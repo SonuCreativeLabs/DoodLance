@@ -15,11 +15,22 @@ All notable changes to the SkilledMice project will be documented in this file.
 - Main layout structure
 - Git repository setup and GitHub integration
 - Geist font integration for improved typography
+- Dual hiring models:
+  - Post a Job feature with AI-powered categorization and rate suggestions
+  - Direct Hire feature with freelancer profiles and advanced filtering
+- AI-powered matching:
+  - Auto-categorization of jobs into relevant categories
+  - Rate suggestions based on local market data
+- Tabs component for switching between hiring modes
+- Freelancer card component with detailed profile information
+- Advanced search and filtering system for freelancers
 
 ### Changed
 - Updated project metadata and descriptions
 - Improved README with comprehensive project information
 - Switched from Inter to Geist font for better typography
+- Enhanced bottom navigation to include Hire section
+- Optimized layout for better mobile responsiveness
 
 ### Fixed
 - Font visibility issues by installing and configuring Geist font
