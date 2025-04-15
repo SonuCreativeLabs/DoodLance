@@ -24,21 +24,19 @@ const BottomNav = () => {
   }
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 h-16 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-t md:hidden">
-      <div className="grid h-full grid-cols-6 mx-auto max-w-md">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bottom-nav border-t">
+      <div className="grid grid-cols-6 h-16">
         {navigation.map((item) => (
           <Link
             key={item.name}
             href={item.href}
             className={cn(
-              'inline-flex flex-col items-center justify-center px-3 hover:bg-gray-50 dark:hover:bg-gray-800',
-              pathname === item.href
-                ? 'text-primary'
-                : 'text-muted-foreground'
+              "flex flex-col items-center justify-center gap-1 bottom-nav-item",
+              pathname === item.href && "active"
             )}
           >
-            <item.icon className="w-5 h-5" />
-            <span className="text-xs">{item.name}</span>
+            <item.icon className="w-6 h-6" />
+            <span className="text-xs font-medium">{item.name}</span>
           </Link>
         ))}
       </div>
