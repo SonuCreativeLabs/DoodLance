@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { GeistSans } from "geist/font/sans";
+import { GeistMono } from "geist/font/mono";
 import "./globals.css";
 import BottomNav from "@/components/layout/bottom-nav";
 
-const inter = Inter({ subsets: ["latin"] });
-
 export const metadata: Metadata = {
-  title: "Next.js PWA",
-  description: "Next.js PWA with TypeScript, shadcn-ui, and Supabase Auth",
+  title: "SkilledMice - Hyper-local Service Marketplace",
+  description: "Connect with local service providers and monetize your skills",
   manifest: "/manifest.json",
   themeColor: "#ffffff",
   viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no",
@@ -20,7 +19,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
+      <body className={`${GeistSans.variable} ${GeistMono.variable} font-sans`}>
         <main className="min-h-screen pb-16 md:pb-0">
           {children}
         </main>
