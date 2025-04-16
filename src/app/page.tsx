@@ -1,6 +1,6 @@
 "use client"
 
-import { Search, MapPin, Star, Clock, Calendar, User } from 'lucide-react'
+import { Search, MapPin, Star, Clock, Calendar, User, Briefcase, GraduationCap } from 'lucide-react'
 import MainLayout from '@/components/layout/main-layout'
 import { Button } from '@/components/ui/button'
 import { motion } from 'framer-motion'
@@ -38,11 +38,36 @@ const featuredProviders = [
   // Add more providers as needed
 ]
 
+const AnimatedCard = ({ icon, delay }: { icon: React.ReactNode; delay: number }) => (
+  <motion.div
+    initial={{ scale: 0.8, opacity: 0 }}
+    animate={{ scale: 1, opacity: 1 }}
+    transition={{
+      duration: 0.5,
+      delay,
+      repeat: Infinity,
+      repeatType: "reverse",
+      repeatDelay: 2
+    }}
+    className="bg-white rounded-xl p-4 shadow-lg"
+  >
+    <div className="flex items-center gap-3">
+      <div className="w-10 h-10 bg-sky-100 rounded-full flex items-center justify-center text-sky-600">
+        {icon}
+      </div>
+      <div className="space-y-2">
+        <div className="h-2 w-20 bg-gray-200 rounded animate-pulse"></div>
+        <div className="h-2 w-16 bg-gray-100 rounded animate-pulse"></div>
+      </div>
+    </div>
+  </motion.div>
+)
+
 export default function Home() {
   return (
     <MainLayout>
       {/* Hero Banner with Animation */}
-      <div className="relative h-[500px] bg-gradient-to-b from-sky-400 to-sky-200 overflow-hidden">
+      <div className="relative min-h-[600px] md:h-[500px] bg-gradient-to-b from-sky-400 to-sky-200 overflow-hidden">
         {/* Animated Background Elements */}
         <div className="absolute inset-0">
           <motion.div
@@ -57,6 +82,7 @@ export default function Home() {
               viewBox="0 0 1440 120"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
+              preserveAspectRatio="none"
             >
               <path
                 d="M0 120L60 110C120 100 240 80 360 70C480 60 600 60 720 65C840 70 960 80 1080 85C1200 90 1320 90 1380 90L1440 90V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0V120Z"
@@ -65,77 +91,30 @@ export default function Home() {
             </svg>
           </motion.div>
 
-          {/* Animated Service Icons */}
-          <motion.div
-            initial={{ y: 100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="absolute right-10 top-20 w-72 h-72"
-          >
-            <div className="relative w-full h-full">
-              {/* Service Provider Animation */}
-              <motion.div
-                animate={{
-                  y: [0, -10, 0],
-                  x: [0, 5, 0],
-                }}
-                transition={{
-                  duration: 4,
-                  repeat: Infinity,
-                  repeatType: "reverse",
-                }}
-                className="absolute top-0 right-0 bg-white p-4 rounded-lg shadow-lg"
-              >
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-sky-100 rounded-full flex items-center justify-center">
-                    🔧
-                  </div>
-                  <div>
-                    <div className="h-2 w-20 bg-gray-200 rounded"></div>
-                    <div className="h-2 w-16 bg-gray-100 rounded mt-2"></div>
-                  </div>
-                </div>
-              </motion.div>
-
-              <motion.div
-                animate={{
-                  y: [0, 10, 0],
-                  x: [0, -5, 0],
-                }}
-                transition={{
-                  duration: 3.5,
-                  repeat: Infinity,
-                  repeatType: "reverse",
-                  delay: 0.5,
-                }}
-                className="absolute bottom-0 left-0 bg-white p-4 rounded-lg shadow-lg"
-              >
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-sky-100 rounded-full flex items-center justify-center">
-                    📚
-                  </div>
-                  <div>
-                    <div className="h-2 w-20 bg-gray-200 rounded"></div>
-                    <div className="h-2 w-16 bg-gray-100 rounded mt-2"></div>
-                  </div>
-                </div>
-              </motion.div>
+          {/* Animated Service Cards */}
+          <div className="hidden md:block">
+            <div className="absolute right-10 top-20 space-y-4">
+              <AnimatedCard icon={<Briefcase className="w-6 h-6" />} delay={0} />
+              <AnimatedCard icon={<GraduationCap className="w-6 h-6" />} delay={0.3} />
             </div>
-          </motion.div>
+            <div className="absolute left-10 top-40 space-y-4">
+              <AnimatedCard icon={<MapPin className="w-6 h-6" />} delay={0.6} />
+            </div>
+          </div>
         </div>
 
         {/* Hero Content */}
-        <div className="relative container mx-auto px-4 pt-20">
+        <div className="relative container mx-auto px-4 pt-12 md:pt-20">
           <motion.div
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.8 }}
-            className="max-w-2xl"
+            className="max-w-2xl mx-auto text-center"
           >
-            <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+            <h1 className="text-3xl md:text-5xl font-bold text-white mb-4">
               Find Local Services
             </h1>
-            <p className="text-xl text-white/90 mb-8">
+            <p className="text-lg md:text-xl text-white/90 mb-8">
               Connect with skilled professionals in your neighborhood
             </p>
           </motion.div>
@@ -145,7 +124,7 @@ export default function Home() {
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="bg-white rounded-xl shadow-lg p-4 max-w-3xl"
+            className="bg-white rounded-xl shadow-lg p-4 max-w-3xl mx-auto"
           >
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="relative">
@@ -153,7 +132,7 @@ export default function Home() {
                 <input
                   type="text"
                   placeholder="Where are you looking?"
-                  className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-100 focus:outline-none focus:ring-2 focus:ring-sky-400"
+                  className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-200 bg-transparent text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-sky-400"
                 />
               </div>
               <div className="relative">
@@ -161,10 +140,10 @@ export default function Home() {
                 <input
                   type="text"
                   placeholder="What service do you need?"
-                  className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-100 focus:outline-none focus:ring-2 focus:ring-sky-400"
+                  className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-200 bg-transparent text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-sky-400"
                 />
               </div>
-              <Button className="w-full bg-[#FF8A3D] hover:bg-[#ff7a24] text-white py-3">
+              <Button className="w-full bg-[#FF8A3D] hover:bg-[#ff7a24] text-white py-3 h-[50px] text-base">
                 Search
               </Button>
             </div>
