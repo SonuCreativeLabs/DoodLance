@@ -48,29 +48,33 @@ export default function LocalMap({ gigs, onMarkerClick, selectedGigId }: LocalMa
   };
 
   return (
-    <div style={{ width: '100%', height: '100%' }}>
+    <div className="w-full h-[calc(100vh-4rem)]">
       <Map
         {...viewState}
         onMove={(evt: ViewStateChangeEvent) => setViewState(evt.viewState)}
         onClick={handleMapClick}
         mapStyle="mapbox://styles/mapbox/streets-v11"
-        mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
+        mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN}
         style={{ width: '100%', height: '100%' }}
+        reuseMaps={true}
       >
         {gigs.map(gig => (
           <Marker
             key={gig.id}
             latitude={gig.location.lat}
             longitude={gig.location.lng}
+            anchor="bottom"
           >
             <div 
-              className={`w-6 h-6 rounded-full cursor-pointer transition-all duration-200 ${
+              className={`w-8 h-8 rounded-full cursor-pointer transition-all duration-200 flex items-center justify-center ${
                 selectedGigId === gig.id 
-                  ? 'bg-primary scale-125' 
-                  : 'bg-primary/80 hover:bg-primary'
+                  ? 'bg-blue-500 scale-125' 
+                  : 'bg-blue-500/80 hover:bg-blue-500'
               }`}
               onClick={() => handleMarkerClick(gig)}
-            />
+            >
+              <MapPin className="w-4 h-4 text-white" />
+            </div>
           </Marker>
         ))}
 
@@ -81,10 +85,12 @@ export default function LocalMap({ gigs, onMarkerClick, selectedGigId }: LocalMa
             onClose={() => setSelectedGig(null)}
             closeButton={true}
             closeOnClick={false}
+            anchor="bottom"
           >
-            <div className="p-2">
-              <h3 className="font-semibold">{selectedGig.title}</h3>
-              <p className="text-sm text-gray-600">${selectedGig.budget.min} - ${selectedGig.budget.max}</p>
+            <div className="p-2 min-w-[200px]">
+              <h3 className="font-semibold text-sm">{selectedGig.title}</h3>
+              <p className="text-xs text-gray-600">${selectedGig.budget.min} - ${selectedGig.budget.max}</p>
+              <p className="text-xs text-gray-500 mt-1">{selectedGig.location.address}</p>
             </div>
           </Popup>
         )}

@@ -1,6 +1,4 @@
-import { HfInference } from '@huggingface/inference';
-
-const hf = new HfInference(process.env.HUGGING_FACE_API_KEY);
+import { env } from "@/env.mjs";
 
 interface Category {
   label: string;
@@ -8,47 +6,47 @@ interface Category {
 }
 
 interface ZeroShotClassificationResult {
-  label: string;
-  score: number;
+  labels: string[];
+  scores: number[];
 }
+
+const HUGGING_FACE_API_URL = "https://api-inference.huggingface.co/models/facebook/bart-large-mnli";
 
 export async function categorizeJob(title: string, description: string): Promise<Category[]> {
   try {
-    // Combine title and description for better context
-    const text = `${title}. ${description}`;
+    console.log('Categorizing job:', { title, description });
     
-    // Use a zero-shot classification model to categorize the job
-    const result = await hf.zeroShotClassification({
-      model: 'facebook/bart-large-mnli',
-      inputs: text,
-      parameters: {
-        candidate_labels: [
-          'Home Improvement',
-          'Cleaning',
-          'Moving & Packing',
-          'Gardening',
-          'Pet Care',
-          'Tutoring',
-          'Event Planning',
-          'Personal Training',
-          'Beauty & Wellness',
-          'Tech Support',
-          'Writing & Translation',
-          'Graphic Design',
-          'Photography',
-          'Music Lessons',
-          'Cooking & Baking'
-        ]
-      }
+    const response = await fetch('/api/categorize', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ title, description }),
+      cache: 'no-store'
     });
 
-    // Map the results to our Category interface
-    return result.map((item: ZeroShotClassificationResult) => ({
-      label: item.label,
-      score: item.score
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error('API error:', data.error);
+      throw new Error(data.error || 'Failed to categorize job');
+    }
+
+    if (!data.labels || !data.scores) {
+      console.error('Invalid API response:', data);
+      throw new Error('Invalid response from categorization service');
+    }
+    
+    return data.labels.map((label: string, index: number) => ({
+      label,
+      score: data.scores[index],
     }));
   } catch (error) {
     console.error('Error categorizing job:', error);
-    return [];
+    // Return a default category if the API call fails
+    return [{
+      label: 'Other',
+      score: 1.0
+    }];
   }
 } 
