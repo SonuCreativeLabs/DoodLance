@@ -15,18 +15,18 @@ const mockGigs = [
     distance: 0.5,
     postedTime: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
     budget: {
-      min: 50,
-      max: 100
+      min: 500,
+      max: 1000
     },
     category: 'Cleaning',
     location: {
-      lat: 37.7749,
-      lng: -122.4194,
-      address: '123 Main St, San Francisco, CA'
+      lat: 13.0827,
+      lng: 80.2707,
+      address: 'Anna Nagar, Chennai, Tamil Nadu'
     },
     client: {
       id: 'c1',
-      name: 'John Doe',
+      name: 'Priya Kumar',
       rating: 4.8,
       completedJobs: 12
     }
@@ -38,18 +38,18 @@ const mockGigs = [
     distance: 1.2,
     postedTime: new Date(Date.now() - 7200000).toISOString(), // 2 hours ago
     budget: {
-      min: 80,
-      max: 150
+      min: 800,
+      max: 1500
     },
     category: 'Gardening',
     location: {
-      lat: 37.7833,
-      lng: -122.4167,
-      address: '456 Market St, San Francisco, CA'
+      lat: 13.0500,
+      lng: 80.2121,
+      address: 'T. Nagar, Chennai, Tamil Nadu'
     },
     client: {
       id: 'c2',
-      name: 'Jane Smith',
+      name: 'Raj Sharma',
       rating: 4.9,
       completedJobs: 8
     }
@@ -91,25 +91,25 @@ export default function DiscoverPage() {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex justify-between items-center p-4 bg-white border-b">
-        <h1 className="text-xl font-semibold">Discover Local Gigs</h1>
+      <div className="flex justify-between items-center p-4 bg-gradient-to-r from-primary to-primary-dark border-b border-white/10">
+        <h1 className="text-xl font-semibold text-white">Discover Local Gigs</h1>
         <div className="flex space-x-2">
           <button
             onClick={() => setViewMode('map')}
-            className={`px-4 py-2 rounded-lg ${
+            className={`px-4 py-2 rounded-lg transition-colors ${
               viewMode === 'map'
-                ? 'bg-blue-500 text-white'
-                : 'bg-gray-100 text-gray-600'
+                ? 'bg-accent text-white'
+                : 'bg-white/10 text-white/70 hover:bg-white/20'
             }`}
           >
             Map
           </button>
           <button
             onClick={() => setViewMode('feed')}
-            className={`px-4 py-2 rounded-lg ${
+            className={`px-4 py-2 rounded-lg transition-colors ${
               viewMode === 'feed'
-                ? 'bg-blue-500 text-white'
-                : 'bg-gray-100 text-gray-600'
+                ? 'bg-accent text-white'
+                : 'bg-white/10 text-white/70 hover:bg-white/20'
             }`}
           >
             Feed

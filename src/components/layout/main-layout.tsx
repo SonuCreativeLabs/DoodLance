@@ -1,23 +1,23 @@
 "use client"
 
-import { ReactNode } from 'react'
 import BottomNav from './bottom-nav'
-import Header from './header'
 
 interface MainLayoutProps {
-  children: ReactNode
+  children: React.ReactNode
 }
 
-const MainLayout = ({ children }: MainLayoutProps) => {
+export default function MainLayout({ children }: MainLayoutProps) {
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
+    <div className="min-h-screen bg-[#F5F5F5]">
+      <nav className="bg-black text-white py-4 px-4 shadow-md">
+        <div className="container mx-auto flex justify-between items-center">
+          <h1 className="text-xl font-bold">SkilledMice</h1>
+        </div>
+      </nav>
       <main className="pb-16">
         {children}
       </main>
       <BottomNav />
     </div>
   )
-}
-
-export default MainLayout 
+} 

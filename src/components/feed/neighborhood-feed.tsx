@@ -69,34 +69,34 @@ export default function NeighborhoodFeed({ gigs, onGigClick }: NeighborhoodFeedP
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: index * 0.1 }}
-          className="bg-white rounded-lg shadow-md p-4 cursor-pointer hover:shadow-lg transition-shadow"
+          className="bg-gradient-to-br from-primary to-primary-dark rounded-lg p-4 cursor-pointer hover:shadow-lg transition-all border border-white/10 backdrop-blur-sm"
           onClick={() => onGigClick(gig)}
         >
           <div className="flex justify-between items-start mb-2">
-            <h3 className="text-lg font-semibold text-gray-900">{gig.title}</h3>
-            <div className="flex items-center text-sm text-gray-500">
+            <h3 className="text-lg font-semibold text-white">{gig.title}</h3>
+            <div className="flex items-center text-sm text-white/60">
               <MapPin className="w-4 h-4 mr-1" />
               <span>{formatDistance(gig.distance)}</span>
             </div>
           </div>
           
-          <p className="text-gray-600 text-sm mb-3">{gig.description}</p>
+          <p className="text-white/80 text-sm mb-3">{gig.description}</p>
           
           <div className="flex items-center justify-between text-sm">
-            <div className="flex items-center text-gray-500">
+            <div className="flex items-center text-white/60">
               <Clock className="w-4 h-4 mr-1" />
               <span>{formatTime(gig.postedTime)}</span>
             </div>
             
-            <div className="flex items-center text-gray-500">
+            <div className="flex items-center text-accent">
               <DollarSign className="w-4 h-4 mr-1" />
               <span>${gig.budget.min} - ${gig.budget.max}</span>
             </div>
             
             <div className="flex items-center">
-              <Star className="w-4 h-4 text-yellow-400 mr-1" />
-              <span className="text-gray-500">{gig.client.rating}</span>
-              <span className="text-gray-400 ml-1">({gig.client.completedJobs})</span>
+              <Star className="w-4 h-4 text-accent mr-1" />
+              <span className="text-white">{gig.client.rating}</span>
+              <span className="text-white/60 ml-1">({gig.client.completedJobs})</span>
             </div>
           </div>
         </motion.div>

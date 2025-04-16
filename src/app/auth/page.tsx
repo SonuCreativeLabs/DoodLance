@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Mail, Phone, Lock, ArrowRight } from 'lucide-react'
+import { Mail, Phone, ArrowRight } from 'lucide-react'
 import MainLayout from '@/components/layout/main-layout'
 import { Button } from '@/components/ui/button'
 
@@ -154,6 +154,8 @@ export default function Auth() {
               </div>
             </>
           )}
+
+          <p className="text-sm text-muted-foreground">Don&apos;t have an account?</p>
         </motion.div>
       </div>
     </MainLayout>

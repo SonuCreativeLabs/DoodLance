@@ -29,9 +29,9 @@ interface LocalMapProps {
 
 export default function LocalMap({ gigs, onMarkerClick, selectedGigId }: LocalMapProps) {
   const [viewState, setViewState] = useState({
-    latitude: 37.7749,
-    longitude: -122.4194,
-    zoom: 12,
+    latitude: 13.0827,  // Chennai latitude
+    longitude: 80.2707, // Chennai longitude
+    zoom: 11,
     bearing: 0,
     pitch: 0
   });
@@ -68,8 +68,8 @@ export default function LocalMap({ gigs, onMarkerClick, selectedGigId }: LocalMa
             <div 
               className={`w-8 h-8 rounded-full cursor-pointer transition-all duration-200 flex items-center justify-center ${
                 selectedGigId === gig.id 
-                  ? 'bg-blue-500 scale-125' 
-                  : 'bg-blue-500/80 hover:bg-blue-500'
+                  ? 'bg-accent shadow-lg scale-125' 
+                  : 'bg-primary hover:bg-primary-dark'
               }`}
               onClick={() => handleMarkerClick(gig)}
             >
@@ -86,11 +86,12 @@ export default function LocalMap({ gigs, onMarkerClick, selectedGigId }: LocalMa
             closeButton={true}
             closeOnClick={false}
             anchor="bottom"
+            className="rounded-lg overflow-hidden"
           >
-            <div className="p-2 min-w-[200px]">
+            <div className="p-3 min-w-[200px] bg-gradient-to-b from-primary to-primary-dark text-white">
               <h3 className="font-semibold text-sm">{selectedGig.title}</h3>
-              <p className="text-xs text-gray-600">${selectedGig.budget.min} - ${selectedGig.budget.max}</p>
-              <p className="text-xs text-gray-500 mt-1">{selectedGig.location.address}</p>
+              <p className="text-xs text-white/90">${selectedGig.budget.min} - ${selectedGig.budget.max}</p>
+              <p className="text-xs text-white/80 mt-1">{selectedGig.location.address}</p>
             </div>
           </Popup>
         )}
