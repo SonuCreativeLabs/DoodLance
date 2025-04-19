@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Briefcase, PlusSquare, Inbox, DollarSign } from 'lucide-react'
+import { Home, Briefcase, PlusSquare, Inbox } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const navigation = [
@@ -10,7 +10,6 @@ const navigation = [
   { name: 'Hires', href: '/hires', icon: Briefcase },
   { name: 'Post', href: '/post', icon: PlusSquare },
   { name: 'Inbox', href: '/inbox', icon: Inbox },
-  { name: 'Work & Earn', href: '/work-and-earn', icon: DollarSign },
 ]
 
 export default function BottomNav() {
@@ -19,7 +18,7 @@ export default function BottomNav() {
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-black text-white border-t border-white/10">
       <div className="container mx-auto">
-        <div className="grid grid-cols-5">
+        <div className="grid grid-cols-4">
           {navigation.map((item) => (
             <Link
               key={item.name}

@@ -27,9 +27,6 @@ export function Navbar() {
             <Link href="/inbox" className="hover:text-amber-500 transition-colors">
               Inbox
             </Link>
-            <Link href="/work-and-earn" className="hover:text-amber-500 transition-colors">
-              Work & Earn
-            </Link>
           </div>
 
           {/* Auth Buttons */}
