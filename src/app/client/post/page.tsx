@@ -76,7 +76,7 @@ const mockFreelancers = [
   },
 ];
 
-export default function HirePage() {
+export default function PostPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [location, setLocation] = useState("");
   const [priceRange, setPriceRange] = useState("");

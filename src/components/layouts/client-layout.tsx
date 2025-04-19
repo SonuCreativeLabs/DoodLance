@@ -1,5 +1,7 @@
 import { ReactNode } from "react"
 import { cn } from "@/lib/utils"
+import Link from "next/link"
+import { Home, Search, PlusCircle, Calendar, User } from "lucide-react"
 
 interface ClientLayoutProps {
   children: ReactNode
@@ -8,30 +10,37 @@ interface ClientLayoutProps {
 
 export default function ClientLayout({ children, className }: ClientLayoutProps) {
   return (
-    <div className={cn("min-h-screen bg-background", className)}>
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-14 items-center">
-          <div className="mr-4 flex">
-            <a className="mr-6 flex items-center space-x-2" href="/client">
-              <span className="font-bold">Client Dashboard</span>
-            </a>
-            <nav className="flex items-center space-x-6 text-sm font-medium">
-              <a href="/client/jobs" className="transition-colors hover:text-foreground/80">
-                Jobs
-              </a>
-              <a href="/client/hire" className="transition-colors hover:text-foreground/80">
-                Hire
-              </a>
-              <a href="/client/profile" className="transition-colors hover:text-foreground/80">
-                Profile
-              </a>
-            </nav>
-          </div>
-        </div>
-      </header>
-      <main className="container py-6">
+    <div className={cn("min-h-screen bg-background flex flex-col", className)}>
+      <main className="container py-6 flex-1">
         {children}
       </main>
+      
+      {/* Bottom Navigation */}
+      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-4 px-4">
+        <div className="container mx-auto">
+          <div className="flex justify-around items-center">
+            <Link href="/client" className="flex flex-col items-center">
+              <Home className="w-6 h-6" />
+              <span className="text-xs mt-1">Home</span>
+            </Link>
+            <Link href="/client/post" className="flex flex-col items-center">
+              <PlusCircle className="w-6 h-6" />
+              <span className="text-xs mt-1">Post</span>
+            </Link>
+            <Link href="/client/bookings" className="flex flex-col items-center">
+              <Calendar className="w-6 h-6" />
+              <span className="text-xs mt-1">Bookings</span>
+            </Link>
+            <Link href="/client/profile" className="flex flex-col items-center">
+              <User className="w-6 h-6" />
+              <span className="text-xs mt-1">Profile</span>
+            </Link>
+          </div>
+        </div>
+      </nav>
+      
+      {/* Add padding to account for fixed bottom nav */}
+      <div className="h-16" />
     </div>
   )
 } 

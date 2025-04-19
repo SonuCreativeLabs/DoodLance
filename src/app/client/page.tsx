@@ -1,6 +1,6 @@
 "use client"
 
-import { Search, MapPin, Star, Clock, Calendar, User, Briefcase, GraduationCap } from 'lucide-react'
+import { Search, MapPin, Star, Clock, Calendar, User, Briefcase, GraduationCap, ChevronRight } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import ClientLayout from '@/components/layouts/client-layout'
 import { FreelancerCard } from '@/components/client/freelancer-card'
@@ -15,6 +15,8 @@ const serviceCategories = [
   { name: 'Pet Care', icon: '🐾', color: 'bg-white' },
   { name: 'Cleaning', icon: '🧹', color: 'bg-white' },
   { name: 'Coaching', icon: '🎯', color: 'bg-white' },
+  { name: 'Gardening', icon: '🌱', color: 'bg-white' },
+  { name: 'Moving', icon: '🚚', color: 'bg-white' },
   { name: 'More', icon: '➕', color: 'bg-white' },
 ]
 
@@ -40,7 +42,26 @@ const nearbyFreelancers = [
     location: '1.8 km away',
     responseTime: 'Usually responds in 30 mins',
   },
-  // Add more freelancers as needed
+  {
+    id: 3,
+    name: 'Mike Wilson',
+    service: 'Pet Care',
+    rating: 4.7,
+    reviews: 56,
+    image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Mike',
+    location: '3.2 km away',
+    responseTime: 'Usually responds in 2 hours',
+  },
+  {
+    id: 4,
+    name: 'Emma Davis',
+    service: 'Cleaning',
+    rating: 4.9,
+    reviews: 203,
+    image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Emma',
+    location: '1.5 km away',
+    responseTime: 'Usually responds in 45 mins',
+  },
 ]
 
 const AnimatedCard = ({ icon, delay }: { icon: React.ReactNode; delay: number }) => (
@@ -81,6 +102,30 @@ export default function ClientHome() {
 
   return (
     <ClientLayout>
+      {/* Welcome Banner */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="bg-white shadow-sm py-4"
+      >
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Welcome back, John!</h1>
+              <div className="flex items-center text-gray-600 mt-1">
+                <MapPin className="w-4 h-4 mr-1" />
+                <span>San Francisco, CA</span>
+              </div>
+            </div>
+            <button className="flex items-center text-[#FF8A3D] hover:text-[#ff7a24] transition-colors">
+              <span className="text-sm font-medium">View Profile</span>
+              <ChevronRight className="w-4 h-4 ml-1" />
+            </button>
+          </div>
+        </div>
+      </motion.div>
+
       {/* Hero Banner with Animation */}
       <div className="relative min-h-[600px] md:h-[500px] bg-gradient-to-b from-sky-400 to-sky-200 overflow-hidden">
         {/* Animated Background Elements */}
@@ -169,12 +214,19 @@ export default function ClientHome() {
       <div className="container mx-auto px-4 py-12">
         {/* Service Categories */}
         <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-6 text-gray-900">Popular Services</h2>
-          <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-semibold text-gray-900">Popular Services</h2>
+            <button className="text-[#FF8A3D] hover:text-[#ff7a24] text-sm font-medium flex items-center">
+              View All
+              <ChevronRight className="w-4 h-4 ml-1" />
+            </button>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4">
             {serviceCategories.map((category) => (
               <motion.div
                 key={category.name}
                 whileHover={{ scale: 1.05 }}
+                onClick={() => handleCategoryClick(category.name)}
                 className="bg-white rounded-xl p-4 text-center cursor-pointer shadow-md hover:shadow-lg transition-all duration-200"
               >
                 <div className="text-2xl mb-2">{category.icon}</div>
@@ -186,8 +238,14 @@ export default function ClientHome() {
 
         {/* Featured Providers */}
         <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-6 text-gray-900">Top Rated Professionals</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-semibold text-gray-900">Nearby Professionals</h2>
+            <button className="text-[#FF8A3D] hover:text-[#ff7a24] text-sm font-medium flex items-center">
+              View All
+              <ChevronRight className="w-4 h-4 ml-1" />
+            </button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {nearbyFreelancers.map((freelancer) => (
               <motion.div
                 key={freelancer.id}
@@ -220,7 +278,10 @@ export default function ClientHome() {
                       </div>
                     </div>
                     <div className="mt-3 flex gap-2">
-                      <button className="flex-1 bg-[#FF8A3D] hover:bg-[#ff7a24] text-white py-2 px-4 rounded-lg transition-colors">
+                      <button 
+                        onClick={() => handleHire(freelancer.id)}
+                        className="flex-1 bg-[#FF8A3D] hover:bg-[#ff7a24] text-white py-2 px-4 rounded-lg transition-colors"
+                      >
                         Book Now
                       </button>
                       <button className="flex-1 border border-gray-200 text-gray-700 hover:bg-gray-50 py-2 px-4 rounded-lg transition-colors">
