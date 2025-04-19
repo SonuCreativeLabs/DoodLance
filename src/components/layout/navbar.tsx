@@ -15,14 +15,20 @@ export function Navbar() {
 
           {/* Navigation Links */}
           <div className="hidden md:flex items-center space-x-8">
-            <Link href="/services" className="hover:text-amber-500 transition-colors">
-              Services
+            <Link href="/" className="hover:text-amber-500 transition-colors">
+              Home
             </Link>
-            <Link href="/providers" className="hover:text-amber-500 transition-colors">
-              Providers
+            <Link href="/hires" className="hover:text-amber-500 transition-colors">
+              Hires
             </Link>
-            <Link href="/about" className="hover:text-amber-500 transition-colors">
-              About
+            <Link href="/post" className="hover:text-amber-500 transition-colors">
+              Post
+            </Link>
+            <Link href="/inbox" className="hover:text-amber-500 transition-colors">
+              Inbox
+            </Link>
+            <Link href="/work-and-earn" className="hover:text-amber-500 transition-colors">
+              Work & Earn
             </Link>
           </div>
 

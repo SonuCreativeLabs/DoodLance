@@ -2,16 +2,15 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Search, Calendar, MessageSquare, User, Briefcase } from 'lucide-react'
+import { Home, Briefcase, PlusSquare, Inbox, DollarSign } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const navigation = [
   { name: 'Home', href: '/', icon: Home },
-  { name: 'Discover', href: '/discover', icon: Search },
-  { name: 'Hire', href: '/hire', icon: Briefcase },
-  { name: 'Bookings', href: '/bookings', icon: Calendar },
-  { name: 'Messages', href: '/messages', icon: MessageSquare },
-  { name: 'Profile', href: '/profile', icon: User },
+  { name: 'Hires', href: '/hires', icon: Briefcase },
+  { name: 'Post', href: '/post', icon: PlusSquare },
+  { name: 'Inbox', href: '/inbox', icon: Inbox },
+  { name: 'Work & Earn', href: '/work-and-earn', icon: DollarSign },
 ]
 
 export default function BottomNav() {
@@ -20,7 +19,7 @@ export default function BottomNav() {
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-black text-white border-t border-white/10">
       <div className="container mx-auto">
-        <div className="grid grid-cols-6">
+        <div className="grid grid-cols-5">
           {navigation.map((item) => (
             <Link
               key={item.name}
