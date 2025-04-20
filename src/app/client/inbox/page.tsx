@@ -23,14 +23,23 @@ interface Thread {
   unread: number
 }
 
-// Mock data
+// Helper function for consistent date formatting
+const formatTime = (date: Date) => {
+  return new Intl.DateTimeFormat('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  }).format(date)
+}
+
+// Mock data with fixed timestamps
 const mockThreads: Thread[] = [
   {
     id: "1",
     freelancerName: "John Doe",
     freelancerImage: "https://api.dicebear.com/7.x/avataaars/svg?seed=John",
     lastMessage: "I'll be there in 20 minutes",
-    lastMessageTime: new Date(),
+    lastMessageTime: new Date('2024-04-20T16:49:00'),
     unread: 2,
   },
   {
@@ -38,7 +47,7 @@ const mockThreads: Thread[] = [
     freelancerName: "Sarah Wilson",
     freelancerImage: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah",
     lastMessage: "The job is completed",
-    lastMessageTime: new Date(Date.now() - 3600000),
+    lastMessageTime: new Date('2024-04-20T15:49:00'),
     unread: 0,
   },
 ]
@@ -48,21 +57,21 @@ const mockMessages: Message[] = [
     id: "1",
     content: "Hi, I'm interested in the plumbing job",
     sender: "freelancer",
-    timestamp: new Date(Date.now() - 3600000),
+    timestamp: new Date('2024-04-20T14:00:00'),
     status: "read"
   },
   {
     id: "2",
     content: "Great! When can you start?",
     sender: "user",
-    timestamp: new Date(Date.now() - 3000000),
+    timestamp: new Date('2024-04-20T14:30:00'),
     status: "read"
   },
   {
     id: "3",
     content: "I can start tomorrow morning",
     sender: "freelancer",
-    timestamp: new Date(Date.now() - 2400000),
+    timestamp: new Date('2024-04-20T14:40:00'),
     status: "read"
   }
 ]
@@ -122,7 +131,7 @@ export default function InboxPage() {
                 <p className="text-sm text-gray-500 truncate">{thread.lastMessage}</p>
               </div>
               <span className="text-xs text-gray-400">
-                {thread.lastMessageTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                {formatTime(thread.lastMessageTime)}
               </span>
             </div>
           ))}
@@ -169,10 +178,7 @@ export default function InboxPage() {
                     <p>{message.content}</p>
                     <div className="flex items-center justify-end space-x-1 mt-1">
                       <span className="text-xs opacity-70">
-                        {message.timestamp.toLocaleTimeString([], {
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
+                        {formatTime(message.timestamp)}
                       </span>
                       {message.sender === "user" && (
                         message.status === "read" ? (
