@@ -17,7 +17,7 @@ const navigation = [
   },
   {
     name: "Jobs",
-    href: "/freelancer/proposals",
+    href: "/freelancer/jobs",
     icon: Briefcase,
   },
   {
