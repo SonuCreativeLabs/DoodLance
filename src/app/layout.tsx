@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import "./globals.css";
-import { AuthProvider } from "@/context/auth-context";
+import { AuthProvider } from "@/contexts/authentication-context";
 import { RoleProvider } from "@/contexts/role-context";
 
 export const metadata: Metadata = {

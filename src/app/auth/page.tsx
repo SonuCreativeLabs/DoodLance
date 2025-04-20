@@ -6,7 +6,7 @@ import PhoneInput from "@/components/auth/phone-input"
 import OTPVerification from "@/components/auth/otp-verification"
 import RoleSelection from "@/components/auth/role-selection"
 import { useRouter } from "next/navigation"
-import { useAuth } from "@/context/auth-context"
+import { useAuth } from "@/contexts/authentication-context"
 
 type AuthStep = "splash" | "phone" | "otp" | "role"
 
