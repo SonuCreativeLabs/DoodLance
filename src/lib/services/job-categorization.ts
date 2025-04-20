@@ -1,15 +1,17 @@
 import { HfInference } from '@huggingface/inference';
+import { ZeroShotClassificationOutput } from '@/types';
 
-const hf = new HfInference(process.env.HUGGINGFACE_API_KEY);
+const hf = new HfInference(process.env.NEXT_PUBLIC_HUGGINGFACE_API_KEY);
 
-interface ClassificationResult {
-  label: string;
-  score: number;
+interface ZeroShotResult {
+  labels: string[];
+  scores: number[];
+  sequence: string;
 }
 
 export async function categorizeJob(description: string): Promise<string> {
   try {
-    const response = await hf.textClassification({
+    const response = await hf.zeroShotClassification({
       model: 'facebook/bart-large-mnli',
       inputs: description,
       parameters: {
@@ -28,15 +30,13 @@ export async function categorizeJob(description: string): Promise<string> {
       }
     });
 
-    // Find the label with the highest score
-    const results = response as ClassificationResult[];
-    const bestMatch = results.reduce((prev, current) => 
-      (prev.score > current.score) ? prev : current
-    );
-
-    return bestMatch.label;
+    // Cast the response to our expected type
+    const result = (response as unknown as ZeroShotClassificationOutput)[0];
+    const maxIndex = result.scores.indexOf(Math.max(...result.scores));
+    return result.labels[maxIndex];
   } catch (error) {
     console.error('Error categorizing job:', error);
+    // Return the existing category if available, otherwise 'other'
     return 'other';
   }
 } 

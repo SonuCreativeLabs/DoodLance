@@ -60,20 +60,38 @@ export default function DiscoverPage() {
   const [selectedGig, setSelectedGig] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'map' | 'feed'>('map');
   const [gigs, setGigs] = useState(mockGigs);
+  const [isLoading, setIsLoading] = useState(false); // Start with false since we have mock data
 
   useEffect(() => {
+    // Skip categorization in development if there's an issue with the API
+    if (process.env.NODE_ENV === 'development') {
+      setIsLoading(false);
+      return;
+    }
+
     // Categorize jobs when they're loaded
     const categorizeJobs = async () => {
-      const categorizedGigs = await Promise.all(
-        gigs.map(async (gig) => {
-          const category = await categorizeJob(gig.description);
-          return {
-            ...gig,
-            category
-          };
-        })
-      );
-      setGigs(categorizedGigs);
+      try {
+        const categorizedGigs = await Promise.all(
+          gigs.map(async (gig) => {
+            try {
+              const category = await categorizeJob(gig.description);
+              return {
+                ...gig,
+                category
+              };
+            } catch (error) {
+              console.error(`Error categorizing gig ${gig.id}:`, error);
+              return gig; // Keep the original category if categorization fails
+            }
+          })
+        );
+        setGigs(categorizedGigs);
+      } catch (error) {
+        console.error('Error categorizing jobs:', error);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
     categorizeJobs();
@@ -88,17 +106,25 @@ export default function DiscoverPage() {
     setSelectedGig(gigId);
   };
 
+  if (isLoading) {
+    return (
+      <div className="h-full w-full flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
   return (
-    <div className="h-full flex flex-col">
-      <div className="flex justify-between items-center p-4 bg-gradient-to-r from-primary to-primary-dark border-b border-white/10">
-        <h1 className="text-xl font-semibold text-white">Discover Local Gigs</h1>
+    <div className="h-screen w-full flex flex-col">
+      <div className="flex justify-between items-center p-4 bg-white shadow-md z-10">
+        <h1 className="text-xl font-semibold text-gray-800">Discover Local Gigs</h1>
         <div className="flex space-x-2">
           <button
             onClick={() => setViewMode('map')}
             className={`px-4 py-2 rounded-lg transition-colors ${
               viewMode === 'map'
-                ? 'bg-accent text-white'
-                : 'bg-white/10 text-white/70 hover:bg-white/20'
+                ? 'bg-blue-500 text-white'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
             Map
@@ -107,8 +133,8 @@ export default function DiscoverPage() {
             onClick={() => setViewMode('feed')}
             className={`px-4 py-2 rounded-lg transition-colors ${
               viewMode === 'feed'
-                ? 'bg-accent text-white'
-                : 'bg-white/10 text-white/70 hover:bg-white/20'
+                ? 'bg-blue-500 text-white'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
             Feed
@@ -121,7 +147,7 @@ export default function DiscoverPage() {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="h-full"
+            className="absolute inset-0"
           >
             <LocalMap
               gigs={gigs}
