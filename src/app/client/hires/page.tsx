@@ -74,6 +74,32 @@ const historyJobs = [
   // Add more history items as needed
 ]
 
+// Mock data for bookings
+const bookings = [
+  {
+    id: 1,
+    service: 'Plumbing',
+    provider: 'John Smith',
+    date: '2024-04-20',
+    time: '10:00 AM',
+    status: 'upcoming',
+    location: '123 Main St, City',
+    price: '$75',
+    image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=John',
+  },
+  {
+    id: 2,
+    service: 'Math Tutoring',
+    provider: 'Sarah Johnson',
+    date: '2024-04-18',
+    time: '2:00 PM',
+    status: 'completed',
+    location: '456 Oak Ave, City',
+    price: '$50',
+    image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah',
+  },
+]
+
 const ApplicationCard = ({ application }: { application: any }) => {
   return (
     <motion.div
@@ -129,6 +155,7 @@ const ApplicationCard = ({ application }: { application: any }) => {
 
 export default function HiresPage() {
   const [currentApplicationIndex, setCurrentApplicationIndex] = useState(0)
+  const [activeTab, setActiveTab] = useState('bookings')
 
   const handleSwipe = (direction: "left" | "right") => {
     console.log(`Swiped ${direction} on application ${applications[currentApplicationIndex].id}`)
@@ -139,65 +166,65 @@ export default function HiresPage() {
     <div className="max-w-2xl mx-auto px-4 py-6">
       <h1 className="text-2xl font-semibold text-gray-900 mb-6">Your Hires</h1>
       
-      <Tabs defaultValue="current" className="w-full">
+      <Tabs defaultValue="bookings" className="w-full" onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-3 mb-6">
-          <TabsTrigger value="current">Current</TabsTrigger>
+          <TabsTrigger value="bookings">Bookings</TabsTrigger>
           <TabsTrigger value="applications">Applications</TabsTrigger>
           <TabsTrigger value="history">History</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="current">
+        <TabsContent value="bookings">
           <div className="space-y-4">
-            {currentWorks.map((work) => (
-              <div 
-                key={work.id} 
-                className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow"
+            {bookings.map((booking) => (
+              <div
+                key={booking.id}
+                className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:border-gray-200 transition-all duration-200"
               >
-                <div className="p-4">
-                  <div className="flex items-start gap-4">
-                    <img
-                      src={work.freelancer.image}
-                      alt={work.freelancer.name}
-                      className="w-12 h-12 rounded-full border border-gray-100"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2">
-                        <h3 className="text-base font-semibold text-gray-900 truncate">{work.title}</h3>
-                        <span className={cn(
-                          "px-2.5 py-0.5 rounded-full text-xs font-medium",
-                          work.status === "In Progress" 
-                            ? "bg-green-100 text-green-700"
-                            : "bg-blue-100 text-blue-700"
-                        )}>
-                          {work.status}
-                        </span>
+                <div className="flex items-start gap-4">
+                  <img
+                    src={booking.image}
+                    alt={booking.provider}
+                    className="w-16 h-16 rounded-full border-2 border-[#FF8A3D]"
+                  />
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-semibold text-gray-900">{booking.service}</h3>
+                      <span className="text-sm font-medium text-[#FF8A3D]">
+                        {booking.price}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-600">{booking.provider}</p>
+                    <div className="flex flex-col gap-2 mt-2 text-sm text-gray-500">
+                      <div className="flex items-center">
+                        <Calendar className="w-4 h-4 mr-2" />
+                        {booking.date} at {booking.time}
                       </div>
-                      
-                      <div className="mt-1 flex items-center text-sm text-gray-600">
-                        <span className="truncate">{work.freelancer.name}</span>
-                        <span className="mx-2">•</span>
-                        <Star className="w-4 h-4 text-[#FF8A3D] fill-current" />
-                        <span className="ml-1">{work.freelancer.rating}</span>
+                      <div className="flex items-center">
+                        <MapPin className="w-4 h-4 mr-2" />
+                        {booking.location}
                       </div>
-
-                      <div className="mt-3 grid grid-cols-2 gap-2 text-sm text-gray-500">
-                        <div className="flex items-center">
-                          <Calendar className="w-4 h-4 mr-1.5 flex-shrink-0" />
-                          <span className="truncate">{work.startDate}</span>
-                        </div>
-                        <div className="flex items-center">
-                          <MapPin className="w-4 h-4 mr-1.5 flex-shrink-0" />
-                          <span className="truncate">{work.location}</span>
-                        </div>
-                      </div>
-
-                      <div className="mt-3 flex items-center justify-between">
-                        <span className="text-[#FF8A3D] font-semibold">{work.price}</span>
-                        <button className="inline-flex items-center text-sm font-medium text-gray-600 hover:text-gray-900">
-                          View Details
-                          <ChevronRight className="w-4 h-4 ml-1" />
-                        </button>
-                      </div>
+                    </div>
+                    <div className="mt-3 flex gap-2">
+                      {booking.status === 'upcoming' && (
+                        <>
+                          <button className="flex-1 bg-[#FF8A3D] hover:bg-[#ff7a24] text-white py-2 px-4 rounded-lg transition-colors">
+                            Reschedule
+                          </button>
+                          <button className="flex-1 border border-gray-200 text-gray-700 hover:bg-gray-50 py-2 px-4 rounded-lg transition-colors">
+                            Cancel
+                          </button>
+                        </>
+                      )}
+                      {booking.status === 'completed' && (
+                        <>
+                          <button className="flex-1 bg-[#FF8A3D] hover:bg-[#ff7a24] text-white py-2 px-4 rounded-lg transition-colors">
+                            Rate & Review
+                          </button>
+                          <button className="flex-1 border border-gray-200 text-gray-700 hover:bg-gray-50 py-2 px-4 rounded-lg transition-colors">
+                            Book Again
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>

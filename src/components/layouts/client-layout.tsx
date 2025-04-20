@@ -1,7 +1,10 @@
+"use client"
+
 import { ReactNode } from "react"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
-import { Home, Search, PlusCircle, Calendar, User } from "lucide-react"
+import { Home, Briefcase, PlusCircle, MessageSquare, User } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 interface ClientLayoutProps {
   children: ReactNode
@@ -9,6 +12,12 @@ interface ClientLayoutProps {
 }
 
 export default function ClientLayout({ children, className }: ClientLayoutProps) {
+  const router = useRouter();
+
+  const handleSwitchToFreelancer = () => {
+    router.push('/freelancer');
+  };
+
   return (
     <div className={cn("min-h-screen bg-background flex flex-col", className)}>
       <main className="flex-1 flex flex-col">
@@ -23,18 +32,25 @@ export default function ClientLayout({ children, className }: ClientLayoutProps)
               <Home className="w-5 h-5" />
               <span className="text-xs mt-0.5">Home</span>
             </Link>
+            <Link href="/client/hires" className="flex flex-col items-center">
+              <Briefcase className="w-5 h-5" />
+              <span className="text-xs mt-0.5">Hires</span>
+            </Link>
             <Link href="/client/post" className="flex flex-col items-center">
               <PlusCircle className="w-5 h-5" />
               <span className="text-xs mt-0.5">Post</span>
             </Link>
-            <Link href="/client/bookings" className="flex flex-col items-center">
-              <Calendar className="w-5 h-5" />
-              <span className="text-xs mt-0.5">Bookings</span>
+            <Link href="/client/inbox" className="flex flex-col items-center">
+              <MessageSquare className="w-5 h-5" />
+              <span className="text-xs mt-0.5">Inbox</span>
             </Link>
-            <Link href="/client/profile" className="flex flex-col items-center">
+            <button 
+              onClick={handleSwitchToFreelancer}
+              className="flex flex-col items-center"
+            >
               <User className="w-5 h-5" />
-              <span className="text-xs mt-0.5">Profile</span>
-            </Link>
+              <span className="text-xs mt-0.5">Work & Earn</span>
+            </button>
           </div>
         </div>
       </nav>
