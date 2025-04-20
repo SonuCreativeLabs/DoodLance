@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Star, CheckCircle } from "lucide-react"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 interface FreelancerCardProps {
   id: string
@@ -38,11 +39,10 @@ export default function FreelancerCard({
         <div className="flex items-start gap-4">
           {/* Avatar and Basic Info */}
           <div className="relative">
-            <img
-              src={avatar}
-              alt={name}
-              className="w-16 h-16 rounded-full object-cover"
-            />
+            <Avatar size="lg">
+              <AvatarImage src={avatar} alt={name} />
+              <AvatarFallback>{name.charAt(0)}</AvatarFallback>
+            </Avatar>
             {isVerified && (
               <CheckCircle className="absolute -bottom-1 -right-1 w-5 h-5 text-green-500 bg-white rounded-full" />
             )}
