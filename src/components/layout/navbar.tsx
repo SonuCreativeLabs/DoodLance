@@ -4,37 +4,37 @@ import { Button } from "@/components/ui/button"
 
 export function Navbar() {
   return (
-    <nav className="bg-navy-900 text-white">
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
+    <nav className="bg-white border-b border-gray-200 h-14">
+      <div className="h-full px-4">
+        <div className="flex items-center justify-between h-full">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
-            <Mouse className="w-8 h-8 text-amber-500" />
-            <span className="text-xl font-bold">SkilledMice</span>
+            <Mouse className="w-6 h-6 text-[#FF8A3D]" />
+            <span className="text-lg font-semibold text-gray-800">SkilledMice</span>
           </Link>
 
           {/* Navigation Links */}
           <div className="hidden md:flex items-center space-x-8">
-            <Link href="/" className="hover:text-amber-500 transition-colors">
+            <Link href="/" className="text-gray-600 hover:text-[#FF8A3D] transition-colors">
               Home
             </Link>
-            <Link href="/hires" className="hover:text-amber-500 transition-colors">
+            <Link href="/hires" className="text-gray-600 hover:text-[#FF8A3D] transition-colors">
               Hires
             </Link>
-            <Link href="/post" className="hover:text-amber-500 transition-colors">
+            <Link href="/post" className="text-gray-600 hover:text-[#FF8A3D] transition-colors">
               Post
             </Link>
-            <Link href="/inbox" className="hover:text-amber-500 transition-colors">
+            <Link href="/inbox" className="text-gray-600 hover:text-[#FF8A3D] transition-colors">
               Inbox
             </Link>
           </div>
 
           {/* Auth Buttons */}
-          <div className="flex items-center space-x-4">
-            <Button variant="outline" className="border-white/20 text-white hover:bg-white/10">
+          <div className="flex items-center space-x-3">
+            <Button variant="outline" size="sm" className="border-gray-200 text-gray-700 hover:bg-gray-50">
               Sign In
             </Button>
-            <Button className="bg-amber-500 hover:bg-amber-600 text-white">
+            <Button size="sm" className="bg-[#FF8A3D] hover:bg-[#FF8A3D]/90 text-white">
               Sign Up
             </Button>
           </div>

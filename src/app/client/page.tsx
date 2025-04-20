@@ -107,13 +107,13 @@ export default function ClientHome() {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="bg-white shadow-sm py-4"
+        className="bg-white shadow-sm"
       >
-        <div className="container mx-auto px-4">
+        <div className="px-4 py-3">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Welcome back, John!</h1>
-              <div className="flex items-center text-gray-600 mt-1">
+              <h1 className="text-xl font-semibold text-gray-900">Welcome back, John!</h1>
+              <div className="flex items-center text-gray-600 mt-0.5">
                 <MapPin className="w-4 h-4 mr-1" />
                 <span>San Francisco, CA</span>
               </div>

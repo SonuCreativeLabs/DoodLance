@@ -11,36 +11,36 @@ interface ClientLayoutProps {
 export default function ClientLayout({ children, className }: ClientLayoutProps) {
   return (
     <div className={cn("min-h-screen bg-background flex flex-col", className)}>
-      <main className="container py-6 flex-1">
+      <main className="flex-1 flex flex-col">
         {children}
       </main>
       
       {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-4 px-4">
-        <div className="container mx-auto">
+      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200">
+        <div className="px-4 py-2">
           <div className="flex justify-around items-center">
             <Link href="/client" className="flex flex-col items-center">
-              <Home className="w-6 h-6" />
-              <span className="text-xs mt-1">Home</span>
+              <Home className="w-5 h-5" />
+              <span className="text-xs mt-0.5">Home</span>
             </Link>
             <Link href="/client/post" className="flex flex-col items-center">
-              <PlusCircle className="w-6 h-6" />
-              <span className="text-xs mt-1">Post</span>
+              <PlusCircle className="w-5 h-5" />
+              <span className="text-xs mt-0.5">Post</span>
             </Link>
             <Link href="/client/bookings" className="flex flex-col items-center">
-              <Calendar className="w-6 h-6" />
-              <span className="text-xs mt-1">Bookings</span>
+              <Calendar className="w-5 h-5" />
+              <span className="text-xs mt-0.5">Bookings</span>
             </Link>
             <Link href="/client/profile" className="flex flex-col items-center">
-              <User className="w-6 h-6" />
-              <span className="text-xs mt-1">Profile</span>
+              <User className="w-5 h-5" />
+              <span className="text-xs mt-0.5">Profile</span>
             </Link>
           </div>
         </div>
       </nav>
       
       {/* Add padding to account for fixed bottom nav */}
-      <div className="h-16" />
+      <div className="h-14" />
     </div>
   )
 } 

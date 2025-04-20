@@ -2,8 +2,8 @@
 
 :root {
   /* Base colors */
-  --background: #ffffff;
-  --foreground: #000000;
+  --background: #F8F9FA;  /* Very light grey background */
+  --foreground: #4A5568;
   
   /* Primary colors */
   --primary: #2563eb;
@@ -15,30 +15,30 @@
   
   /* Accent colors */
   --accent: #f1f5f9;
-  --accent-foreground: #0f172a;
+  --accent-foreground: #4A5568;
   
   /* UI Elements */
   --card-background: #ffffff;
-  --card-foreground: #0f172a;
+  --card-foreground: #4A5568;
   --nav-background: #ffffff;
-  --nav-foreground: #4b5563;
+  --nav-foreground: #64748b;
   --nav-active: #2563eb;
-  --search-background: #f8fafc;
-  --search-placeholder: #64748b;
-  --search-text: #0f172a;
+  --search-background: #ffffff;
+  --search-placeholder: #94a3b8;
+  --search-text: #4A5568;
   
   /* Service cards */
   --service-card-bg: #ffffff;
-  --service-card-text: #0f172a;
+  --service-card-text: #4A5568;
   --service-card-hover: rgba(255, 255, 255, 0.95);
   --service-card-border: #e2e8f0;
-  --service-card-shadow: rgba(0, 0, 0, 0.1);
+  --service-card-shadow: rgba(0, 0, 0, 0.05);
   
   /* States */
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
   --border: #e2e8f0;
-  --input: #e2e8f0;
+  --input: #f1f5f9;
   --ring: #2563eb;
 }
 
@@ -52,43 +52,43 @@
 @media (prefers-color-scheme: dark) {
   :root {
     /* Base colors */
-    --background: #0f172a;
-    --foreground: #f8fafc;
+    --background: #F8F9FA;  /* Keeping light theme for better UX */
+    --foreground: #4A5568;
     
     /* Primary colors */
     --primary: #60a5fa;
-    --primary-foreground: #0f172a;
+    --primary-foreground: #ffffff;
     
     /* Secondary colors */
     --secondary: #94a3b8;
-    --secondary-foreground: #0f172a;
+    --secondary-foreground: #ffffff;
     
     /* Accent colors */
-    --accent: #1e293b;
-    --accent-foreground: #f8fafc;
+    --accent: #f1f5f9;
+    --accent-foreground: #4A5568;
     
     /* UI Elements */
-    --card-background: #1e293b;
-    --card-foreground: #f8fafc;
-    --nav-background: #0f172a;
-    --nav-foreground: #94a3b8;
+    --card-background: #ffffff;
+    --card-foreground: #4A5568;
+    --nav-background: #ffffff;
+    --nav-foreground: #64748b;
     --nav-active: #60a5fa;
-    --search-background: #1e293b;
+    --search-background: #ffffff;
     --search-placeholder: #94a3b8;
-    --search-text: #f8fafc;
+    --search-text: #4A5568;
     
     /* Service cards */
-    --service-card-bg: #1e293b;
-    --service-card-text: #f8fafc;
-    --service-card-hover: rgba(30, 41, 59, 0.95);
-    --service-card-border: #2d3748;
-    --service-card-shadow: rgba(0, 0, 0, 0.25);
+    --service-card-bg: #ffffff;
+    --service-card-text: #4A5568;
+    --service-card-hover: rgba(255, 255, 255, 0.95);
+    --service-card-border: #e2e8f0;
+    --service-card-shadow: rgba(0, 0, 0, 0.05);
     
     /* States */
     --destructive: #f87171;
-    --destructive-foreground: #0f172a;
-    --border: #1e293b;
-    --input: #1e293b;
+    --destructive-foreground: #ffffff;
+    --border: #e2e8f0;
+    --input: #f1f5f9;
     --ring: #60a5fa;
   }
 }

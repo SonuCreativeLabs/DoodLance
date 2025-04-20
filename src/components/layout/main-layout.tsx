@@ -9,9 +9,9 @@ interface MainLayoutProps {
 
 export default function MainLayout({ children }: MainLayoutProps) {
   return (
-    <div className="min-h-screen bg-[#F5F5F5]">
+    <div className="min-h-screen bg-[#F5F5F5] flex flex-col">
       <Navbar />
-      <main className="pb-16">
+      <main className="flex-1">
         {children}
       </main>
       <BottomNav />
