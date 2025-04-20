@@ -22,12 +22,12 @@ interface ChatListProps {
 
 export function ChatList({ chats, selectedChatId, onSelectChat }: ChatListProps) {
   return (
-    <div className="space-y-2 px-4">
+    <div className="space-y-2">
       {chats.map((chat) => (
         <div
           key={chat.id}
           onClick={() => onSelectChat(chat.id)}
-          className={`w-full p-4 flex items-start gap-4 hover:bg-gray-50 rounded-2xl border border-gray-100 cursor-pointer transition-colors ${
+          className={`mx-4 p-4 flex items-start gap-4 hover:bg-gray-50 rounded-2xl border border-gray-100 cursor-pointer transition-colors ${
             selectedChatId === chat.id ? 'bg-gray-50' : 'bg-white'
           }`}
         >

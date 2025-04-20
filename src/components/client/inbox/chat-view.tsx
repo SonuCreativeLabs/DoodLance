@@ -1,17 +1,17 @@
 'use client';
 
 import { useState } from 'react';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Send, Paperclip, ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Paperclip, Send } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 interface Message {
   id: string;
   content: string;
   timestamp: Date;
-  sender: 'client' | 'freelancer';
+  sender: 'user' | 'other';
   status: 'sent' | 'delivered' | 'read';
 }
 
@@ -28,23 +28,23 @@ const mockMessages: Record<string, Message[]> = {
   '1': [
     {
       id: '1',
-      content: 'Hi, I need help with my bathroom plumbing.',
+      content: 'Hi, I saw your profile and I think you\'d be perfect for our project.',
       timestamp: new Date(Date.now() - 1000 * 60 * 60), // 1 hour ago
-      sender: 'client',
+      sender: 'other',
       status: 'read'
     },
     {
       id: '2',
-      content: 'I can help you with that. What specific issues are you having?',
+      content: 'Thanks! I\'d love to hear more about it.',
       timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
-      sender: 'freelancer',
+      sender: 'user',
       status: 'read'
     },
     {
       id: '3',
-      content: 'The sink is leaking and the water pressure is low.',
+      content: 'Can you start the project next week?',
       timestamp: new Date(Date.now() - 1000 * 60 * 5), // 5 minutes ago
-      sender: 'client',
+      sender: 'other',
       status: 'delivered'
     }
   ]
@@ -68,7 +68,7 @@ export function ChatView({
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-[100vh] fixed inset-0">
       {/* Chat Header */}
       <div className="flex items-center gap-3 p-4 border-b bg-white sticky top-0 z-10">
         <Button
@@ -95,27 +95,27 @@ export function ChatView({
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
         {messages.map((message) => (
           <div
             key={message.id}
-            className={`flex ${message.sender === 'client' ? 'justify-end' : 'justify-start'}`}
+            className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             <div
               className={`max-w-[70%] rounded-lg p-3 ${
-                message.sender === 'client'
-                  ? 'bg-[#FF8A3D] text-white'
-                  : 'bg-gray-100 text-gray-900'
+                message.sender === 'user'
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-white text-gray-900 shadow-sm'
               }`}
             >
               <p>{message.content}</p>
               <div
                 className={`text-xs mt-1 ${
-                  message.sender === 'client' ? 'text-orange-100' : 'text-gray-500'
+                  message.sender === 'user' ? 'text-blue-100' : 'text-gray-500'
                 }`}
               >
                 {formatDistanceToNow(message.timestamp, { addSuffix: true })}
-                {message.sender === 'client' && (
+                {message.sender === 'user' && (
                   <span className="ml-2">
                     {message.status === 'sent' && '✓'}
                     {message.status === 'delivered' && '✓✓'}
@@ -129,7 +129,7 @@ export function ChatView({
       </div>
 
       {/* Message Input */}
-      <div className="p-4 border-t bg-white">
+      <div className="p-4 border-t bg-white sticky bottom-0 z-10">
         <div className="flex gap-2">
           <Button variant="ghost" size="sm" className="shrink-0">
             <Paperclip className="h-5 w-5" />

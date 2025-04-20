@@ -51,60 +51,56 @@ export default function InboxPage() {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] bg-white">
-      <div className="flex-1 overflow-hidden">
-        <div className="h-full grid md:grid-cols-[350px_1fr] relative">
-          {/* Chat List */}
-          <div
-            className={`h-full overflow-y-auto bg-white transition-transform duration-300 absolute md:relative inset-0 ${
-              selectedChatId ? "-translate-x-full md:translate-x-0" : "translate-x-0"
-            }`}
-          >
-            <div className="sticky top-0 z-10 p-4 bg-white">
-              <h1 className="text-2xl font-semibold text-[#4A5568]">Messages</h1>
-            </div>
-            <div className="pb-4">
-              <ChatList
-                chats={mockChats}
-                selectedChatId={selectedChatId}
-                onSelectChat={setSelectedChatId}
-              />
-            </div>
+    <div className="flex-1 overflow-hidden">
+      <div className="relative h-full">
+        {/* Chat List */}
+        <div
+          className={`absolute inset-0 w-full h-full bg-white transition-transform duration-300 ${
+            selectedChatId ? "-translate-x-full md:translate-x-0" : "translate-x-0"
+          }`}
+        >
+          <div className="sticky top-0 z-10 p-4 bg-white">
+            <h1 className="text-2xl font-semibold text-[#4A5568]">Messages</h1>
           </div>
+          <ChatList
+            chats={mockChats}
+            selectedChatId={selectedChatId}
+            onSelectChat={setSelectedChatId}
+          />
+        </div>
 
-          {/* Chat View */}
-          <div
-            className={`h-full bg-white transition-transform duration-300 absolute md:relative inset-0 ${
-              selectedChatId ? "translate-x-0" : "translate-x-full md:translate-x-0"
-            }`}
-          >
-            {selectedChat ? (
-              <>
-                <div className="absolute top-4 left-4 z-10">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleBackClick}
-                    className="h-8 w-8 md:hidden"
-                  >
-                    <ArrowLeft className="h-5 w-5" />
-                  </Button>
-                </div>
-                <ChatView
-                  chatId={selectedChat.id}
-                  recipientName={selectedChat.recipientName}
-                  recipientAvatar={selectedChat.recipientAvatar}
-                  recipientJobTitle={selectedChat.recipientJobTitle}
-                  online={selectedChat.online}
-                  onBack={handleBackClick}
-                />
-              </>
-            ) : (
-              <div className="h-full flex items-center justify-center text-gray-500">
-                <p>Select a conversation to start messaging</p>
+        {/* Chat View */}
+        <div
+          className={`absolute inset-0 w-full h-full bg-white transition-transform duration-300 ${
+            selectedChatId ? "translate-x-0" : "translate-x-full"
+          } ${selectedChatId ? "md:relative md:w-auto md:inset-auto" : ""}`}
+        >
+          {selectedChat ? (
+            <>
+              <div className="absolute top-4 left-4 z-10 md:hidden">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleBackClick}
+                  className="h-8 w-8"
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
               </div>
-            )}
-          </div>
+              <ChatView
+                chatId={selectedChat.id}
+                recipientName={selectedChat.recipientName}
+                recipientAvatar={selectedChat.recipientAvatar}
+                recipientJobTitle={selectedChat.recipientJobTitle}
+                online={selectedChat.online}
+                onBack={handleBackClick}
+              />
+            </>
+          ) : (
+            <div className="h-full flex items-center justify-center text-gray-500">
+              <p>Select a conversation to start messaging</p>
+            </div>
+          )}
         </div>
       </div>
     </div>
