@@ -69,7 +69,7 @@ Here's a **phase-by-phase prompt blueprint** to systematically build our app:
 - **List View**: Filterable job cards (price, distance, ratings)  
 - Radius selector (1-10km range) and category filters"
 
-#### **Step 2.3 - Application Management**  
+#### **Step 2.3 - Application Job Management**  
 "Develop job tracking dashboard with:  
 - **Upcoming** tab: Accepted jobs with client details  
 - **Applications** tab: Status pipeline (Applied/Interviewing/Hired)  
