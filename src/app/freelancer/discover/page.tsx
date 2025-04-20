@@ -1,10 +1,10 @@
-"use client"
+'use client';
 
-import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
-import LocalMap from '@/components/map/local-map'
-import NeighborhoodFeed from '@/components/feed/neighborhood-feed'
-import { categorizeJob } from '@/lib/services/job-categorization'
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { LocalMap } from '@/components/map/local-map';
+import { NeighborhoodFeed } from '@/components/feed/neighborhood-feed';
+import { categorizeJob } from '@/lib/services/job-categorization';
 
 // Mock data for demonstration
 const mockGigs = [
@@ -54,40 +54,39 @@ const mockGigs = [
       completedJobs: 8
     }
   }
-]
+];
 
 export default function DiscoverPage() {
-  const [selectedGig, setSelectedGig] = useState<string | null>(null)
-  const [viewMode, setViewMode] = useState<'map' | 'feed'>('map')
-  const [gigs, setGigs] = useState(mockGigs)
+  const [selectedGig, setSelectedGig] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'map' | 'feed'>('map');
+  const [gigs, setGigs] = useState(mockGigs);
 
   useEffect(() => {
     // Categorize jobs when they're loaded
     const categorizeJobs = async () => {
       const categorizedGigs = await Promise.all(
         gigs.map(async (gig) => {
-          const categories = await categorizeJob(gig.title, gig.description)
-          const topCategory = categories[0]?.label || gig.category
+          const category = await categorizeJob(gig.description);
           return {
             ...gig,
-            category: topCategory
-          }
+            category
+          };
         })
-      )
-      setGigs(categorizedGigs)
-    }
+      );
+      setGigs(categorizedGigs);
+    };
 
-    categorizeJobs()
-  }, [])
+    categorizeJobs();
+  }, []);
 
   const handleGigClick = (gig: any) => {
-    setSelectedGig(gig.id)
-    setViewMode('map')
-  }
+    setSelectedGig(gig.id);
+    setViewMode('map');
+  };
 
   const handleMarkerClick = (gigId: string) => {
-    setSelectedGig(gigId)
-  }
+    setSelectedGig(gigId);
+  };
 
   return (
     <div className="h-full flex flex-col">
@@ -138,11 +137,12 @@ export default function DiscoverPage() {
           >
             <NeighborhoodFeed
               gigs={gigs}
-              onGigClick={handleGigClick}
+              onGigSelect={handleGigClick}
+              selectedGigId={selectedGig}
             />
           </motion.div>
         )}
       </div>
     </div>
-  )
+  );
 } 
