@@ -1,6 +1,6 @@
 "use client"
 
-import BottomNav from './bottom-nav'
+import { BottomNav } from './bottom-nav'
 import { Navbar } from './navbar'
 
 interface MainLayoutProps {

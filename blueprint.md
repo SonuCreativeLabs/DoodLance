@@ -4,6 +4,9 @@ Here's a **phase-by-phase prompt blueprint** to systematically build our app:
 
 ### **Phase 1: MVP Client Interface**  
 **Objective**: Build core client-facing features for job posting/hiring  
+###Client Interface
+"Navigation Structure:
+"Home" | "Hires" | "Post" | "Inbox" | "Work & Earn""
 
 #### **Step 1.1 - Welcome & Auth Flow**  
 "Design a splash screen with app logo animation (3s duration) followed by phone number input with country code selector. Implement OTP verification flow with resend option. After OTP confirmation, show role selection screen with two large buttons: 'Hire' (Client) and 'Work' (Freelancer)."
@@ -43,14 +46,14 @@ Here's a **phase-by-phase prompt blueprint** to systematically build our app:
 - Profile migration wizard for existing jobs  
 - Return-to-client toggle confirmation"
 
-###Client Interface
-"Navigation Structure:
-"Home" | "Hires" | "Post" | "Inbox" | "Work & Earn""
 
 ---
 
 ### **Phase 2: MVP Freelancer Interface**  
-**Objective**: Enable freelancers to find/manage work  
+**Objective**: Enable freelancers to find/manage work 
+###Freelancer Interface
+"Navigation Structure:
+"Feed" | "Discover" | "Jobs" | "Inbox" | "Profile"" 
 
 #### **Step 2.1 - Freelancer Home Feed**  
 "Create a feed showing:  
@@ -79,9 +82,6 @@ Here's a **phase-by-phase prompt blueprint** to systematically build our app:
 - Portfolio gallery (image/video upload)  
 - Client rating display (1-5 stars)"
 
-###Freelancer Interface
-"Navigation Structure:
-"Feed" | "Discover" | "Jobs" | "Inbox" | "Profile""
 ---
 
 ### **Phase 3: AI Integration**  
