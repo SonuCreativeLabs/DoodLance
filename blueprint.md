@@ -26,7 +26,7 @@ Here's a **phase-by-phase prompt blueprint** to systematically build our app:
 
 #### **Step 1.4 - Hires Management**  
 "Develop a hires dashboard with:  
-- **Active** tab: Ongoing jobs with progress bars  
+- **Active** tab: current and upcoming works 
 - **Applications** tab: Tinder-style and accept/reject applicant cards (swipe left/right)  
 - **History** tab: Past hires with rating/review system  
 - Status filters (Pending/Approved/Completed)"

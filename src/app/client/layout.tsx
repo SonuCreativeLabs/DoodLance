@@ -3,10 +3,10 @@
 import { ReactNode } from "react"
 import ClientLayout from "@/components/layouts/client-layout"
 
-interface RootLayoutProps {
+interface ClientRootLayoutProps {
   children: ReactNode
 }
 
-export default function Layout({ children }: RootLayoutProps) {
+export default function ClientRootLayout({ children }: ClientRootLayoutProps) {
   return <ClientLayout>{children}</ClientLayout>
 } 
