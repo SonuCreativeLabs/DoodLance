@@ -21,13 +21,13 @@ export default function ClientLayout({ children, className }: ClientLayoutProps)
   };
 
   return (
-    <div className={cn("min-h-screen bg-background flex flex-col", className)}>
+    <div className={cn("min-h-screen bg-[#F8F9FA] flex flex-col", className)}>
       <main className="flex-1 flex flex-col pb-16">
         {children}
       </main>
       
       {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100">
+      <nav className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md border-t border-gray-100/50">
         <div className="max-w-screen-xl mx-auto">
           <div className="grid grid-cols-12 items-center h-16">
             {/* Main Navigation Items */}
@@ -38,7 +38,7 @@ export default function ClientLayout({ children, className }: ClientLayoutProps)
               >
                 <div className={cn(
                   "flex flex-col items-center",
-                  pathname === "/client" ? "text-[#FF8A3D]" : "text-gray-400"
+                  pathname === "/client" ? "text-purple-500" : "text-gray-400"
                 )}>
                   <Home className="h-6 w-6" />
                   <span className="text-[12px] mt-1 font-medium">Home</span>
@@ -51,7 +51,7 @@ export default function ClientLayout({ children, className }: ClientLayoutProps)
               >
                 <div className={cn(
                   "flex flex-col items-center",
-                  pathname === "/client/hires" ? "text-[#FF8A3D]" : "text-gray-400"
+                  pathname === "/client/hires" ? "text-purple-500" : "text-gray-400"
                 )}>
                   <Briefcase className="h-6 w-6" />
                   <span className="text-[12px] mt-1 font-medium">Hires</span>
@@ -64,7 +64,7 @@ export default function ClientLayout({ children, className }: ClientLayoutProps)
               >
                 <div className={cn(
                   "flex flex-col items-center",
-                  pathname === "/client/post" ? "text-[#FF8A3D]" : "text-gray-400"
+                  pathname === "/client/post" ? "text-purple-500" : "text-gray-400"
                 )}>
                   <PlusCircle className="h-6 w-6" />
                   <span className="text-[12px] mt-1 font-medium">Post</span>
@@ -77,7 +77,7 @@ export default function ClientLayout({ children, className }: ClientLayoutProps)
               >
                 <div className={cn(
                   "flex flex-col items-center",
-                  pathname === "/client/inbox" ? "text-[#FF8A3D]" : "text-gray-400"
+                  pathname === "/client/inbox" ? "text-purple-500" : "text-gray-400"
                 )}>
                   <MessageSquare className="h-6 w-6" />
                   <span className="text-[12px] mt-1 font-medium">Inbox</span>
@@ -91,7 +91,7 @@ export default function ClientLayout({ children, className }: ClientLayoutProps)
                 onClick={handleSwitchToFreelancer}
                 className="flex items-center h-16 w-full"
               >
-                <div className="flex items-center justify-end h-full w-full bg-gradient-to-r from-purple-600 to-purple-400 rounded-l-full px-4">
+                <div className="flex items-center justify-end h-full w-full bg-gradient-to-r from-purple-600 via-purple-500 to-purple-400 rounded-l-full px-4 shadow-lg hover:shadow-xl transition-all duration-300 hover:from-purple-700 hover:via-purple-600 hover:to-purple-500">
                   <div className="flex flex-col items-end">
                     <span className="text-[14px] font-medium text-white/90 leading-tight mb-[1px] pr-[1px]">Work &</span>
                     <div className="flex items-center">

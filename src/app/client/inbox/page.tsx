@@ -51,16 +51,16 @@ export default function InboxPage() {
   }
 
   return (
-    <div className="flex-1 overflow-hidden">
+    <div className="flex-1 overflow-hidden bg-gradient-to-br from-gray-50 to-purple-50/30">
       <div className="relative h-full">
         {/* Chat List */}
         <div
-          className={`absolute inset-0 w-full h-full bg-white transition-transform duration-300 ${
+          className={`absolute inset-0 w-full h-full bg-white/80 backdrop-blur-sm transition-transform duration-300 ${
             selectedChatId ? "-translate-x-full md:translate-x-0" : "translate-x-0"
           }`}
         >
-          <div className="sticky top-0 z-10 p-4 bg-white">
-            <h1 className="text-2xl font-semibold text-[#4A5568]">Messages</h1>
+          <div className="sticky top-0 z-10 p-4 bg-white/80 backdrop-blur-sm border-b border-purple-100/50">
+            <h1 className="text-2xl font-semibold bg-gradient-to-r from-purple-600 to-purple-400 bg-clip-text text-transparent">Messages</h1>
           </div>
           <ChatList
             chats={mockChats}
@@ -71,7 +71,7 @@ export default function InboxPage() {
 
         {/* Chat View */}
         <div
-          className={`absolute inset-0 w-full h-full bg-white transition-transform duration-300 ${
+          className={`absolute inset-0 w-full h-full bg-white/80 backdrop-blur-sm transition-transform duration-300 ${
             selectedChatId ? "translate-x-0" : "translate-x-full"
           } ${selectedChatId ? "md:relative md:w-auto md:inset-auto" : ""}`}
         >
@@ -82,7 +82,7 @@ export default function InboxPage() {
                   variant="ghost"
                   size="sm"
                   onClick={handleBackClick}
-                  className="h-8 w-8"
+                  className="h-8 w-8 hover:bg-purple-50 text-purple-600"
                 >
                   <ArrowLeft className="h-5 w-5" />
                 </Button>
@@ -97,8 +97,8 @@ export default function InboxPage() {
               />
             </>
           ) : (
-            <div className="h-full flex items-center justify-center text-gray-500">
-              <p>Select a conversation to start messaging</p>
+            <div className="h-full flex items-center justify-center">
+              <p className="text-purple-600/80">Select a conversation to start messaging</p>
             </div>
           )}
         </div>

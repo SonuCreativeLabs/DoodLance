@@ -2,44 +2,51 @@
 
 :root {
   /* Base colors */
-  --background: #F8F9FA;  /* Very light grey background */
-  --foreground: #4A5568;
+  --background: #FFFFFF;
+  --foreground: #1A1A1A;
   
   /* Primary colors */
-  --primary: #2563eb;
-  --primary-foreground: #ffffff;
+  --primary: #FF8A3D;
+  --primary-foreground: #FFFFFF;
   
   /* Secondary colors */
-  --secondary: #64748b;
-  --secondary-foreground: #ffffff;
+  --secondary: #FF6B6B;
+  --secondary-foreground: #FFFFFF;
   
   /* Accent colors */
-  --accent: #f1f5f9;
-  --accent-foreground: #4A5568;
+  --accent: #FF8A3D;
+  --accent-foreground: #FFFFFF;
+
+  /* Purple colors */
+  --purple: #6B46C1;
+  --purple-hover: #5B35B0;
+  --purple-light: #8B66D1;
+  --purple-dark: #4C1D95;
+  --purple-darker: #2D1B69;
   
   /* UI Elements */
-  --card-background: #ffffff;
-  --card-foreground: #4A5568;
-  --nav-background: #ffffff;
-  --nav-foreground: #64748b;
-  --nav-active: #2563eb;
-  --search-background: #ffffff;
-  --search-placeholder: #94a3b8;
-  --search-text: #4A5568;
+  --card-background: #FFFFFF;
+  --card-foreground: #1A1A1A;
+  --nav-background: #FFFFFF;
+  --nav-foreground: #4A5568;
+  --nav-active: #FF8A3D;
+  --search-background: #F8F9FA;
+  --search-placeholder: #718096;
+  --search-text: #1A1A1A;
   
   /* Service cards */
-  --service-card-bg: #ffffff;
-  --service-card-text: #4A5568;
-  --service-card-hover: rgba(255, 255, 255, 0.95);
-  --service-card-border: #e2e8f0;
-  --service-card-shadow: rgba(0, 0, 0, 0.05);
+  --service-card-bg: #FFFFFF;
+  --service-card-text: #1A1A1A;
+  --service-card-hover: rgba(255, 138, 61, 0.1);
+  --service-card-border: #F8F9FA;
+  --service-card-shadow: rgba(255, 138, 61, 0.1);
   
   /* States */
-  --destructive: #ef4444;
-  --destructive-foreground: #ffffff;
-  --border: #e2e8f0;
-  --input: #f1f5f9;
-  --ring: #2563eb;
+  --destructive: #F56565;
+  --destructive-foreground: #FFFFFF;
+  --border: #F8F9FA;
+  --input: #F8F9FA;
+  --ring: #FF8A3D;
 }
 
 @theme inline {
@@ -52,44 +59,51 @@
 @media (prefers-color-scheme: dark) {
   :root {
     /* Base colors */
-    --background: #F8F9FA;  /* Keeping light theme for better UX */
-    --foreground: #4A5568;
+    --background: #1A1A1A;
+    --foreground: #FFFFFF;
     
     /* Primary colors */
-    --primary: #60a5fa;
-    --primary-foreground: #ffffff;
+    --primary: #FF8A3D;
+    --primary-foreground: #FFFFFF;
     
     /* Secondary colors */
-    --secondary: #94a3b8;
-    --secondary-foreground: #ffffff;
+    --secondary: #FF6B6B;
+    --secondary-foreground: #FFFFFF;
     
     /* Accent colors */
-    --accent: #f1f5f9;
-    --accent-foreground: #4A5568;
+    --accent: #FF8A3D;
+    --accent-foreground: #FFFFFF;
+
+    /* Purple colors */
+    --purple: #8B66D1;
+    --purple-hover: #6B46C1;
+    --purple-light: #9B76E1;
+    --purple-dark: #4C1D95;
+    --purple-darker: #2D1B69;
     
     /* UI Elements */
-    --card-background: #ffffff;
-    --card-foreground: #4A5568;
-    --nav-background: #ffffff;
-    --nav-foreground: #64748b;
-    --nav-active: #60a5fa;
-    --search-background: #ffffff;
-    --search-placeholder: #94a3b8;
-    --search-text: #4A5568;
+    --card-background: #2D2D2D;
+    --card-foreground: #FFFFFF;
+    --nav-background: #2D2D2D;
+    --nav-foreground: #A0AEC0;
+    --nav-active: #FF8A3D;
+    --search-background: #2D2D2D;
+    --search-placeholder: #A0AEC0;
+    --search-text: #FFFFFF;
     
     /* Service cards */
-    --service-card-bg: #ffffff;
-    --service-card-text: #4A5568;
-    --service-card-hover: rgba(255, 255, 255, 0.95);
-    --service-card-border: #e2e8f0;
-    --service-card-shadow: rgba(0, 0, 0, 0.05);
+    --service-card-bg: #2D2D2D;
+    --service-card-text: #FFFFFF;
+    --service-card-hover: rgba(255, 138, 61, 0.2);
+    --service-card-border: #3D3D3D;
+    --service-card-shadow: rgba(0, 0, 0, 0.2);
     
     /* States */
-    --destructive: #f87171;
-    --destructive-foreground: #ffffff;
-    --border: #e2e8f0;
-    --input: #f1f5f9;
-    --ring: #60a5fa;
+    --destructive: #FC8181;
+    --destructive-foreground: #FFFFFF;
+    --border: #3D3D3D;
+    --input: #2D2D2D;
+    --ring: #FF8A3D;
   }
 }
 
@@ -97,7 +111,7 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
 }
 
 /* Component-specific styles */

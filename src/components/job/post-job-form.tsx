@@ -52,19 +52,34 @@ export default function PostJobForm() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="bg-white rounded-xl shadow-md p-6"
+      className="bg-white/90 backdrop-blur-md rounded-xl shadow-xl border border-purple-100/50 p-8 relative overflow-hidden group"
     >
-      <div className="space-y-6">
+      {/* Decorative elements */}
+      <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-purple-200/20 to-purple-300/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+      <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-purple-200/20 to-purple-300/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
+      
+      {/* Hover effect */}
+      <div className="absolute inset-0 bg-gradient-to-br from-purple-50/50 to-purple-100/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+      
+      <div className="space-y-8 relative">
+        {/* Form header */}
+        <div className="border-b border-purple-100 pb-4">
+          <h2 className="text-xl font-semibold bg-gradient-to-r from-purple-700 to-purple-500 bg-clip-text text-transparent">Create a New Job Posting</h2>
+          <p className="text-purple-600/80 text-sm mt-1">Fill in the details below to find the perfect freelancer for your job</p>
+        </div>
+        
         {/* Category Selection */}
         <div>
-          <Label htmlFor="category">Service Category</Label>
+          <Label htmlFor="category" className="text-purple-900 font-medium flex items-center gap-2">
+            <Tag className="h-4 w-4 text-purple-500" />
+            Service Category
+          </Label>
           <div className="relative mt-2">
-            <Tag className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
             <select
               id="category"
               value={selectedCategory}
               onChange={handleCategoryChange}
-              className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-200 bg-transparent text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#FF8A3D]"
+              className="w-full pl-10 pr-4 py-3 rounded-lg border border-purple-200 bg-white/90 backdrop-blur-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-purple-400 focus:border-purple-300 transition-all duration-200 shadow-sm hover:shadow-md"
             >
               <option value="">Select a category</option>
               <option value="Plumbing">Plumbing</option>
@@ -77,23 +92,23 @@ export default function PostJobForm() {
 
         {/* Job Title */}
         <div>
-          <Label htmlFor="title">Job Title</Label>
+          <Label htmlFor="title" className="text-purple-900 font-medium">Job Title</Label>
           <Input
             id="title"
             placeholder="e.g., Need a plumber for bathroom repair"
-            className="mt-2"
+            className="mt-2 border-purple-200 focus:border-purple-300 focus:ring-1 focus:ring-purple-400 bg-white/90 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-200 text-gray-900 placeholder:text-gray-500"
           />
         </div>
 
         {/* Description with AI Assist */}
         <div>
           <div className="flex items-center justify-between mb-2">
-            <Label htmlFor="description">Job Description</Label>
+            <Label htmlFor="description" className="text-purple-900 font-medium">Job Description</Label>
             <Button
               variant="outline"
               size="sm"
               onClick={handleGenerateDescription}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 border-purple-200 hover:bg-purple-50 text-purple-600 hover:text-purple-700 shadow-sm hover:shadow-md transition-all duration-200"
             >
               <Sparkles className="w-4 h-4" />
               Generate with AI
@@ -104,48 +119,52 @@ export default function PostJobForm() {
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Describe the job requirements, timeline, and any specific needs..."
-            className="min-h-[150px]"
+            className="min-h-[150px] border-purple-200 focus:border-purple-300 focus:ring-1 focus:ring-purple-400 bg-white/90 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-200 text-gray-900 placeholder:text-gray-500"
           />
         </div>
 
         {/* Budget */}
         <div>
           <div className="flex items-center justify-between mb-2">
-            <Label htmlFor="budget">Budget</Label>
+            <Label htmlFor="budget" className="text-purple-900 font-medium flex items-center gap-2">
+              <DollarSign className="h-4 w-4 text-purple-500" />
+              Budget
+            </Label>
             <Button
               variant="outline"
               size="sm"
               onClick={handleBudgetSuggestion}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 border-purple-200 hover:bg-purple-50 text-purple-600 hover:text-purple-700 shadow-sm hover:shadow-md transition-all duration-200"
             >
               <Sparkles className="w-4 h-4" />
               Suggest Budget
             </Button>
           </div>
           <div className="relative">
-            <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
             <Input
               id="budget"
               type="number"
               value={budget}
               onChange={(e) => setBudget(e.target.value)}
               placeholder="Enter your budget"
-              className="pl-10"
+              className="pl-10 border-purple-200 focus:border-purple-300 focus:ring-1 focus:ring-purple-400 bg-white/90 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-200 text-gray-900 placeholder:text-gray-500"
             />
           </div>
         </div>
 
         {/* Location */}
         <div>
-          <Label htmlFor="location">Location</Label>
+          <Label htmlFor="location" className="text-purple-900 font-medium flex items-center gap-2">
+            <MapPin className="h-4 w-4 text-purple-500" />
+            Location
+          </Label>
           <div className="relative mt-2">
-            <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
             <Input
               id="location"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               placeholder="Enter location or drop pin on map"
-              className="pl-10"
+              className="pl-10 border-purple-200 focus:border-purple-300 focus:ring-1 focus:ring-purple-400 bg-white/90 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-200 text-gray-900 placeholder:text-gray-500"
             />
           </div>
         </div>
@@ -153,33 +172,39 @@ export default function PostJobForm() {
         {/* Timeline */}
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <Label htmlFor="startDate">Start Date</Label>
+            <Label htmlFor="startDate" className="text-purple-900 font-medium flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-purple-500" />
+              Start Date
+            </Label>
             <div className="relative mt-2">
-              <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <Input
                 id="startDate"
                 type="date"
-                className="pl-10"
+                className="pl-10 border-purple-200 focus:border-purple-300 focus:ring-1 focus:ring-purple-400 bg-white/90 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-200 text-gray-900"
               />
             </div>
           </div>
           <div>
-            <Label htmlFor="duration">Duration</Label>
+            <Label htmlFor="duration" className="text-purple-900 font-medium flex items-center gap-2">
+              <Clock className="h-4 w-4 text-purple-500" />
+              Duration
+            </Label>
             <div className="relative mt-2">
-              <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <Input
                 id="duration"
                 placeholder="e.g., 2 hours"
-                className="pl-10"
+                className="pl-10 border-purple-200 focus:border-purple-300 focus:ring-1 focus:ring-purple-400 bg-white/90 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-200 text-gray-900 placeholder:text-gray-500"
               />
             </div>
           </div>
         </div>
 
         {/* Submit Button */}
-        <Button className="w-full bg-[#FF8A3D] hover:bg-[#ff7a24]">
-          Post Job
-        </Button>
+        <div className="pt-4">
+          <Button className="w-full bg-gradient-to-r from-purple-600 via-purple-500 to-purple-400 hover:from-purple-700 hover:via-purple-600 hover:to-purple-500 text-white shadow-lg hover:shadow-xl transition-all duration-300 py-6 text-lg font-medium">
+            Post Job
+          </Button>
+        </div>
       </div>
     </motion.div>
   )
