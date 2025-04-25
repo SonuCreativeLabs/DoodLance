@@ -1,80 +1,54 @@
 "use client"
 
-import { Search, MapPin, Star, Clock, Calendar, User, Briefcase, GraduationCap } from 'lucide-react'
-import MainLayout from '@/components/layout/main-layout'
-import { Button } from '@/components/ui/button'
-import { motion } from 'framer-motion'
-import { cn } from "@/lib/utils"
-
-const serviceCategories = [
-  { name: 'Plumbing', icon: '🔧', color: 'bg-white' },
-  { name: 'Tutoring', icon: '📚', color: 'bg-white' },
-  { name: 'Pet Care', icon: '🐾', color: 'bg-white' },
-  { name: 'Cleaning', icon: '🧹', color: 'bg-white' },
-  { name: 'Coaching', icon: '🎯', color: 'bg-white' },
-  { name: 'More', icon: '➕', color: 'bg-white' },
-]
-
-const featuredProviders = [
-  {
-    id: 1,
-    name: 'John Smith',
-    service: 'Plumbing',
-    rating: 4.8,
-    reviews: 127,
-    image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=John',
-    location: '2.5 km away',
-    responseTime: 'Usually responds in 1 hour',
-  },
-  {
-    id: 2,
-    name: 'Sarah Johnson',
-    service: 'Math Tutoring',
-    rating: 4.9,
-    reviews: 89,
-    image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah',
-    location: '1.8 km away',
-    responseTime: 'Usually responds in 30 mins',
-  },
-  // Add more providers as needed
-]
-
-const AnimatedCard = ({ icon, delay }: { icon: React.ReactNode; delay: number }) => (
-  <motion.div
-    initial={{ scale: 0.8, opacity: 0 }}
-    animate={{ scale: 1, opacity: 1 }}
-    transition={{
-      duration: 0.5,
-      delay,
-      repeat: Infinity,
-      repeatType: "reverse",
-      repeatDelay: 2
-    }}
-    className="bg-white rounded-xl p-4 shadow-lg"
-  >
-    <div className="flex items-center gap-3">
-      <div className="w-10 h-10 bg-sky-100 rounded-full flex items-center justify-center text-sky-600">
-        {icon}
-      </div>
-      <div className="space-y-2">
-        <div className="h-2 w-20 bg-gray-200 rounded animate-pulse"></div>
-        <div className="h-2 w-16 bg-gray-100 rounded animate-pulse"></div>
-      </div>
-    </div>
-  </motion.div>
-)
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { useRole } from '@/contexts/role-context'
 
 export default function Home() {
-  return (
-    <MainLayout>
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-4xl font-bold text-center mb-8">Welcome to SkilledMice</h1>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {serviceCategories.map((category, index) => (
-            <AnimatedCard key={category.name} icon={category.icon} delay={index * 0.2} />
-          ))}
-        </div>
-      </div>
-    </MainLayout>
-  )
-}
+  const router = useRouter()
+  const { role, switchRole } = useRole()
+
+  useEffect(() => {
+    // Check if this is first time after signup
+    const isFirstTimeAfterSignup = sessionStorage.getItem('isNewSignup')
+    const selectedRole = sessionStorage.getItem('selectedRole')
+    
+    if (isFirstTimeAfterSignup === 'true' && selectedRole) {
+      // Clear the first-time flag
+      sessionStorage.removeItem('isNewSignup')
+      
+      // Set the role based on signup selection
+      if (selectedRole !== role) {
+        switchRole()
+      }
+      
+      // Redirect to appropriate interface
+      const redirectPath = selectedRole === 'freelancer' ? '/freelancer' : '/client'
+      // Store as last used interface
+      localStorage.setItem('lastUsedInterface', redirectPath)
+      router.push(redirectPath)
+      return
+    }
+
+    // For subsequent sign-ins, use last used interface
+    const lastUsedInterface = localStorage.getItem('lastUsedInterface')
+    if (lastUsedInterface) {
+      // Ensure role matches the interface
+      const shouldBeFreelancer = lastUsedInterface === '/freelancer'
+      if ((shouldBeFreelancer && role !== 'freelancer') || 
+          (!shouldBeFreelancer && role !== 'client')) {
+        switchRole()
+      }
+      router.push(lastUsedInterface)
+      return
+    }
+
+    // Default fallback (first time ever or no stored preference)
+    const defaultPath = role === 'freelancer' ? '/freelancer' : '/client'
+    localStorage.setItem('lastUsedInterface', defaultPath)
+    router.push(defaultPath)
+  }, [router, role, switchRole])
+
+  // Return null or loading state while redirecting
+  return null
+} 

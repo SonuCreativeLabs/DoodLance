@@ -5,34 +5,61 @@ import { useAuth } from '@/contexts/auth-context'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { supabase } from '@/lib/supabase'
+import { Eye, EyeOff } from 'lucide-react'
+
+type UserRole = 'client' | 'freelancer'
 
 export default function SignUp() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
+  const router = useRouter()
   const { signUp } = useAuth()
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+    confirmPassword: '',
+    firstName: '',
+    lastName: '',
+    phoneNumber: '',
+    role: '' as UserRole
+  })
 
   const validateForm = () => {
-    if (!email) {
+    if (!formData.email) {
       setError('Email is required')
       return false
     }
-    if (!email.includes('@')) {
+    if (!formData.email.includes('@')) {
       setError('Please enter a valid email address')
       return false
     }
-    if (!password) {
+    if (!formData.password) {
       setError('Password is required')
       return false
     }
-    if (password.length < 6) {
+    if (formData.password.length < 6) {
       setError('Password must be at least 6 characters long')
       return false
     }
-    if (password !== confirmPassword) {
+    if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match')
+      return false
+    }
+    if (!formData.firstName || !formData.lastName) {
+      setError('Please enter your full name')
+      return false
+    }
+    if (!formData.phoneNumber) {
+      setError('Phone number is required')
+      return false
+    }
+    if (!formData.role) {
+      setError('Please select a role')
       return false
     }
     return true
@@ -48,15 +75,52 @@ export default function SignUp() {
 
     setLoading(true)
     try {
-      const { error } = await signUp(email, password)
-      if (error) {
-        if (error.message.includes('already registered')) {
-          setError('This email is already registered. Please sign in instead.')
-        } else {
-          setError(error.message)
-        }
+      // First, create the user account
+      const { error: signUpError, data } = await signUp(formData.email, formData.password)
+      
+      if (signUpError) {
+        console.error('Signup error:', JSON.stringify(signUpError))
+        setError(signUpError.message || 'Failed to create account. Please try again.')
+        setLoading(false)
+        return
       }
+
+      if (!data?.user?.id) {
+        console.error('No user data received after signup')
+        setError('Failed to create account. Please try again.')
+        setLoading(false)
+        return
+      }
+
+      // Then, create the user profile
+      const { error: profileError } = await supabase
+        .from('user_profiles')
+        .insert({
+          id: data.user.id,
+          first_name: formData.firstName,
+          last_name: formData.lastName,
+          phone_number: formData.phoneNumber,
+          role: formData.role,
+          email: formData.email,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+
+      if (profileError) {
+        console.error('Profile creation error:', JSON.stringify(profileError))
+        setError('Failed to create user profile. Please try again.')
+        setLoading(false)
+        return
+      }
+
+      // Store the last used interface
+      const redirectPath = formData.role === 'client' ? '/client' : '/freelancer'
+      localStorage.setItem('lastUsedInterface', redirectPath)
+      
+      // Redirect to email verification page
+      router.push('/auth/verify-email')
     } catch (err) {
+      console.error('Error during signup:', JSON.stringify(err))
       setError('An unexpected error occurred. Please try again.')
     } finally {
       setLoading(false)
@@ -71,37 +135,115 @@ export default function SignUp() {
             Create your account
           </h2>
         </div>
+        
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="rounded-md shadow-sm -space-y-px">
+          {/* Account Information */}
+          <div className="space-y-4">
             <div>
               <Input
                 type="email"
                 required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 placeholder="Email address"
-                className="appearance-none rounded-t-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-purple-500 focus:border-purple-500 focus:z-10 sm:text-sm bg-white"
+                className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-purple-500 focus:border-purple-500 focus:z-10 sm:text-sm bg-white"
               />
             </div>
-            <div>
+            
+            <div className="relative">
               <Input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 placeholder="Password"
-                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-purple-500 focus:border-purple-500 focus:z-10 sm:text-sm bg-white"
+                className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-purple-500 focus:border-purple-500 focus:z-10 sm:text-sm bg-white pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-500"
+              >
+                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+              </button>
+            </div>
+            
+            <div className="relative">
+              <Input
+                type={showConfirmPassword ? "text" : "password"}
+                required
+                value={formData.confirmPassword}
+                onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                placeholder="Confirm Password"
+                className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-purple-500 focus:border-purple-500 focus:z-10 sm:text-sm bg-white pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-500"
+              >
+                {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+              </button>
+            </div>
+          </div>
+
+          {/* Personal Information */}
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <Input
+                type="text"
+                required
+                value={formData.firstName}
+                onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                placeholder="First Name"
+                className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-purple-500 focus:border-purple-500 focus:z-10 sm:text-sm bg-white"
+              />
+              <Input
+                type="text"
+                required
+                value={formData.lastName}
+                onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                placeholder="Last Name"
+                className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-purple-500 focus:border-purple-500 focus:z-10 sm:text-sm bg-white"
               />
             </div>
-            <div>
-              <Input
-                type="password"
-                required
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Confirm Password"
-                className="appearance-none rounded-b-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-purple-500 focus:border-purple-500 focus:z-10 sm:text-sm bg-white"
-              />
+            
+            <Input
+              type="tel"
+              required
+              value={formData.phoneNumber}
+              onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+              placeholder="Phone Number"
+              className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-purple-500 focus:border-purple-500 focus:z-10 sm:text-sm bg-white"
+            />
+          </div>
+
+          {/* Role Selection */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium text-gray-900">I want to:</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <Button
+                type="button"
+                onClick={() => setFormData({ ...formData, role: 'client' })}
+                className={`w-full py-3 px-4 rounded-md text-white font-medium ${
+                  formData.role === 'client'
+                    ? 'bg-purple-600 hover:bg-purple-700'
+                    : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                }`}
+              >
+                Hire
+              </Button>
+              <Button
+                type="button"
+                onClick={() => setFormData({ ...formData, role: 'freelancer' })}
+                className={`w-full py-3 px-4 rounded-md text-white font-medium ${
+                  formData.role === 'freelancer'
+                    ? 'bg-purple-600 hover:bg-purple-700'
+                    : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                }`}
+              >
+                Work
+              </Button>
             </div>
           </div>
 

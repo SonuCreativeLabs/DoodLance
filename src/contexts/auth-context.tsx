@@ -9,7 +9,7 @@ type AuthContextType = {
   user: User | null
   loading: boolean
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>
-  signUp: (email: string, password: string) => Promise<{ error: AuthError | null }>
+  signUp: (email: string, password: string) => Promise<{ error: AuthError | null, data?: { user: User | null } }>
   signOut: () => Promise<void>
   resendVerificationEmail: (email: string) => Promise<{ error: AuthError | null }>
 }
@@ -53,7 +53,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return { error: { ...error, message: 'Invalid email or password' } as AuthError }
         }
         if (error.message.includes('Email not confirmed')) {
+          // Store email for resend functionality
+          localStorage.setItem('pendingVerificationEmail', email)
+          router.push('/auth/verify-email')
           return { error: { ...error, message: 'Please verify your email before signing in' } as AuthError }
+        }
+        if (error.message.includes('rate limit')) {
+          return { error: { ...error, message: 'Too many attempts. Please try again in a few minutes.' } as AuthError }
         }
         return { error }
       }
@@ -68,9 +74,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           .single()
 
         if (profile?.role) {
-          router.push(profile.role === 'client' ? '/client' : '/freelancer')
+          // Redirect based on role
+          const redirectPath = profile.role === 'client' ? '/client' : '/freelancer'
+          localStorage.setItem('lastUsedInterface', redirectPath)
+          router.push(redirectPath)
         } else {
-          router.push('/user-details')
+          // If no role is set, redirect to complete profile page instead of signup
+          router.push('/auth/complete-profile')
         }
       }
       return { error: null }
@@ -101,16 +111,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (error.message.includes('already registered')) {
           return { error: { ...error, message: 'This email is already registered. Please sign in instead.' } as AuthError }
         }
+        if (error.message.includes('rate limit')) {
+          return { error: { ...error, message: 'Too many attempts. Please try again in a few minutes.' } as AuthError }
+        }
         return { error }
       }
 
       console.log('Sign up successful:', data)
+      
+      // Check if email verification is required
+      if (data?.user?.identities?.length === 0) {
+        return { error: { message: 'This email is already registered. Please sign in instead.' } as AuthError }
+      }
+
       if (data?.user) {
         // Store the email in localStorage for resend functionality
         localStorage.setItem('pendingVerificationEmail', email)
+        
+        // Show verification message
+        console.log('Verification email sent to:', email)
+        
         router.push('/auth/verify-email')
       }
-      return { error: null }
+      return { error: null, data: { user: data.user } }
     } catch (error) {
       console.error('Sign up error:', error)
       return { error: { message: 'An unexpected error occurred during sign up' } as AuthError }
