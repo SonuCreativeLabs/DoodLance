@@ -1,13 +1,9 @@
 "use client"
 
-import { useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { useAuth } from "@/contexts/authentication-context"
 import { Search, MapPin, Star, Clock, Calendar, User, Briefcase, GraduationCap } from 'lucide-react'
 import MainLayout from '@/components/layout/main-layout'
 import { Button } from '@/components/ui/button'
 import { motion } from 'framer-motion'
-import ProtectedRoute from '@/components/auth/protected-route'
 import { cn } from "@/lib/utils"
 
 const serviceCategories = [
@@ -69,23 +65,15 @@ const AnimatedCard = ({ icon, delay }: { icon: React.ReactNode; delay: number })
 )
 
 export default function Home() {
-  const router = useRouter()
-  const { isAuthenticated, role } = useAuth()
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      // Redirect to appropriate dashboard based on user type
-      router.push(role === 'client' ? '/client' : '/freelancer')
-    } else {
-      // Redirect to auth page if not logged in
-      router.push('/auth')
-    }
-  }, [isAuthenticated, role, router])
-
   return (
     <MainLayout>
-      <div className="flex items-center justify-center h-full">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#FF8A3D]"></div>
+      <div className="container mx-auto px-4 py-8">
+        <h1 className="text-4xl font-bold text-center mb-8">Welcome to SkilledMice</h1>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {serviceCategories.map((category, index) => (
+            <AnimatedCard key={category.name} icon={category.icon} delay={index * 0.2} />
+          ))}
+        </div>
       </div>
     </MainLayout>
   )

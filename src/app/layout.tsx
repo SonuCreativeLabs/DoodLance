@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import "./globals.css";
-import { AuthProvider } from "@/contexts/authentication-context";
 import { RoleProvider } from "@/contexts/role-context";
 
 export const metadata: Metadata = {
@@ -18,13 +17,11 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${GeistSans.variable} ${GeistMono.variable} font-sans`}>
-        <AuthProvider>
-          <RoleProvider>
-            <main className="min-h-screen">
-              {children}
-            </main>
-          </RoleProvider>
-        </AuthProvider>
+        <RoleProvider>
+          <main className="min-h-screen">
+            {children}
+          </main>
+        </RoleProvider>
       </body>
     </html>
   );
