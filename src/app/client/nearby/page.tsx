@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Calendar as CalendarIcon } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 
 // Mock data for areas
 const areas = [
@@ -166,6 +167,7 @@ export default function NearbyProfessionals() {
   const [favoriteIds, setFavoriteIds] = useState<number[]>([])
   const timeOptions = ['Any', 'Morning', 'Afternoon', 'Evening', 'Night']
   const [selectedTimeOptions, setSelectedTimeOptions] = useState<string[]>([])
+  const router = useRouter()
 
   const handleTimeOptionClick = (option: string) => {
     if (option === 'Any') {
@@ -291,7 +293,10 @@ export default function NearbyProfessionals() {
         </div>
         
         {/* Page Name below header */}
-        <h1 className="text-2xl font-semibold text-white mb-6">Nearby Professionals</h1>
+        <div className="flex items-center gap-3 mb-6">
+          <h1 className="text-2xl font-semibold text-white">Nearby Professionals</h1>
+          <span className="text-base text-white/60 font-medium">Feed view</span>
+        </div>
 
         {/* Filter Button and Selected Filters Row */}
         <div className="flex items-center justify-between mb-4">
@@ -670,6 +675,14 @@ export default function NearbyProfessionals() {
           ))}
         </div>
       </div>
+      {/* Floating Map View Button */}
+      <button
+        onClick={() => router.push('/client/nearby/map-view')}
+        className="fixed bottom-20 right-6 z-50 bg-purple-600 hover:bg-purple-700 text-white font-semibold px-6 py-3 rounded-full shadow-lg transition-all duration-200"
+        style={{ boxShadow: '0 4px 24px 0 rgba(80,0,200,0.15)' }}
+      >
+        Map view
+      </button>
     </ClientLayout>
   )
 } 
