@@ -264,49 +264,67 @@ export default function ClientHome() {
               <ChevronRight className="w-4 h-4 ml-1" />
             </button>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {nearbyFreelancers.map((freelancer) => (
-              <motion.div
-                key={freelancer.id}
-                whileHover={{ y: -5 }}
-                className="bg-white/10 backdrop-blur-md shadow-lg hover:shadow-xl rounded-xl p-6 border border-white/10 hover:border-purple-300/30 transition-all duration-200"
-              >
-                <div className="flex items-start gap-4">
-                  <div className="relative">
-                    <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full opacity-20 blur-md"></div>
-                    <img
-                      src={freelancer.image}
-                      alt={freelancer.name}
-                      className="w-16 h-16 rounded-full border-2 border-purple-200/50 relative z-10"
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-white">{freelancer.name}</h3>
-                    <div className="flex items-center text-sm text-white/60 mt-1">
-                      <Star className="w-4 h-4 text-purple-500 fill-current" />
-                      <span className="ml-1">{freelancer.rating}</span>
-                      <span className="mx-2">•</span>
-                      <span>{freelancer.completedJobs} jobs</span>
+          <div className="relative">
+            <div className="overflow-x-auto scrollbar-hide">
+              <div className="flex space-x-4 pb-4 px-1">
+                {nearbyFreelancers.map((freelancer) => (
+                  <motion.div
+                    key={freelancer.id}
+                    whileHover={{ y: -5 }}
+                    className="flex-shrink-0 w-[300px] bg-white/10 backdrop-blur-md shadow-lg hover:shadow-xl rounded-2xl p-6 border border-white/10 hover:border-purple-300/30 transition-all duration-200"
+                  >
+                    <div className="flex flex-col">
+                      <div className="flex items-start gap-4 mb-4">
+                        <div className="relative">
+                          <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full opacity-20 blur-md"></div>
+                          <img
+                            src={freelancer.image}
+                            alt={freelancer.name}
+                            className="w-16 h-16 rounded-full border-2 border-purple-200/50 relative z-10"
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-white">{freelancer.name}</h3>
+                          <div className="flex items-center text-sm text-white/60 mt-1">
+                            <Star className="w-4 h-4 text-purple-500 fill-current" />
+                            <span className="ml-1">{freelancer.rating}</span>
+                            <span className="mx-2">•</span>
+                            <span>{freelancer.completedJobs} jobs</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <div className="flex items-center text-sm text-white/60">
+                          <Briefcase className="w-4 h-4 mr-2" />
+                          <span>{freelancer.service}</span>
+                        </div>
+                        <div className="flex items-center text-sm text-white/60">
+                          <MapPin className="w-4 h-4 mr-2" />
+                          <span>{freelancer.location}</span>
+                        </div>
+                        <div className="flex items-center text-sm text-white/60">
+                          <Clock className="w-4 h-4 mr-2" />
+                          <span>{freelancer.responseTime}</span>
+                        </div>
+                      </div>
+
+                      <div className="mt-4 flex gap-2">
+                        <button 
+                          onClick={() => handleHire(freelancer.id)}
+                          className="flex-1 bg-gradient-to-r from-purple-600 via-purple-500 to-purple-400 text-white py-2 px-4 rounded-xl transition-all duration-300 hover:shadow-lg hover:from-purple-700 hover:to-purple-500"
+                        >
+                          Book Now
+                        </button>
+                        <button className="flex-1 bg-gradient-to-r from-purple-600/20 to-purple-400/20 hover:from-purple-600/30 hover:to-purple-400/30 text-white py-2 px-4 rounded-xl transition-all duration-300 border border-white/10">
+                          View Profile
+                        </button>
+                      </div>
                     </div>
-                    <div className="flex items-center text-sm text-white/60 mt-1">
-                      <MapPin className="w-4 h-4 mr-1" />
-                      <span>{freelancer.location}</span>
-                    </div>
-                    <div className="mt-4 flex gap-2">
-                      <button 
-                        onClick={() => handleHire(freelancer.id)}
-                        className="flex-1 bg-gradient-to-r from-purple-600 via-purple-500 to-purple-400 text-white py-2 px-4 rounded-lg transition-all duration-300 hover:shadow-lg hover:from-purple-700 hover:to-purple-500"
-                      >
-                        Book Now
-                      </button>
-                      <button className="flex-1 bg-gradient-to-r from-purple-600/20 to-purple-400/20 hover:from-purple-600/30 hover:to-purple-400/30 text-white py-2 px-4 rounded-lg transition-all duration-300 border border-white/10">
-                        View Profile
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
+                  </motion.div>
+                ))}
+              </div>
+            </div>
           </div>
         </section>
 
