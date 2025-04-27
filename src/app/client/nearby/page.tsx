@@ -164,8 +164,32 @@ export default function NearbyProfessionals() {
     preferredTime: ""
   })
   const [favoriteIds, setFavoriteIds] = useState<number[]>([])
-
   const timeOptions = ['Any', 'Morning', 'Afternoon', 'Evening', 'Night']
+  const [selectedTimeOptions, setSelectedTimeOptions] = useState<string[]>([])
+
+  const handleTimeOptionClick = (option: string) => {
+    if (option === 'Any') {
+      // If Any is clicked and already selected, clear all selections
+      if (selectedTimeOptions.includes('Any')) {
+        setSelectedTimeOptions([]);
+      } else {
+        // Otherwise, just select Any
+        setSelectedTimeOptions(['Any']);
+      }
+    } else {
+      setSelectedTimeOptions(prev => {
+        // If Any is selected, remove it
+        const newSelection = prev.includes('Any') ? [] : [...prev];
+        
+        // Toggle the selected option
+        if (newSelection.includes(option)) {
+          return newSelection.filter(item => item !== option);
+        } else {
+          return [...newSelection, option];
+        }
+      });
+    }
+  };
 
   // Filter freelancers based on applied filters
   const filteredFreelancers = nearbyFreelancers.filter(freelancer => {
@@ -197,7 +221,7 @@ export default function NearbyProfessionals() {
       minRating,
       availability,
       date: selectedDate,
-      preferredTime
+      preferredTime: selectedTimeOptions.length > 0 ? selectedTimeOptions.join(', ') : 'Any'
     });
     setShowAllFilters(false);
   };
@@ -212,6 +236,7 @@ export default function NearbyProfessionals() {
     setAvailability("");
     setSelectedDate(null);
     setPreferredTime("Any");
+    setSelectedTimeOptions([]);
     setSearchQuery("");
     setAppliedFilters({
       area: "Velachery",
@@ -241,37 +266,37 @@ export default function NearbyProfessionals() {
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
-          {/* Back Button with improved design */}
           <Link 
             href="/client" 
-            className="flex items-center gap-2 bg-white/10 hover:bg-white/20 transition-all duration-200 px-4 py-2 rounded-xl text-white/80 hover:text-white"
+            className="flex items-center justify-center w-10 h-10 bg-white/10 hover:bg-white/20 transition-all duration-200 rounded-full text-white/80 hover:text-white"
           >
             <ChevronLeft className="w-5 h-5" />
-            <span className="text-sm font-medium">Back</span>
           </Link>
           
-          {/* Location Button with improved design */}
-          <button className="flex items-center gap-2 bg-gradient-to-r from-purple-600/20 to-purple-400/20 hover:from-purple-600/30 hover:to-purple-400/30 transition-all duration-200 px-4 py-2 rounded-xl border border-white/10">
-            <MapPin className="w-4 h-4 text-purple-400" />
-            <select
-              value={selectedArea}
-              onChange={(e) => setSelectedArea(e.target.value)}
-              className="bg-transparent text-white text-sm focus:outline-none cursor-pointer"
-            >
-              {areas.map((area) => (
-                <option key={area} value={area} className="bg-[#1a1a1a]">{area}</option>
-              ))}
-            </select>
-            <ChevronDown className="w-4 h-4 text-white/60" />
-          </button>
+          <div className="relative">
+            <button className="flex items-center gap-2 bg-gradient-to-r from-purple-600/20 to-purple-400/20 hover:from-purple-600/30 hover:to-purple-400/30 transition-all duration-200 px-4 py-2 rounded-xl border border-white/10">
+              <MapPin className="w-4 h-4 text-purple-400" />
+              <select
+                value={selectedArea}
+                onChange={(e) => setSelectedArea(e.target.value)}
+                className="bg-transparent text-white text-sm focus:outline-none cursor-pointer appearance-none pr-6"
+              >
+                {areas.map((area) => (
+                  <option key={area} value={area} className="bg-[#1a1a1a]">{area}</option>
+                ))}
+              </select>
+              <ChevronDown className="w-4 h-4 text-white/60 absolute right-3" />
+            </button>
+          </div>
         </div>
+        
         {/* Page Name below header */}
         <h1 className="text-2xl font-semibold text-white mb-6">Nearby Professionals</h1>
 
         {/* Filter Button and Selected Filters Row */}
         <div className="flex items-center justify-between mb-4">
           {/* All Filters as Chips (except Area/Location) */}
-          <div className="flex-1 overflow-x-auto flex gap-2 scrollbar-hide">
+          <div className="flex-1 overflow-x-auto flex gap-2 pr-4 py-1 scrollbar-hide">
             {/* Service Filter */}
             <div className="flex items-center bg-purple-100 text-purple-800 rounded-full px-3 py-1 text-xs whitespace-nowrap">
               {appliedFilters.service === 'All' || appliedFilters.service === '' ? 'All Services' : appliedFilters.service}
@@ -347,13 +372,21 @@ export default function NearbyProfessionals() {
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              className="bg-white/5 rounded-xl p-6 space-y-6"
+              className="bg-white/5 rounded-xl p-8 space-y-6 relative"
             >
+              {/* Close button for filters */}
+              <button 
+                onClick={() => setShowAllFilters(false)}
+                className="absolute top-4 right-4 p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white/60 hover:text-white transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+              
               {/* Service Type Filter */}
-              <div className="space-y-2">
-                <label className="text-white/60 text-sm font-medium">Service Type</label>
+              <div className="space-y-6">
+                <div className="mb-2 text-white/70 text-sm font-medium">Service Type</div>
                 <Select value={selectedService} onValueChange={setSelectedService}>
-                  <SelectTrigger className="w-full bg-white/10 border-white/20 text-white">
+                  <SelectTrigger className="w-full bg-white/10 border-white/20 text-white h-11">
                     <SelectValue placeholder="Select Service" />
                   </SelectTrigger>
                   <SelectContent position="popper" className="bg-[#1a1a1a] border border-white/20 max-h-[300px] overflow-y-auto">
@@ -377,35 +410,35 @@ export default function NearbyProfessionals() {
               </div>
 
               {/* Range Slider */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <label className="text-white/60 text-sm font-medium">Distance Range</label>
-                  <span className="text-white text-sm">{range[0] === 50 ? '50+ km' : `${range[0]} km`}</span>
+              <div className="space-y-6">
+                <div className="mb-2 flex items-center justify-between">
+                  <span className="text-white/70 text-sm font-medium">Distance Range</span>
+                  <span className="text-white text-sm font-medium">{range[0] === 50 ? '50+ km' : `${range[0]} km`}</span>
                 </div>
-                <div className="px-2">
+                <div>
                   <Slider
                     value={range}
                     onValueChange={setRange}
                     max={50}
                     step={1}
-                    className="w-full [&_[role=slider]]:bg-purple-500 [&_[role=slider]]:border-2 [&_[role=slider]]:border-white [&_[role=slider]]:w-4 [&_[role=slider]]:h-4 [&_[role=track]]:bg-white [&_[role=track]]:h-5 [&_[role=range]]:bg-purple-500"
+                    className="w-full [&_[role=slider]]:bg-purple-500 [&_[role=slider]]:border-2 [&_[role=slider]]:border-white [&_[role=slider]]:w-5 [&_[role=slider]]:h-5 [&_[role=track]]:bg-white/20 [&_[role=track]]:h-2 [&_[role=range]]:bg-purple-500"
                   />
                 </div>
               </div>
 
               {/* Price Type and Range */}
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-white/60 text-sm font-medium">Price Type</label>
-                  <div className="grid grid-cols-3 gap-2">
+              <div className="space-y-6">
+                <div className="space-y-6">
+                  <div className="mb-2 text-white/70 text-sm font-medium">Price Type</div>
+                  <div className="grid grid-cols-3 gap-3">
                     {['Any', 'Per Work', 'Per Hour'].map((type) => (
                       <button
                         key={type}
                         onClick={() => setPriceType(type)}
-                        className={`flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg text-sm transition-all duration-200 h-10 min-w-[90px] whitespace-nowrap ${
+                        className={`flex items-center justify-center gap-1 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 h-11 whitespace-nowrap ${
                           priceType === type
                             ? 'bg-purple-500 text-white'
-                            : 'bg-white/10 text-white/60 hover:bg-white/20'
+                            : 'bg-white/10 text-white/70 hover:bg-white/20'
                         }`}
                       >
                         {type !== 'Any' && <IndianRupee className="w-4 h-4" />}
@@ -415,35 +448,35 @@ export default function NearbyProfessionals() {
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <label className="text-white/60 text-sm font-medium">Price Range</label>
-                    <span className="text-white text-sm">₹{priceRange[0]} - ₹{priceRange[1] === 20000 ? '20,000+' : priceRange[1]}</span>
+                <div className="space-y-6">
+                  <div className="mb-2 flex items-center justify-between">
+                    <span className="text-white/70 text-sm font-medium">Price Range</span>
+                    <span className="text-white text-sm font-medium">₹{priceRange[0]} - ₹{priceRange[1] === 20000 ? '20,000+' : priceRange[1]}</span>
                   </div>
-                  <div className="px-2">
+                  <div>
                     <Slider
                       value={priceRange}
                       onValueChange={setPriceRange}
                       max={20000}
                       step={100}
-                      className="w-full [&_[role=slider]]:bg-purple-500 [&_[role=slider]]:border-2 [&_[role=slider]]:border-white [&_[role=slider]]:w-4 [&_[role=slider]]:h-4 [&_[role=track]]:bg-white [&_[role=track]]:h-5 [&_[role=range]]:bg-purple-500"
+                      className="w-full [&_[role=slider]]:bg-purple-500 [&_[role=slider]]:border-2 [&_[role=slider]]:border-white [&_[role=slider]]:w-5 [&_[role=slider]]:h-5 [&_[role=track]]:bg-white/20 [&_[role=track]]:h-2 [&_[role=range]]:bg-purple-500"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Rating Filter */}
-              <div className="space-y-2">
-                <label className="text-white/60 text-sm font-medium">Minimum Rating</label>
-                <div className="flex gap-2">
+              <div className="space-y-6">
+                <div className="mb-2 text-white/70 text-sm font-medium">Minimum Rating</div>
+                <div className="flex gap-3">
                   {[0, 3, 4, 4.5].map((rating) => (
                     <button
                       key={rating}
                       onClick={() => setMinRating(rating)}
-                      className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm transition-all duration-200 ${
+                      className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm transition-all duration-200 ${
                         minRating === rating
                           ? 'bg-purple-500 text-white'
-                          : 'bg-white/10 text-white/60 hover:bg-white/20'
+                          : 'bg-white/10 text-white/70 hover:bg-white/20'
                       }`}
                     >
                       {rating > 0 && <Star className="w-4 h-4 text-yellow-400 fill-current" />}
@@ -454,9 +487,9 @@ export default function NearbyProfessionals() {
               </div>
 
               {/* Availability Filter */}
-              <div className="space-y-2">
-                <label className="text-white/60 text-sm font-medium">Availability</label>
-                <div className="flex flex-wrap items-center gap-2">
+              <div className="space-y-6">
+                <div className="mb-2 text-white/70 text-sm font-medium">Availability</div>
+                <div className="flex flex-wrap items-center gap-3">
                   {/* Now Button */}
                   <button
                     onClick={() => {
@@ -464,10 +497,10 @@ export default function NearbyProfessionals() {
                       setSelectedDate(null)
                       setPreferredTime('Any')
                     }}
-                    className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs transition-all duration-200 ${
+                    className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm transition-all duration-200 ${
                       availability === 'Available Now'
                         ? 'bg-purple-500 text-white'
-                        : 'bg-white/10 text-white/60 hover:bg-white/20'
+                        : 'bg-white/10 text-white/70 hover:bg-white/20'
                     }`}
                   >
                     Now
@@ -478,10 +511,10 @@ export default function NearbyProfessionals() {
                       setAvailability('Available Today')
                       setSelectedDate(null)
                     }}
-                    className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs transition-all duration-200 ${
+                    className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm transition-all duration-200 ${
                       availability === 'Available Today'
                         ? 'bg-purple-500 text-white'
-                        : 'bg-white/10 text-white/60 hover:bg-white/20'
+                        : 'bg-white/10 text-white/70 hover:bg-white/20'
                     }`}
                   >
                     Today
@@ -495,10 +528,10 @@ export default function NearbyProfessionals() {
                         dateInputRef.current?.showPicker?.() || dateInputRef.current?.focus()
                       }, 0)
                     }}
-                    className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs transition-all duration-200 relative ${
+                    className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm transition-all duration-200 relative ${
                       availability === 'Pick Date'
                         ? 'bg-purple-500 text-white'
-                        : 'bg-white/10 text-white/60 hover:bg-white/20'
+                        : 'bg-white/10 text-white/70 hover:bg-white/20'
                     }`}
                   >
                     <CalendarIcon className="w-4 h-4" />
@@ -521,19 +554,20 @@ export default function NearbyProfessionals() {
                     />
                   </button>
                 </div>
-                {/* Time Options (no Date & Time label) */}
+                
+                {/* Time Options with multi-select capability */}
                 {(availability === 'Available Today' || availability === 'Pick Date') && (
-                  <div className="mt-4">
-                    <div className="mb-1 text-xs text-white/60 font-medium">Preferred Time</div>
-                    <div className="flex items-center gap-2">
+                  <div>
+                    <div className="mb-2 text-sm text-white/70 font-medium">Preferred Times</div>
+                    <div className="flex flex-wrap items-center gap-3">
                       {timeOptions.map((option) => (
                         <button
                           key={option}
-                          onClick={() => setPreferredTime(option)}
-                          className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs transition-all duration-200 ${
-                            preferredTime === option
+                          onClick={() => handleTimeOptionClick(option)}
+                          className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm transition-all duration-200 ${
+                            selectedTimeOptions.includes(option)
                               ? 'bg-purple-500 text-white'
-                              : 'bg-white/10 text-white/60 hover:bg-white/20'
+                              : 'bg-white/10 text-white/70 hover:bg-white/20'
                           }`}
                         >
                           {option}
@@ -544,22 +578,25 @@ export default function NearbyProfessionals() {
                 )}
               </div>
 
-              {/* Save Filters Button */}
-              <button
-                className="w-full mb-2 bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 rounded-lg transition-colors"
-                onClick={handleSaveFilters}
-              >
-                Save Filters
-              </button>
+              {/* Action Buttons */}
+              <div className="grid grid-cols-1 gap-3 pt-3">
+                {/* Save Filters Button */}
+                <button
+                  className="w-full py-3 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors"
+                  onClick={handleSaveFilters}
+                >
+                  Save Filters
+                </button>
 
-              {/* Clear Filters */}
-              <button
-                onClick={handleClearFilters}
-                className="flex items-center gap-2 bg-white/10 hover:bg-white/20 rounded-lg px-4 py-2 text-white/60 text-sm transition-colors w-full justify-center"
-              >
-                <X className="w-4 h-4" />
-                Clear All Filters
-              </button>
+                {/* Clear Filters */}
+                <button
+                  onClick={handleClearFilters}
+                  className="flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 rounded-lg px-4 py-3 text-white/70 text-sm transition-colors w-full"
+                >
+                  <X className="w-4 h-4" />
+                  Clear All Filters
+                </button>
+              </div>
             </motion.div>
           )}
         </div>
@@ -594,10 +631,13 @@ export default function NearbyProfessionals() {
                       className="w-16 h-16 rounded-full border-2 border-purple-200/50 relative z-10"
                     />
                   </div>
-                  {/* Rating below profile image with proper spacing */}
-                  <div className="flex items-center text-sm text-white/60 mt-4 gap-1">
-                    <Star className="w-4 h-4 text-purple-500 fill-current" />
-                    <span className="ml-1">{freelancer.rating}</span>
+                  {/* Updated Rating Design */}
+                  <div className="flex flex-col items-center mt-3">
+                    <div className="flex items-center gap-1 bg-white/10 rounded-full px-3 py-1">
+                      <Star className="w-3.5 h-3.5 text-yellow-400 fill-current" />
+                      <span className="text-sm font-medium text-white">{freelancer.rating}</span>
+                    </div>
+                    <span className="text-xs text-white/60 mt-1">({freelancer.reviews} reviews)</span>
                   </div>
                 </div>
                 <div className="flex-1">
