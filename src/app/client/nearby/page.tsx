@@ -227,35 +227,43 @@ export default function NearbyProfessionals() {
   };
 
   const handleToggleFavorite = (id: number) => {
-    setFavoriteIds((prev) =>
-      prev.includes(id) ? prev.filter((fid) => fid !== id) : [...prev, id]
-    )
-    // TODO: Integrate with backend/profile to persist favorites
-  }
+    setFavoriteIds(prev => {
+      if (prev.includes(id)) {
+        return prev.filter(fId => fId !== id);
+      } else {
+        return [...prev, id];
+      }
+    });
+  };
 
   return (
     <ClientLayout>
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-4">
-            <Link href="/client" className="text-white/60 hover:text-white">
-              <ChevronLeft className="w-6 h-6" />
-            </Link>
-          </div>
-          {/* Area Filter - Moved to top right */}
-          <div className="flex items-center gap-2 bg-white/10 rounded-lg px-4 py-2">
+        <div className="flex items-center justify-between mb-6">
+          {/* Back Button with improved design */}
+          <Link 
+            href="/client" 
+            className="flex items-center gap-2 bg-white/10 hover:bg-white/20 transition-all duration-200 px-4 py-2 rounded-xl text-white/80 hover:text-white"
+          >
+            <ChevronLeft className="w-5 h-5" />
+            <span className="text-sm font-medium">Back</span>
+          </Link>
+          
+          {/* Location Button with improved design */}
+          <button className="flex items-center gap-2 bg-gradient-to-r from-purple-600/20 to-purple-400/20 hover:from-purple-600/30 hover:to-purple-400/30 transition-all duration-200 px-4 py-2 rounded-xl border border-white/10">
             <MapPin className="w-4 h-4 text-purple-400" />
             <select
               value={selectedArea}
               onChange={(e) => setSelectedArea(e.target.value)}
-              className="bg-transparent text-white text-sm focus:outline-none"
+              className="bg-transparent text-white text-sm focus:outline-none cursor-pointer"
             >
               {areas.map((area) => (
-                <option key={area} value={area}>{area}</option>
+                <option key={area} value={area} className="bg-[#1a1a1a]">{area}</option>
               ))}
             </select>
-          </div>
+            <ChevronDown className="w-4 h-4 text-white/60" />
+          </button>
         </div>
         {/* Page Name below header */}
         <h1 className="text-2xl font-semibold text-white mb-6">Nearby Professionals</h1>
@@ -499,14 +507,14 @@ export default function NearbyProfessionals() {
                         ? new Date(selectedDate).toLocaleDateString()
                         : 'Pick Date'}
                     </span>
-                    <input
-                      ref={dateInputRef}
-                      type="date"
+                      <input
+                        ref={dateInputRef}
+                        type="date"
                       className="absolute left-0 top-0 w-full h-full opacity-0 cursor-pointer"
-                      value={selectedDate ?? ''}
-                      onChange={e => {
-                        setSelectedDate(e.target.value)
-                        setAvailability('Pick Date')
+                        value={selectedDate ?? ''}
+                        onChange={e => {
+                          setSelectedDate(e.target.value)
+                          setAvailability('Pick Date')
                       }}
                       tabIndex={-1}
                       style={{ pointerEvents: 'auto' }}
