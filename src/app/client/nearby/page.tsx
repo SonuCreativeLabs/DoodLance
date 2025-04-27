@@ -163,6 +163,7 @@ export default function NearbyProfessionals() {
     date: null as string | null,
     preferredTime: ""
   })
+  const [favoriteIds, setFavoriteIds] = useState<number[]>([])
 
   const timeOptions = ['Any', 'Morning', 'Afternoon', 'Evening', 'Night']
 
@@ -174,7 +175,7 @@ export default function NearbyProfessionals() {
       freelancer.service.toLowerCase().includes(searchQuery.toLowerCase());
     
     // Service type filter
-    const matchesService = appliedFilters.service === "" || 
+    const matchesService = appliedFilters.service === "All" || appliedFilters.service === "" || 
       freelancer.service.toLowerCase().includes(appliedFilters.service.toLowerCase());
     
     // Rating filter
@@ -225,16 +226,22 @@ export default function NearbyProfessionals() {
     });
   };
 
+  const handleToggleFavorite = (id: number) => {
+    setFavoriteIds((prev) =>
+      prev.includes(id) ? prev.filter((fid) => fid !== id) : [...prev, id]
+    )
+    // TODO: Integrate with backend/profile to persist favorites
+  }
+
   return (
     <ClientLayout>
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-4">
             <Link href="/client" className="text-white/60 hover:text-white">
               <ChevronLeft className="w-6 h-6" />
             </Link>
-            <h1 className="text-2xl font-semibold text-white">Nearby Professionals</h1>
           </div>
           {/* Area Filter - Moved to top right */}
           <div className="flex items-center gap-2 bg-white/10 rounded-lg px-4 py-2">
@@ -250,27 +257,82 @@ export default function NearbyProfessionals() {
             </select>
           </div>
         </div>
+        {/* Page Name below header */}
+        <h1 className="text-2xl font-semibold text-white mb-6">Nearby Professionals</h1>
+
+        {/* Filter Button and Selected Filters Row */}
+        <div className="flex items-center justify-between mb-4">
+          {/* All Filters as Chips (except Area/Location) */}
+          <div className="flex-1 overflow-x-auto flex gap-2 scrollbar-hide">
+            {/* Service Filter */}
+            <div className="flex items-center bg-purple-100 text-purple-800 rounded-full px-3 py-1 text-xs whitespace-nowrap">
+              {appliedFilters.service === 'All' || appliedFilters.service === '' ? 'All Services' : appliedFilters.service}
+              {appliedFilters.service !== 'All' && appliedFilters.service !== '' && (
+                <button className="ml-2" onClick={() => { setSelectedService('All'); setAppliedFilters({ ...appliedFilters, service: 'All' }); }}>
+                  <X className="w-3 h-3" />
+                </button>
+              )}
+            </div>
+            {/* Price Range Filter */}
+            <div className="flex items-center bg-purple-100 text-purple-800 rounded-full px-3 py-1 text-xs whitespace-nowrap">
+              ₹{appliedFilters.priceRange[0]} - ₹{appliedFilters.priceRange[1] === 20000 ? '20,000+' : appliedFilters.priceRange[1]}
+              {(appliedFilters.priceRange[0] !== 0 || appliedFilters.priceRange[1] !== 20000) && (
+                <button className="ml-2" onClick={() => { setPriceRange([0, 20000]); setAppliedFilters({ ...appliedFilters, priceRange: [0, 20000] }); }}>
+                  <X className="w-3 h-3" />
+                </button>
+              )}
+            </div>
+            {/* Rating Filter */}
+            <div className="flex items-center bg-purple-100 text-purple-800 rounded-full px-3 py-1 text-xs whitespace-nowrap">
+              {appliedFilters.minRating === 0 ? 'Any Rating' : `${appliedFilters.minRating}+`}
+              {appliedFilters.minRating !== 0 && (
+                <button className="ml-2" onClick={() => { setMinRating(0); setAppliedFilters({ ...appliedFilters, minRating: 0 }); }}>
+                  <X className="w-3 h-3" />
+                </button>
+              )}
+            </div>
+            {/* Availability Filter */}
+            <div className="flex items-center bg-purple-100 text-purple-800 rounded-full px-3 py-1 text-xs whitespace-nowrap">
+              {appliedFilters.availability === '' ? 'Any Availability' : (appliedFilters.availability === 'Pick Date' && appliedFilters.date ? new Date(appliedFilters.date).toLocaleDateString() : appliedFilters.availability)}
+              {appliedFilters.availability !== '' && (
+                <button className="ml-2" onClick={() => { setAvailability(''); setSelectedDate(null); setAppliedFilters({ ...appliedFilters, availability: '', date: null }); }}>
+                  <X className="w-3 h-3" />
+                </button>
+              )}
+            </div>
+            {/* Preferred Time Filter */}
+            <div className="flex items-center bg-purple-100 text-purple-800 rounded-full px-3 py-1 text-xs whitespace-nowrap">
+              {appliedFilters.preferredTime === 'Any' || !appliedFilters.preferredTime ? 'Any Time' : appliedFilters.preferredTime}
+              {appliedFilters.preferredTime && appliedFilters.preferredTime !== 'Any' && (
+                <button className="ml-2" onClick={() => { setPreferredTime('Any'); setAppliedFilters({ ...appliedFilters, preferredTime: 'Any' }); }}>
+                  <X className="w-3 h-3" />
+                </button>
+              )}
+            </div>
+          </div>
+          {/* Filter Button on the right */}
+          <button
+            onClick={() => setShowAllFilters(!showAllFilters)}
+            className="flex items-center justify-center w-10 h-10 bg-white/10 hover:bg-white/20 rounded-lg text-white/60 transition-colors ml-2"
+          >
+            <Filter className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Search Bar */}
+        <div className="relative mb-8">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/60" />
+          <Input
+            type="text"
+            placeholder="Search service or professionals..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-4 py-3 rounded-xl border border-white/20 bg-white/10 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-purple-400"
+          />
+        </div>
 
         {/* Search and Filters */}
         <div className="space-y-4 mb-8">
-          {/* Search Bar with All Filters */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/60" />
-            <Input
-              type="text"
-              placeholder="Search professionals..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-32 py-3 rounded-xl border border-white/20 bg-white/10 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-purple-400"
-            />
-            <button
-              onClick={() => setShowAllFilters(!showAllFilters)}
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center justify-center w-8 h-8 bg-white/10 hover:bg-white/20 rounded-lg text-white/60 transition-colors"
-            >
-              <Filter className="w-4 h-4" />
-            </button>
-          </div>
-
           {/* Expanded Filters */}
           {showAllFilters && (
             <motion.div
@@ -500,24 +562,39 @@ export default function NearbyProfessionals() {
             <motion.div
               key={freelancer.id}
               whileHover={{ y: -5 }}
-              className="bg-white/10 backdrop-blur-md shadow-lg hover:shadow-xl rounded-xl p-4 border border-white/10 hover:border-purple-300/30 transition-all duration-200"
+              className="bg-white/10 backdrop-blur-md shadow-lg hover:shadow-xl rounded-xl p-4 border border-white/10 hover:border-purple-300/30 transition-all duration-200 relative"
             >
+              {/* Transparent heart icon in the top right corner of the card, turns red on click, with feedback */}
+              <motion.button
+                whileTap={{ scale: 1.2 }}
+                className={`absolute top-3 right-3 z-20 p-1 transition-colors ${favoriteIds.includes(freelancer.id) ? 'text-red-500' : 'text-white/60 hover:text-red-400'}`}
+                style={{ background: 'transparent', border: 'none' }}
+                onClick={() => handleToggleFavorite(freelancer.id)}
+                aria-label="Add to favorites"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill={favoriteIds.includes(freelancer.id) ? 'currentColor' : 'none'} viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 3.75a5.25 5.25 0 00-4.5 2.472A5.25 5.25 0 007.5 3.75 5.25 5.25 0 003 9c0 7.25 9 11.25 9 11.25s9-4 9-11.25a5.25 5.25 0 00-5.25-5.25z" />
+                </svg>
+              </motion.button>
               <div className="flex items-start gap-4">
-                <div className="relative">
-                  <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full opacity-20 blur-md"></div>
-                  <img
-                    src={freelancer.image}
-                    alt={freelancer.name}
-                    className="w-16 h-16 rounded-full border-2 border-purple-200/50 relative z-10"
-                  />
+                <div className="relative flex flex-col items-center w-20">
+                  <div className="relative mt-2">
+                    <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full opacity-20 blur-md"></div>
+                    <img
+                      src={freelancer.image}
+                      alt={freelancer.name}
+                      className="w-16 h-16 rounded-full border-2 border-purple-200/50 relative z-10"
+                    />
+                  </div>
+                  {/* Rating below profile image with proper spacing */}
+                  <div className="flex items-center text-sm text-white/60 mt-4 gap-1">
+                    <Star className="w-4 h-4 text-purple-500 fill-current" />
+                    <span className="ml-1">{freelancer.rating}</span>
+                  </div>
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center justify-between">
                     <h3 className="font-semibold text-white">{freelancer.name}</h3>
-                    <div className="flex items-center text-sm text-white/60">
-                      <Star className="w-4 h-4 text-purple-500 fill-current" />
-                      <span className="ml-1">{freelancer.rating}</span>
-                    </div>
                   </div>
                   <div className="flex items-center text-sm text-white/60 mt-1">
                     <Briefcase className="w-4 h-4 mr-2" />
