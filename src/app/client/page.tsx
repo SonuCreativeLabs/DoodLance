@@ -1,12 +1,13 @@
 "use client"
 
-import { Search, MapPin, Star, Clock, Calendar, User, Briefcase, GraduationCap, ChevronRight, Bell } from 'lucide-react'
+import { Search, MapPin, Star, Clock, Calendar, User, Briefcase, GraduationCap, ChevronRight, Bell, Wallet } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import ClientLayout from '@/components/layouts/client-layout'
 import { FreelancerCard } from '@/components/client/freelancer-card'
 import { ServiceCategory } from '@/components/client/service-category'
 import { cn } from '@/lib/utils'
 import { motion } from 'framer-motion'
+import Link from 'next/link'
 
 // Mock data for service categories
 const serviceCategories = [
@@ -120,22 +121,7 @@ export default function ClientHome() {
         <div className="relative container mx-auto px-4 pt-6">
           {/* Welcome Section */}
           <div className="flex items-center justify-between mb-12">
-            <div>
-              <h2 className="text-2xl font-semibold text-white">Welcome back, John!</h2>
-              <div className="flex items-center text-white/60 mt-1">
-                <MapPin className="w-4 h-4 mr-1" />
-                <span>San Francisco, CA</span>
-              </div>
-            </div>
             <div className="flex items-center space-x-4">
-              <div className="relative">
-                <button className="flex items-center justify-center w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md transition-colors">
-                  <Bell className="w-5 h-5 text-white" />
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center">
-                    <span className="text-[10px] font-medium text-white">3</span>
-                  </span>
-                </button>
-              </div>
               <div className="relative group">
                 <button className="flex items-center justify-center w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md transition-colors p-0.5">
                   <img
@@ -144,7 +130,7 @@ export default function ClientHome() {
                     className="w-full h-full rounded-full"
                   />
                 </button>
-                <div className="absolute top-12 right-0 hidden group-hover:block">
+                <div className="absolute top-12 left-0 hidden group-hover:block">
                   <div className="bg-white/10 backdrop-blur-md rounded-lg py-2 w-48 border border-white/20">
                     <div className="px-4 py-2 text-sm text-white/80 hover:bg-white/10 cursor-pointer">
                       View Profile
@@ -158,6 +144,25 @@ export default function ClientHome() {
                     </div>
                   </div>
                 </div>
+              </div>
+              <h2 className="text-2xl font-semibold text-white">Welcome back, John!</h2>
+            </div>
+            <div className="flex items-center space-x-4">
+              <div className="relative">
+                <button className="flex items-center justify-center w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md transition-colors">
+                  <Bell className="w-5 h-5 text-white" />
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center">
+                    <span className="text-[10px] font-medium text-white">3</span>
+                  </span>
+                </button>
+              </div>
+              <div className="relative">
+                <button className="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-r from-purple-600 to-purple-400 hover:from-purple-700 hover:to-purple-500 backdrop-blur-md transition-colors">
+                  <Wallet className="w-5 h-5 text-white" />
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-white rounded-full flex items-center justify-center">
+                    <span className="text-[10px] font-medium text-purple-600">$0</span>
+                  </span>
+                </button>
               </div>
             </div>
           </div>
@@ -203,10 +208,10 @@ export default function ClientHome() {
         <section className="mb-12">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-semibold text-white">Popular Services</h2>
-            <button className="text-purple-500 hover:text-purple-600 text-sm font-medium flex items-center">
+            <Link href="/client/services" className="text-purple-500 hover:text-purple-600 text-sm font-medium flex items-center">
               View All
               <ChevronRight className="w-4 h-4 ml-1" />
-            </button>
+            </Link>
           </div>
           <div className="relative">
             <div className="overflow-x-auto scrollbar-hide">

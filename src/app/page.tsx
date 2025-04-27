@@ -2,53 +2,42 @@
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useRole } from '@/contexts/role-context'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 
 export default function Home() {
   const router = useRouter()
-  const { role, switchRole } = useRole()
+  const supabase = createClientComponentClient()
 
   useEffect(() => {
-    // Check if this is first time after signup
-    const isFirstTimeAfterSignup = sessionStorage.getItem('isNewSignup')
-    const selectedRole = sessionStorage.getItem('selectedRole')
-    
-    if (isFirstTimeAfterSignup === 'true' && selectedRole) {
-      // Clear the first-time flag
-      sessionStorage.removeItem('isNewSignup')
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
       
-      // Set the role based on signup selection
-      if (selectedRole !== role) {
-        switchRole()
+      if (session) {
+        // If user is logged in, check if they have completed their profile
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('role, is_profile_complete')
+          .eq('id', session.user.id)
+          .single()
+
+        if (!profile || !profile.is_profile_complete) {
+          router.push('/auth/complete-profile')
+        } else if (profile.role === 'freelancer') {
+          router.push('/freelancer/feed')
+        } else {
+          router.push('/client/home')
+        }
+      } else {
+        // If no session, redirect to sign in after splash screen
+        router.push('/auth/signin')
       }
-      
-      // Redirect to appropriate interface
-      const redirectPath = selectedRole === 'freelancer' ? '/freelancer' : '/client'
-      // Store as last used interface
-      localStorage.setItem('lastUsedInterface', redirectPath)
-      router.push(redirectPath)
-      return
     }
 
-    // For subsequent sign-ins, use last used interface
-    const lastUsedInterface = localStorage.getItem('lastUsedInterface')
-    if (lastUsedInterface) {
-      // Ensure role matches the interface
-      const shouldBeFreelancer = lastUsedInterface === '/freelancer'
-      if ((shouldBeFreelancer && role !== 'freelancer') || 
-          (!shouldBeFreelancer && role !== 'client')) {
-        switchRole()
-      }
-      router.push(lastUsedInterface)
-      return
-    }
+    // Wait for splash screen animation to complete
+    const timer = setTimeout(checkSession, 3500) // 3s for splash + 0.5s for fade out
+    return () => clearTimeout(timer)
+  }, [router, supabase])
 
-    // Default fallback (first time ever or no stored preference)
-    const defaultPath = role === 'freelancer' ? '/freelancer' : '/client'
-    localStorage.setItem('lastUsedInterface', defaultPath)
-    router.push(defaultPath)
-  }, [router, role, switchRole])
-
-  // Return null or loading state while redirecting
-  return null
+  // Return empty div as splash screen is handled by layout
+  return <div />
 } 

@@ -1,28 +1,31 @@
-import type { Metadata } from "next";
+"use client";
+
+import "./globals.css";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
-import "./globals.css";
-import { RoleProvider } from "@/contexts/role-context";
 import { AuthProvider } from "@/contexts/auth-context";
+import { RoleProvider } from "@/contexts/role-context";
+import { SplashScreen } from "@/components/splash-screen";
+import { useState } from "react";
 
-export const metadata: Metadata = {
-  title: "SkilledMice",
-  description: "Find skilled professionals for your tasks",
-};
-
+// Metadata is moved to a separate layout file since this is a client component
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
+  const [showSplash, setShowSplash] = useState(true);
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${GeistSans.variable} ${GeistMono.variable} font-sans`}>
         <AuthProvider>
           <RoleProvider>
-            <main className="min-h-screen">
-              {children}
-            </main>
+            {showSplash ? (
+              <SplashScreen onComplete={() => setShowSplash(false)} />
+            ) : (
+              <main className="min-h-screen">{children}</main>
+            )}
           </RoleProvider>
         </AuthProvider>
       </body>

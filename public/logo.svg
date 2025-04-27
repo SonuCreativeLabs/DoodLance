@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Outer circle representing connection/network -->
+  <circle cx="256" cy="256" r="240" stroke="#4F46E5" stroke-width="16" stroke-dasharray="20,10"/>
+  
+  <!-- Inner shape representing a stylized mouse/professional -->
+  <path d="M256 140
+    C200 140 160 180 160 240
+    C160 280 180 310 220 330
+    L220 370
+    C220 380 230 390 240 390
+    L272 390
+    C282 390 292 380 292 370
+    L292 330
+    C332 310 352 280 352 240
+    C352 180 312 140 256 140Z" 
+    fill="#4F46E5"/>
+  
+  <!-- Mouse ears -->
+  <circle cx="200" cy="200" r="30" fill="#4F46E5"/>
+  <circle cx="312" cy="200" r="30" fill="#4F46E5"/>
+  
+  <!-- Skills representation -->
+  <circle cx="256" cy="260" r="15" fill="white"/>
+  <path d="M236 280 L276 280" stroke="white" stroke-width="8" stroke-linecap="round"/>
+  
+  <!-- Gear icons representing skills -->
+  <path d="M160 100
+    A10 10 0 0 1 180 100
+    A10 10 0 0 1 160 100" 
+    fill="#4F46E5" transform="rotate(45, 170, 100)"/>
+  
+  <path d="M332 100
+    A10 10 0 0 1 352 100
+    A10 10 0 0 1 332 100" 
+    fill="#4F46E5" transform="rotate(-45, 342, 100)"/>
+</svg> 
