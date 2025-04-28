@@ -133,9 +133,10 @@ const nearbyFreelancers: Freelancer[] = [
 ];
 
 export default function IntegratedExplorePage() {
-  const [showMap, setShowMap] = useState(false);
+  const [isSheetCollapsed, setIsSheetCollapsed] = useState(false);
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [sheetOffset, setSheetOffset] = useState(0);
   // Filter state
   const [selectedArea, setSelectedArea] = useState("Velachery");
   const [selectedService, setSelectedService] = useState("All");
@@ -152,17 +153,20 @@ export default function IntegratedExplorePage() {
   const [selectedTimeOptions, setSelectedTimeOptions] = useState<string[]>([]);
   const router = useRouter();
   const [sheetHeight, setSheetHeight] = useState("15vh");
-  const [isSheetExpanded, setIsSheetExpanded] = useState(false);
 
   // Number of professionals (mock for now)
   const professionalsCount = 6;
 
-  // Reset sheet state when switching views
+  // Calculate sheet offset on mount and window resize
   useEffect(() => {
-    if (!showMap) {
-      setIsSheetExpanded(false);
-    }
-  }, [showMap]);
+    const updateSheetOffset = () => {
+      setSheetOffset(window.innerHeight * 0.7);
+    };
+    
+    updateSheetOffset();
+    window.addEventListener('resize', updateSheetOffset);
+    return () => window.removeEventListener('resize', updateSheetOffset);
+  }, []);
 
   const handleTimeOptionClick = (option: string) => {
     if (option === 'Any') {
@@ -201,8 +205,7 @@ export default function IntegratedExplorePage() {
     setSearchQuery("");
   };
 
-  // Height of sticky top bar (search+categories)
-  const TOP_BAR_HEIGHT = 112; // px (adjust if needed)
+  const HEADER_HEIGHT = 112; // Height of search + categories
 
   const handleSheetDrag = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     const height = Math.max(
@@ -212,15 +215,15 @@ export default function IntegratedExplorePage() {
     setSheetHeight(`${height}vh`);
   };
 
-  const handleMapToggle = () => {
-    setShowMap(true);
-    setIsSheetExpanded(false);
-  };
-
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-[#18181b] text-white">
-      {/* Sticky top: Search bar and categories */}
-      <header className="sticky top-0 w-full z-50 bg-[#23232a] px-0 pt-4 pb-2 flex flex-col items-center border-b border-white/10">
+      {/* Background Map */}
+      <div className="absolute inset-0">
+        <MapView />
+      </div>
+
+      {/* Fixed Header - Always at top */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-[#23232a] px-0 pt-4 pb-2 flex flex-col items-center border-b border-white/10">
         <div className="w-full max-w-2xl flex items-center gap-2 mb-2 px-4">
           <button
             className="p-2 rounded-full bg-[#23232a] border border-white/10 text-white/80 hover:bg-[#18181b] hover:text-white shadow flex-shrink-0"
@@ -251,113 +254,53 @@ export default function IntegratedExplorePage() {
             </button>
           ))}
         </div>
-      </header>
-
-      {/* Main content area */}
-      <div className="flex-1 h-[calc(100vh-112px)] overflow-hidden">
-        <AnimatePresence mode="wait">
-          {!showMap ? (
-            // Feed view
-            <motion.div 
-              key="list"
-              className="h-full overflow-y-auto pb-24"
-              initial={{ y: "100%" }}
-              animate={{ y: 0 }}
-              exit={{ y: "100%" }}
-              transition={{
-                type: "spring",
-                damping: 30,
-                stiffness: 300
-              }}
-            >
-              <ProfessionalsFeed />
-              <button
-                className="fixed bottom-24 right-6 z-40 bg-black/80 text-white px-6 py-3 rounded-full shadow-lg"
-                onClick={handleMapToggle}
-              >
-                Show Map
-              </button>
-            </motion.div>
-          ) : (
-            // Map view with draggable sheet
-            <motion.div
-              key="map"
-              className="absolute inset-0"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{
-                duration: 0.2
-              }}
-            >
-              <div className="absolute inset-0">
-                <MapView />
-              </div>
-              <motion.div
-                className="fixed left-0 right-0 bottom-0 w-full z-50"
-                style={{ 
-                  height: "85vh",
-                  y: isSheetExpanded ? "15vh" : "70vh"
-                }}
-                initial={{ y: "70vh" }}
-                animate={{
-                  y: isSheetExpanded ? "15vh" : "70vh"
-                }}
-                transition={{
-                  type: "spring",
-                  damping: 30,
-                  stiffness: 300
-                }}
-                drag="y"
-                dragElastic={0.2}
-                dragConstraints={{ bottom: window.innerHeight * 0.7, top: window.innerHeight * 0.15 }}
-                onDragEnd={(event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-                  const dragDistance = info.offset.y;
-                  if (dragDistance < -50) {
-                    setIsSheetExpanded(true);
-                    if (dragDistance < -200) {
-                      setShowMap(false);
-                    }
-                  } else {
-                    setIsSheetExpanded(false);
-                  }
-                }}
-              >
-                <div className="bg-[#18181b] rounded-t-3xl shadow-xl h-full flex flex-col border-t border-white/10">
-                  <div className="pt-3 pb-2 flex justify-center">
-                    <div className="w-12 h-1 bg-white/20 rounded-full" />
-                  </div>
-                  <div className="flex-1 flex flex-col overflow-hidden">
-                    <div className="flex flex-col items-center justify-center px-4 py-2">
-                      <div className="text-white font-bold text-lg">{nearbyFreelancers.length} nearby professionals</div>
-                      <div className="text-white/50 text-sm mt-1">↑ Swipe up to view list</div>
-                    </div>
-                    <AnimatePresence>
-                      {isSheetExpanded && (
-                        <motion.div 
-                          className="flex-1 overflow-y-auto px-4 pb-24"
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: 20 }}
-                          transition={{
-                            type: "spring",
-                            damping: 25,
-                            stiffness: 200
-                          }}
-                        >
-                          <ProfessionalsFeed />
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                </div>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
 
-      {/* Fullscreen Filter/Search Modal */}
+      {/* Draggable Sheet */}
+      <motion.div
+        className="fixed inset-x-0 bottom-0 bg-[#18181b] rounded-t-3xl shadow-xl z-40"
+        style={{ 
+          height: "calc(100vh - 112px)" // Subtract header height
+        }}
+        initial={{ y: sheetOffset }}
+        animate={{
+          y: isSheetCollapsed ? sheetOffset : 0
+        }}
+        transition={{
+          type: "spring",
+          damping: 30,
+          stiffness: 350,
+          mass: 0.8
+        }}
+        drag="y"
+        dragElastic={0.1}
+        dragConstraints={{ top: 0, bottom: sheetOffset }}
+        dragMomentum={false}
+        onDragEnd={(event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+          const dragDistance = info.offset.y;
+          const dragVelocity = info.velocity.y;
+          
+          if (dragDistance > 50 || dragVelocity > 300) {
+            setIsSheetCollapsed(true);
+          } else if (dragDistance < -50 || dragVelocity < -300) {
+            setIsSheetCollapsed(false);
+          } else {
+            setIsSheetCollapsed(dragDistance > 0);
+          }
+        }}
+      >
+        {/* Drag Handle */}
+        <div className="pt-3 pb-2 flex justify-center">
+          <div className="w-12 h-1 bg-white/20 rounded-full" />
+        </div>
+
+        {/* Scrollable Content */}
+        <div className="h-full overflow-y-auto pb-safe">
+          <ProfessionalsFeed />
+        </div>
+      </motion.div>
+
+      {/* Filter Modal */}
       {showFilterModal && (
         <div className="fixed inset-0 z-50 flex flex-col bg-[#18181b] text-white animate-fadeIn">
           {/* Modal header */}
