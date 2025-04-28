@@ -81,11 +81,11 @@ export default function ProfessionalsFeed() {
   };
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 p-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       {nearbyFreelancers.map(freelancer => (
         <div
           key={freelancer.id}
-          className="bg-[#23232a] shadow-lg hover:shadow-xl rounded-xl p-4 border border-white/10 hover:border-purple-300/30 transition-all duration-200 relative"
+          className="bg-[#111111] shadow-lg hover:shadow-xl rounded-xl p-4 border border-white/10 hover:border-purple-300/30 transition-all duration-200 relative"
         >
           {/* Heart icon */}
           <button
