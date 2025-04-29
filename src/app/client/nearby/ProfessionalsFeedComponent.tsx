@@ -3,9 +3,15 @@
 import React, { useState } from 'react';
 import { Star, MapPin, Clock, Briefcase } from 'lucide-react';
 import { professionals } from './mockData';
+import type { Freelancer } from './types';
 
-export default function ProfessionalsFeed() {
+interface ProfessionalsFeedProps {
+  filteredProfessionals?: Freelancer[];
+}
+
+export default function ProfessionalsFeed({ filteredProfessionals }: ProfessionalsFeedProps) {
   const [favoriteIds, setFavoriteIds] = useState<number[]>([]);
+  const displayProfessionals = filteredProfessionals || professionals;
 
   const handleToggleFavorite = (id: number) => {
     setFavoriteIds(prev =>
@@ -15,7 +21,7 @@ export default function ProfessionalsFeed() {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      {professionals.map(freelancer => (
+      {displayProfessionals.map(freelancer => (
         <div
           key={freelancer.id}
           className="bg-[#111111] shadow-lg hover:shadow-xl rounded-xl p-4 border border-white/10 hover:border-purple-300/30 transition-all duration-200 relative"

@@ -1,3 +1,5 @@
+import { Freelancer } from './types';
+
 interface Professional {
   id: number;
   name: string;
@@ -195,4 +197,16 @@ export const professionals: Professional[] = [
     priceUnit: "piece",
     coords: [80.2244, 13.0387] // West Mambalam coordinates
   }
-]; 
+];
+
+// Add coordinates for map markers
+export const professionalCoordinates = professionals.map(pro => ({
+  id: pro.id,
+  name: pro.name,
+  service: pro.service,
+  coords: [
+    // Chennai area coordinates
+    80.2707 + (Math.random() - 0.5) * 0.1, // Longitude
+    13.0827 + (Math.random() - 0.5) * 0.1  // Latitude
+  ] as [number, number]
+})); 
