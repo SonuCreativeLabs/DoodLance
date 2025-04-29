@@ -23,22 +23,19 @@ export default function MapView() {
     const style = document.createElement('style');
     style.textContent = `
       .custom-popup {
-        transform-origin: bottom center;
+        transform-origin: 50% calc(100% - 8px);
       }
       
       .custom-popup.animate-popup {
-        animation: popupAppear 0.3s ease-out;
+        animation: none;
+        opacity: 0;
+        transform: translateY(5px) scale(0.98);
+        transition: opacity 0.2s ease-out, transform 0.2s ease-out;
       }
 
-      @keyframes popupAppear {
-        0% {
-          opacity: 0;
-          transform: translateY(10px) scale(0.95);
-        }
-        100% {
-          opacity: 1;
-          transform: translateY(0) scale(1);
-        }
+      .custom-popup.mapboxgl-popup-anchor-bottom {
+        opacity: 1;
+        transform: translateY(0) scale(1);
       }
 
       .custom-popup .mapboxgl-popup-content {
@@ -47,22 +44,36 @@ export default function MapView() {
         background: transparent;
         box-shadow: none;
         border: none;
+        transform-origin: bottom center;
+        transition: transform 0.3s ease-out;
+      }
+
+      .mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip {
+        transition: transform 0.2s ease-out;
       }
       
       .custom-popup .mapboxgl-popup-close-button {
-        padding: 4px;
-        right: 8px;
-        top: 8px;
-        color: rgba(255, 255, 255, 0.6);
-        font-size: 18px;
-        border-radius: 4px;
+        padding: 8px;
+        right: 12px;
+        top: 12px;
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 24px;
+        font-weight: 300;
+        border-radius: 50%;
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         transition: all 0.2s;
         z-index: 1;
+        line-height: 0;
       }
       
       .custom-popup .mapboxgl-popup-close-button:hover {
-        background-color: rgba(255, 255, 255, 0.1);
-        color: rgba(255, 255, 255, 0.9);
+        background-color: rgba(255, 255, 255, 0.15);
+        color: rgba(255, 255, 255, 1);
+        transform: scale(1.1);
       }
       
       .custom-popup .mapboxgl-popup-tip {
@@ -73,13 +84,15 @@ export default function MapView() {
     `;
     document.head.appendChild(style);
 
-    // Function to center map on marker with animation
-    const centerMapOnMarker = (coords: [number, number]) => {
-      map.flyTo({
+    // Function to smoothly move between markers
+    const moveToMarker = (coords: [number, number]) => {
+      map.easeTo({
         center: coords,
-        offset: [0, -100], // Offset to account for popup height
-        duration: 800,
-        essential: true
+        offset: [0, -80],
+        duration: 500,
+        easing: (t) => {
+          return t * (2 - t);
+        }
       });
     };
 
@@ -87,11 +100,12 @@ export default function MapView() {
     professionals.forEach((pro) => {
       // Create a popup with more information
       const popup = new mapboxgl.Popup({
-        offset: [0, -10],
+        offset: [0, -8],
         closeButton: true,
         closeOnClick: false,
         maxWidth: '340px',
-        className: 'custom-popup animate-popup'
+        className: 'custom-popup animate-popup',
+        anchor: 'bottom'
       }).setHTML(`
         <div class="bg-[#111111] shadow-lg rounded-xl p-4 border border-white/10 relative">
           <div class="flex items-start gap-4">
@@ -162,17 +176,19 @@ export default function MapView() {
       marker.getElement().addEventListener('click', (e) => {
         e.stopPropagation();
         
-        // Remove any existing popups
+        // Remove any existing popups with fade out
         const existingPopups = document.getElementsByClassName('mapboxgl-popup');
-        Array.from(existingPopups).forEach(popup => popup.remove());
+        Array.from(existingPopups).forEach(popup => {
+          (popup as HTMLElement).style.opacity = '0';
+          (popup as HTMLElement).style.transform = 'translateY(5px) scale(0.98)';
+          setTimeout(() => popup.remove(), 200);
+        });
         
-        // Show popup
+        // Show new popup
         popup.setLngLat(pro.coords).addTo(map);
         
-        // Center map on marker with animation
-        setTimeout(() => {
-          centerMapOnMarker(pro.coords);
-        }, 50);
+        // Move map to center on marker
+        moveToMarker(pro.coords);
       });
 
       // Optional: Remove popup when clicking elsewhere on the map
