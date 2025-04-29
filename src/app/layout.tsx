@@ -1,12 +1,13 @@
 "use client";
 
 import "./globals.css";
-import { GeistSans } from "geist/font/sans";
-import { GeistMono } from "geist/font/mono";
+import { Inter } from "next/font/google";
 import { AuthProvider } from "@/contexts/auth-context";
 import { RoleProvider } from "@/contexts/role-context";
 import { SplashScreen } from "@/components/splash-screen";
 import { useState } from "react";
+
+const inter = Inter({ subsets: ["latin"] });
 
 // Metadata is moved to a separate layout file since this is a client component
 export default function RootLayout({
@@ -19,7 +20,11 @@ export default function RootLayout({
 
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${GeistSans.variable} ${GeistMono.variable} font-sans`}>
+      <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+      </head>
+      <body className={`${inter.className} antialiased`}>
         <AuthProvider>
           <RoleProvider>
             {showSplash ? (

@@ -332,19 +332,17 @@ export default function IntegratedExplorePage() {
       {/* Floating Map Button - Only visible when list is expanded */}
       {!isSheetCollapsed && (
         <motion.div 
-          className="fixed bottom-[15%] left-1/2 transform -translate-x-1/2 z-10"
+          className="fixed bottom-[10%] inset-x-0 mx-auto flex justify-center z-10"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 20 }}
         >
           <button 
             onClick={() => setIsSheetCollapsed(true)}
-            className="group flex items-center h-10 px-4 bg-white/95 backdrop-blur-sm text-gray-700 rounded-full shadow-lg hover:bg-white transition-all border border-gray-100"
+            className="inline-flex items-center h-10 px-4 bg-white/95 backdrop-blur-sm text-gray-700 rounded-full shadow-lg hover:bg-white transition-all border border-gray-100"
           >
-            <div className="flex items-center gap-2">
-              <Map className="w-4 h-4" />
-              <span className="text-[13px] font-medium">Map</span>
-            </div>
+            <Map className="w-4 h-4" />
+            <span className="text-[13px] font-medium ml-2">Map</span>
           </button>
         </motion.div>
       )}
