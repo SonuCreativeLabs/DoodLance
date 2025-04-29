@@ -239,19 +239,27 @@ export default function IntegratedExplorePage() {
   const router = useRouter();
   const [sheetHeight, setSheetHeight] = useState("15vh");
   const [isDragTextVisible, setIsDragTextVisible] = useState(true);
+  const [initialSheetY, setInitialSheetY] = useState(0);
 
   // Number of professionals (mock for now)
   const professionalsCount = 6;
 
   // Calculate sheet offset on mount and window resize
   useEffect(() => {
+    // Set initial sheet Y position
+    setInitialSheetY(typeof window !== 'undefined' ? window.innerHeight * 0.7 : 0);
+    
     const updateSheetOffset = () => {
-      setSheetOffset(window.innerHeight * 0.7);
+      if (typeof window !== 'undefined') {
+        setSheetOffset(window.innerHeight * 0.7);
+      }
     };
     
     updateSheetOffset();
-    window.addEventListener('resize', updateSheetOffset);
-    return () => window.removeEventListener('resize', updateSheetOffset);
+    if (typeof window !== 'undefined') {
+      window.addEventListener('resize', updateSheetOffset);
+      return () => window.removeEventListener('resize', updateSheetOffset);
+    }
   }, []);
 
   const handleTimeOptionClick = (option: string) => {
@@ -387,9 +395,9 @@ export default function IntegratedExplorePage() {
           willChange: 'transform',
           overflow: isSheetCollapsed ? 'hidden' : 'visible'
         }}
-        initial={{ y: window.innerHeight * 0.7 }}
+        initial={{ y: initialSheetY }}
         animate={{
-          y: isSheetCollapsed ? window.innerHeight * 0.7 : 0
+          y: isSheetCollapsed ? (typeof window !== 'undefined' ? window.innerHeight * 0.7 : 0) : 0
         }}
         transition={{
           type: "spring",
@@ -400,7 +408,7 @@ export default function IntegratedExplorePage() {
         dragElastic={0.1}
         dragConstraints={{
           top: 0,
-          bottom: window.innerHeight * 0.7
+          bottom: typeof window !== 'undefined' ? window.innerHeight * 0.7 : 0
         }}
         dragMomentum={false}
         onDragEnd={(event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {

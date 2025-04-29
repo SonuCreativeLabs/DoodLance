@@ -1,18 +1,11 @@
+"use client";
+
 import React, { useRef, useEffect } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
+import { professionals } from './mockData';
 
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN!;
-
-// Mock professionals with coordinates
-const professionals: { id: number; name: string; coords: [number, number] }[] = [
-  { id: 1, name: 'John Smith', coords: [80.2707, 13.0827] }, // Chennai
-  { id: 2, name: 'Sarah Johnson', coords: [80.0183, 12.8406] }, // Near Chennai
-  { id: 3, name: 'Mike Wilson', coords: [79.9426, 13.6288] }, // Near Chennai
-  { id: 4, name: 'Emma Davis', coords: [80.1627, 12.9716] }, // Near Chennai
-  { id: 5, name: 'David Brown', coords: [79.8083, 12.9200] }, // Near Chennai
-  { id: 6, name: 'Lisa Anderson', coords: [80.2376, 13.0674] }, // Near Chennai
-];
 
 export default function MapView() {
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -21,24 +14,39 @@ export default function MapView() {
     if (!mapContainer.current) return;
     const map = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/streets-v11',
-      center: [80.2707, 13.0827],
+      style: 'mapbox://styles/mapbox/streets-v12', // Default Mapbox style
+      center: [80.2707, 13.0827], // Chennai center
       zoom: 11,
     });
-    // Add markers
+
+    // Add markers for each professional
     professionals.forEach((pro) => {
-      const marker = new mapboxgl.Marker()
+      // Create a popup with more information
+      const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(`
+        <div style="color: black;">
+          <strong>${pro.name}</strong><br/>
+          ${pro.service}<br/>
+          <small>⭐ ${pro.rating} (${pro.reviews} reviews)</small><br/>
+          <small>📍 ${pro.location}</small>
+        </div>
+      `);
+
+      // Create and add the marker
+      new mapboxgl.Marker({
+        color: "#9333EA", // Purple color to match theme
+      })
         .setLngLat(pro.coords)
-        .setPopup(new mapboxgl.Popup({ offset: 25 }).setText(pro.name))
+        .setPopup(popup)
         .addTo(map);
     });
+
     return () => map.remove();
   }, []);
 
   return (
     <div
       ref={mapContainer}
-      style={{ width: '100vw', height: '100vh', position: 'absolute', top: 0, left: 0, zIndex: 0 }}
+      style={{ width: '100%', height: '100%', position: 'absolute', top: 0, left: 0, zIndex: 0 }}
     />
   );
 } 

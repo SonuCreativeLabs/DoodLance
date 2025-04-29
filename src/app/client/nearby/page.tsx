@@ -1,6 +1,7 @@
-import { redirect } from 'next/navigation';
+"use client";
+
+import IntegratedExplorePage from './integrated-explore/page';
 
 export default function NearbyProfessionals() {
-  redirect('/client/nearby/integrated-explore');
-  return null;
+  return <IntegratedExplorePage />;
 } 
