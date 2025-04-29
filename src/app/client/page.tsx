@@ -8,6 +8,7 @@ import { ServiceCategory } from '@/components/client/service-category'
 import { cn } from '@/lib/utils'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
+import { professionals } from './nearby/mockData'
 
 // Mock data for service categories
 const serviceCategories = [
@@ -19,43 +20,6 @@ const serviceCategories = [
   { name: 'Gardening', icon: '🌱', color: 'bg-white' },
   { name: 'Moving', icon: '🚚', color: 'bg-white' },
   { name: 'More', icon: '➕', color: 'bg-white' },
-]
-
-// Mock data for freelancers
-const nearbyFreelancers = [
-  {
-    id: 1,
-    name: "John Smith",
-    service: "Plumbing Services",
-    rating: 4.8,
-    reviews: 156,
-    completedJobs: 156,
-    image: "https://api.dicebear.com/7.x/avataaars/svg?seed=John",
-    location: "2.5 km away",
-    responseTime: "Usually responds in 30 mins"
-  },
-  {
-    id: 2,
-    name: "Sarah Johnson",
-    service: "House Cleaning",
-    rating: 4.9,
-    reviews: 203,
-    completedJobs: 203,
-    image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah",
-    location: "1.8 km away",
-    responseTime: "Usually responds in 15 mins"
-  },
-  {
-    id: 3,
-    name: "Mike Wilson",
-    service: "Electrical Work",
-    rating: 4.7,
-    reviews: 128,
-    completedJobs: 128,
-    image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Mike",
-    location: "3.2 km away",
-    responseTime: "Usually responds in 45 mins"
-  }
 ]
 
 const AnimatedCard = ({ icon, delay }: { icon: React.ReactNode; delay: number }) => (
@@ -255,45 +219,67 @@ export default function ClientHome() {
           }
         `}</style>
 
-        {/* Featured Providers */}
+        {/* Top Rated Experts Section */}
         <section className="mb-12">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-semibold text-white">Nearby Professionals</h2>
+            <h2 className="text-2xl font-semibold text-white">
+              <span className="bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 text-transparent bg-clip-text">Top Rated</span>
+              {" "}Experts
+            </h2>
             <Link href="/client/nearby" className="text-purple-500 hover:text-purple-600 text-sm font-medium flex items-center">
               View All
               <ChevronRight className="w-4 h-4 ml-1" />
             </Link>
           </div>
           <div className="relative">
-            <div className="overflow-x-auto scrollbar-hide">
-              <div className="flex space-x-4 pb-4 px-1">
-                {nearbyFreelancers.map((freelancer) => (
+            <div className="overflow-x-auto scrollbar-hide max-w-[353px] sm:max-w-none mx-auto">
+              <div className="flex gap-[1px] pb-4">
+                {professionals
+                  .sort((a, b) => {
+                    // First sort by rating
+                    if (b.rating !== a.rating) {
+                      return b.rating - a.rating;
+                    }
+                    // If ratings are equal, sort by number of reviews
+                    return b.reviews - a.reviews;
+                  })
+                  .slice(0, 5) // Only take top 5
+                  .map((expert) => (
                   <motion.div
-                    key={freelancer.id}
+                    key={expert.id}
                     whileHover={{ scale: 1.05 }}
-                    className="flex-shrink-0 w-[120px]"
+                    className="flex-shrink-0 w-[160px]"
                   >
-                    <div className="relative">
+                    <div className="relative group">
                       {/* Rating Badge */}
-                      <div className="absolute top-2 right-2 z-20 bg-black/50 backdrop-blur-sm rounded-full px-2 py-1 flex items-center gap-1">
-                        <Star className="w-3 h-3 text-yellow-400 fill-current" />
-                        <span className="text-white text-xs font-medium">{freelancer.rating}</span>
+                      <div className="absolute top-2 left-2 z-20 bg-gradient-to-r from-yellow-400 to-yellow-600 px-2 py-0.5 rounded-full flex items-center gap-1 shadow-lg">
+                        <Star className="w-2.5 h-2.5 text-black fill-current" />
+                        <span className="text-black text-[10px] font-bold">{expert.rating}</span>
                       </div>
                       
-                      {/* Profile Picture */}
-                      <div className="relative">
-                        <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full opacity-20 blur-md"></div>
+                      {/* Profile Picture with Gradient Shadow */}
+                      <div className="relative w-[100px] h-[100px] mx-auto">
+                        {/* Main Glow */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full opacity-20 blur-[10px]"></div>
+                        {/* Bottom Shadow */}
+                        <div className="absolute -bottom-1 -inset-x-1 h-4 bg-gradient-to-b from-purple-500/20 to-transparent blur-sm"></div>
                         <img
-                          src={freelancer.image}
-                          alt={freelancer.name}
-                          className="w-[120px] h-[120px] rounded-full border-2 border-purple-200/50 relative z-10 object-cover"
+                          src={expert.image}
+                          alt={expert.name}
+                          className="w-full h-full rounded-full border-2 border-purple-200/50 relative z-10 object-cover"
                         />
                       </div>
                       
-                      {/* Name and Skill */}
-                      <div className="mt-2 text-center">
-                        <h3 className="font-medium text-white text-sm truncate">{freelancer.name}</h3>
-                        <p className="text-white/60 text-xs truncate">{freelancer.service}</p>
+                      {/* Expert Info with Instagram-style Spacing */}
+                      <div className="mt-3 text-center">
+                        <h3 className="font-semibold text-white text-sm leading-tight truncate">{expert.name}</h3>
+                        <p className="text-purple-400 text-xs font-medium truncate mt-0.5">{expert.service}</p>
+                        <div className="flex items-center justify-center gap-1.5 mt-1.5">
+                          <p className="text-white/70 text-[10px]">{expert.reviews} reviews</p>
+                          <span className="text-white/30">•</span>
+                          <p className="text-white/70 text-[10px]">{expert.completedJobs} jobs</p>
+                        </div>
+                        <p className="text-white/50 text-[10px] font-medium mt-1">{expert.location}</p>
                       </div>
                     </div>
                   </motion.div>
