@@ -1,18 +1,11 @@
+"use client";
+
 import React, { useRef, useEffect } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
+import { professionals } from './mockData';
 
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN!;
-
-// Mock professionals with coordinates
-const professionals: { id: number; name: string; coords: [number, number] }[] = [
-  { id: 1, name: 'John Smith', coords: [80.2707, 13.0827] }, // Chennai
-  { id: 2, name: 'Sarah Johnson', coords: [80.0183, 12.8406] }, // Near Chennai
-  { id: 3, name: 'Mike Wilson', coords: [79.9426, 13.6288] }, // Near Chennai
-  { id: 4, name: 'Emma Davis', coords: [80.1627, 12.9716] }, // Near Chennai
-  { id: 5, name: 'David Brown', coords: [79.8083, 12.9200] }, // Near Chennai
-  { id: 6, name: 'Lisa Anderson', coords: [80.2376, 13.0674] }, // Near Chennai
-];
 
 export default function MapView() {
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -21,24 +14,84 @@ export default function MapView() {
     if (!mapContainer.current) return;
     const map = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/streets-v11',
-      center: [80.2707, 13.0827],
+      style: 'mapbox://styles/mapbox/streets-v12',
+      center: [80.2707, 13.0827], // Chennai center
       zoom: 11,
     });
-    // Add markers
+
+    // Add markers for each professional
     professionals.forEach((pro) => {
-      const marker = new mapboxgl.Marker()
+      // Create a popup with more information
+      const popup = new mapboxgl.Popup({
+        offset: 25,
+        closeButton: true,
+        closeOnClick: false,
+        maxWidth: '300px',
+        className: 'custom-popup'
+      }).setHTML(`
+        <div class="p-3 text-black">
+          <h3 class="font-bold text-lg mb-1">${pro.name}</h3>
+          <p class="text-gray-600 mb-2">${pro.service}</p>
+          <div class="flex items-center gap-1 text-sm">
+            <span class="text-yellow-500">⭐</span>
+            <span class="font-medium">${pro.rating}</span>
+            <span class="text-gray-500">(${pro.reviews} reviews)</span>
+          </div>
+          <p class="text-gray-600 text-sm mt-1">📍 ${pro.location}</p>
+        </div>
+      `);
+
+      // Create and add the marker
+      const marker = new mapboxgl.Marker({
+        color: "#9333EA",
+      })
         .setLngLat(pro.coords)
-        .setPopup(new mapboxgl.Popup({ offset: 25 }).setText(pro.name))
+        .setPopup(popup)
         .addTo(map);
+
+      // Add hover effect
+      marker.getElement().addEventListener('mouseenter', () => popup.addTo(map));
+      marker.getElement().addEventListener('mouseleave', () => {
+        setTimeout(() => {
+          if (!popup.isOpen()) popup.remove();
+        }, 300);
+      });
     });
-    return () => map.remove();
+
+    // Add custom styles for popups
+    const style = document.createElement('style');
+    style.textContent = `
+      .custom-popup .mapboxgl-popup-content {
+        border-radius: 12px;
+        padding: 0;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      }
+      .custom-popup .mapboxgl-popup-close-button {
+        padding: 4px 8px;
+        right: 4px;
+        top: 4px;
+        color: #666;
+        font-size: 16px;
+        border-radius: 50%;
+        transition: all 0.2s;
+      }
+      .custom-popup .mapboxgl-popup-close-button:hover {
+        background-color: #f3f4f6;
+        color: #000;
+      }
+    `;
+    document.head.appendChild(style);
+
+    return () => {
+      map.remove();
+      document.head.removeChild(style);
+    };
   }, []);
 
   return (
     <div
       ref={mapContainer}
-      style={{ width: '100vw', height: '100vh', position: 'absolute', top: 0, left: 0, zIndex: 0 }}
+      style={{ width: '100%', height: '100%', position: 'absolute', top: 0, left: 0, zIndex: 0 }}
     />
   );
 } 

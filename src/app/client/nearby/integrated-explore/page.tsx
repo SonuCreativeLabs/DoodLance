@@ -1,220 +1,15 @@
 "use client";
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { PanInfo } from 'framer-motion';
 import MapView from '../MapViewComponent';
 import ProfessionalsFeed from '../ProfessionalsFeedComponent';
-import { Search, X, Calendar, Map } from 'lucide-react';
+import { Search, Map } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-
-interface Freelancer {
-  id: number;
-  name: string;
-  service: string;
-  rating: number;
-  reviews: number;
-  completedJobs: number;
-  location: string;
-  responseTime: string;
-  image: string;
-  distance: number;
-  price: number;
-  priceUnit: string;
-}
-
-interface Category {
-  id: number;
-  name: string;
-  icon: string;
-}
-
-const categories: Category[] = [
-  { id: 1, name: 'All', icon: '🌟' },
-  { id: 2, name: 'Home Services', icon: '🏠' },
-  { id: 3, name: 'Education', icon: '📚' },
-  { id: 4, name: 'Health', icon: '💪' },
-  { id: 5, name: 'Pet Care', icon: '🐾' },
-  { id: 6, name: 'Professional', icon: '💼' },
-  { id: 7, name: 'Tech', icon: '💻' },
-  { id: 8, name: 'Personal Care', icon: '💅' },
-  { id: 9, name: 'Events', icon: '🎉' },
-];
-const areas = ["Velachery", "Anna Nagar", "T Nagar", "Adyar", "Mylapore", "Porur", "Vadapalani", "Chromepet"];
-const serviceTypes = ["Plumbing", "Electrical", "Cleaning", "Gardening", "Pet Care", "Tutoring", "Cooking", "Moving", "Painting", "Carpentry", "HVAC", "Photography", "Videography", "Graphic Design", "Content Writing"];
-const availabilityOptions = ["Available Now", "Available Today", "Available This Week", "Available Next Week"];
-const timeOptions = ['Any', 'Morning', 'Afternoon', 'Evening', 'Night'];
-
-// Copy the nearbyFreelancers array from ProfessionalsFeedComponent for now
-const nearbyFreelancers: Freelancer[] = [
-  {
-    id: 1,
-    name: "Rajesh Kumar",
-    service: "AC Repair & Service",
-    rating: 4.8,
-    reviews: 156,
-    completedJobs: 230,
-    location: "Anna Nagar",
-    responseTime: "< 30 mins",
-    image: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=200&h=200&fit=crop&crop=faces&auto=format&q=80",
-    distance: 1.2,
-    price: 500,
-    priceUnit: "visit"
-  },
-  {
-    id: 2,
-    name: "Priya Lakshmi",
-    service: "Home Cleaning",
-    rating: 4.9,
-    reviews: 203,
-    completedJobs: 180,
-    location: "T Nagar",
-    responseTime: "< 1 hour",
-    image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop&crop=faces&auto=format&q=80",
-    distance: 2.5,
-    price: 1200,
-    priceUnit: "day"
-  },
-  {
-    id: 3,
-    name: "Arun Prakash",
-    service: "Cricket Coach",
-    rating: 4.9,
-    reviews: 128,
-    completedJobs: 150,
-    location: "Chepauk",
-    responseTime: "< 45 mins",
-    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=faces&auto=format&q=80",
-    distance: 3.1,
-    price: 1000,
-    priceUnit: "session"
-  },
-  {
-    id: 4,
-    name: "Divya Shankar",
-    service: "Carnatic Music Teacher",
-    rating: 4.9,
-    reviews: 178,
-    completedJobs: 200,
-    location: "Mylapore",
-    responseTime: "< 2 hours",
-    image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&h=200&fit=crop&crop=faces&auto=format&q=80",
-    distance: 1.8,
-    price: 800,
-    priceUnit: "hour"
-  },
-  {
-    id: 5,
-    name: "Karthik Raja",
-    service: "Car Driving Instructor",
-    rating: 4.6,
-    reviews: 142,
-    completedJobs: 165,
-    location: "Adyar",
-    responseTime: "< 1 hour",
-    image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop&crop=faces&auto=format&q=80",
-    distance: 2.7,
-    price: 600,
-    priceUnit: "hour"
-  },
-  {
-    id: 6,
-    name: "Meena Kumari",
-    service: "Bharatanatyam Teacher",
-    rating: 4.8,
-    reviews: 189,
-    completedJobs: 210,
-    location: "Alwarpet",
-    responseTime: "< 3 hours",
-    image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&h=200&fit=crop&crop=faces&auto=format&q=80",
-    distance: 4.2,
-    price: 1500,
-    priceUnit: "month"
-  },
-  {
-    id: 7,
-    name: "Senthil Kumar",
-    service: "Fitness Trainer",
-    rating: 4.7,
-    reviews: 165,
-    completedJobs: 190,
-    location: "Nungambakkam",
-    responseTime: "< 30 mins",
-    image: "https://images.unsplash.com/photo-1534368420009-621bfab424a8?w=200&h=200&fit=crop&crop=faces&auto=format&q=80",
-    distance: 3.5,
-    price: 700,
-    priceUnit: "session"
-  },
-  {
-    id: 8,
-    name: "Fathima Begum",
-    service: "Mehendi Artist",
-    rating: 4.9,
-    reviews: 220,
-    completedJobs: 250,
-    location: "Royapettah",
-    responseTime: "< 1 hour",
-    image: "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=200&h=200&fit=crop&crop=faces&auto=format&q=80",
-    distance: 2.9,
-    price: 2000,
-    priceUnit: "event"
-  },
-  {
-    id: 9,
-    name: "Ramesh Babu",
-    service: "Guitar Teacher",
-    rating: 4.7,
-    reviews: 145,
-    completedJobs: 170,
-    location: "Kodambakkam",
-    responseTime: "< 2 hours",
-    image: "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=200&h=200&fit=crop&crop=faces&auto=format&q=80",
-    distance: 5.1,
-    price: 600,
-    priceUnit: "hour"
-  },
-  {
-    id: 10,
-    name: "Lakshmi Narayanan",
-    service: "Yoga Instructor",
-    rating: 4.8,
-    reviews: 198,
-    completedJobs: 220,
-    location: "Besant Nagar",
-    responseTime: "< 1 hour",
-    image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop&crop=faces&auto=format&q=80",
-    distance: 3.8,
-    price: 500,
-    priceUnit: "session"
-  },
-  {
-    id: 11,
-    name: "Vijay Kumar",
-    service: "Swimming Coach",
-    rating: 4.9,
-    reviews: 167,
-    completedJobs: 190,
-    location: "Velachery",
-    responseTime: "< 45 mins",
-    image: "https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?w=200&h=200&fit=crop&crop=faces&auto=format&q=80",
-    distance: 4.5,
-    price: 800,
-    priceUnit: "session"
-  },
-  {
-    id: 12,
-    name: "Anitha Rajan",
-    service: "Tailoring & Alterations",
-    rating: 4.8,
-    reviews: 210,
-    completedJobs: 245,
-    location: "West Mambalam",
-    responseTime: "< 2 hours",
-    image: "https://images.unsplash.com/photo-1544717302-de2939b7ef71?w=200&h=200&fit=crop&crop=faces&auto=format&q=80",
-    distance: 3.2,
-    price: 400,
-    priceUnit: "piece"
-  }
-];
+import { categories } from '../constants';
+import { professionals } from '../mockData';
+import type { Freelancer } from '../types';
+import SearchFilters from '../components/SearchFilters';
 
 export default function IntegratedExplorePage() {
   const [isSheetCollapsed, setIsSheetCollapsed] = useState(false);
@@ -222,6 +17,9 @@ export default function IntegratedExplorePage() {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [isDragging, setIsDragging] = useState(false);
   const [sheetOffset, setSheetOffset] = useState(0);
+  const [isDragTextVisible, setIsDragTextVisible] = useState(true);
+  const [initialSheetY, setInitialSheetY] = useState(0);
+  
   // Filter state
   const [selectedArea, setSelectedArea] = useState("Velachery");
   const [selectedService, setSelectedService] = useState("All");
@@ -229,94 +27,89 @@ export default function IntegratedExplorePage() {
   const [minRating, setMinRating] = useState(0);
   const [priceRange, setPriceRange] = useState([0, 20000]);
   const [availability, setAvailability] = useState("");
-  const [priceType, setPriceType] = useState('Any');
-  const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [preferredTime, setPreferredTime] = useState('Any');
-  const dateInputRef = useRef<HTMLInputElement | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
   const [selectedTimeOptions, setSelectedTimeOptions] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filteredProfessionals, setFilteredProfessionals] = useState<Freelancer[]>(professionals);
+  
   const router = useRouter();
-  const [sheetHeight, setSheetHeight] = useState("15vh");
-  const [isDragTextVisible, setIsDragTextVisible] = useState(true);
-
-  // Number of professionals (mock for now)
-  const professionalsCount = 6;
 
   // Calculate sheet offset on mount and window resize
   useEffect(() => {
     const updateSheetOffset = () => {
-      setSheetOffset(window.innerHeight * 0.7);
+      if (typeof window !== 'undefined') {
+        setInitialSheetY(window.innerHeight * 0.7);
+      }
     };
-    
+
     updateSheetOffset();
     window.addEventListener('resize', updateSheetOffset);
     return () => window.removeEventListener('resize', updateSheetOffset);
   }, []);
 
   const handleTimeOptionClick = (option: string) => {
-    if (option === 'Any') {
-      if (selectedTimeOptions.includes('Any')) {
-        setSelectedTimeOptions([]);
+    setSelectedTimeOptions(prev => {
+      if (prev.includes(option)) {
+        return prev.filter(t => t !== option);
       } else {
-        setSelectedTimeOptions(['Any']);
+        return [...prev, option];
       }
-    } else {
-      setSelectedTimeOptions(prev => {
-        const newSelection = prev.includes('Any') ? [] : [...prev];
-        if (newSelection.includes(option)) {
-          return newSelection.filter(item => item !== option);
-        } else {
-          return [...newSelection, option];
-        }
-      });
-    }
+    });
   };
 
-  // Save and clear filter handlers
   const handleSaveFilters = () => {
+    // Apply filters to professionals
+    let filtered = [...professionals];
+    
+    // Apply area filter
+    if (selectedArea) {
+      filtered = filtered.filter(pro => pro.location === selectedArea);
+    }
+    
+    // Apply service filter
+    if (selectedService && selectedService !== "All") {
+      filtered = filtered.filter(pro => pro.service === selectedService);
+    }
+    
+    // Apply distance filter
+    if (range[0]) {
+      filtered = filtered.filter(pro => pro.distance <= range[0]);
+    }
+    
+    // Apply rating filter
+    if (minRating > 0) {
+      filtered = filtered.filter(pro => pro.rating >= minRating);
+    }
+    
+    // Apply price range filter
+    filtered = filtered.filter(pro => 
+      pro.price >= priceRange[0] && pro.price <= priceRange[1]
+    );
+    
+    setFilteredProfessionals(filtered);
     setShowFilterModal(false);
   };
+
   const handleClearFilters = () => {
     setSelectedArea("Velachery");
     setSelectedService("All");
     setRange([10]);
     setMinRating(0);
     setPriceRange([0, 20000]);
-    setPriceType('Any');
     setAvailability("");
-    setSelectedDate(null);
-    setPreferredTime("Any");
     setSelectedTimeOptions([]);
-    setSearchQuery("");
+    setFilteredProfessionals(professionals);
   };
 
-  // Update HEADER_HEIGHT to match the actual header height
-  const HEADER_HEIGHT = 144; // 64px for search bar + 80px for category bar
-
-  const handleSheetDrag = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-    const height = Math.max(
-      15,
-      Math.min(85, 100 - (info.point.y / window.innerHeight) * 100)
-    );
-    setSheetHeight(`${height}vh`);
-  };
-
-  // Add scroll handler
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    if (e.currentTarget.scrollTop > 20) {
-      setIsDragTextVisible(false);
-    } else {
-      setIsDragTextVisible(true);
-    }
+    const target = e.target as HTMLDivElement;
+    setIsDragTextVisible(target.scrollTop === 0);
   };
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden bg-[#111111] text-white">
-      {/* Background Map */}
-      <div className="absolute inset-0 z-[1]">
-        <MapView />
-      </div>
+    <div className="h-screen w-full bg-black relative overflow-hidden">
+      {/* Map View */}
+      <MapView />
 
       {/* Fixed Header - Always at top */}
       <div className="fixed top-0 left-0 right-0 z-[3] px-0 pt-3 flex flex-col items-center bg-[#111111]">
@@ -364,18 +157,6 @@ export default function IntegratedExplorePage() {
       {/* Background overlay for header */}
       <div className="fixed top-0 left-0 right-0 h-[100px] bg-[#111111] z-[2]" />
 
-      {/* Add global styles for no-scrollbar */}
-      <style jsx global>{`
-        .no-scrollbar {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-          overflow-x: auto;
-        }
-        .no-scrollbar::-webkit-scrollbar {
-          display: none;
-        }
-      `}</style>
-
       {/* Bottom Sheet */}
       <motion.div
         className="fixed left-0 right-0 bg-[#111111] shadow-xl z-[2] flex flex-col"
@@ -387,9 +168,9 @@ export default function IntegratedExplorePage() {
           willChange: 'transform',
           overflow: isSheetCollapsed ? 'hidden' : 'visible'
         }}
-        initial={{ y: window.innerHeight * 0.7 }}
+        initial={{ y: initialSheetY }}
         animate={{
-          y: isSheetCollapsed ? window.innerHeight * 0.7 : 0
+          y: isSheetCollapsed ? (typeof window !== 'undefined' ? window.innerHeight * 0.7 : 0) : 0
         }}
         transition={{
           type: "spring",
@@ -400,7 +181,7 @@ export default function IntegratedExplorePage() {
         dragElastic={0.1}
         dragConstraints={{
           top: 0,
-          bottom: window.innerHeight * 0.7
+          bottom: typeof window !== 'undefined' ? window.innerHeight * 0.7 : 0
         }}
         dragMomentum={false}
         onDragEnd={(event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
@@ -433,7 +214,7 @@ export default function IntegratedExplorePage() {
         </div>
 
         {/* Content */}
-        <div 
+        <div
           className={`flex-1 ${isSheetCollapsed ? 'overflow-hidden' : 'overflow-y-auto'} overscroll-contain`}
           onScroll={handleScroll}
           style={{
@@ -445,7 +226,7 @@ export default function IntegratedExplorePage() {
               <div className="flex items-center justify-center py-3">
                 <div className="flex items-center gap-4">
                   <div className="flex -space-x-3">
-                    {nearbyFreelancers.slice(0, 4).map((freelancer, index) => (
+                    {professionals.slice(0, 4).map((freelancer, index) => (
                       <motion.div
                         key={freelancer.id}
                         className="relative"
@@ -466,7 +247,7 @@ export default function IntegratedExplorePage() {
                         </div>
                       </motion.div>
                     ))}
-                    {nearbyFreelancers.length > 4 && (
+                    {professionals.length > 4 && (
                       <motion.div
                         className="relative"
                         style={{ zIndex: 0 }}
@@ -477,7 +258,7 @@ export default function IntegratedExplorePage() {
                         <div className="relative w-10 h-10">
                           <div className="absolute inset-0 bg-gradient-to-br from-purple-400/20 to-purple-600/20 rounded-full blur-sm"></div>
                           <div className="relative w-10 h-10 rounded-full border-2 border-purple-200/20 overflow-hidden backdrop-blur-sm bg-[#111111]/90 flex items-center justify-center">
-                            <span className="text-xs font-bold text-white/70">+{nearbyFreelancers.length - 4}</span>
+                            <span className="text-xs font-bold text-white/70">+{professionals.length - 4}</span>
                           </div>
                         </div>
                       </motion.div>
@@ -490,7 +271,7 @@ export default function IntegratedExplorePage() {
                     transition={{ delay: 0.4 }}
                   >
                     <div className="text-white font-medium text-[15px]">
-                      {nearbyFreelancers.length} nearby experts
+                      {professionals.length} nearby experts
                     </div>
                     <div className="flex items-center gap-1.5 text-white/60 text-sm">
                       <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
@@ -503,7 +284,7 @@ export default function IntegratedExplorePage() {
               <div className="flex items-center justify-center mb-5 pt-1">
                 <div className="flex items-center gap-4">
                   <div className="text-white font-semibold tracking-tight text-[15px]">
-                    {nearbyFreelancers.length} Nearby Experts
+                    {professionals.length} Nearby Experts
                   </div>
                   <div className="text-white/20 font-light">|</div>
                   <div className="flex items-center gap-1.5 text-white/60 capitalize tracking-tight text-[15px]">
@@ -515,16 +296,49 @@ export default function IntegratedExplorePage() {
             )}
             {!isSheetCollapsed && (
               <div className="space-y-2.5 px-1">
-                <ProfessionalsFeed />
+                <ProfessionalsFeed filteredProfessionals={filteredProfessionals} />
               </div>
             )}
           </div>
         </div>
+      </motion.div>
 
-        {/* Floating Map Button */}
-        <div className="fixed bottom-[15%] left-1/2 transform -translate-x-1/2 z-10">
+      {/* Search Filters */}
+      <SearchFilters
+        showFilterModal={showFilterModal}
+        setShowFilterModal={setShowFilterModal}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        selectedArea={selectedArea}
+        setSelectedArea={setSelectedArea}
+        selectedService={selectedService}
+        setSelectedService={setSelectedService}
+        range={range}
+        setRange={setRange}
+        minRating={minRating}
+        setMinRating={setMinRating}
+        priceRange={priceRange}
+        setPriceRange={setPriceRange}
+        availability={availability}
+        setAvailability={setAvailability}
+        selectedDate={selectedDate}
+        setSelectedDate={setSelectedDate}
+        selectedTimeOptions={selectedTimeOptions}
+        handleTimeOptionClick={handleTimeOptionClick}
+        handleSaveFilters={handleSaveFilters}
+        handleClearFilters={handleClearFilters}
+      />
+
+      {/* Floating Map Button - Only visible when list is expanded */}
+      {!isSheetCollapsed && (
+        <motion.div 
+          className="fixed bottom-[15%] left-1/2 transform -translate-x-1/2 z-10"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 20 }}
+        >
           <button 
-            onClick={() => setIsSheetCollapsed(!isSheetCollapsed)}
+            onClick={() => setIsSheetCollapsed(true)}
             className="group flex items-center h-10 px-4 bg-white/95 backdrop-blur-sm text-gray-700 rounded-full shadow-lg hover:bg-white transition-all border border-gray-100"
           >
             <div className="flex items-center gap-2">
@@ -532,182 +346,20 @@ export default function IntegratedExplorePage() {
               <span className="text-[13px] font-medium">Map</span>
             </div>
           </button>
-        </div>
-      </motion.div>
-
-      {/* Filter Modal */}
-      {showFilterModal && (
-        <div className="fixed inset-0 z-[4] flex flex-col bg-[#111111] text-white animate-fadeIn">
-          {/* Modal header */}
-          <div className="flex items-center justify-between px-6 py-5 border-b border-white/10 bg-[#111111]">
-            <h2 className="text-xl font-extrabold">Search & Filters</h2>
-            <button
-              className="p-2 rounded-full bg-[#111111] hover:bg-[#111111]/80 text-white/60 hover:text-white"
-              onClick={() => setShowFilterModal(false)}
-              aria-label="Close filters"
-            >
-              <X className="w-6 h-6" />
-            </button>
-          </div>
-          {/* Modal content */}
-          <div className="flex-1 overflow-y-auto px-6 py-6">
-            {/* Search input */}
-            <div className="mb-6">
-              <div className="flex items-center gap-2 bg-[#111111] rounded-full px-4 py-3 border border-white/10">
-                <Search className="w-5 h-5 text-purple-400" />
-                <input
-                  type="text"
-                  placeholder="Search for services, professionals, or areas..."
-                  className="flex-1 bg-transparent outline-none text-lg text-white font-semibold placeholder:text-white/60"
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                />
-              </div>
-            </div>
-            {/* Area Filter */}
-            <div className="mb-6">
-              <label className="block mb-1 text-white/90 font-bold">Area</label>
-              <select
-                value={selectedArea}
-                onChange={e => setSelectedArea(e.target.value)}
-                className="w-full px-3 py-3 rounded-lg bg-[#111111] text-white border border-white/10 text-lg font-semibold"
-              >
-                {areas.map(area => (
-                  <option key={area} value={area}>{area}</option>
-                ))}
-              </select>
-            </div>
-            {/* Service Type Filter */}
-            <div className="mb-6">
-              <label className="block mb-1 text-white/90 font-bold">Service Type</label>
-              <select
-                value={selectedService}
-                onChange={e => setSelectedService(e.target.value)}
-                className="w-full px-3 py-3 rounded-lg bg-[#111111] text-white border border-white/10 text-lg font-semibold"
-              >
-                <option value="All">All Services</option>
-                {serviceTypes.map(service => (
-                  <option key={service} value={service}>{service}</option>
-                ))}
-              </select>
-            </div>
-            {/* Distance Filter */}
-            <div className="mb-6">
-              <label className="block mb-1 text-white/90 font-bold">Distance (km)</label>
-              <input
-                type="range"
-                min={1}
-                max={50}
-                value={range[0]}
-                onChange={e => setRange([parseInt(e.target.value)])}
-                className="w-full accent-purple-500"
-              />
-              <div className="text-right text-base text-white/80 font-bold">{range[0]} km</div>
-            </div>
-            {/* Price Range Filter */}
-            <div className="mb-6">
-              <label className="block mb-1 text-white/90 font-bold">Price Range (₹)</label>
-              <input
-                type="range"
-                min={0}
-                max={20000}
-                step={100}
-                value={priceRange[0]}
-                onChange={e => setPriceRange([parseInt(e.target.value), priceRange[1]])}
-                className="w-full accent-purple-500"
-              />
-              <input
-                type="range"
-                min={0}
-                max={20000}
-                step={100}
-                value={priceRange[1]}
-                onChange={e => setPriceRange([priceRange[0], parseInt(e.target.value)])}
-                className="w-full accent-purple-500 mt-1"
-              />
-              <div className="text-right text-base text-white/80 font-bold">₹{priceRange[0]} - ₹{priceRange[1] === 20000 ? '20,000+' : priceRange[1]}</div>
-            </div>
-            {/* Rating Filter */}
-            <div className="mb-6">
-              <label className="block mb-1 text-white/90 font-bold">Minimum Rating</label>
-              <div className="flex gap-2">
-                {[0, 3, 4, 4.5].map(rating => (
-                  <button
-                    key={rating}
-                    onClick={() => setMinRating(rating)}
-                    className={`px-4 py-2 rounded-lg text-base font-bold ${minRating === rating ? 'bg-purple-600 text-white' : 'bg-[#111111] text-white/70 border border-white/10'}`}
-                  >
-                    {rating === 0 ? 'Any' : `${rating}+`}
-                  </button>
-                ))}
-              </div>
-            </div>
-            {/* Availability Filter */}
-            <div className="mb-6">
-              <label className="block mb-1 text-white/90 font-bold">Availability</label>
-              <div className="flex gap-2 flex-wrap">
-                {availabilityOptions.map(option => (
-                  <button
-                    key={option}
-                    onClick={() => setAvailability(option)}
-                    className={`px-4 py-2 rounded-lg text-base font-bold ${availability === option ? 'bg-purple-600 text-white' : 'bg-[#111111] text-white/70 border border-white/10'}`}
-                  >
-                    {option}
-                  </button>
-                ))}
-                <button
-                  onClick={() => setAvailability('Pick Date')}
-                  className={`px-4 py-2 rounded-lg text-base font-bold flex items-center gap-1 ${availability === 'Pick Date' ? 'bg-purple-600 text-white' : 'bg-[#111111] text-white/70 border border-white/10'}`}
-                >
-                  <Calendar className="w-5 h-5" /> Pick Date
-                </button>
-                {availability === 'Pick Date' && (
-                  <input
-                    ref={dateInputRef}
-                    type="date"
-                    className="ml-2 px-2 py-2 rounded bg-[#111111] text-white border border-white/10"
-                    value={selectedDate ?? ''}
-                    onChange={e => setSelectedDate(e.target.value)}
-                  />
-                )}
-              </div>
-            </div>
-            {/* Preferred Time Filter */}
-            {(availability === 'Available Today' || availability === 'Pick Date') && (
-              <div className="mb-6">
-                <label className="block mb-1 text-white/90 font-bold">Preferred Time</label>
-                <div className="flex gap-2 flex-wrap">
-                  {timeOptions.map(option => (
-                    <button
-                      key={option}
-                      onClick={() => handleTimeOptionClick(option)}
-                      className={`px-4 py-2 rounded-lg text-base font-bold ${selectedTimeOptions.includes(option) ? 'bg-purple-600 text-white' : 'bg-[#111111] text-white/70 border border-white/10'}`}
-                    >
-                      {option}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-            {/* Action Buttons */}
-            <div className="flex gap-2 mt-8">
-              <button
-                className="flex-1 py-4 bg-purple-600 hover:bg-purple-700 text-white font-extrabold rounded-lg text-lg transition-colors"
-                onClick={handleSaveFilters}
-              >
-                Show Results
-              </button>
-              <button
-                onClick={handleClearFilters}
-                className="flex-1 flex items-center justify-center gap-2 bg-[#111111] hover:bg-[#111111]/80 rounded-lg px-4 py-4 text-white/70 text-lg border border-white/10 transition-colors font-bold"
-              >
-                <X className="w-5 h-5" />
-                Clear All
-              </button>
-            </div>
-          </div>
-        </div>
+        </motion.div>
       )}
+
+      {/* Add global styles for no-scrollbar */}
+      <style jsx global>{`
+        .no-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+          overflow-x: auto;
+        }
+        .no-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
     </div>
   );
 } 

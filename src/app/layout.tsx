@@ -14,7 +14,8 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [showSplash, setShowSplash] = useState(true);
+  // Temporarily disabled splash screen
+  const [showSplash, setShowSplash] = useState(false);
 
   return (
     <html lang="en" suppressHydrationWarning>
