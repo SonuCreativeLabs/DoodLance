@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { professionals } from './mockData';
@@ -9,89 +9,137 @@ mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN!;
 
 export default function MapView() {
   const mapContainer = useRef<HTMLDivElement>(null);
+  const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
 
   useEffect(() => {
     if (!mapContainer.current) return;
+
+    // Initialize map
     const map = new mapboxgl.Map({
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/streets-v12',
-      center: [80.2707, 13.0827], // Chennai center
+      center: [80.2707, 13.0827],
       zoom: 11,
+      minZoom: 3,
+      maxZoom: 18,
+      dragRotate: true,
+      pitchWithRotate: true,
+      touchZoomRotate: true
     });
 
-    // Add custom styles for popups
-    const style = document.createElement('style');
-    style.textContent = `
-      .custom-popup {
-        transform-origin: 50% calc(100% - 8px);
-        filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.3));
-      }
-      
-      .custom-popup.animate-popup {
-        animation: none;
-        opacity: 0;
-        transform: translateY(5px) scale(0.98);
-        transition: opacity 0.2s ease-out, transform 0.2s ease-out;
-      }
+    // Add navigation controls with all features enabled
+    const nav = new mapboxgl.NavigationControl({
+      showCompass: true,
+      showZoom: true,
+      visualizePitch: true
+    });
+    map.addControl(nav, 'top-right');
 
-      .custom-popup.mapboxgl-popup-anchor-bottom {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-      }
+    // Enable keyboard controls for rotation
+    map.keyboard.enable();
 
-      .custom-popup .mapboxgl-popup-content {
-        border-radius: 12px;
-        padding: 0;
-        background: transparent;
-        box-shadow: none;
-        border: none;
-        transform-origin: bottom center;
-        transition: transform 0.3s ease-out;
-      }
+    // Add double-click-and-drag handler for rotation
+    map.dragRotate.enable();
 
-      .mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip {
-        transition: transform 0.2s ease-out;
-        border-top-color: rgba(0, 0, 0, 0.8);
-        filter: drop-shadow(0 -1px 2px rgba(0, 0, 0, 0.1));
-      }
-      
-      .custom-popup .mapboxgl-popup-close-button {
-        padding: 8px;
-        right: 12px;
-        top: 12px;
-        color: rgba(255, 255, 255, 0.8);
-        font-size: 24px;
-        font-weight: 300;
-        border-radius: 50%;
-        width: 36px;
-        height: 36px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.2s;
-        z-index: 1;
-        line-height: 0;
-      }
-      
-      .custom-popup .mapboxgl-popup-close-button:hover {
-        background-color: rgba(255, 255, 255, 0.15);
-        color: rgba(255, 255, 255, 1);
-        transform: scale(1.1);
-      }
-    `;
-    document.head.appendChild(style);
+    // Add touch rotation handler
+    map.touchZoomRotate.enableRotation();
 
-    // Function to smoothly move between markers
-    const moveToMarker = (coords: [number, number]) => {
-      map.easeTo({
-        center: coords,
-        offset: [0, -80],
-        duration: 500,
-        easing: (t) => {
-          return t * (2 - t);
+    // Add geolocation control
+    const geolocate = new mapboxgl.GeolocateControl({
+      positionOptions: {
+        enableHighAccuracy: true
+      },
+      trackUserLocation: true,
+      showUserHeading: true
+    });
+    map.addControl(geolocate, 'top-right');
+
+    // Add scale control
+    const scale = new mapboxgl.ScaleControl({
+      maxWidth: 64,
+      unit: 'metric'
+    });
+    map.addControl(scale, 'top-left');
+
+    // Wait for map to load before adding markers
+    map.on('load', () => {
+      // Add custom map features
+      map.addSource('places', {
+        type: 'geojson',
+        data: {
+          type: 'FeatureCollection',
+          features: professionals.map(pro => ({
+            type: 'Feature',
+            geometry: {
+              type: 'Point',
+              coordinates: pro.coords
+            },
+            properties: {
+              id: pro.id,
+              name: pro.name
+            }
+          }))
         }
       });
-    };
+
+      // Add a heatmap layer to show concentration of professionals
+      map.addLayer({
+        id: 'professional-heat',
+        type: 'heatmap',
+        source: 'places',
+        maxzoom: 15,
+        paint: {
+          'heatmap-weight': 1,
+          'heatmap-intensity': [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            0, 1,
+            15, 3
+          ],
+          'heatmap-color': [
+            'interpolate',
+            ['linear'],
+            ['heatmap-density'],
+            0, 'rgba(147, 51, 234, 0)',
+            0.2, 'rgba(147, 51, 234, 0.2)',
+            0.4, 'rgba(147, 51, 234, 0.4)',
+            0.6, 'rgba(147, 51, 234, 0.6)',
+            0.8, 'rgba(147, 51, 234, 0.8)',
+            1, 'rgba(147, 51, 234, 1)'
+          ],
+          'heatmap-radius': [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            0, 2,
+            15, 20
+          ],
+          'heatmap-opacity': 0.7
+        }
+      });
+
+      // Add circle layer for better visibility at high zoom levels
+      map.addLayer({
+        id: 'professional-point',
+        type: 'circle',
+        source: 'places',
+        minzoom: 14,
+        paint: {
+          'circle-radius': 6,
+          'circle-color': '#9333EA',
+          'circle-stroke-width': 2,
+          'circle-stroke-color': 'white',
+          'circle-opacity': [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            14, 0,
+            15, 1
+          ]
+        }
+      });
+    });
 
     // Add markers for each professional
     professionals.forEach((pro) => {
@@ -172,7 +220,8 @@ export default function MapView() {
       // Create and add the marker
       const marker = new mapboxgl.Marker({
         color: "#9333EA",
-        clickTolerance: 3
+        clickTolerance: 3,
+        scale: 0.8 // Slightly smaller markers for better aesthetics
       })
         .setLngLat(pro.coords)
         .addTo(map);
@@ -202,9 +251,148 @@ export default function MapView() {
       });
     });
 
+    // Add custom styles for map controls
+    const mapStyle = document.createElement('style');
+    mapStyle.textContent = `
+      .mapboxgl-ctrl-top-right {
+        margin-top: 110px !important;
+      }
+
+      .mapboxgl-ctrl-top-right .mapboxgl-ctrl {
+        margin: 10px 10px 0 0;
+      }
+
+      .mapboxgl-ctrl-top-left {
+        margin-top: 110px !important;
+      }
+
+      .mapboxgl-ctrl-top-left .mapboxgl-ctrl {
+        margin: 10px 0 0 10px;
+      }
+
+      .mapboxgl-ctrl-group {
+        background: white !important;
+        border: 1px solid rgba(0, 0, 0, 0.1) !important;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+      }
+
+      .mapboxgl-ctrl-group button {
+        background-color: white !important;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1) !important;
+      }
+
+      .mapboxgl-ctrl-group button:hover {
+        background-color: #f8f8f8 !important;
+      }
+
+      .mapboxgl-ctrl-scale {
+        min-width: 50px !important;
+        height: 22px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        background-color: white !important;
+        border: 1px solid rgba(0, 0, 0, 0.1) !important;
+        color: #666 !important;
+        font-size: 11px !important;
+        font-weight: 500 !important;
+        padding: 0 6px !important;
+        border-radius: 6px !important;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05) !important;
+        transition: all 0.2s ease-in-out !important;
+        letter-spacing: 0.2px !important;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+      }
+
+      .mapboxgl-ctrl-scale:hover {
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.08) !important;
+        transform: translateY(-1px) !important;
+      }
+
+      .mapboxgl-ctrl-attrib {
+        display: none;
+      }
+    `;
+    document.head.appendChild(mapStyle);
+
+    // Add custom styles for popups
+    const style = document.createElement('style');
+    style.textContent = `
+      .custom-popup {
+        transform-origin: 50% calc(100% - 8px);
+        filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.3));
+      }
+      
+      .custom-popup.animate-popup {
+        animation: none;
+        opacity: 0;
+        transform: translateY(5px) scale(0.98);
+        transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+      }
+
+      .custom-popup.mapboxgl-popup-anchor-bottom {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+
+      .custom-popup .mapboxgl-popup-content {
+        border-radius: 12px;
+        padding: 0;
+        background: transparent;
+        box-shadow: none;
+        border: none;
+        transform-origin: bottom center;
+        transition: transform 0.3s ease-out;
+      }
+
+      .mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip {
+        transition: transform 0.2s ease-out;
+        border-top-color: rgba(0, 0, 0, 0.8);
+        filter: drop-shadow(0 -1px 2px rgba(0, 0, 0, 0.1));
+      }
+      
+      .custom-popup .mapboxgl-popup-close-button {
+        padding: 8px;
+        right: 12px;
+        top: 12px;
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 24px;
+        font-weight: 300;
+        border-radius: 50%;
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+        z-index: 1;
+        line-height: 0;
+      }
+      
+      .custom-popup .mapboxgl-popup-close-button:hover {
+        background-color: rgba(255, 255, 255, 0.15);
+        color: rgba(255, 255, 255, 1);
+        transform: scale(1.1);
+      }
+    `;
+    document.head.appendChild(style);
+
+    // Function to smoothly move between markers
+    const moveToMarker = (coords: [number, number]) => {
+      map.easeTo({
+        center: coords,
+        offset: [0, -80],
+        duration: 500,
+        easing: (t) => {
+          return t * (2 - t);
+        }
+      });
+    };
+
     return () => {
       map.remove();
       document.head.removeChild(style);
+      document.head.removeChild(mapStyle);
     };
   }, []);
 
