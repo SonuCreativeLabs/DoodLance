@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import type { PanInfo } from 'framer-motion';
 import MapView from '../MapViewComponent';
 import ProfessionalsFeed from '../ProfessionalsFeedComponent';
-import { Search, X, Calendar } from 'lucide-react';
+import { Search, X, Calendar, Map } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 interface Freelancer {
@@ -435,6 +435,19 @@ export default function IntegratedExplorePage() {
               </div>
             )}
           </div>
+        </div>
+
+        {/* Floating Map Button */}
+        <div className="fixed bottom-[15%] left-1/2 transform -translate-x-1/2 z-10">
+          <button 
+            onClick={() => setIsSheetCollapsed(!isSheetCollapsed)}
+            className="group flex items-center h-10 px-4 bg-white/95 backdrop-blur-sm text-gray-700 rounded-full shadow-lg hover:bg-white transition-all border border-gray-100"
+          >
+            <div className="flex items-center gap-2">
+              <Map className="w-4 h-4" />
+              <span className="text-[13px] font-medium">Map</span>
+            </div>
+          </button>
         </div>
       </motion.div>
 
