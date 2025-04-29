@@ -259,54 +259,47 @@ export default function ClientHome() {
         <section className="mb-12">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-semibold text-white">Nearby Professionals</h2>
-            <button className="text-purple-500 hover:text-purple-600 text-sm font-medium flex items-center">
+            <Link href="/client/nearby" className="text-purple-500 hover:text-purple-600 text-sm font-medium flex items-center">
               View All
               <ChevronRight className="w-4 h-4 ml-1" />
-            </button>
+            </Link>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {nearbyFreelancers.map((freelancer) => (
-              <motion.div
-                key={freelancer.id}
-                whileHover={{ y: -5 }}
-                className="bg-white/10 backdrop-blur-md shadow-lg hover:shadow-xl rounded-xl p-6 border border-white/10 hover:border-purple-300/30 transition-all duration-200"
-              >
-                <div className="flex items-start gap-4">
-                  <div className="relative">
-                    <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full opacity-20 blur-md"></div>
-                    <img
-                      src={freelancer.image}
-                      alt={freelancer.name}
-                      className="w-16 h-16 rounded-full border-2 border-purple-200/50 relative z-10"
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-white">{freelancer.name}</h3>
-                    <div className="flex items-center text-sm text-white/60 mt-1">
-                      <Star className="w-4 h-4 text-purple-500 fill-current" />
-                      <span className="ml-1">{freelancer.rating}</span>
-                      <span className="mx-2">•</span>
-                      <span>{freelancer.completedJobs} jobs</span>
+          <div className="relative">
+            <div className="overflow-x-auto scrollbar-hide">
+              <div className="flex space-x-4 pb-4 px-1">
+                {nearbyFreelancers.map((freelancer) => (
+                  <motion.div
+                    key={freelancer.id}
+                    whileHover={{ scale: 1.05 }}
+                    className="flex-shrink-0 w-[120px]"
+                  >
+                    <div className="relative">
+                      {/* Rating Badge */}
+                      <div className="absolute top-2 right-2 z-20 bg-black/50 backdrop-blur-sm rounded-full px-2 py-1 flex items-center gap-1">
+                        <Star className="w-3 h-3 text-yellow-400 fill-current" />
+                        <span className="text-white text-xs font-medium">{freelancer.rating}</span>
+                      </div>
+                      
+                      {/* Profile Picture */}
+                      <div className="relative">
+                        <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full opacity-20 blur-md"></div>
+                        <img
+                          src={freelancer.image}
+                          alt={freelancer.name}
+                          className="w-[120px] h-[120px] rounded-full border-2 border-purple-200/50 relative z-10 object-cover"
+                        />
+                      </div>
+                      
+                      {/* Name and Skill */}
+                      <div className="mt-2 text-center">
+                        <h3 className="font-medium text-white text-sm truncate">{freelancer.name}</h3>
+                        <p className="text-white/60 text-xs truncate">{freelancer.service}</p>
+                      </div>
                     </div>
-                    <div className="flex items-center text-sm text-white/60 mt-1">
-                      <MapPin className="w-4 h-4 mr-1" />
-                      <span>{freelancer.location}</span>
-                    </div>
-                    <div className="mt-4 flex gap-2">
-                      <button 
-                        onClick={() => handleHire(freelancer.id)}
-                        className="flex-1 bg-gradient-to-r from-purple-600 via-purple-500 to-purple-400 text-white py-2 px-4 rounded-lg transition-all duration-300 hover:shadow-lg hover:from-purple-700 hover:to-purple-500"
-                      >
-                        Book Now
-                      </button>
-                      <button className="flex-1 bg-gradient-to-r from-purple-600/20 to-purple-400/20 hover:from-purple-600/30 hover:to-purple-400/30 text-white py-2 px-4 rounded-lg transition-all duration-300 border border-white/10">
-                        View Profile
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
+                  </motion.div>
+                ))}
+              </div>
+            </div>
           </div>
         </section>
 
