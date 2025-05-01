@@ -202,7 +202,7 @@ export default function ClientHome() {
         {/* Top Rated Experts Section */}
         <section className="mb-12">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-semibold text-white">
+            <h2 className="text-lg font-semibold text-white">
               <span className="bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 text-transparent bg-clip-text">Top Rated</span>
               {" "}Experts
             </h2>
