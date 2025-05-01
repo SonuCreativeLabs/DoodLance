@@ -20,8 +20,8 @@ export default function ClientLayout({ children, className }: ClientLayoutProps)
     router.push('/freelancer');
   };
 
-  // Hide navbar on nearby pages
-  const shouldHideNavbar = pathname.includes('/client/nearby');
+  // Hide navbar on nearby and services pages
+  const shouldHideNavbar = pathname.includes('/client/nearby') || pathname.includes('/client/services');
 
   return (
     <div className={cn("min-h-screen bg-[#111111] flex flex-col", className)}>

@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion'
 import ClientLayout from '@/components/layouts/client-layout'
 import { Search, ArrowLeft, Clock } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 
@@ -259,14 +259,26 @@ const serviceItems = [
 
 export default function ServicesPage() {
   const [selectedCategory, setSelectedCategory] = useState('all')
+  const sidebarRef = useRef<HTMLDivElement>(null)
+  const selectedButtonRef = useRef<HTMLButtonElement>(null)
+
+  // Function to scroll selected category into view
+  useEffect(() => {
+    if (selectedButtonRef.current) {
+      selectedButtonRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center'
+      })
+    }
+  }, [selectedCategory])
 
   return (
     <ClientLayout>
       <div className="min-h-screen bg-[#111111] fixed inset-0 flex flex-col">
         {/* Header */}
-        <div className="sticky top-0 z-50 bg-[#111111] border-b border-white/[0.08]">
-          <div className="max-w-[1400px] mx-auto px-4 py-4">
-            <div className="flex items-center justify-between">
+        <div className="sticky top-0 z-50 bg-[#111111] border-b border-white/[0.08] h-[60px]">
+          <div className="max-w-[1400px] mx-auto px-4 h-full">
+            <div className="flex items-center justify-between h-full">
               <div className="flex items-center gap-4">
                 <Link href="/client">
                   <button className="p-2 hover:bg-white/5 rounded-full transition-colors">
@@ -288,34 +300,35 @@ export default function ServicesPage() {
             {/* Split Layout */}
             <div className="flex max-w-[1400px] mx-auto flex-1">
               {/* Slim Sidebar */}
-              <div className="w-20 bg-[#161616] flex-none h-[calc(100vh-73px)] overflow-y-auto scrollbar-none sticky top-[73px]">
-                <div className="py-4 space-y-2 flex flex-col min-h-full">
-                  <div className="flex-1">
+              <div ref={sidebarRef} className="w-[70px] bg-[#161616] flex-none h-[calc(100vh-60px)] overflow-y-auto scrollbar-none sticky top-[60px] border-r border-white/[0.08]">
+                <div className="py-3 flex flex-col min-h-full">
+                  <div className="flex-1 px-2 space-y-1 pb-6">
                     {sidebarCategories.map((category) => (
                       <button
                         key={category.id}
+                        ref={selectedCategory === category.id ? selectedButtonRef : null}
                         onClick={() => setSelectedCategory(category.id)}
-                        className={`w-full flex flex-col items-center gap-1.5 py-2 relative group`}
-                      >
-                        <div className={`w-16 h-16 rounded-xl flex items-center justify-center transition-all ${
+                        className={`w-full flex flex-col items-center gap-1 py-2 px-1 rounded-lg transition-all duration-200 group relative ${
                           selectedCategory === category.id
-                          ? 'bg-purple-500/10 ring-1 ring-purple-500/20'
-                          : 'bg-[#111111] hover:bg-[#161616] hover:scale-105'
-                        }`}>
-                          <span className={`text-[36px] transition-transform group-hover:scale-110 ${
+                          ? 'after:absolute after:top-1/2 after:-translate-y-1/2 after:left-0 after:w-[2px] after:h-6 after:bg-purple-500 after:rounded-r-full'
+                          : 'hover:bg-white/[0.02]'
+                        }`}
+                      >
+                        <div className="w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-200">
+                          <span className={`text-[24px] transition-transform ${
                             selectedCategory === category.id
-                            ? 'text-purple-400'
-                            : 'text-white/70'
+                            ? 'text-white scale-110 font-bold'
+                            : 'text-white/60 group-hover:text-white/80 group-hover:scale-105'
                           }`}>{category.icon}</span>
                         </div>
-                        <div className="flex flex-col items-center leading-tight">
+                        <div className="flex flex-col items-center leading-none">
                           {category.name.map((line, index) => (
                             <span
                               key={index}
-                              className={`text-[10px] font-medium transition-colors ${
+                              className={`text-[9px] transition-colors ${
                                 selectedCategory === category.id
-                                ? 'text-purple-400'
-                                : 'text-white/50 group-hover:text-white/70'
+                                ? 'text-white font-bold'
+                                : 'text-white/40 font-medium group-hover:text-white/60'
                               }`}
                             >
                               {line}
@@ -332,7 +345,7 @@ export default function ServicesPage() {
               <div className="flex-1 overflow-y-auto h-[calc(100vh-73px)]">
                 <div className="max-w-[1400px] mx-auto px-4">
                   <div className="py-6">
-                    <div className="grid grid-cols-2 gap-6 pb-24">
+                    <div className="grid grid-cols-2 gap-5 pb-24">
                       {serviceItems
                         .filter(service => selectedCategory === 'all' || service.category === selectedCategory)
                         .map((service) => (
@@ -341,46 +354,53 @@ export default function ServicesPage() {
                           key={service.id}
                           className="block group"
                         >
-                          <div className="bg-[#161616] rounded-2xl overflow-hidden">
-                            {/* Image Container */}
-                            <div className="aspect-[16/12] relative rounded-t-2xl overflow-hidden bg-[#111111]">
-                              <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 via-transparent to-blue-500/10 z-10" />
+                          <div className="relative bg-[#161616] rounded-2xl overflow-hidden">
+                            {/* Full Image Container */}
+                            <div className="aspect-[3/4] relative">
                               {/* Fallback/Loading State */}
-                              <div className="absolute inset-0 flex items-center justify-center z-0">
-                                <span className="text-[84px]">{service.fallbackEmoji}</span>
+                              <div className="absolute inset-0 flex items-center justify-center z-0 bg-[#161616]">
+                                <span className="text-[48px] opacity-40">{service.fallbackEmoji}</span>
                               </div>
+                              
                               <img
                                 src={service.image}
                                 alt={service.name}
-                                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out z-[1]"
+                                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out z-[1]"
                               />
-                              {/* Badges */}
-                              <div className="absolute top-2 inset-x-2 flex items-center justify-between z-20">
+
+                              {/* Gradient Overlay - Balanced for text visibility */}
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent z-[2]" />
+
+                              {/* Content Overlay */}
+                              <div className="absolute inset-x-0 bottom-0 p-4 z-[3]">
+                                {/* Title and Provider Count */}
+                                <div className="space-y-2">
+                                  <div className="space-y-1.5">
+                                    <h3 className="font-medium text-[13px] text-white leading-tight line-clamp-2 min-h-[32px] drop-shadow-sm">
+                                      {service.name}
+                                    </h3>
+                                    <div className="flex items-center gap-2">
+                                      <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse"></div>
+                                      <span className="text-[11px] text-white/90 drop-shadow-sm">
+                                        {service.providerCount} Providers
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Badges - Even smaller size */}
+                              <div className="absolute top-2 left-2 flex flex-wrap items-start gap-1 z-[3]">
                                 {service.discount && (
-                                  <div className="bg-gradient-to-r from-purple-600/90 to-fuchsia-600/90 text-white text-[9px] font-medium px-1.5 py-0.5 rounded-full backdrop-blur-sm">
+                                  <div className="bg-purple-500/80 backdrop-blur-[2px] text-white text-[9px] font-medium px-1.5 py-0.5 rounded-full">
                                     {service.discount}
                                   </div>
                                 )}
                                 {service.mostBooked && (
-                                  <div className="bg-gradient-to-r from-amber-500/90 to-orange-500/90 text-white text-[9px] font-medium px-1.5 py-0.5 rounded-full backdrop-blur-sm">
+                                  <div className="bg-amber-500/80 backdrop-blur-[2px] text-white text-[9px] font-medium px-1.5 py-0.5 rounded-full">
                                     Most Booked
                                   </div>
                                 )}
-                              </div>
-                            </div>
-                            <div className="p-4">
-                              <div className="flex flex-col gap-2.5">
-                                <div className="h-[42px]">
-                                  <h3 className="font-medium text-[13px] text-white leading-[1.4] group-hover:text-purple-400 transition-colors line-clamp-2">
-                                    {service.name}
-                                  </h3>
-                                </div>
-                                <div className="flex items-center gap-1.5">
-                                  <div className="h-1.5 w-1.5 rounded-full bg-green-500/80"></div>
-                                  <span className="text-[11px] text-white/60">
-                                    {service.providerCount} Providers
-                                  </span>
-                                </div>
                               </div>
                             </div>
                           </div>
