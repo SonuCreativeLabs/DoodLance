@@ -80,12 +80,12 @@ const sidebarCategories = [
 const serviceItems = [
   // Home & Repair Services
   {
-    id: 'home-repair-general',
+    id: 'general-repair',
     name: 'General Home Repair',
     category: 'home-repair',
     providerCount: 62,
     mostBooked: true,
-    image: '/images/services/home-repair.jpg',
+    image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=800&q=80',
     fallbackEmoji: '🔧'
   },
   {
@@ -94,8 +94,17 @@ const serviceItems = [
     category: 'home-repair',
     providerCount: 45,
     discount: '15% Off',
-    image: '/images/services/furniture-repair.jpg',
+    image: 'https://images.unsplash.com/photo-1588854337236-6889d631faa8?auto=format&fit=crop&w=800&q=80',
     fallbackEmoji: '🪑'
+  },
+  {
+    id: 'home-maintenance',
+    name: 'Home Maintenance',
+    category: 'home-repair',
+    providerCount: 38,
+    discount: '10% Off',
+    image: 'https://images.unsplash.com/photo-1591129841117-3adfd313e34f?auto=format&fit=crop&w=800&q=80',
+    fallbackEmoji: '🏠'
   },
   {
     id: 'home-cleaning',
@@ -103,7 +112,7 @@ const serviceItems = [
     category: 'cleaning',
     providerCount: 48,
     discount: '15% Off',
-    image: '/images/services/home-cleaning.jpg',
+    image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=800&q=80',
     fallbackEmoji: '🧹'
   },
   {
@@ -112,7 +121,7 @@ const serviceItems = [
     category: 'plumbing',
     providerCount: 32,
     discount: '10% Off',
-    image: '/images/services/plumbing.jpg',
+    image: 'https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?auto=format&fit=crop&w=800&q=80',
     fallbackEmoji: '🚰'
   },
   {
@@ -121,7 +130,7 @@ const serviceItems = [
     category: 'electrical',
     providerCount: 56,
     mostBooked: true,
-    image: '/images/services/electrical.jpg',
+    image: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=800&q=80',
     fallbackEmoji: '⚡'
   },
   {
@@ -130,7 +139,7 @@ const serviceItems = [
     category: 'painting',
     providerCount: 41,
     discount: '12% Off',
-    image: '/images/services/painting.jpg',
+    image: 'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?auto=format&fit=crop&w=800&q=80',
     fallbackEmoji: '🖌️'
   },
   {
@@ -139,7 +148,7 @@ const serviceItems = [
     category: 'gardening',
     providerCount: 35,
     mostBooked: true,
-    image: '/images/services/gardening.jpg',
+    image: 'https://images.unsplash.com/photo-1557429287-b2e26467fc2b?auto=format&fit=crop&w=800&q=80',
     fallbackEmoji: '🌺'
   },
   {
@@ -148,7 +157,7 @@ const serviceItems = [
     category: 'moving',
     providerCount: 29,
     discount: '18% Off',
-    image: '/images/services/moving.jpg',
+    image: 'https://images.unsplash.com/photo-1603796846097-bee99e4a601f?auto=format&fit=crop&w=800&q=80',
     fallbackEmoji: '🚛'
   },
   // Beauty & Spa Services
@@ -158,7 +167,7 @@ const serviceItems = [
     category: 'beauty',
     providerCount: 42,
     discount: '20% Off',
-    image: '/images/services/spa-massage.jpg',
+    image: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&w=800&q=80',
     fallbackEmoji: '💆‍♀️'
   },
   {
@@ -167,7 +176,7 @@ const serviceItems = [
     category: 'beauty',
     providerCount: 38,
     mostBooked: true,
-    image: '/images/services/hair-styling.jpg',
+    image: 'https://images.unsplash.com/photo-1562322140-8baeececf3df?auto=format&fit=crop&w=800&q=80',
     fallbackEmoji: '💇‍♀️'
   },
   // Education Services
@@ -177,7 +186,7 @@ const serviceItems = [
     category: 'education',
     providerCount: 45,
     discount: '10% Off',
-    image: '/images/services/math-tutoring.jpg',
+    image: 'https://images.unsplash.com/photo-1560785496-3c9d27877182?auto=format&fit=crop&w=800&q=80',
     fallbackEmoji: '📐'
   },
   {
@@ -186,7 +195,7 @@ const serviceItems = [
     category: 'education',
     providerCount: 36,
     mostBooked: true,
-    image: '/images/services/language-classes.jpg',
+    image: 'https://images.unsplash.com/photo-1571260899304-425eee4c7efc?auto=format&fit=crop&w=800&q=80',
     fallbackEmoji: '🗣️'
   },
   // Sports & Fitness
@@ -196,7 +205,7 @@ const serviceItems = [
     category: 'sports',
     providerCount: 52,
     discount: '25% Off',
-    image: '/images/services/personal-training.jpg',
+    image: 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?auto=format&fit=crop&w=800&q=80',
     fallbackEmoji: '🏋️‍♂️'
   },
   {
@@ -205,7 +214,7 @@ const serviceItems = [
     category: 'sports',
     providerCount: 44,
     mostBooked: true,
-    image: '/images/services/yoga-classes.jpg',
+    image: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=800&q=80',
     fallbackEmoji: '🧘‍♀️'
   },
   // Pet Care
@@ -215,7 +224,7 @@ const serviceItems = [
     category: 'pet-care',
     providerCount: 34,
     discount: '15% Off',
-    image: '/images/services/pet-grooming.jpg',
+    image: 'https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?auto=format&fit=crop&w=800&q=80',
     fallbackEmoji: '🐕'
   },
   {
@@ -224,7 +233,7 @@ const serviceItems = [
     category: 'pet-care',
     providerCount: 28,
     mostBooked: true,
-    image: '/images/services/pet-training.jpg',
+    image: 'https://images.unsplash.com/photo-1587300003388-59208cc962cb?auto=format&fit=crop&w=800&q=80',
     fallbackEmoji: '🦮'
   },
   // Tech Support
@@ -234,7 +243,7 @@ const serviceItems = [
     category: 'tech-support',
     providerCount: 39,
     discount: '20% Off',
-    image: '/images/services/computer-repair.jpg',
+    image: 'https://images.unsplash.com/photo-1597872200969-2b65d56bd16b?auto=format&fit=crop&w=800&q=80',
     fallbackEmoji: '💻'
   },
   {
@@ -243,7 +252,7 @@ const serviceItems = [
     category: 'tech-support',
     providerCount: 31,
     mostBooked: true,
-    image: '/images/services/network-setup.jpg',
+    image: 'https://images.unsplash.com/photo-1544197150-b99a580bb7a8?auto=format&fit=crop&w=800&q=80',
     fallbackEmoji: '🌐'
   }
 ]
@@ -334,28 +343,18 @@ export default function ServicesPage() {
                         >
                           <div className="bg-[#161616] rounded-2xl overflow-hidden">
                             {/* Image Container */}
-                            <div className="aspect-[16/10] relative rounded-t-2xl overflow-hidden bg-[#111111]">
+                            <div className="aspect-[16/12] relative rounded-t-2xl overflow-hidden bg-[#111111]">
                               <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 via-transparent to-blue-500/10 z-10" />
                               {/* Fallback/Loading State */}
                               <div className="absolute inset-0 flex items-center justify-center z-0">
-                                <span className="text-[84px] animate-pulse">{service.fallbackEmoji}</span>
+                                <span className="text-[84px]">{service.fallbackEmoji}</span>
                               </div>
-                              <Image
+                              <img
                                 src={service.image}
                                 alt={service.name}
-                                fill
-                                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                                className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out relative z-[1]"
-                                loading="lazy"
-                                onLoadingComplete={(img) => {
-                                  img.classList.remove('opacity-0');
-                                  img.classList.add('opacity-100');
-                                }}
-                                onError={(e) => {
-                                  const target = e.target as HTMLElement;
-                                  target.style.display = 'none';
-                                }}
+                                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out z-[1]"
                               />
+                              {/* Badges */}
                               <div className="absolute top-2 inset-x-2 flex items-center justify-between z-20">
                                 {service.discount && (
                                   <div className="bg-gradient-to-r from-purple-600/90 to-fuchsia-600/90 text-white text-[9px] font-medium px-1.5 py-0.5 rounded-full backdrop-blur-sm">
