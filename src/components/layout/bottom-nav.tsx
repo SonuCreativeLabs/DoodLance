@@ -8,8 +8,8 @@ import { useRole } from '@/contexts/role-context'
 
 const navigation = [
   { name: 'HOME', href: '/client', icon: Home },
-  { name: 'Trips', href: '/client/hires', icon: Briefcase },
-  { name: 'Post', href: '/client/post', icon: PlusCircle },
+  { name: 'My Booking', href: '/client/hires', icon: Briefcase },
+  { name: 'Hire', href: '/client/nearby/integrated-explore', icon: PlusCircle },
   { name: 'Profile', href: '/client/inbox', icon: MessageSquare },
 ]
 

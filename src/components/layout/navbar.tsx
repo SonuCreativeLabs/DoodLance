@@ -19,10 +19,10 @@ export function Navbar() {
               Home
             </Link>
             <Link href="/hires" className="text-gray-600 hover:text-[#FF8A3D] transition-colors">
-              Hires
+              My Booking
             </Link>
-            <Link href="/post" className="text-gray-600 hover:text-[#FF8A3D] transition-colors">
-              Post
+            <Link href="/client/nearby/integrated-explore" className="text-gray-600 hover:text-[#FF8A3D] transition-colors">
+              Hire
             </Link>
             <Link href="/inbox" className="text-gray-600 hover:text-[#FF8A3D] transition-colors">
               Inbox
