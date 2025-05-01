@@ -31,7 +31,7 @@ export default function ClientLayout({ children, className }: ClientLayoutProps)
       
       {/* Bottom Navigation */}
       {!shouldHideNavbar && (
-        <nav className="fixed bottom-0 left-0 right-0 bg-[#111111] backdrop-blur-md border-t border-gray-800/50">
+        <nav className="fixed bottom-0 left-0 right-0 bg-[#111111] backdrop-blur-md border-t border-gray-800/50 z-50">
           <div className="max-w-screen-xl mx-auto">
             <div className="grid grid-cols-12 items-center h-16">
               {/* Main Navigation Items */}
