@@ -9,17 +9,41 @@ import { cn } from '@/lib/utils'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { professionals } from './nearby/mockData'
+import Image from 'next/image'
 
-// Mock data for service categories
+// Mock data for service categories - using real data from services page
 const serviceCategories = [
-  { name: 'Plumbing', icon: '🔧', color: 'bg-white' },
-  { name: 'Tutoring', icon: '📚', color: 'bg-white' },
-  { name: 'Pet Care', icon: '🐾', color: 'bg-white' },
-  { name: 'Cleaning', icon: '🧹', color: 'bg-white' },
-  { name: 'Coaching', icon: '🎯', color: 'bg-white' },
-  { name: 'Gardening', icon: '🌱', color: 'bg-white' },
-  { name: 'Moving', icon: '🚚', color: 'bg-white' },
-  { name: 'More', icon: '➕', color: 'bg-white' },
+  { 
+    id: 'plumbing',
+    name: 'Plumbing',
+    icon: '🔧',
+    providerCount: 32,
+    image: 'https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?auto=format&fit=crop&w=800&q=80',
+    discount: '10% Off'
+  },
+  { 
+    id: 'education',
+    name: 'Tutoring',
+    icon: '📚',
+    providerCount: 45,
+    image: 'https://images.unsplash.com/photo-1560785496-3c9d27877182?auto=format&fit=crop&w=800&q=80',
+    discount: '10% Off'
+  },
+  { 
+    id: 'pet-care',
+    name: 'Pet Care',
+    icon: '🐾',
+    providerCount: 28,
+    image: 'https://images.unsplash.com/photo-1587764379873-97837921fd44?auto=format&fit=crop&w=800&q=80',
+  },
+  { 
+    id: 'cleaning',
+    name: 'Cleaning',
+    icon: '🧹',
+    providerCount: 48,
+    image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=800&q=80',
+    discount: '15% Off'
+  }
 ]
 
 const AnimatedCard = ({ icon, delay }: { icon: React.ReactNode; delay: number }) => (
@@ -179,29 +203,48 @@ export default function ClientHome() {
           </div>
           <div className="relative">
             <div className="overflow-x-auto scrollbar-hide">
-              <div className="flex space-x-4 pb-4 px-1">
+              <div className="flex space-x-4 pb-4">
                 {serviceCategories.map((category) => (
-                  <motion.div
-                    key={category.name}
-                    whileHover={{ scale: 1.05 }}
-                    className="flex-shrink-0 w-[180px]"
-                    onClick={() => handleCategoryClick(category.name)}
-                  >
-                    <div className="bg-white/10 backdrop-blur-md shadow-lg hover:shadow-xl rounded-xl p-4 border border-white/10 hover:border-purple-300/30 transition-all duration-200 h-full">
-                      <div className="flex flex-col items-center">
-                        <div className="w-12 h-12 bg-gradient-to-br from-purple-600 via-purple-500 to-purple-400 rounded-full flex items-center justify-center mb-3 shadow-lg">
-                          <span className="text-2xl text-white">{category.icon}</span>
+                  <Link key={category.id} href={`/client/services?category=${category.id}`}>
+                    <motion.div
+                      whileHover={{ scale: 1.01 }}
+                      whileTap={{ scale: 0.99 }}
+                      className="relative w-[180px] aspect-[3/4] rounded-xl overflow-hidden group flex-shrink-0 shadow-lg"
+                    >
+                      {/* Background Image */}
+                      <Image
+                        src={category.image}
+                        alt={category.name}
+                        fill
+                        className="object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                      
+                      {/* Gradient Overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-black/10 opacity-80 group-hover:opacity-70 transition-opacity duration-300" />
+                      
+                      {/* Content */}
+                      <div className="absolute inset-0 p-4 flex flex-col justify-between">
+                        <div className="flex justify-between items-start">
+                          {/* Icon with glassmorphism - simplified */}
+                          <div className="relative w-9 h-9 bg-white/20 backdrop-blur-[12px] rounded-xl flex items-center justify-center text-base shadow-lg border border-white/30 hover:bg-white/30 transition-colors duration-300">
+                            {category.icon}
+                          </div>
+                          
+                          {/* Discount Badge */}
+                          {category.discount && (
+                            <span className="px-2 py-0.5 text-[10px] font-semibold bg-white/20 backdrop-blur-md text-white rounded-xl shadow-lg border border-white/30">
+                              {category.discount}
+                            </span>
+                          )}
                         </div>
-                        <h3 className="text-white font-medium mb-2">{category.name}</h3>
-                        <div className="text-white/60 text-sm">50+ Providers</div>
-                        <div className="mt-3 w-full">
-                          <button className="w-full bg-gradient-to-r from-purple-600/20 to-purple-400/20 hover:from-purple-600/30 hover:to-purple-400/30 text-white text-sm py-2 rounded-lg transition-all duration-300 border border-white/10">
-                            Explore
-                          </button>
+                        
+                        <div className="space-y-1.5">
+                          <h3 className="text-lg font-bold text-white line-clamp-1 drop-shadow-sm">{category.name}</h3>
+                          <p className="text-white/90 text-sm font-medium">{category.providerCount}+ Providers</p>
                         </div>
                       </div>
-                    </div>
-                  </motion.div>
+                    </motion.div>
+                  </Link>
                 ))}
               </div>
             </div>

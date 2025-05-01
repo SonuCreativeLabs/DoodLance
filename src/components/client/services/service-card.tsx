@@ -8,37 +8,50 @@ import { cn } from '@/lib/utils';
 interface ServiceCardProps {
   id: string;
   title: string;
-  icon: string;
-  color: string;
+  image: string;
+  discount?: number;
+  isMostBooked?: boolean;
 }
 
-export default function ServiceCard({ id, title, icon, color }: ServiceCardProps) {
+export default function ServiceCard({ id, title, image, discount, isMostBooked }: ServiceCardProps) {
   return (
     <Link href={`/services/${id}`}>
       <motion.div
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        className={cn(
-          "service-card p-4 rounded-xl flex flex-col items-center justify-center gap-3 aspect-square",
-          "bg-white/90 dark:bg-slate-800/90 shadow-lg backdrop-blur-sm",
-          "border border-slate-200 dark:border-slate-700"
-        )}
-        style={{
-          backgroundColor: `${color}15`,
-          boxShadow: `0 4px 6px -1px ${color}10, 0 2px 4px -1px ${color}20`
-        }}
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+        className="relative w-full aspect-[3/4] rounded-xl overflow-hidden"
       >
-        <div className="relative w-12 h-12">
-          <Image
-            src={icon}
-            alt={title}
-            fill
-            className="object-contain drop-shadow-md"
-          />
+        {/* Background Image */}
+        <Image
+          src={image}
+          alt={title}
+          fill
+          className="object-cover"
+        />
+        
+        {/* Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+        
+        {/* Badges */}
+        <div className="absolute top-4 left-4 flex gap-2">
+          {discount && (
+            <span className="px-2 py-1 text-xs font-semibold bg-red-500 text-white rounded">
+              {discount}% OFF
+            </span>
+          )}
+          {isMostBooked && (
+            <span className="px-2 py-1 text-xs font-semibold bg-purple-500 text-white rounded">
+              Most Booked
+            </span>
+          )}
         </div>
-        <span className="text-sm font-semibold text-center text-slate-900 dark:text-white drop-shadow-sm">
-          {title}
-        </span>
+        
+        {/* Title */}
+        <div className="absolute bottom-0 w-full p-4">
+          <h3 className="text-lg font-bold text-white drop-shadow-lg">
+            {title}
+          </h3>
+        </div>
       </motion.div>
     </Link>
   );
