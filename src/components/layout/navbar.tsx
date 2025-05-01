@@ -18,8 +18,8 @@ export function Navbar() {
             <Link href="/" className="text-gray-600 hover:text-[#FF8A3D] transition-colors">
               Home
             </Link>
-            <Link href="/hires" className="text-gray-600 hover:text-[#FF8A3D] transition-colors">
-              My Booking
+            <Link href="/client/bookings" className="text-gray-600 hover:text-[#FF8A3D] transition-colors">
+              Bookings
             </Link>
             <Link href="/client/nearby/integrated-explore" className="text-gray-600 hover:text-[#FF8A3D] transition-colors">
               Hire
