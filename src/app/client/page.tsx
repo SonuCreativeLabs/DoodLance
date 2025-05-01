@@ -10,41 +10,8 @@ import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { professionals } from './nearby/mockData'
 import Image from 'next/image'
-
-// Mock data for service categories - using real data from services page
-const serviceCategories = [
-  { 
-    id: 'plumbing',
-    name: 'Plumbing',
-    icon: '🔧',
-    providerCount: 32,
-    image: 'https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?auto=format&fit=crop&w=800&q=80',
-    discount: '10% Off'
-  },
-  { 
-    id: 'education',
-    name: 'Tutoring',
-    icon: '📚',
-    providerCount: 45,
-    image: 'https://images.unsplash.com/photo-1560785496-3c9d27877182?auto=format&fit=crop&w=800&q=80',
-    discount: '10% Off'
-  },
-  { 
-    id: 'pet-care',
-    name: 'Pet Care',
-    icon: '🐾',
-    providerCount: 28,
-    image: 'https://images.unsplash.com/photo-1587764379873-97837921fd44?auto=format&fit=crop&w=800&q=80',
-  },
-  { 
-    id: 'cleaning',
-    name: 'Cleaning',
-    icon: '🧹',
-    providerCount: 48,
-    image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=800&q=80',
-    discount: '15% Off'
-  }
-]
+import ServiceCard from '@/components/client/services/service-card'
+import { popularServices } from '@/data/services'
 
 const AnimatedCard = ({ icon, delay }: { icon: React.ReactNode; delay: number }) => (
   <motion.div
@@ -195,7 +162,7 @@ export default function ClientHome() {
         {/* Service Categories */}
         <section className="mb-12">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-semibold text-white">Popular Services</h2>
+            <h2 className="text-lg font-semibold text-white">Popular Services in your area</h2>
             <Link href="/client/services" className="text-purple-500 hover:text-purple-600 text-sm font-medium flex items-center">
               View All
               <ChevronRight className="w-4 h-4 ml-1" />
@@ -204,47 +171,17 @@ export default function ClientHome() {
           <div className="relative">
             <div className="overflow-x-auto scrollbar-hide">
               <div className="flex space-x-4 pb-4">
-                {serviceCategories.map((category) => (
-                  <Link key={category.id} href={`/client/services?category=${category.id}`}>
-                    <motion.div
-                      whileHover={{ scale: 1.01 }}
-                      whileTap={{ scale: 0.99 }}
-                      className="relative w-[180px] aspect-[3/4] rounded-xl overflow-hidden group flex-shrink-0 shadow-lg"
-                    >
-                      {/* Background Image */}
-                      <Image
-                        src={category.image}
-                        alt={category.name}
-                        fill
-                        className="object-cover transition-transform duration-500 group-hover:scale-105"
-                      />
-                      
-                      {/* Gradient Overlay */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-black/10 opacity-80 group-hover:opacity-70 transition-opacity duration-300" />
-                      
-                      {/* Content */}
-                      <div className="absolute inset-0 p-4 flex flex-col justify-between">
-                        <div className="flex justify-between items-start">
-                          {/* Icon with glassmorphism - simplified */}
-                          <div className="relative w-9 h-9 bg-white/20 backdrop-blur-[12px] rounded-xl flex items-center justify-center text-base shadow-lg border border-white/30 hover:bg-white/30 transition-colors duration-300">
-                            {category.icon}
-                          </div>
-                          
-                          {/* Discount Badge */}
-                          {category.discount && (
-                            <span className="px-2 py-0.5 text-[10px] font-semibold bg-white/20 backdrop-blur-md text-white rounded-xl shadow-lg border border-white/30">
-                              {category.discount}
-                            </span>
-                          )}
-                        </div>
-                        
-                        <div className="space-y-1.5">
-                          <h3 className="text-lg font-bold text-white line-clamp-1 drop-shadow-sm">{category.name}</h3>
-                          <p className="text-white/90 text-sm font-medium">{category.providerCount}+ Providers</p>
-                        </div>
-                      </div>
-                    </motion.div>
-                  </Link>
+                {popularServices.map((service) => (
+                  <ServiceCard
+                    key={service.id}
+                    id={service.id}
+                    title={service.title}
+                    image={service.image}
+                    icon={service.icon}
+                    providerCount={service.providerCount}
+                    discount={service.discount}
+                    className="w-[180px] flex-shrink-0"
+                  />
                 ))}
               </div>
             </div>
