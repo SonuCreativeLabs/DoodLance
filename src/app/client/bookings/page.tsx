@@ -58,9 +58,20 @@ const BookingCard = ({ booking, showActions = true }: BookingCardProps) => {
               <Button 
                 size="sm" 
                 variant="outline" 
-                className="flex-1 border-purple-500/20 text-white/70 hover:bg-purple-500/10 hover:border-purple-500/30 transition-all duration-300"
+                className="flex-1 border-purple-500/20 text-white/70 hover:bg-purple-500/10 hover:border-purple-500/30 transition-all duration-300 flex items-center justify-center gap-2 group"
               >
-                Cancel
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  className="w-4 h-4 group-hover:scale-110 transition-transform"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+                </svg>
+                Chat with Provider
               </Button>
             </div>
           )}
@@ -150,36 +161,97 @@ export default function BookingsPage() {
     const bookingMatchesSearch = booking.service.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          booking.provider.toLowerCase().includes(searchQuery.toLowerCase())
     
-    if (selectedFilter === 'all') return bookingMatchesSearch
-    if (selectedFilter === 'ongoing') {
-      const today = new Date()
-      const bookingDate = new Date(booking.date)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0) // Reset time to start of day
+    
+    // Parse the time properly considering AM/PM
+    const timeStr = booking.time
+    const [time, period] = timeStr.split(' ')
+    const [hours, minutes] = time.split(':').map(Number)
+    let bookingHours = hours
+    if (period === 'PM' && hours !== 12) bookingHours += 12
+    if (period === 'AM' && hours === 12) bookingHours = 0
+    
+    // Create booking date with proper time
+    const [bookingYear, bookingMonth, bookingDay] = booking.date.split('-').map(Number)
+    const bookingDate = new Date(bookingYear, bookingMonth - 1, bookingDay)
+    const bookingDateTime = new Date(bookingYear, bookingMonth - 1, bookingDay, bookingHours, minutes)
+    
+    // For debugging
+    console.log({
+      service: booking.service,
+      status: booking.status,
+      filter: selectedFilter,
+      bookingDate: bookingDate.toDateString(),
+      today: today.toDateString(),
+      isToday: bookingDate.toDateString() === today.toDateString(),
+      isFuture: bookingDate > today
+    })
+    
+    if (selectedFilter === 'all') {
       return bookingMatchesSearch && 
-        bookingDate.toDateString() === today.toDateString() &&
-        booking.status === 'confirmed'
-    }
-    if (selectedFilter === 'upcoming') {
-      const today = new Date()
-      const bookingDate = new Date(booking.date)
-      return bookingMatchesSearch && 
-        bookingDate > today &&
         (booking.status === 'confirmed' || booking.status === 'pending')
     }
+    
+    if (selectedFilter === 'ongoing') {
+      const now = new Date()
+      return bookingMatchesSearch && 
+        bookingDate.toDateString() === today.toDateString() && // Same day
+        booking.status === 'confirmed' &&
+        bookingDateTime >= now // Not past the booking time
+    }
+    
+    if (selectedFilter === 'upcoming') {
+      return bookingMatchesSearch && 
+        bookingDate > today && // Future date
+        (booking.status === 'confirmed' || booking.status === 'pending')
+    }
+    
     return bookingMatchesSearch
+  }).sort((a, b) => {
+    // Parse dates for sorting
+    const parseDateTime = (date: string, time: string) => {
+      const [year, month, day] = date.split('-').map(Number)
+      const [timeStr, period] = time.split(' ')
+      const [hours, minutes] = timeStr.split(':').map(Number)
+      let adjustedHours = hours
+      if (period === 'PM' && hours !== 12) adjustedHours += 12
+      if (period === 'AM' && hours === 12) adjustedHours = 0
+      return new Date(year, month - 1, day, adjustedHours, minutes)
+    }
+    
+    const dateA = parseDateTime(a.date, a.time)
+    const dateB = parseDateTime(b.date, b.time)
+    return dateA.getTime() - dateB.getTime()
   })
 
   const filteredApplications = applications.filter(application => {
     const applicationMatchesSearch = application.freelancer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          application.jobTitle.toLowerCase().includes(searchQuery.toLowerCase())
+    
     if (!applicationFilter) return applicationMatchesSearch
     return applicationMatchesSearch && application.status === applicationFilter
+  }).sort((a, b) => {
+    // Sort by status priority: new -> accepted -> rejected
+    const statusPriority = { 'new': 0, 'accepted': 1, 'rejected': 2 }
+    if (statusPriority[a.status] !== statusPriority[b.status]) {
+      return statusPriority[a.status] - statusPriority[b.status]
+    }
+    // If same status, sort by rating
+    return b.freelancer.rating - a.freelancer.rating
   })
 
   const filteredHistory = historyJobs.filter(job => {
     const historyMatchesSearch = job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          job.freelancer.name.toLowerCase().includes(searchQuery.toLowerCase())
+    
     if (historyFilter === 'all') return historyMatchesSearch
     return historyMatchesSearch && job.status.toLowerCase() === historyFilter.toLowerCase()
+  }).sort((a, b) => {
+    // Sort by completion date, most recent first
+    const dateA = new Date(a.completedDate)
+    const dateB = new Date(b.completedDate)
+    return dateB.getTime() - dateA.getTime()
   })
 
   const toggleSearch = () => {
@@ -251,12 +323,15 @@ export default function BookingsPage() {
             {/* Fixed Tabs Header */}
             <div className="fixed top-[84px] left-0 right-0 z-40 bg-[#111111]">
               <div className="container max-w-4xl mx-auto px-4">
-                <TabsList className="grid w-full grid-cols-3 bg-white/5 backdrop-blur-md p-1 rounded-lg border border-white/10">
+                <TabsList className="flex w-full bg-white/5 rounded-lg divide-x divide-white/10">
                   <TabsTrigger 
                     value="active" 
                     className={cn(
-                      "text-white/70 data-[state=active]:text-purple-400 data-[state=active]:bg-white/10",
-                      "rounded-md transition-all"
+                      "flex-1 py-3 text-sm font-medium",
+                      "text-white/60 data-[state=active]:text-white",
+                      "first:rounded-l-lg last:rounded-r-lg",
+                      "data-[state=active]:bg-white/10",
+                      "hover:bg-white/5"
                     )}
                   >
                     Active
@@ -264,8 +339,11 @@ export default function BookingsPage() {
                   <TabsTrigger 
                     value="applications"
                     className={cn(
-                      "text-white/70 data-[state=active]:text-purple-400 data-[state=active]:bg-white/10",
-                      "rounded-md transition-all"
+                      "flex-1 py-3 text-sm font-medium",
+                      "text-white/60 data-[state=active]:text-white",
+                      "first:rounded-l-lg last:rounded-r-lg",
+                      "data-[state=active]:bg-white/10",
+                      "hover:bg-white/5"
                     )}
                   >
                     Applications
@@ -273,8 +351,11 @@ export default function BookingsPage() {
                   <TabsTrigger 
                     value="history"
                     className={cn(
-                      "text-white/70 data-[state=active]:text-purple-400 data-[state=active]:bg-white/10",
-                      "rounded-md transition-all"
+                      "flex-1 py-3 text-sm font-medium",
+                      "text-white/60 data-[state=active]:text-white",
+                      "first:rounded-l-lg last:rounded-r-lg",
+                      "data-[state=active]:bg-white/10",
+                      "hover:bg-white/5"
                     )}
                   >
                     History
@@ -286,7 +367,7 @@ export default function BookingsPage() {
             {/* Scrollable Content */}
             <div className="flex-1 overflow-y-auto pt-[144px] pb-6">
               <div className="container max-w-4xl mx-auto px-4">
-                <TabsContent value="active">
+                <TabsContent value="active" className="mt-2 focus-visible:outline-none focus-visible:ring-0">
                   {/* Active Tab Filters */}
                   <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
                     {['all', 'ongoing', 'upcoming'].map((filter) => (
@@ -331,7 +412,7 @@ export default function BookingsPage() {
                   </div>
                 </TabsContent>
 
-                <TabsContent value="applications">
+                <TabsContent value="applications" className="mt-2 focus-visible:outline-none focus-visible:ring-0">
                   {/* Applications Tab Filters */}
                   <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
                     {['new', 'accepted', 'rejected'].map((filter) => (
@@ -371,7 +452,7 @@ export default function BookingsPage() {
                   </div>
                 </TabsContent>
 
-                <TabsContent value="history">
+                <TabsContent value="history" className="mt-2 focus-visible:outline-none focus-visible:ring-0">
                   {/* History Tab Filters */}
                   <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
                     {['all', 'completed', 'cancelled'].map((filter) => (

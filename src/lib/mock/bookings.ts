@@ -52,8 +52,8 @@ export const bookings: Booking[] = [
     service: "AC Service & Repair",
     provider: "Rajesh Kumar",
     image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Rajesh",
-    date: "2024-04-20",
-    time: "11:00 AM",
+    date: new Date().toISOString().split('T')[0], // Today's date
+    time: new Date().getHours() < 11 ? "11:00 AM" : "5:00 PM", // Future time today
     status: "confirmed",
     location: "Anna Nagar East, Chennai",
     price: "₹1,200",
@@ -67,7 +67,7 @@ export const bookings: Booking[] = [
     service: "Carnatic Vocal Classes",
     provider: "Priya Lakshmi",
     image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Priya",
-    date: "2024-04-21",
+    date: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0], // Tomorrow
     time: "5:00 PM",
     status: "pending",
     location: "Mylapore, Chennai",
@@ -82,7 +82,7 @@ export const bookings: Booking[] = [
     service: "Home Deep Cleaning",
     provider: "Lakshmi Devi",
     image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Lakshmi",
-    date: "2024-04-19",
+    date: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0], // Yesterday
     time: "9:00 AM",
     status: "completed",
     location: "T Nagar, Chennai",
@@ -97,9 +97,9 @@ export const bookings: Booking[] = [
     service: "Cricket Coaching",
     provider: "Arun Kumar",
     image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Arun",
-    date: "2024-04-22",
-    time: "4:30 PM",
-    status: "cancelled",
+    date: new Date().toISOString().split('T')[0], // Today
+    time: new Date().getHours() < 16 ? "4:30 PM" : "8:30 PM", // Future time today
+    status: "confirmed",
     location: "Chepauk Stadium, Chennai",
     price: "₹1,000/session",
     rating: 4.6,
@@ -112,7 +112,7 @@ export const bookings: Booking[] = [
     service: "Bharatanatyam Class",
     provider: "Meena Kumari",
     image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Meena",
-    date: "2024-04-23",
+    date: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString().split('T')[0], // Day after tomorrow
     time: "5:30 PM",
     status: "confirmed",
     location: "Alwarpet, Chennai",
