@@ -1,57 +1,74 @@
 "use client"
 
-import { useState } from "react"
-import { ChatList } from "@/components/client/inbox/chat-list"
-import { ChatView } from "@/components/client/inbox/chat-view"
-import { ArrowLeft } from "lucide-react"
-import { Button } from "@/components/ui/button"
-
-// Mock data matching the image exactly
-const mockChats = [
-  {
-    id: "1",
-    recipientName: "Raj Kumar",
-    recipientAvatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=raj",
-    recipientJobTitle: "Full Stack Developer",
-    lastMessage: "Can you start the project next week?",
-    timestamp: new Date(Date.now() - 1000 * 60 * 5), // 5 minutes ago
-    unreadCount: 2,
-    online: true,
-  },
-  {
-    id: "2",
-    recipientName: "Priya Singh",
-    recipientAvatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=priya",
-    recipientJobTitle: "UI/UX Designer",
-    lastMessage: "The design looks great! Moving forward with...",
-    timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
-    unreadCount: 0,
-    online: false,
-  },
-  {
-    id: "3",
-    recipientName: "Alex Thompson",
-    recipientAvatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=alex",
-    recipientJobTitle: "Backend Developer",
-    lastMessage: "Perfect, I will review the code and get b...",
-    timestamp: new Date(Date.now() - 1000 * 60 * 120), // about 2 hours ago
-    unreadCount: 1,
-    online: true,
-  },
-]
+import { useState, useMemo } from "react";
+import { professionals } from "../nearby/mockData";
+import { ChatList } from "@/components/client/inbox/chat-list";
+import { ChatView } from "@/components/client/inbox/chat-view";
+import { ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default function InboxPage() {
+  // Generate chats and messages only on the client to avoid hydration mismatch
+  const mockChats = useMemo(() => professionals.map((pro, idx) => ({
+    id: String(pro.id),
+    recipientName: pro.name,
+    recipientAvatar: pro.image,
+    recipientJobTitle: pro.service,
+    lastMessage: `Hi, I'm available for ${pro.service} in ${pro.location}!`,
+    // Use static timestamps and unreadCount for SSR safety
+    timestamp: new Date(2024, 0, 1, 10, 0, 0 + idx * 5),
+    unreadCount: (idx % 3),
+    online: idx % 2 === 0,
+  })), []);
+
+  const mockMessages = useMemo(() => {
+    const msgs: Record<string, any[]> = {};
+    mockChats.forEach((chat, idx) => {
+      msgs[chat.id] = [
+        {
+          id: `${chat.id}-1`,
+          content: `Hi ${chat.recipientName}, I'm interested in your ${chat.recipientJobTitle} service in ${professionals[idx].location}.`,
+          timestamp: new Date(2024, 0, 1, 9, 0, 0),
+          sender: 'user',
+          status: 'read',
+        },
+        {
+          id: `${chat.id}-2`,
+          content: `Hello! Thank you for reaching out. How can I help you?`,
+          timestamp: new Date(2024, 0, 1, 9, 5, 0),
+          sender: 'other',
+          status: 'read',
+        },
+        {
+          id: `${chat.id}-3`,
+          content: `I'd like to know your availability this week.`,
+          timestamp: new Date(2024, 0, 1, 9, 15, 0),
+          sender: 'user',
+          status: 'delivered',
+        },
+        {
+          id: `${chat.id}-4`,
+          content: `I'm available on Thursday and Friday. Let me know what works for you!`,
+          timestamp: new Date(2024, 0, 1, 9, 30, 0),
+          sender: 'other',
+          status: 'delivered',
+        },
+      ];
+    });
+    return msgs;
+  }, [mockChats]);
+
   const [selectedChatId, setSelectedChatId] = useState<string | undefined>(
     undefined
-  )
-  const selectedChat = mockChats.find((chat) => chat.id === selectedChatId)
+  );
+  const selectedChat = mockChats.find((chat) => chat.id === selectedChatId);
 
   const handleBackClick = () => {
-    setSelectedChatId(undefined)
-  }
+    setSelectedChatId(undefined);
+  };
 
   return (
-    <div className="flex-1 overflow-hidden bg-gradient-to-br from-gray-50 to-purple-50/30">
+    <div className="flex-1 overflow-hidden bg-[#111111]">
       <div className="relative h-full">
         {/* Chat List */}
         <div
@@ -59,8 +76,8 @@ export default function InboxPage() {
             selectedChatId ? "-translate-x-full md:translate-x-0" : "translate-x-0"
           }`}
         >
-          <div className="sticky top-0 z-10 p-4 bg-white/80 backdrop-blur-sm border-b border-purple-100/50">
-            <h1 className="text-2xl font-semibold bg-gradient-to-r from-purple-600 to-purple-400 bg-clip-text text-transparent">Messages</h1>
+          <div className="sticky top-0 z-10 px-4 py-4 bg-[#111111]">
+            <h1 className="text-3xl font-bold text-white tracking-tight">Messages</h1>
           </div>
           <ChatList
             chats={mockChats}
@@ -77,16 +94,6 @@ export default function InboxPage() {
         >
           {selectedChat ? (
             <>
-              <div className="absolute top-4 left-4 z-10 md:hidden">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleBackClick}
-                  className="h-8 w-8 hover:bg-purple-50 text-purple-600"
-                >
-                  <ArrowLeft className="h-5 w-5" />
-                </Button>
-              </div>
               <ChatView
                 chatId={selectedChat.id}
                 recipientName={selectedChat.recipientName}
@@ -94,15 +101,14 @@ export default function InboxPage() {
                 recipientJobTitle={selectedChat.recipientJobTitle}
                 online={selectedChat.online}
                 onBack={handleBackClick}
+                messages={mockMessages[selectedChat.id]}
               />
             </>
           ) : (
-            <div className="h-full flex items-center justify-center">
-              <p className="text-purple-600/80">Select a conversation to start messaging</p>
-            </div>
+            <div className="h-full" />
           )}
         </div>
       </div>
     </div>
-  )
-} 
+  );
+}
