@@ -38,7 +38,17 @@ const AnimatedCard = ({ icon, delay }: { icon: React.ReactNode; delay: number })
   </motion.div>
 )
 
+import { useState } from "react";
+
+const mockNotifications = [
+  { id: 1, message: "Your booking with Priya Lakshmi is confirmed.", time: "2 min ago" },
+  { id: 2, message: "Rajesh Kumar has sent you a new message.", time: "15 min ago" },
+  { id: 3, message: "Your payment for Home Cleaning is complete.", time: "1 hour ago" },
+  { id: 4, message: "Reminder: AC Repair appointment tomorrow at 10:00 AM.", time: "3 hours ago" },
+];
+
 export default function ClientHome() {
+  const [showNotifications, setShowNotifications] = useState(false);
   const handleHire = (id: number) => {
     // TODO: Implement hire functionality
     console.log('Hiring freelancer:', id)
@@ -105,12 +115,16 @@ export default function ClientHome() {
             </div>
             <div className="flex items-center space-x-4">
               <div className="relative">
-                <button className="flex items-center justify-center w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md transition-colors">
-                  <Bell className="w-5 h-5 text-white" />
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center">
-                    <span className="text-[10px] font-medium text-white">3</span>
+                <Link href="/client/notifications" className="relative group" aria-label="Notifications">
+                  <span className="flex items-center justify-center w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md transition-colors">
+                    <Bell className="w-5 h-5 text-white" />
+                    {mockNotifications.length > 0 && (
+                      <span className="absolute -top-1 -right-1 w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center">
+                        <span className="text-[10px] font-medium text-white">{mockNotifications.length}</span>
+                      </span>
+                    )}
                   </span>
-                </button>
+                </Link>
               </div>
               <div className="relative">
                 <button className="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-r from-purple-600 to-purple-400 hover:from-purple-700 hover:to-purple-500 backdrop-blur-md transition-colors">
