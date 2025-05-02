@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import type { PanInfo } from 'framer-motion';
 import MapView from '../MapViewComponent';
 import ProfessionalsFeed from '../ProfessionalsFeedComponent';
-import { Search, Map } from 'lucide-react';
+import { Search, Map, Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { categories } from '../constants';
 import { professionals } from '../mockData';
@@ -12,14 +12,14 @@ import type { Freelancer } from '../types';
 import SearchFilters from '../components/SearchFilters';
 
 export default function IntegratedExplorePage() {
-  const [isSheetCollapsed, setIsSheetCollapsed] = useState(false);
+  const [isSheetCollapsed, setIsSheetCollapsed] = useState(true);
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [isDragging, setIsDragging] = useState(false);
   const [sheetOffset, setSheetOffset] = useState(0);
   const [isDragTextVisible, setIsDragTextVisible] = useState(true);
-  const [initialSheetY, setInitialSheetY] = useState(0);
-  
+  const router = useRouter();
+
   // Filter state
   const [selectedArea, setSelectedArea] = useState("Velachery");
   const [selectedService, setSelectedService] = useState("All");
@@ -32,20 +32,8 @@ export default function IntegratedExplorePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredProfessionals, setFilteredProfessionals] = useState<Freelancer[]>(professionals);
   
-  const router = useRouter();
-
-  // Calculate sheet offset on mount and window resize
-  useEffect(() => {
-    const updateSheetOffset = () => {
-      if (typeof window !== 'undefined') {
-        setInitialSheetY(window.innerHeight * 0.7);
-      }
-    };
-
-    updateSheetOffset();
-    window.addEventListener('resize', updateSheetOffset);
-    return () => window.removeEventListener('resize', updateSheetOffset);
-  }, []);
+  // Set initial sheet position to collapsed state (70vh)
+  const initialSheetY = typeof window !== 'undefined' ? window.innerHeight * 0.7 : 0;
 
   const handleTimeOptionClick = (option: string) => {
     setSelectedTimeOptions(prev => {
@@ -198,16 +186,16 @@ export default function IntegratedExplorePage() {
         }}
       >
         {/* Drag Handle */}
-        <div className="sticky top-0 pt-3 pb-2 flex flex-col items-center bg-[#111111] cursor-grab active:cursor-grabbing z-10">
+        <div className="sticky top-0 pt-3 pb-1 flex flex-col items-center z-10">
           <div className="w-10 h-1 bg-white/20 rounded-full" />
           <AnimatePresence>
             {isDragTextVisible && (
               <motion.div 
                 initial={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
-                className="text-white/50 text-xs py-1.5"
+                className="text-white/50 text-xs py-1"
               >
-                {isSheetCollapsed ? "↑ Pull up for list view" : "↓ Pull down for map view"}
+                {isSheetCollapsed ? "↑ Pull up for list view" : "↓ Pull down to minimize"}
               </motion.div>
             )}
           </AnimatePresence>
@@ -223,8 +211,8 @@ export default function IntegratedExplorePage() {
         >
           <div className="container max-w-2xl mx-auto px-3 pb-6">
             {isSheetCollapsed ? (
-              <div className="flex items-center justify-center py-3">
-                <div className="flex items-center gap-4">
+              <div className="flex items-center justify-between w-full max-w-3xl mx-auto px-4 pt-4">
+                <div className="flex flex-col items-start gap-1.5">
                   <div className="flex -space-x-3">
                     {professionals.slice(0, 4).map((freelancer, index) => (
                       <motion.div
@@ -235,9 +223,9 @@ export default function IntegratedExplorePage() {
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: index * 0.1 }}
                       >
-                        <div className="relative w-10 h-10">
+                        <div className="relative w-9 h-9">
                           <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full opacity-20 blur-sm"></div>
-                          <div className="relative w-10 h-10 rounded-full border-2 border-purple-200/20 overflow-hidden backdrop-blur-sm shadow-lg">
+                          <div className="relative w-9 h-9 rounded-full border-2 border-purple-200/20 overflow-hidden backdrop-blur-sm shadow-lg">
                             <img
                               src={freelancer.image}
                               alt=""
@@ -255,43 +243,47 @@ export default function IntegratedExplorePage() {
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: 0.4 }}
                       >
-                        <div className="relative w-10 h-10">
+                        <div className="relative w-9 h-9">
                           <div className="absolute inset-0 bg-gradient-to-br from-purple-400/20 to-purple-600/20 rounded-full blur-sm"></div>
-                          <div className="relative w-10 h-10 rounded-full border-2 border-purple-200/20 overflow-hidden backdrop-blur-sm bg-[#111111]/90 flex items-center justify-center">
+                          <div className="relative w-9 h-9 rounded-full border-2 border-purple-200/20 overflow-hidden backdrop-blur-sm bg-[#111111]/90 flex items-center justify-center">
                             <span className="text-xs font-bold text-white/70">+{professionals.length - 4}</span>
                           </div>
                         </div>
                       </motion.div>
                     )}
                   </div>
-                  <motion.div 
-                    className="flex flex-col"
-                    initial={{ opacity: 0, y: 5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4 }}
+                  <div className="text-white/80 text-sm font-medium">
+                    <span>{professionals.length} experts available</span>
+                  </div>
+                </div>
+                <div className="self-center">
+                  <button
+                    onClick={() => router.push('/client/post')}
+                    className="group relative flex items-center gap-1.5 px-4 py-2 bg-white/95 backdrop-blur-xl rounded-xl text-sm font-semibold transition-all duration-300 hover:bg-white shadow-lg hover:shadow-xl"
                   >
-                    <div className="text-white font-medium text-[15px]">
-                      {professionals.length} nearby experts
-                    </div>
-                    <div className="flex items-center gap-1.5 text-white/60 text-sm">
-                      <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
-                      <span>available now</span>
-                    </div>
-                  </motion.div>
+                    <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-purple-500/5 to-purple-600/5 opacity-80 group-hover:opacity-100 transition-opacity" />
+                    <div className="absolute inset-0 rounded-xl border border-purple-200/20 group-hover:border-purple-300/30 transition-colors" />
+                    <div className="absolute inset-0 rounded-xl shadow-inner shadow-purple-100/10" />
+                    <Plus className="w-3.5 h-3.5 text-purple-600 group-hover:text-purple-700 transition-colors relative z-10" />
+                    <span className="text-purple-600 group-hover:text-purple-700 relative z-10 transition-colors">Post A Job</span>
+                  </button>
                 </div>
               </div>
             ) : (
-              <div className="flex items-center justify-center mb-5 pt-1">
-                <div className="flex items-center gap-4">
-                  <div className="text-white font-semibold tracking-tight text-[15px]">
-                    {professionals.length} Nearby Experts
-                  </div>
-                  <div className="text-white/20 font-light">|</div>
-                  <div className="flex items-center gap-1.5 text-white/60 capitalize tracking-tight text-[15px]">
-                    <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
-                    <span>Available Now</span>
-                  </div>
+              <div className="flex items-center justify-between w-full max-w-3xl mx-auto px-4 mb-5 pt-1">
+                <div className="text-white/80 text-sm font-medium">
+                  <span>{professionals.length} experts available</span>
                 </div>
+                <button
+                  onClick={() => router.push('/client/post')}
+                  className="group relative flex items-center gap-1.5 px-4 py-2 bg-white/95 backdrop-blur-xl rounded-xl text-sm font-semibold transition-all duration-300 hover:bg-white shadow-lg hover:shadow-xl"
+                >
+                  <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-purple-500/5 to-purple-600/5 opacity-80 group-hover:opacity-100 transition-opacity" />
+                  <div className="absolute inset-0 rounded-xl border border-purple-200/20 group-hover:border-purple-300/30 transition-colors" />
+                  <div className="absolute inset-0 rounded-xl shadow-inner shadow-purple-100/10" />
+                  <Plus className="w-3.5 h-3.5 text-purple-600 group-hover:text-purple-700 transition-colors relative z-10" />
+                  <span className="text-purple-600 group-hover:text-purple-700 relative z-10 transition-colors">Post A Job</span>
+                </button>
               </div>
             )}
             {!isSheetCollapsed && (
