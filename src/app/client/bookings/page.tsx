@@ -18,7 +18,7 @@ interface BookingCardProps {
 const BookingCard = ({ booking, showActions = true }: BookingCardProps) => {
   return (
     <div
-      className="group bg-white/5 backdrop-blur-md hover:bg-white/10 rounded-xl p-6 border border-white/10 hover:border-purple-500/30 transition-all duration-300"
+      className="group bg-[#23232b] rounded-xl p-6 border border-[#23232b] transition-all duration-300"
     >
       <div className="flex items-start gap-4">
         <div className="relative">
@@ -71,7 +71,7 @@ const BookingCard = ({ booking, showActions = true }: BookingCardProps) => {
                 >
                   <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
                 </svg>
-                Chat with Provider
+                Message
               </Button>
             </div>
           )}
@@ -87,7 +87,7 @@ const ApplicationCard = ({ application }: { application: Application }) => {
       initial={{ scale: 0.95, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       exit={{ scale: 0.95, opacity: 0 }}
-      className="group bg-white/5 backdrop-blur-md hover:bg-white/10 rounded-xl p-6 border border-white/10 hover:border-purple-500/30 transition-all duration-300"
+      className="group bg-[#23232b] rounded-xl p-6 border border-[#23232b] transition-all duration-300"
     >
       <div className="flex items-start gap-4">
         <div className="relative">
@@ -321,17 +321,16 @@ export default function BookingsPage() {
         <div className="flex-1">
           <Tabs defaultValue="active" className="h-full flex flex-col" onValueChange={setActiveTab}>
             {/* Fixed Tabs Header */}
-            <div className="fixed top-[84px] left-0 right-0 z-40 bg-[#111111]">
+            <div className="fixed top-[64px] left-0 right-0 z-40 bg-[#111111]">
               <div className="container max-w-4xl mx-auto px-4">
-                <TabsList className="flex w-full bg-white/5 rounded-lg divide-x divide-white/10">
+                <TabsList className="flex w-full bg-white/5 divide-x divide-white/10">
                   <TabsTrigger 
                     value="active" 
                     className={cn(
-                      "flex-1 py-3 text-sm font-medium",
-                      "text-white/60 data-[state=active]:text-white",
+                      "flex-1 py-2.5 text-sm font-medium",
                       "first:rounded-l-lg last:rounded-r-lg",
-                      "data-[state=active]:bg-white/10",
-                      "hover:bg-white/5"
+                      "data-[state=active]:bg-white/90 data-[state=active]:text-purple-600",
+                      "data-[state=inactive]:bg-transparent data-[state=inactive]:text-white/60"
                     )}
                   >
                     Active
@@ -339,11 +338,10 @@ export default function BookingsPage() {
                   <TabsTrigger 
                     value="applications"
                     className={cn(
-                      "flex-1 py-3 text-sm font-medium",
-                      "text-white/60 data-[state=active]:text-white",
+                      "flex-1 py-2.5 text-sm font-medium",
                       "first:rounded-l-lg last:rounded-r-lg",
-                      "data-[state=active]:bg-white/10",
-                      "hover:bg-white/5"
+                      "data-[state=active]:bg-white/90 data-[state=active]:text-purple-600",
+                      "data-[state=inactive]:bg-transparent data-[state=inactive]:text-white/60"
                     )}
                   >
                     Applications
@@ -351,11 +349,10 @@ export default function BookingsPage() {
                   <TabsTrigger 
                     value="history"
                     className={cn(
-                      "flex-1 py-3 text-sm font-medium",
-                      "text-white/60 data-[state=active]:text-white",
+                      "flex-1 py-2.5 text-sm font-medium",
                       "first:rounded-l-lg last:rounded-r-lg",
-                      "data-[state=active]:bg-white/10",
-                      "hover:bg-white/5"
+                      "data-[state=active]:bg-white/90 data-[state=active]:text-purple-600",
+                      "data-[state=inactive]:bg-transparent data-[state=inactive]:text-white/60"
                     )}
                   >
                     History
@@ -365,7 +362,7 @@ export default function BookingsPage() {
             </div>
 
             {/* Scrollable Content */}
-            <div className="flex-1 overflow-y-auto pt-[144px] pb-6">
+            <div className="flex-1 overflow-y-auto pt-[120px] pb-6">
               <div className="container max-w-4xl mx-auto px-4">
                 <TabsContent value="active" className="mt-2 focus-visible:outline-none focus-visible:ring-0">
                   {/* Active Tab Filters */}
@@ -485,7 +482,7 @@ export default function BookingsPage() {
                       filteredHistory.map((job) => (
                         <div
                           key={job.id}
-                          className="group bg-white/5 backdrop-blur-md hover:bg-white/10 rounded-xl p-6 border border-white/10 hover:border-purple-500/30 transition-all duration-300"
+                          className="group bg-[#23232b] rounded-xl p-6 border border-[#23232b] transition-all duration-300"
                         >
                           <div className="flex items-start gap-4">
                             <div className="relative">

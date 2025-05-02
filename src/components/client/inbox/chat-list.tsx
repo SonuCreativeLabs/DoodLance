@@ -22,42 +22,40 @@ interface ChatListProps {
 
 export function ChatList({ chats, selectedChatId, onSelectChat }: ChatListProps) {
   return (
-    <div className="space-y-2">
+    <div className="space-y-4 py-4">
       {chats.map((chat) => (
         <div
           key={chat.id}
           onClick={() => onSelectChat(chat.id)}
-          className={`mx-4 p-4 flex items-start gap-4 hover:bg-gray-50 rounded-2xl border border-gray-100 cursor-pointer transition-colors ${
-            selectedChatId === chat.id ? 'bg-gray-50' : 'bg-white'
-          }`}
+          className={`group mx-4 p-4 flex items-start gap-4 rounded-xl border cursor-pointer transition-all duration-300 hover:border-purple-500/20 ${selectedChatId === chat.id ? 'bg-[#23232b] border-purple-500/40' : 'bg-[#23232b] border-[#23232b]'}`}
         >
-          <div className="relative">
-            <Avatar className="h-12 w-12">
+          <div className="relative flex-shrink-0">
+            <Avatar className="h-12 w-12 ring-2 ring-purple-500/20 group-hover:ring-purple-500/40 transition-all">
               <AvatarImage src={chat.recipientAvatar} alt={chat.recipientName} />
               <AvatarFallback>{chat.recipientName.charAt(0)}</AvatarFallback>
             </Avatar>
             {chat.online && (
-              <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-green-500 border-2 border-white" />
+              <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-green-500 ring-2 ring-[#23232b]" />
             )}
           </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex justify-between items-start">
-              <div>
-                <h3 className="font-semibold text-[#4A5568]">{chat.recipientName}</h3>
-                <p className="text-sm text-[#718096]">{chat.recipientJobTitle}</p>
+          <div className="flex-1 min-w-0 space-y-1">
+            <div className="flex justify-between items-center">
+              <div className="flex flex-col">
+                <h3 className="font-semibold text-white group-hover:text-purple-400 transition-colors">{chat.recipientName}</h3>
+                <p className="text-xs text-white/40 font-medium">{chat.recipientJobTitle}</p>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-[#718096]">
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <span className="text-xs text-white/40 tabular-nums">
                   {formatDistanceToNow(chat.timestamp, { addSuffix: false })} ago
                 </span>
                 {chat.unreadCount > 0 && (
-                  <div className="h-6 w-6 rounded-full bg-[#4299E1] text-white text-sm flex items-center justify-center">
+                  <div className="h-5 w-5 rounded-full bg-purple-500/90 text-white text-xs font-medium flex items-center justify-center ring-2 ring-purple-500/20">
                     {chat.unreadCount}
                   </div>
                 )}
               </div>
             </div>
-            <p className="text-sm text-[#718096] truncate mt-1">{chat.lastMessage}</p>
+            <p className="text-sm text-white/70 truncate leading-relaxed">{chat.lastMessage}</p>
           </div>
         </div>
       ))}

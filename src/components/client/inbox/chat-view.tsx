@@ -22,33 +22,11 @@ interface ChatViewProps {
   recipientJobTitle: string;
   online: boolean;
   onBack?: () => void;
+  messages?: Message[];
 }
 
-const mockMessages: Record<string, Message[]> = {
-  '1': [
-    {
-      id: '1',
-      content: 'Hi, I saw your profile and I think you\'d be perfect for our project.',
-      timestamp: new Date(Date.now() - 1000 * 60 * 60), // 1 hour ago
-      sender: 'other',
-      status: 'read'
-    },
-    {
-      id: '2',
-      content: 'Thanks! I\'d love to hear more about it.',
-      timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
-      sender: 'user',
-      status: 'read'
-    },
-    {
-      id: '3',
-      content: 'Can you start the project next week?',
-      timestamp: new Date(Date.now() - 1000 * 60 * 5), // 5 minutes ago
-      sender: 'other',
-      status: 'delivered'
-    }
-  ]
-};
+// mockMessages removed; messages are now passed as a prop
+
 
 export function ChatView({ 
   chatId, 
@@ -56,10 +34,10 @@ export function ChatView({
   recipientAvatar, 
   recipientJobTitle, 
   online,
-  onBack 
+  onBack,
+  messages = [],
 }: ChatViewProps) {
   const [newMessage, setNewMessage] = useState('');
-  const messages = mockMessages[chatId] || [];
 
   const handleSend = () => {
     if (!newMessage.trim()) return;
@@ -68,58 +46,63 @@ export function ChatView({
   };
 
   return (
-    <div className="flex flex-col h-[100vh] fixed inset-0">
+    <div className="flex flex-col h-[100vh] fixed inset-0 bg-[#111111]">
       {/* Chat Header */}
-      <div className="flex items-center gap-3 p-4 border-b bg-white sticky top-0 z-10">
+      <div className="flex items-center gap-4 p-4 border-b border-white/5 bg-[#23232b] sticky top-0 z-10">
         <Button
           variant="ghost"
           size="sm"
           onClick={onBack}
-          className="h-12 w-12 md:hidden"
+          className="h-10 w-10 p-0 rounded-xl md:hidden hover:bg-white/5"
         >
-          <ArrowLeft className="h-6 w-6" />
+          <ArrowLeft className="h-5 w-5 text-white/70" />
         </Button>
         <div className="relative">
-          <Avatar>
+          <Avatar className="h-10 w-10 ring-2 ring-purple-500/20">
             <AvatarImage src={recipientAvatar} alt={recipientName} />
             <AvatarFallback>{recipientName.charAt(0)}</AvatarFallback>
           </Avatar>
           {online && (
-            <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-green-500 border-2 border-white" />
+            <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-green-500 ring-2 ring-[#23232b]" />
           )}
         </div>
-        <div>
-          <h3 className="font-semibold">{recipientName}</h3>
-          <p className="text-sm text-gray-500">{recipientJobTitle}</p>
+        <div className="flex-1">
+          <h3 className="font-semibold text-white">{recipientName}</h3>
+          <p className="text-sm text-white/40">{recipientJobTitle}</p>
         </div>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-[#111111]">
         {messages.map((message) => (
           <div
             key={message.id}
-            className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+            className={`flex items-end gap-2 ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
           >
+            {message.sender !== 'user' && (
+              <Avatar className="h-6 w-6 ring-2 ring-purple-500/20">
+                <AvatarImage src={recipientAvatar} alt={recipientName} />
+                <AvatarFallback>{recipientName.charAt(0)}</AvatarFallback>
+              </Avatar>
+            )}
             <div
-              className={`max-w-[70%] rounded-lg p-3 ${
-                message.sender === 'user'
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-white text-gray-900 shadow-sm'
+              className={`max-w-[70%] rounded-xl p-3 ${message.sender === 'user'
+                ? 'bg-purple-500/90 text-white'
+                : 'bg-[#23232b] text-white/90 ring-1 ring-white/5'
               }`}
             >
-              <p>{message.content}</p>
-              <div
-                className={`text-xs mt-1 ${
-                  message.sender === 'user' ? 'text-blue-100' : 'text-gray-500'
-                }`}
-              >
-                {formatDistanceToNow(message.timestamp, { addSuffix: true })}
+              <p className="text-sm leading-relaxed">{message.content}</p>
+              <div className="flex items-center gap-1.5 mt-1">
+                <time className="text-[10px] tabular-nums opacity-40">
+                  {formatDistanceToNow(message.timestamp, { addSuffix: true })}
+                </time>
                 {message.sender === 'user' && (
-                  <span className="ml-2">
+                  <span className="text-[10px] opacity-40">
                     {message.status === 'sent' && '✓'}
                     {message.status === 'delivered' && '✓✓'}
-                    {message.status === 'read' && '✓✓'}
+                    {message.status === 'read' && (
+                      <span className="text-purple-300">✓✓</span>
+                    )}
                   </span>
                 )}
               </div>
@@ -129,21 +112,41 @@ export function ChatView({
       </div>
 
       {/* Message Input */}
-      <div className="p-4 border-t bg-white sticky bottom-0 z-10">
+      <div className="p-4 border-t border-white/5 bg-[#23232b] sticky bottom-0 z-10">
         <div className="flex gap-2">
-          <Button variant="ghost" size="sm" className="shrink-0">
-            <Paperclip className="h-5 w-5" />
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="h-10 w-10 p-0 rounded-xl shrink-0 hover:bg-white/5"
+          >
+            <Paperclip className="h-5 w-5 text-white/70" />
           </Button>
           <Input
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             placeholder="Type a message..."
-            className="flex-1"
+            className="flex-1 bg-white/5 border-0 text-white/90 placeholder:text-white/40 rounded-xl focus-visible:ring-1 focus-visible:ring-purple-500/50"
             onKeyPress={(e) => e.key === 'Enter' && handleSend()}
           />
-          <Button onClick={handleSend} className="shrink-0" disabled={!newMessage.trim()}>
-            <Send className="h-5 w-5" />
-          </Button>
+          <button
+            onClick={handleSend}
+            disabled={!newMessage.trim()}
+            className="flex items-center justify-center h-10 w-10 rounded-xl disabled:bg-white/5 enabled:bg-purple-500/90 hover:bg-purple-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors group"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              className="w-6 h-6 text-white/70 group-hover:text-purple-400 transition-colors"
+            >
+              <path
+                d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
         </div>
       </div>
     </div>
