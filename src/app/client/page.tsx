@@ -1,6 +1,6 @@
 "use client"
 
-import { Search, MapPin, Star, Clock, Calendar, User, Briefcase, GraduationCap, ChevronRight, Bell, Wallet } from 'lucide-react'
+import { Search, MapPin, Star, Clock, Calendar, User, Briefcase, GraduationCap, ChevronRight, Bell, Wallet, X } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import ClientLayout from '@/components/layouts/client-layout'
 import { FreelancerCard } from '@/components/client/freelancer-card'
@@ -38,7 +38,22 @@ const AnimatedCard = ({ icon, delay }: { icon: React.ReactNode; delay: number })
   </motion.div>
 )
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
+const mockSearches = [
+  { id: 1, text: "Plumber near me", count: 2450 },
+  { id: 2, text: "Math tutor", count: 1830 },
+  { id: 3, text: "House cleaning service", count: 1560 },
+  { id: 4, text: "AC repair and service", count: 1240 },
+  { id: 5, text: "Pet grooming", count: 980 },
+];
+
+const mockLocations = [
+  { city: "Chennai", state: "TN" },
+  { city: "Bangalore", state: "KA" },
+  { city: "Mumbai", state: "MH" },
+  { city: "Delhi", state: "DL" },
+];
 
 const mockNotifications = [
   { id: 1, message: "Your booking with Priya Lakshmi is confirmed.", time: "2 min ago" },
@@ -49,6 +64,34 @@ const mockNotifications = [
 
 export default function ClientHome() {
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showLocationPicker, setShowLocationPicker] = useState(false);
+  const [currentLocation, setCurrentLocation] = useState(mockLocations[0]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+  // Handle ESC key press
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowSuggestions(false);
+        setShowLocationPicker(false);
+      }
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, []);
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    setShowSuggestions(true);
+  };
+
+  const handleSearchSelect = (text: string) => {
+    setSearchQuery(text);
+    setShowSuggestions(false);
+    // TODO: Implement actual search
+    console.log('Searching for:', text);
+  };
   const handleHire = (id: number) => {
     // TODO: Implement hire functionality
     console.log('Hiring freelancer:', id)
@@ -111,7 +154,37 @@ export default function ClientHome() {
                   </div>
                 </div>
               </div>
-              <h2 className="text-2xl font-semibold text-white">Welcome back, Sonu!</h2>
+              <div className="flex flex-col gap-0.5">
+                <span className="text-lg font-medium text-white">Welcome back, Sonu!</span>
+                <div className="relative group">
+                  <button 
+                    className="flex items-center text-white/70 hover:text-white/90 transition-colors"
+                    onClick={() => setShowLocationPicker(prev => !prev)}
+                  >
+                    <MapPin className="w-3 h-3 mr-1" />
+                    <span className="text-xs">{currentLocation.city}, {currentLocation.state}</span>
+                    <ChevronRight className="w-3 h-3 ml-0.5 group-hover:rotate-90 transition-transform duration-200" />
+                  </button>
+                  
+                  {showLocationPicker && (
+                    <div className="absolute top-6 left-0 bg-white/10 backdrop-blur-md rounded-lg py-2 w-36 border border-white/20">
+                      {mockLocations.map((loc) => (
+                        <button
+                          key={`${loc.city}-${loc.state}`}
+                          className="w-full px-3 py-1.5 text-xs text-white/80 hover:bg-white/10 text-left flex items-center gap-2"
+                          onClick={() => {
+                            setCurrentLocation(loc);
+                            setShowLocationPicker(false);
+                          }}
+                        >
+                          <MapPin className="w-3 h-3" />
+                          {loc.city}, {loc.state}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
             <div className="flex items-center space-x-4">
               <div className="relative">
@@ -148,24 +221,52 @@ export default function ClientHome() {
 
           {/* Modern Search Bar */}
           <div className="bg-gradient-to-r from-purple-600/20 via-purple-500/20 to-purple-400/20 backdrop-blur-md rounded-xl shadow-lg p-4 max-w-3xl mx-auto border border-purple-500/20">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="relative">
-                <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/60" />
-                <input
-                  type="text"
-                  placeholder="Where are you looking?"
-                  className="w-full pl-10 pr-4 py-3 rounded-lg border border-white/20 bg-white/10 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-purple-400"
-                />
+            <div className="grid grid-cols-1 md:grid-cols-[1fr,auto] gap-4">
+              <div className="relative group">
+                <div className="flex items-center">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/60" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => handleSearch(e.target.value)}
+                    onFocus={() => setShowSuggestions(true)}
+                    placeholder={`Find services in ${currentLocation.city}...`}
+                    className="w-full pl-10 pr-4 py-3 rounded-lg border border-white/20 bg-white/10 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-purple-400"
+                  />
+                </div>
+                {showSuggestions && (
+                  <div className="absolute mt-1 w-full bg-[#18181b]/95 backdrop-blur-md rounded-lg border border-white/10 shadow-xl z-20">
+                    <div className="p-2">
+                      <div className="text-xs font-medium text-white/50 px-2 py-1 flex justify-between items-center">
+                        <span>Popular Searches</span>
+                        <button 
+                          onClick={() => setShowSuggestions(false)}
+                          className="p-1 hover:bg-white/10 rounded-full transition-colors"
+                          aria-label="Close suggestions"
+                        >
+                          <X className="w-4 h-4 text-white/50" />
+                        </button>
+                      </div>
+                      <div className="space-y-1">
+                        {mockSearches.map((search) => (
+                          <button 
+                            key={search.id}
+                            onClick={() => handleSearchSelect(search.text)}
+                            className="w-full px-3 py-2 text-sm text-white hover:bg-white/10 rounded-lg flex items-center justify-between group/item"
+                          >
+                            <div className="flex items-center">
+                              <Search className="w-4 h-4 mr-2 text-purple-400" />
+                              {search.text}
+                            </div>
+                            <span className="text-xs text-white/30 group-hover/item:text-white/50">{search.count.toLocaleString()}+ searches</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/60" />
-                <input
-                  type="text"
-                  placeholder="What service do you need?"
-                  className="w-full pl-10 pr-4 py-3 rounded-lg border border-white/20 bg-white/10 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-purple-400"
-                />
-              </div>
-              <button className="w-full bg-gradient-to-r from-purple-600 via-purple-500 to-purple-400 hover:from-purple-700 hover:via-purple-600 hover:to-purple-500 text-white py-3 h-[50px] text-base rounded-lg transition-all duration-300 font-medium">
+              <button className="h-[50px] px-8 bg-gradient-to-r from-purple-600 via-purple-500 to-purple-400 hover:from-purple-700 hover:via-purple-600 hover:to-purple-500 text-white py-3 text-base rounded-lg transition-all duration-300 font-medium whitespace-nowrap">
                 Search
               </button>
             </div>
