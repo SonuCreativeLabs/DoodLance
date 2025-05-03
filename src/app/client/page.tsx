@@ -298,7 +298,7 @@ export default function ClientHome() {
       </div>
 
       {/* Main Content with top padding for fixed header */}
-      <div className="pt-[60px]"> 
+      <div> 
         {/* Hero Banner + Why SkillBridge unified background */}
         <div className="relative pb-16 min-h-[600px] md:h-auto overflow-hidden">
           {/* Background Elements */}
@@ -320,9 +320,9 @@ export default function ClientHome() {
           </div>
 
           {/* Hero Content */}
-          <div className="relative container mx-auto px-4 pt-6">
-            {/* Add padding-top to push content below header */}
-            <div className="pt-16">
+          <div className="relative container mx-auto px-4">
+            {/* Adjusted space for optimal position */}
+            <div className="pt-28 md:pt-32">
               <div className="max-w-2xl mx-auto text-center">
                 <h1 className="text-4xl md:text-6xl font-bold text-white mb-4 tracking-tight">
                   Find Local Services
@@ -333,7 +333,7 @@ export default function ClientHome() {
               </div>
 
               {/* Modern Search Bar */}
-              <div className="bg-gradient-to-r from-purple-600/20 via-purple-500/20 to-purple-400/20 rounded-xl shadow-lg p-4 max-w-3xl mx-auto border border-purple-500/20">
+              <div className="bg-white/10 rounded-2xl shadow-lg p-4 max-w-3xl mx-auto border border-white/20">
                 <div className="grid grid-cols-1 md:grid-cols-[1fr,auto] gap-4">
                   <div className="w-full">
                     <div className="relative w-full">
@@ -342,7 +342,7 @@ export default function ClientHome() {
                         placeholder={`Find services in ${currentLocation.city}...`}
                         value={searchQuery}
                         onChange={(e) => handleSearch(e.target.value)}
-                        className="w-full bg-white/10 border border-white/20 text-white placeholder-white/60 rounded-full py-3 pl-10 pr-4 focus:outline-none focus:border-purple-500 transition-all"
+                        className="w-full bg-white/10 border border-white/20 text-white placeholder-white/60 rounded py-3 pl-10 pr-4 focus:outline-none focus:border-purple-500 transition-all"
                         onFocus={() => setShowSuggestions(true)}
                         onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                       />
@@ -382,14 +382,14 @@ export default function ClientHome() {
                       )}
                     </div>
                   </div>
-                  <button className="h-[50px] px-8 bg-gradient-to-r from-purple-600 via-purple-500 to-purple-400 hover:from-purple-700 hover:via-purple-600 hover:to-purple-500 text-white py-3 text-base rounded-lg transition-all duration-300 font-medium whitespace-nowrap">
+                  <button className="h-[50px] px-8 bg-gradient-to-r from-purple-600 via-purple-500 to-purple-400 hover:from-purple-700 hover:via-purple-600 hover:to-purple-500 text-white py-3 text-base rounded transition-all duration-300 font-medium whitespace-nowrap">
                     Search
                   </button>
                 </div>
               </div>
 
               {/* Why SkillBridge Section */}
-              <div className="mt-12 max-w-4xl mx-auto">
+              <div className="mt-10 max-w-4xl mx-auto">
                 <div className="mb-2">
                   <h2 className="text-base font-semibold text-white tracking-wide text-left">WHY SKILLBRIDGE?</h2>
                 </div>
