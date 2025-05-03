@@ -38,7 +38,7 @@ const AnimatedCard = ({ icon, delay }: { icon: React.ReactNode; delay: number })
   </motion.div>
 )
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 const mockSearches = [
   { id: 1, text: "Plumber near me", count: 2450 },
@@ -68,6 +68,16 @@ export default function ClientHome() {
   const [currentLocation, setCurrentLocation] = useState(mockLocations[0]);
   const [searchQuery, setSearchQuery] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isSticky, setIsSticky] = useState(false);
+  const headerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsSticky(window.scrollY > 10);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Handle ESC key press
   useEffect(() => {
@@ -127,189 +137,192 @@ export default function ClientHome() {
 
         {/* Hero Content */}
         <div className="relative container mx-auto px-4 pt-6">
-          {/* Welcome Section */}
-          <div className="flex items-center justify-between mb-12">
-            <div className="flex items-center space-x-4">
-              <div className="relative group">
-                <button className="flex items-center justify-center w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md transition-all duration-300 p-0.5 relative group">
-                  <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
-                  <img
-                    src="/images/profile-sonu.jpg"
-                    alt="Profile"
-                    className="w-full h-full rounded-full object-cover ring-2 ring-white/10 group-hover:ring-purple-400/50 transition-all duration-300"
-                  />
-                </button>
-                <div className="absolute top-12 left-0 hidden group-hover:block">
-                  <div className="bg-white/10 backdrop-blur-md rounded-lg py-2 w-48 border border-white/20">
-                    <div className="px-4 py-2 text-sm text-white/80 hover:bg-white/10 cursor-pointer">
-                      View Profile
-                    </div>
-                    <div className="px-4 py-2 text-sm text-white/80 hover:bg-white/10 cursor-pointer">
-                      Settings
-                    </div>
-                    <div className="border-t border-white/10 my-1"></div>
-                    <div className="px-4 py-2 text-sm text-red-400 hover:bg-white/10 cursor-pointer">
-                      Logout
+          {/* Fixed/Sticky Header (blends with hero on top, gets solid on scroll) */}
+          <div className={`fixed top-0 left-0 w-full z-30 transition-colors duration-300 ${isSticky ? 'bg-gradient-to-br from-[#6B46C1] via-[#4C1D95] to-[#6B46C1] shadow-md' : 'bg-gradient-to-br from-[#6B46C1] via-[#4C1D95] to-[#6B46C1]/80'}`}> 
+            <div className="container mx-auto px-4 flex items-center justify-between pt-4 pb-2">
+              <div className="flex items-center space-x-4">
+                <div className="relative group">
+                  <button className="flex items-center justify-center w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md transition-all duration-300 p-0.5 relative group">
+                    <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
+                    <img
+                      src="/images/profile-sonu.jpg"
+                      alt="Profile"
+                      className="w-full h-full rounded-full object-cover ring-2 ring-white/10 group-hover:ring-purple-400/50 transition-all duration-300"
+                    />
+                  </button>
+                  <div className="absolute top-12 left-0 hidden group-hover:block">
+                    <div className="bg-white/10 backdrop-blur-md rounded-lg py-2 w-48 border border-white/20">
+                      <div className="px-4 py-2 text-sm text-white/80 hover:bg-white/10 cursor-pointer">
+                        View Profile
+                      </div>
+                      <div className="px-4 py-2 text-sm text-white/80 hover:bg-white/10 cursor-pointer">
+                        Settings
+                      </div>
+                      <div className="border-t border-white/10 my-1"></div>
+                      <div className="px-4 py-2 text-sm text-red-400 hover:bg-white/10 cursor-pointer">
+                        Logout
+                      </div>
                     </div>
                   </div>
                 </div>
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-lg font-medium text-white">Welcome back, Sonu!</span>
+                  <div className="relative group">
+                    <button 
+                      className="flex items-center text-white/70 hover:text-white/90 transition-colors"
+                      onClick={() => setShowLocationPicker(prev => !prev)}
+                    >
+                      <MapPin className="w-3 h-3 mr-1" />
+                      <span className="text-xs">{currentLocation.city}, {currentLocation.state}</span>
+                      <ChevronRight className="w-3 h-3 ml-0.5 group-hover:rotate-90 transition-transform duration-200" />
+                    </button>
+                    {showLocationPicker && (
+                      <div className="absolute top-6 left-0 bg-white/10 backdrop-blur-md rounded-lg py-2 w-36 border border-white/20">
+                        {mockLocations.map((loc) => (
+                          <button
+                            key={`${loc.city}-${loc.state}`}
+                            className="w-full px-3 py-1.5 text-xs text-white/80 hover:bg-white/10 text-left flex items-center gap-2"
+                            onClick={() => {
+                              setCurrentLocation(loc);
+                              setShowLocationPicker(false);
+                            }}
+                          >
+                            <MapPin className="w-3 h-3" />
+                            {loc.city}, {loc.state}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
-              <div className="flex flex-col gap-0.5">
-                <span className="text-lg font-medium text-white">Welcome back, Sonu!</span>
-                <div className="relative group">
-                  <button 
-                    className="flex items-center text-white/70 hover:text-white/90 transition-colors"
-                    onClick={() => setShowLocationPicker(prev => !prev)}
-                  >
-                    <MapPin className="w-3 h-3 mr-1" />
-                    <span className="text-xs">{currentLocation.city}, {currentLocation.state}</span>
-                    <ChevronRight className="w-3 h-3 ml-0.5 group-hover:rotate-90 transition-transform duration-200" />
+              <div className="flex items-center space-x-4">
+                <div className="relative">
+                  <Link href="/client/notifications" className="relative group" aria-label="Notifications">
+                    <span className="flex items-center justify-center w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md transition-colors">
+                      <Bell className="w-5 h-5 text-white" />
+                      {mockNotifications.length > 0 && (
+                        <span className="absolute -top-1 -right-1 w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center">
+                          <span className="text-[10px] font-medium text-white">{mockNotifications.length}</span>
+                        </span>
+                      )}
+                    </span>
+                  </Link>
+                </div>
+                <div className="relative">
+                  <button className="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-r from-purple-600 to-purple-400 hover:from-purple-700 hover:to-purple-500 backdrop-blur-md transition-colors">
+                    <Wallet className="w-5 h-5 text-white" />
+                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-white rounded-full flex items-center justify-center">
+                      <span className="text-[10px] font-medium text-purple-600">$0</span>
+                    </span>
                   </button>
-                  
-                  {showLocationPicker && (
-                    <div className="absolute top-6 left-0 bg-white/10 backdrop-blur-md rounded-lg py-2 w-36 border border-white/20">
-                      {mockLocations.map((loc) => (
-                        <button
-                          key={`${loc.city}-${loc.state}`}
-                          className="w-full px-3 py-1.5 text-xs text-white/80 hover:bg-white/10 text-left flex items-center gap-2"
-                          onClick={() => {
-                            setCurrentLocation(loc);
-                            setShowLocationPicker(false);
-                          }}
-                        >
-                          <MapPin className="w-3 h-3" />
-                          {loc.city}, {loc.state}
-                        </button>
-                      ))}
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
-            <div className="flex items-center space-x-4">
-              <div className="relative">
-                <Link href="/client/notifications" className="relative group" aria-label="Notifications">
-                  <span className="flex items-center justify-center w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md transition-colors">
-                    <Bell className="w-5 h-5 text-white" />
-                    {mockNotifications.length > 0 && (
-                      <span className="absolute -top-1 -right-1 w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center">
-                        <span className="text-[10px] font-medium text-white">{mockNotifications.length}</span>
-                      </span>
+          </div>
+          {/* Add padding-top to push content below header */}
+          <div className="pt-16">
+            <div className="max-w-2xl mx-auto text-center">
+              <h1 className="text-4xl md:text-6xl font-bold text-white mb-4 tracking-tight">
+                Find Local Services
+              </h1>
+              <p className="text-lg md:text-xl text-white/80 mb-8">
+                Connect with skilled professionals in your neighborhood
+              </p>
+            </div>
+
+            {/* Modern Search Bar */}
+            <div className="bg-gradient-to-r from-purple-600/20 via-purple-500/20 to-purple-400/20 backdrop-blur-md rounded-xl shadow-lg p-4 max-w-3xl mx-auto border border-purple-500/20">
+              <div className="grid grid-cols-1 md:grid-cols-[1fr,auto] gap-4">
+                <div className="w-full">
+                  <div className="relative w-full">
+                    <Input
+                      type="text"
+                      placeholder={`Find services in ${currentLocation.city}...`}
+                      value={searchQuery}
+                      onChange={(e) => handleSearch(e.target.value)}
+                      className="w-full bg-white/10 border border-white/20 text-white placeholder-white/60 rounded-full py-3 pl-10 pr-4 focus:outline-none focus:border-purple-500 transition-all"
+                      onFocus={() => setShowSuggestions(true)}
+                      onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                    />
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/70">
+                      <Sparkles className="w-5 h-5" />
+                    </span>
+                    {showSuggestions && (
+                      <div className="absolute left-0 top-full mt-1 w-full bg-[#18181b]/95 backdrop-blur-md rounded-lg border border-white/10 shadow-xl z-20">
+                        <div className="p-2">
+                          <div className="text-xs font-medium text-white/80 px-2 py-1 flex justify-between items-center">
+                            <span>Popular Searches</span>
+                            <button 
+                              onClick={() => setShowSuggestions(false)}
+                              className="p-1 hover:bg-white/10 rounded-full transition-colors"
+                              aria-label="Close suggestions"
+                            >
+                              <X className="w-4 h-4 text-white/50" />
+                            </button>
+                          </div>
+                          <div className="space-y-1">
+                            {mockSearches.map((search) => (
+                              <button 
+                                key={search.id}
+                                onClick={() => handleSearchSelect(search.text)}
+                                className="w-full px-3 py-2 text-sm text-white hover:bg-white/10 rounded-lg flex items-center justify-between group/item"
+                              >
+                                <div className="flex items-center">
+                                  <Search className="w-4 h-4 mr-2 text-purple-400" />
+                                  <span className="text-white">{search.text}</span>
+                                </div>
+                                <span className="text-xs text-white/50 group-hover/item:text-white/80">{search.count.toLocaleString()}+ searches</span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
                     )}
-                  </span>
-                </Link>
-              </div>
-              <div className="relative">
-                <button className="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-r from-purple-600 to-purple-400 hover:from-purple-700 hover:to-purple-500 backdrop-blur-md transition-colors">
-                  <Wallet className="w-5 h-5 text-white" />
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-white rounded-full flex items-center justify-center">
-                    <span className="text-[10px] font-medium text-purple-600">$0</span>
-                  </span>
+                  </div>
+                </div>
+                <button className="h-[50px] px-8 bg-gradient-to-r from-purple-600 via-purple-500 to-purple-400 hover:from-purple-700 hover:via-purple-600 hover:to-purple-500 text-white py-3 text-base rounded-lg transition-all duration-300 font-medium whitespace-nowrap">
+                  Search
                 </button>
               </div>
             </div>
-          </div>
 
-          <div className="max-w-2xl mx-auto text-center">
-            <h1 className="text-4xl md:text-6xl font-bold text-white mb-4 tracking-tight">
-              Find Local Services
-            </h1>
-            <p className="text-lg md:text-xl text-white/80 mb-8">
-              Connect with skilled professionals in your neighborhood
-            </p>
-          </div>
-
-          {/* Modern Search Bar */}
-          <div className="bg-gradient-to-r from-purple-600/20 via-purple-500/20 to-purple-400/20 backdrop-blur-md rounded-xl shadow-lg p-4 max-w-3xl mx-auto border border-purple-500/20">
-            <div className="grid grid-cols-1 md:grid-cols-[1fr,auto] gap-4">
-              <div className="w-full">
-                <div className="relative w-full">
-                  <Input
-                    type="text"
-                    placeholder={`Find services in ${currentLocation.city}...`}
-                    value={searchQuery}
-                    onChange={(e) => handleSearch(e.target.value)}
-                    className="w-full bg-white/10 border border-white/20 text-white placeholder-white/60 rounded-full py-3 pl-10 pr-4 focus:outline-none focus:border-purple-500 transition-all"
-                    onFocus={() => setShowSuggestions(true)}
-                    onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                  />
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/70">
-                    <Sparkles className="w-5 h-5" />
-                  </span>
-                  {showSuggestions && (
-                    <div className="absolute left-0 top-full mt-1 w-full bg-[#18181b]/95 backdrop-blur-md rounded-lg border border-white/10 shadow-xl z-20">
-                      <div className="p-2">
-                        <div className="text-xs font-medium text-white/80 px-2 py-1 flex justify-between items-center">
-                          <span>Popular Searches</span>
-                          <button 
-                            onClick={() => setShowSuggestions(false)}
-                            className="p-1 hover:bg-white/10 rounded-full transition-colors"
-                            aria-label="Close suggestions"
-                          >
-                            <X className="w-4 h-4 text-white/50" />
-                          </button>
-                        </div>
-                        <div className="space-y-1">
-                          {mockSearches.map((search) => (
-                            <button 
-                              key={search.id}
-                              onClick={() => handleSearchSelect(search.text)}
-                              className="w-full px-3 py-2 text-sm text-white hover:bg-white/10 rounded-lg flex items-center justify-between group/item"
-                            >
-                              <div className="flex items-center">
-                                <Search className="w-4 h-4 mr-2 text-purple-400" />
-                                <span className="text-white">{search.text}</span>
-                              </div>
-                              <span className="text-xs text-white/50 group-hover/item:text-white/80">{search.count.toLocaleString()}+ searches</span>
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
+            {/* Why SkillBridge Section */}
+            <div className="mt-12 max-w-4xl mx-auto">
+              <div className="mb-2">
+                <h2 className="text-base font-semibold text-white tracking-wide text-left">WHY SKILLBRIDGE?</h2>
               </div>
-              <button className="h-[50px] px-8 bg-gradient-to-r from-purple-600 via-purple-500 to-purple-400 hover:from-purple-700 hover:via-purple-600 hover:to-purple-500 text-white py-3 text-base rounded-lg transition-all duration-300 font-medium whitespace-nowrap">
-                Search
-              </button>
-            </div>
-          </div>
-
-          {/* Why SkillBridge Section */}
-          <div className="mt-12 max-w-4xl mx-auto">
-            <div className="mb-2">
-              <h2 className="text-base font-semibold text-white tracking-wide text-left">WHY SKILLBRIDGE?</h2>
-            </div>
-            <div className="flex flex-row justify-center gap-3 md:gap-6">
-              {/* Local Delivery */}
-              <div className="flex flex-col items-center w-32 md:w-40 py-4">
-                <div className="w-14 h-14 rounded-full bg-purple-100 flex items-center justify-center mb-3">
-                  <MapPin className="w-7 h-7 text-purple-500" />
+              <div className="flex flex-row justify-center gap-3 md:gap-6">
+                {/* Local Delivery */}
+                <div className="flex flex-col items-center w-32 md:w-40 py-4">
+                  <div className="w-14 h-14 rounded-full bg-purple-100 flex items-center justify-center mb-3">
+                    <MapPin className="w-7 h-7 text-purple-500" />
+                  </div>
+                  <div className="text-center">
+                    <div className="font-bold text-base md:text-lg text-white">Fast Service</div>
+                    <div className="text-[12px] md:text-sm text-white/80 leading-tight">In Your<br />Neighborhood</div>
+                  </div>
                 </div>
-                <div className="text-center">
-                  <div className="font-bold text-base md:text-lg text-white">Fast Service</div>
-                  <div className="text-[12px] md:text-sm text-white/80 leading-tight">In Your<br />Neighborhood</div>
+                {/* Smart Matching */}
+                <div className="flex flex-col items-center w-32 md:w-40 py-4">
+                  <div className="w-14 h-14 rounded-full bg-purple-100 flex items-center justify-center mb-3">
+                    {/* AI-related icon - Sparkles */}
+                    <Sparkles className="w-7 h-7 text-purple-500" />
+                  </div>
+                  <div className="text-center">
+                    <div className="font-bold text-base md:text-lg text-white">AI-Powered</div>
+                    <div className="text-[12px] md:text-sm text-white/80 leading-tight">Find the<br />Right Expert</div>
+                  </div>
                 </div>
-              </div>
-              {/* Smart Matching */}
-              <div className="flex flex-col items-center w-32 md:w-40 py-4">
-                <div className="w-14 h-14 rounded-full bg-purple-100 flex items-center justify-center mb-3">
-                  {/* AI-related icon - Sparkles */}
-                  <Sparkles className="w-7 h-7 text-purple-500" />
-                </div>
-                <div className="text-center">
-                  <div className="font-bold text-base md:text-lg text-white">AI-Powered</div>
-                  <div className="text-[12px] md:text-sm text-white/80 leading-tight">Find the<br />Right Expert</div>
-                </div>
-              </div>
-              {/* Instant Booking */}
-              <div className="flex flex-col items-center w-32 md:w-40 py-4">
-                <div className="w-14 h-14 rounded-full bg-purple-100 flex items-center justify-center mb-3">
-                  <Clock className="w-7 h-7 text-purple-500" />
-                </div>
-                <div className="text-center">
-                  <div className="font-bold text-base md:text-lg text-white whitespace-nowrap">Book Instantly</div>
-                  <div className="text-[12px] md:text-sm text-white/80 leading-tight whitespace-nowrap">Real-Time<br />Availability</div>
+                {/* Instant Booking */}
+                <div className="flex flex-col items-center w-32 md:w-40 py-4">
+                  <div className="w-14 h-14 rounded-full bg-purple-100 flex items-center justify-center mb-3">
+                    <Clock className="w-7 h-7 text-purple-500" />
+                  </div>
+                  <div className="text-center">
+                    <div className="font-bold text-base md:text-lg text-white whitespace-nowrap">Book Instantly</div>
+                    <div className="text-[12px] md:text-sm text-white/80 leading-tight whitespace-nowrap">Real-Time<br />Availability</div>
+                  </div>
                 </div>
               </div>
             </div>
