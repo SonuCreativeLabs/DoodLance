@@ -271,6 +271,45 @@ export default function ClientHome() {
               </button>
             </div>
           </div>
+
+          {/* Why SkillBridge Section */}
+          <div className="mt-8 max-w-4xl mx-auto">
+            <div className="text-center mb-4">
+              <h2 className="text-base font-semibold text-white tracking-wide">WHY SKILLBRIDGE?</h2>
+            </div>
+            <div className="flex flex-row justify-center gap-4 md:gap-8">
+              {/* Local Delivery */}
+              <div className="flex flex-col items-center w-32">
+                <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center mb-2">
+                  <MapPin className="w-6 h-6 text-purple-500" />
+                </div>
+                <div className="text-center">
+                  <div className="font-bold text-base text-white">Fast Service</div>
+                  <div className="text-xs text-white/80 leading-tight">In Your<br />Neighborhood</div>
+                </div>
+              </div>
+              {/* Smart Matching */}
+              <div className="flex flex-col items-center w-32">
+                <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center mb-2">
+                  <Star className="w-6 h-6 text-purple-500" />
+                </div>
+                <div className="text-center">
+                  <div className="font-bold text-base text-white">AI-Powered</div>
+                  <div className="text-xs text-white/80 leading-tight">Find the Right<br />Expert</div>
+                </div>
+              </div>
+              {/* Instant Booking */}
+              <div className="flex flex-col items-center w-32">
+                <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center mb-2">
+                  <Clock className="w-6 h-6 text-purple-500" />
+                </div>
+                <div className="text-center">
+                  <div className="font-bold text-base text-white">Book Instantly</div>
+                  <div className="text-xs text-white/80 leading-tight">Real-Time<br />Availability</div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
