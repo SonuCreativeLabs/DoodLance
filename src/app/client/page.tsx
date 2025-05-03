@@ -8,6 +8,7 @@ import { ServiceCategory } from '@/components/client/service-category'
 import { cn } from '@/lib/utils'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation' // Ensure correct import for Next.js 13+ app directory
 import { professionals } from './nearby/mockData'
 import Image from 'next/image'
 import ServiceCard from '@/components/client/services/service-card'
@@ -63,6 +64,7 @@ const mockNotifications = [
 ];
 
 export default function ClientHome() {
+  const router = useRouter();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showLocationPicker, setShowLocationPicker] = useState(false);
   const [currentLocation, setCurrentLocation] = useState(mockLocations[0]);
@@ -120,51 +122,122 @@ export default function ClientHome() {
         <div className="container mx-auto px-4 flex items-center justify-between pt-4 pb-2">
           <div className="flex items-center space-x-4">
             <div className="relative group">
-              <button
-                className="flex items-center justify-center w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 transition-colors relative"
-                onClick={() => setShowSidebar(true)}
-                aria-label="Open profile menu"
-              >
-                <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
-                <img
-                  src="/images/profile-sonu.jpg"
-                  alt="Profile"
-                  className="w-full h-full rounded-full object-cover ring-2 ring-white/10 group-hover:ring-purple-400/50 transition-all duration-300"
-                />
-              </button>
-              {/* Sidebar & Backdrop */}
-              {showSidebar && (
-                <>
-                  {/* Backdrop */}
-                  <div
-                    className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm transition-opacity animate-fadein"
-                    onClick={() => setShowSidebar(false)}
-                    aria-label="Close sidebar"
+              <div className="relative flex items-center justify-center">
+                <button
+                  className="flex items-center justify-center w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 transition-colors relative"
+                  onClick={() => setShowSidebar(true)}
+                  aria-label="Open profile menu"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
+                  <img
+                    src="/images/profile-sonu.jpg"
+                    alt="Profile"
+                    className="w-full h-full rounded-full object-cover ring-2 ring-white/10 group-hover:ring-purple-400/50 transition-all duration-300"
                   />
-                  {/* Sidebar */}
-                  <div className="fixed top-0 right-0 z-50 h-full w-72 bg-[#18181b] border-l border-white/10 shadow-2xl flex flex-col transition-transform animate-slidein">
-                    <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
-                      <div className="flex items-center gap-3">
-                        <img src="/images/profile-sonu.jpg" alt="Profile" className="w-10 h-10 rounded-full object-cover border-2 border-purple-400" />
-                        <span className="text-white font-medium">Sonu</span>
-                      </div>
-                      <button
-                        className="p-2 rounded-full hover:bg-white/10 text-white"
-                        onClick={() => setShowSidebar(false)}
-                        aria-label="Close sidebar"
-                      >
-                        <X className="w-5 h-5" />
-                      </button>
+
+                </button>
+              </div>
+              {/* Sidebar & Backdrop */}
+              {/* Sidebar & Backdrop - always mounted for animation */}
+              <div>
+                {/* Backdrop */}
+                <div
+                  className={`fixed inset-0 z-40 bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${showSidebar ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+                  onClick={() => setShowSidebar(false)}
+                  aria-label="Close sidebar"
+                />
+                {/* Sidebar */}
+                <div className={`fixed top-0 left-0 z-50 h-full w-72 bg-white border-r border-neutral-200 shadow-2xl flex flex-col transition-transform duration-300 ${showSidebar ? 'translate-x-0' : '-translate-x-full'}`}>
+                  <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-100">
+                    <div className="flex items-center gap-3">
+                      <img src="/images/profile-sonu.jpg" alt="Profile" className="w-10 h-10 rounded-full object-cover border-2 border-purple-400" />
+                      <span className="text-neutral-900 font-medium">Sonu</span>
                     </div>
-                    <div className="flex flex-col py-4">
-                      <button className="px-6 py-3 text-left text-white/80 hover:bg-white/10 transition-colors">View Profile</button>
-                      <button className="px-6 py-3 text-left text-white/80 hover:bg-white/10 transition-colors">Settings</button>
-                      <div className="border-t border-white/10 my-2" />
-                      <button className="px-6 py-3 text-left text-red-400 hover:bg-white/10 transition-colors">Logout</button>
+                    <button
+                      className="p-2 rounded-full hover:bg-neutral-100 text-neutral-700"
+                      onClick={() => setShowSidebar(false)}
+                      aria-label="Close sidebar"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+                  <div className="flex flex-col py-4 flex-1 gap-1">
+                    {/* My Profile */}
+                    <button
+                      className="flex items-center gap-3 px-6 py-3 text-left text-neutral-800 hover:bg-neutral-100 transition-colors"
+                      onClick={() => router.push('/client/profile')}
+                    >
+                      <svg className="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a8.38 8.38 0 0 1 13 0"/></svg>
+                      My Profile
+                    </button>
+                    {/* Wallet */}
+                    <button
+                      className="flex items-center gap-3 px-6 py-3 text-left text-neutral-800 hover:bg-neutral-100 transition-colors"
+                      onClick={() => router.push('/client/wallet')}
+                    >
+                      <svg className="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="10" rx="2"/><path d="M16 3v4"/><path d="M8 3v4"/><path d="M2 13h20"/></svg>
+                      Wallet
+                      <span className="ml-auto text-xs text-neutral-500">₹1,300</span>
+                    </button>
+                    {/* Skill Coins */}
+                    <div className="flex items-center gap-3 px-6 py-2 text-left">
+                      <svg className="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 2"/></svg>
+                      <span className="text-neutral-800">Skill Coins</span>
+                      <span className="ml-auto text-xs text-yellow-600 font-semibold">2,500</span>
+                    </div>
+                    {/* My Bookings */}
+                    <button
+                      className="flex items-center gap-3 px-6 py-3 text-left text-neutral-800 hover:bg-neutral-100 transition-colors"
+                      onClick={() => router.push('/client/bookings')}
+                    >
+                      <svg className="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg>
+                      My Bookings
+                    </button>
+                    {/* My Referrals */}
+                    <button
+                      className="flex items-center gap-3 px-6 py-3 text-left text-neutral-800 hover:bg-neutral-100 transition-colors"
+                      onClick={() => router.push('/client/referrals')}
+                    >
+                      <svg className="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                      My Referrals
+                    </button>
+                    {/* Notifications */}
+                    <button
+                      className="flex items-center gap-3 px-6 py-3 text-left text-neutral-800 hover:bg-neutral-100 transition-colors"
+                      onClick={() => router.push('/client/notifications')}
+                    >
+                      <svg className="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                      Notifications
+                      <span className="ml-auto inline-flex items-center justify-center w-5 h-5 text-xs bg-purple-500 text-white rounded-full text-center font-semibold">
+                        4
+                      </span>
+                    </button>
+                    {/* Support */}
+                    <button
+                      className="flex items-center gap-3 px-6 py-3 text-left text-neutral-800 hover:bg-neutral-100 transition-colors"
+                      onClick={() => router.push('/client/support')}
+                    >
+                      <svg className="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 2"/></svg>
+                      Support
+                    </button>
+
+                    <div className="border-t border-neutral-200 my-2" />
+                    {/* Logout at the bottom */}
+                    <button className="flex items-center gap-3 px-6 py-3 text-left text-red-500 hover:bg-neutral-100 transition-colors">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7"/><path d="M3 21V3"/></svg>
+                      Logout
+                    </button>
+                  </div>
+                  {/* Hamburger icon at bottom - now darker for visibility */}
+                  <div className="flex justify-center pb-6">
+                    <div className="flex flex-col items-center gap-1">
+                      <span className="block w-7 h-1 bg-neutral-700 rounded"></span>
+                      <span className="block w-7 h-1 bg-neutral-700 rounded"></span>
+                      <span className="block w-7 h-1 bg-neutral-700 rounded"></span>
                     </div>
                   </div>
-                </>
-              )}
+                </div>
+              </div>
             </div>
             <div className="flex flex-col gap-0.5">
               <span className="text-lg font-medium text-white">Welcome back, Sonu!</span>
