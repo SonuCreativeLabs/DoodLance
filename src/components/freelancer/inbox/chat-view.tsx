@@ -95,19 +95,19 @@ export function ChatView({
       className="flex flex-col min-h-0 flex-1"
     >
       {/* Chat Header */}
-      <div className="flex items-center justify-between p-6 border-b border-white/10 bg-[#111111]/95 backdrop-blur-xl">
+      <div className="flex items-center justify-between p-2 border-b border-white/10 bg-[#111111]/95 backdrop-blur-xl">
         <div className="flex items-center gap-4">
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={onBack}
-            className="md:hidden flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 backdrop-blur-lg transition-all duration-300 border border-white/5 hover:border-purple-500/30 group"
+            className="md:hidden flex items-center justify-center w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 backdrop-blur-lg transition-all duration-300 border border-white/5 hover:border-purple-500/30 group"
           >
             <ArrowLeft className="h-5 w-5 text-white/80 group-hover:text-purple-400 transition-colors duration-300" />
           </motion.button>
           <div className="flex items-center gap-4">
             <div className="relative">
-              <div className="relative h-12 w-12 rounded-xl overflow-hidden ring-2 ring-purple-500/30 group-hover:ring-purple-500/50 transition-all duration-300">
+              <div className="relative h-10 w-10 rounded-xl overflow-hidden ring-2 ring-purple-500/30 group-hover:ring-purple-500/50 transition-all duration-300">
                 <img 
                   src={recipientAvatar} 
                   alt={recipientName} 
@@ -119,8 +119,8 @@ export function ChatView({
               )}
             </div>
             <div>
-              <h3 className="font-medium text-white">{recipientName}</h3>
-              <p className="text-sm text-white/60">{recipientJobTitle}</p>
+              <h3 className="font-medium text-base text-white">{recipientName}</h3>
+              <p className="text-xs text-white/60">{recipientJobTitle}</p>
             </div>
           </div>
         </div>
@@ -131,13 +131,6 @@ export function ChatView({
             className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 backdrop-blur-lg transition-all duration-300 border border-white/5 hover:border-purple-500/30 group"
           >
             <Phone className="h-4 w-4 text-white/80 group-hover:text-purple-400 transition-colors duration-300" />
-          </motion.button>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 backdrop-blur-lg transition-all duration-300 border border-white/5 hover:border-purple-500/30 group"
-          >
-            <Video className="h-4 w-4 text-white/80 group-hover:text-purple-400 transition-colors duration-300" />
           </motion.button>
           <motion.button
             whileHover={{ scale: 1.05 }}
@@ -191,8 +184,9 @@ export function ChatView({
       </div>
 
       {/* Message Input */}
-      <div className="p-6 border-t border-white/10 bg-[#111111]/95 backdrop-blur-xl">
-        <div className="flex gap-4">
+      <div className="bg-[#111111]/95 backdrop-blur-xl">
+        <div className="p-2 border-t border-white/10 mb-6 pb-[env(safe-area-inset-bottom)]">
+        <div className="flex gap-2">
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -206,7 +200,7 @@ export function ChatView({
               value={newMessage}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewMessage(e.target.value)}
               placeholder="Type a message..."
-              className="w-full h-10 rounded-xl bg-white/5 border border-white/10 focus:border-purple-500/30 px-4 text-sm text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500/20 transition-all duration-300"
+              className="w-full h-9 rounded-xl bg-white/5 border border-white/10 focus:border-purple-500/30 px-3 text-xs text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500/20 transition-all duration-300"
               onKeyPress={(e: React.KeyboardEvent) => e.key === 'Enter' && handleSend()}
             />
           </div>
@@ -222,6 +216,7 @@ export function ChatView({
           >
             <Send className={`h-4 w-4 ${newMessage.trim() ? 'text-white' : 'text-white/40'}`} />
           </motion.button>
+        </div>
         </div>
       </div>
     </motion.div>

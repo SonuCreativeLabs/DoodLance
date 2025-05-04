@@ -50,9 +50,9 @@ export default function InboxPage() {
       animate={{ opacity: 1 }}
       className="flex-1 relative"
     >
-      <div className="flex flex-col flex-1">
+      <div className="flex flex-col flex-1 min-h-0">
         {selectedChat ? (
-          <div className="flex-1 flex flex-col">
+          <div className="flex flex-col min-h-0" style={{ height: 'calc(100vh - 4rem - 4rem)' }}>
             <ChatView
               chatId={selectedChat.id}
               recipientName={selectedChat.name}
