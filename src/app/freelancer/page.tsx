@@ -1,15 +1,35 @@
 "use client"
 
 import Image from "next/image"
-import { CircleDollarSign, Calendar, ChevronRight, Star, MapPin, Wallet } from "lucide-react"
+import { motion } from "framer-motion"
+import { CircleDollarSign, Calendar, ChevronRight, Star, MapPin, Wallet, TrendingUp, Award, Clock } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 export default function FreelancerHome() {
   return (
     <div>
       {/* Hero Banner */}
-      <div className="relative min-h-[300px] bg-gradient-to-br from-[#6B46C1] via-[#4C1D95] to-[#2D1B69] overflow-hidden">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="relative min-h-[340px] bg-gradient-to-br from-purple-600 via-purple-700 to-purple-900 overflow-hidden"
+      >
         {/* Background Elements */}
         <div className="absolute inset-0">
+          <div className="absolute inset-0 bg-[url('/images/grid-pattern.svg')] opacity-20"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
+          <motion.div 
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="absolute -right-20 -top-20 w-80 h-80 bg-purple-400 rounded-full blur-3xl opacity-20"
+          />
+          <motion.div 
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="absolute -left-20 -bottom-20 w-80 h-80 bg-purple-500 rounded-full blur-3xl opacity-20"
+          />
           <svg
             className="absolute bottom-0 w-full h-32"
             viewBox="0 0 1440 120"
@@ -25,143 +45,371 @@ export default function FreelancerHome() {
         </div>
 
         {/* Hero Content */}
-        <div className="relative container mx-auto px-4 pt-6">
-          <div className="max-w-2xl">
-            <h1 className="text-3xl font-bold text-white mb-2">Welcome back!</h1>
-            <p className="text-lg text-white/80">
-              You have 3 new job recommendations matching your skills
-            </p>
-          </div>
+        <div className="relative container mx-auto px-4 pt-8">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="max-w-2xl space-y-6"
+          >
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-sm border border-white/10">
+              <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
+              <span className="text-sm font-medium text-white/90">Online & Ready for Work</span>
+            </div>
+            <div>
+              <h1 className="text-4xl font-bold text-white mb-3">Welcome back!</h1>
+              <p className="text-lg text-white/80 leading-relaxed">
+                You have <span className="text-purple-300 font-medium">3 new job recommendations</span> matching your skills
+              </p>
+            </div>
+          </motion.div>
         </div>
-      </div>
+      </motion.div>
 
       <div className="container mx-auto px-4 py-12 bg-[#111111] relative z-0">
         {/* Earnings Summary */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <div className="bg-gradient-to-r from-purple-600/20 via-purple-500/20 to-purple-400/20 backdrop-blur-md rounded-xl p-6 border border-purple-500/20">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-white">Today's Earnings</h2>
-              <CircleDollarSign className="h-5 w-5 text-purple-400" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="bg-gradient-to-br from-purple-600/10 via-purple-500/10 to-purple-400/10 backdrop-blur-lg rounded-2xl p-6 border border-purple-500/20 relative group hover:border-purple-500/30 transition-colors"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-600/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl"></div>
+            <div className="relative">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-white">Today's Earnings</h2>
+                <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center">
+                  <CircleDollarSign className="h-5 w-5 text-purple-400" />
+                </div>
+              </div>
+              <p className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-purple-600 mb-2">₹2,000</p>
+              <div className="flex items-center gap-2">
+                <p className="text-sm text-white/60">From 3 completed jobs</p>
+                <span className="inline-flex items-center gap-1 text-xs text-green-400">
+                  <TrendingUp className="w-3 h-3" /> +12%
+                </span>
+              </div>
             </div>
-            <p className="text-3xl font-bold text-white mb-2">₹2,000</p>
-            <p className="text-sm text-white/60">From 3 completed jobs</p>
-          </div>
+          </motion.div>
 
-          <div className="bg-gradient-to-r from-purple-600/20 via-purple-500/20 to-purple-400/20 backdrop-blur-md rounded-xl p-6 border border-purple-500/20">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-white">Total Earnings</h2>
-              <Wallet className="h-5 w-5 text-purple-400" />
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="bg-gradient-to-br from-purple-600/10 via-purple-500/10 to-purple-400/10 backdrop-blur-lg rounded-2xl p-6 border border-purple-500/20 relative group hover:border-purple-500/30 transition-colors"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-600/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl"></div>
+            <div className="relative">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-white">Total Earnings</h2>
+                <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center">
+                  <Wallet className="h-5 w-5 text-purple-400" />
+                </div>
+              </div>
+              <p className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-purple-600 mb-2">₹24,500</p>
+              <div className="flex items-center gap-2">
+                <p className="text-sm text-white/60">Lifetime earnings</p>
+                <span className="inline-flex items-center gap-1 text-xs text-amber-400">
+                  <Award className="w-3 h-3" /> Top 10%
+                </span>
+              </div>
             </div>
-            <p className="text-3xl font-bold text-white mb-2">₹24,500</p>
-            <p className="text-sm text-white/60">Lifetime earnings</p>
-          </div>
+          </motion.div>
+
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="bg-gradient-to-br from-purple-600/10 via-purple-500/10 to-purple-400/10 backdrop-blur-lg rounded-2xl p-6 border border-purple-500/20 relative group hover:border-purple-500/30 transition-colors"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-600/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl"></div>
+            <div className="relative">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-white">Active Hours</h2>
+                <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center">
+                  <Clock className="h-5 w-5 text-purple-400" />
+                </div>
+              </div>
+              <p className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-purple-600 mb-2">32.5h</p>
+              <div className="flex items-center gap-2">
+                <p className="text-sm text-white/60">This week</p>
+                <span className="inline-flex items-center gap-1 text-xs text-blue-400">
+                  <TrendingUp className="w-3 h-3" /> +8h
+                </span>
+              </div>
+            </div>
+          </motion.div>
         </div>
 
         {/* Your Profile Section */}
-        <div className="bg-gradient-to-r from-purple-600/10 via-purple-500/10 to-purple-400/10 backdrop-blur-md rounded-xl p-6 border border-purple-500/20 mb-8">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-4">
-              <div className="relative h-16 w-16 rounded-xl overflow-hidden ring-2 ring-purple-500/20">
-                <Image
-                  src="https://api.dicebear.com/7.x/avataaars/svg?seed=John"
-                  alt="Profile"
-                  fill
-                  className="object-cover"
-                />
-              </div>
-              <div>
-                <h2 className="text-xl font-semibold text-white">John Doe</h2>
-                <div className="flex items-center gap-2 mt-1">
-                  <Star className="h-4 w-4 text-purple-400" />
-                  <span className="text-sm text-white/80">4.8 (120 reviews)</span>
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="bg-gradient-to-br from-purple-600/10 via-purple-500/10 to-purple-400/10 backdrop-blur-lg rounded-2xl p-6 border border-purple-500/20 mb-8 relative group hover:border-purple-500/30 transition-colors"
+        >
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-600/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl"></div>
+          
+          <div className="relative">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-4">
+                <motion.div 
+                  initial={{ scale: 0.9 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.6 }}
+                  className="relative h-16 w-16 rounded-2xl overflow-hidden ring-2 ring-purple-500/30 group-hover:ring-purple-500/50 transition-all duration-300"
+                >
+                  <Image
+                    src="https://api.dicebear.com/7.x/avataaars/svg?seed=John"
+                    alt="Profile"
+                    fill
+                    className="object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                </motion.div>
+                <div>
+                  <h2 className="text-xl font-semibold text-white group-hover:text-purple-300 transition-colors">John Doe</h2>
+                  <div className="flex items-center gap-2 mt-1">
+                    <div className="flex -space-x-1">
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} className={cn(
+                          "h-4 w-4",
+                          i < 4 ? "text-amber-400" : "text-purple-400/30"
+                        )} />
+                      ))}
+                    </div>
+                    <span className="text-sm text-white/80">4.8 (120 reviews)</span>
+                  </div>
                 </div>
               </div>
+              <motion.button 
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-400 hover:from-purple-700 hover:to-purple-500 text-white rounded-lg transition-all duration-300 shadow-lg shadow-purple-600/20 hover:shadow-purple-600/30"
+              >
+                Edit Profile
+              </motion.button>
             </div>
-            <button className="px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-400 hover:from-purple-700 hover:to-purple-500 text-white rounded-lg transition-all duration-300">
-              Edit Profile
-            </button>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex items-center gap-4 p-4 rounded-lg bg-white/5 border border-white/10">
-              <Calendar className="h-5 w-5 text-purple-400" />
-              <div className="flex-1">
-                <p className="text-sm font-medium text-white">Availability Calendar</p>
-                <p className="text-xs text-white/60">Set your working hours</p>
-              </div>
-              <div className="relative inline-flex h-6 w-11 items-center rounded-full bg-purple-600">
-                <span className="absolute h-4 w-4 rounded-full bg-white right-1 transition-all duration-300" />
-              </div>
-            </div>
-            <div className="flex items-center gap-4 p-4 rounded-lg bg-white/5 border border-white/10">
-              <MapPin className="h-5 w-5 text-purple-400" />
-              <div className="flex-1">
-                <p className="text-sm font-medium text-white">Service Area</p>
-                <p className="text-xs text-white/60">Within 10km radius</p>
-              </div>
-              <button className="text-sm text-purple-400">Edit →</button>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <motion.div 
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.7 }}
+                className="flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/10 hover:border-purple-500/30 hover:bg-white/10 transition-all duration-300 group/card"
+              >
+                <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center group-hover/card:bg-purple-500/20 transition-colors">
+                  <Calendar className="h-5 w-5 text-purple-400" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-white group-hover/card:text-purple-300 transition-colors">Working Hours</p>
+                  <p className="text-xs text-white/60">Set your working hours</p>
+                </div>
+                <div className="relative inline-flex h-6 w-11 items-center rounded-full bg-purple-600/50 group-hover/card:bg-purple-600 transition-colors cursor-pointer">
+                  <motion.span 
+                    initial={{ x: 0 }}
+                    whileHover={{ x: -16 }}
+                    className="absolute h-4 w-4 rounded-full bg-white right-1 transition-all duration-300 shadow-sm" 
+                  />
+                </div>
+              </motion.div>
+
+              <motion.div 
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.8 }}
+                className="flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/10 hover:border-purple-500/30 hover:bg-white/10 transition-all duration-300 group/card"
+              >
+                <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center group-hover/card:bg-purple-500/20 transition-colors">
+                  <MapPin className="h-5 w-5 text-purple-400" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-white group-hover/card:text-purple-300 transition-colors">Service Area</p>
+                  <p className="text-xs text-white/60">Within 10km radius</p>
+                </div>
+                <motion.button 
+                  whileHover={{ x: 3 }}
+                  className="text-sm text-purple-400 hover:text-purple-300 transition-colors"
+                >
+                  Edit →
+                </motion.button>
+              </motion.div>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Recommended Jobs */}
-        <div className="mb-8">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.9 }}
+          className="mb-8"
+        >
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-white">Recommended Jobs</h2>
-            <button className="text-purple-400 hover:text-purple-300 text-sm font-medium flex items-center">
+            <div className="flex items-center gap-3">
+              <h2 className="text-lg font-semibold text-white">Recommended Jobs</h2>
+              <span className="px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-400 text-xs font-medium">2 New</span>
+            </div>
+            <motion.button 
+              whileHover={{ x: 3 }}
+              className="text-purple-400 hover:text-purple-300 text-sm font-medium flex items-center transition-colors"
+            >
               View All
               <ChevronRight className="w-4 h-4 ml-1" />
-            </button>
+            </motion.button>
           </div>
           <div className="grid gap-4">
-            {[1, 2].map((job) => (
-              <div key={job} className="bg-gradient-to-r from-purple-600/10 via-purple-500/10 to-purple-400/10 backdrop-blur-md rounded-xl p-6 border border-purple-500/20">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-medium text-white">Plumbing Work</h3>
-                  <span className="text-purple-400 font-medium">₹2000</span>
-                </div>
-                <p className="text-sm text-white/60 mb-4">Need help fixing a leaky faucet and bathroom installation</p>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-purple-500/20 ring-2 ring-purple-500/20" />
-                    <div>
-                      <p className="text-sm font-medium text-white">Sarah Wilson</p>
-                      <p className="text-xs text-white/60">2.5 km away</p>
+            {[1, 2].map((job, index) => (
+              <motion.div 
+                key={job}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1 + (index * 0.1) }}
+                className="bg-gradient-to-br from-purple-600/10 via-purple-500/10 to-purple-400/10 backdrop-blur-lg rounded-2xl p-6 border border-purple-500/20 relative group hover:border-purple-500/30 transition-colors"
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-600/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl"></div>
+                <div className="relative">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-medium text-white group-hover:text-purple-300 transition-colors">Plumbing Work</h3>
+                        <span className="px-1.5 py-0.5 rounded-full bg-green-500/20 text-green-400 text-[10px] font-medium">Urgent</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-white/60">
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-3 h-3" /> Posted 2h ago
+                        </span>
+                        <span className="w-1 h-1 rounded-full bg-white/30"></span>
+                        <span className="flex items-center gap-1">
+                          <MapPin className="w-3 h-3" /> 2.5 km away
+                        </span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-purple-600">₹2,000</span>
+                      <p className="text-[10px] text-white/40 font-medium">FIXED PRICE</p>
                     </div>
                   </div>
-                  <button className="px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-400 hover:from-purple-700 hover:to-purple-500 text-white text-sm font-medium rounded-lg transition-all duration-300">
-                    Quick Apply
-                  </button>
+                  <p className="text-sm text-white/60 mb-4">Need help fixing a leaky faucet and bathroom installation</p>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="relative h-10 w-10 rounded-xl overflow-hidden ring-2 ring-purple-500/30 group-hover:ring-purple-500/50 transition-all duration-300">
+                        <Image
+                          src="https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah"
+                          alt="Client"
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-white group-hover:text-purple-300 transition-colors">Sarah Wilson</p>
+                        <div className="flex items-center gap-1">
+                          <div className="flex -space-x-1">
+                            {[...Array(5)].map((_, i) => (
+                              <Star key={i} className={cn(
+                                "h-3 w-3",
+                                i < 4 ? "text-amber-400" : "text-purple-400/30"
+                              )} />
+                            ))}
+                          </div>
+                          <span className="text-xs text-white/60">(4.2)</span>
+                        </div>
+                      </div>
+                    </div>
+                    <motion.button 
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-400 hover:from-purple-700 hover:to-purple-500 text-white text-sm font-medium rounded-lg transition-all duration-300 shadow-lg shadow-purple-600/20 hover:shadow-purple-600/30"
+                    >
+                      Quick Apply
+                    </motion.button>
+                  </div>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
-        </div>
+        </motion.div>
 
         {/* Skills Progress */}
-        <div>
-          <h2 className="text-lg font-semibold text-white mb-6">Your Skills</h2>
-          <div className="bg-gradient-to-r from-purple-600/10 via-purple-500/10 to-purple-400/10 backdrop-blur-md rounded-xl p-6 border border-purple-500/20 space-y-6">
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-white">Plumbing</span>
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.2 }}
+        >
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <h2 className="text-lg font-semibold text-white">Your Skills</h2>
+              <span className="px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-400 text-xs font-medium">2 Skills</span>
+            </div>
+            <motion.button 
+              whileHover={{ x: 3 }}
+              className="text-purple-400 hover:text-purple-300 text-sm font-medium flex items-center transition-colors"
+            >
+              Add New
+              <ChevronRight className="w-4 h-4 ml-1" />
+            </motion.button>
+          </div>
+
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.3 }}
+            className="bg-gradient-to-br from-purple-600/10 via-purple-500/10 to-purple-400/10 backdrop-blur-lg rounded-2xl p-6 border border-purple-500/20 space-y-6 relative group hover:border-purple-500/30 transition-colors"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-600/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl"></div>
+            
+            <div className="relative">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center group-hover:bg-purple-500/20 transition-colors">
+                    <svg className="w-5 h-5 text-purple-400" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M12 16L7 11L8.4 9.55L12 13.15L15.6 9.55L17 11L12 16ZM6 22C5.45 22 4.97917 21.8042 4.5875 21.4125C4.19583 21.0208 4 20.55 4 20V4C4 3.45 4.19583 2.97917 4.5875 2.5875C4.97917 2.19583 5.45 2 6 2H14L20 8V20C20 20.55 19.8042 21.0208 19.4125 21.4125C19.0208 21.8042 18.55 22 18 22H6ZM13 9V4H6V20H18V9H13Z" fill="currentColor"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-medium text-white group-hover:text-purple-300 transition-colors">Plumbing</h3>
+                    <p className="text-xs text-white/60">3 years experience</p>
+                  </div>
+                </div>
                 <span className="text-sm text-white/60">Expert</span>
               </div>
-              <div className="h-2 bg-white/10 rounded-full">
-                <div className="h-full w-[90%] bg-gradient-to-r from-purple-600 to-purple-400 rounded-full" />
+              <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: "90%" }}
+                  transition={{ delay: 1.4, duration: 0.8, ease: "easeOut" }}
+                  className="h-full bg-gradient-to-r from-purple-600 to-purple-400 rounded-full" 
+                />
               </div>
             </div>
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-white">Electrical</span>
+
+            <div className="relative">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center group-hover:bg-purple-500/20 transition-colors">
+                    <svg className="w-5 h-5 text-purple-400" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M7 21C6.45 21 5.97917 20.8042 5.5875 20.4125C5.19583 20.0208 5 19.55 5 19V13H3V11L5 6H19L21 11V13H19V19C19 19.55 18.8042 20.0208 18.4125 20.4125C18.0208 20.8042 17.55 21 17 21H7ZM7 19H17V13H7V19ZM7.5 11H16.5L15.25 8H8.75L7.5 11Z" fill="currentColor"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-medium text-white group-hover:text-purple-300 transition-colors">Electrical</h3>
+                    <p className="text-xs text-white/60">1.5 years experience</p>
+                  </div>
+                </div>
                 <span className="text-sm text-white/60">Intermediate</span>
               </div>
-              <div className="h-2 bg-white/10 rounded-full">
-                <div className="h-full w-[60%] bg-gradient-to-r from-purple-600 to-purple-400 rounded-full" />
+              <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: "60%" }}
+                  transition={{ delay: 1.5, duration: 0.8, ease: "easeOut" }}
+                  className="h-full bg-gradient-to-r from-purple-600 to-purple-400 rounded-full" 
+                />
               </div>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </div>
     </div>
   )

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from 'react'
-import { Menu, Bell, X } from 'lucide-react'
+import { Menu, Bell, X, Wallet } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 
@@ -37,6 +37,7 @@ export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
   const [unreadCount, setUnreadCount] = useState(3)
+  const [walletBalance, setWalletBalance] = useState(24500) // In the future, this should come from an API
 
   return (
     <header className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
@@ -52,18 +53,25 @@ export default function Header() {
           LocalSkills
         </Link>
 
-        <div className="relative">
-          <button
-            className="p-2 hover:bg-gray-100 rounded-lg relative"
-            onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-          >
-            <Bell className="w-6 h-6" />
-            {unreadCount > 0 && (
-              <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                {unreadCount}
-              </span>
-            )}
-          </button>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 px-3 py-1.5 bg-purple-100 rounded-lg">
+            <Wallet className="w-4 h-4 text-purple-600" />
+            <span className="text-sm font-medium text-purple-600">₹{walletBalance.toLocaleString()}</span>
+          </div>
+
+          <div className="relative">
+            <button
+              className="p-2 hover:bg-gray-100 rounded-lg relative"
+              onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+            >
+              <Bell className="w-6 h-6" />
+              {unreadCount > 0 && (
+                <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                  {unreadCount}
+                </span>
+              )}
+            </button>
+          </div>
 
           {/* Notifications Dropdown */}
           {isNotificationsOpen && (
