@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Upload, Camera } from "lucide-react";
 
 interface KYCStatus {
@@ -28,52 +27,48 @@ export function KYCVerification() {
 
   return (
     <div className="space-y-6">
-      <Card className="p-6">
-        <div className="flex items-center justify-between mb-4">
+      <section className="max-w-2xl mx-auto w-full px-2 md:px-0 mb-8 text-neutral-100">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4 border-b border-neutral-700 pb-4">
           <div>
-            <h3 className="text-lg font-semibold">ID Verification</h3>
-            <p className="text-sm text-gray-500">Upload a government-issued ID</p>
+            <div className="font-semibold text-base text-neutral-100">Government ID</div>
+            <div className="text-sm text-neutral-300">Upload your Aadhaar, PAN, or other valid ID</div>
           </div>
           <Button
-            variant={kycStatus.idVerified ? "outline" : "default"}
+            className={`rounded-lg px-4 py-2 ${kycStatus.idVerified ? 'bg-green-900/20 text-green-300 border border-green-700' : 'bg-neutral-900 text-neutral-100 border border-neutral-700 hover:bg-purple-900/30 hover:border-purple-400'} flex items-center gap-2 shadow-sm transition-all`}
             onClick={handleIDUpload}
-            disabled={kycStatus.idVerified}
           >
-            {kycStatus.idVerified ? "Verified" : "Upload ID"}
-            <Upload className="ml-2 h-4 w-4" />
+            {kycStatus.idVerified ? 'Verified' : 'Upload'}
+            <Upload className="h-4 w-4" />
           </Button>
         </div>
-        <div className="text-sm text-gray-500">
+        <div className="text-sm text-neutral-400">
           Accepted documents: Aadhar Card, PAN Card, Passport, Driver's License
         </div>
-      </Card>
+      </section>
 
-      <Card className="p-6">
-        <div className="flex items-center justify-between mb-4">
+      <section className="max-w-2xl mx-auto w-full px-2 md:px-0 mb-8 text-neutral-100">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4 border-b border-neutral-700 pb-4">
           <div>
-            <h3 className="text-lg font-semibold">Selfie Verification</h3>
-            <p className="text-sm text-gray-500">Take a selfie to verify your identity</p>
+            <div className="font-semibold text-base text-neutral-100">Selfie Verification</div>
+            <div className="text-sm text-neutral-300">Take a selfie for facial verification</div>
           </div>
           <Button
-            variant={kycStatus.selfieVerified ? "outline" : "default"}
+            className={`rounded-lg px-4 py-2 ${kycStatus.selfieVerified ? 'bg-green-900/20 text-green-300 border border-green-700' : 'bg-neutral-900 text-neutral-100 border border-neutral-700 hover:bg-purple-900/30 hover:border-purple-400'} flex items-center gap-2 shadow-sm transition-all`}
             onClick={handleSelfieUpload}
-            disabled={kycStatus.selfieVerified}
           >
-            {kycStatus.selfieVerified ? "Verified" : "Take Selfie"}
-            <Camera className="ml-2 h-4 w-4" />
+            {kycStatus.selfieVerified ? 'Verified' : 'Take Selfie'}
+            <Camera className="h-4 w-4" />
           </Button>
         </div>
-        <div className="text-sm text-gray-500">
-          Make sure your face is clearly visible and matches your ID
-        </div>
-      </Card>
+        <div className="text-sm text-neutral-400">Make sure your face is clearly visible and matches your ID</div>
+      </section>
 
       {kycStatus.idVerified && kycStatus.selfieVerified && (
-        <div className="text-center p-4 bg-green-50 text-green-700 rounded-lg">
-          <p className="font-medium">KYC Verification Complete!</p>
+        <div className="max-w-2xl mx-auto w-full px-2 md:px-0 text-center p-4 bg-green-900/20 text-green-300 rounded-xl border border-green-700 mt-8">
+          <p className="font-semibold">KYC Verification Complete!</p>
           <p className="text-sm">Your account is now fully verified.</p>
         </div>
       )}
     </div>
   );
-} 
+}

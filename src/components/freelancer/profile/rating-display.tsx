@@ -1,7 +1,6 @@
 'use client';
 
 import { Star } from "lucide-react";
-import { Card } from "@/components/ui/card";
 
 interface Review {
   id: string;
@@ -36,51 +35,48 @@ export function RatingDisplay() {
 
   return (
     <div className="space-y-6">
-      <Card className="p-6">
-        <div className="flex items-center gap-4">
-          <div className="text-4xl font-bold">{averageRating.toFixed(1)}</div>
+      <section className="max-w-2xl mx-auto w-full px-2 md:px-0 text-neutral-100">
+        <h2 className="text-xl font-semibold text-neutral-100 mb-6">Client Ratings</h2>
+        <div className="flex items-center gap-4 mb-6">
+          <div className="text-4xl font-bold text-neutral-100">{averageRating.toFixed(1)}</div>
           <div>
             <div className="flex">
               {[1, 2, 3, 4, 5].map((star) => (
                 <Star
                   key={star}
                   className={`h-5 w-5 ${
-                    star <= averageRating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
+                    star <= averageRating ? 'fill-yellow-400 text-yellow-400' : 'text-neutral-700'
                   }`}
                 />
               ))}
             </div>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-neutral-400 mt-1">
               Based on {reviews.length} {reviews.length === 1 ? 'review' : 'reviews'}
             </p>
           </div>
         </div>
-      </Card>
-
-      <div className="space-y-4">
-        {reviews.map(review => (
-          <Card key={review.id} className="p-6">
-            <div className="flex items-center justify-between mb-2">
+        <div className="space-y-3">
+          {reviews.map((review) => (
+            <div key={review.id} className="flex items-center justify-between border-b border-neutral-700 py-3">
               <div>
-                <h3 className="font-medium">{review.clientName}</h3>
-                <p className="text-sm text-gray-500">{review.jobTitle}</p>
+                <div className="font-medium text-neutral-100">{review.clientName}</div>
+                <div className="text-xs text-neutral-400">{review.date}</div>
+                <div className="text-sm text-neutral-300 mt-1">{review.comment}</div>
               </div>
               <div className="flex">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <Star
                     key={star}
                     className={`h-4 w-4 ${
-                      star <= review.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
+                      star <= review.rating ? 'fill-yellow-400 text-yellow-400' : 'text-neutral-700'
                     }`}
                   />
                 ))}
               </div>
             </div>
-            <p className="text-gray-600 mb-2">{review.comment}</p>
-            <p className="text-sm text-gray-500">{review.date}</p>
-          </Card>
-        ))}
-      </div>
+          ))}
+        </div>
+      </section>
     </div>
   );
-} 
+}
