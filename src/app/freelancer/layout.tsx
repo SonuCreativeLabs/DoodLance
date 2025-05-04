@@ -12,7 +12,10 @@ export default function FreelancerLayout({ children }: FreelancerLayoutProps) {
   const pathname = usePathname()
 
   const isActive = (path: string) => {
-    return pathname === path || pathname?.startsWith(path + '/')
+    if (path === '/freelancer') {
+      return pathname === '/freelancer';
+    }
+    return pathname === path || pathname?.startsWith(path + '/');
   }
 
   const navItems = [
