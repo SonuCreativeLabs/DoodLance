@@ -23,6 +23,7 @@ export default function FreelancerLayout({ children }: FreelancerLayoutProps) {
     { href: '/freelancer/feed', label: 'Feed', icon: Compass },
     { href: '/freelancer/jobs', label: 'Jobs', icon: Briefcase },
     { href: '/freelancer/inbox', label: 'Inbox', icon: Inbox },
+    { href: '/freelancer/notifications', label: 'Notifications', icon: Bell },
     { href: '/freelancer/profile', label: 'Profile', icon: User },
   ]
 
@@ -65,12 +66,12 @@ export default function FreelancerLayout({ children }: FreelancerLayoutProps) {
           </div>
           <div className="flex items-center space-x-4">
             <div className="relative">
-              <button className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 backdrop-blur-lg transition-all duration-300 border border-white/5 hover:border-purple-500/30 group">
+              <a href="/freelancer/notifications" className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 backdrop-blur-lg transition-all duration-300 border border-white/5 hover:border-purple-500/30 group relative">
                 <Bell className="w-5 h-5 text-white/80 group-hover:text-purple-400 transition-colors duration-300" />
                 <span className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-r from-purple-600 to-purple-400 rounded-full flex items-center justify-center shadow-lg shadow-purple-600/20">
                   <span className="text-[10px] font-medium text-white">2</span>
                 </span>
-              </button>
+              </a>
             </div>
             <div className="relative">
               <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-purple-400 hover:from-purple-700 hover:to-purple-500 transition-all duration-300 shadow-lg shadow-purple-600/20 hover:shadow-purple-600/30 group">
