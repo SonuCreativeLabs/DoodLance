@@ -160,16 +160,17 @@ export default function FreelancerHome() {
                   className="relative h-14 w-14 rounded-2xl overflow-hidden ring-2 ring-purple-500/30 group-hover:ring-purple-500/50 transition-all duration-300 flex-shrink-0"
                 >
                   <Image
-                    src="https://api.dicebear.com/7.x/avataaars/svg?seed=John"
-                    alt="Profile"
-                    fill
+                    src="/images/avatar.jpg"
+                    alt="Profile Picture"
+                    width={56}
+                    height={56}
                     className="object-cover"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 </motion.div>
                 {/* Name and Rating */}
                 <div className="flex flex-col justify-center flex-grow min-w-0 ml-4">
-                  <div className="flex items-center gap-4 flex-wrap">
+                  <div className="flex items-center gap-4">
                     <h2 className="text-base font-semibold text-white group-hover:text-purple-300 transition-colors truncate max-w-[120px]">John Doe</h2>
                     <span className="flex items-center gap-1 whitespace-nowrap">
                       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="#fbbf24" className="h-4 w-4 flex-shrink-0">
@@ -200,14 +201,14 @@ export default function FreelancerHome() {
                 transition={{ delay: 0.7 }}
                 className="flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/10 hover:border-purple-500/30 hover:bg-white/10 transition-all duration-300 group/card"
               >
-                <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center group-hover/card:bg-purple-500/20 transition-colors">
+                <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center group-hover:bg-purple-500/20 transition-colors">
                   <Calendar className="h-5 w-5 text-purple-400" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-white group-hover/card:text-purple-300 transition-colors">Ready to work</p>
+                  <p className="text-sm font-medium text-white group-hover:text-purple-300 transition-colors">Ready to work</p>
                   <p className="text-xs text-white/60">Toggle your availability</p>
                 </div>
-                <div className="relative inline-flex h-6 w-11 items-center rounded-full bg-purple-600/50 group-hover/card:bg-purple-600 transition-colors cursor-pointer">
+                <div className="relative inline-flex h-6 w-11 items-center rounded-full bg-purple-600/50 group-hover:bg-purple-600 transition-colors cursor-pointer">
                   <motion.span 
                     initial={{ x: 0 }}
                     whileHover={{ x: -16 }}
@@ -221,11 +222,11 @@ export default function FreelancerHome() {
                 transition={{ delay: 0.8 }}
                 className="flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/10 hover:border-purple-500/30 hover:bg-white/10 transition-all duration-300 group/card"
               >
-                <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center group-hover/card:bg-purple-500/20 transition-colors">
+                <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center group-hover:bg-purple-500/20 transition-colors">
                   <MapPin className="h-5 w-5 text-purple-400" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-white group-hover/card:text-purple-300 transition-colors whitespace-nowrap">Availability & Service Area</p>
+                  <p className="text-sm font-medium text-white group-hover:text-purple-300 transition-colors whitespace-nowrap">Availability & Service Area</p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1">
                     <div className="flex items-center gap-2">
                       <Clock className="h-4 w-4 text-purple-400" />
@@ -239,12 +240,15 @@ export default function FreelancerHome() {
                     </div>
                   </div>
                 </div>
-                <motion.button 
-                  whileHover={{ x: 3 }}
+                <a
+                  href="/freelancer/availability"
+                  tabIndex={0}
+                  aria-label="Edit Availability"
                   className="text-sm text-purple-400 hover:text-purple-300 transition-colors"
+                  style={{ display: 'inline-flex', alignItems: 'center' }}
                 >
                   Edit
-                </motion.button>
+                </a>
               </motion.div>
             </div>
           </div>
@@ -422,5 +426,5 @@ export default function FreelancerHome() {
         </motion.div>
       </div>
     </div>
-  )
-} 
+  );
+}
