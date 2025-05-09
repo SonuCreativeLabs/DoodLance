@@ -16,7 +16,7 @@ export default function InboxPage() {
     recipientJobTitle: pro.service,
     lastMessage: `Hi, I'm available for ${pro.service} in ${pro.location}!`,
     // Use static timestamps and unreadCount for SSR safety
-    timestamp: new Date(2024, 0, 1, 10, 0, 0 + idx * 5),
+    timestamp: new Date(Date.now() - (idx * 5 * 60 * 1000)), // Each chat 5 min apart
     unreadCount: (idx % 3),
     online: idx % 2 === 0,
   })), []);
@@ -28,28 +28,28 @@ export default function InboxPage() {
         {
           id: `${chat.id}-1`,
           content: `Hi ${chat.recipientName}, I'm interested in your ${chat.recipientJobTitle} service in ${professionals[idx].location}.`,
-          timestamp: new Date(2024, 0, 1, 9, 0, 0),
+          timestamp: new Date(Date.now() - (60 * 60 * 1000)), // 1 hour ago
           sender: 'user',
           status: 'read',
         },
         {
           id: `${chat.id}-2`,
           content: `Hello! Thank you for reaching out. How can I help you?`,
-          timestamp: new Date(2024, 0, 1, 9, 5, 0),
+          timestamp: new Date(Date.now() - (55 * 60 * 1000)), // 55 min ago
           sender: 'other',
           status: 'read',
         },
         {
           id: `${chat.id}-3`,
           content: `I'd like to know your availability this week.`,
-          timestamp: new Date(2024, 0, 1, 9, 15, 0),
+          timestamp: new Date(Date.now() - (45 * 60 * 1000)), // 45 min ago
           sender: 'user',
           status: 'delivered',
         },
         {
           id: `${chat.id}-4`,
           content: `I'm available on Thursday and Friday. Let me know what works for you!`,
-          timestamp: new Date(2024, 0, 1, 9, 30, 0),
+          timestamp: new Date(Date.now() - (30 * 60 * 1000)), // 30 min ago
           sender: 'other',
           status: 'delivered',
         },

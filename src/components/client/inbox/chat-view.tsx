@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, Paperclip, Send } from 'lucide-react';
+import { ArrowLeft, Paperclip, Send, Phone } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 interface Message {
@@ -70,6 +70,14 @@ export function ChatView({
           <h3 className="font-semibold text-white">{recipientName}</h3>
           <p className="text-sm text-white/40">{recipientJobTitle}</p>
         </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-10 w-10 rounded-full hover:bg-purple-900/30 ml-2"
+          aria-label="Call"
+        >
+          <Phone className="h-6 w-6 text-purple-400" />
+        </Button>
       </div>
 
       {/* Messages */}

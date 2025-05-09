@@ -14,7 +14,7 @@ export default function ProfilePage() {
   const router = useRouter();
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 flex flex-col h-screen pb-28 md:pb-8 overflow-hidden">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">Your Profile</h1>
         <Button 
@@ -27,8 +27,8 @@ export default function ProfilePage() {
         </Button>
       </div>
       
-      <Tabs defaultValue="profile" className="w-full">
-        <TabsList className="grid w-full grid-cols-5 mb-8">
+      <Tabs defaultValue="profile" className="w-full flex-1 flex flex-col min-h-0">
+        <TabsList className="h-10 items-center justify-center rounded-md bg-gray-100 p-1 text-gray-500 grid w-full grid-cols-5 mb-8">
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="kyc">KYC</TabsTrigger>
           <TabsTrigger value="skills">Skills</TabsTrigger>
@@ -36,25 +36,27 @@ export default function ProfilePage() {
           <TabsTrigger value="ratings">Ratings</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="profile">
-          <ProfileEditor />
-        </TabsContent>
+        <div className="flex-1 min-h-0 overflow-y-auto">
+          <TabsContent value="profile">
+            <ProfileEditor />
+          </TabsContent>
 
-        <TabsContent value="kyc">
-          <KYCVerification />
-        </TabsContent>
+          <TabsContent value="kyc">
+            <KYCVerification />
+          </TabsContent>
 
-        <TabsContent value="skills">
-          <SkillMatrix />
-        </TabsContent>
+          <TabsContent value="skills">
+            <SkillMatrix />
+          </TabsContent>
 
-        <TabsContent value="portfolio">
-          <PortfolioGallery />
-        </TabsContent>
+          <TabsContent value="portfolio">
+            <PortfolioGallery />
+          </TabsContent>
 
-        <TabsContent value="ratings">
-          <RatingDisplay />
-        </TabsContent>
+          <TabsContent value="ratings">
+            <RatingDisplay />
+          </TabsContent>
+        </div>
       </Tabs>
     </div>
   );
