@@ -10,8 +10,12 @@ import { Label } from '@/components/ui/label'
 import { motion } from 'framer-motion'
 import ClientLayout from '@/components/layouts/client-layout'
 
+// Define the type for budget suggestions
+type ServiceCategory = 'Plumbing' | 'Tutoring' | 'Pet Care' | 'Cleaning';
+type BudgetSuggestion = { min: number; max: number; avg: number };
+
 // Mock data for budget suggestions
-const budgetSuggestions = {
+const budgetSuggestions: Record<ServiceCategory, BudgetSuggestion> = {
   'Plumbing': { min: 50, max: 200, avg: 120 },
   'Tutoring': { min: 20, max: 100, avg: 60 },
   'Pet Care': { min: 15, max: 50, avg: 30 },
@@ -19,7 +23,7 @@ const budgetSuggestions = {
 }
 
 export default function PostJob() {
-  const [selectedCategory, setSelectedCategory] = useState('')
+  const [selectedCategory, setSelectedCategory] = useState<ServiceCategory | ''>('')
   const [description, setDescription] = useState('')
   const [budget, setBudget] = useState('')
   const [location, setLocation] = useState('')
@@ -65,7 +69,7 @@ export default function PostJob() {
                       <select
                         id="category"
                         value={selectedCategory}
-                        onChange={(e) => setSelectedCategory(e.target.value)}
+                        onChange={(e) => setSelectedCategory(e.target.value as ServiceCategory | '')}
                         className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-200 bg-transparent text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#FF8A3D]"
                       >
                         <option value="">Select a category</option>
