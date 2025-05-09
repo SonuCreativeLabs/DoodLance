@@ -35,7 +35,8 @@ export default function PostJob() {
   }
 
   const handleBudgetSuggestion = () => {
-    if (selectedCategory && budgetSuggestions[selectedCategory]) {
+    // Only proceed if selectedCategory is not empty string
+    if (selectedCategory !== '') {
       const suggestion = budgetSuggestions[selectedCategory]
       setBudget(suggestion.avg.toString())
     }
