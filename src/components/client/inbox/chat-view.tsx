@@ -72,7 +72,7 @@ export function ChatView({
         </div>
         <Button
           variant="ghost"
-          size="icon"
+          size="sm"
           className="h-10 w-10 rounded-full hover:bg-purple-900/30 ml-2"
           aria-label="Call"
         >
