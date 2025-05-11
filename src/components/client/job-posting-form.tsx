@@ -61,8 +61,8 @@ export default function JobPostingForm({ onSubmit }: JobPostingFormProps) {
     if (name === 'title' || name === 'description') {
       setIsLoading(true);
       try {
-        const categories = await categorizeJob(formData.title, formData.description);
-        setSuggestions(categories.map(cat => cat.label));
+        const category = await categorizeJob(formData.description || '');
+        setSuggestions([category]);
       } catch (error) {
         console.error('Error getting suggestions:', error);
       } finally {

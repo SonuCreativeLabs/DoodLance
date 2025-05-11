@@ -1,5 +1,5 @@
 [build]
-  command = "npm run build"
+  command = "echo $NEXT_PUBLIC_SUPABASE_URL && npm run build"
   publish = ".next"
 
 [build.environment]
