@@ -1,26 +1,28 @@
 "use client"
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Filter, Map as MapIcon } from 'lucide-react';
+import { Search, Filter, Map as MapIcon, ArrowLeft } from 'lucide-react';
 import dynamic from 'next/dynamic';
+import { useRouter } from 'next/navigation';
 import SearchFilters from './components/SearchFilters';
 import { Job } from './types';
 import JobFeed from './components/JobFeedComponent';
 
-// Dynamically import MapView with no SSR to avoid leaflet issues
-const MapView = dynamic<{
+const MapView = dynamic(() => import('./components/MapViewComponent'),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-full h-full flex items-center justify-center bg-[#111111]">
+        <div className="animate-pulse text-white/40">Loading map...</div>
+      </div>
+    ),
+  }
+) as React.ComponentType<{
   jobs: Job[];
   selectedJobId?: number;
   onMarkerClick?: (jobId: number) => void;
-}>(() => import('./components/MapView'), {
-  ssr: false,
-  loading: () => (
-    <div className="w-full h-full flex items-center justify-center bg-[#111111]">
-      <div className="animate-pulse text-white/40">Loading map...</div>
-    </div>
-  )
-});
+}>;
 
 const mockJobs: Job[] = [
   {
@@ -106,6 +108,7 @@ const mockJobs: Job[] = [
 ]
 
 export default function FeedPage() {
+  const router = useRouter();
   const [isNavbarVisible, setIsNavbarVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
 
@@ -195,7 +198,7 @@ export default function FeedPage() {
       {/* Map View - Always in Background */}
       <div className="absolute inset-0 z-0">
         <MapView 
-          jobs={mockJobs}
+          jobs={useMemo(() => filteredJobs, [filteredJobs])}
           selectedJobId={selectedJobId}
           onMarkerClick={(jobId: number) => {
             setSelectedJobId(jobId);
@@ -216,6 +219,14 @@ export default function FeedPage() {
           ease: 'easeInOut'
         }}>
         <div className="w-full max-w-md flex items-center gap-2 mb-2">
+          {/* Back Button */}
+          <button
+            onClick={() => router.back()}
+            className="mr-2 p-2 rounded-full bg-white/10 hover:bg-purple-500/20 border border-white/10 hover:border-purple-400 text-white"
+            aria-label="Back"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
           <div className="relative flex-1">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
             <input 
