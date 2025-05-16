@@ -33,7 +33,8 @@ export default function FreelancerLayout({ children }: FreelancerLayoutProps) {
         <div className="absolute top-0 -left-40 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl" />
         <div className="absolute bottom-0 -right-40 w-96 h-96 bg-purple-400/20 rounded-full blur-3xl" />
       </div>
-      <nav className="fixed top-0 left-0 right-0 border-b border-white/10 bg-[#111111]/95 backdrop-blur-xl z-[100]">
+      {pathname !== '/freelancer/feed' && (
+        <nav className="fixed top-0 left-0 right-0 border-b border-white/10 bg-[#111111]/95 backdrop-blur-xl z-[100]">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center space-x-8">
             <Link 
@@ -89,9 +90,11 @@ export default function FreelancerLayout({ children }: FreelancerLayoutProps) {
           </div>
         </div>
       </nav>
+      )}
 
       {/* Mobile Navigation */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 border-t border-white/10 bg-[#111111]/95 backdrop-blur-lg z-50">
+      {pathname !== '/freelancer/feed' && (
+        <div className="md:hidden fixed bottom-0 left-0 right-0 border-t border-white/10 bg-[#111111]/95 backdrop-blur-lg z-50">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between py-3">
             {navItems.map((item) => {
@@ -115,6 +118,7 @@ export default function FreelancerLayout({ children }: FreelancerLayoutProps) {
           </div>
         </div>
       </div>
+      )}
 
       <div className="h-16" /> {/* Spacer for fixed header */}
       <main className="min-h-[calc(100vh-4rem)] overflow-y-auto relative z-10">{children}</main>
