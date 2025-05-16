@@ -1,348 +1,342 @@
-"use client"
-
-import React, { useState, useEffect, useMemo } from 'react';
+"use client";
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Filter, Map as MapIcon, ArrowLeft } from 'lucide-react';
+import { X, Clock, Calendar, Star, Check, ChevronDown } from 'lucide-react';
 import dynamic from 'next/dynamic';
-import { useRouter } from 'next/navigation';
+
+const MapView = dynamic(() => import('./components/MapViewComponent'), { 
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-full flex items-center justify-center bg-[#111111]">
+      <div className="animate-pulse text-white/40">Loading map...</div>
+    </div>
+  )
+});
+
+import ProfessionalsFeed from './components/ProfessionalsFeed';
 import SearchFilters from './components/SearchFilters';
-import { Job } from './types';
-import JobFeed from './components/JobFeedComponent';
 
-const MapView = dynamic(() => import('./components/MapViewComponent'),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="w-full h-full flex items-center justify-center bg-[#111111]">
-        <div className="animate-pulse text-white/40">Loading map...</div>
-      </div>
-    ),
-  }
-) as React.ComponentType<{
-  jobs: Job[];
-  selectedJobId?: number;
-  onMarkerClick?: (jobId: number) => void;
-}>;
+interface Job {
+  id: number;
+  title: string;
+  client: string;
+  clientRating: number;
+  budget: number;
+  currency: string;
+  description: string;
+  location: string;
+  distance: number;
+  posted: string;
+  duration: string;
+  coords: [number, number];
+  availability: string[];
+  skills: string[];
+  category: string;
+  proposals: number;
+}
 
-const mockJobs: Job[] = [
+
+
+
+
+const jobs: Job[] = [
   {
     id: 1,
-    title: "Full Stack Developer Needed for E-commerce Platform",
-    description: "Looking for an experienced full-stack developer to help build a modern e-commerce platform. Strong knowledge of React, Node.js, and MongoDB required.",
-    budget: "₹20,000 - ₹40,000",
-    duration: "2-3 months",
-    skills: ["React", "Node.js", "MongoDB", "TypeScript"],
-    postedAt: "2 hours ago",
-    location: "Remote",
-    proposals: 12,
-    company: "TechStart Solutions",
-    companyLogo: "/images/companies/techstart.png",
-    type: "Full-time",
-    image: "/images/jobs/ecommerce.jpg",
-    coords: [77.5946, 12.9716]
+    title: 'House Cleaning Needed',
+    client: 'John D.',
+    clientRating: 4.9,
+    budget: 120,
+    currency: '₹',
+    description: 'Looking for a professional cleaner for a 3BHK apartment. Need deep cleaning for kitchen and bathrooms.',
+    location: 'T. Nagar',
+    distance: 1.2,
+    posted: '2h ago',
+    duration: '3-4 hours',
+    coords: [80.2407, 13.0627] as [number, number],
+    availability: ['ASAP', 'Weekdays'],
+    skills: ['Cleaning', 'Home Maintenance'],
+    category: 'Cleaning',
+    proposals: 3
   },
   {
     id: 2,
-    title: "Cricket Analytics Expert for National Team",
-    description: "Seeking a cricket analytics expert to analyze player performance data and provide strategic insights for team improvement. Experience with sports analytics required.",
-    budget: "₹15,000 - ₹30,000",
-    duration: "3 months",
-    skills: ["Sports Analytics", "Data Visualization", "Statistical Analysis", "Python"],
-    postedAt: "3 hours ago",
-    location: "Hybrid",
-    proposals: 5,
-    company: "Cricket Excellence Academy",
-    companyLogo: "/images/companies/cricket.png",
-    type: "Contract",
-    image: "/images/jobs/cricket.jpg",
-    coords: [77.5746, 12.9516]
+    title: 'Math Tutor for Grade 10',
+    client: 'Priya M.',
+    clientRating: 4.7,
+    budget: 500,
+    currency: '₹',
+    description: 'Need an experienced math tutor for CBSE 10th standard. 3 times a week, 1.5 hours per session.',
+    location: 'Anna Nagar',
+    distance: 2.8,
+    posted: '5h ago',
+    duration: '1 month',
+    coords: [80.2107, 13.0827] as [number, number],
+    availability: ['Evenings', 'Weekends'],
+    skills: ['Mathematics', 'Teaching', 'CBSE'],
+    category: 'Education',
+    proposals: 2
   },
   {
     id: 3,
-    title: "Content Creator for Social Media",
-    description: "Seeking a creative content creator to manage our social media presence. Experience with Instagram, YouTube, and TikTok content creation required.",
-    budget: "₹10,000 - ₹20,000",
-    duration: "Ongoing",
-    skills: ["Social Media", "Content Creation", "Video Editing"],
-    postedAt: "1 day ago",
-    location: "Bangalore",
-    proposals: 15,
-    company: "Digital Vibes",
-    companyLogo: "/images/companies/digitalvibes.png",
-    type: "Part-time",
-    image: "/images/jobs/social.jpg",
-    coords: [77.6146, 12.9916]
+    title: 'Personal Trainer',
+    client: 'Raj K.',
+    clientRating: 4.8,
+    budget: 800,
+    currency: '₹',
+    description: 'Looking for a certified personal trainer for weight loss program. 3 sessions per week.',
+    location: 'Velachery',
+    distance: 1.8,
+    posted: '1d ago',
+    duration: '3 months',
+    coords: [80.2207, 13.0227] as [number, number],
+    availability: ['Morning', 'Evening'],
+    skills: ['Fitness Training', 'Weight Loss', 'Nutrition'],
+    category: 'Fitness',
+    proposals: 5
   },
   {
     id: 4,
-    title: "Professional Photographer for Events",
-    description: "Looking for a skilled photographer to cover corporate events and product launches. Must have experience with event photography and professional equipment.",
-    budget: "₹5,000 - ₹15,000",
-    duration: "Per Event",
-    skills: ["Photography", "Photo Editing", "Event Coverage"],
-    postedAt: "2 days ago",
-    location: "Delhi",
-    proposals: 20,
-    company: "Capture Studios",
-    companyLogo: "/images/companies/capture.png",
-    type: "Freelance",
-    image: "/images/jobs/photo.jpg",
-    coords: [77.6346, 12.9616]
+    title: 'Home Painting',
+    client: 'Meena R.',
+    clientRating: 4.6,
+    budget: 15000,
+    currency: '₹',
+    description: 'Need to repaint 2BHK apartment. Includes walls, windows and doors. Must provide own materials.',
+    location: 'Adyar',
+    distance: 3.5,
+    posted: '3h ago',
+    duration: '5 days',
+    coords: [80.2607, 13.0127] as [number, number],
+    availability: ['Next Week'],
+    skills: ['Painting', 'Interior Design'],
+    category: 'Home',
+    proposals: 8
   },
   {
     id: 5,
-    title: "Cricket Academy Website Development",
-    description: "Need a web developer to create a modern website for our cricket academy. The website should include features for class scheduling, player profiles, and performance tracking.",
-    budget: "₹15,000 - ₹25,000",
-    duration: "1-2 months",
-    skills: ["HTML", "CSS", "JavaScript", "PHP"],
-    postedAt: "5 hours ago",
-    location: "Mumbai",
-    proposals: 8,
-    company: "Premier Cricket Academy",
-    companyLogo: "/images/companies/cricket.png",
-    type: "Contract",
-    image: "/images/jobs/cricket.jpg",
-    coords: [77.5746, 12.9516]
+    title: 'Yoga Instructor',
+    client: 'Community Center',
+    clientRating: 4.9,
+    budget: 1000,
+    currency: '₹',
+    description: 'Looking for a certified yoga instructor for weekly classes at our community center.',
+    location: 'Besant Nagar',
+    distance: 2.1,
+    posted: '1d ago',
+    duration: 'Ongoing',
+    coords: [80.2707, 13.0027] as [number, number],
+    availability: ['Weekend Mornings'],
+    skills: ['Yoga', 'Meditation', 'Breathing Exercises'],
+    category: 'Fitness',
+    proposals: 4
   }
-]
+];
 
 export default function FeedPage() {
-  const router = useRouter();
-  const [isNavbarVisible, setIsNavbarVisible] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
+  // Sheet and UI state
+  const [isSheetCollapsed, setIsSheetCollapsed] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [sheetOffset, setSheetOffset] = useState(0);
+  const [showFilters, setShowFilters] = useState(false);
 
-  // Handle scroll direction for navbar visibility
-  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    const currentScrollY = e.currentTarget.scrollTop;
-    if (currentScrollY > lastScrollY) {
-      // Scrolling down
-      setIsNavbarVisible(false);
-    } else {
-      // Scrolling up
-      setIsNavbarVisible(true);
+  // Search and category state
+  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedArea, setSelectedArea] = useState('Any');
+  const [selectedService, setSelectedService] = useState('Any');
+  const [range, setRange] = useState(10);
+  const [minRating, setMinRating] = useState(0);
+  const [budgetRange, setBudgetRange] = useState<[number, number]>([0, 10000]);
+  // Using 'budgetRange' consistently
+  const budgeRange = budgetRange; // Alias to match the dependency array
+  const [availability, setAvailability] = useState<string[]>([]);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedTimeOptions, setSelectedTimeOptions] = useState<string[]>([]);
+  const [filteredJobs, setFilteredJobs] = useState<Job[]>(jobs);
+
+  // Filtering logic
+  useEffect(() => {
+    let filtered = [...jobs];
+
+    // Filter by category
+    if (selectedCategory !== 'All') {
+      filtered = filtered.filter(job => job.category === selectedCategory);
     }
-    setLastScrollY(currentScrollY);
-  };
 
-  const [selectedJobId, setSelectedJobId] = useState<number | undefined>();
-  const [isSheetCollapsed, setIsSheetCollapsed] = useState(true);
-  const [showFilterModal, setShowFilterModal] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedLocation, setSelectedLocation] = useState("All Locations");
-  const [selectedJobType, setSelectedJobType] = useState("All");
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 20000]);
-  const [filteredJobs, setFilteredJobs] = useState<Job[]>(mockJobs);
-
-  // Initialize filtered jobs
-  useEffect(() => {
-    setFilteredJobs(mockJobs);
-  }, []);
-
-  // Filter jobs whenever any filter criteria changes
-  useEffect(() => {
-    let filtered = [...mockJobs];
-    console.log('Initial jobs:', filtered.length);
-
-    // Apply search filter
+    // Filter by search query
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
         job =>
           job.title.toLowerCase().includes(query) ||
-          job.description.toLowerCase().includes(query) ||
-          job.company.toLowerCase().includes(query) ||
-          job.skills.some(skill => skill.toLowerCase().includes(query))
+          job.client.toLowerCase().includes(query) ||
+          job.skills.some(skill => skill.toLowerCase().includes(query)) ||
+          job.description.toLowerCase().includes(query)
       );
-      console.log('After search filter:', filtered.length);
     }
 
-    // Apply location filter
-    if (selectedLocation !== "All Locations") {
-      filtered = filtered.filter(job => job.location === selectedLocation);
-      console.log('After location filter:', filtered.length);
+    // Filter by distance
+    filtered = filtered.filter(job => job.distance <= range);
+
+    // Filter by client rating
+    filtered = filtered.filter(job => job.clientRating >= minRating);
+
+    // Filter by budget
+    filtered = filtered.filter(
+      job => job.budget >= budgetRange[0] && job.budget <= budgetRange[1]
+    );
+
+    // Filter by availability
+    if (availability.length > 0) {
+      filtered = filtered.filter(job =>
+        availability.every(avail => job.availability.includes(avail))
+      );
     }
 
-    // Apply job type filter
-    if (selectedJobType !== "All") {
-      filtered = filtered.filter(job => job.type === selectedJobType);
-      console.log('After type filter:', filtered.length);
+    // Filter by selected date
+    if (selectedDate) {
+      // Simple date filtering - in a real app, you'd want to check actual availability
+      const day = selectedDate.getDay();
+      const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+      const dayName = days[day];
+      
+      filtered = filtered.filter(job => 
+        job.availability.includes(dayName) || 
+        job.availability.includes('Any Day') ||
+        job.availability.includes('ASAP')
+      );
     }
 
-    // Apply price range filter
-    filtered = filtered.filter(job => {
-      const jobBudget = parseInt(job.budget.replace(/[^0-9]/g, ''));
-      return jobBudget >= priceRange[0] && jobBudget <= priceRange[1];
-    });
-    console.log('After price filter:', filtered.length);
+    // Filter by time options
+    if (selectedTimeOptions.length > 0) {
+      filtered = filtered.filter(job =>
+        selectedTimeOptions.some(option => job.availability.includes(option))
+      );
+    }
 
     setFilteredJobs(filtered);
-  }, [searchQuery, selectedLocation, selectedJobType, priceRange]);
+  }, [
+    selectedCategory,
+    searchQuery,
+    range,
+    minRating,
+    budgeRange,
+    availability,
+    selectedDate,
+    selectedTimeOptions,
+  ]);
 
+  // Handle category tab click
+  const handleCategoryTab = (category: string) => {
+    setSelectedCategory(category);
+    setSelectedService('All'); // Reset service filter when category changes
+  };
+
+  // Filter modal logic
   const handleSaveFilters = () => {
-    setShowFilterModal(false);
+    setShowFilters(false);
+    // Filtering is handled by useEffect
   };
 
-  const handleClearFilters = () => {
-    setSelectedLocation("All Locations");
-    setSelectedJobType("All");
-    setPriceRange([0, 20000]);
-    setSearchQuery("");
+  const handleResetFilters = () => {
+    setSelectedArea('Any');
+    setSelectedService('Any');
+    setRange(10);
+    setMinRating(0);
+    setBudgetRange([0, 10000]);
+    setAvailability([]);
+    setSelectedDate(null);
+    setSelectedTimeOptions([]);
+    setSearchQuery('');
+    setSelectedCategory('All');
+    setFilteredJobs(jobs);
   };
 
-  // Set initial sheet position to collapsed state (70vh)
-  const initialSheetY = typeof window !== 'undefined' ? window.innerHeight * 0.6 : 0;
+  useEffect(() => {
+    handleSaveFilters();
+  }, [
+    selectedArea,
+    selectedService,
+    range,
+    minRating,
+    budgetRange,
+    availability,
+    selectedDate,
+    selectedTimeOptions,
+    selectedCategory,
+    searchQuery
+  ]);
 
   return (
-    <div className="h-screen w-full bg-[#111111] relative overflow-hidden">
-      {/* Map View - Always in Background */}
-      <div className="absolute inset-0 z-0">
-        <MapView 
-          jobs={useMemo(() => filteredJobs, [filteredJobs])}
-          selectedJobId={selectedJobId}
-          onMarkerClick={(jobId: number) => {
-            setSelectedJobId(jobId);
-            setIsSheetCollapsed(false);
-          }}
-        />
+    <div className="relative h-[100dvh] bg-[#0A0A0A] overflow-hidden">
+      {/* Map View - Full screen */}
+      <div className="absolute inset-0 w-full h-full">
+        <MapView jobs={filteredJobs} />
       </div>
-      {/* Fixed Header - Slides up/down */}
-      <motion.div 
-        className="fixed left-0 right-0 z-[3] px-4 pt-3 flex flex-col items-center bg-gradient-to-b from-[#111111] to-transparent"
-        initial={{ top: 0 }}
-        animate={{ 
-          top: isNavbarVisible ? 0 : -80,
-          opacity: isNavbarVisible ? 1 : 0
-        }}
-        transition={{ 
-          duration: 0.3,
-          ease: 'easeInOut'
-        }}>
-        <div className="w-full max-w-md flex items-center gap-2 mb-2">
-          {/* Back Button */}
-          <button
-            onClick={() => router.back()}
-            className="mr-2 p-2 rounded-full bg-white/10 hover:bg-purple-500/20 border border-white/10 hover:border-purple-400 text-white"
-            aria-label="Back"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <div className="relative flex-1">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
-            <input 
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search for jobs..."
-              className="w-full h-12 rounded-2xl bg-white/5 border border-white/10 focus:border-purple-500/30 pl-12 pr-4 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500/20 transition-all duration-300 shadow-lg shadow-black/10"
-            />
-          </div>
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => setShowFilterModal(true)}
-            className="flex items-center justify-center w-12 h-12 rounded-2xl bg-white/5 border border-white/10 text-white/80 hover:bg-white/10 hover:border-purple-500/30 transition-all duration-300"
-          >
-            <Filter className="w-5 h-5" />
-          </motion.button>
+
+      {/* Search and Filters Overlay */}
+      <div className="absolute top-0 left-0 right-0 z-30 pt-2 pb-2 px-4 bg-gradient-to-b from-black/80 to-transparent">
+        <div className="flex items-center rounded-2xl bg-[#18181C] shadow-lg px-4 py-2 mb-2">
+          <svg className="w-5 h-5 text-purple-400 mr-2" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input
+            type="text"
+            placeholder="Search professionals..."
+            className="flex-1 bg-transparent text-white placeholder-white/60 border-none outline-none text-base"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+          />
         </div>
-      </motion.div>
+        <div className="flex gap-2 overflow-x-auto no-scrollbar py-1">
+          {['All', 'Home', 'Education', 'Cleaning', 'Tutoring', 'Fitness'].map((category) => (
+            <button
+              key={category}
+              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${
+                selectedCategory === category
+                  ? 'bg-purple-500 text-white'
+                  : 'bg-black/40 text-white/80 hover:bg-black/60 border border-white/10'
+              }`}
+              onClick={() => handleCategoryTab(category)}
+            >
+              {category}
+            </button>
+          ))}
+        </div>
+      </div>
 
-      {/* Search Filters Modal */}
-      <SearchFilters
-        showFilterModal={showFilterModal}
-        setShowFilterModal={setShowFilterModal}
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        selectedLocation={selectedLocation}
-        setSelectedLocation={setSelectedLocation}
-        selectedJobType={selectedJobType}
-        setSelectedJobType={setSelectedJobType}
-        priceRange={priceRange}
-        setPriceRange={setPriceRange}
-        handleSaveFilters={handleSaveFilters}
-        handleClearFilters={handleClearFilters}
-      />
-
-      {/* Draggable Sheet */}
+      {/* Collapsible Sheet Placeholder */}
       <motion.div
-        initial={{ y: initialSheetY }}
-        animate={{ y: isSheetCollapsed ? initialSheetY : 80 }}
-        transition={{
-          type: "spring",
-          damping: 20,
-          stiffness: 300
-        }}
+        className="fixed bottom-0 left-0 right-0 z-20 bg-[#18181C] rounded-t-2xl shadow-2xl border-t border-white/10"
+        initial={{ y: 0 }}
+        animate={{ y: isSheetCollapsed ? '70vh' : 0 }}
+        transition={{ type: 'spring', damping: 30, stiffness: 300 }}
         drag="y"
-        dragConstraints={{
-          top: 80,
-          bottom: initialSheetY
-        }}
-        dragElastic={0.2}
-        onDragEnd={(event, info) => {
-          // If dragged up more than halfway, expand. Otherwise, collapse.
-          const threshold = initialSheetY / 2;
-          setIsSheetCollapsed(info.point.y > threshold);
-        }}
-        className="fixed inset-x-0 bottom-0 z-[4] w-full bg-[#111111] rounded-t-[32px] shadow-2xl border-t border-white/10"
-        style={{
-          height: '70vh',
-          touchAction: 'none'
-        }}
+        dragConstraints={{ top: 0, bottom: 0 }}
+        onDragStart={() => setIsDragging(true)}
+        onDragEnd={() => setIsDragging(false)}
       >
-        {/* Drag Handle */}
-        <div className="absolute -top-3 inset-x-0 flex justify-center items-center h-12 cursor-grab active:cursor-grabbing">
-          <div className="w-12 h-1.5 rounded-full bg-white/20" />
+        {/* Drag handle and pull-up indicator */}
+        <div className="flex flex-col items-center pt-2 pb-1 cursor-pointer" onClick={() => setIsSheetCollapsed(!isSheetCollapsed)}>
+          <div className="w-12 h-1.5 bg-white/30 rounded-full mb-1" />
+          <div className="text-xs text-white/40 font-medium">↑ Pull up for list view</div>
         </div>
-
-        {/* Content */}
-        <div 
-          className="h-full overflow-y-auto pb-24 px-4 pt-16 no-scrollbar"
-          onScroll={handleScroll}>
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-xl font-semibold text-white">
-                Available Jobs
-              </h1>
-              <p className="text-white/60 text-sm mt-1">
-                {filteredJobs.length} jobs found
-              </p>
-            </div>
+        {/* Jobs count */}
+        <div className="px-4 py-2">
+          <div className="text-sm font-medium text-white/80">
+            {filteredJobs.length} {filteredJobs.length === 1 ? 'job' : 'jobs'} nearby
           </div>
-          {/* Job List */}
-          <JobFeed jobs={mockJobs} />
         </div>
+        {/* Professionals Feed List */}
+        <div className="max-h-[50vh] overflow-y-auto px-2 pb-4">
+          <ProfessionalsFeed jobs={filteredJobs} />
+        </div>
+        {/* Professionals count at bottom */}
+        <p className="text-sm text-white/60">
+          Showing <span className="font-medium">{filteredJobs.length}</span> {filteredJobs.length === 1 ? 'job' : 'jobs'} nearby
+        </p>
       </motion.div>
-
-      {/* Floating Map Button - Only visible when list is expanded */}
-      {!isSheetCollapsed && (
-        <motion.div 
-          className="fixed bottom-[10%] inset-x-0 mx-auto flex justify-center z-[5]"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 20 }}
-        >
-          <button 
-            onClick={() => setIsSheetCollapsed(true)}
-            className="inline-flex items-center h-10 px-4 bg-white/95 backdrop-blur-sm text-gray-700 rounded-full shadow-lg hover:bg-white transition-all border border-gray-100"
-          >
-            <MapIcon className="w-4 h-4" />
-            <span className="text-[13px] font-medium ml-2">Map</span>
-          </button>
-        </motion.div>
-      )}
-
-      {/* Add global styles for no-scrollbar */}
-      <style jsx global>{`
-        .no-scrollbar {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-          overflow-x: auto;
-        }
-        .no-scrollbar::-webkit-scrollbar {
-          display: none;
-        }
-      `}</style>
     </div>
   );
-} 
+}

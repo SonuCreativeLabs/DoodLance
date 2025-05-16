@@ -30,7 +30,7 @@ export default function RootLayout({
             {showSplash ? (
               <SplashScreen onComplete={() => setShowSplash(false)} />
             ) : (
-              <main className="min-h-screen">{children}</main>
+              <main className="flex flex-col h-screen">{children}</main>
             )}
           </RoleProvider>
         </AuthProvider>

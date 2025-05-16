@@ -1,189 +1,153 @@
 "use client";
 
 import React, { useRef, useEffect, useState } from 'react';
-import mapboxgl, { GeoJSONSource } from 'mapbox-gl';
+import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { Job } from '../types';
-import { Feature, Geometry, GeoJsonProperties } from 'geojson';
 
-mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN!;
+interface Job {
+  id: number;
+  title: string;
+  client: string;
+  clientRating: number;
+  budget: number;
+  currency: string;
+  description: string;
+  location: string;
+  distance: number;
+  posted: string;
+  duration: string;
+  coords: [number, number];
+  availability: string[];
+  skills: string[];
+  category: string;
+  proposals: number;
+}
 
 interface MapViewProps {
   jobs: Job[];
-  selectedJobId?: number;
-  onMarkerClick?: (jobId: number) => void;
+  style?: React.CSSProperties;
 }
 
-export default function MapView({ jobs, selectedJobId, onMarkerClick }: MapViewProps) {
+export default function MapView({ jobs, style = {} }: MapViewProps): JSX.Element {
   const mapContainer = useRef<HTMLDivElement>(null);
-  const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
+  const mapInstance = useRef<mapboxgl.Map | null>(null);
+  const [userLocation, setUserLocation] = useState<[number, number]>([80.2707, 13.0827]);
+
+  useEffect(() => {
+    console.log('Initializing map...');
+    console.log('Mapbox token:', process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN ? 'Set' : 'Not set');
+    
+    // Get user's location
+    if (navigator.geolocation) {
+      console.log('Requesting geolocation...');
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          console.log('Got user location:', position.coords);
+          setUserLocation([position.coords.longitude, position.coords.latitude]);
+        },
+        (error) => {
+          console.warn('Error getting location, using default:', error);
+          // Default to Chennai coordinates if location access is denied
+          setUserLocation([80.2707, 13.0827]);
+        }
+      );
+    } else {
+      console.warn('Geolocation not supported by browser');
+      setUserLocation([80.2707, 13.0827]);
+    }
+  }, []);
 
   useEffect(() => {
     if (!mapContainer.current) return;
 
-    // Initialize map
-    const map = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/streets-v12',
-      center: [77.5946, 12.9716], // Default to Bangalore
-      zoom: 11,
-      minZoom: 3,
-      maxZoom: 18,
-      dragRotate: true,
-      pitchWithRotate: true,
-      touchZoomRotate: true
-    });
+    // Check if Mapbox access token is available
+    const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
+    if (!mapboxToken) {
+      console.error('Mapbox access token is not set. Please set NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN in your .env.local file');
+      return;
+    }
 
-    // Add navigation controls
-    const nav = new mapboxgl.NavigationControl({
-      showCompass: true,
-      showZoom: true,
-      visualizePitch: true
-    });
-    map.addControl(nav, 'top-right');
-
-    // Enable keyboard and touch controls
-    map.keyboard.enable();
-    map.dragRotate.enable();
-    map.touchZoomRotate.enableRotation();
-
-    // Add geolocation control
-    const geolocate = new mapboxgl.GeolocateControl({
-      positionOptions: {
-        enableHighAccuracy: true
-      },
-      trackUserLocation: true,
-      showUserHeading: true
-    });
-    map.addControl(geolocate, 'top-right');
-
-    // Add scale control
-    const scale = new mapboxgl.ScaleControl({
-      maxWidth: 64,
-      unit: 'metric'
-    });
-    map.addControl(scale, 'top-left');
-
-    // Wait for map to load before adding markers
-    map.on('load', () => {
-      // Convert jobs to GeoJSON features
-      const features: Feature<Geometry, GeoJsonProperties>[] = jobs.map(job => ({
-        type: 'Feature' as const,
-        geometry: {
-          type: 'Point',
-          // For demo, generate random coordinates around Bangalore
-          coordinates: job.coords || [
-            77.5946 + (Math.random() - 0.5) * 0.1,
-            12.9716 + (Math.random() - 0.5) * 0.1
-          ] as [number, number]
-        },
-        properties: {
-          id: job.id,
-          title: job.title,
-          company: job.company
-        }
-      }));
-
-      // Add source for job locations
-      map.addSource('jobs', {
-        type: 'geojson',
-        data: {
-          type: 'FeatureCollection',
-          features
-        }
+    // Initialize map with error handling
+    try {
+      console.log('Creating map instance...');
+      if (!mapContainer.current) {
+        console.error('Map container not found');
+        return;
+      }
+      
+      console.log('Map container dimensions:', {
+        width: mapContainer.current.offsetWidth,
+        height: mapContainer.current.offsetHeight
       });
-
-      // Add heatmap layer
-      map.addLayer({
-        id: 'job-heat',
-        type: 'heatmap',
-        source: 'jobs',
-        maxzoom: 15,
-        paint: {
-          'heatmap-weight': 1,
-          'heatmap-intensity': [
-            'interpolate',
-            ['linear'],
-            ['zoom'],
-            0, 1,
-            15, 3
-          ],
-          'heatmap-color': [
-            'interpolate',
-            ['linear'],
-            ['heatmap-density'],
-            0, 'rgba(147, 51, 234, 0)',
-            0.2, 'rgba(147, 51, 234, 0.2)',
-            0.4, 'rgba(147, 51, 234, 0.4)',
-            0.6, 'rgba(147, 51, 234, 0.6)',
-            0.8, 'rgba(147, 51, 234, 0.8)',
-            1, 'rgba(147, 51, 234, 1)'
-          ],
-          'heatmap-radius': [
-            'interpolate',
-            ['linear'],
-            ['zoom'],
-            0, 2,
-            15, 20
-          ],
-          'heatmap-opacity': 0.7
-        }
+      
+      mapInstance.current = new mapboxgl.Map({
+        container: mapContainer.current,
+        style: 'mapbox://styles/mapbox/streets-v12',
+        center: userLocation,
+        zoom: 12,
+        accessToken: mapboxToken,
       });
-
-      // Add circle layer for markers
-      map.addLayer({
-        id: 'job-point',
-        type: 'circle',
-        source: 'jobs',
-        minzoom: 14,
-        paint: {
-          'circle-radius': 8,
-          'circle-color': '#9333EA',
-          'circle-stroke-width': 2,
-          'circle-stroke-color': 'white',
-          'circle-opacity': [
-            'interpolate',
-            ['linear'],
-            ['zoom'],
-            14, 0,
-            15, 1
-          ]
-        }
+      
+      mapInstance.current.on('load', () => {
+        console.log('Map loaded successfully');
       });
+      
+      mapInstance.current.on('error', (e) => {
+        console.error('Map error:', e.error);
+      });
+    } catch (error) {
+      console.error('Error initializing map:', error);
+      return;
+    }
 
-      // Add markers with popups
-      features.forEach((feature) => {
-        const properties = feature.properties;
-        if (!properties) return;
-        const popup = new mapboxgl.Popup({
-          offset: [0, -8],
-          closeButton: true,
-          closeOnClick: false,
-          maxWidth: '340px',
-          className: 'custom-popup animate-popup'
-        })
-        .setHTML(`
-          <div class="bg-[#111111]/80 backdrop-blur-md p-4 rounded-xl border border-white/10">
-            <h3 class="text-white font-medium mb-1">${properties.title}</h3>
-            <p class="text-white/60 text-sm">${properties.company}</p>
-          </div>
-        `);
+    const map = mapInstance.current;
 
-        const marker = new mapboxgl.Marker({
-          color: '#9333EA',
-          scale: 0.8
-        })
-        .setLngLat((feature.geometry as any).coordinates)
+    // Add navigation control
+    map.addControl(new mapboxgl.NavigationControl(), 'top-right');
+
+    // Add user location marker
+    const userEl = document.createElement('div');
+    userEl.className = 'w-4 h-4 bg-blue-500 rounded-full border-2 border-white';
+    new mapboxgl.Marker({
+      element: userEl,
+    })
+      .setLngLat(userLocation)
+      .addTo(map);
+
+    // Add markers for jobs
+    jobs.forEach((job) => {
+      const el = document.createElement('div');
+      el.className = 'w-6 h-6 bg-purple-500 rounded-full border-2 border-white cursor-pointer transition-transform hover:scale-110';
+
+      const popup = new mapboxgl.Popup({
+        offset: 25,
+        closeButton: false,
+        className: 'bg-[#111111] text-white px-4 py-2 rounded-lg shadow-lg border border-white/10 w-64',
+      })
+        .setHTML(
+          `<div class="space-y-1">
+            <h3 class="font-semibold text-purple-400">${job.title}</h3>
+            <p class="text-sm text-white/80">${job.client} • ${job.clientRating}★</p>
+            <p class="text-sm text-white/60">${job.budget} ${job.currency} • ${job.distance} km away</p>
+            <p class="text-xs text-white/50 mt-1 line-clamp-2">${job.description}</p>
+            <div class="flex flex-wrap gap-1 mt-2">
+              ${job.skills.map(skill => 
+                `<span class="text-xs bg-black/30 px-2 py-0.5 rounded-full">${skill}</span>`
+              ).join('')}
+            </div>
+          </div>`
+        );
+
+      const marker = new mapboxgl.Marker({
+        element: el,
+      })
+        .setLngLat(job.coords)
         .setPopup(popup)
         .addTo(map);
 
-        // Add click handler
-        marker.getElement().addEventListener('click', () => {
-          if (onMarkerClick && properties) {
-            onMarkerClick(properties.id);
-          }
-        });
-      });
+      // Show popup on hover
+      el.addEventListener('mouseenter', () => marker.togglePopup());
+      el.addEventListener('mouseleave', () => marker.togglePopup());
     });
 
     // Add custom styles
@@ -301,12 +265,23 @@ export default function MapView({ jobs, selectedJobId, onMarkerClick }: MapViewP
       document.head.removeChild(mapStyle);
       document.head.removeChild(popupStyle);
     };
-  }, [jobs, onMarkerClick]);
+  }, [jobs, userLocation]);
 
   return (
-    <div
-      ref={mapContainer}
-      style={{ width: '100%', height: '100%', position: 'absolute', top: 0, left: 0, zIndex: 0 }}
-    />
+    <div className="absolute inset-0 w-full h-full">
+      <div 
+        ref={mapContainer} 
+        className="absolute inset-0 w-full h-full"
+        style={style}
+      />
+      {!process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/80 text-white p-4 text-center">
+          <div>
+            <p className="text-xl font-bold mb-2">Mapbox Access Token Missing</p>
+            <p>Please set NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN in your .env.local file</p>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

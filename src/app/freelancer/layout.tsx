@@ -26,15 +26,20 @@ export default function FreelancerLayout({ children }: FreelancerLayoutProps) {
     { href: '/freelancer/profile', label: 'Profile', icon: User },
   ]
 
+  // For feed page, we want a minimal layout with just the content
+  if (pathname === '/freelancer/feed') {
+    return <div className="h-[100dvh] overflow-hidden">{children}</div>;
+  }
+
   return (
-    <div className="min-h-screen bg-[#111111]">
+    <div className="min-h-screen bg-black text-white relative">
       {/* Background gradients */}
       <div className="fixed inset-0 z-0">
         <div className="absolute top-0 -left-40 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl" />
         <div className="absolute bottom-0 -right-40 w-96 h-96 bg-purple-400/20 rounded-full blur-3xl" />
       </div>
-      {pathname !== '/freelancer/feed' && (
-        <nav className="fixed top-0 left-0 right-0 border-b border-white/10 bg-[#111111]/95 backdrop-blur-xl z-[100]">
+      
+      <nav className="fixed top-0 left-0 right-0 border-b border-white/10 bg-[#111111]/95 backdrop-blur-xl z-[100]">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center space-x-8">
             <Link 
@@ -90,34 +95,33 @@ export default function FreelancerLayout({ children }: FreelancerLayoutProps) {
           </div>
         </div>
       </nav>
-      )}
 
-      {/* Mobile Navigation */}
+      {/* Mobile Navigation - Only show for non-feed pages */}
       {pathname !== '/freelancer/feed' && (
         <div className="md:hidden fixed bottom-0 left-0 right-0 border-t border-white/10 bg-[#111111]/95 backdrop-blur-lg z-50">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between py-3">
-            {navItems.map((item) => {
-              const Icon = item.icon
-              const active = isActive(item.href)
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`flex flex-col items-center space-y-1.5 px-3 py-1.5 rounded-xl transition-all duration-300 ${
-                    active 
-                      ? 'text-purple-400 bg-purple-400/10 border border-purple-500/30' 
-                      : 'text-white/60 border border-transparent'
-                  }`}
-                >
-                  <Icon className="w-5 h-5" />
-                  <span className="text-xs font-medium">{item.label}</span>
-                </Link>
-              )
-            })}
+          <div className="container mx-auto px-4">
+            <div className="flex items-center justify-between py-3">
+              {navItems.map((item) => {
+                const Icon = item.icon
+                const active = isActive(item.href)
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`flex flex-col items-center space-y-1.5 px-3 py-1.5 rounded-xl transition-all duration-300 ${
+                      active 
+                        ? 'text-purple-400 bg-purple-400/10 border border-purple-500/30' 
+                        : 'text-white/60 border border-transparent'
+                    }`}
+                  >
+                    <Icon className="w-5 h-5" />
+                    <span className="text-xs font-medium">{item.label}</span>
+                  </Link>
+                )
+              })}
+            </div>
           </div>
         </div>
-      </div>
       )}
 
       <div className="h-16" /> {/* Spacer for fixed header */}
