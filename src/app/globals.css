@@ -156,3 +156,21 @@ body {
 .bottom-nav-item.active {
   color: var(--nav-active);
 }
+
+/* Hide scrollbar for categories */
+.hide-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+  height: 0;
+  width: 0;
+}
+
+/* Ensure smooth scrolling */
+.overflow-x-auto {
+  -webkit-overflow-scrolling: touch;
+}

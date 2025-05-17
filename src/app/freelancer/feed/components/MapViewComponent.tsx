@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
@@ -32,6 +32,7 @@ export default function MapView({ jobs, style = {} }: MapViewProps): JSX.Element
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<mapboxgl.Map | null>(null);
   const [userLocation, setUserLocation] = useState<[number, number]>([80.2707, 13.0827]);
+  const [isLocating, setIsLocating] = useState(false);
 
   useEffect(() => {
     console.log('Initializing map...');
@@ -102,8 +103,33 @@ export default function MapView({ jobs, style = {} }: MapViewProps): JSX.Element
 
     const map = mapInstance.current;
 
-    // Add navigation control
-    map.addControl(new mapboxgl.NavigationControl(), 'top-right');
+    // Initialize map without attribution control
+    map.addControl(new mapboxgl.NavigationControl({
+      showCompass: false,
+      showZoom: true,
+      visualizePitch: false
+    }), 'bottom-right');
+    
+    // Add compact geolocation control
+    const geolocate = new mapboxgl.GeolocateControl({
+      positionOptions: {
+        enableHighAccuracy: true
+      },
+      trackUserLocation: false,
+      showUserHeading: false,
+      showAccuracyCircle: false,
+      fitBoundsOptions: { maxZoom: 15 }
+    });
+    
+    geolocate.on('geolocate', () => {
+      setIsLocating(true);
+      setTimeout(() => setIsLocating(false), 2000);
+    });
+    
+    map.addControl(geolocate, 'bottom-right');
+    
+    // Remove default attribution
+    document.querySelector('.mapboxgl-ctrl-attrib')?.remove();
 
     // Add user location marker
     const userEl = document.createElement('div');
@@ -116,49 +142,227 @@ export default function MapView({ jobs, style = {} }: MapViewProps): JSX.Element
 
     // Add markers for jobs
     jobs.forEach((job) => {
+      // Create custom pin element
       const el = document.createElement('div');
-      el.className = 'w-6 h-6 bg-purple-500 rounded-full border-2 border-white cursor-pointer transition-transform hover:scale-110';
+      el.className = 'job-pin cursor-pointer transition-all duration-200 hover:scale-110';
+      el.innerHTML = `
+        <div class="relative">
+          <div class="absolute inset-0 bg-purple-500 rounded-full animate-ping opacity-20" style="animation-duration: 2s;"></div>
+          <div class="relative w-8 h-8 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-xs border-2 border-white shadow-md">
+            <span class="relative z-10">₹${job.budget}</span>
+            <div class="absolute bottom-0 w-0 h-0 border-l-6 border-r-6 border-t-6 border-l-transparent border-r-transparent border-t-purple-500 transform translate-y-1"></div>
+          </div>
+        </div>
+      `;
 
+      // Create popup that will be shown on click
       const popup = new mapboxgl.Popup({
-        offset: 25,
-        closeButton: false,
-        className: 'bg-[#111111] text-white px-4 py-2 rounded-lg shadow-lg border border-white/10 w-64',
-      })
-        .setHTML(
-          `<div class="space-y-1">
-            <h3 class="font-semibold text-purple-400">${job.title}</h3>
-            <p class="text-sm text-white/80">${job.client} • ${job.clientRating}★</p>
-            <p class="text-sm text-white/60">${job.budget} ${job.currency} • ${job.distance} km away</p>
-            <p class="text-xs text-white/50 mt-1 line-clamp-2">${job.description}</p>
-            <div class="flex flex-wrap gap-1 mt-2">
-              ${job.skills.map(skill => 
-                `<span class="text-xs bg-black/30 px-2 py-0.5 rounded-full">${skill}</span>`
-              ).join('')}
+        closeButton: true,
+        closeOnClick: true,
+        closeOnMove: false,
+        maxWidth: '340px',
+        className: 'job-card-popup',
+        offset: [0, -8],
+        anchor: 'bottom'
+      }).setHTML(`
+        <div class="bg-[#111111] shadow-lg rounded-xl p-3 border border-white/10 relative backdrop-blur-xl bg-black/80 before:absolute before:inset-0 before:bg-gradient-to-b before:from-purple-500/10 before:to-transparent before:rounded-xl before:pointer-events-none">
+          <div class="flex items-start gap-3">
+            <div class="relative">
+              <div class="relative">
+                <div class="absolute inset-0 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full opacity-20 blur-md"></div>
+                <div class="absolute inset-0 bg-gradient-to-br from-purple-400/50 to-purple-600/50 rounded-full animate-pulse" style="animation-duration: 3s;"></div>
+                <div class="w-12 h-12 rounded-full border-2 border-purple-200/50 relative z-10 flex items-center justify-center bg-purple-900/50 text-white text-xl font-bold shadow-xl ring-2 ring-purple-500/20 ring-offset-2 ring-offset-black/50">
+                  ${job.client.charAt(0).toUpperCase()}
+                </div>
+              </div>
             </div>
-          </div>`
-        );
+            <div class="flex-1 -mt-1">
+              <h3 class="font-bold text-base text-white leading-tight drop-shadow-sm">${job.title}</h3>
+              <div class="flex items-center gap-2 mt-1">
+                <span class="text-xs text-white/80">${job.client}</span>
+                <span class="text-white/20">•</span>
+                <div class="flex items-center gap-1">
+                  <svg class="w-3 h-3 text-yellow-400 fill-current" viewBox="0 0 24 24">
+                    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                  </svg>
+                  <span class="text-xs font-bold text-white">${job.clientRating}</span>
+                </div>
+              </div>
+              <div class="flex items-center text-xs text-white/60 mt-1">
+                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <span class="mr-2">${job.distance} km</span>
+                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>${job.posted}</span>
+              </div>
+              <p class="text-xs text-white/70 line-clamp-2 mt-2">${job.description}</p>
+              
+              <!-- Skills/Tags - Horizontal Layout -->
+              <div class="flex flex-wrap gap-1.5 mt-2">
+                ${job.skills.slice(0, 3).map(skill => `
+                  <span class="text-[10px] bg-black/30 text-white/80 px-2 py-0.5 rounded-full border border-white/5">
+                    ${skill}
+                  </span>
+                `).join('')}
+                ${job.skills.length > 3 ? `
+                  <span class="text-[10px] bg-black/20 text-white/60 px-2 py-0.5 rounded-full">
+                    +${job.skills.length - 3}
+                  </span>
+                ` : ''}
+              </div>
+              
+              <!-- Price and Action Buttons -->
+              <div class="flex items-center justify-between mt-3 pt-2 border-t border-white/5">
+                <div class="flex items-center gap-2">
+                  <span class="text-sm font-bold text-purple-400">₹${job.budget.toLocaleString('en-IN')}</span>
+                  <span class="text-xs text-white/50">•</span>
+                  <span class="text-xs text-white/60">${job.duration}</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <button class="bg-gray-700 hover:bg-gray-600 text-white text-xs px-3 py-1.5 rounded-full font-medium transition-colors">
+                    View
+                  </button>
+                  <button class="bg-purple-600 hover:bg-purple-700 text-white text-xs px-3 py-1.5 rounded-full font-medium transition-colors">
+                    Apply
+                  </button>
+                </div>
+              </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `);
 
       const marker = new mapboxgl.Marker({
         element: el,
+        anchor: 'bottom',
       })
         .setLngLat(job.coords)
         .setPopup(popup)
         .addTo(map);
 
-      // Show popup on hover
-      el.addEventListener('mouseenter', () => marker.togglePopup());
-      el.addEventListener('mouseleave', () => marker.togglePopup());
+      // Only show popup on click
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        // Close any open popups first
+        document.querySelectorAll('.mapboxgl-popup').forEach(p => p.remove());
+        // Open this popup
+        marker.togglePopup();
+      });
     });
 
-    // Add custom styles
+    // Add custom styles for map controls and popups
     const mapStyle = document.createElement('style');
     mapStyle.textContent = `
-      .mapboxgl-ctrl-top-right {
-        margin-top: 70px !important;
+      /* Popup animations and styles */
+      @keyframes popupFadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .animate-popup {
+        animation: popupFadeIn 0.2s ease-out forwards;
+      }
+      .custom-popup .mapboxgl-popup-content {
+        background: transparent;
+        padding: 0;
+        box-shadow: none;
+      }
+      .custom-popup .mapboxgl-popup-close-button {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 20px;
+        padding: 8px;
+        right: 4px;
+        top: 4px;
+        background: rgba(0, 0, 0, 0.7);
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+      }
+      .custom-popup .mapboxgl-popup-close-button:hover {
+        color: white;
+        background: rgba(0, 0, 0, 0.9);
       }
 
-      .mapboxgl-ctrl-top-right .mapboxgl-ctrl {
-        margin: 10px 10px 0 0;
+      /* Job pin styles */
+      .job-pin {
+        transform-origin: 50% 100%;
+        will-change: transform;
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+      }
+      
+      .job-pin:hover {
+        filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
+      }
+      
+      .job-pin .animate-ping {
+        animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+      }
+      
+      @keyframes ping {
+        75%, 100% {
+          transform: scale(1.5);
+          opacity: 0;
+        }
+      }
+      
+      /* Job card popup styles */
+      .job-card-popup {
+        transform-origin: 50% 100%;
+      }
+      
+      .job-card-popup .mapboxgl-popup-content {
+        background: transparent !important;
+        padding: 0 !important;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5) !important;
+        border-radius: 16px !important;
+        overflow: visible !important;
+      }
+      
+      .job-card-popup .mapboxgl-popup-tip {
+        display: none !important;
+      }
+      
+      .job-card-popup .mapboxgl-popup-close-button {
+        color: white !important;
+        background: rgba(0, 0, 0, 0.7) !important;
+        border-radius: 50% !important;
+        width: 24px !important;
+        height: 24px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: 16px !important;
+        right: 8px !important;
+        top: 8px !important;
+        transition: all 0.2s ease !important;
+      }
+      
+      .job-card-popup .mapboxgl-popup-close-button:hover {
+        background: rgba(0, 0, 0, 0.9) !important;
+        transform: scale(1.1) !important;
+      }
+      
+      /* Map controls */
+      .mapboxgl-ctrl-bottom-right {
+        right: 8px !important;
+        bottom: 80px !important;
+      }
+
+      .mapboxgl-ctrl-bottom-right .mapboxgl-ctrl {
+        margin: 0 0 6px 0 !important;
+        float: right;
+        clear: both;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.15) !important;
+        border-radius: 6px !important;
+        overflow: hidden;
       }
 
       .mapboxgl-ctrl-top-left {
@@ -172,16 +376,60 @@ export default function MapView({ jobs, style = {} }: MapViewProps): JSX.Element
       .mapboxgl-ctrl-group {
         background: white !important;
         border: 1px solid rgba(0, 0, 0, 0.1) !important;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+        border-radius: 6px !important;
+        padding: 1px !important;
       }
 
       .mapboxgl-ctrl-group button {
+        width: 28px !important;
+        height: 28px !important;
         background-color: white !important;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.1) !important;
+        border: none !important;
+        border-radius: 4px !important;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        margin: 0;
+      }
+      
+      .mapboxgl-ctrl-group button + button {
+        border-top: 1px solid rgba(0, 0, 0, 0.1) !important;
       }
 
       .mapboxgl-ctrl-group button:hover {
         background-color: #f8f8f8 !important;
+      }
+      
+      .mapboxgl-ctrl-geolocate {
+        width: 28px !important;
+        height: 28px !important;
+      }
+      
+      .mapboxgl-ctrl-geolocate .mapboxgl-ctrl-icon {
+        width: 100% !important;
+        height: 100% !important;
+        background-size: 16px !important;
+        opacity: 0.8;
+      }
+      
+      .mapboxgl-ctrl-geolocate:hover .mapboxgl-ctrl-icon {
+        opacity: 1;
+      }
+      
+      .mapboxgl-ctrl-zoom-in,
+      .mapboxgl-ctrl-zoom-out {
+        width: 28px !important;
+        height: 28px !important;
+        background-size: 16px !important;
+        opacity: 0.8;
+      }
+      
+      .mapboxgl-ctrl-zoom-in:hover,
+      .mapboxgl-ctrl-zoom-out:hover {
+        opacity: 1;
       }
 
       .mapboxgl-ctrl-scale {

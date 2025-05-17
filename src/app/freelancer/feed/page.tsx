@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Clock, Calendar, Star, Check, ChevronDown, Map } from 'lucide-react';
 import type { PanInfo } from 'framer-motion';
@@ -130,12 +131,103 @@ const jobs: Job[] = [
     skills: ['Yoga', 'Meditation', 'Breathing Exercises'],
     category: 'Fitness',
     proposals: 4
+  },
+  {
+    id: 6,
+    title: 'Web Developer Needed',
+    client: 'TechStart Inc',
+    clientRating: 4.8,
+    budget: 25000,
+    currency: '₹',
+    description: 'Looking for a skilled React/Node.js developer to build an e-commerce platform. Experience with Next.js and MongoDB preferred.',
+    location: 'OMR',
+    distance: 4.2,
+    posted: '5h ago',
+    duration: '1 month',
+    coords: [80.2507, 12.9027] as [number, number],
+    availability: ['Remote', 'Flexible'],
+    skills: ['React', 'Node.js', 'MongoDB', 'Next.js'],
+    category: 'Technology',
+    proposals: 7
+  },
+  {
+    id: 7,
+    title: 'Graphic Designer for Social Media',
+    client: 'Foodie Delights',
+    clientRating: 4.7,
+    budget: 8000,
+    currency: '₹',
+    description: 'Need creative social media posts for our restaurant. Must have experience with food photography and content creation.',
+    location: 'Nungambakkam',
+    distance: 1.5,
+    posted: '3h ago',
+    duration: '2 weeks',
+    coords: [80.2407, 13.0527] as [number, number],
+    availability: ['ASAP', 'Weekdays'],
+    skills: ['Photoshop', 'Illustrator', 'Social Media', 'Content Creation'],
+    category: 'Design',
+    proposals: 5
+  },
+  {
+    id: 8,
+    title: 'Math & Science Tutor',
+    client: 'Parent of 9th Grader',
+    clientRating: 4.9,
+    budget: 600,
+    currency: '₹',
+    description: 'Looking for an experienced tutor for CBSE 9th standard Math and Science. Must have prior teaching experience.',
+    location: 'Anna Nagar',
+    distance: 2.8,
+    posted: '2d ago',
+    duration: '3 months',
+    coords: [80.2107, 13.0827] as [number, number],
+    availability: ['Evenings', 'Weekends'],
+    skills: ['Mathematics', 'Science', 'CBSE', 'Teaching'],
+    category: 'Education',
+    proposals: 6
+  },
+  {
+    id: 9,
+    title: 'Car Wash & Detailing',
+    client: 'Car Enthusiast',
+    clientRating: 4.8,
+    budget: 2000,
+    currency: '₹',
+    description: 'Professional car wash and detailing service needed for my SUV. Interior cleaning and waxing required.',
+    location: 'Thoraipakkam',
+    distance: 3.5,
+    posted: '1d ago',
+    duration: '1 day',
+    coords: [80.2507, 12.9227] as [number, number],
+    availability: ['Weekends'],
+    skills: ['Car Detailing', 'Interior Cleaning', 'Waxing'],
+    category: 'Automotive',
+    proposals: 3
+  },
+  {
+    id: 10,
+    title: 'Content Writer for Tech Blog',
+    client: 'Tech Insights',
+    clientRating: 4.9,
+    budget: 5000,
+    currency: '₹',
+    description: 'Need engaging content writer for our technology blog. Must be knowledgeable about latest tech trends and able to write in simple language.',
+    location: 'Remote',
+    distance: 0,
+    posted: '6h ago',
+    duration: 'Ongoing',
+    coords: [80.2707, 13.0827] as [number, number],
+    availability: ['Remote', 'Flexible'],
+    skills: ['Content Writing', 'Technology', 'Blogging', 'SEO'],
+    category: 'Writing',
+    proposals: 8
   }
 ];
 
 export default function FeedPage() {
   // Sheet and UI state
-  const [isSheetCollapsed, setIsSheetCollapsed] = useState(true);
+  const [isSheetCollapsed, setIsSheetCollapsed] = useState(false);
+  const router = useRouter();
   const [isDragging, setIsDragging] = useState(false);
   const [isDragTextVisible, setIsDragTextVisible] = useState(true);
   const [showFilterModal, setShowFilterModal] = useState(false);
@@ -234,44 +326,55 @@ export default function FeedPage() {
   ]);
 
   return (
-    <div className="relative h-[100dvh] bg-[#0A0A0A] overflow-hidden">
-      {/* Map View - Full screen */}
-      <div className="absolute inset-0 w-full h-full">
-        <MapView jobs={filteredJobs} />
+    <div className="relative h-screen w-full bg-black overflow-hidden">
+      {/* Map View */}
+      <div className="absolute inset-0 z-0">
+        <MapView jobs={jobs} />
       </div>
 
-      {/* Search and Categories Container with conditional background */}
-      <div 
-        className={`fixed top-0 left-0 right-0 z-50 transition-colors duration-300 ${
-          !isSheetCollapsed ? 'bg-[#0A0A0A]/95 backdrop-blur-md shadow-xl' : ''
-        }`}
-      >
-        {/* Search Bar */}
-        <div className="px-4 pt-2">
-          <div className="flex items-center rounded-2xl bg-[#18181C] shadow-lg px-4 py-2">
-            <svg className="w-5 h-5 text-purple-400 mr-2" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-              <circle cx="11" cy="11" r="8"></circle>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      {/* Header */}
+      <div className={`fixed top-0 left-0 right-0 z-10 px-4 pt-2 pb-1 transition-all duration-300 ${
+        isSheetCollapsed ? 'bg-transparent' : 'bg-[#121212]'
+      }`}>
+        <div className="flex items-center justify-between mb-1">
+          <button 
+            onClick={() => router.back()}
+            className="p-1.5 rounded-full bg-black/60 backdrop-blur-md hover:bg-black/80 transition-colors"
+          >
+            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
-            <input
-              type="text"
-              placeholder="Search professionals..."
-              className="flex-1 bg-transparent text-white placeholder-white/60 border-none outline-none text-base"
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-            />
+          </button>
+          
+          <div className="flex-1 max-w-xs mx-3">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search jobs..."
+                className="w-full bg-black/60 backdrop-blur-md text-white text-sm px-4 py-2 pl-10 rounded-full border border-white/10 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              />
+              <svg className="w-3.5 h-3.5 text-white/60 absolute left-3 top-1/2 transform -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
           </div>
+          
+          <button className="p-1.5 rounded-full bg-black/60 backdrop-blur-md">
+            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+            </svg>
+          </button>
         </div>
-
+        
         {/* Categories */}
-        <div className="px-4 py-2 overflow-x-auto">
-          <div className="flex gap-2 no-scrollbar">
-            {['All', 'Home', 'Education', 'Cleaning', 'Tutoring', 'Fitness'].map((category) => (
+        <div className="overflow-x-auto py-2 hide-scrollbar">
+          <div className="flex space-x-2 px-4">
+            {['All', 'Home', 'Education', 'Fitness', 'Beauty', 'Technology', 'Health', 'Business', 'Design', 'Writing', 'Marketing'].map((category) => (
               <button
                 key={category}
-                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${
+                className={`px-4 py-1.5 text-sm font-medium rounded-full whitespace-nowrap transition-colors ${
                   selectedCategory === category
-                    ? 'bg-purple-500 text-white'
+                    ? 'bg-purple-600 text-white'
                     : 'bg-black/40 text-white/80 hover:bg-black/60 border border-white/10'
                 }`}
                 onClick={() => setSelectedCategory(category)}
@@ -283,25 +386,33 @@ export default function FeedPage() {
         </div>
       </div>
 
-      {/* Collapsible Sheet */}
+
+
+      {/* Bottom Sheet */}
       <motion.div
-        className="fixed z-40 bg-[#18181C] rounded-t-2xl shadow-2xl left-0 right-0 bottom-0 overflow-hidden"
+        className={`bg-[#121212] backdrop-blur-lg shadow-2xl transition-all duration-300 ${
+          isSheetCollapsed ? 'rounded-t-3xl' : 'rounded-none'
+        }`}
         style={{
-          top: '0',
-          height: '100vh',
-          touchAction: "pan-y",
-          transform: `translateY(${isSheetCollapsed ? '70vh' : '0px'})`,
+          position: 'fixed',
+          left: 0,
+          right: 0,
+          bottom: 0,
+          height: 'calc(100vh - 100px)', // Adjusted to remove gap
+          touchAction: 'pan-y',
           willChange: 'transform',
-          overflow: isSheetCollapsed ? 'hidden' : 'visible'
+          overflow: 'hidden',
+          borderTopLeftRadius: isSheetCollapsed ? '1.5rem' : '0',
+          borderTopRightRadius: isSheetCollapsed ? '1.5rem' : '0',
         }}
-        initial={{ y: initialSheetY }}
+        initial={{ y: '70vh' }}
         animate={{
-          y: isSheetCollapsed ? (typeof window !== 'undefined' ? window.innerHeight * 0.7 : 0) : 0
+          y: isSheetCollapsed ? 'calc(100vh - 180px)' : '0', // Adjusted to remove gap
         }}
         transition={{
           type: "spring",
           damping: 30,
-          stiffness: 350
+          stiffness: 300
         }}
         drag="y"
         dragElastic={0.1}
@@ -333,90 +444,61 @@ export default function FeedPage() {
       >
         {/* Drag handle */}
         <div 
-          className="flex flex-col items-center py-3 cursor-grab active:cursor-grabbing touch-none select-none border-b border-white/10"
+          className="flex flex-col items-center pt-2 pb-1 cursor-grab active:cursor-grabbing touch-none select-none"
           style={{ touchAction: 'none' }}
           onPointerDown={() => setIsDragTextVisible(false)}
           onPointerUp={() => resetDragTextVisibility()}
         >
-          <div className="w-12 h-1 bg-white/20 rounded-full" />
-          <AnimatePresence>
-            {isDragTextVisible && (
-              <motion.div 
-                initial={{ opacity: 0, y: -5 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 5 }}
-                transition={{ duration: 0.2 }}
-                className="text-white/40 text-xs font-medium tracking-wide mt-2 px-3 py-1 rounded-full bg-white/5"
-              >
-                {isSheetCollapsed ? '↑ Pull up for list view' : '↓ Pull down to minimize'}
-              </motion.div>
-            )}
-          </AnimatePresence>
+          <div className="w-10 h-1 bg-white/30 rounded-full" />
+          <div className="text-white/70 text-sm font-semibold mt-1">
+            {filteredJobs.length} jobs available
+          </div>
         </div>
 
         {/* Content container */}
         <div 
           className={`flex-1 ${isSheetCollapsed ? 'overflow-hidden' : 'overflow-y-auto'} overscroll-contain`}
           style={{
-            maxHeight: isSheetCollapsed ? 'auto' : 'calc(100vh - 104px)'
+            maxHeight: isSheetCollapsed ? 'auto' : 'calc(100vh - 140px)'
           }}
         >
-          <div className="container max-w-2xl mx-auto px-3 pb-6">
-            <div className="px-1">
-              {/* Jobs count */}
-              <div className="flex flex-col items-center justify-center w-full max-w-3xl mx-auto mb-6 pt-2">
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-500/10 border border-purple-500/20">
-                  <div className="w-2 h-2 rounded-full bg-purple-500 animate-pulse" />
-                  <div className="text-white/90 text-sm font-medium">
-                    {filteredJobs.length} {filteredJobs.length === 1 ? 'job' : 'jobs'} available
-                  </div>
-                </div>
-              </div>
+          <div className="container max-w-2xl mx-auto px-0 pb-6">
 
-              {/* Jobs list */}
-              <div className="space-y-2.5">
-                <ProfessionalsFeed jobs={filteredJobs} />
-              </div>
+            {/* Jobs list */}
+            <div className="space-y-2 px-4">
+              <ProfessionalsFeed jobs={filteredJobs} />
             </div>
           </div>
         </div>
       </motion.div>
 
-      {/* Floating Map Button */}
+      {/* Toggle Map/List Button - Positioned 15% from bottom and centered */}
       <motion.div 
-        className="fixed bottom-4 right-4 z-10"
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.8 }}
+        className="fixed bottom-[15%] left-0 right-0 z-50 flex justify-center"
+        initial={{ opacity: 1 }}
+        animate={{ opacity: 1 }}
       >
         <button 
           onClick={() => setIsSheetCollapsed(!isSheetCollapsed)}
-          className="inline-flex items-center h-10 px-4 bg-white/95 backdrop-blur-sm text-gray-700 rounded-full shadow-lg hover:bg-white transition-all border border-gray-100"
+          className="flex items-center h-9 px-5 bg-white/95 backdrop-blur-sm text-gray-700 rounded-full shadow-lg hover:bg-white transition-all border border-white/20 shadow-black/20 whitespace-nowrap text-sm"
         >
-          <Map className="w-4 h-4" />
-          <span className="text-[13px] font-medium ml-2">Map</span>
+          {isSheetCollapsed ? (
+            <>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+              <span className="text-sm font-medium ml-2">List</span>
+            </>
+          ) : (
+            <>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+              </svg>
+              <span className="text-sm font-medium ml-2">Map</span>
+            </>
+          )}
         </button>
       </motion.div>
-
-      {/* Floating List Button - Only visible when sheet is collapsed (map view) */}
-      {isSheetCollapsed && (
-        <motion.div 
-          className="fixed bottom-[10%] inset-x-0 mx-auto flex justify-center z-10"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 20 }}
-        >
-          <button 
-            onClick={() => setIsSheetCollapsed(false)}
-            className="inline-flex items-center h-10 px-4 bg-white/95 backdrop-blur-sm text-gray-700 rounded-full shadow-lg hover:bg-white transition-all border border-gray-100"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 12h.007v.008H3.75V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.007v.008H3.75v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
-            </svg>
-            <span className="text-[13px] font-medium ml-2">List</span>
-          </button>
-        </motion.div>
-      )}
     </div>
   );
 }
