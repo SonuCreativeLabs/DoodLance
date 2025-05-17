@@ -1,7 +1,8 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Clock, Calendar, Star, Check, ChevronDown } from 'lucide-react';
+import { X, Clock, Calendar, Star, Check, ChevronDown, Map } from 'lucide-react';
+import type { PanInfo } from 'framer-motion';
 import dynamic from 'next/dynamic';
 
 const MapView = dynamic(() => import('./components/MapViewComponent'), { 
@@ -134,27 +135,33 @@ const jobs: Job[] = [
 
 export default function FeedPage() {
   // Sheet and UI state
-  const [isSheetCollapsed, setIsSheetCollapsed] = useState(false);
+  const [isSheetCollapsed, setIsSheetCollapsed] = useState(true);
   const [isDragging, setIsDragging] = useState(false);
-  const [sheetOffset, setSheetOffset] = useState(0);
-  const [showFilters, setShowFilters] = useState(false);
-
-  // Search and category state
+  const [isDragTextVisible, setIsDragTextVisible] = useState(true);
+  const [showFilterModal, setShowFilterModal] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('All');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedArea, setSelectedArea] = useState('Any');
-  const [selectedService, setSelectedService] = useState('Any');
-  const [range, setRange] = useState(10);
-  const [minRating, setMinRating] = useState(0);
-  const [budgetRange, setBudgetRange] = useState<[number, number]>([0, 10000]);
-  // Using 'budgetRange' consistently
-  const budgeRange = budgetRange; // Alias to match the dependency array
-  const [availability, setAvailability] = useState<string[]>([]);
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [selectedTimeOptions, setSelectedTimeOptions] = useState<string[]>([]);
   const [filteredJobs, setFilteredJobs] = useState<Job[]>(jobs);
+  const [selectedArea, setSelectedArea] = useState("Velachery");
+  const [selectedService, setSelectedService] = useState("All");
+  const [range, setRange] = useState([10]);
+  const [minRating, setMinRating] = useState(0);
+  const [priceRange, setPriceRange] = useState([0, 20000]);
+  const [availability, setAvailability] = useState("");
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [selectedTimeOptions, setSelectedTimeOptions] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
 
-  // Filtering logic
+  // Constants for sheet positions
+  const COLLAPSED_HEIGHT = 180;
+  const HEADER_HEIGHT = 104;
+
+  // Set initial sheet position to collapsed state (70vh)
+  const initialSheetY = typeof window !== 'undefined' ? window.innerHeight * 0.7 : 0;
+
+  const resetDragTextVisibility = () => {
+    setTimeout(() => setIsDragTextVisible(true), 1000);
+  };
+
   useEffect(() => {
     let filtered = [...jobs];
 
@@ -176,27 +183,27 @@ export default function FeedPage() {
     }
 
     // Filter by distance
-    filtered = filtered.filter(job => job.distance <= range);
+    filtered = filtered.filter(job => job.distance <= range[0]);
 
     // Filter by client rating
     filtered = filtered.filter(job => job.clientRating >= minRating);
 
     // Filter by budget
     filtered = filtered.filter(
-      job => job.budget >= budgetRange[0] && job.budget <= budgetRange[1]
+      job => job.budget >= priceRange[0] && job.budget <= priceRange[1]
     );
 
     // Filter by availability
-    if (availability.length > 0) {
+    if (availability) {
       filtered = filtered.filter(job =>
-        availability.every(avail => job.availability.includes(avail))
+        job.availability.includes(availability)
       );
     }
 
     // Filter by selected date
     if (selectedDate) {
       // Simple date filtering - in a real app, you'd want to check actual availability
-      const day = selectedDate.getDay();
+      const day = new Date(selectedDate).getDay();
       const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
       const dayName = days[day];
       
@@ -220,51 +227,10 @@ export default function FeedPage() {
     searchQuery,
     range,
     minRating,
-    budgeRange,
+    priceRange,
     availability,
     selectedDate,
     selectedTimeOptions,
-  ]);
-
-  // Handle category tab click
-  const handleCategoryTab = (category: string) => {
-    setSelectedCategory(category);
-    setSelectedService('All'); // Reset service filter when category changes
-  };
-
-  // Filter modal logic
-  const handleSaveFilters = () => {
-    setShowFilters(false);
-    // Filtering is handled by useEffect
-  };
-
-  const handleResetFilters = () => {
-    setSelectedArea('Any');
-    setSelectedService('Any');
-    setRange(10);
-    setMinRating(0);
-    setBudgetRange([0, 10000]);
-    setAvailability([]);
-    setSelectedDate(null);
-    setSelectedTimeOptions([]);
-    setSearchQuery('');
-    setSelectedCategory('All');
-    setFilteredJobs(jobs);
-  };
-
-  useEffect(() => {
-    handleSaveFilters();
-  }, [
-    selectedArea,
-    selectedService,
-    range,
-    minRating,
-    budgetRange,
-    availability,
-    selectedDate,
-    selectedTimeOptions,
-    selectedCategory,
-    searchQuery
   ]);
 
   return (
@@ -274,69 +240,183 @@ export default function FeedPage() {
         <MapView jobs={filteredJobs} />
       </div>
 
-      {/* Search and Filters Overlay */}
-      <div className="absolute top-0 left-0 right-0 z-30 pt-2 pb-2 px-4 bg-gradient-to-b from-black/80 to-transparent">
-        <div className="flex items-center rounded-2xl bg-[#18181C] shadow-lg px-4 py-2 mb-2">
-          <svg className="w-5 h-5 text-purple-400 mr-2" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-            <circle cx="11" cy="11" r="8"></circle>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-          </svg>
-          <input
-            type="text"
-            placeholder="Search professionals..."
-            className="flex-1 bg-transparent text-white placeholder-white/60 border-none outline-none text-base"
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-          />
+      {/* Search and Categories Container with conditional background */}
+      <div 
+        className={`fixed top-0 left-0 right-0 z-50 transition-colors duration-300 ${
+          !isSheetCollapsed ? 'bg-[#0A0A0A]/95 backdrop-blur-md shadow-xl' : ''
+        }`}
+      >
+        {/* Search Bar */}
+        <div className="px-4 pt-2">
+          <div className="flex items-center rounded-2xl bg-[#18181C] shadow-lg px-4 py-2">
+            <svg className="w-5 h-5 text-purple-400 mr-2" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input
+              type="text"
+              placeholder="Search professionals..."
+              className="flex-1 bg-transparent text-white placeholder-white/60 border-none outline-none text-base"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+            />
+          </div>
         </div>
-        <div className="flex gap-2 overflow-x-auto no-scrollbar py-1">
-          {['All', 'Home', 'Education', 'Cleaning', 'Tutoring', 'Fitness'].map((category) => (
-            <button
-              key={category}
-              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${
-                selectedCategory === category
-                  ? 'bg-purple-500 text-white'
-                  : 'bg-black/40 text-white/80 hover:bg-black/60 border border-white/10'
-              }`}
-              onClick={() => handleCategoryTab(category)}
-            >
-              {category}
-            </button>
-          ))}
+
+        {/* Categories */}
+        <div className="px-4 py-2 overflow-x-auto">
+          <div className="flex gap-2 no-scrollbar">
+            {['All', 'Home', 'Education', 'Cleaning', 'Tutoring', 'Fitness'].map((category) => (
+              <button
+                key={category}
+                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${
+                  selectedCategory === category
+                    ? 'bg-purple-500 text-white'
+                    : 'bg-black/40 text-white/80 hover:bg-black/60 border border-white/10'
+                }`}
+                onClick={() => setSelectedCategory(category)}
+              >
+                {category}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* Collapsible Sheet Placeholder */}
+      {/* Collapsible Sheet */}
       <motion.div
-        className="fixed bottom-0 left-0 right-0 z-20 bg-[#18181C] rounded-t-2xl shadow-2xl border-t border-white/10"
-        initial={{ y: 0 }}
-        animate={{ y: isSheetCollapsed ? '70vh' : 0 }}
-        transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+        className="fixed z-40 bg-[#18181C] rounded-t-2xl shadow-2xl left-0 right-0 bottom-0 overflow-hidden"
+        style={{
+          top: '0',
+          height: '100vh',
+          touchAction: "pan-y",
+          transform: `translateY(${isSheetCollapsed ? '70vh' : '0px'})`,
+          willChange: 'transform',
+          overflow: isSheetCollapsed ? 'hidden' : 'visible'
+        }}
+        initial={{ y: initialSheetY }}
+        animate={{
+          y: isSheetCollapsed ? (typeof window !== 'undefined' ? window.innerHeight * 0.7 : 0) : 0
+        }}
+        transition={{
+          type: "spring",
+          damping: 30,
+          stiffness: 350
+        }}
         drag="y"
-        dragConstraints={{ top: 0, bottom: 0 }}
-        onDragStart={() => setIsDragging(true)}
-        onDragEnd={() => setIsDragging(false)}
+        dragElastic={0.1}
+        dragConstraints={{
+          top: 0,
+          bottom: typeof window !== 'undefined' ? window.innerHeight * 0.7 : 0
+        }}
+        dragMomentum={false}
+        onDragEnd={(event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+          const dragDistance = info.offset.y;
+          const dragVelocity = info.velocity.y;
+          
+          if (dragDistance > 50 || dragVelocity > 300) {
+            setIsSheetCollapsed(true);
+          } else if (dragDistance < -50 || dragVelocity < -300) {
+            setIsSheetCollapsed(false);
+          } else {
+            setIsSheetCollapsed(dragDistance > 0);
+          }
+          resetDragTextVisibility();
+        }}
+        onDragStart={() => {
+          setIsDragTextVisible(false);
+        }}
+        onClick={() => {
+          setIsDragTextVisible(false);
+          resetDragTextVisibility();
+        }}
       >
-        {/* Drag handle and pull-up indicator */}
-        <div className="flex flex-col items-center pt-2 pb-1 cursor-pointer" onClick={() => setIsSheetCollapsed(!isSheetCollapsed)}>
-          <div className="w-12 h-1.5 bg-white/30 rounded-full mb-1" />
-          <div className="text-xs text-white/40 font-medium">↑ Pull up for list view</div>
+        {/* Drag handle */}
+        <div 
+          className="flex flex-col items-center py-3 cursor-grab active:cursor-grabbing touch-none select-none border-b border-white/10"
+          style={{ touchAction: 'none' }}
+          onPointerDown={() => setIsDragTextVisible(false)}
+          onPointerUp={() => resetDragTextVisibility()}
+        >
+          <div className="w-12 h-1 bg-white/20 rounded-full" />
+          <AnimatePresence>
+            {isDragTextVisible && (
+              <motion.div 
+                initial={{ opacity: 0, y: -5 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 5 }}
+                transition={{ duration: 0.2 }}
+                className="text-white/40 text-xs font-medium tracking-wide mt-2 px-3 py-1 rounded-full bg-white/5"
+              >
+                {isSheetCollapsed ? '↑ Pull up for list view' : '↓ Pull down to minimize'}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
-        {/* Jobs count */}
-        <div className="px-4 py-2">
-          <div className="text-sm font-medium text-white/80">
-            {filteredJobs.length} {filteredJobs.length === 1 ? 'job' : 'jobs'} nearby
+
+        {/* Content container */}
+        <div 
+          className={`flex-1 ${isSheetCollapsed ? 'overflow-hidden' : 'overflow-y-auto'} overscroll-contain`}
+          style={{
+            maxHeight: isSheetCollapsed ? 'auto' : 'calc(100vh - 104px)'
+          }}
+        >
+          <div className="container max-w-2xl mx-auto px-3 pb-6">
+            <div className="px-1">
+              {/* Jobs count */}
+              <div className="flex flex-col items-center justify-center w-full max-w-3xl mx-auto mb-6 pt-2">
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-500/10 border border-purple-500/20">
+                  <div className="w-2 h-2 rounded-full bg-purple-500 animate-pulse" />
+                  <div className="text-white/90 text-sm font-medium">
+                    {filteredJobs.length} {filteredJobs.length === 1 ? 'job' : 'jobs'} available
+                  </div>
+                </div>
+              </div>
+
+              {/* Jobs list */}
+              <div className="space-y-2.5">
+                <ProfessionalsFeed jobs={filteredJobs} />
+              </div>
+            </div>
           </div>
         </div>
-        {/* Professionals Feed List */}
-        <div className="max-h-[50vh] overflow-y-auto px-2 pb-4">
-          <ProfessionalsFeed jobs={filteredJobs} />
-        </div>
-        {/* Professionals count at bottom */}
-        <p className="text-sm text-white/60">
-          Showing <span className="font-medium">{filteredJobs.length}</span> {filteredJobs.length === 1 ? 'job' : 'jobs'} nearby
-        </p>
       </motion.div>
+
+      {/* Floating Map Button */}
+      <motion.div 
+        className="fixed bottom-4 right-4 z-10"
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.8 }}
+      >
+        <button 
+          onClick={() => setIsSheetCollapsed(!isSheetCollapsed)}
+          className="inline-flex items-center h-10 px-4 bg-white/95 backdrop-blur-sm text-gray-700 rounded-full shadow-lg hover:bg-white transition-all border border-gray-100"
+        >
+          <Map className="w-4 h-4" />
+          <span className="text-[13px] font-medium ml-2">Map</span>
+        </button>
+      </motion.div>
+
+      {/* Floating List Button - Only visible when sheet is collapsed (map view) */}
+      {isSheetCollapsed && (
+        <motion.div 
+          className="fixed bottom-[10%] inset-x-0 mx-auto flex justify-center z-10"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 20 }}
+        >
+          <button 
+            onClick={() => setIsSheetCollapsed(false)}
+            className="inline-flex items-center h-10 px-4 bg-white/95 backdrop-blur-sm text-gray-700 rounded-full shadow-lg hover:bg-white transition-all border border-gray-100"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 12h.007v.008H3.75V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.007v.008H3.75v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+            </svg>
+            <span className="text-[13px] font-medium ml-2">List</span>
+          </button>
+        </motion.div>
+      )}
     </div>
   );
 }
