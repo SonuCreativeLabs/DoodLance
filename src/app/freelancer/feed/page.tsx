@@ -223,18 +223,22 @@ export default function FeedPage() {
         
         {/* Categories */}
         <div className="overflow-x-auto py-2 hide-scrollbar">
-          <div className="flex space-x-2 px-4">
-            {['For You', 'Explore'].map((category) => (
+          <div className="flex justify-center space-x-2 px-4">
+            {[
+              { name: 'For You', icon: '👤' },
+              { name: 'Explore All Jobs', icon: '🌍' }
+            ].map(({ name, icon }) => (
               <button
-                key={category}
-                className={`px-4 py-1.5 text-sm font-medium rounded-full whitespace-nowrap transition-colors ${
-                  selectedCategory === category
+                key={name}
+                className={`px-4 py-1.5 text-sm font-medium rounded-full whitespace-nowrap transition-colors flex items-center space-x-1.5 ${
+                  selectedCategory === name
                     ? 'bg-purple-600 text-white'
                     : 'bg-black/40 text-white/80 hover:bg-black/60 border border-white/10'
                 }`}
-                onClick={() => setSelectedCategory(category)}
+                onClick={() => setSelectedCategory(name)}
               >
-                {category}
+                <span className="text-base">{icon}</span>
+                <span>{name}</span>
               </button>
             ))}
           </div>

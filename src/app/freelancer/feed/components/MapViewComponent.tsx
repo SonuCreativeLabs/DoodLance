@@ -52,32 +52,81 @@ export default function MapView({ jobs, selectedCategory, style = {} }: MapViewP
       return;
     }
 
-    // Initialize map with error handling
+    // Set container size
+    const updateMapSize = () => {
+      if (mapContainer.current) {
+        mapContainer.current.style.width = '100%';
+        mapContainer.current.style.height = '100%';
+      }
+    };
+
+    updateMapSize();
+    window.addEventListener('resize', updateMapSize);
+
+    // Initialize map
     try {
       console.log('Creating map instance...');
-      if (!mapContainer.current) {
-        console.error('Map container not found');
-        return;
-      }
-      
-      console.log('Map container dimensions:', {
-        width: mapContainer.current.offsetWidth,
-        height: mapContainer.current.offsetHeight
-      });
-      
-      mapInstance.current = new mapboxgl.Map({
+      const map = new mapboxgl.Map({
         container: mapContainer.current,
         style: 'mapbox://styles/mapbox/streets-v12',
         center: userLocation,
         zoom: 12,
+        pitch: 45,
+        bearing: 0,
+        attributionControl: false,
         accessToken: mapboxToken,
       });
       
-      mapInstance.current.on('load', () => {
+      mapInstance.current = map;
+
+      // Add 3D buildings
+      map.on('style.load', () => {
+        if (!map.getSource('composite')) {
+          map.addSource('composite', {
+            type: 'vector',
+            url: 'mapbox://mapbox.mapbox-streets-v8',
+          });
+          
+          if (!map.getLayer('3d-buildings')) {
+            map.addLayer({
+              'id': '3d-buildings',
+              'source': 'composite',
+              'source-layer': 'building',
+              'filter': ['==', 'extrude', 'true'],
+              'type': 'fill-extrusion',
+              'minzoom': 15,
+              'paint': {
+                'fill-extrusion-color': '#aaa',
+                'fill-extrusion-height': [
+                  'interpolate',
+                  ['linear'],
+                  ['zoom'],
+                  15,
+                  0,
+                  15.05,
+                  ['get', 'height']
+                ],
+                'fill-extrusion-base': [
+                  'interpolate',
+                  ['linear'],
+                  ['zoom'],
+                  15,
+                  0,
+                  15.05,
+                  ['get', 'min_height']
+                ],
+                'fill-extrusion-opacity': 0.6
+              }
+            });
+          }
+        }
+      });
+
+      map.on('load', () => {
         console.log('Map loaded successfully');
       });
-      
-      mapInstance.current.on('error', (e) => {
+
+      map.on('error', (e) => {
         console.error('Map error:', e.error);
       });
     } catch (error) {
@@ -87,30 +136,84 @@ export default function MapView({ jobs, selectedCategory, style = {} }: MapViewP
 
     const map = mapInstance.current;
 
-    // Initialize map without attribution control
-    map.addControl(new mapboxgl.NavigationControl({
-      showCompass: false,
-      showZoom: true,
-      visualizePitch: false
-    }), 'bottom-right');
-    
-    // Add compact geolocation control
-    const geolocate = new mapboxgl.GeolocateControl({
-      positionOptions: {
-        enableHighAccuracy: true
-      },
-      trackUserLocation: false,
-      showUserHeading: false,
-      showAccuracyCircle: false,
-      fitBoundsOptions: { maxZoom: 15 }
-    });
-    
-    geolocate.on('geolocate', () => {
-      setIsLocating(true);
-      setTimeout(() => setIsLocating(false), 2000);
-    });
-    
-    map.addControl(geolocate, 'bottom-right');
+    // Create custom zoom controls container
+    const customControls = document.createElement('div');
+    customControls.className = 'custom-map-controls';
+
+    // Add zoom in button
+    const zoomInButton = document.createElement('button');
+    zoomInButton.className = 'custom-zoom-button';
+    zoomInButton.innerHTML = '+';
+    zoomInButton.onclick = () => map.zoomIn();
+    customControls.appendChild(zoomInButton);
+
+    // Add zoom out button
+    const zoomOutButton = document.createElement('button');
+    zoomOutButton.className = 'custom-zoom-button';
+    zoomOutButton.innerHTML = '−';
+    zoomOutButton.onclick = () => map.zoomOut();
+    customControls.appendChild(zoomOutButton);
+
+    // Add compass button
+    const compassButton = document.createElement('button');
+    compassButton.className = 'custom-zoom-button';
+    compassButton.innerHTML = '⤢';
+    compassButton.onclick = () => {
+      map.easeTo({ bearing: 0, pitch: 0 });
+    };
+    customControls.appendChild(compassButton);
+
+    // Create geolocation controls container
+    const geoControls = document.createElement('div');
+    geoControls.className = 'custom-geo-controls';
+
+    // Add geolocation button
+    const geoButton = document.createElement('button');
+    geoButton.className = 'custom-zoom-button';
+    geoButton.innerHTML = '⌖';
+    geoButton.onclick = () => {
+      if ('geolocation' in navigator) {
+        geoButton.style.opacity = '0.5';
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const { longitude, latitude } = position.coords;
+            map.flyTo({
+              center: [longitude, latitude],
+              zoom: 15,
+              duration: 1500
+            });
+            // Add a marker at the user's location
+            new mapboxgl.Marker({
+              color: '#6366f1',
+              scale: 0.8
+            })
+            .setLngLat([longitude, latitude])
+            .addTo(map);
+            geoButton.style.opacity = '1';
+          },
+          (error) => {
+            console.warn('Error getting location:', error);
+            geoButton.style.opacity = '1';
+            alert('Could not get your location. Please make sure location access is enabled.');
+          },
+          { 
+            enableHighAccuracy: true,
+            timeout: 5000,
+            maximumAge: 0
+          }
+        );
+      } else {
+        alert('Geolocation is not supported by your browser.');
+      }
+    };
+    geoControls.appendChild(geoButton);
+
+    // Add controls to the map
+    map.getContainer().appendChild(customControls);
+    map.getContainer().appendChild(geoControls);
+
+    // Store controls reference for cleanup
+    const controlsRef = [customControls, geoControls];
     
     // Remove default attribution
     document.querySelector('.mapboxgl-ctrl-attrib')?.remove();
@@ -527,6 +630,9 @@ export default function MapView({ jobs, selectedCategory, style = {} }: MapViewP
     document.head.appendChild(popupStyle);
 
     return () => {
+      // Remove custom controls
+      controlsRef?.forEach(control => control.remove());
+      // Remove map and styles
       map.remove();
       document.head.removeChild(mapStyle);
       document.head.removeChild(popupStyle);
@@ -535,14 +641,82 @@ export default function MapView({ jobs, selectedCategory, style = {} }: MapViewP
 
   return (
     <div className="absolute inset-0 w-full h-full">
-      <div 
-        ref={mapContainer} 
+      <div
+        ref={mapContainer}
         className="absolute inset-0 w-full h-full"
-        style={style}
+        style={{
+          ...style,
+          '--mapboxgl-ctrl-top-right': '80px',
+        } as React.CSSProperties}
       />
+      <style jsx global>{`
+        .custom-map-controls {
+          position: absolute;
+          top: 120px;
+          right: 16px;
+          display: flex;
+          flex-direction: column;
+          background: white;
+          border-radius: 4px;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+          overflow: hidden;
+          padding: 2px;
+          gap: 1px;
+          z-index: 1;
+        }
+
+        .custom-geo-controls {
+          position: absolute;
+          top: 220px;
+          right: 16px;
+          display: flex;
+          flex-direction: column;
+          background: white;
+          border-radius: 4px;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+          overflow: hidden;
+          padding: 2px;
+          z-index: 1;
+        }
+
+        .custom-zoom-button {
+          width: 28px;
+          height: 28px;
+          border: none;
+          background: white;
+          color: #666;
+          font-size: 18px;
+          line-height: 1;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0;
+          border-radius: 2px;
+          transition: all 0.2s;
+          user-select: none;
+        }
+
+        .custom-zoom-button:hover {
+          background: #f8f8f8;
+        }
+
+        .custom-zoom-button:active {
+          background: #f0f0f0;
+          transform: scale(0.95);
+        }
+
+        .custom-zoom-button:focus {
+          outline: none;
+        }
+
+        .custom-zoom-button:not(:last-child) {
+          margin-bottom: 1px;
+        }
+      `}</style>
       {!process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/80 text-white p-4 text-center">
-          <div>
+          <div className="max-w-md">
             <p className="text-xl font-bold mb-2">Mapbox Access Token Missing</p>
             <p>Please set NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN in your .env.local file</p>
           </div>
