@@ -4,31 +4,15 @@ import React, { useRef, useEffect, useState, useCallback } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
-interface Job {
-  id: number;
-  title: string;
-  client: string;
-  clientRating: number;
-  budget: number;
-  currency: string;
-  description: string;
-  location: string;
-  distance: number;
-  posted: string;
-  duration: string;
-  coords: [number, number];
-  availability: string[];
-  skills: string[];
-  category: string;
-  proposals: number;
-}
+import { Job } from '../types';
 
 interface MapViewProps {
   jobs: Job[];
+  selectedCategory: string;
   style?: React.CSSProperties;
 }
 
-export default function MapView({ jobs, style = {} }: MapViewProps): JSX.Element {
+export default function MapView({ jobs, selectedCategory, style = {} }: MapViewProps): JSX.Element {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<mapboxgl.Map | null>(null);
   const [userLocation, setUserLocation] = useState<[number, number]>([80.2707, 13.0827]);
@@ -140,17 +124,51 @@ export default function MapView({ jobs, style = {} }: MapViewProps): JSX.Element
       .setLngLat(userLocation)
       .addTo(map);
 
+    // Filter jobs based on category
+    const filteredJobs = selectedCategory === 'For You' ?
+      jobs.filter(job => {
+        const userSkills = ['developer', 'cricketer']; // User's actual skills
+        return job.skills.some(skill => userSkills.includes(skill));
+      }) : jobs;
+
     // Add markers for jobs
-    jobs.forEach((job) => {
+    filteredJobs.forEach((job) => {
       // Create custom pin element
       const el = document.createElement('div');
-      el.className = 'job-pin cursor-pointer transition-all duration-200 hover:scale-110';
+      el.className = 'job-pin cursor-pointer';
       el.innerHTML = `
-        <div class="relative">
-          <div class="absolute inset-0 bg-purple-500 rounded-full animate-ping opacity-20" style="animation-duration: 2s;"></div>
-          <div class="relative w-8 h-8 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-xs border-2 border-white shadow-md">
-            <span class="relative z-10">₹${job.budget}</span>
-            <div class="absolute bottom-0 w-0 h-0 border-l-6 border-r-6 border-t-6 border-l-transparent border-r-transparent border-t-purple-500 transform translate-y-1"></div>
+        <div style="width: 30px; height: 42px; position: relative;">
+          <!-- Location pin shape -->
+          <div style="
+            width: 30px;
+            height: 42px;
+            position: relative;
+          ">
+            <!-- Pin head (circle) -->
+            <div style="
+              width: 30px;
+              height: 30px;
+              background: white;
+              border: 2px solid #8b5cf6;
+              border-radius: 50% 50% 0 50%;
+              transform: rotate(45deg);
+              position: absolute;
+              top: 0;
+              left: 0;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            ">
+              <span style="
+                color: #8b5cf6;
+                font-weight: bold;
+                font-size: 1rem;
+                transform: rotate(-45deg);
+                line-height: 1;
+              ">₹</span>
+            </div>
+          </div>
           </div>
         </div>
       `;

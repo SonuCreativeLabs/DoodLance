@@ -20,16 +20,18 @@ export interface Professional {
 export interface Job {
   id: number;
   title: string;
-  company: string;
-  companyLogo: string;
+  client: string;
+  clientRating: number;
+  budget: number;
+  currency: string;
   description: string;
-  budget: string;
-  duration: string;
   location: string;
-  type: string;
+  distance: number;
+  posted: string;
+  duration: string;
+  coords: [number, number];
+  availability: string[];
   skills: string[];
-  image: string;
-  postedAt: string;
+  category: string;
   proposals: number;
-  coords?: [number, number];
 }

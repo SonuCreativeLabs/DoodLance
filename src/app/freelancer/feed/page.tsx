@@ -37,192 +37,7 @@ interface Job {
   proposals: number;
 }
 
-
-
-
-
-const jobs: Job[] = [
-  {
-    id: 1,
-    title: 'House Cleaning Needed',
-    client: 'John D.',
-    clientRating: 4.9,
-    budget: 120,
-    currency: '₹',
-    description: 'Looking for a professional cleaner for a 3BHK apartment. Need deep cleaning for kitchen and bathrooms.',
-    location: 'T. Nagar',
-    distance: 1.2,
-    posted: '2h ago',
-    duration: '3-4 hours',
-    coords: [80.2407, 13.0627] as [number, number],
-    availability: ['ASAP', 'Weekdays'],
-    skills: ['Cleaning', 'Home Maintenance'],
-    category: 'Cleaning',
-    proposals: 3
-  },
-  {
-    id: 2,
-    title: 'Math Tutor for Grade 10',
-    client: 'Priya M.',
-    clientRating: 4.7,
-    budget: 500,
-    currency: '₹',
-    description: 'Need an experienced math tutor for CBSE 10th standard. 3 times a week, 1.5 hours per session.',
-    location: 'Anna Nagar',
-    distance: 2.8,
-    posted: '5h ago',
-    duration: '1 month',
-    coords: [80.2107, 13.0827] as [number, number],
-    availability: ['Evenings', 'Weekends'],
-    skills: ['Mathematics', 'Teaching', 'CBSE'],
-    category: 'Education',
-    proposals: 2
-  },
-  {
-    id: 3,
-    title: 'Personal Trainer',
-    client: 'Raj K.',
-    clientRating: 4.8,
-    budget: 800,
-    currency: '₹',
-    description: 'Looking for a certified personal trainer for weight loss program. 3 sessions per week.',
-    location: 'Velachery',
-    distance: 1.8,
-    posted: '1d ago',
-    duration: '3 months',
-    coords: [80.2207, 13.0227] as [number, number],
-    availability: ['Morning', 'Evening'],
-    skills: ['Fitness Training', 'Weight Loss', 'Nutrition'],
-    category: 'Fitness',
-    proposals: 5
-  },
-  {
-    id: 4,
-    title: 'Home Painting',
-    client: 'Meena R.',
-    clientRating: 4.6,
-    budget: 15000,
-    currency: '₹',
-    description: 'Need to repaint 2BHK apartment. Includes walls, windows and doors. Must provide own materials.',
-    location: 'Adyar',
-    distance: 3.5,
-    posted: '3h ago',
-    duration: '5 days',
-    coords: [80.2607, 13.0127] as [number, number],
-    availability: ['Next Week'],
-    skills: ['Painting', 'Interior Design'],
-    category: 'Home',
-    proposals: 8
-  },
-  {
-    id: 5,
-    title: 'Yoga Instructor',
-    client: 'Community Center',
-    clientRating: 4.9,
-    budget: 1000,
-    currency: '₹',
-    description: 'Looking for a certified yoga instructor for weekly classes at our community center.',
-    location: 'Besant Nagar',
-    distance: 2.1,
-    posted: '1d ago',
-    duration: 'Ongoing',
-    coords: [80.2707, 13.0027] as [number, number],
-    availability: ['Weekend Mornings'],
-    skills: ['Yoga', 'Meditation', 'Breathing Exercises'],
-    category: 'Fitness',
-    proposals: 4
-  },
-  {
-    id: 6,
-    title: 'Web Developer Needed',
-    client: 'TechStart Inc',
-    clientRating: 4.8,
-    budget: 25000,
-    currency: '₹',
-    description: 'Looking for a skilled React/Node.js developer to build an e-commerce platform. Experience with Next.js and MongoDB preferred.',
-    location: 'OMR',
-    distance: 4.2,
-    posted: '5h ago',
-    duration: '1 month',
-    coords: [80.2507, 12.9027] as [number, number],
-    availability: ['Remote', 'Flexible'],
-    skills: ['React', 'Node.js', 'MongoDB', 'Next.js'],
-    category: 'Technology',
-    proposals: 7
-  },
-  {
-    id: 7,
-    title: 'Graphic Designer for Social Media',
-    client: 'Foodie Delights',
-    clientRating: 4.7,
-    budget: 8000,
-    currency: '₹',
-    description: 'Need creative social media posts for our restaurant. Must have experience with food photography and content creation.',
-    location: 'Nungambakkam',
-    distance: 1.5,
-    posted: '3h ago',
-    duration: '2 weeks',
-    coords: [80.2407, 13.0527] as [number, number],
-    availability: ['ASAP', 'Weekdays'],
-    skills: ['Photoshop', 'Illustrator', 'Social Media', 'Content Creation'],
-    category: 'Design',
-    proposals: 5
-  },
-  {
-    id: 8,
-    title: 'Math & Science Tutor',
-    client: 'Parent of 9th Grader',
-    clientRating: 4.9,
-    budget: 600,
-    currency: '₹',
-    description: 'Looking for an experienced tutor for CBSE 9th standard Math and Science. Must have prior teaching experience.',
-    location: 'Anna Nagar',
-    distance: 2.8,
-    posted: '2d ago',
-    duration: '3 months',
-    coords: [80.2107, 13.0827] as [number, number],
-    availability: ['Evenings', 'Weekends'],
-    skills: ['Mathematics', 'Science', 'CBSE', 'Teaching'],
-    category: 'Education',
-    proposals: 6
-  },
-  {
-    id: 9,
-    title: 'Car Wash & Detailing',
-    client: 'Car Enthusiast',
-    clientRating: 4.8,
-    budget: 2000,
-    currency: '₹',
-    description: 'Professional car wash and detailing service needed for my SUV. Interior cleaning and waxing required.',
-    location: 'Thoraipakkam',
-    distance: 3.5,
-    posted: '1d ago',
-    duration: '1 day',
-    coords: [80.2507, 12.9227] as [number, number],
-    availability: ['Weekends'],
-    skills: ['Car Detailing', 'Interior Cleaning', 'Waxing'],
-    category: 'Automotive',
-    proposals: 3
-  },
-  {
-    id: 10,
-    title: 'Content Writer for Tech Blog',
-    client: 'Tech Insights',
-    clientRating: 4.9,
-    budget: 5000,
-    currency: '₹',
-    description: 'Need engaging content writer for our technology blog. Must be knowledgeable about latest tech trends and able to write in simple language.',
-    location: 'Remote',
-    distance: 0,
-    posted: '6h ago',
-    duration: 'Ongoing',
-    coords: [80.2707, 13.0827] as [number, number],
-    availability: ['Remote', 'Flexible'],
-    skills: ['Content Writing', 'Technology', 'Blogging', 'SEO'],
-    category: 'Writing',
-    proposals: 8
-  }
-];
+import { jobs } from './data/jobs';
 
 export default function FeedPage() {
   // Sheet and UI state
@@ -231,13 +46,13 @@ export default function FeedPage() {
   const [isDragging, setIsDragging] = useState(false);
   const [isDragTextVisible, setIsDragTextVisible] = useState(true);
   const [showFilterModal, setShowFilterModal] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState('All');
-  const [filteredJobs, setFilteredJobs] = useState<Job[]>(jobs);
-  const [selectedArea, setSelectedArea] = useState("Velachery");
+  const [selectedCategory, setSelectedCategory] = useState('For You');
+  const [filteredJobs, setFilteredJobs] = useState<Job[]>([]);
+  const [selectedArea, setSelectedArea] = useState("All");
   const [selectedService, setSelectedService] = useState("All");
-  const [range, setRange] = useState([10]);
+  const [range, setRange] = useState([50]);
   const [minRating, setMinRating] = useState(0);
-  const [priceRange, setPriceRange] = useState([0, 20000]);
+  const [priceRange, setPriceRange] = useState([0, 100000]);
   const [availability, setAvailability] = useState("");
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedTimeOptions, setSelectedTimeOptions] = useState<string[]>([]);
@@ -254,82 +69,122 @@ export default function FeedPage() {
     setTimeout(() => setIsDragTextVisible(true), 1000);
   };
 
+  const handleDragEnd = () => {
+    setIsDragging(false);
+    setTimeout(() => setIsDragTextVisible(true), 1000);
+  };
+
+  // Filter jobs based on category and search query
   useEffect(() => {
+    console.log('Selected category:', selectedCategory);
+    console.log('Total jobs:', jobs.length);
+
     let filtered = [...jobs];
 
-    // Filter by category
-    if (selectedCategory !== 'All') {
-      filtered = filtered.filter(job => job.category === selectedCategory);
+    // First apply category filter
+    if (selectedCategory === 'For You') {
+      const userSkills = ['developer', 'cricketer'];
+      filtered = filtered.filter((job: Job) => {
+        const jobSkills = job.skills.map(s => s.toLowerCase());
+        const hasMatchingSkill = jobSkills.some(skill => userSkills.includes(skill));
+        console.log(`Job ${job.title}: Skills ${jobSkills.join(', ')} - Match: ${hasMatchingSkill}`);
+        return hasMatchingSkill;
+      });
     }
 
-    // Filter by search query
+    console.log('After category filter:', filtered.length, 'jobs');
+
+    // Then apply search query if exists
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        job =>
-          job.title.toLowerCase().includes(query) ||
-          job.client.toLowerCase().includes(query) ||
-          job.skills.some(skill => skill.toLowerCase().includes(query)) ||
-          job.description.toLowerCase().includes(query)
-      );
+      filtered = filtered.filter((job: Job) => (
+        job.title.toLowerCase().includes(query) ||
+        job.description.toLowerCase().includes(query) ||
+        job.skills.some(skill => skill.toLowerCase().includes(query))
+      ));
+      console.log('After search query filter:', filtered.length, 'jobs');
     }
 
-    // Filter by distance
-    filtered = filtered.filter(job => job.distance <= range[0]);
+    // Apply location filter if not "All"
+    if (selectedArea !== "All") {
+      filtered = filtered.filter((job: Job) => job.location === selectedArea);
+      console.log('After location filter:', filtered.length, 'jobs');
+    }
 
-    // Filter by client rating
-    filtered = filtered.filter(job => job.clientRating >= minRating);
+    // Apply service type filter if not "All"
+    if (selectedService !== "All") {
+      filtered = filtered.filter((job: Job) => job.category === selectedService);
+      console.log('After service filter:', filtered.length, 'jobs');
+    }
 
-    // Filter by budget
-    filtered = filtered.filter(
-      job => job.budget >= priceRange[0] && job.budget <= priceRange[1]
-    );
+    // Apply distance range filter
+    if (range[0] < 50) {
+      filtered = filtered.filter((job: Job) => job.distance <= range[0]);
+      console.log('After range filter:', filtered.length, 'jobs');
+    }
 
-    // Filter by availability
+    // Apply rating filter
+    if (minRating > 0) {
+      filtered = filtered.filter((job: Job) => job.clientRating >= minRating);
+      console.log('After rating filter:', filtered.length, 'jobs');
+    }
+
+    // Apply price range filter
+    if (priceRange[0] > 0 || priceRange[1] < 100000) {
+      filtered = filtered.filter((job: Job) => {
+        const budget = job.budget;
+        return budget >= priceRange[0] && budget <= priceRange[1];
+      });
+      console.log('After price range filter:', filtered.length, 'jobs');
+    }
+
+    // Apply availability filter
     if (availability) {
-      filtered = filtered.filter(job =>
+      filtered = filtered.filter((job: Job) =>
         job.availability.includes(availability)
       );
+      console.log('After availability filter:', filtered.length, 'jobs');
     }
 
-    // Filter by selected date
+    // Apply date filter
     if (selectedDate) {
-      // Simple date filtering - in a real app, you'd want to check actual availability
-      const day = new Date(selectedDate).getDay();
-      const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-      const dayName = days[day];
-      
-      filtered = filtered.filter(job => 
-        job.availability.includes(dayName) || 
-        job.availability.includes('Any Day') ||
-        job.availability.includes('ASAP')
+      filtered = filtered.filter((job: Job) =>
+        job.posted.includes(selectedDate)
       );
+      console.log('After date filter:', filtered.length, 'jobs');
     }
 
-    // Filter by time options
+    // Apply time options filter
     if (selectedTimeOptions.length > 0) {
-      filtered = filtered.filter(job =>
-        selectedTimeOptions.some(option => job.availability.includes(option))
+      filtered = filtered.filter((job: Job) =>
+        job.availability.some(time =>
+          selectedTimeOptions.includes(time)
+        )
       );
+      console.log('After time options filter:', filtered.length, 'jobs');
     }
 
+    console.log(`Final: Found ${filtered.length} jobs after applying all filters`);
     setFilteredJobs(filtered);
   }, [
     selectedCategory,
     searchQuery,
+    selectedArea,
+    selectedService,
     range,
     minRating,
     priceRange,
     availability,
     selectedDate,
     selectedTimeOptions,
+    jobs
   ]);
 
   return (
     <div className="relative h-screen w-full bg-black overflow-hidden">
       {/* Map View */}
       <div className="absolute inset-0 z-0">
-        <MapView jobs={jobs} />
+        <MapView jobs={filteredJobs} selectedCategory={selectedCategory} />
       </div>
 
       {/* Header */}
@@ -369,7 +224,7 @@ export default function FeedPage() {
         {/* Categories */}
         <div className="overflow-x-auto py-2 hide-scrollbar">
           <div className="flex space-x-2 px-4">
-            {['All', 'Home', 'Education', 'Fitness', 'Beauty', 'Technology', 'Health', 'Business', 'Design', 'Writing', 'Marketing'].map((category) => (
+            {['For You', 'Explore'].map((category) => (
               <button
                 key={category}
                 className={`px-4 py-1.5 text-sm font-medium rounded-full whitespace-nowrap transition-colors ${

@@ -3,30 +3,21 @@
 import React from 'react';
 import { Star } from 'lucide-react';
 
-interface Job {
-  id: number;
-  title: string;
-  client: string;
-  clientRating: number;
-  budget: number;
-  currency: string;
-  description: string;
-  location: string;
-  distance: number;
-  posted: string;
-  duration: string;
-  coords: [number, number];
-  availability: string[];
-  skills: string[];
-  category: string;
-  proposals: number;
-}
+import { Job } from '../types';
 
 interface ProfessionalsFeedProps {
   jobs: Job[];
 }
 
 export default function ProfessionalsFeed({ jobs }: ProfessionalsFeedProps) {
+  if (!jobs || jobs.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-10 text-white/60">
+        <p className="text-sm">No jobs found</p>
+      </div>
+    );
+  }
+  console.log('ProfessionalsFeed - Rendering jobs:', jobs.length);
   return (
     <div className="space-y-3 pb-24">
       {jobs.map((job) => (
