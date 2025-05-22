@@ -21,34 +21,42 @@ export default function ProfessionalsFeed({ jobs }: ProfessionalsFeedProps) {
   return (
     <div className="space-y-4 pb-24">
       {jobs.map((job) => (
-        <div key={job.id} className="bg-[#1E1E1E] rounded-2xl p-6 shadow-lg border border-white/5 hover:border-white/10 transition-all duration-200 w-full hover:shadow-purple-500/10">
+        <div key={job.id} className="bg-[#1E1E1E] rounded-2xl p-5 shadow-lg border border-white/5 hover:border-white/10 transition-all duration-200 w-full hover:shadow-purple-500/10">
           {/* Job Header */}
-          <div className="flex justify-between items-start gap-4">
+          <div className="flex justify-between items-start gap-4 mb-3">
             <div className="flex-1 min-w-0">
-              <div className="flex justify-between items-start gap-2 mb-2">
-                <h3 className="text-lg font-semibold text-white truncate">{job.title}</h3>
-                <div className="flex-shrink-0 bg-black/30 rounded-xl px-4 py-2 text-center">
-                  <div className="text-lg font-bold text-purple-400 whitespace-nowrap">
-                    ₹{job.budget.toLocaleString('en-IN')}
-                  </div>
-                  <div className="text-xs text-white/70 font-medium mt-0.5">{job.duration}</div>
+              <h3 className="text-[15px] font-semibold text-white leading-tight mb-1.5 line-clamp-2">
+                {job.title}
+              </h3>
+              
+              {/* Location and Date */}
+              <div className="flex items-center gap-3 text-[13px] text-white/60">
+                <div className="flex items-center gap-1.5">
+                  <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span className="truncate max-w-[180px]">{job.location}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span>{new Date(job.postedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
                 </div>
               </div>
-              <div className="flex items-center gap-3 text-sm text-white/70">
-                <div className="flex items-center gap-1.5">
-                  <MapPin className="w-4 h-4" />
-                  <span>{job.location}</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <Clock className="w-4 h-4" />
-                  <span>{new Date(job.postedAt).toLocaleDateString()}</span>
-                </div>
+            </div>
+            
+            {/* Budget */}
+            <div className="flex-shrink-0 bg-black/30 rounded-xl px-3 py-2 text-center min-w-[90px]">
+              <div className="text-[15px] font-bold text-purple-400 leading-none">
+                ₹{job.budget.toLocaleString('en-IN')}
+              </div>
+              <div className="text-[11px] text-white/60 font-medium mt-1">
+                {job.duration}
               </div>
             </div>
           </div>
 
           {/* Job Description */}
-          <p className="text-sm text-white/70 mt-4 line-clamp-2 leading-relaxed">{job.description}</p>
+          <p className="text-[13px] text-white/70 mt-3 line-clamp-2 leading-[1.5] tracking-wide">
+            {job.description}
+          </p>
           
           {/* Skills/Tags */}
           <div className="flex items-center gap-2 mt-4 overflow-hidden">

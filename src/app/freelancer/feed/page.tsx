@@ -297,7 +297,7 @@ export default function FeedPage() {
       </div>
 
       {/* Header - Fixed height to account for search and tabs */}
-      <div className={`fixed top-0 left-0 right-0 z-10 px-4 pt-4 pb-2 transition-all duration-300 h-[120px] flex flex-col justify-between ${
+      <div className={`fixed top-0 left-0 right-0 z-10 px-4 pt-4 pb-0 transition-all duration-300 h-[120px] flex flex-col justify-between bg-[#121212] ${
         isSheetCollapsed ? 'bg-transparent' : 'bg-[#121212]'
       }`}>
         {/* Search Bar */}
@@ -399,12 +399,12 @@ export default function FeedPage() {
 
       {/* Bottom Sheet */}
       <motion.div
-        className={`bg-[#121212] backdrop-blur-lg shadow-2xl ${isSheetCollapsed ? 'rounded-t-3xl' : 'rounded-none'}`}
+        className={`bg-[#121212] backdrop-blur-lg ${isSheetCollapsed ? 'rounded-t-3xl' : 'rounded-none'} shadow-none`}
         style={{
           position: 'fixed',
           left: 0,
           right: 0,
-          top: '120px',
+          top: '119px',
           bottom: 0,
           touchAction: 'pan-y',
           willChange: 'transform',
