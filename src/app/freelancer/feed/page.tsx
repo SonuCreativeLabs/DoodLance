@@ -18,45 +18,78 @@ const MapView = dynamic(() => import('./components/MapViewComponent'), {
 import ProfessionalsFeed from './components/ProfessionalsFeed';
 import SearchFilters from './components/SearchFilters';
 
-interface Job {
-  id: number;
-  title: string;
-  client: string;
-  clientRating: number;
-  budget: number;
-  currency: string;
-  description: string;
-  location: string;
-  distance: number;
-  posted: string;
-  duration: string;
-  coords: [number, number];
-  availability: string[];
-  skills: string[];
-  category: string;
-  proposals: number;
-}
+
 
 import { jobs } from './data/jobs';
+import type { Job, WorkMode } from './types';
 
 export default function FeedPage() {
   // Sheet and UI state
   const [isSheetCollapsed, setIsSheetCollapsed] = useState(false);
   const router = useRouter();
+  // UI State
   const [isDragging, setIsDragging] = useState(false);
   const [isDragTextVisible, setIsDragTextVisible] = useState(true);
   const [showFilterModal, setShowFilterModal] = useState(false);
+  const [filtersApplied, setFiltersApplied] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  
+  // Data State
   const [selectedCategory, setSelectedCategory] = useState('For You');
   const [filteredJobs, setFilteredJobs] = useState<Job[]>([]);
-  const [selectedArea, setSelectedArea] = useState("All");
-  const [selectedService, setSelectedService] = useState("All");
-  const [range, setRange] = useState([50]);
-  const [minRating, setMinRating] = useState(0);
-  const [priceRange, setPriceRange] = useState([0, 100000]);
-  const [availability, setAvailability] = useState("");
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [selectedTimeOptions, setSelectedTimeOptions] = useState<string[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
+  
+  // State for filters
+  const [location, setLocation] = useState<string>('Chennai, Tamil Nadu, India');
+  const [serviceCategory, setServiceCategory] = useState<string>('all');
+  const [workMode, setWorkMode] = useState<WorkMode | ''>('');
+  // Price range in INR per hour (aligned with job.rate values)
+  const [priceRange, setPriceRange] = useState<[number, number]>([500, 2500]);
+  const [distance, setDistance] = useState<number>(50);
+  const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
+  const [currentLocation, setCurrentLocation] = useState('Getting location...');
+
+  // Function to reverse geocode coordinates to address
+  const reverseGeocode = async (lat: number, lng: number): Promise<string> => {
+    try {
+      const response = await fetch(
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN}&types=locality,place,neighborhood,address`
+      );
+      const data = await response.json();
+      
+      if (data.features && data.features.length > 0) {
+        // Try to get the most relevant address
+        return data.features[0].place_name || 'Current Location';
+      }
+      return 'Current Location';
+    } catch (error) {
+      console.error('Reverse geocoding error:', error);
+      return 'Current Location';
+    }
+  };
+
+  // Get user's current location
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+          // Get human-readable address
+          const address = await reverseGeocode(latitude, longitude);
+          setCurrentLocation(address);
+          setLocation(address);
+        },
+        (error) => {
+          console.error('Error getting location:', error);
+          setCurrentLocation('Chennai, India'); // Default to Chennai if location access is denied
+          setLocation('Chennai, India');
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
+    } else {
+      setCurrentLocation('Chennai, India');
+      setLocation('Chennai, India');
+    }
+  }, []);
 
   // Constants for sheet positions
   const COLLAPSED_HEIGHT = 180;
@@ -74,114 +107,190 @@ export default function FeedPage() {
     setTimeout(() => setIsDragTextVisible(true), 1000);
   };
 
-  // Filter jobs based on category and search query
-  useEffect(() => {
-    console.log('Selected category:', selectedCategory);
-    console.log('Total jobs:', jobs.length);
+  // Handle filter button click
+  const handleFilterClick = () => {
+    setShowFilterModal(!showFilterModal);
+  };
 
+  // Handle filter application
+  const applyFilters = () => {
+    setFiltersApplied(true);
+    setShowFilterModal(false);
+    // Trigger a re-filter
+    setFilteredJobs(filterJobs());
+  };
+
+  // Clear all filters
+  const clearAllFilters = () => {
+    setLocation('Current Location');
+    setServiceCategory('all');
+    setWorkMode('');
+    setPriceRange([0, 1000]);
+    setDistance(50);
+    setSelectedSkills([]);
+    setFiltersApplied(false);
+  };
+
+  // User's skills for personalized job matching
+  const userSkills = ['cricket', 'developer'];
+
+  // Filter jobs based on selected tab and filters
+  const filterJobs = () => {
+    console.log('\n=== Starting job filtering ===');
+    
+    // Start with all jobs
     let filtered = [...jobs];
-
-    // First apply category filter
+    
+    // For "For You" tab - show jobs matching user's skills
     if (selectedCategory === 'For You') {
-      const userSkills = ['developer', 'cricketer'];
-      filtered = filtered.filter((job: Job) => {
-        const jobSkills = job.skills.map(s => s.toLowerCase());
-        const hasMatchingSkill = jobSkills.some(skill => userSkills.includes(skill));
-        console.log(`Job ${job.title}: Skills ${jobSkills.join(', ')} - Match: ${hasMatchingSkill}`);
-        return hasMatchingSkill;
+      filtered = filtered.filter(job => {
+        // Combine all job text for matching
+        const jobText = [
+          job.title,
+          job.description,
+          job.category,
+          ...(job.skills || [])
+        ].join(' ').toLowerCase();
+        
+        // Match developer jobs
+        const isDeveloperJob = [
+          'developer', 'programming', 'code', 'software', 'frontend', 'backend',
+          'fullstack', 'web', 'app', 'mobile', 'react', 'javascript', 'typescript',
+          'node', 'python', 'java', 'api', 'engineer'
+        ].some(keyword => jobText.includes(keyword.toLowerCase()));
+        
+        // Match cricket/sports jobs
+        const isCricketJob = [
+          'cricket', 'coach', 'training', 'sports', 'player',
+          'fitness', 'athlete', 'fielding', 'batting', 'bowling'
+        ].some(keyword => jobText.includes(keyword.toLowerCase()));
+        
+        return isDeveloperJob || isCricketJob;
       });
+      
+      console.log(`For You tab: Found ${filtered.length} jobs matching your skills`);
     }
+    
+    // For Explore tab - show all jobs by default, apply filters only if explicitly set
+    if (selectedCategory === 'Explore') {
+      let filtersApplied = false;
+      const appliedFilters: Record<string, string> = {};
 
-    console.log('After category filter:', filtered.length, 'jobs');
-
-    // Then apply search query if exists
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter((job: Job) => (
-        job.title.toLowerCase().includes(query) ||
-        job.description.toLowerCase().includes(query) ||
-        job.skills.some(skill => skill.toLowerCase().includes(query))
-      ));
-      console.log('After search query filter:', filtered.length, 'jobs');
+      // Only apply search if user has typed something
+      if (searchQuery) {
+        filtersApplied = true;
+        appliedFilters.searchQuery = searchQuery;
+        const query = searchQuery.toLowerCase();
+        filtered = filtered.filter(job => 
+          job.title.toLowerCase().includes(query) ||
+          job.description.toLowerCase().includes(query) ||
+          job.category.toLowerCase().includes(query) ||
+          (job.skills && job.skills.some(skill => 
+            skill.toLowerCase().includes(query)
+          ))
+        );
+      }
+      
+      // Only apply location filter if user has selected a location other than Chennai
+      if (location && !location.toLowerCase().includes('chennai')) {
+        filtersApplied = true;
+        appliedFilters.location = location;
+        const locality = location.split(',')[0].trim().toLowerCase();
+        filtered = filtered.filter(job => {
+          if (!job.location) return false; // Don't show jobs without location when filtering by location
+          return job.location.toLowerCase().includes(locality);
+        });
+      }
+      
+      // Only apply category filter if user has selected a specific category
+      if (serviceCategory !== 'all') {
+        filtersApplied = true;
+        appliedFilters.category = serviceCategory;
+        filtered = filtered.filter(job => job.category === serviceCategory);
+      }
+      
+      // Only apply work mode filter if user has selected one
+      if (workMode) {
+        filtersApplied = true;
+        appliedFilters.workMode = workMode;
+        filtered = filtered.filter(job => job.workMode === workMode);
+      }
+      
+      // Only apply skills filter if user has selected skills
+      if (selectedSkills.length > 0) {
+        filtersApplied = true;
+        appliedFilters.skills = selectedSkills.join(', ');
+        filtered = filtered.filter(job =>
+          selectedSkills.every(skill => 
+            job.skills.some(jobSkill => 
+              jobSkill.toLowerCase().includes(skill.toLowerCase())
+            )
+          )
+        );
+      }
+      
+      // Only apply price range filter if user has changed it
+      if (priceRange[0] !== 500 || priceRange[1] !== 2500) {
+        filtersApplied = true;
+        appliedFilters.priceRange = `₹${priceRange[0]}-₹${priceRange[1]}`;
+        filtered = filtered.filter(job => 
+          job.rate >= priceRange[0] && job.rate <= priceRange[1]
+        );
+      }
+      
+      if (filtersApplied) {
+        console.log('Explore tab: Filters applied:', appliedFilters);
+      } else {
+        console.log('Explore tab: Showing all jobs (no filters applied)');
+      }
+      console.log(`Total jobs shown: ${filtered.length}`);
     }
+    
+    return filtered;
+  };
 
-    // Apply location filter if not "All"
-    if (selectedArea !== "All") {
-      filtered = filtered.filter((job: Job) => job.location === selectedArea);
-      console.log('After location filter:', filtered.length, 'jobs');
+  // Initialize with all jobs on mount
+  useEffect(() => {
+    setFilteredJobs([...jobs]);
+  }, []);
+
+  // Filter jobs when any filter changes
+  useEffect(() => {
+    // Only filter if the component is mounted and jobs are loaded
+    if (jobs.length > 0) {
+      const timer = setTimeout(() => {
+        const results = filterJobs();
+        setFilteredJobs(results);
+      }, 100);
+      
+      return () => clearTimeout(timer);
     }
-
-    // Apply service type filter if not "All"
-    if (selectedService !== "All") {
-      filtered = filtered.filter((job: Job) => job.category === selectedService);
-      console.log('After service filter:', filtered.length, 'jobs');
-    }
-
-    // Apply distance range filter
-    if (range[0] < 50) {
-      filtered = filtered.filter((job: Job) => job.distance <= range[0]);
-      console.log('After range filter:', filtered.length, 'jobs');
-    }
-
-    // Apply rating filter
-    if (minRating > 0) {
-      filtered = filtered.filter((job: Job) => job.clientRating >= minRating);
-      console.log('After rating filter:', filtered.length, 'jobs');
-    }
-
-    // Apply price range filter
-    if (priceRange[0] > 0 || priceRange[1] < 100000) {
-      filtered = filtered.filter((job: Job) => {
-        const budget = job.budget;
-        return budget >= priceRange[0] && budget <= priceRange[1];
-      });
-      console.log('After price range filter:', filtered.length, 'jobs');
-    }
-
-    // Apply availability filter
-    if (availability) {
-      filtered = filtered.filter((job: Job) =>
-        job.availability.includes(availability)
-      );
-      console.log('After availability filter:', filtered.length, 'jobs');
-    }
-
-    // Apply date filter
-    if (selectedDate) {
-      filtered = filtered.filter((job: Job) =>
-        job.posted.includes(selectedDate)
-      );
-      console.log('After date filter:', filtered.length, 'jobs');
-    }
-
-    // Apply time options filter
-    if (selectedTimeOptions.length > 0) {
-      filtered = filtered.filter((job: Job) =>
-        job.availability.some(time =>
-          selectedTimeOptions.includes(time)
-        )
-      );
-      console.log('After time options filter:', filtered.length, 'jobs');
-    }
-
-    console.log(`Final: Found ${filtered.length} jobs after applying all filters`);
-    setFilteredJobs(filtered);
-  }, [
-    selectedCategory,
-    searchQuery,
-    selectedArea,
-    selectedService,
-    range,
-    minRating,
-    priceRange,
-    availability,
-    selectedDate,
-    selectedTimeOptions,
-    jobs
-  ]);
+  }, [selectedCategory, searchQuery, location, serviceCategory, workMode, priceRange, selectedSkills, jobs.length]);
 
   return (
     <div className="relative h-screen w-full bg-black overflow-hidden">
+      {/* SearchFilters Modal */}
+      <SearchFilters
+        isOpen={showFilterModal}
+        onClose={() => setShowFilterModal(false)}
+        location={location}
+        setLocation={setLocation}
+        serviceCategory={serviceCategory}
+        setServiceCategory={setServiceCategory}
+        workMode={workMode}
+        setWorkMode={setWorkMode}
+        priceRange={priceRange}
+        setPriceRange={setPriceRange}
+        distance={distance}
+        setDistance={setDistance}
+        filtersApplied={filtersApplied}
+        currentLocation={currentLocation}
+        selectedSkills={selectedSkills}
+        setSelectedSkills={setSelectedSkills}
+        clearFilters={clearAllFilters}
+        applyFilters={applyFilters}
+      />
+
       {/* Map View */}
       <div className="absolute inset-0 z-0">
         <MapView jobs={filteredJobs} selectedCategory={selectedCategory} />
@@ -191,57 +300,72 @@ export default function FeedPage() {
       <div className={`fixed top-0 left-0 right-0 z-10 px-4 pt-2 pb-1 transition-all duration-300 ${
         isSheetCollapsed ? 'bg-transparent' : 'bg-[#121212]'
       }`}>
-        <div className="flex items-center justify-between mb-1">
-          <button 
-            onClick={() => router.back()}
-            className="p-1.5 rounded-full bg-black/60 backdrop-blur-md hover:bg-black/80 transition-colors"
-          >
-            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        {/* Search Bar */}
+        <div className="flex items-center mb-2">
+          <div className="relative w-full">
+            <input
+              type="text"
+              placeholder="Search jobs..."
+              className="w-full bg-black/60 backdrop-blur-md text-white text-sm px-4 py-2 pl-10 pr-4 rounded-full border border-white/10 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            />
+            <svg className="w-3.5 h-3.5 text-white/60 absolute left-3 top-1/2 transform -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
-          </button>
-          
-          <div className="flex-1 max-w-xs mx-3">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Search jobs..."
-                className="w-full bg-black/60 backdrop-blur-md text-white text-sm px-4 py-2 pl-10 rounded-full border border-white/10 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              />
-              <svg className="w-3.5 h-3.5 text-white/60 absolute left-3 top-1/2 transform -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
+          </div>
+        </div>
+        
+        {/* Categories with Filter Button */}
+        <div className="flex items-center space-x-2 py-2">
+          <div className="flex-1 overflow-x-auto hide-scrollbar">
+            <div className="flex space-x-2 px-1">
+              {[
+                { name: 'For You', icon: '👤' },
+                { name: 'Explore', icon: '🌍' }
+              ].map(({ name, icon }) => (
+                <button
+                  key={name}
+                  className={`px-4 py-2 text-sm font-medium rounded-xl whitespace-nowrap transition-all duration-200 flex items-center space-x-2
+                    backdrop-blur-sm border ${
+                      selectedCategory === name
+                        ? 'bg-gradient-to-r from-purple-600/90 to-purple-500/90 text-white border-purple-500/30 shadow-lg shadow-purple-500/20'
+                        : 'bg-black/30 text-white/90 hover:bg-white/10 border-white/5 hover:border-white/10'
+                    }`}
+                  onClick={() => setSelectedCategory(name)}
+                >
+                  <span className="text-base">{icon}</span>
+                  <span>{name}</span>
+                </button>
+              ))}
             </div>
           </div>
           
-          <button className="p-1.5 rounded-full bg-black/60 backdrop-blur-md">
-            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-            </svg>
-          </button>
-        </div>
-        
-        {/* Categories */}
-        <div className="overflow-x-auto py-2 hide-scrollbar">
-          <div className="flex justify-center space-x-2 px-4">
-            {[
-              { name: 'For You', icon: '👤' },
-              { name: 'Explore All Jobs', icon: '🌍' }
-            ].map(({ name, icon }) => (
-              <button
-                key={name}
-                className={`px-4 py-1.5 text-sm font-medium rounded-full whitespace-nowrap transition-colors flex items-center space-x-1.5 ${
-                  selectedCategory === name
-                    ? 'bg-purple-600 text-white'
-                    : 'bg-black/40 text-white/80 hover:bg-black/60 border border-white/10'
+          {/* Filter Button - Only show in Explore tab */}
+          {selectedCategory === 'Explore' && (
+            <div className="relative">
+              <button 
+                onClick={() => setShowFilterModal(true)}
+                className={`flex-shrink-0 p-2.5 rounded-xl backdrop-blur-sm hover:opacity-90 transition-all duration-200 border ${
+                  filtersApplied 
+                    ? 'bg-gradient-to-r from-purple-600/90 to-purple-500/90 border-purple-500/30 shadow-lg shadow-purple-500/10'
+                    : 'bg-black/30 border-white/10 hover:border-white/20'
                 }`}
-                onClick={() => setSelectedCategory(name)}
               >
-                <span className="text-base">{icon}</span>
-                <span>{name}</span>
+                <svg 
+                  className={`w-5 h-5 ${
+                    filtersApplied ? 'text-white' : 'text-white/90'
+                  }`} 
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                </svg>
               </button>
-            ))}
-          </div>
+              {filtersApplied && (
+                <span className="absolute -top-1 -right-1 w-2 h-2 bg-purple-400 rounded-full"></span>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -266,7 +390,7 @@ export default function FeedPage() {
         }}
         initial={{ y: '70vh' }}
         animate={{
-          y: isSheetCollapsed ? 'calc(100vh - 180px)' : '0', // Adjusted to remove gap
+          y: isSheetCollapsed ? 'calc(100vh - 20px)' : '0', // 2% up from bottom
         }}
         transition={{
           type: "spring",
@@ -333,9 +457,11 @@ export default function FeedPage() {
 
       {/* Toggle Map/List Button - Positioned 15% from bottom and centered */}
       <motion.div 
-        className="fixed bottom-[15%] left-0 right-0 z-50 flex justify-center"
+        className={`fixed bottom-[15%] left-0 right-0 z-50 flex justify-center transition-opacity duration-200 ${
+          showFilterModal ? 'opacity-0 pointer-events-none' : 'opacity-100'
+        }`}
         initial={{ opacity: 1 }}
-        animate={{ opacity: 1 }}
+        animate={{ opacity: showFilterModal ? 0 : 1 }}
       >
         <button 
           onClick={() => setIsSheetCollapsed(!isSheetCollapsed)}

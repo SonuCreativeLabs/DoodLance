@@ -26,9 +26,34 @@ export default function FreelancerLayout({ children }: FreelancerLayoutProps) {
     { href: '/freelancer/profile', label: 'Profile', icon: User },
   ]
 
-  // For feed page, we want a minimal layout with just the content
+  // For feed page, we want a minimal layout with just the content and bottom nav
   if (pathname === '/freelancer/feed') {
-    return <div className="h-[100dvh] overflow-hidden">{children}</div>;
+    return (
+      <div className="h-[100dvh] overflow-hidden">
+        {children}
+        {/* Mobile Navigation - Show for feed page */}
+        <div className="md:hidden fixed bottom-0 left-0 right-0 border-t border-white/10 bg-[#111111]/95 backdrop-blur-lg z-50">
+          <div className="flex items-center justify-around h-16">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const active = isActive(item.href);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`flex flex-col items-center justify-center flex-1 h-full transition-colors duration-200 ${
+                    active ? 'text-purple-400' : 'text-white/60 hover:text-white'
+                  }`}
+                >
+                  <Icon className={`w-5 h-5 ${active ? 'text-purple-400' : 'text-white/60'}`} />
+                  <span className="text-xs mt-1">{item.label}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (

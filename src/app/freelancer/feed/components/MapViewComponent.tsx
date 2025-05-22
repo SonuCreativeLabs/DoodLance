@@ -1,10 +1,48 @@
 "use client";
 
-import React, { useRef, useEffect, useState, useCallback } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
-import { Job } from '../types';
+// Define the Job interface that matches your data structure
+type SalaryPeriod = 'hour' | 'day' | 'week' | 'month' | 'year';
+
+interface Company {
+  name: string;
+  logo?: string;
+  description?: string;
+  website?: string;
+  size?: string;
+  founded?: number;
+  industry?: string;
+}
+
+interface Salary {
+  min: number;
+  max: number;
+  currency: string;
+  period: SalaryPeriod;
+}
+
+export interface Job {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  rate: number;
+  budget: number;
+  location: string;
+  coords: [number, number]; // [lng, lat] format for Mapbox
+  skills: string[];
+  workMode: 'remote' | 'onsite' | 'hybrid';
+  type: 'full-time' | 'part-time' | 'contract';
+  postedAt: string;
+  clientRating: string;
+  clientJobs: number;
+  proposals: number;
+  duration: string;
+  salary?: Salary;
+}
 
 interface MapViewProps {
   jobs: Job[];
@@ -12,716 +50,214 @@ interface MapViewProps {
   style?: React.CSSProperties;
 }
 
-export default function MapView({ jobs, selectedCategory, style = {} }: MapViewProps): JSX.Element {
+const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, style = {} }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
-  const mapInstance = useRef<mapboxgl.Map | null>(null);
-  const [userLocation, setUserLocation] = useState<[number, number]>([80.2707, 13.0827]);
-  const [isLocating, setIsLocating] = useState(false);
+  const map = useRef<mapboxgl.Map | null>(null);
+  const markersRef = useRef<mapboxgl.Marker[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Process jobs with default values
+  const processedJobs = React.useMemo(() => {
+    return jobs.map(job => ({
+      ...job,
+      coords: job.coords || [0, 0] as [number, number],
+      skills: job.skills || [],
+      description: job.description || '',
+      category: job.category || 'Uncategorized',
+      title: job.title || 'Untitled Job',
+      location: job.location || 'Location not specified',
+      clientRating: job.clientRating || '0',
+      clientJobs: job.clientJobs || 0,
+      budget: job.budget || 0,
+      rate: job.rate || 0,
+      postedAt: job.postedAt || new Date().toISOString(),
+      duration: job.duration || 'Not specified'
+    }));
+  }, [jobs]);
 
-  useEffect(() => {
-    console.log('Initializing map...');
-    console.log('Mapbox token:', process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN ? 'Set' : 'Not set');
-    
-    // Get user's location
-    if (navigator.geolocation) {
-      console.log('Requesting geolocation...');
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          console.log('Got user location:', position.coords);
-          setUserLocation([position.coords.longitude, position.coords.latitude]);
-        },
-        (error) => {
-          console.warn('Error getting location, using default:', error);
-          // Default to Chennai coordinates if location access is denied
-          setUserLocation([80.2707, 13.0827]);
-        }
-      );
-    } else {
-      console.warn('Geolocation not supported by browser');
-      setUserLocation([80.2707, 13.0827]);
-    }
-  }, []);
-
+  // Initialize map
   useEffect(() => {
     if (!mapContainer.current) return;
 
-    // Check if Mapbox access token is available
     const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
     if (!mapboxToken) {
-      console.error('Mapbox access token is not set. Please set NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN in your .env.local file');
+      setError('Mapbox access token is not configured');
+      setIsLoading(false);
       return;
     }
 
-    // Set container size
-    const updateMapSize = () => {
-      if (mapContainer.current) {
-        mapContainer.current.style.width = '100%';
-        mapContainer.current.style.height = '100%';
-      }
-    };
-
-    updateMapSize();
-    window.addEventListener('resize', updateMapSize);
-
-    // Initialize map
     try {
-      console.log('Creating map instance...');
-      const map = new mapboxgl.Map({
+      // Initialize map
+      map.current = new mapboxgl.Map({
         container: mapContainer.current,
-        style: 'mapbox://styles/mapbox/streets-v12',
-        center: userLocation,
+        style: 'mapbox://styles/mapbox/streets-v11',
+        center: [80.2007, 12.9359], // Default to Chennai
         zoom: 12,
-        pitch: 45,
-        bearing: 0,
-        attributionControl: false,
         accessToken: mapboxToken,
       });
-      
-      mapInstance.current = map;
 
-      // Add 3D buildings
-      map.on('style.load', () => {
-        if (!map.getSource('composite')) {
-          map.addSource('composite', {
-            type: 'vector',
-            url: 'mapbox://mapbox.mapbox-streets-v8',
-          });
-          
-          if (!map.getLayer('3d-buildings')) {
-            map.addLayer({
-              'id': '3d-buildings',
-              'source': 'composite',
-              'source-layer': 'building',
-              'filter': ['==', 'extrude', 'true'],
-              'type': 'fill-extrusion',
-              'minzoom': 15,
-              'paint': {
-                'fill-extrusion-color': '#aaa',
-                'fill-extrusion-height': [
-                  'interpolate',
-                  ['linear'],
-                  ['zoom'],
-                  15,
-                  0,
-                  15.05,
-                  ['get', 'height']
-                ],
-                'fill-extrusion-base': [
-                  'interpolate',
-                  ['linear'],
-                  ['zoom'],
-                  15,
-                  0,
-                  15.05,
-                  ['get', 'min_height']
-                ],
-                'fill-extrusion-opacity': 0.6
-              }
-            });
-          }
-        }
+      // Add navigation control
+      map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+
+      // Set loading to false when map is ready
+      map.current.on('load', () => {
+        setIsLoading(false);
       });
 
-      map.on('load', () => {
-        console.log('Map loaded successfully');
-      });
-
-      map.on('error', (e) => {
+      // Handle map errors
+      map.current.on('error', (e) => {
         console.error('Map error:', e.error);
+        setError('Failed to load map. Please try refreshing the page.');
+        setIsLoading(false);
       });
+
+      // Cleanup function
+      return () => {
+        if (map.current) {
+          // Remove all markers
+          markersRef.current.forEach((marker) => marker.remove());
+          markersRef.current = [];
+
+          // Remove the map
+          map.current.remove();
+          map.current = null;
+        }
+      };
     } catch (error) {
       console.error('Error initializing map:', error);
-      return;
+      setError('Failed to initialize map. Please check your connection and try again.');
+      setIsLoading(false);
     }
+  }, []);
 
-    const map = mapInstance.current;
-
-    // Create custom zoom controls container
-    const customControls = document.createElement('div');
-    customControls.className = 'custom-map-controls';
-
-    // Add zoom in button
-    const zoomInButton = document.createElement('button');
-    zoomInButton.className = 'custom-zoom-button';
-    zoomInButton.innerHTML = '+';
-    zoomInButton.onclick = () => map.zoomIn();
-    customControls.appendChild(zoomInButton);
-
-    // Add zoom out button
-    const zoomOutButton = document.createElement('button');
-    zoomOutButton.className = 'custom-zoom-button';
-    zoomOutButton.innerHTML = '−';
-    zoomOutButton.onclick = () => map.zoomOut();
-    customControls.appendChild(zoomOutButton);
-
-    // Add compass button
-    const compassButton = document.createElement('button');
-    compassButton.className = 'custom-zoom-button';
-    compassButton.innerHTML = '⤢';
-    compassButton.onclick = () => {
-      map.easeTo({ bearing: 0, pitch: 0 });
-    };
-    customControls.appendChild(compassButton);
-
-    // Create geolocation controls container
-    const geoControls = document.createElement('div');
-    geoControls.className = 'custom-geo-controls';
-
-    // Add geolocation button
-    const geoButton = document.createElement('button');
-    geoButton.className = 'custom-zoom-button';
-    geoButton.innerHTML = '⌖';
-    geoButton.onclick = () => {
-      if ('geolocation' in navigator) {
-        geoButton.style.opacity = '0.5';
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            const { longitude, latitude } = position.coords;
-            map.flyTo({
-              center: [longitude, latitude],
-              zoom: 15,
-              duration: 1500
-            });
-            // Add a marker at the user's location
-            new mapboxgl.Marker({
-              color: '#6366f1',
-              scale: 0.8
-            })
-            .setLngLat([longitude, latitude])
-            .addTo(map);
-            geoButton.style.opacity = '1';
-          },
-          (error) => {
-            console.warn('Error getting location:', error);
-            geoButton.style.opacity = '1';
-            alert('Could not get your location. Please make sure location access is enabled.');
-          },
-          { 
-            enableHighAccuracy: true,
-            timeout: 5000,
-            maximumAge: 0
-          }
-        );
-      } else {
-        alert('Geolocation is not supported by your browser.');
-      }
-    };
-    geoControls.appendChild(geoButton);
-
-    // Add controls to the map
-    map.getContainer().appendChild(customControls);
-    map.getContainer().appendChild(geoControls);
-
-    // Store controls reference for cleanup
-    const controlsRef = [customControls, geoControls];
-    
-    // Remove default attribution
-    document.querySelector('.mapboxgl-ctrl-attrib')?.remove();
-
-    // Add user location marker
-    const userEl = document.createElement('div');
-    userEl.className = 'w-4 h-4 bg-blue-500 rounded-full border-2 border-white';
-    new mapboxgl.Marker({
-      element: userEl,
-    })
-      .setLngLat(userLocation)
-      .addTo(map);
+  // Handle job markers
+  useEffect(() => {
+    if (!map.current) return;
 
     // Filter jobs based on category
-    const filteredJobs = selectedCategory === 'For You' ?
-      jobs.filter(job => {
-        const userSkills = ['developer', 'cricketer']; // User's actual skills
-        return job.skills.some(skill => userSkills.includes(skill));
-      }) : jobs;
+    const filteredJobs = selectedCategory === 'For You'
+      ? processedJobs.filter((job) => {
+          const jobText = [
+            job.title,
+            job.description,
+            job.category,
+            ...job.skills,
+          ].join(' ').toLowerCase();
 
-    // Add markers for jobs
+          const isCricketJob = /cricket|coach|training|sports|player/i.test(jobText);
+          const isDeveloperJob = /developer|programming|code|software|frontend|backend|fullstack|web|app|mobile/i.test(jobText);
+
+          return isCricketJob || isDeveloperJob;
+        })
+      : processedJobs;
+
+    // Clear existing markers
+    markersRef.current.forEach((marker) => marker.remove());
+    markersRef.current = [];
+
+    // Add markers for filtered jobs
     filteredJobs.forEach((job) => {
-      // Create custom pin element
-      const el = document.createElement('div');
-      el.className = 'job-pin cursor-pointer';
-      el.innerHTML = `
-        <div style="width: 30px; height: 42px; position: relative;">
-          <!-- Location pin shape -->
-          <div style="
-            width: 30px;
-            height: 42px;
-            position: relative;
-          ">
-            <!-- Pin head (circle) -->
-            <div style="
-              width: 30px;
-              height: 30px;
-              background: white;
-              border: 2px solid #8b5cf6;
-              border-radius: 50% 50% 0 50%;
-              transform: rotate(45deg);
-              position: absolute;
-              top: 0;
-              left: 0;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            ">
-              <span style="
-                color: #8b5cf6;
-                font-weight: bold;
-                font-size: 1rem;
-                transform: rotate(-45deg);
-                line-height: 1;
-              ">₹</span>
-            </div>
-          </div>
-          </div>
-        </div>
-      `;
+      // Skip jobs without valid coordinates
+      if (!job.coords || job.coords.length !== 2 || typeof job.coords[0] !== 'number' || typeof job.coords[1] !== 'number') {
+        console.warn('Skipping job with invalid coordinates:', job);
+        return;
+      }
 
-      // Create popup that will be shown on click
-      const popup = new mapboxgl.Popup({
-        closeButton: true,
-        closeOnClick: true,
-        closeOnMove: false,
-        maxWidth: '340px',
-        className: 'job-card-popup',
-        offset: [0, -8],
-        anchor: 'bottom'
-      }).setHTML(`
-        <div class="bg-[#111111] shadow-lg rounded-xl p-3 border border-white/10 relative backdrop-blur-xl bg-black/80 before:absolute before:inset-0 before:bg-gradient-to-b before:from-purple-500/10 before:to-transparent before:rounded-xl before:pointer-events-none">
-          <div class="flex items-start gap-3">
-            <div class="relative">
-              <div class="relative">
-                <div class="absolute inset-0 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full opacity-20 blur-md"></div>
-                <div class="absolute inset-0 bg-gradient-to-br from-purple-400/50 to-purple-600/50 rounded-full animate-pulse" style="animation-duration: 3s;"></div>
-                <div class="w-12 h-12 rounded-full border-2 border-purple-200/50 relative z-10 flex items-center justify-center bg-purple-900/50 text-white text-xl font-bold shadow-xl ring-2 ring-purple-500/20 ring-offset-2 ring-offset-black/50">
-                  ${job.client.charAt(0).toUpperCase()}
-                </div>
-              </div>
-            </div>
-            <div class="flex-1 -mt-1">
-              <h3 class="font-bold text-base text-white leading-tight drop-shadow-sm">${job.title}</h3>
-              <div class="flex items-center gap-2 mt-1">
-                <span class="text-xs text-white/80">${job.client}</span>
-                <span class="text-white/20">•</span>
-                <div class="flex items-center gap-1">
-                  <svg class="w-3 h-3 text-yellow-400 fill-current" viewBox="0 0 24 24">
-                    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
-                  </svg>
-                  <span class="text-xs font-bold text-white">${job.clientRating}</span>
-                </div>
-              </div>
-              <div class="flex items-center text-xs text-white/60 mt-1">
-                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                <span class="mr-2">${job.distance} km</span>
-                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span>${job.posted}</span>
-              </div>
-              <p class="text-xs text-white/70 line-clamp-2 mt-2">${job.description}</p>
-              
-              <!-- Skills/Tags - Horizontal Layout -->
-              <div class="flex flex-wrap gap-1.5 mt-2">
-                ${job.skills.slice(0, 3).map(skill => `
-                  <span class="text-[10px] bg-black/30 text-white/80 px-2 py-0.5 rounded-full border border-white/5">
-                    ${skill}
-                  </span>
-                `).join('')}
-                ${job.skills.length > 3 ? `
-                  <span class="text-[10px] bg-black/20 text-white/60 px-2 py-0.5 rounded-full">
-                    +${job.skills.length - 3}
-                  </span>
-                ` : ''}
-              </div>
-              
-              <!-- Price and Action Buttons -->
-              <div class="flex items-center justify-between mt-3 pt-2 border-t border-white/5">
-                <div class="flex items-center gap-2">
-                  <span class="text-sm font-bold text-purple-400">₹${job.budget.toLocaleString('en-IN')}</span>
-                  <span class="text-xs text-white/50">•</span>
-                  <span class="text-xs text-white/60">${job.duration}</span>
-                </div>
-                <div class="flex items-center gap-2">
-                  <button class="bg-gray-700 hover:bg-gray-600 text-white text-xs px-3 py-1.5 rounded-full font-medium transition-colors">
-                    View
-                  </button>
-                  <button class="bg-purple-600 hover:bg-purple-700 text-white text-xs px-3 py-1.5 rounded-full font-medium transition-colors">
-                    Apply
-                  </button>
-                </div>
-              </div>
-              </div>
-            </div>
+      // Create marker element
+      const el = document.createElement('div');
+      el.className = 'w-4 h-4 bg-blue-500 rounded-full border-2 border-white cursor-pointer';
+
+      // Create popup content
+      const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(`
+        <div class="bg-white rounded-lg shadow-lg p-4 max-w-sm">
+          <h3 class="text-lg font-semibold mb-2">${job.title}</h3>
+          <div class="text-sm text-gray-600 mb-2">
+            <p><strong>Rating:</strong> ${job.clientRating} ⭐️</p>
+            <p><strong>Jobs Posted:</strong> ${job.clientJobs}</p>
+            <p><strong>Posted:</strong> ${new Date(job.postedAt).toLocaleDateString()}</p>
+            <p><strong>Budget:</strong> ₹${job.budget}</p>
+          </div>
+          <p class="text-sm text-gray-500">${job.description}</p>
+          <div class="mt-2 flex flex-wrap gap-1">
+            ${job.skills.map(skill => `
+              <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                ${skill}
+              </span>
+            `).join('')}
           </div>
         </div>
       `);
 
-      const marker = new mapboxgl.Marker({
-        element: el,
-        anchor: 'bottom',
-      })
-        .setLngLat(job.coords)
+      // Add marker to map
+      const marker = new mapboxgl.Marker(el)
+        .setLngLat(job.coords) // job.coords is already in [lng, lat] format
         .setPopup(popup)
-        .addTo(map);
+        .addTo(map.current!);
 
-      // Only show popup on click
-      el.addEventListener('click', (e) => {
-        e.stopPropagation();
-        // Close any open popups first
-        document.querySelectorAll('.mapboxgl-popup').forEach(p => p.remove());
-        // Open this popup
-        marker.togglePopup();
-      });
+      markersRef.current.push(marker);
     });
 
-    // Add custom styles for map controls and popups
-    const mapStyle = document.createElement('style');
-    mapStyle.textContent = `
-      /* Popup animations and styles */
-      @keyframes popupFadeIn {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
-      }
-      .animate-popup {
-        animation: popupFadeIn 0.2s ease-out forwards;
-      }
-      .custom-popup .mapboxgl-popup-content {
-        background: transparent;
-        padding: 0;
-        box-shadow: none;
-      }
-      .custom-popup .mapboxgl-popup-close-button {
-        color: rgba(255, 255, 255, 0.7);
-        font-size: 20px;
-        padding: 8px;
-        right: 4px;
-        top: 4px;
-        background: rgba(0, 0, 0, 0.7);
-        border-radius: 50%;
-        width: 24px;
-        height: 24px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.2s ease;
-      }
-      .custom-popup .mapboxgl-popup-close-button:hover {
-        color: white;
-        background: rgba(0, 0, 0, 0.9);
-      }
+    // Fit map to show all markers if we have any
+    if (filteredJobs.length > 0) {
+      const bounds = new mapboxgl.LngLatBounds();
+      let hasValidCoords = false;
 
-      /* Job pin styles */
-      .job-pin {
-        transform-origin: 50% 100%;
-        will-change: transform;
-        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
-      }
-      
-      .job-pin:hover {
-        filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
-      }
-      
-      .job-pin .animate-ping {
-        animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
-      }
-      
-      @keyframes ping {
-        75%, 100% {
-          transform: scale(1.5);
-          opacity: 0;
+      filteredJobs.forEach((job) => {
+        if (job.coords && job.coords.length === 2) {
+          bounds.extend(job.coords);
+          hasValidCoords = true;
         }
-      }
-      
-      /* Job card popup styles */
-      .job-card-popup {
-        transform-origin: 50% 100%;
-      }
-      
-      .job-card-popup .mapboxgl-popup-content {
-        background: transparent !important;
-        padding: 0 !important;
-        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5) !important;
-        border-radius: 16px !important;
-        overflow: visible !important;
-      }
-      
-      .job-card-popup .mapboxgl-popup-tip {
-        display: none !important;
-      }
-      
-      .job-card-popup .mapboxgl-popup-close-button {
-        color: white !important;
-        background: rgba(0, 0, 0, 0.7) !important;
-        border-radius: 50% !important;
-        width: 24px !important;
-        height: 24px !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        font-size: 16px !important;
-        right: 8px !important;
-        top: 8px !important;
-        transition: all 0.2s ease !important;
-      }
-      
-      .job-card-popup .mapboxgl-popup-close-button:hover {
-        background: rgba(0, 0, 0, 0.9) !important;
-        transform: scale(1.1) !important;
-      }
-      
-      /* Map controls */
-      .mapboxgl-ctrl-bottom-right {
-        right: 8px !important;
-        bottom: 80px !important;
-      }
+      });
 
-      .mapboxgl-ctrl-bottom-right .mapboxgl-ctrl {
-        margin: 0 0 6px 0 !important;
-        float: right;
-        clear: both;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.15) !important;
-        border-radius: 6px !important;
-        overflow: hidden;
+      if (hasValidCoords && !bounds.isEmpty()) {
+        map.current.fitBounds(bounds, {
+          padding: 50,
+          maxZoom: 15
+        });
       }
-
-      .mapboxgl-ctrl-top-left {
-        margin-top: 110px !important;
-      }
-
-      .mapboxgl-ctrl-top-left .mapboxgl-ctrl {
-        margin: 10px 0 0 10px;
-      }
-
-      .mapboxgl-ctrl-group {
-        background: white !important;
-        border: 1px solid rgba(0, 0, 0, 0.1) !important;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
-        border-radius: 6px !important;
-        padding: 1px !important;
-      }
-
-      .mapboxgl-ctrl-group button {
-        width: 28px !important;
-        height: 28px !important;
-        background-color: white !important;
-        border: none !important;
-        border-radius: 4px !important;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0;
-        margin: 0;
-      }
-      
-      .mapboxgl-ctrl-group button + button {
-        border-top: 1px solid rgba(0, 0, 0, 0.1) !important;
-      }
-
-      .mapboxgl-ctrl-group button:hover {
-        background-color: #f8f8f8 !important;
-      }
-      
-      .mapboxgl-ctrl-geolocate {
-        width: 28px !important;
-        height: 28px !important;
-      }
-      
-      .mapboxgl-ctrl-geolocate .mapboxgl-ctrl-icon {
-        width: 100% !important;
-        height: 100% !important;
-        background-size: 16px !important;
-        opacity: 0.8;
-      }
-      
-      .mapboxgl-ctrl-geolocate:hover .mapboxgl-ctrl-icon {
-        opacity: 1;
-      }
-      
-      .mapboxgl-ctrl-zoom-in,
-      .mapboxgl-ctrl-zoom-out {
-        width: 28px !important;
-        height: 28px !important;
-        background-size: 16px !important;
-        opacity: 0.8;
-      }
-      
-      .mapboxgl-ctrl-zoom-in:hover,
-      .mapboxgl-ctrl-zoom-out:hover {
-        opacity: 1;
-      }
-
-      .mapboxgl-ctrl-scale {
-        min-width: 50px !important;
-        height: 22px !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        background-color: white !important;
-        border: 1px solid rgba(0, 0, 0, 0.1) !important;
-        color: #666 !important;
-        font-size: 11px !important;
-        font-weight: 500 !important;
-        padding: 0 6px !important;
-        border-radius: 6px !important;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05) !important;
-        transition: all 0.2s ease-in-out !important;
-        letter-spacing: 0.2px !important;
-      }
-    `;
-    document.head.appendChild(mapStyle);
-
-    // Add popup styles
-    const popupStyle = document.createElement('style');
-    popupStyle.textContent = `
-      .custom-popup {
-        transform-origin: 50% calc(100% - 8px);
-        filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.3));
-      }
-      
-      .custom-popup.animate-popup {
-        animation: none;
-        opacity: 0;
-        transform: translateY(5px) scale(0.98);
-        transition: opacity 0.2s ease-out, transform 0.2s ease-out;
-      }
-
-      .custom-popup.mapboxgl-popup-anchor-bottom {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-      }
-
-      .custom-popup .mapboxgl-popup-content {
-        border-radius: 12px;
-        padding: 0;
-        background: transparent;
-        box-shadow: none;
-        border: none;
-      }
-
-      .mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip {
-        border-top-color: rgba(17, 17, 17, 0.8);
-      }
-      
-      .custom-popup .mapboxgl-popup-close-button {
-        padding: 8px;
-        right: 8px;
-        top: 8px;
-        color: rgba(255, 255, 255, 0.8);
-        font-size: 24px;
-        font-weight: 300;
-        border-radius: 50%;
-        width: 32px;
-        height: 32px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.2s;
-        z-index: 1;
-      }
-      
-      .custom-popup .mapboxgl-popup-close-button:hover {
-        background-color: rgba(255, 255, 255, 0.15);
-        color: rgba(255, 255, 255, 1);
-      }
-    `;
-    document.head.appendChild(popupStyle);
-
-    return () => {
-      // Remove custom controls
-      controlsRef?.forEach(control => control.remove());
-      // Remove map and styles
-      map.remove();
-      document.head.removeChild(mapStyle);
-      document.head.removeChild(popupStyle);
-    };
-  }, [jobs, userLocation]);
+    } else {
+      // If no jobs to show, center on a default location
+      map.current.flyTo({
+        center: [80.2007, 12.9359],
+        zoom: 12
+      });
+    }
+  }, [processedJobs, selectedCategory]);
 
   return (
-    <div className="absolute inset-0 w-full h-full">
-      <div
-        ref={mapContainer}
-        className="absolute inset-0 w-full h-full"
-        style={{
-          ...style,
-          '--mapboxgl-ctrl-top-right': '80px',
-        } as React.CSSProperties}
-      />
-      <style jsx global>{`
-        .custom-map-controls {
-          position: absolute;
-          top: 120px;
-          right: 16px;
-          display: flex;
-          flex-direction: column;
-          background: white;
-          border-radius: 4px;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-          overflow: hidden;
-          padding: 2px;
-          gap: 1px;
-          z-index: 1;
-        }
-
-        .custom-geo-controls {
-          position: absolute;
-          top: 220px;
-          right: 16px;
-          display: flex;
-          flex-direction: column;
-          background: white;
-          border-radius: 4px;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-          overflow: hidden;
-          padding: 2px;
-          z-index: 1;
-        }
-
-        .custom-zoom-button {
-          width: 28px;
-          height: 28px;
-          border: none;
-          background: white;
-          color: #666;
-          font-size: 18px;
-          line-height: 1;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 0;
-          border-radius: 2px;
-          transition: all 0.2s;
-          user-select: none;
-        }
-
-        .custom-zoom-button:hover {
-          background: #f8f8f8;
-        }
-
-        .custom-zoom-button:active {
-          background: #f0f0f0;
-          transform: scale(0.95);
-        }
-
-        .custom-zoom-button:focus {
-          outline: none;
-        }
-
-        .custom-zoom-button:not(:last-child) {
-          margin-bottom: 1px;
-        }
-      `}</style>
-      {!process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/80 text-white p-4 text-center">
-          <div className="max-w-md">
-            <p className="text-xl font-bold mb-2">Mapbox Access Token Missing</p>
-            <p>Please set NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN in your .env.local file</p>
+    <div className="relative w-full h-full">
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/30 z-10">
+          <div className="bg-white p-4 rounded-lg shadow-lg flex items-center space-x-2">
+            <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+            <span className="text-gray-800">Loading map...</span>
           </div>
         </div>
       )}
+      
+      {error && (
+        <div className="absolute top-4 right-4 bg-red-500 text-white p-3 rounded-lg shadow-lg z-10 max-w-xs">
+          <div className="flex items-start">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm font-medium">{error}</p>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      <div
+        ref={mapContainer}
+        className="w-full h-full rounded-lg overflow-hidden shadow-sm"
+        style={style}
+      />
     </div>
   );
-}
+};
+
+export default MapViewComponent;
