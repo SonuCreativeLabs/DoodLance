@@ -216,13 +216,27 @@ export default function SearchFilters({
       {isOpen && (
         <motion.div
           className="fixed inset-0 z-50 bg-[#121212] text-white overflow-y-auto"
-          style={{ 
+          style={{
             top: 0,
-            height: '100vh'
+            left: 0,
+            right: 0,
+            bottom: 0,
+            height: '100vh',
+            width: '100vw',
+            overflow: 'hidden',
+            touchAction: 'pan-y',
+            WebkitOverflowScrolling: 'touch',
+            overscrollBehavior: 'contain',
+            position: 'fixed',
+            zIndex: 50
           }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 20 }}
+          transition={{ duration: 0.2, ease: 'easeInOut' }}
         >
           {/* Header */}
-          <div className="sticky top-0 z-10 p-4 border-b border-white/5 bg-[#1A1A1A] flex justify-between items-center pt-12">
+          <div className="sticky top-0 z-10 p-4 border-b border-white/5 bg-[#1A1A1A]/95 backdrop-blur-md flex justify-between items-center pt-12">
             <h2 className="text-lg font-medium">Filters</h2>
             <button
               onClick={onClose}
@@ -234,7 +248,7 @@ export default function SearchFilters({
           </div>
 
           {/* Content */}
-          <div className="p-5 space-y-8 pb-24">
+          <div className="p-5 space-y-8 pb-24 max-w-3xl mx-auto w-full">
             {/* Location */}
             <div className="space-y-3">
               <div className="flex justify-between items-center">

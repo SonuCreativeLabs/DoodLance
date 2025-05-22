@@ -304,7 +304,7 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
       const markerEl = document.createElement('div');
       markerEl.className = 'custom-marker';
       markerEl.innerHTML = `
-        <svg width="18" height="22" viewBox="0 0 32 40" fill="none" xmlns="http://www.w3.org/2000/svg" class="location-pin" style="pointer-events: none;">
+        <svg width="26" height="32" viewBox="0 0 32 40" fill="none" xmlns="http://www.w3.org/2000/svg" class="location-pin" style="pointer-events: none;">
           <path 
             d="M16 0C7.163 0 0 7.163 0 16C0 28 16 40 16 40C16 40 32 28 32 16C32 7.163 24.837 0 16 0Z" 
             fill="#1d59eb"
@@ -315,8 +315,8 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
       `;
       
       // Style the marker container
-      markerEl.style.width = '18px';
-      markerEl.style.height = '22px';
+      markerEl.style.width = '26px';
+      markerEl.style.height = '32px';
       markerEl.style.display = 'flex';
       markerEl.style.justifyContent = 'center';
 

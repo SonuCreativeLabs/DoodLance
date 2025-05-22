@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Clock, Calendar, Star, Check, ChevronDown, Map } from 'lucide-react';
+import { X, Clock, Calendar, Star, Check, ChevronDown, Map, Sparkles, Compass } from 'lucide-react';
 import type { PanInfo } from 'framer-motion';
 import dynamic from 'next/dynamic';
 
@@ -322,7 +322,7 @@ export default function FeedPage() {
             <div className="flex items-center space-x-3">
               {/* For You Tab */}
               <button
-                className={`px-6 py-2.5 text-sm font-medium rounded-xl whitespace-nowrap transition-all duration-300 flex items-center space-x-2
+                className={`px-5 py-2 text-sm font-medium rounded whitespace-nowrap transition-all duration-200 flex items-center space-x-2 h-10
                   backdrop-blur-sm border transform ${
                     selectedCategory === 'For You'
                       ? 'bg-gradient-to-r from-purple-600/90 to-purple-500/90 text-white border-purple-500/30 shadow-lg shadow-purple-500/20 scale-100'
@@ -330,14 +330,14 @@ export default function FeedPage() {
                   }`}
                 onClick={() => setSelectedCategory('For You')}
               >
-                <span className="text-base">👤</span>
+                <Sparkles className="w-3.5 h-3.5" />
                 <span className="font-medium">For You</span>
               </button>
               
               {/* Explore All Tab */}
               <div className="relative flex items-center">
                 <button
-                  className={`px-6 py-2.5 text-sm font-medium rounded-xl whitespace-nowrap transition-all duration-300 flex items-center space-x-2
+                  className={`px-5 py-2 text-sm font-medium rounded whitespace-nowrap transition-all duration-200 flex items-center space-x-2 h-10
                     backdrop-blur-sm border transform ${
                       selectedCategory === 'Explore'
                         ? 'bg-gradient-to-r from-purple-600/90 to-purple-500/90 text-white border-purple-500/30 shadow-lg shadow-purple-500/20 scale-100'
@@ -345,13 +345,13 @@ export default function FeedPage() {
                     }`}
                   onClick={() => setSelectedCategory('Explore')}
                 >
-                  <span className="text-base">🌍</span>
+                  <Compass className="w-3.5 h-3.5" strokeWidth={1.5} />
                   <span className="font-medium">Explore All</span>
                 </button>
                 
                 {/* Filter Button */}
                 <motion.div 
-                  className="absolute left-full ml-2 top-0 h-full flex items-center"
+                  className="absolute left-full ml-3 top-0 h-full flex items-center"
                   initial={{ opacity: 0, x: -10 }}
                   animate={{
                     opacity: selectedCategory === 'Explore' ? 1 : 0,
@@ -365,7 +365,7 @@ export default function FeedPage() {
                       e.stopPropagation();
                       setShowFilterModal(true);
                     }}
-                    className={`p-2.5 rounded-xl backdrop-blur-sm transition-all duration-300 border ${
+                    className={`w-9 h-9 flex items-center justify-center rounded-full backdrop-blur-sm transition-all duration-300 border ${
                       filtersApplied 
                         ? 'bg-gradient-to-r from-purple-600/90 to-purple-500/90 border-purple-500/30 shadow-lg shadow-purple-500/10'
                         : 'bg-black/30 border-white/10 hover:border-white/20'
