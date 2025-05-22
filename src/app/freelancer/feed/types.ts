@@ -32,6 +32,8 @@ export interface Job {
   workMode: 'remote' | 'onsite' | 'hybrid';
   type: 'full-time' | 'part-time' | 'contract';
   postedAt: string;
+  clientName: string;
+  clientImage?: string;
   clientRating: string;
   clientJobs: number;
   proposals: number;

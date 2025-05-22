@@ -1,7 +1,7 @@
 import { Job } from '../types';
 
 // Helper function to generate random coordinates near a point
-const generateNearbyCoords = (baseCoords: [number, number], radiusKm = 5): [number, number] => {
+const generateNearbyCoords = (baseCoords: [number, number], radiusKm = 0.5): [number, number] => {
   // Convert km to degrees (approximate)
   const radiusInDegrees = radiusKm / 111.32;
   const u = Math.random();
@@ -20,10 +20,35 @@ const generateNearbyCoords = (baseCoords: [number, number], radiusKm = 5): [numb
   ] as [number, number];
 };
 
-// Base coordinates for Chennai
-const chennaiCoords: [number, number] = [80.2707, 13.0827];
+// Chennai area coordinates
+const areaCoords = {
+  velachery: [80.2174, 12.9815],
+  pallikaranai: [80.2198, 12.9350],
+  madipakkam: [80.1991, 12.9627],
+  medavakkam: [80.1924, 12.9187],
+  tambaram: [80.1270, 12.9249],
+  chrompet: [80.1444, 12.9516],
+  thoraipakkam: [80.2311, 12.9515],
+  perungudi: [80.2418, 12.9697],
+  sholinganallur: [80.2279, 12.8996]
+} as const;
+
+const areas = Object.keys(areaCoords) as (keyof typeof areaCoords)[];
 
 // Common skills
+const clientNames = [
+  'Priya Sharma',
+  'Raj Kumar',
+  'Aisha Patel',
+  'Vikram Singh',
+  'Meera Reddy',
+  'Arjun Nair',
+  'Divya Menon',
+  'Karthik Iyer',
+  'Ananya Gupta',
+  'Suresh Kumar'
+];
+
 const devSkills = [
   ['React', 'TypeScript', 'Redux', 'Frontend Development'],
   ['Node.js', 'Express', 'MongoDB', 'Backend Development'],
@@ -90,6 +115,15 @@ const generateJobs = (): Job[] => {
   const workModes: Array<'remote' | 'onsite' | 'hybrid'> = ['remote', 'onsite', 'hybrid'];
   const jobTypes: Array<'full-time' | 'part-time' | 'contract'> = ['full-time', 'part-time', 'contract'];
 
+  // Helper function to get random area
+  const getRandomArea = () => {
+    const area = areas[Math.floor(Math.random() * areas.length)];
+    return {
+      name: area.charAt(0).toUpperCase() + area.slice(1),
+      coords: [...areaCoords[area]] as [number, number]
+    };
+  };
+
   // Helper function to generate a job
   const createJob = ({
     id,
@@ -112,9 +146,10 @@ const generateJobs = (): Job[] => {
   }) => {
     const rate = Math.floor(Math.random() * (maxRate - minRate)) + minRate;
     const budget = rate * Math.floor(Math.random() * 100) + 50;
-    const coords = generateNearbyCoords(chennaiCoords);
-    
-    return {
+    const { name: location, coords: baseCoords } = getRandomArea();
+    const coords = generateNearbyCoords(baseCoords);
+    const clientName = clientNames[Math.floor(Math.random() * clientNames.length)];
+    const job: Job = {
       id,
       title,
       description,
@@ -127,11 +162,25 @@ const generateJobs = (): Job[] => {
       workMode,
       type: jobTypes[Math.floor(Math.random() * jobTypes.length)],
       postedAt: new Date(Date.now() - Math.floor(Math.random() * 7 * 24 * 60 * 60 * 1000)).toISOString(),
-      clientRating: (Math.random() * 2 + 3).toFixed(1),
+      clientName,
+      clientImage: `https://ui-avatars.com/api/?name=${encodeURIComponent(clientName)}&background=6B46C1&color=fff&bold=true`,
+      clientRating: (Math.floor(Math.random() * 10) / 2 + 3).toFixed(1),
       clientJobs: Math.floor(Math.random() * 50) + 1,
       proposals: Math.floor(Math.random() * 30),
       duration: `${Math.floor(Math.random() * 6) + 1} months`
     };
+    return job;
+  };
+
+  // Helper function to create a job with client info
+  const createJobWithClient = (jobData: any) => {
+    const clientName = clientNames[Math.floor(Math.random() * clientNames.length)];
+    const job = createJob({
+      ...jobData,
+      clientName,
+      clientImage: `https://ui-avatars.com/api/?name=${encodeURIComponent(clientName)}&background=6B46C1&color=fff&bold=true`
+    });
+    return job;
   };
 
   // Generate offline service jobs (30 jobs)
@@ -140,7 +189,7 @@ const generateJobs = (): Job[] => {
       const skills = offlineServiceSkills[Math.floor(Math.random() * offlineServiceSkills.length)];
       const description = `Looking for an experienced ${title.toLowerCase()} for local service. Must be available for on-site work in the specified location.`;
       
-      jobs.push(createJob({
+      jobs.push(createJobWithClient({
         id: `offline-${category}-${index + 1}`,
         title,
         description,
@@ -159,7 +208,7 @@ const generateJobs = (): Job[] => {
       const skills = devSkills[Math.floor(Math.random() * devSkills.length)];
       const description = `Looking for an experienced ${title.toLowerCase()} with strong expertise in ${skills.slice(0, -1).join(', ')} and ${skills[skills.length - 1]}.`;
       
-      jobs.push(createJob({
+      jobs.push(createJobWithClient({
         id: `tech-${category}-${index + 1}`,
         title,
         description,
@@ -177,7 +226,7 @@ const generateJobs = (): Job[] => {
     const title = `Cricket ${skills[0]}`;
     const description = `Looking for an experienced cricket coach specializing in ${skills[1]} and ${skills[2]}. Local candidates preferred.`;
     
-    jobs.push(createJob({
+    jobs.push(createJobWithClient({
       id: `cricket-${index + 1}`,
       title,
       description,

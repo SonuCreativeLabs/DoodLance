@@ -315,57 +315,56 @@ export default function FeedPage() {
         </div>
         
         {/* Categories with Filter Button */}
-        <div className="flex items-center space-x-2 py-2">
-          <div className="flex-1 overflow-x-auto hide-scrollbar">
-            <div className="flex space-x-2 px-1">
-              {[
-                { name: 'For You', icon: '👤' },
-                { name: 'Explore', icon: '🌍' }
-              ].map(({ name, icon }) => (
+        <div className="flex items-center justify-center py-2 w-full">
+          <div className="flex items-center space-x-3">
+            {[
+              { name: 'For You', icon: '👤' },
+              { name: 'Explore All', icon: '🌍' }
+            ].map(({ name, icon }) => (
+              <div key={name} className="relative flex items-center">
                 <button
-                  key={name}
-                  className={`px-4 py-2 text-sm font-medium rounded-xl whitespace-nowrap transition-all duration-200 flex items-center space-x-2
+                  className={`px-6 py-2.5 text-sm font-medium rounded-xl whitespace-nowrap transition-all duration-200 flex items-center space-x-2
                     backdrop-blur-sm border ${
-                      selectedCategory === name
+                      selectedCategory === name.replace(' All', '')
                         ? 'bg-gradient-to-r from-purple-600/90 to-purple-500/90 text-white border-purple-500/30 shadow-lg shadow-purple-500/20'
                         : 'bg-black/30 text-white/90 hover:bg-white/10 border-white/5 hover:border-white/10'
                     }`}
-                  onClick={() => setSelectedCategory(name)}
+                  onClick={() => setSelectedCategory(name.replace(' All', ''))}
                 >
                   <span className="text-base">{icon}</span>
-                  <span>{name}</span>
+                  <span className="font-medium">{name}</span>
                 </button>
-              ))}
-            </div>
+                
+                {/* Filter Button - Only show next to Explore All tab */}
+                {selectedCategory === 'Explore' && name === 'Explore All' && (
+                  <div className="relative ml-2">
+                    <button 
+                      onClick={() => setShowFilterModal(true)}
+                      className={`p-2.5 rounded-xl backdrop-blur-sm hover:opacity-90 transition-all duration-200 border ${
+                        filtersApplied 
+                          ? 'bg-gradient-to-r from-purple-600/90 to-purple-500/90 border-purple-500/30 shadow-lg shadow-purple-500/10'
+                          : 'bg-black/30 border-white/10 hover:border-white/20'
+                      }`}
+                    >
+                      <svg 
+                        className={`w-5 h-5 ${
+                          filtersApplied ? 'text-white' : 'text-white/90'
+                        }`} 
+                        fill="none" 
+                        viewBox="0 0 24 24" 
+                        stroke="currentColor"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                      </svg>
+                    </button>
+                    {filtersApplied && (
+                      <span className="absolute -top-1 -right-1 w-2 h-2 bg-purple-400 rounded-full"></span>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
-          
-          {/* Filter Button - Only show in Explore tab */}
-          {selectedCategory === 'Explore' && (
-            <div className="relative">
-              <button 
-                onClick={() => setShowFilterModal(true)}
-                className={`flex-shrink-0 p-2.5 rounded-xl backdrop-blur-sm hover:opacity-90 transition-all duration-200 border ${
-                  filtersApplied 
-                    ? 'bg-gradient-to-r from-purple-600/90 to-purple-500/90 border-purple-500/30 shadow-lg shadow-purple-500/10'
-                    : 'bg-black/30 border-white/10 hover:border-white/20'
-                }`}
-              >
-                <svg 
-                  className={`w-5 h-5 ${
-                    filtersApplied ? 'text-white' : 'text-white/90'
-                  }`} 
-                  fill="none" 
-                  viewBox="0 0 24 24" 
-                  stroke="currentColor"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                </svg>
-              </button>
-              {filtersApplied && (
-                <span className="absolute -top-1 -right-1 w-2 h-2 bg-purple-400 rounded-full"></span>
-              )}
-            </div>
-          )}
         </div>
       </div>
 
