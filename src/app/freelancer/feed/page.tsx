@@ -315,55 +315,82 @@ export default function FeedPage() {
         </div>
         
         {/* Categories with Filter Button */}
-        <div className="flex items-center justify-center py-2 w-full">
-          <div className="flex items-center space-x-3">
-            {[
-              { name: 'For You', icon: '👤' },
-              { name: 'Explore All', icon: '🌍' }
-            ].map(({ name, icon }) => (
-              <div key={name} className="relative flex items-center">
+        <div className="relative flex items-center justify-center py-2 w-full overflow-visible">
+          <div className={`relative transition-transform duration-300 ease-in-out ${
+            selectedCategory === 'Explore' ? '-translate-x-8' : 'translate-x-0'
+          }`}>
+            <div className="flex items-center space-x-3">
+              {/* For You Tab */}
+              <button
+                className={`px-6 py-2.5 text-sm font-medium rounded-xl whitespace-nowrap transition-all duration-300 flex items-center space-x-2
+                  backdrop-blur-sm border transform ${
+                    selectedCategory === 'For You'
+                      ? 'bg-gradient-to-r from-purple-600/90 to-purple-500/90 text-white border-purple-500/30 shadow-lg shadow-purple-500/20 scale-100'
+                      : 'bg-black/30 text-white/90 hover:bg-white/10 border-white/5 hover:border-white/10 scale-95 hover:scale-100'
+                  }`}
+                onClick={() => setSelectedCategory('For You')}
+              >
+                <span className="text-base">👤</span>
+                <span className="font-medium">For You</span>
+              </button>
+              
+              {/* Explore All Tab */}
+              <div className="relative flex items-center">
                 <button
-                  className={`px-6 py-2.5 text-sm font-medium rounded-xl whitespace-nowrap transition-all duration-200 flex items-center space-x-2
-                    backdrop-blur-sm border ${
-                      selectedCategory === name.replace(' All', '')
-                        ? 'bg-gradient-to-r from-purple-600/90 to-purple-500/90 text-white border-purple-500/30 shadow-lg shadow-purple-500/20'
-                        : 'bg-black/30 text-white/90 hover:bg-white/10 border-white/5 hover:border-white/10'
+                  className={`px-6 py-2.5 text-sm font-medium rounded-xl whitespace-nowrap transition-all duration-300 flex items-center space-x-2
+                    backdrop-blur-sm border transform ${
+                      selectedCategory === 'Explore'
+                        ? 'bg-gradient-to-r from-purple-600/90 to-purple-500/90 text-white border-purple-500/30 shadow-lg shadow-purple-500/20 scale-100'
+                        : 'bg-black/30 text-white/90 hover:bg-white/10 border-white/5 hover:border-white/10 scale-95 hover:scale-100'
                     }`}
-                  onClick={() => setSelectedCategory(name.replace(' All', ''))}
+                  onClick={() => setSelectedCategory('Explore')}
                 >
-                  <span className="text-base">{icon}</span>
-                  <span className="font-medium">{name}</span>
+                  <span className="text-base">🌍</span>
+                  <span className="font-medium">Explore All</span>
                 </button>
                 
-                {/* Filter Button - Only show next to Explore All tab */}
-                {selectedCategory === 'Explore' && name === 'Explore All' && (
-                  <div className="relative ml-2">
-                    <button 
-                      onClick={() => setShowFilterModal(true)}
-                      className={`p-2.5 rounded-xl backdrop-blur-sm hover:opacity-90 transition-all duration-200 border ${
-                        filtersApplied 
-                          ? 'bg-gradient-to-r from-purple-600/90 to-purple-500/90 border-purple-500/30 shadow-lg shadow-purple-500/10'
-                          : 'bg-black/30 border-white/10 hover:border-white/20'
-                      }`}
+                {/* Filter Button */}
+                <motion.div 
+                  className="absolute left-full ml-2 top-0 h-full flex items-center"
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{
+                    opacity: selectedCategory === 'Explore' ? 1 : 0,
+                    x: selectedCategory === 'Explore' ? 0 : -10,
+                    pointerEvents: selectedCategory === 'Explore' ? 'auto' : 'none'
+                  }}
+                  transition={{ duration: 0.3, ease: "easeInOut" }}
+                >
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowFilterModal(true);
+                    }}
+                    className={`p-2.5 rounded-xl backdrop-blur-sm transition-all duration-300 border ${
+                      filtersApplied 
+                        ? 'bg-gradient-to-r from-purple-600/90 to-purple-500/90 border-purple-500/30 shadow-lg shadow-purple-500/10'
+                        : 'bg-black/30 border-white/10 hover:border-white/20'
+                    }`}
+                  >
+                    <svg 
+                      className={`w-5 h-5 ${filtersApplied ? 'text-white' : 'text-white/90'}`} 
+                      fill="none" 
+                      viewBox="0 0 24 24" 
+                      stroke="currentColor"
                     >
-                      <svg 
-                        className={`w-5 h-5 ${
-                          filtersApplied ? 'text-white' : 'text-white/90'
-                        }`} 
-                        fill="none" 
-                        viewBox="0 0 24 24" 
-                        stroke="currentColor"
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                      </svg>
-                    </button>
-                    {filtersApplied && (
-                      <span className="absolute -top-1 -right-1 w-2 h-2 bg-purple-400 rounded-full"></span>
-                    )}
-                  </div>
-                )}
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                    </svg>
+                  </button>
+                  {filtersApplied && selectedCategory === 'Explore' && (
+                    <motion.span 
+                      className="absolute -top-1 -right-1 w-2 h-2 bg-purple-400 rounded-full"
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ delay: 0.2 }}
+                    />
+                  )}
+                </motion.div>
               </div>
-            ))}
+            </div>
           </div>
         </div>
       </div>
