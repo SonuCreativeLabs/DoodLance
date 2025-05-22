@@ -296,17 +296,17 @@ export default function FeedPage() {
         <MapView jobs={filteredJobs} selectedCategory={selectedCategory} />
       </div>
 
-      {/* Header */}
-      <div className={`fixed top-0 left-0 right-0 z-10 px-4 pt-2 pb-1 transition-all duration-300 ${
+      {/* Header - Fixed height to account for search and tabs */}
+      <div className={`fixed top-0 left-0 right-0 z-10 px-4 pt-4 pb-2 transition-all duration-300 h-[120px] flex flex-col justify-between ${
         isSheetCollapsed ? 'bg-transparent' : 'bg-[#121212]'
       }`}>
         {/* Search Bar */}
-        <div className="flex items-center mb-2">
+        <div className="flex items-center mb-3">
           <div className="relative w-full">
             <input
               type="text"
               placeholder="Search jobs..."
-              className="w-full bg-black/60 backdrop-blur-md text-white text-sm px-4 py-2 pl-10 pr-4 rounded-full border border-white/10 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className="w-full bg-black/60 backdrop-blur-md text-white text-sm px-4 py-2.5 pl-10 pr-4 rounded-full border border-white/10 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             />
             <svg className="w-3.5 h-3.5 text-white/60 absolute left-3 top-1/2 transform -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -315,7 +315,7 @@ export default function FeedPage() {
         </div>
         
         {/* Categories with Filter Button */}
-        <div className="relative flex items-center justify-center py-2 w-full overflow-visible">
+        <div className="relative flex items-center justify-center py-1.5 w-full overflow-visible">
           <div className={`relative transition-transform duration-300 ease-in-out ${
             selectedCategory === 'Explore' ? '-translate-x-8' : 'translate-x-0'
           }`}>
@@ -399,24 +399,22 @@ export default function FeedPage() {
 
       {/* Bottom Sheet */}
       <motion.div
-        className={`bg-[#121212] backdrop-blur-lg shadow-2xl transition-all duration-300 ${
-          isSheetCollapsed ? 'rounded-t-3xl' : 'rounded-none'
-        }`}
+        className={`bg-[#121212] backdrop-blur-lg shadow-2xl ${isSheetCollapsed ? 'rounded-t-3xl' : 'rounded-none'}`}
         style={{
           position: 'fixed',
           left: 0,
           right: 0,
+          top: '120px',
           bottom: 0,
-          height: 'calc(100vh - 100px)', // Adjusted to remove gap
           touchAction: 'pan-y',
           willChange: 'transform',
           overflow: 'hidden',
+        }}
+        initial={{ y: 'calc(100vh - 160px)' }}
+        animate={{
+          y: isSheetCollapsed ? 'calc(100vh - 160px)' : '0',
           borderTopLeftRadius: isSheetCollapsed ? '1.5rem' : '0',
           borderTopRightRadius: isSheetCollapsed ? '1.5rem' : '0',
-        }}
-        initial={{ y: '70vh' }}
-        animate={{
-          y: isSheetCollapsed ? 'calc(100vh - 20px)' : '0', // 2% up from bottom
         }}
         transition={{
           type: "spring",
@@ -453,13 +451,13 @@ export default function FeedPage() {
       >
         {/* Drag handle */}
         <div 
-          className="flex flex-col items-center pt-2 pb-1 cursor-grab active:cursor-grabbing touch-none select-none"
+          className="flex flex-col items-center pt-3 pb-2 cursor-grab active:cursor-grabbing touch-none select-none bg-[#121212]"
           style={{ touchAction: 'none' }}
           onPointerDown={() => setIsDragTextVisible(false)}
           onPointerUp={() => resetDragTextVisibility()}
         >
-          <div className="w-10 h-1 bg-white/30 rounded-full" />
-          <div className="text-white/70 text-sm font-semibold mt-1">
+          <div className="w-10 h-1 bg-white/30 rounded-full mb-1.5" />
+          <div className="text-white/80 text-sm font-semibold">
             {filteredJobs.length} jobs available
           </div>
         </div>
@@ -468,11 +466,10 @@ export default function FeedPage() {
         <div 
           className={`flex-1 ${isSheetCollapsed ? 'overflow-hidden' : 'overflow-y-auto'} overscroll-contain`}
           style={{
-            maxHeight: isSheetCollapsed ? 'auto' : 'calc(100vh - 140px)'
+            maxHeight: isSheetCollapsed ? '0' : 'calc(100vh - 140px)'
           }}
         >
           <div className="container max-w-2xl mx-auto px-0 pb-6">
-
             {/* Jobs list */}
             <div className="space-y-2 px-4">
               <ProfessionalsFeed jobs={filteredJobs} />
