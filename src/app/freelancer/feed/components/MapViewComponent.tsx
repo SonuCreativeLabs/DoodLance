@@ -300,12 +300,15 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
     markersRef.current = [];
 
     // Add markers for filtered jobs
+    console.log(`Adding ${filteredJobs.length} job markers to the map`);
     filteredJobs.forEach((job) => {
       // Skip jobs without valid coordinates
       if (!job.coords || job.coords.length !== 2 || typeof job.coords[0] !== 'number' || typeof job.coords[1] !== 'number') {
         console.warn('Skipping job with invalid coordinates:', job);
         return;
       }
+      
+      console.log(`Adding marker for job: ${job.title} at [${job.coords[0]}, ${job.coords[1]}]`);
 
       // Create a smaller location pin marker
       const markerEl = document.createElement('div');
@@ -359,23 +362,95 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
         </div>
       `;
 
-      // Create popup
+      // Create popup with connecting line to pin
       const popup = new mapboxgl.Popup({
-        offset: 25,
+        offset: [0, -15], // Position above the pin
         closeButton: false,
+        closeOnClick: false,
         maxWidth: '340px',
-        className: 'custom-popup animate-popup',
+        className: 'custom-popup',
         anchor: 'bottom'
-      }).setHTML(popupContent);
+      }).setHTML(`
+        <div class="popup-content">
+          ${popupContent}
+          <div class="popup-connector"></div>
+        </div>
+      `);
 
-      // Add marker to map
-      const marker = new mapboxgl.Marker(markerEl)
-        .setLngLat(job.coords) // job.coords is already in [lng, lat] format
-        .setPopup(popup)
-        .addTo(map.current!);
+      // Add marker to map with popup
+      try {
+        const marker = new mapboxgl.Marker({
+          element: markerEl,
+          anchor: 'bottom'
+        })
+          .setLngLat(job.coords)
+          .setPopup(popup)
+          .addTo(map.current!);
+          
+        console.log(`Marker added successfully for job: ${job.title}`);
+        
+        // Use Mapbox's built-in popup toggle
+        markerEl.style.cursor = 'pointer';
+        
+        // Add click handler to toggle the popup
+        markerEl.addEventListener('click', (e) => {
+          e.stopPropagation();
+          
+          // Close all other popups
+          markersRef.current.forEach(m => {
+            if (m !== marker) {
+              const popup = m.getPopup();
+              if (popup && popup.isOpen()) {
+                popup.remove();
+              }
+            }
+          });
+          
+          // Toggle the current marker's popup
+          const currentPopup = marker.getPopup();
+          if (currentPopup) {
+            if (currentPopup.isOpen()) {
+              currentPopup.remove();
+            } else {
+              // Create a new popup to ensure it's fresh
+              const newPopup = new mapboxgl.Popup({
+                offset: [0, -10],
+                closeButton: false,
+                closeOnClick: false,
+                maxWidth: '340px',
+                className: 'custom-popup',
+                anchor: 'bottom'
+              })
+                .setLngLat(job.coords)
+                .setHTML(popupContent)
+                .addTo(map.current!);
 
-      markersRef.current.push(marker);
+              // Update the marker's popup reference
+              marker.setPopup(newPopup);
+              
+              // Center the map on the marker with an offset to account for the category section
+              if (map.current) {
+                // Center the map on the marker with a slight offset
+                map.current.flyTo({
+                  center: job.coords,
+                  offset: [0, -80], // Adjust this value to position the marker relative to the popup
+                  essential: true,
+                  duration: 500
+                });
+              }
+            }
+          }
+        });
+        
+        // Store the marker reference
+        markersRef.current.push(marker);
+      } catch (error) {
+        console.error(`Error adding marker for job ${job.title}:`, error);
+      }
+
     });
+    
+    console.log(`Finished adding ${markersRef.current.length} markers to the map`);
 
     // Fit map to show all markers if we have any
     if (filteredJobs.length > 0) {
@@ -432,9 +507,47 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
       
       <div
         ref={mapContainer}
-        className="w-full h-full rounded-lg overflow-hidden shadow-sm"
+        className="w-full h-full rounded-lg overflow-hidden shadow-sm relative"
         style={style}
       />
+      <style jsx global>{`
+        .mapboxgl-popup {
+          z-index: 1000;
+          pointer-events: auto !important;
+          /* Let Mapbox handle the positioning */
+          padding-bottom: 15px; /* Space for the connector */
+        }
+        
+        .popup-content {
+          position: relative;
+        }
+        
+        .popup-connector {
+          position: absolute;
+          bottom: -15px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 2px;
+          height: 20px;
+          background: linear-gradient(to bottom, rgba(0,0,0,0.1), transparent);
+        }
+        .mapboxgl-popup-content {
+          padding: 0 !important;
+          border-radius: 0.75rem;
+          overflow: hidden;
+          background: transparent !important;
+          box-shadow: 0 10px 25px rgba(0,0,0,0.2) !important;
+        }
+        .mapboxgl-popup-tip {
+          display: none !important;
+        }
+        .mapboxgl-popup-close-button {
+          display: none;
+        }
+        .mapboxgl-popup-anchor-bottom {
+          margin-top: 10px; /* Adjust as needed */
+        }
+      `}</style>
     </div>
   );
 };
