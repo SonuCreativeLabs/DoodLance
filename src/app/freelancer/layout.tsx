@@ -20,8 +20,8 @@ export default function FreelancerLayout({ children }: FreelancerLayoutProps) {
 
   const navItems = [
     { href: '/freelancer', label: 'Home', icon: Home },
-    { href: '/freelancer/feed', label: 'Feed', icon: Compass },
     { href: '/freelancer/jobs', label: 'Jobs', icon: Briefcase },
+    { href: '/freelancer/feed', label: 'Feed', icon: Compass },
     { href: '/freelancer/inbox', label: 'Inbox', icon: Inbox },
     { href: '/freelancer/profile', label: 'Profile', icon: User },
   ]

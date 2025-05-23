@@ -226,9 +226,23 @@ export default function FeedPage() {
       
       console.log(`For You tab: Found ${filtered.length} jobs matching your skills (cricket/developer)`);
       
+      // Apply search query if one exists
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        filtered = filtered.filter(job => 
+          job.title.toLowerCase().includes(query) ||
+          job.description.toLowerCase().includes(query) ||
+          job.category.toLowerCase().includes(query) ||
+          (job.skills && job.skills.some(skill => 
+            skill.toLowerCase().includes(query)
+          ))
+        );
+        console.log(`After search (${searchQuery}): ${filtered.length} jobs remaining`);
+      }
+      
       // If no jobs found, suggest searching in the Explore tab
       if (filtered.length === 0) {
-        console.log('No jobs found matching your skills. Try the Explore tab for more options.');
+        console.log('No jobs found matching your criteria. Try adjusting your search or check the Explore tab for more options.');
       }
     }
     
@@ -367,6 +381,8 @@ export default function FeedPage() {
             <input
               type="text"
               placeholder="Search jobs..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full bg-black/60 backdrop-blur-md text-white text-sm px-4 py-2.5 pl-10 pr-4 rounded-full border border-white/10 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             />
             <svg className="w-3.5 h-3.5 text-white/60 absolute left-3 top-1/2 transform -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
