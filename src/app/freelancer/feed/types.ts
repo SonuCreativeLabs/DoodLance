@@ -19,6 +19,10 @@ export interface Professional {
 
 export type WorkMode = 'remote' | 'onsite' | 'hybrid';
 
+export type JobType = 'freelance' | 'part-time' | 'full-time' | 'contract';
+export type JobDuration = 'hourly' | 'daily' | 'weekly' | 'monthly';
+export type ExperienceLevel = 'Entry Level' | 'Intermediate' | 'Expert';
+
 export interface Job {
   id: string;
   title: string;
@@ -29,13 +33,14 @@ export interface Job {
   location: string;
   coords: [number, number];
   skills: string[];
-  workMode: 'remote' | 'onsite' | 'hybrid';
-  type: 'full-time' | 'part-time' | 'contract';
+  workMode: WorkMode;
+  type: JobType;
   postedAt: string;
   clientName: string;
-  clientImage?: string;
+  clientImage: string;
   clientRating: string;
   clientJobs: number;
   proposals: number;
-  duration: string;
+  duration: JobDuration;
+  experience: ExperienceLevel;
 }

@@ -7,6 +7,10 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 // Define the Job interface that matches your data structure
 type SalaryPeriod = 'hour' | 'day' | 'week' | 'month' | 'year';
 
+type JobType = 'freelance' | 'part-time' | 'full-time' | 'contract';
+type JobDuration = 'hourly' | 'daily' | 'weekly' | 'monthly';
+type ExperienceLevel = 'Entry Level' | 'Intermediate' | 'Expert';
+
 interface Company {
   name: string;
   logo?: string;
@@ -35,12 +39,15 @@ export interface Job {
   coords: [number, number]; // [lng, lat] format for Mapbox
   skills: string[];
   workMode: 'remote' | 'onsite' | 'hybrid';
-  type: 'full-time' | 'part-time' | 'contract';
+  type: JobType;
   postedAt: string;
+  clientName: string;
+  clientImage: string;
   clientRating: string;
   clientJobs: number;
   proposals: number;
-  duration: string;
+  duration: JobDuration;
+  experience: ExperienceLevel;
   salary?: Salary;
 }
 

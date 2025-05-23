@@ -125,6 +125,10 @@ const generateJobs = (): Job[] => {
   };
 
   // Helper function to generate a job
+  // Define job durations and experience levels
+  const jobDurations = ['hourly', 'daily', 'weekly', 'monthly'] as const;
+  const experienceLevels = ['Entry Level', 'Intermediate', 'Expert'] as const;
+
   const createJob = ({
     id,
     title,
@@ -132,8 +136,8 @@ const generateJobs = (): Job[] => {
     category,
     skills,
     workMode,
-    minRate = 500,
-    maxRate = 2500
+    minRate = 300,
+    maxRate = 2000
   }: {
     id: string;
     title: string;
@@ -144,8 +148,36 @@ const generateJobs = (): Job[] => {
     minRate?: number;
     maxRate?: number;
   }) => {
-    const rate = Math.floor(Math.random() * (maxRate - minRate)) + minRate;
-    const budget = rate * Math.floor(Math.random() * 100) + 50;
+    // Generate a more realistic rate based on category and experience
+    const experience = experienceLevels[Math.floor(Math.random() * experienceLevels.length)];
+    
+    // Adjust base rate based on experience
+    let experienceMultiplier = 1;
+    if (experience === 'Intermediate') experienceMultiplier = 1.5;
+    if (experience === 'Expert') experienceMultiplier = 2.5;
+    
+    // Base rate for Chennai freelance work
+    const baseRate = Math.floor(Math.random() * (maxRate - minRate)) + minRate;
+    const rate = Math.floor(baseRate * experienceMultiplier);
+    
+    // Generate budget based on duration
+    const duration = jobDurations[Math.floor(Math.random() * jobDurations.length)];
+    let budget = rate;
+    
+    switch(duration) {
+      case 'hourly':
+        budget = rate * (Math.floor(Math.random() * 8) + 1); // 1-8 hours
+        break;
+      case 'daily':
+        budget = rate * 8 * (Math.floor(Math.random() * 3) + 1); // 1-3 days
+        break;
+      case 'weekly':
+        budget = rate * 8 * 5 * (Math.floor(Math.random() * 4) + 1); // 1-4 weeks
+        break;
+      case 'monthly':
+        budget = rate * 8 * 5 * 4 * (Math.floor(Math.random() * 3) + 1); // 1-3 months
+        break;
+    }
     const { name: location, coords: baseCoords } = getRandomArea();
     const coords = generateNearbyCoords(baseCoords);
     const clientName = clientNames[Math.floor(Math.random() * clientNames.length)];
@@ -160,14 +192,15 @@ const generateJobs = (): Job[] => {
       coords,
       skills,
       workMode,
-      type: jobTypes[Math.floor(Math.random() * jobTypes.length)],
+      type: 'freelance',
       postedAt: new Date(Date.now() - Math.floor(Math.random() * 7 * 24 * 60 * 60 * 1000)).toISOString(),
       clientName,
       clientImage: `https://ui-avatars.com/api/?name=${encodeURIComponent(clientName)}&background=6B46C1&color=fff&bold=true`,
       clientRating: (Math.floor(Math.random() * 10) / 2 + 3).toFixed(1),
       clientJobs: Math.floor(Math.random() * 50) + 1,
       proposals: Math.floor(Math.random() * 30),
-      duration: `${Math.floor(Math.random() * 6) + 1} months`
+      duration,
+      experience
     };
     return job;
   };
@@ -195,9 +228,9 @@ const generateJobs = (): Job[] => {
         description,
         category: category.charAt(0).toUpperCase() + category.slice(1).replace('_', ' '),
         skills,
-        workMode: 'onsite',
-        minRate: 800,
-        maxRate: 3000
+        workMode: 'hybrid',
+        minRate: 350,
+        maxRate: 18000
       }));
     });
   });
