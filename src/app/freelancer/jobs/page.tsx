@@ -14,7 +14,7 @@ export default function JobsPage() {
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="container max-w-screen-xl mx-auto px-4 py-6"
+      className="container max-w-screen-xl mx-auto px-4 py-6 bg-[#111111] min-h-screen"
     >
       <Tabs defaultValue="jobs" className="w-full" onValueChange={setActiveTab}>
         <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
