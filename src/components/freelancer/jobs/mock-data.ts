@@ -1,0 +1,287 @@
+import { Job, Application, EarningsData } from './types';
+
+// Your skills that will be matched with jobs
+export const mySkills = [
+  'House Cleaning', 'Deep Cleaning', 'Organization', 'AC Repair', 'Maintenance',
+  'Wall Painting', 'Color Mixing', 'Office Maintenance', 'Sanitization',
+  'Organic Gardening', 'Landscape Design', 'Plant Care',
+  'React', 'Node.js', 'JavaScript', 'TypeScript', 'MongoDB', 'Git',
+  'Cricket Coaching', 'Batting Techniques', 'Bowling Techniques', 'Team Management'
+];
+
+// Function to find matching skills between your skills and job requirements
+export const getMatchingSkills = (jobSkills: string[] = []) => {
+  return mySkills.filter(skill => 
+    jobSkills.some(jobSkill => 
+      jobSkill.toLowerCase().includes(skill.toLowerCase()) || 
+      skill.toLowerCase().includes(jobSkill.toLowerCase())
+    )
+  );
+};
+
+// Mock data for demonstration
+export const mockUpcomingJobs: Job[] = [
+  {
+    id: 'cricket-1',
+    title: 'Cricket Coach for U-16 Team',
+    category: 'Sports Coaching',
+    date: '2024-07-10',
+    time: '16:00',
+    status: 'pending',
+    payment: 2500,
+    location: 'Mylapore, Chennai',
+    description: 'Looking for an experienced cricket coach for our U-16 academy team. Must have prior coaching experience and knowledge of modern cricket techniques. Will be responsible for conducting training sessions 3 times a week.',
+    skills: ['Cricket Coaching', 'Batting Techniques', 'Bowling Techniques', 'Fielding Drills', 'Team Management'],
+    duration: '2 hours per session',
+    experienceLevel: 'Expert'
+  },
+  {
+    id: 'dev-1',
+    title: 'Full Stack Web Developer',
+    category: 'Web Development',
+    date: '2024-07-05',
+    time: '10:00',
+    status: 'confirmed',
+    payment: 15000,
+    location: 'Remote',
+    description: 'Need an experienced Full Stack Developer to build and maintain web applications. Must be proficient in React, Node.js, and have experience with databases. This is a contract position with potential for extension.',
+    skills: ['React', 'Node.js', 'MongoDB', 'REST APIs', 'JavaScript', 'TypeScript', 'Git'],
+    duration: '3 months',
+    experienceLevel: 'Expert'
+  },
+  {
+    id: '1',
+    title: 'House Cleaning',
+    category: 'Cleaning',
+    date: '2024-06-25',
+    time: '14:00',
+    status: 'confirmed',
+    payment: 1500,
+    location: 'Anna Nagar, Chennai',
+    description: 'Deep cleaning of 2BHK apartment including kitchen and bathroom. Need someone with attention to detail and own cleaning supplies.',
+    skills: ['House Cleaning', 'Deep Cleaning', 'Organization'],
+    duration: '3-4 hours',
+    experienceLevel: 'Intermediate'
+  },
+  {
+    id: '2',
+    title: 'Garden Maintenance',
+    category: 'Gardening',
+    date: '2024-06-26',
+    time: '10:00',
+    status: 'pending',
+    payment: 800,
+    location: 'T Nagar, Chennai',
+    description: 'Weekly garden maintenance including mowing, pruning, and weeding. Must have experience with both manual and power tools.',
+    skills: ['Lawn Mowing', 'Pruning', 'Landscaping'],
+    duration: '2-3 hours',
+    experienceLevel: 'Beginner'
+  },
+  {
+    id: '3',
+    title: 'AC Service Technician Needed',
+    category: 'Appliance Repair',
+    date: '2024-06-27',
+    time: '11:30',
+    status: 'confirmed',
+    payment: 1200,
+    location: 'Adyar, Chennai',
+    description: 'Annual maintenance service for 2 split AC units. Must be certified and provide service report.',
+    skills: ['AC Repair', 'Maintenance', 'HVAC'],
+    duration: '2 hours',
+    experienceLevel: 'Expert'
+  },
+  {
+    id: '4',
+    title: 'Interior Painting Work',
+    category: 'Painting',
+    date: '2024-06-28',
+    time: '09:00',
+    status: 'completed',
+    payment: 3500,
+    location: 'Velachery, Chennai',
+    description: 'Interior painting for living room (400 sq ft). Must provide all materials and clean up after completion.',
+    skills: ['Wall Painting', 'Color Mixing', 'Surface Prep'],
+    duration: '6-8 hours',
+    experienceLevel: 'Intermediate'
+  },
+  {
+    id: 'cricket-bowling-1',
+    title: 'Bowling Coach for Cricket Academy',
+    category: 'Sports Coaching',
+    date: '2024-07-15',
+    time: '17:00',
+    status: 'cancelled',
+    payment: 2000,
+    location: 'Nungambakkam, Chennai',
+    description: 'Required experienced bowling coach for our cricket academy. Must specialize in fast bowling techniques and have experience working with young cricketers.',
+    skills: ['Bowling Techniques', 'Pace Bowling', 'Swing Bowling', 'Coaching'],
+    duration: '2 hours',
+    experienceLevel: 'Expert'
+  }
+];
+
+export const mockApplications: Application[] = [
+  {
+    id: 'cricket-proposal',
+    jobTitle: 'Cricket Coach for School Team',
+    appliedDate: '2024-06-28',
+    status: 'pending',
+    clientName: 'Chennai Public School',
+    budget: { min: 2000, max: 3000 },
+    progress: 0,
+    clientImage: '/avatars/school.jpg',
+    location: 'Nungambakkam, Chennai',
+    postedDate: '2024-06-25',
+    description: 'Looking for a part-time cricket coach for our school team. Must have experience coaching children aged 10-14.',
+    clientId: 'school123',
+    proposal: {
+      coverLetter: 'I have 5+ years of experience coaching young cricketers and have helped teams win district-level tournaments. I focus on both technical skills and team building.',
+      proposedRate: 2500,
+      estimatedDays: 30,
+      skills: ['Cricket Coaching', 'Batting Techniques', 'Bowling Techniques', 'Team Management', 'Youth Development'],
+      attachments: ['coaching_certificate.pdf', 'resume.pdf']
+    }
+  },
+  {
+    id: 'dev-proposal',
+    jobTitle: 'Frontend Developer for E-commerce Site',
+    appliedDate: '2024-06-29',
+    status: 'pending',
+    clientName: 'TechStart Inc',
+    budget: { min: 15000, max: 25000 },
+    progress: 0,
+    clientImage: '/avatars/company2.jpg',
+    location: 'Remote',
+    postedDate: '2024-06-26',
+    description: 'Need a skilled frontend developer to build a responsive e-commerce site using React and TypeScript.',
+    clientId: 'techstart456',
+    proposal: {
+      coverLetter: 'I am a full-stack developer with 3+ years of experience in React and TypeScript. I have built multiple e-commerce platforms and can ensure a smooth, responsive user experience.',
+      proposedRate: 20000,
+      estimatedDays: 45,
+      skills: ['React', 'TypeScript', 'Redux', 'Responsive Design', 'UI/UX'],
+      attachments: ['portfolio.pdf', 'resume_dev.pdf']
+    }
+  },
+  {
+    id: '1',
+    jobTitle: 'Office Cleaning',
+    appliedDate: '2024-06-20',
+    status: 'pending',
+    clientName: 'TechCorp Ltd',
+    budget: { min: 1800, max: 2000 },
+    progress: 0,
+    clientImage: '/avatars/company1.jpg',
+    location: 'Tidel Park, Chennai',
+    postedDate: '2024-06-18',
+    description: 'Daily cleaning for 2000 sq ft office space',
+    clientId: 'client1',
+    proposal: {
+      coverLetter: 'I have 5+ years of experience in commercial cleaning and can ensure your office space is spotless. I have all necessary equipment and can work during your preferred hours.',
+      proposedRate: 2000,
+      estimatedDays: 3,
+      skills: ['Deep Cleaning', 'Office Maintenance', 'Sanitization'],
+      attachments: ['Resume.pdf', 'Certification.pdf']
+    }
+  },
+  {
+    id: '2',
+    jobTitle: 'Home Gardening',
+    appliedDate: '2024-06-19',
+    status: 'accepted',
+    clientName: 'Meera R',
+    budget: { min: 800, max: 1000 },
+    progress: 0,
+    clientImage: '/avatars/avatar5.jpg',
+    location: 'Besant Nagar, Chennai',
+    postedDate: '2024-06-17',
+    description: 'Monthly maintenance for small garden with native plants',
+    clientId: 'client2',
+    proposal: {
+      coverLetter: 'As a certified horticulturist with expertise in native plants, I can help maintain your garden with organic methods. I specialize in sustainable gardening practices.',
+      proposedRate: 900,
+      estimatedDays: 1,
+      skills: ['Organic Gardening', 'Landscape Design', 'Plant Care'],
+      attachments: ['Portfolio.pdf', 'Certification.pdf']
+    }
+  },
+  {
+    id: '3',
+    jobTitle: 'Plumbing Repair',
+    appliedDate: '2024-06-21',
+    status: 'rejected',
+    clientName: 'Rahul K',
+    budget: { min: 1200, max: 1800 },
+    progress: 0,
+    clientImage: '/avatars/avatar6.jpg',
+    location: 'Nungambakkam, Chennai',
+    postedDate: '2024-06-20',
+    description: 'Fix leaking pipes in kitchen and bathroom',
+    clientId: 'client3',
+    proposal: {
+      coverLetter: 'Licensed plumber with 8 years of experience in residential repairs. I can diagnose and fix your leaking pipes efficiently with minimal disruption.',
+      proposedRate: 1500,
+      estimatedDays: 1,
+      skills: ['Pipe Repair', 'Leak Detection', 'Bathroom Plumbing'],
+      attachments: ['License.pdf', 'References.pdf']
+    }
+  }
+];
+
+export const mockEarnings: EarningsData = {
+  totalEarnings: 45600,
+  pendingPayouts: 7800,
+  completedJobs: 24,
+  averageRating: 4.7,
+  recentTransactions: [
+    {
+      id: '1',
+      amount: 2500,
+      status: 'completed',
+      date: '2024-06-20',
+      jobTitle: 'Office Deep Cleaning',
+      client: 'TechWave Solutions',
+      type: 'credit',
+      paymentMethod: 'UPI'
+    },
+    {
+      id: '2',
+      amount: 1800,
+      status: 'pending',
+      date: '2024-06-21',
+      jobTitle: 'Garden Maintenance',
+      client: 'Green Spaces Ltd',
+      type: 'credit',
+      paymentMethod: 'Cash'
+    },
+    {
+      id: '3',
+      amount: 1200,
+      status: 'completed',
+      date: '2024-06-19',
+      jobTitle: 'AC Service',
+      client: 'Cool Air Systems',
+      type: 'credit',
+      paymentMethod: 'UPI'
+    },
+    {
+      id: '4',
+      amount: 500,
+      status: 'completed',
+      date: '2024-06-18',
+      jobTitle: 'Plumbing Repair',
+      client: 'HomeServe Connect',
+      type: 'credit',
+      paymentMethod: 'Cash'
+    }
+  ],
+  earningsByMonth: [
+    { month: 'Jan', earnings: 12000 },
+    { month: 'Feb', earnings: 9800 },
+    { month: 'Mar', earnings: 14200 },
+    { month: 'Apr', earnings: 15600 },
+    { month: 'May', earnings: 18900 },
+    { month: 'Jun', earnings: 21300 },
+  ]
+};
