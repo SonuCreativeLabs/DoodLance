@@ -2,12 +2,12 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
-import { CalendarIcon, MapPin, FileText, ClockIcon } from 'lucide-react';
+import { CalendarIcon, MapPin, ClockIcon, MessageCircle } from 'lucide-react';
 import { IndianRupee } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 import { Job } from './types';
 import { getStatusStyles, formatTimeRemaining } from './utils';
-import { getMatchingSkills } from './mock-data';
 
 interface JobCardProps {
   job: Job;
@@ -15,13 +15,27 @@ interface JobCardProps {
 }
 
 export const JobCard: React.FC<JobCardProps> = ({ job, index }) => {
+  const router = useRouter();
+  
+  const handleCardClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    router.push(`/freelancer/jobs/${job.id}`);
+  };
+  
+  const handleMessageClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    // Handle message button click
+    console.log('Message button clicked for job:', job.id);
+  };
+
   return (
     <motion.div
       key={job.id}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: index * 0.1 }}
-      className="relative w-full px-0"
+      className="relative w-full px-0 cursor-pointer"
+      onClick={handleCardClick}
     >
       <motion.div
         whileHover={{ scale: 1.01 }}
@@ -48,90 +62,61 @@ export const JobCard: React.FC<JobCardProps> = ({ job, index }) => {
             </h3>
             
             {/* Job Meta */}
-            <div className="flex flex-wrap items-center gap-4 text-sm">
-              {job.category && (
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-900/30 text-purple-400 border border-purple-800/50">
-                  {job.category}
-                </span>
+            <div className="grid grid-cols-2 gap-3 text-sm mt-3">
+              <div className="flex items-start gap-2 text-white/60">
+                <CalendarIcon className="w-4 h-4 text-purple-400 flex-shrink-0 mt-0.5" />
+                <div>
+                  <div className="text-xs text-white/40">Date & Time</div>
+                  <div className="text-white/80">{format(new Date(job.date), 'MMM d, yyyy')} • {job.time}</div>
+                </div>
+              </div>
+              {job.location && (
+                <div className="flex items-start gap-2 text-white/60">
+                  <MapPin className="w-4 h-4 text-purple-400 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <div className="text-xs text-white/40">Location</div>
+                    <div className="text-white/80">{job.location}</div>
+                  </div>
+                </div>
               )}
+              <div className="flex items-start gap-2 text-white/60">
+                <IndianRupee className="w-4 h-4 text-purple-400 flex-shrink-0 mt-0.5" />
+                <div>
+                  <div className="text-xs text-white/40">Payment</div>
+                  <div className="text-white/80">₹{job.payment} <span className="text-xs">/job</span></div>
+                </div>
+              </div>
               {job.experienceLevel && (
-                <span className="text-white/60">
-                  {job.experienceLevel}
-                </span>
+                <div className="flex items-start gap-2 text-white/60">
+                  <div className="w-4 h-4 flex items-center justify-center mt-0.5">
+                    <div className="w-1.5 h-1.5 rounded-full bg-purple-400"></div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-white/40">Experience</div>
+                    <div className="text-white/80">{job.experienceLevel}</div>
+                  </div>
+                </div>
               )}
-              {job.duration && (
-                <span className="flex items-center text-white/60">
-                  <ClockIcon className="w-3.5 h-3.5 mr-1" />
-                  {job.duration}
-                </span>
-              )}
-            </div>
-            
-            {/* Skills */}
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-xs font-medium text-white/60">Skills:</span>
-                <span className="text-xs text-white/40">
-                  {getMatchingSkills(job.skills).length} of {job.skills?.length || 0} match
-                </span>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {job.skills?.slice(0, 6).map((skill, i) => {
-                  const isMatching = getMatchingSkills(job.skills).includes(skill);
-                  return (
-                    <span 
-                      key={i} 
-                      className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs ${
-                        isMatching 
-                          ? 'bg-green-900/30 text-green-400 border border-green-800/50' 
-                          : 'bg-white/5 text-white/60 border border-white/10'
-                      }`}
-                    >
-                      {skill}
-                    </span>
-                  );
-                })}
-                {job.skills && job.skills.length > 6 && (
-                  <span className="text-xs text-white/40 self-center">
-                    +{job.skills.length - 6} more
-                  </span>
-                )}
-              </div>
             </div>
           </div>
 
-          {/* Description */}
-          {job.description && (
-            <p className="text-sm text-white/80 leading-relaxed">{job.description}</p>
-          )}
-
-          {/* Job Details */}
-          <div className="flex flex-wrap gap-4 text-sm">
-            <div className="flex items-center gap-2 text-white/60">
-              <CalendarIcon className="w-4 h-4 text-purple-400" />
-              <span>{format(new Date(job.date), 'MMM d, yyyy')} • {job.time}</span>
-            </div>
-            {job.location && (
-              <div className="flex items-center gap-2 text-sm text-gray-400">
-                <MapPin className="w-4 h-4" />
-                <span>{job.location}</span>
-              </div>
-            )}
-            <div className="flex items-center gap-2 text-white/60">
-              <IndianRupee className="w-4 h-4 text-purple-400" />
-              <span className="font-medium text-white/80">₹{job.payment}</span>
-              <span className="text-sm">/job</span>
-            </div>
-          </div>
-
-          {/* View Details Button */}
-          <div className="pt-2">
+          {/* Action Buttons */}
+          <div className="flex items-center justify-between pt-4 gap-3">
             <Button 
               variant="outline" 
-              size="sm" 
-              className="w-full bg-black/30 border-gray-700 hover:bg-gray-800/50 hover:border-purple-500/50 text-white/90 transition-colors"
+              size="sm"
+              className="flex-1 bg-transparent hover:bg-white/5 border-white/10 text-white/80 hover:text-white"
+              onClick={handleMessageClick}
             >
-              <FileText className="w-4 h-4 mr-2" />
+              <MessageCircle className="w-4 h-4 mr-2" />
+              Message
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm"
+              className="flex-1 flex items-center justify-center gap-2 text-white/60 hover:text-white/90 hover:bg-white/5 transition-colors"
+              onClick={handleCardClick}
+            >
               View Details
             </Button>
           </div>

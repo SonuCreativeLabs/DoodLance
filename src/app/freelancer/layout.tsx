@@ -20,14 +20,14 @@ export default function FreelancerLayout({ children }: FreelancerLayoutProps) {
 
   const navItems = [
     { href: '/freelancer', label: 'Home', icon: Home },
-    { href: '/freelancer/jobs', label: 'Jobs', icon: Briefcase },
+    { href: '/freelancer/jobs', label: 'My Jobs', icon: Briefcase },
     { href: '/freelancer/feed', label: 'Feed', icon: Compass },
     { href: '/freelancer/inbox', label: 'Inbox', icon: Inbox },
     { href: '/freelancer/profile', label: 'Profile', icon: User },
   ]
 
-  // For feed page, we want a minimal layout with just the content and bottom nav
-  if (pathname === '/freelancer/feed') {
+  // For feed and job details pages, we want a minimal layout with just the content and bottom nav
+  if (pathname === '/freelancer/feed' || pathname?.startsWith('/freelancer/jobs/')) {
     return (
       <div className="h-[100dvh] overflow-hidden">
         {children}
