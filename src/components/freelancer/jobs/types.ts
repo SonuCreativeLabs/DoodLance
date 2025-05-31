@@ -1,23 +1,73 @@
 // Status Types
-export type JobStatus = 'confirmed' | 'pending' | 'completed' | 'cancelled';
+export type JobStatus = 'confirmed' | 'pending' | 'completed' | 'cancelled' | 'upcoming';
 export type ApplicationStatus = 'pending' | 'accepted' | 'rejected' | 'completed' | 'cancelled';
 export type TransactionStatus = 'pending' | 'failed' | 'completed';
 
 export type StatusType = JobStatus | ApplicationStatus | TransactionStatus;
 
+// Job Categories
+export type JobCategory = 
+  | 'PHOTO' 
+  | 'VIDEO' 
+  | 'DESIGN' 
+  | 'MUSIC' 
+  | 'DANCE' 
+  | 'EVENT' 
+  | 'OTHER';
+
+export const JOB_CATEGORIES = [
+  'PHOTO',
+  'VIDEO',
+  'DESIGN',
+  'MUSIC',
+  'DANCE',
+  'EVENT',
+  'OTHER'
+] as const;
+
+export interface ClientInfo {
+  name: string;
+  rating?: number;
+  jobsCompleted?: number;
+}
+
+export interface CancellationDetails {
+  cancelledBy: 'client' | 'freelancer';
+  cancelledAt: string;
+  notes?: string;
+}
+
+export interface Rating {
+  stars: 1 | 2 | 3 | 4 | 5;
+  feedback: string;
+  date: string;
+}
+
 export interface Job {
   id: string;
   title: string;
-  category?: string;
+  category: JobCategory;
   date: string;
   time: string;
-  status: JobStatus;
-  payment: number;
+  jobDate?: string; // Scheduled date for the job
+  jobTime?: string;  // Scheduled time for the job
+  status: JobStatus | 'upcoming' | 'completed' | 'cancelled';
+  payment: number | string;
   location: string;
   description?: string;
   skills?: string[];
   duration?: string;
   experienceLevel?: 'Beginner' | 'Intermediate' | 'Expert';
+  client?: ClientInfo;
+  cancellationDetails?: CancellationDetails;
+  rating?: Rating;
+  clientRating?: Rating;
+  earnings?: {
+    amount: number;
+    platformFee: number;
+    total: number;
+  };
+  completedAt?: string;
 }
 
 export interface Proposal {

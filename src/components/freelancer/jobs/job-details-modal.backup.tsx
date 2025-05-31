@@ -1,6 +1,6 @@
 'use client';
 
-import { X, MessageCircle, Phone, MapPin, CalendarIcon, ClockIcon, IndianRupee, ArrowLeft, AlertCircle, User, UserCheck, Star, ChevronDown, ChevronUp, CheckCircle, ThumbsUp, Award, Heart, Zap, MessageSquare } from 'lucide-react';
+import { X, MessageCircle, MapPin, CalendarIcon, ClockIcon, IndianRupee, ArrowLeft, AlertCircle, User, UserCheck, Star, ChevronDown, ChevronUp, CheckCircle, ThumbsUp, Award, Heart, Zap, MessageSquare, Search, FileText } from 'lucide-react';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -28,7 +28,6 @@ interface JobDetailsModalProps {
     status?: 'upcoming' | 'completed' | 'cancelled' | 'confirmed' | 'pending';
     client?: {
       name: string;
-      phoneNumber?: string;
       rating?: number;
       jobsCompleted?: number;
     };
@@ -107,31 +106,29 @@ export function JobDetailsModal({ job }: JobDetailsModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 bg-[#0a0a0a] overflow-y-auto">
-      {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-[#0a0a0a]/95 backdrop-blur-sm border-b border-white/10 p-4 flex items-center">
-        <button 
-          onClick={handleBack}
-          className="p-2 rounded-full hover:bg-white/10 transition-colors"
-          aria-label="Go back"
-        >
-          <ArrowLeft className="w-5 h-5 text-white/80" />
-        </button>
-        <div className="ml-4">
-          <div className="text-sm font-medium text-white">
-            {job.status === 'upcoming' || job.status === 'confirmed' || job.status === 'pending' 
-              ? 'Upcoming Job' 
-              : job.status === 'completed' 
-                ? 'Completed Job' 
-                : 'Cancelled Job'}
+      <div className="min-h-[100dvh] w-full pt-16 pb-24">
+        {/* Header */}
+        <div className="fixed top-0 left-0 right-0 z-50 bg-[#0a0a0a]/95 backdrop-blur-sm border-b border-white/10 p-4 flex items-center">
+          <button 
+            onClick={handleBack}
+            className="p-2 rounded-full hover:bg-white/10 transition-colors"
+            aria-label="Go back"
+          >
+            <ArrowLeft className="w-5 h-5 text-white/80" />
+          </button>
+          <div className="ml-4">
+            <div className="text-sm font-medium text-white">
+              {job.status === 'upcoming' || job.status === 'confirmed' || job.status === 'pending' 
+                ? 'Upcoming Job' 
+                : job.status === 'completed' 
+                  ? 'Completed Job' 
+                  : 'Cancelled Job'}
+            </div>
+            <div className="text-xs font-mono text-white/60">ID: {job.id}</div>
           </div>
-          <div className="text-xs font-mono text-white/60">ID: {job.id}</div>
         </div>
-      </div>
-      
-      {/* Main Content */}
-      <div className="min-h-[100dvh] w-full pt-20 pb-24">
+        
         <div className="max-w-6xl mx-auto p-4 md:p-6">
-          
           <div className="space-y-8">
             <div className="relative">
               <div className="flex flex-col space-y-2 mb-6">
@@ -243,89 +240,47 @@ export function JobDetailsModal({ job }: JobDetailsModalProps) {
             )}
 
             <div className="pt-6 border-t border-white/10">
-              {(job.status === 'upcoming' || job.status === 'confirmed' || job.status === 'pending') && (
-                <div className="space-y-4">
-                  {/* Action Buttons */}
-                  <div className="space-y-3">
-                    {/* First Row: Message and Call Buttons */}
-                    <div className="flex gap-3 w-full">
-                      {/* Message Button */}
-                      <Button 
-                        variant="default"
-                        size="sm"
-                        className="flex-1 bg-gradient-to-r from-[#643cb5] to-[#4a1c91] hover:from-[#5a36a3] hover:to-[#3a1773] text-white h-12 text-sm font-medium shadow-md shadow-purple-900/20 transition-all duration-200 flex items-center justify-center gap-2"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          // Handle message client
-                        }}
-                      >
-                        <MessageCircle className="w-4 h-4" />
-                        <span>Message</span>
-                      </Button>
-                      
-                      {/* Call Button */}
-                      <Button 
-                        variant="default"
-                        size="sm"
-                        className="flex-1 text-white h-12 text-sm font-medium shadow-md transition-all duration-200 flex items-center justify-center gap-2"
-                        style={{
-                          background: 'linear-gradient(135deg, #2131e2 0%, #1d59eb 100%)',
-                          boxShadow: '0 4px 14px 0 rgba(33, 49, 226, 0.25)'
-                        }}
-                        onMouseOver={(e) => {
-                          e.currentTarget.style.background = 'linear-gradient(135deg, #1d2bcb 0%, #1a4fd3 100%)';
-                        }}
-                        onMouseOut={(e) => {
-                          e.currentTarget.style.background = 'linear-gradient(135deg, #2131e2 0%, #1d59eb 100%)';
-                        }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (job.client?.phoneNumber) {
-                            window.location.href = `tel:${job.client.phoneNumber}`;
-                          }
-                        }}
-                      >
-                        <Phone className="w-4 h-4" />
-                        <span>Call</span>
-                      </Button>
-                    </div>
+              {job.status === 'upcoming' && (
+                <div className="flex flex-col sm:flex-row justify-end gap-4">
+                  <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                    <Button 
+                      variant="outline" 
+                      className="bg-transparent border-white/10 hover:bg-white/5 w-full sm:w-auto"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        // Handle message click
+                      }}
+                    >
+                      <MessageCircle className="w-4 h-4 mr-2" />
+                      Message Client
+                    </Button>
                     
-                    {/* Second Row: Cancel and Complete Buttons */}
-                    <div className="flex gap-3 w-full">
-                      {/* Cancel Job Button */}
-                      <Button 
-                        variant="outline"
-                        size="sm"
-                        className="flex-1 bg-red-900/10 hover:bg-red-900/20 border-red-800/20 text-red-400 hover:text-red-300 h-12 text-sm font-medium transition-all duration-200 flex items-center justify-center gap-2"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          // Handle cancel job
-                        }}
-                      >
-                        <X className="w-4 h-4" />
-                        <span>Cancel Job</span>
-                      </Button>
-                      
-                      {/* Mark as Complete Button */}
-                      <Button 
-                        variant="default"
-                        size="sm"
-                        className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white h-12 text-sm font-medium shadow-md shadow-green-900/20 transition-all duration-200 flex items-center justify-center gap-2"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          // Handle mark as complete
-                        }}
-                      >
-                        <CheckCircle className="w-4 h-4" />
-                        <span>Mark as Complete</span>
-                      </Button>
-                    </div>
+                    <Button 
+                      variant="outline" 
+                      className="bg-transparent border-white/10 hover:bg-white/5 text-red-400 hover:text-red-300 hover:border-red-400/30 w-full sm:w-auto"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        // Handle cancel job
+                      }}
+                    >
+                      Cancel Job
+                    </Button>
                   </div>
+                  
+                  <Button 
+                    className="bg-purple-600 hover:bg-purple-700 w-full sm:w-auto"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      // Handle job completion
+                    }}
+                  >
+                    Mark as Complete
+                  </Button>
                 </div>
               )}
               
               {job.status === 'completed' && (
-                <div className="space-y-4">
+                <div className="space-y-6">
                   {/* Completion Status */}
                   <div className="w-full text-center py-3 bg-green-900/10 rounded-lg border border-green-900/20">
                     <p className="text-green-400 mb-2">
@@ -341,6 +296,30 @@ export function JobDetailsModal({ job }: JobDetailsModalProps) {
                     <p className="text-sm text-white/70">
                       Thanks for completing this job! Your payment is being processed.
                     </p>
+                  </div>
+                  
+                  {/* Action Buttons for Completed Jobs */}
+                  <div className="flex flex-col sm:flex-row gap-3 pt-4">
+                    <Button 
+                      variant="outline" 
+                      className="h-12 px-6 border-white/20 hover:bg-white/10 hover:text-white/90 transition-colors flex-1"
+                      onClick={() => {
+                        console.log('Message client clicked');
+                      }}
+                    >
+                      <MessageCircle className="w-4 h-4 mr-2" />
+                      Message Client
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      className="h-12 px-6 border-purple-400/30 text-purple-400 hover:bg-purple-900/20 hover:border-purple-400/50 hover:text-purple-300 transition-colors flex-1"
+                      onClick={() => {
+                        console.log('View invoice clicked');
+                      }}
+                    >
+                      <FileText className="w-4 h-4 mr-2" />
+                      View Invoice
+                    </Button>
                   </div>
 
                   {/* Your Earnings */}
@@ -490,7 +469,8 @@ export function JobDetailsModal({ job }: JobDetailsModalProps) {
               )}
               
               {job.status === 'cancelled' && job.cancellationDetails && (
-                <div className="w-full p-4 mb-4 bg-red-900/10 border border-red-900/20 rounded-lg">
+                <div className="space-y-4">
+                  <div className="w-full p-4 bg-red-900/10 border border-red-900/20 rounded-lg">
                   <div className="flex items-start gap-3">
                     <div className="flex-shrink-0 pt-0.5">
                       <AlertCircle className="w-5 h-5 text-red-400" />
@@ -540,9 +520,75 @@ export function JobDetailsModal({ job }: JobDetailsModalProps) {
                       </div>
                     </div>
                   </div>
+                  
+                  {/* Action Buttons for Cancelled Jobs */}
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <Button 
+                      variant="outline" 
+                      className="h-12 px-6 border-white/20 hover:bg-white/10 hover:text-white/90 transition-colors flex-1"
+                      onClick={() => {
+                        console.log('Message client clicked');
+                      }}
+                    >
+                      <MessageCircle className="w-4 h-4 mr-2" />
+                      Message Client
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      className="h-12 px-6 border-blue-400/30 text-blue-400 hover:bg-blue-900/20 hover:border-blue-400/50 hover:text-blue-300 transition-colors flex-1"
+                      onClick={() => {
+                        console.log('Find similar jobs clicked');
+                      }}
+                    >
+                      <Search className="w-4 h-4 mr-2" />
+                      Find Similar Jobs
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>
+            
+            {/* Action Buttons for Upcoming Jobs */}
+            {(job.status === 'upcoming' || job.status === 'confirmed' || job.status === 'pending') && (
+              <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent py-4 px-4 z-40">
+                <div className="max-w-6xl mx-auto flex flex-col sm:flex-row gap-3 justify-end">
+                  <Button 
+                    variant="outline" 
+                    className="h-12 px-6 border-white/20 hover:bg-white/10 hover:text-white/90 transition-colors flex-1 sm:flex-initial"
+                    onClick={() => {
+                      // Handle message client
+                      console.log('Message client clicked');
+                    }}
+                  >
+                    <MessageCircle className="w-4 h-4 mr-2" />
+                    Message
+                  </Button>
+                  
+                  <Button 
+                    variant="outline"
+                    className="h-12 px-6 border-red-400/30 text-red-400 hover:bg-red-900/20 hover:border-red-400/50 hover:text-red-300 transition-colors flex-1 sm:flex-initial"
+                    onClick={() => {
+                      // Handle cancel job
+                      console.log('Cancel job clicked');
+                    }}
+                  >
+                    <X className="w-4 h-4 mr-2" />
+                    Cancel Job
+                  </Button>
+                  
+                  <Button 
+                    className="h-12 px-6 bg-gradient-to-r from-purple-600 to-blue-500 hover:from-purple-700 hover:to-blue-600 transition-all flex-1 sm:flex-initial"
+                    onClick={() => {
+                      // Handle mark as complete
+                      console.log('Mark as complete clicked');
+                    }}
+                  >
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    Mark Complete
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -21,41 +21,53 @@ export const getMatchingSkills = (jobSkills: string[] = []) => {
 
 // Mock data for demonstration
 export const mockUpcomingJobs: Job[] = [
+  // Original jobs with updated IDs but keeping original details
   {
-    id: 'cricket-1',
+    id: 'DLSP1234',
     title: 'Cricket Coach for U-16 Team',
-    category: 'Sports Coaching',
+    category: 'OTHER',
     date: '2024-07-10',
     time: '16:00',
-    status: 'pending',
+    status: 'upcoming',
     payment: 2500,
     location: 'Mylapore, Chennai',
-    description: 'Looking for an experienced cricket coach for our U-16 academy team. Must have prior coaching experience and knowledge of modern cricket techniques. Will be responsible for conducting training sessions 3 times a week.',
+    description: 'Looking for an experienced cricket coach for our U-16 academy team. Must have prior coaching experience and knowledge of modern cricket techniques.',
     skills: ['Cricket Coaching', 'Batting Techniques', 'Bowling Techniques', 'Fielding Drills', 'Team Management'],
     duration: '2 hours per session',
     experienceLevel: 'Expert'
   },
   {
-    id: 'dev-1',
+    id: 'DLWD5678',
     title: 'Full Stack Web Developer',
-    category: 'Web Development',
-    date: '2024-07-05',
+    category: 'DESIGN',
+    date: '2024-06-25',
     time: '10:00',
-    status: 'confirmed',
+    status: 'completed',
+    completedAt: '2024-06-25T15:30:00',
     payment: 15000,
     location: 'Remote',
-    description: 'Need an experienced Full Stack Developer to build and maintain web applications. Must be proficient in React, Node.js, and have experience with databases. This is a contract position with potential for extension.',
+    description: 'Need an experienced Full Stack Developer to build and maintain web applications. Must be proficient in React, Node.js, and have experience with databases.',
     skills: ['React', 'Node.js', 'MongoDB', 'REST APIs', 'JavaScript', 'TypeScript', 'Git'],
     duration: '3 months',
-    experienceLevel: 'Expert'
+    experienceLevel: 'Expert',
+    earnings: {
+      amount: 15000,
+      platformFee: 1500, // 10%
+      total: 13500
+    },
+    clientRating: {
+      stars: 5,
+      feedback: 'Excellent work! The developer delivered high-quality code and was very professional throughout the project. Would definitely hire again.',
+      date: '2024-06-26T10:15:00'
+    }
   },
   {
-    id: '1',
+    id: 'DLCL9012',
     title: 'House Cleaning',
-    category: 'Cleaning',
-    date: '2024-06-25',
+    category: 'OTHER',
+    date: '2024-06-20',
     time: '14:00',
-    status: 'confirmed',
+    status: 'completed',
     payment: 1500,
     location: 'Anna Nagar, Chennai',
     description: 'Deep cleaning of 2BHK apartment including kitchen and bathroom. Need someone with attention to detail and own cleaning supplies.',
@@ -64,37 +76,47 @@ export const mockUpcomingJobs: Job[] = [
     experienceLevel: 'Intermediate'
   },
   {
-    id: '2',
+    id: 'DLGD6789',
     title: 'Garden Maintenance',
-    category: 'Gardening',
-    date: '2024-06-26',
+    category: 'OTHER',
+    date: '2024-06-18',
     time: '10:00',
-    status: 'pending',
+    status: 'cancelled',
     payment: 800,
     location: 'T Nagar, Chennai',
     description: 'Weekly garden maintenance including mowing, pruning, and weeding. Must have experience with both manual and power tools.',
     skills: ['Lawn Mowing', 'Pruning', 'Landscaping'],
     duration: '2-3 hours',
-    experienceLevel: 'Beginner'
+    experienceLevel: 'Beginner',
+    cancellationDetails: {
+      cancelledBy: 'client',
+      cancelledAt: '2024-06-16T14:30:00',
+      notes: 'Client found another service provider with a lower rate.'
+    }
   },
   {
-    id: '3',
-    title: 'AC Service Technician Needed',
-    category: 'Appliance Repair',
-    date: '2024-06-27',
+    id: 'DLAC3456',
+    title: 'AC Service Technician',
+    category: 'OTHER',
+    date: '2024-06-15',
     time: '11:30',
-    status: 'confirmed',
+    status: 'cancelled',
     payment: 1200,
     location: 'Adyar, Chennai',
     description: 'Annual maintenance service for 2 split AC units. Must be certified and provide service report.',
     skills: ['AC Repair', 'Maintenance', 'HVAC'],
     duration: '2 hours',
-    experienceLevel: 'Expert'
+    experienceLevel: 'Expert',
+    cancellationDetails: {
+      cancelledBy: 'freelancer',
+      cancelledAt: '2024-06-14T16:45:00',
+      notes: 'Unable to service this model of AC unit.'
+    }
   },
   {
-    id: '4',
+    id: 'DLPT7890',
     title: 'Interior Painting Work',
-    category: 'Painting',
+    category: 'OTHER',
     date: '2024-06-28',
     time: '09:00',
     status: 'completed',
@@ -105,18 +127,76 @@ export const mockUpcomingJobs: Job[] = [
     duration: '6-8 hours',
     experienceLevel: 'Intermediate'
   },
+  
+  // New jobs with the updated format
   {
-    id: 'cricket-bowling-1',
-    title: 'Bowling Coach for Cricket Academy',
-    category: 'Sports Coaching',
+    id: 'DLPH1234',
+    title: 'Professional Photo Shoot',
+    category: 'PHOTO',
+    date: '2024-07-12',
+    time: '09:00',
+    status: 'pending',
+    payment: 3500,
+    location: 'Adyar, Chennai',
+    description: 'Need a professional photographer for a product photoshoot. Must have experience with product photography and lighting.',
+    skills: ['Product Photography', 'Lighting', 'Editing'],
+    duration: '6 hours',
+    experienceLevel: 'Intermediate'
+  },
+  {
+    id: 'DLVD3456',
+    title: 'Wedding Videography',
+    category: 'VIDEO',
+    date: '2024-07-08',
+    time: '08:00',
+    status: 'confirmed',
+    payment: 20000,
+    location: 'Bessy, Chennai',
+    description: 'Looking for a professional videographer for a wedding event. Must have experience in wedding cinematography and editing.',
+    skills: ['Videography', 'Editing', 'Storytelling'],
+    duration: 'Full day',
+    experienceLevel: 'Expert'
+  },
+  {
+    id: 'DLMS7890',
+    title: 'Live Band Performance',
+    category: 'MUSIC',
     date: '2024-07-15',
-    time: '17:00',
-    status: 'cancelled',
-    payment: 2000,
-    location: 'Nungambakkam, Chennai',
-    description: 'Required experienced bowling coach for our cricket academy. Must specialize in fast bowling techniques and have experience working with young cricketers.',
-    skills: ['Bowling Techniques', 'Pace Bowling', 'Swing Bowling', 'Coaching'],
+    time: '19:00',
+    status: 'pending',
+    payment: 15000,
+    location: 'Velachery, Chennai',
+    description: 'Looking for a live band for a corporate event. Must have experience performing at corporate functions.',
+    skills: ['Live Performance', 'Music', 'Entertainment'],
+    duration: '3 hours',
+    experienceLevel: 'Expert'
+  },
+  {
+    id: 'DLDN2468',
+    title: 'Dance Performance',
+    category: 'DANCE',
+    date: '2024-07-20',
+    time: '18:00',
+    status: 'confirmed',
+    payment: 12000,
+    location: 'Anna Nagar, Chennai',
+    description: 'Looking for professional dancers for a cultural event. Various dance styles welcome.',
+    skills: ['Dance', 'Choreography', 'Performance'],
     duration: '2 hours',
+    experienceLevel: 'Expert'
+  },
+  {
+    id: 'DLEV1357',
+    title: 'Corporate Event Planning',
+    category: 'EVENT',
+    date: '2024-07-25',
+    time: '10:00',
+    status: 'pending',
+    payment: 25000,
+    location: 'Nungambakkam, Chennai',
+    description: 'Need an event manager for a corporate conference. Must have experience in managing large-scale events.',
+    skills: ['Event Planning', 'Vendor Management', 'Logistics'],
+    duration: 'Full day',
     experienceLevel: 'Expert'
   }
 ];
