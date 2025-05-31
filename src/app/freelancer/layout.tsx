@@ -26,8 +26,10 @@ export default function FreelancerLayout({ children }: FreelancerLayoutProps) {
     { href: '/freelancer/profile', label: 'Profile', icon: User },
   ]
 
-  // For feed and job details pages, we want a minimal layout with just the content and bottom nav
-  if (pathname === '/freelancer/feed' || pathname?.startsWith('/freelancer/jobs/')) {
+  // For feed, job details, and proposal details pages, we want a minimal layout with just the content and bottom nav
+  if (pathname === '/freelancer/feed' || 
+      pathname?.startsWith('/freelancer/jobs/') || 
+      pathname?.startsWith('/freelancer/proposals/')) {
     return (
       <div className="h-[100dvh] overflow-hidden">
         {children}

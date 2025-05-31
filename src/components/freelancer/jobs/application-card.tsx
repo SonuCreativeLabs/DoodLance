@@ -1,12 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { format } from 'date-fns';
+import { format, formatDistanceToNow } from 'date-fns';
 import { Button } from '@/components/ui/button';
-import { MapPin, FileText, XCircle } from 'lucide-react';
+import { MapPin, FileText, MessageCircle, Clock, CheckCircle, XCircle, ChevronDown, ChevronUp, User, Clock as ClockIcon } from 'lucide-react';
 import { IndianRupee } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 import { Application, ApplicationStatus } from './types';
-import { getStatusStyles } from './utils';
+import { getStatusStyles, formatTime12Hour } from './utils';
+import { cn } from '@/lib/utils';
 
 interface ApplicationCardProps {
   application: Application;
@@ -15,147 +17,239 @@ interface ApplicationCardProps {
 }
 
 export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, index, onViewDetails }) => {
+  const router = useRouter();
+  
+  const [isExpanded, setIsExpanded] = useState(false);
+  const statusStyles = getStatusStyles(application.status as ApplicationStatus);
+  const isPending = application.status === 'pending';
+  const isAccepted = application.status === 'accepted';
+  const isRejected = application.status === 'rejected';
+
+  const statusIcons: Record<ApplicationStatus, React.ReactNode> = {
+    pending: <Clock className="w-3.5 h-3.5 mr-1.5" />,
+    accepted: <CheckCircle className="w-3.5 h-3.5 mr-1.5" />,
+    rejected: <XCircle className="w-3.5 h-3.5 mr-1.5" />,
+    completed: <CheckCircle className="w-3.5 h-3.5 mr-1.5" />,
+    cancelled: <XCircle className="w-3.5 h-3.5 mr-1.5" />
+  };
+
+  const handleCardClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    router.push(`/freelancer/proposals/${application.id}`);
+  };
+
+  const handleMessageClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    // Handle message button click
+    console.log('Message button clicked for application:', application.id);
+  };
+
   return (
     <motion.div
       key={application.id}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.05 }}
-      className="group relative"
+      transition={{ duration: 0.3, delay: index * 0.1 }}
+      className="relative w-full px-0 cursor-pointer"
+      onClick={handleCardClick}
     >
       <motion.div
         whileHover={{ scale: 1.01 }}
-        className="p-6 rounded-2xl bg-white/5 border border-white/10 hover:border-purple-500/30 backdrop-blur-xl border-gray-800 hover:border-purple-500/30 transition-all duration-300 shadow-2xl shadow-black/50"
+        className="p-5 rounded-xl bg-[#1E1E1E] border border-white/5 hover:border-white/10 transition-all duration-200 w-full shadow-lg hover:shadow-purple-500/5"
       >
-        <div className="space-y-5">
-          {/* Header */}
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white/80 border border-white/10">
-                <span className="text-sm font-medium">
-                  {application.clientName ? application.clientName.charAt(0).toUpperCase() : 'C'}
+        <div className="space-y-4">
+          {/* Status and Time */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className={cn(
+                "text-xs font-medium px-3 py-1 rounded-full border w-fit",
+                statusStyles.bg,
+                statusStyles.text,
+                statusStyles.border
+              )}>
+                {application.status.charAt(0).toUpperCase() + application.status.slice(1)}
+              </div>
+              <div className="text-xs font-medium bg-gray-800/50 text-gray-300 px-2.5 py-1.5 rounded-full border border-gray-700/50 backdrop-blur-sm flex items-center gap-1.5">
+                <ClockIcon className="w-3 h-3 text-gray-400" />
+                <span className="font-mono">
+                  {formatDistanceToNow(new Date(application.appliedDate), { addSuffix: true })}
                 </span>
               </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="text-lg font-medium text-white group-hover:text-purple-400 transition-colors duration-300">
-                  {application.jobTitle}
-                </h3>
-                <p className="text-sm text-white/60">
-                  {application.clientName || 'Client'}
-                </p>
-              </div>
             </div>
-            <div className={`${getStatusStyles(application.status as ApplicationStatus).bg} ${getStatusStyles(application.status as ApplicationStatus).text} text-xs font-medium px-3 py-1 rounded-full border ${getStatusStyles(application.status as ApplicationStatus).border} w-fit`}>
-              {application.status === 'accepted' ? 'Accepted' : 
-                application.status === 'rejected' ? 'Rejected' : 'Pending'}
-            </div>
-          </div>
-          
-          {/* Meta Info */}
-          <div className="flex flex-wrap items-center gap-4 text-sm">
-            <div className="flex items-center text-white/60">
-              <MapPin className="w-3.5 h-3.5 mr-1 text-purple-400" />
-              {application.location}
-            </div>
-            <div className="text-white/30">•</div>
-            <div className="text-white/60">
-              Applied on {format(new Date(application.appliedDate), 'MMM d, yyyy')}
-            </div>
-            <div className="text-white/30">•</div>
-            <div className="text-white/60">
-              Posted {format(new Date(application.postedDate), 'MMM d, yyyy')}
+            <div className="flex items-center gap-1.5 text-sm text-white/60">
+              <span className="font-mono text-xs">
+                {application.id}
+              </span>
             </div>
           </div>
 
-          {/* Proposal Details */}
-          <div className="space-y-3">
-            <div className="bg-white/5 p-3 rounded-lg border border-white/10">
-              <h4 className="text-sm font-medium text-white/90 mb-2">Your Proposal</h4>
-              <p className="text-sm text-white/80 mb-3">{application.proposal.coverLetter}</p>
-              
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <div className="bg-white/5 p-2 rounded">
-                  <p className="text-white/60 text-xs">Proposed Rate</p>
-                  <p className="text-white/90 font-medium">₹{application.proposal.proposedRate.toLocaleString()}</p>
-                </div>
-                <div className="bg-white/5 p-2 rounded">
-                  <p className="text-white/60 text-xs">Estimated Days</p>
-                  <p className="text-white/90 font-medium">{application.proposal.estimatedDays} day{application.proposal.estimatedDays > 1 ? 's' : ''}</p>
+          {/* Job Title and Client */}
+          <div>
+            <h3 className="text-base font-medium text-white line-clamp-2 mb-1">
+              {application.jobTitle}
+            </h3>
+            <div className="flex items-center gap-2 text-sm text-white/60">
+              <User className="w-3.5 h-3.5 text-purple-400" />
+              <span>{application.clientName || 'Client'}</span>
+            </div>
+          </div>
+
+          {/* Job Meta */}
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            <div className="flex items-start gap-2 text-white/60">
+              <div className="flex-shrink-0 mt-0.5 flex flex-col items-center">
+                <MapPin className="w-4 h-4 text-purple-400" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-xs text-white/40 mb-0.5">Location</div>
+                <div className="text-sm text-white/90 line-clamp-1">
+                  {application.location}
                 </div>
               </div>
-              
-              <div className="mt-3">
-                <p className="text-xs text-white/60 mb-1">Skills</p>
-                <div className="flex flex-wrap gap-2">
-                  {application.proposal.skills.map((skill, i) => (
-                    <span key={i} className="text-xs bg-white/10 text-white/80 px-2 py-1 rounded">
-                      {skill}
-                    </span>
-                  ))}
+            </div>
+            <div className="flex items-start gap-2 text-white/60">
+              <div className="flex-shrink-0 mt-0.5">
+                <IndianRupee className="w-4 h-4 text-purple-400" />
+              </div>
+              <div>
+                <div className="text-xs text-white/40 mb-0.5">Proposed Rate</div>
+                <div className="text-sm text-white/90">
+                  ₹{application.proposal.proposedRate.toLocaleString()}
                 </div>
               </div>
-              
-              {application.proposal.attachments && application.proposal.attachments.length > 0 && (
-                <div className="mt-3">
-                  <p className="text-xs text-white/60 mb-1">Attachments</p>
-                  <div className="space-y-1">
-                    {application.proposal.attachments.map((file, i) => (
-                      <div key={i} className="flex items-center text-xs text-purple-400 hover:text-purple-300 cursor-pointer">
-                        <FileText className="w-3 h-3 mr-1" />
-                        {file}
-                      </div>
+            </div>
+          </div>
+
+          {/* Expandable section */}
+          {isExpanded && (
+            <motion.div 
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="overflow-hidden"
+            >
+              <div className="mt-4 pt-4 border-t border-white/5 space-y-4">
+                {/* Proposal details */}
+                <div>
+                  <h4 className="text-sm font-medium text-white/90 mb-2">Your Proposal</h4>
+                  <p className="text-sm text-white/70 bg-white/5 p-3 rounded-lg">
+                    {application.proposal.coverLetter}
+                  </p>
+                </div>
+
+                {/* Skills */}
+                <div>
+                  <p className="text-xs text-white/60 mb-2">SKILLS SHOWCASED</p>
+                  <div className="flex flex-wrap gap-2">
+                    {application.proposal.skills.map((skill, i) => (
+                      <span 
+                        key={i} 
+                        className="text-xs bg-white/5 text-white/80 px-2.5 py-1 rounded-full border border-white/5"
+                      >
+                        {skill}
+                      </span>
                     ))}
                   </div>
                 </div>
+
+                {/* Attachments */}
+                {application.proposal.attachments?.length > 0 && (
+                  <div>
+                    <p className="text-xs text-white/60 mb-2">ATTACHMENTS</p>
+                    <div className="space-y-2">
+                      {application.proposal.attachments.map((file, i) => (
+                        <div 
+                          key={i} 
+                          className="flex items-center text-sm text-white/70 hover:text-white/90 transition-colors cursor-pointer"
+                        >
+                          <FileText className="w-4 h-4 mr-2 text-purple-400" />
+                          <span className="truncate">{file}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+
+          {/* Actions */}
+          <div className="flex items-center justify-between pt-2">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="text-white/60 hover:text-white hover:bg-white/5 px-2 h-8 text-xs"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsExpanded(!isExpanded);
+              }}
+            >
+              {isExpanded ? (
+                <>
+                  <ChevronUp className="w-3.5 h-3.5 mr-1" />
+                  Less details
+                </>
+              ) : (
+                <>
+                  <ChevronDown className="w-3.5 h-3.5 mr-1" />
+                  More details
+                </>
               )}
-            </div>
-          </div>
+            </Button>
 
-          {/* Budget */}
-          <div className="flex items-center gap-2 text-sm">
-            <div className="flex items-center text-white/80">
-              <IndianRupee className="w-4 h-4 mr-1 text-purple-400" />
-              <span className="font-medium">
-                ₹{application.budget.min.toLocaleString()}
-                {application.budget.max > application.budget.min ? ` - ₹${application.budget.max.toLocaleString()}` : ''}
-              </span>
-              <span className="ml-1 text-white/60">/job</span>
-            </div>
-          </div>
-
-          {/* Description */}
-          <p className="text-sm text-white/80 leading-relaxed">
-            {application.description}
-          </p>
-
-          {/* Action Buttons */}
-          <div className="mt-4 pt-4 border-t border-white/10">
-            <div className="grid grid-cols-3 gap-3 w-full">
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={onViewDetails}
-                className="h-10 w-full px-4 py-2 text-sm font-medium bg-purple-900/30 border border-purple-700 hover:bg-purple-800/50 hover:border-purple-500/50 text-white/90 transition-all duration-200 flex items-center justify-center"
-              >
-                <FileText className="w-4 h-4 mr-2 flex-shrink-0" />
-                <span>View Details</span>
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm"
-                className="h-10 w-full px-4 py-2 text-sm font-medium bg-black/30 border border-gray-700 hover:bg-gray-800/50 hover:border-purple-500/50 text-white/90 transition-all duration-200 flex items-center justify-center"
-              >
-                <FileText className="w-4 h-4 mr-2 flex-shrink-0" />
-                <span>Edit Proposal</span>
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm"
-                className="h-10 w-full px-4 py-2 text-sm font-medium bg-red-900/30 border border-red-800/50 hover:bg-red-800/50 hover:border-red-700/50 text-red-400 hover:text-red-300 transition-all duration-200 flex items-center justify-center"
-              >
-                <XCircle className="w-4 h-4 mr-2 flex-shrink-0" />
-                <span>Withdraw</span>
-              </Button>
+            <div className="flex gap-2">
+              {isPending && (
+                <>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="h-8 text-xs border-white/10 hover:bg-white/5 hover:border-white/20"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      // Handle edit
+                    }}
+                  >
+                    Edit
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="h-8 text-xs text-red-400 border-red-400/20 hover:bg-red-400/10 hover:border-red-400/30"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      // Handle withdraw
+                    }}
+                  >
+                    Withdraw
+                  </Button>
+                </>
+              )}
+              
+              {isAccepted && (
+                <Button 
+                  variant="default" 
+                  size="sm" 
+                  className="h-8 text-xs bg-purple-600 hover:bg-purple-700"
+                  onClick={handleMessageClick}
+                >
+                  <MessageCircle className="w-3.5 h-3.5 mr-1.5" />
+                  Message
+                </Button>
+              )}
+              
+              {isRejected && (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="h-8 text-xs border-white/10 hover:bg-white/5"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    // Handle view feedback
+                  }}
+                >
+                  Feedback
+                </Button>
+              )}
             </div>
           </div>
         </div>
