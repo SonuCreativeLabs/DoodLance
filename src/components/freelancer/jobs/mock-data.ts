@@ -34,7 +34,22 @@ export const mockUpcomingJobs: Job[] = [
     description: 'Looking for an experienced cricket coach for our U-16 academy team. Must have prior coaching experience and knowledge of modern cricket techniques.',
     skills: ['Cricket Coaching', 'Batting Techniques', 'Bowling Techniques', 'Fielding Drills', 'Team Management'],
     duration: '2 hours per session',
-    experienceLevel: 'Expert'
+    experienceLevel: 'Expert',
+    client: {
+      name: 'Rajesh Kumar',
+      rating: 4.8,
+      jobsCompleted: 8,
+      moneySpent: 85000,
+      memberSince: '2022-03-15',
+      phoneNumber: '+91 9876543210',
+      image: '/avatars/rajesh.jpg',
+      freelancersWorked: 8,
+      freelancerAvatars: [
+        'https://randomuser.me/api/portraits/men/32.jpg',
+        'https://randomuser.me/api/portraits/women/45.jpg',
+        'https://randomuser.me/api/portraits/men/67.jpg'
+      ]
+    }
   },
   {
     id: 'DLWD5678',
@@ -50,6 +65,21 @@ export const mockUpcomingJobs: Job[] = [
     skills: ['React', 'Node.js', 'MongoDB', 'REST APIs', 'JavaScript', 'TypeScript', 'Git'],
     duration: '3 months',
     experienceLevel: 'Expert',
+    client: {
+      name: 'Priya Sharma',
+      rating: 4.9,
+      jobsCompleted: 12,
+      moneySpent: 95000,
+      memberSince: '2020-05-10',
+      phoneNumber: '+91 8765432109',
+      image: '/avatars/priya.jpg',
+      freelancersWorked: 12,
+      freelancerAvatars: [
+        'https://randomuser.me/api/portraits/women/22.jpg',
+        'https://randomuser.me/api/portraits/men/18.jpg',
+        'https://randomuser.me/api/portraits/women/33.jpg'
+      ]
+    },
     earnings: {
       amount: 15000,
       platformFee: 1500, // 10%
@@ -73,7 +103,21 @@ export const mockUpcomingJobs: Job[] = [
     description: 'Deep cleaning of 2BHK apartment including kitchen and bathroom. Need someone with attention to detail and own cleaning supplies.',
     skills: ['House Cleaning', 'Deep Cleaning', 'Organization'],
     duration: '3-4 hours',
-    experienceLevel: 'Intermediate'
+    experienceLevel: 'Intermediate',
+    client: {
+      name: 'Ananya Patel',
+      rating: 4.7,
+      jobsCompleted: 6,
+      moneySpent: 32000,
+      memberSince: '2023-01-20',
+      phoneNumber: '+91 7654321098',
+      image: '/avatars/ananya.jpg',
+      freelancersWorked: 5,
+      freelancerAvatars: [
+        'https://randomuser.me/api/portraits/women/28.jpg',
+        'https://randomuser.me/api/portraits/men/35.jpg'
+      ]
+    }
   },
   {
     id: 'DLGM1234',
@@ -88,6 +132,19 @@ export const mockUpcomingJobs: Job[] = [
     skills: ['Lawn Mowing', 'Pruning', 'Landscaping'],
     duration: '2-3 hours',
     experienceLevel: 'Beginner',
+    client: {
+      name: 'Arjun Mehta',
+      rating: 4.2,
+      jobsCompleted: 5,
+      moneySpent: 28000,
+      memberSince: '2023-07-10',
+      phoneNumber: '+91 6543210987',
+      image: '/avatars/arjun.jpg',
+      freelancersWorked: 3,
+      freelancerAvatars: [
+        'https://randomuser.me/api/portraits/men/29.jpg'
+      ]
+    },
     cancellationDetails: {
       cancelledBy: 'client',
       cancelledAt: '2024-06-16T14:30:00',
@@ -99,6 +156,21 @@ export const mockUpcomingJobs: Job[] = [
     title: 'AC Service Technician',
     category: 'OTHER',
     date: '2024-06-15',
+    client: {
+      name: 'Sunita Iyer',
+      rating: 4.5,
+      jobsCompleted: 9,
+      moneySpent: 68000,
+      memberSince: '2021-11-05',
+      phoneNumber: '+91 9432109876',
+      image: '/avatars/sunita.jpg',
+      freelancersWorked: 12,
+      freelancerAvatars: [
+        'https://randomuser.me/api/portraits/men/45.jpg',
+        'https://randomuser.me/api/portraits/women/37.jpg',
+        'https://randomuser.me/api/portraits/men/22.jpg'
+      ]
+    },
     time: '11:30',
     status: 'cancelled',
     payment: 1200,
@@ -141,7 +213,22 @@ export const mockUpcomingJobs: Job[] = [
     description: 'Need a professional photographer for a product photoshoot. Must have experience with product photography and lighting.',
     skills: ['Product Photography', 'Lighting', 'Editing'],
     duration: '6 hours',
-    experienceLevel: 'Intermediate'
+    experienceLevel: 'Intermediate',
+    client: {
+      name: 'Meena Gupta',
+      rating: 4.6,
+      jobsCompleted: 5,
+      moneySpent: 42000,
+      memberSince: '2022-05-15',
+      phoneNumber: '+91 8765432101',
+      image: '/avatars/meena.jpg',
+      freelancersWorked: 5,
+      freelancerAvatars: [
+        'https://randomuser.me/api/portraits/women/31.jpg',
+        'https://randomuser.me/api/portraits/men/42.jpg',
+        'https://randomuser.me/api/portraits/women/25.jpg'
+      ]
+    }
   },
   {
     id: 'DLVD3456',
@@ -155,7 +242,22 @@ export const mockUpcomingJobs: Job[] = [
     description: 'Looking for a professional videographer for a wedding event. Must have experience in wedding cinematography and editing.',
     skills: ['Videography', 'Editing', 'Storytelling'],
     duration: 'Full day',
-    experienceLevel: 'Expert'
+    experienceLevel: 'Expert',
+    client: {
+      name: 'Vikram & Neha',
+      rating: 4.9,
+      jobsCompleted: 3,
+      moneySpent: 85000,
+      memberSince: '2020-10-20',
+      phoneNumber: '+91 8765432109',
+      image: '/avatars/couple.jpg',
+      freelancersWorked: 6,
+      freelancerAvatars: [
+        'https://randomuser.me/api/portraits/women/22.jpg',
+        'https://randomuser.me/api/portraits/men/18.jpg',
+        'https://randomuser.me/api/portraits/women/33.jpg'
+      ]
+    }
   },
   {
     id: 'DLMS7890',
@@ -169,7 +271,21 @@ export const mockUpcomingJobs: Job[] = [
     description: 'Looking for a live band for a corporate event. Must have experience performing at corporate functions.',
     skills: ['Live Performance', 'Music', 'Entertainment'],
     duration: '3 hours',
-    experienceLevel: 'Expert'
+    experienceLevel: 'Expert',
+    client: {
+      name: 'Amit Joshi',
+      rating: 4.7,
+      jobsCompleted: 7,
+      moneySpent: 65000,
+      memberSince: '2021-08-10',
+      phoneNumber: '+91 7654321098',
+      image: '/avatars/amit.jpg',
+      freelancersWorked: 7,
+      freelancerAvatars: [
+        'https://randomuser.me/api/portraits/women/28.jpg',
+        'https://randomuser.me/api/portraits/men/35.jpg'
+      ]
+    }
   },
   {
     id: 'DLDN2468',
@@ -183,7 +299,22 @@ export const mockUpcomingJobs: Job[] = [
     description: 'Looking for professional dancers for a cultural event. Various dance styles welcome.',
     skills: ['Dance', 'Choreography', 'Performance'],
     duration: '2 hours',
-    experienceLevel: 'Expert'
+    experienceLevel: 'Expert',
+    client: {
+      name: 'Deepak & Family',
+      rating: 4.9,
+      jobsCompleted: 4,
+      moneySpent: 65000,
+      memberSince: '2021-02-10',
+      phoneNumber: '+91 9876543212',
+      image: '/avatars/family.jpg',
+      freelancersWorked: 4,
+      freelancerAvatars: [
+        'https://randomuser.me/api/portraits/women/36.jpg',
+        'https://randomuser.me/api/portraits/men/47.jpg',
+        'https://randomuser.me/api/portraits/women/24.jpg'
+      ]
+    }
   },
   {
     id: 'DLEV1357',
@@ -197,7 +328,22 @@ export const mockUpcomingJobs: Job[] = [
     description: 'Need an event manager for a corporate conference. Must have experience in managing large-scale events.',
     skills: ['Event Planning', 'Vendor Management', 'Logistics'],
     duration: 'Full day',
-    experienceLevel: 'Expert'
+    experienceLevel: 'Expert',
+    client: {
+      name: 'Ravi Verma',
+      rating: 4.8,
+      jobsCompleted: 11,
+      moneySpent: 92000,
+      memberSince: '2020-07-15',
+      phoneNumber: '+91 8765432111',
+      image: '/avatars/ravi.jpg',
+      freelancersWorked: 11,
+      freelancerAvatars: [
+        'https://randomuser.me/api/portraits/men/38.jpg',
+        'https://randomuser.me/api/portraits/women/27.jpg',
+        'https://randomuser.me/api/portraits/men/51.jpg'
+      ]
+    }
   }
 ];
 
@@ -215,6 +361,13 @@ export const mockApplications: Application[] = [
     postedDate: '2024-06-25',
     description: 'Looking for a part-time cricket coach for our school team. Must have experience coaching children aged 10-14.',
     clientId: 'school123',
+    moneySpent: 12500,
+    freelancersWorked: 3,
+    freelancerAvatars: [
+      'https://randomuser.me/api/portraits/men/32.jpg',
+      'https://randomuser.me/api/portraits/women/45.jpg',
+      'https://randomuser.me/api/portraits/men/67.jpg'
+    ],
     proposal: {
       coverLetter: 'I have 5+ years of experience coaching young cricketers and have helped teams win district-level tournaments. I focus on both technical skills and team building.',
       proposedRate: 2500,
@@ -236,6 +389,15 @@ export const mockApplications: Application[] = [
     postedDate: '2024-06-26',
     description: 'Need a skilled frontend developer to build a responsive e-commerce site using React and TypeScript.',
     clientId: 'techstart456',
+    moneySpent: 85000,
+    freelancersWorked: 8,
+    freelancerAvatars: [
+      'https://randomuser.me/api/portraits/women/22.jpg',
+      'https://randomuser.me/api/portraits/men/18.jpg',
+      'https://randomuser.me/api/portraits/women/33.jpg',
+      'https://randomuser.me/api/portraits/men/45.jpg',
+      'https://randomuser.me/api/portraits/women/12.jpg'
+    ],
     proposal: {
       coverLetter: 'I am a full-stack developer with 3+ years of experience in React and TypeScript. I have built multiple e-commerce platforms and can ensure a smooth, responsive user experience.',
       proposedRate: 20000,
@@ -252,18 +414,28 @@ export const mockApplications: Application[] = [
     clientName: 'TechCorp Ltd',
     budget: { min: 1800, max: 2000 },
     progress: 0,
-    clientImage: '/avatars/company1.jpg',
+    clientImage: '/avatars/company3.jpg',
     location: 'Tidel Park, Chennai',
     postedDate: '2024-06-18',
     description: 'Daily cleaning for 2000 sq ft office space',
-    clientId: 'client1',
+    clientId: 'techcorp789',
+    moneySpent: 42000,
+    freelancersWorked: 15,
+    freelancerAvatars: [
+      'https://randomuser.me/api/portraits/women/28.jpg',
+      'https://randomuser.me/api/portraits/men/35.jpg',
+      'https://randomuser.me/api/portraits/women/19.jpg',
+      'https://randomuser.me/api/portraits/men/42.jpg',
+      'https://randomuser.me/api/portraits/women/37.jpg',
+      'https://randomuser.me/api/portraits/men/23.jpg'
+    ],
     proposal: {
-      coverLetter: 'I have 5+ years of experience in commercial cleaning and can ensure your office space is spotless. I have all necessary equipment and can work during your preferred hours.',
-      proposedRate: 2000,
-      estimatedDays: 3,
-      skills: ['Deep Cleaning', 'Office Maintenance', 'Sanitization'],
-      attachments: ['Resume.pdf', 'Certification.pdf']
-    }
+      coverLetter: 'Professional cleaning service with 5+ years of experience in commercial spaces. We provide our own equipment and supplies.',
+      proposedRate: 1900,
+      estimatedDays: 30,
+      skills: ['Commercial Cleaning', 'Office Maintenance', 'Sanitization'],
+      attachments: ['certificate.pdf', 'references.pdf']
+    },
   },
   {
     id: 'DLGM5678',
@@ -272,18 +444,21 @@ export const mockApplications: Application[] = [
     status: 'accepted',
     clientName: 'Meera R',
     budget: { min: 800, max: 1000 },
-    progress: 0,
+    progress: 100,
     clientImage: '/avatars/avatar5.jpg',
     location: 'Besant Nagar, Chennai',
     postedDate: '2024-06-17',
     description: 'Monthly maintenance for small garden with native plants',
-    clientId: 'client2',
+    clientId: 'meera123',
+    moneySpent: 8500,
+    freelancersWorked: 1,
+    rating: 4.8,
     proposal: {
       coverLetter: 'As a certified horticulturist with expertise in native plants, I can help maintain your garden with organic methods. I specialize in sustainable gardening practices.',
       proposedRate: 900,
-      estimatedDays: 1,
+      estimatedDays: 30,
       skills: ['Organic Gardening', 'Landscape Design', 'Plant Care'],
-      attachments: ['Portfolio.pdf', 'Certification.pdf']
+      attachments: ['portfolio.pdf', 'certification.pdf']
     }
   },
   {
@@ -298,13 +473,21 @@ export const mockApplications: Application[] = [
     location: 'Nungambakkam, Chennai',
     postedDate: '2024-06-20',
     description: 'Fix leaking pipes in kitchen and bathroom',
-    clientId: 'client3',
+    clientId: 'rahul456',
+    moneySpent: 32000,
+    freelancersWorked: 6,
+    freelancerAvatars: [
+      'https://randomuser.me/api/portraits/men/29.jpg',
+      'https://randomuser.me/api/portraits/women/31.jpg',
+      'https://randomuser.me/api/portraits/men/41.jpg'
+    ],
+    rating: 4.2,
     proposal: {
       coverLetter: 'Licensed plumber with 8 years of experience in residential repairs. I can diagnose and fix your leaking pipes efficiently with minimal disruption.',
       proposedRate: 1500,
       estimatedDays: 1,
       skills: ['Pipe Repair', 'Leak Detection', 'Bathroom Plumbing'],
-      attachments: ['License.pdf', 'References.pdf']
+      attachments: ['license.pdf', 'references.pdf']
     }
   }
 ];

@@ -31,6 +31,7 @@ interface JobDetailsModalProps {
       phoneNumber?: string;
       rating?: number;
       jobsCompleted?: number;
+      image?: string;
     };
     jobDate?: string;
     jobTime?: string;
@@ -140,22 +141,124 @@ export function JobDetailsModal({ job }: JobDetailsModalProps) {
               </div>
               
               {job.client && (
-                <div className="mt-4 p-4 bg-white/5 rounded-lg border border-white/10">
-                  <h3 className="text-sm font-medium text-white/80 mb-2">Client Information</h3>
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-purple-900/30 flex items-center justify-center text-purple-400">
-                      {job.client.name.charAt(0).toUpperCase()}
+                <div className="mt-4 p-6 bg-[#111111] rounded-xl border border-gray-800/80">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <div className="w-12 h-12 rounded-full bg-purple-500/10 flex items-center justify-center">
+                      {job.client?.image ? (
+                        <img 
+                          src={job.client.image} 
+                          alt={job.client.name}
+                          className="w-full h-full rounded-full object-cover"
+                        />
+                      ) : (
+                        <User className="w-6 h-6 text-purple-400" />
+                      )}
                     </div>
                     <div>
-                      <p className="text-white font-medium">{job.client.name}</p>
-                      {job.client.rating && (
-                        <div className="flex items-center text-sm text-yellow-400">
-                          ★ {job.client.rating.toFixed(1)}
-                          {job.client.jobsCompleted && (
-                            <span className="ml-2 text-white/60">• {job.client.jobsCompleted} jobs</span>
-                          )}
+                      <h2 className="font-medium">{job.client?.name || 'Unknown Client'}</h2>
+                      <p className="text-sm text-gray-400">Client</p>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <h3 className="text-xs font-medium text-gray-400 mb-1">Job Posted</h3>
+                        <p className="text-sm">
+                          {new Date(job.date).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric'
+                          })}
+                        </p>
+                      </div>
+                      <div>
+                        <h3 className="text-xs font-medium text-gray-400 mb-1">Member Since</h3>
+                        <p className="text-sm">
+                          {job.client?.memberSince ? 
+                            new Date(job.client.memberSince).getFullYear() : 
+                            new Date().getFullYear() - 1}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h3 className="text-xs font-medium text-gray-400 mb-1">Location</h3>
+                      <p className="text-sm">{job.location || 'Not specified'}</p>
+                    </div>
+                    
+                    <div className="pt-2 border-t border-gray-800">
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2">
+                            <div className="flex -space-x-2">
+                              {job.client?.freelancerAvatars?.length ? (
+                                job.client.freelancerAvatars.map((avatar, i) => (
+                                  <img 
+                                    key={i}
+                                    src={avatar}
+                                    alt={`Freelancer ${i + 1}`}
+                                    className="w-7 h-7 rounded-full border-2 border-[#111111] object-cover"
+                                  />
+                                ))
+                              ) : (
+                                Array.from({ length: Math.min(3, job.client?.freelancersWorked || 1) }).map((_, i) => (
+                                  <div key={i} className="w-7 h-7 rounded-full bg-purple-500/20 border-2 border-[#111111] flex items-center justify-center">
+                                    <User className="w-3.5 h-3.5 text-purple-300" />
+                                  </div>
+                                ))
+                              )}
+                              {job.client?.freelancersWorked && job.client.freelancersWorked > 3 && (
+                                <div className="w-7 h-7 rounded-full bg-purple-500/20 border-2 border-[#111111] flex items-center justify-center">
+                                  <span className="text-xs font-medium text-purple-300">
+                                    +{job.client.freelancersWorked - 3}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                            <div>
+                              <p className="text-xs text-gray-300 font-medium">
+                                {job.client?.freelancersWorked || 0} Freelancers
+                              </p>
+                              <p className="text-xs text-gray-500">Worked with this client</p>
+                            </div>
+                          </div>
+                          
+                          <div className="flex flex-col items-end">
+                            <div className="flex items-center space-x-1">
+                              <div className="flex items-center">
+                                {[...Array(5)].map((_, i) => (
+                                  <Star 
+                                    key={i} 
+                                    className={`w-3.5 h-3.5 ${i < Math.floor(job.client?.rating || 5) ? 'text-yellow-400 fill-current' : 'text-gray-600'}`} 
+                                  />
+                                ))}
+                              </div>
+                              <span className="text-sm font-medium text-white">
+                                {job.client?.rating?.toFixed(1) || '5.0'}
+                              </span>
+                            </div>
+                            <p className="text-xs text-gray-500">Client Rating</p>
+                          </div>
                         </div>
-                      )}
+                      </div>
+                    </div>
+                    
+                    <div className="pt-2 border-t border-gray-800">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="text-xs font-medium text-gray-400 mb-1">Money Spent</h3>
+                          <p className="text-sm font-medium">
+                            ₹{(job.client?.moneySpent || 0).toLocaleString('en-IN')}+
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-xs text-gray-400">On DoodLance</p>
+                          <p className="text-xs text-green-400">
+                            {job.client?.jobsCompleted || 0} {job.client?.jobsCompleted === 1 ? 'Project' : 'Projects'}
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>

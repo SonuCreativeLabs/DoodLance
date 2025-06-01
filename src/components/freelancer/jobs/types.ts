@@ -32,6 +32,11 @@ export interface ClientInfo {
   memberSince?: string;
   phoneNumber?: string;
   image?: string;
+  moneySpent?: number;
+  location?: string;
+  joinedDate?: string;
+  freelancersWorked?: number;
+  freelancerAvatars?: string[];
 }
 
 export interface CancellationDetails {
@@ -85,7 +90,7 @@ export interface Application {
   id: string;
   jobTitle: string;
   appliedDate: string;
-  status: ApplicationStatus;
+  status: 'pending' | 'accepted' | 'rejected' | 'withdrawn' | 'interview' | 'hired' | 'completed' | 'cancelled' | 'expired' | 'archived';
   clientName: string;
   budget: { min: number; max: number };
   progress: number;
@@ -94,7 +99,21 @@ export interface Application {
   postedDate: string;
   description: string;
   clientId: string;
-  proposal: Proposal;
+  rating?: number;
+  projectsCompleted?: number;
+  proposal: {
+    coverLetter: string;
+    proposedRate: number;
+    estimatedDays: number;
+    skills: string[];
+    attachments: string[];
+  };
+  clientSince?: string;
+  clientRating?: number;
+  hiredFreelancers?: number;
+  moneySpent?: number;
+  freelancersWorked?: number;
+  freelancerAvatars?: string[];
 }
 
 export interface Transaction {

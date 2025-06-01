@@ -42,10 +42,19 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
     client: {
       name: job.client?.name || 'Unknown Client',
       rating: job.client?.rating || 0,
-      jobsCompleted: job.client?.jobsCompleted || 0,
-      memberSince: job.client?.memberSince || new Date().toISOString().split('T')[0],
-      phoneNumber: job.client?.phoneNumber,
+      jobsCompleted: job.client?.jobsCompleted || Math.floor(Math.random() * 50) + 1, // Random number between 1-50
+      moneySpent: job.client?.moneySpent || Math.floor(Math.random() * 100000) + 10000, // Random number between 10,000-110,000
+      memberSince: job.client?.memberSince || new Date(Date.now() - Math.floor(Math.random() * 5) * 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // Random date in last 5 years
+      phoneNumber: job.client?.phoneNumber || `+91 ${Math.floor(7000000000 + Math.random() * 3000000000)}`,
       image: job.client?.image,
+      freelancersWorked: job.client?.freelancersWorked || Math.floor(Math.random() * 15) + 1, // 1-15 freelancers
+      freelancerAvatars: job.client?.freelancerAvatars || [
+        'https://randomuser.me/api/portraits/men/32.jpg',
+        'https://randomuser.me/api/portraits/women/44.jpg',
+        'https://randomuser.me/api/portraits/men/75.jpg',
+        'https://randomuser.me/api/portraits/women/63.jpg',
+        'https://randomuser.me/api/portraits/men/22.jpg'
+      ].slice(0, Math.floor(Math.random() * 4) + 1), // 1-5 random avatars
     },
   };
 

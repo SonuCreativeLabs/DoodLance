@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { format, formatDistanceToNow } from 'date-fns';
 import { Button } from '@/components/ui/button';
-import { MapPin, FileText, MessageCircle, Clock, CheckCircle, XCircle, ChevronDown, ChevronUp, User, Clock as ClockIcon } from 'lucide-react';
+import { MapPin, FileText, MessageCircle, Clock, CheckCircle, XCircle, ChevronDown, ChevronUp, User, Clock as ClockIcon, Phone } from 'lucide-react';
 import { IndianRupee } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -69,14 +69,9 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, i
               )}>
                 {application.status.charAt(0).toUpperCase() + application.status.slice(1)}
               </div>
-              <div className="text-xs font-medium bg-gray-800/50 text-gray-300 px-2.5 py-1.5 rounded-full border border-gray-700/50 backdrop-blur-sm flex items-center gap-1.5">
-                <ClockIcon className="w-3 h-3 text-gray-400" />
-                <span className="font-mono">
-                  {formatDistanceToNow(new Date(application.appliedDate), { addSuffix: true })}
-                </span>
-              </div>
             </div>
             <div className="flex items-center gap-1.5 text-sm text-white/60">
+              <span className="text-xs text-gray-400">ID:</span>
               <span className="font-mono text-xs">
                 {application.id}
               </span>
@@ -205,29 +200,35 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, i
               )}
               
               {isAccepted && (
-                <Button 
-                  variant="default" 
-                  size="sm" 
-                  className="h-8 text-xs bg-purple-600 hover:bg-purple-700"
-                  onClick={handleMessageClick}
-                >
-                  <MessageCircle className="w-3.5 h-3.5 mr-1.5" />
-                  Message
-                </Button>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="default" 
+                    size="sm" 
+                    className="h-8 text-xs bg-purple-600 hover:bg-purple-700 flex-1"
+                    onClick={handleMessageClick}
+                  >
+                    <MessageCircle className="w-3.5 h-3.5 mr-1.5" />
+                    Message
+                  </Button>
+                  <Button 
+                    variant="default"
+                    size="sm" 
+                    className="h-8 text-xs bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white hover:shadow-lg hover:shadow-blue-500/20 transition-all flex-1"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      // Handle call
+                    }}
+                  >
+                    <Phone className="w-3.5 h-3.5 mr-1.5" />
+                    Call
+                  </Button>
+                </div>
               )}
               
               {isRejected && (
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="h-8 text-xs border-white/10 hover:bg-white/5"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    // Handle view feedback
-                  }}
-                >
-                  Feedback
-                </Button>
+                <div className="text-xs text-gray-400 italic">
+                  Not selected
+                </div>
               )}
             </div>
           </div>

@@ -49,14 +49,9 @@ export const JobCard: React.FC<JobCardProps> = ({ job, index }) => {
               <div className={`${getStatusStyles(job.status === 'confirmed' ? 'pending' : job.status).bg} ${getStatusStyles(job.status === 'confirmed' ? 'pending' : job.status).text} text-xs font-medium px-3 py-1 rounded-full border ${getStatusStyles(job.status === 'confirmed' ? 'pending' : job.status).border} w-fit`}>
                 {job.status === 'pending' || job.status === 'confirmed' ? 'Upcoming' : job.status.charAt(0).toUpperCase() + job.status.slice(1)}
               </div>
-              {(job.status === 'pending' || job.status === 'confirmed') && (
-                <div className="text-xs font-medium bg-gray-800/50 text-gray-300 px-2.5 py-1.5 rounded-full border border-gray-700/50 backdrop-blur-sm flex items-center gap-1.5">
-                  <ClockIcon className="w-3 h-3 text-gray-400" />
-                  <span className="font-mono">{formatTimeRemaining(`${job.date}T${job.time}`)}</span>
-                </div>
-              )}
             </div>
             <div className="flex items-center gap-1.5 text-sm text-white/60">
+              <span className="text-xs text-gray-400">ID:</span>
               <span className="font-mono text-xs">
                 {job.id}
               </span>
