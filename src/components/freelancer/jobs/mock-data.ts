@@ -76,7 +76,7 @@ export const mockUpcomingJobs: Job[] = [
     experienceLevel: 'Intermediate'
   },
   {
-    id: 'DLGD6789',
+    id: 'DLGM1234',
     title: 'Garden Maintenance',
     category: 'OTHER',
     date: '2024-06-18',
@@ -203,7 +203,7 @@ export const mockUpcomingJobs: Job[] = [
 
 export const mockApplications: Application[] = [
   {
-    id: 'cricket-proposal',
+    id: 'DLCP1234',
     jobTitle: 'Cricket Coach for School Team',
     appliedDate: '2024-06-28',
     status: 'pending',
@@ -224,7 +224,7 @@ export const mockApplications: Application[] = [
     }
   },
   {
-    id: 'dev-proposal',
+    id: 'DLFD5678',
     jobTitle: 'Frontend Developer for E-commerce Site',
     appliedDate: '2024-06-29',
     status: 'pending',
@@ -245,7 +245,7 @@ export const mockApplications: Application[] = [
     }
   },
   {
-    id: '1',
+    id: 'DLOC9012',
     jobTitle: 'Office Cleaning',
     appliedDate: '2024-06-20',
     status: 'pending',
@@ -266,7 +266,7 @@ export const mockApplications: Application[] = [
     }
   },
   {
-    id: '2',
+    id: 'DLGM5678',
     jobTitle: 'Home Gardening',
     appliedDate: '2024-06-19',
     status: 'accepted',
@@ -287,7 +287,7 @@ export const mockApplications: Application[] = [
     }
   },
   {
-    id: '3',
+    id: 'DLPR3456',
     jobTitle: 'Plumbing Repair',
     appliedDate: '2024-06-21',
     status: 'rejected',

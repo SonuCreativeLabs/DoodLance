@@ -174,28 +174,7 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, i
           )}
 
           {/* Actions */}
-          <div className="flex items-center justify-between pt-2">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="text-white/60 hover:text-white hover:bg-white/5 px-2 h-8 text-xs"
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsExpanded(!isExpanded);
-              }}
-            >
-              {isExpanded ? (
-                <>
-                  <ChevronUp className="w-3.5 h-3.5 mr-1" />
-                  Less details
-                </>
-              ) : (
-                <>
-                  <ChevronDown className="w-3.5 h-3.5 mr-1" />
-                  More details
-                </>
-              )}
-            </Button>
+          <div className="flex items-center justify-end pt-2">
 
             <div className="flex gap-2">
               {isPending && (

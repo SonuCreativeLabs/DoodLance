@@ -202,7 +202,7 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
     <div className="w-full text-foreground bg-[#111111] min-h-screen">
       <Tabs value={activeTab} className="w-full" onValueChange={handleTabChange}>
         <div className="w-full max-w-[1800px] mx-auto">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 pt-6 gap-4 px-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4 px-6">
         <TabsList className="grid w-full sm:w-auto grid-cols-2 h-10">
           <TabsTrigger value="upcoming">My Jobs</TabsTrigger>
           <TabsTrigger value="applications">My Proposals</TabsTrigger>
