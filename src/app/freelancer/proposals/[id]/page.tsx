@@ -127,7 +127,20 @@ export default function ProposalDetailsPage() {
 
   const handleBack = (e: React.MouseEvent) => {
     e.stopPropagation();
-    router.back();
+    
+    // Default to 'pending' status when navigating back
+    let filterStatus = 'pending';
+    
+    // If we have a proposal, check if its status is one of the allowed values
+    if (proposal) {
+      const proposalStatus = proposal.status.toLowerCase();
+      if (['pending', 'accepted', 'rejected'].includes(proposalStatus)) {
+        filterStatus = proposalStatus;
+      }
+    }
+    
+    // Force a full page navigation to the applications tab with correct status
+    window.location.href = `/freelancer/jobs?tab=applications&status=${filterStatus}`;
   };
   
   const handleSubmitRating = (e: React.FormEvent) => {
@@ -176,9 +189,9 @@ export default function ProposalDetailsPage() {
               <div className="flex items-center">
                 <Button 
                   variant="ghost" 
-                  size="icon" 
+                  size="sm"
                   onClick={handleBack}
-                  className="text-gray-400 hover:text-white hover:bg-white/10"
+                  className="text-gray-400 hover:text-white hover:bg-white/10 p-2 h-10 w-10"
                 >
                   <svg 
                     xmlns="http://www.w3.org/2000/svg" 
@@ -633,7 +646,8 @@ export default function ProposalDetailsPage() {
                   Cancel
                 </Button>
                 <Button
-                  variant="destructive"
+                  variant="outline"
+                  className="text-red-500 border-red-500 hover:bg-red-500/10 hover:text-red-400"
                   onClick={handleWithdraw}
                 >
                   Withdraw

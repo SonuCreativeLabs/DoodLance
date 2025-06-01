@@ -6,6 +6,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useRouter } from 'next/navigation';
 import { Search, Filter as FilterIcon, ChevronLeft, ChevronRight, MoreVertical, X, Calendar as CalendarIcon, Clock as ClockIcon, MapPin, FileText, IndianRupee } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -15,11 +16,54 @@ import { Job, Application, EarningsData, StatusType, ApplicationStatus, JobStatu
 import { formatDate, getStatusStyles, formatTimeRemaining } from './utils';
 import { mockUpcomingJobs, mockApplications, mockEarnings } from './mock-data';
 
-export function JobDashboard() {
-  const [activeTab, setActiveTab] = useState('upcoming');
+interface JobDashboardProps {
+  searchParams?: {
+    tab?: string;
+    status?: string;
+  };
+}
+
+export function JobDashboard({ searchParams }: JobDashboardProps) {
+  // Get initial values from URL params or use defaults
+  const initialTab = searchParams?.tab === 'applications' ? 'applications' : 'upcoming';
+  const initialStatus = searchParams?.status || (initialTab === 'upcoming' ? 'upcoming' : 'pending');
+  
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
-  const [statusFilter, setStatusFilter] = useState(activeTab === 'upcoming' ? 'upcoming' : 'pending');
+  const [statusFilter, setStatusFilter] = useState(initialStatus);
+  
+  // Initialize state from URL params and update when they change
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    // Extract tab from URL parameters
+    let tabFromUrl = 'upcoming';
+    if (searchParams?.tab === 'applications') {
+      tabFromUrl = 'applications';
+    }
+    
+    // Extract status from URL parameters with defaults
+    let statusFromUrl;
+    if (searchParams?.status) {
+      statusFromUrl = searchParams.status;
+    } else {
+      statusFromUrl = tabFromUrl === 'upcoming' ? 'upcoming' : 'pending';
+    }
+    
+    // Validate status based on current tab
+    if (tabFromUrl === 'upcoming' && !['upcoming', 'completed', 'cancelled'].includes(statusFromUrl)) {
+      statusFromUrl = 'upcoming';
+    } else if (tabFromUrl === 'applications' && !['pending', 'accepted', 'rejected'].includes(statusFromUrl)) {
+      statusFromUrl = 'pending';
+    }
+    
+    console.log('Setting tab to:', tabFromUrl, 'and status to:', statusFromUrl);
+    
+    // Update component state
+    setActiveTab(tabFromUrl);
+    setStatusFilter(statusFromUrl);
+  }, [searchParams]); // Run whenever searchParams changes
 
   // Filter jobs and applications based on search and status
   const filteredJobs = useMemo(() => {
@@ -49,33 +93,33 @@ export function JobDashboard() {
   }, [searchQuery, statusFilter]);
 
   const filteredApplications = useMemo(() => {
+    if (!mockApplications || mockApplications.length === 0) {
+      return [];
+    }
+    
     const searchLower = searchQuery.toLowerCase();
-    let filtered = mockApplications.filter(app => {
+    
+    return mockApplications.filter(app => {
+      // Search matching
       const matchesSearch = searchQuery === '' ||
-        app.jobTitle.toLowerCase().includes(searchLower) ||
-        app.location.toLowerCase().includes(searchLower) ||
+        (app.jobTitle && app.jobTitle.toLowerCase().includes(searchLower)) ||
+        (app.location && app.location.toLowerCase().includes(searchLower)) ||
         (app.description && app.description.toLowerCase().includes(searchLower));
 
       if (!matchesSearch) return false;
-
-      // Handle status filtering based on active tab
-      if (activeTab === 'upcoming') {
-        // For jobs tab
-        if (statusFilter === 'upcoming') {
-          return app.status === 'pending' || app.status === 'accepted';
-        }
-        return app.status === statusFilter;
-      } else {
-        // For applications tab
-        if (statusFilter === 'upcoming') {
-          return app.status === 'pending' || app.status === 'accepted';
-        }
-        return app.status === statusFilter;
+      
+      // Status filtering based on the current filter
+      if (statusFilter === 'pending' && app.status === 'pending') {
+        return true;
+      } else if (statusFilter === 'accepted' && app.status === 'accepted') {
+        return true;
+      } else if (statusFilter === 'rejected' && app.status === 'rejected') {
+        return true;
       }
+      
+      return false;
     });
-
-    return filtered;
-  }, [searchQuery, statusFilter, activeTab]);
+  }, [searchQuery, statusFilter]);
 
   // Status filter options
   const statusOptions = useMemo(() => {
@@ -97,8 +141,18 @@ export function JobDashboard() {
 
   const selectedStatus = statusOptions.find((option: { value: string }) => option.value === statusFilter) || statusOptions[0];
 
-  // Handle filter change
+  // Get the router instance
+  const router = useRouter();
+  
+  // Handle filter change with URL update
   const handleFilterChange = (newFilter: string) => {
+    // Update URL with the new status filter using Next.js router
+    const params = new URLSearchParams();
+    params.set('tab', activeTab);
+    params.set('status', newFilter);
+    router.push(`/freelancer/jobs?${params.toString()}`);
+    
+    // Update state
     setStatusFilter(newFilter);
   };
 
@@ -128,16 +182,25 @@ export function JobDashboard() {
     console.log('Message client with ID:', clientId);
   };
 
+  // Handle tab change with URL update
   const handleTabChange = (value: string) => {
-    setActiveTab(value);
-    setSearchQuery('');
-    // Set default status based on the selected tab
-    setStatusFilter(value === 'upcoming' ? 'upcoming' : 'pending');
+    const newTab = value === 'applications' ? 'applications' : 'upcoming';
+    const defaultStatus = newTab === 'applications' ? 'pending' : 'upcoming';
+    
+    // Update URL with new tab and status using Next.js router
+    const params = new URLSearchParams();
+    params.set('tab', newTab);
+    params.set('status', defaultStatus);
+    router.push(`/freelancer/jobs?${params.toString()}`);
+    
+    // Update state
+    setActiveTab(newTab);
+    setStatusFilter(defaultStatus);
   };
 
   return (
     <div className="w-full text-foreground bg-[#111111] min-h-screen">
-      <Tabs defaultValue="upcoming" className="w-full" onValueChange={handleTabChange}>
+      <Tabs value={activeTab} className="w-full" onValueChange={handleTabChange}>
         <div className="w-full max-w-[1800px] mx-auto">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 pt-6 gap-4 px-6">
         <TabsList className="grid w-full sm:w-auto grid-cols-2 h-10">
@@ -213,8 +276,7 @@ export function JobDashboard() {
                 transition={{ duration: 0.15 }}
                 className="w-full"
               >
-
-
+          
           <TabsContent value="upcoming" className="mt-0 w-full">
             {/* Upcoming Jobs Section */}
             <div className="w-full space-y-6">

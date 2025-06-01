@@ -1,10 +1,32 @@
 "use client"
 
+import React from 'react';
 import { motion } from 'framer-motion';
 import { JobDashboard } from '@/components/freelancer/jobs/job-dashboard';
 import { Plus } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
 
-export default function JobsPage() {
+interface PageProps {
+  searchParams?: {
+    tab?: string;
+    status?: string;
+  };
+}
+
+export default function JobsPage({ searchParams: initialSearchParams }: PageProps) {
+  // Use the useSearchParams hook to get the current URL search params
+  const searchParamsObj = useSearchParams();
+  
+  // Get the current tab and status from URL or use defaults
+  const tab = searchParamsObj?.get('tab') || initialSearchParams?.tab || 'upcoming';
+  const status = searchParamsObj?.get('status') || initialSearchParams?.status || 
+                (tab === 'upcoming' ? 'upcoming' : 'pending');
+  
+  // Create a stable searchParams object to pass to JobDashboard
+  const stableSearchParams = React.useMemo(() => ({
+    tab,
+    status
+  }), [tab, status]);
   return (
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
@@ -26,7 +48,7 @@ export default function JobsPage() {
         </div>
       </div>
 
-      <JobDashboard />
+      <JobDashboard searchParams={stableSearchParams} />
     </motion.div>
   );
 }

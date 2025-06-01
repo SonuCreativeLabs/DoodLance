@@ -29,6 +29,9 @@ export interface ClientInfo {
   name: string;
   rating?: number;
   jobsCompleted?: number;
+  memberSince?: string;
+  phoneNumber?: string;
+  image?: string;
 }
 
 export interface CancellationDetails {
