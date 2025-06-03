@@ -36,6 +36,8 @@ export interface Job {
   workMode: WorkMode;
   type: JobType;
   postedAt: string;
+  company: string;
+  companyLogo: string;
   clientName: string;
   clientImage: string;
   clientRating: string;

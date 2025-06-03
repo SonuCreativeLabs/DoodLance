@@ -303,9 +303,9 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
         </div>
       </div>
 
-      {/* Scrollable Content - Add margin top to account for fixed header */}
-      <div className="mt-20 overflow-y-auto h-[calc(100vh-120px)] relative scroll-smooth overscroll-contain">
-        <div className="w-full pb-16">
+      {/* Scrollable Content - Add padding top to account for fixed header */}
+      <div className="pt-24 overflow-y-auto h-[calc(100vh-64px)] relative scroll-smooth overscroll-contain scrollbar-hide">
+        <div className="w-full max-w-[1800px] mx-auto pb-16">
           <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
             <AnimatePresence mode="wait">
               <motion.div
@@ -326,7 +326,7 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
                             <JobCard job={job} index={index} />
                           </div>
                         ))}
-                        <div className="h-24" /> {/* Extra space at the bottom */}
+                        <div className="h-12" /> {/* Reduced bottom space */}
                       </div>
                     ) : (
                       <div className="space-y-6">
@@ -344,7 +344,7 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
 
                 <TabsContent value="applications" className="mt-0 w-full">
                   {/* Applications Section */}
-                  <div className="w-full space-y-6 pb-24">
+                  <div className="w-full space-y-6 pb-12">
                     {filteredApplications.length > 0 ? (
                       filteredApplications.map((application, index) => (
                         <div key={application.id} className="w-full">

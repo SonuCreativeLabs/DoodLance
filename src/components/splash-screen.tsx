@@ -41,7 +41,7 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
           >
             <Image
               src="/logo.svg"
-              alt="SkilledMice Logo"
+              alt="DoodLance Logo"
               fill
               className="object-contain"
               priority
@@ -53,7 +53,7 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
             transition={{ delay: 0.5, duration: 0.5 }}
             className="text-3xl font-bold text-white text-center mb-3"
           >
-            SkilledMice
+            DoodLance
           </motion.h1>
           <motion.p
             initial={{ y: 20, opacity: 0 }}

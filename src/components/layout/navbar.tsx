@@ -10,7 +10,7 @@ export function Navbar() {
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
             <Mouse className="w-6 h-6 text-[#FF8A3D]" />
-            <span className="text-lg font-semibold text-gray-800">SkilledMice</span>
+            <span className="text-lg font-semibold text-gray-800">DoodLance</span>
           </Link>
 
           {/* Navigation Links */}

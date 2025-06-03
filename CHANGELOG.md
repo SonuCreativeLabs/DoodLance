@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to the SkilledMice project will be documented in this file.
+All notable changes to the DoodLance project will be documented in this file.
 
 ## [Unreleased]
 

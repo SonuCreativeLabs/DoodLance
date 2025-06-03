@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "SkilledMice",
+  title: "DoodLance",
   description: "Connect with skilled professionals",
   icons: {
     icon: "/favicon.ico",

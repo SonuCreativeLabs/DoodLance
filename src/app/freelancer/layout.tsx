@@ -73,7 +73,7 @@ export default function FreelancerLayout({ children }: FreelancerLayoutProps) {
               href="/freelancer" 
               className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-purple-600 font-bold text-lg hover:from-purple-500 hover:to-purple-700 transition-all duration-300"
             >
-              SkilledMice
+              DoodLance
             </Link>
             <div className="hidden md:flex items-center space-x-1">
               {navItems.map((item) => {
