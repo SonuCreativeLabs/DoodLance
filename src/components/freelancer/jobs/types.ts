@@ -101,6 +101,7 @@ export interface Application {
   clientId: string;
   rating?: number;
   projectsCompleted?: number;
+  duration?: string;
   proposal: {
     coverLetter: string;
     proposedRate: number;

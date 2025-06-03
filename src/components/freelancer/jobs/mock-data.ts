@@ -28,7 +28,7 @@ export const mockUpcomingJobs: Job[] = [
     category: 'OTHER',
     date: '2024-07-10',
     time: '16:00',
-    status: 'upcoming',
+    status: 'confirmed',
     payment: 2500,
     location: 'Mylapore, Chennai',
     description: 'Looking for an experienced cricket coach for our U-16 academy team. Must have prior coaching experience and knowledge of modern cricket techniques.',

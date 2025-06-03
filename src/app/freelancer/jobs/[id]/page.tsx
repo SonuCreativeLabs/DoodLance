@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { JobDetailsModal } from '@/components/freelancer/jobs/job-details-modal';
+import { JobDetailsModal } from '@/components/freelancer/jobs/JobDetailsModal';
 import { mockUpcomingJobs } from '@/components/freelancer/jobs/mock-data';
 
 export default function JobDetailsPage({ params }: { params: { id: string } }) {

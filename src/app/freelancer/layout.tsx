@@ -152,7 +152,7 @@ export default function FreelancerLayout({ children }: FreelancerLayoutProps) {
       )}
 
       <div className="h-16" /> {/* Spacer for fixed header */}
-      <main className="min-h-[calc(100vh-4rem)] overflow-y-auto relative z-10">{children}</main>
+      <main className="flex flex-col min-h-[calc(100vh-4rem)] relative z-10">{children}</main>
     </div>
   )
 } 

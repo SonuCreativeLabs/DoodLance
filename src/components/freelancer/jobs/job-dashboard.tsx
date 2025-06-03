@@ -67,21 +67,41 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
 
   // Filter jobs and applications based on search and status
   const filteredJobs = useMemo(() => {
-    const searchLower = searchQuery.toLowerCase();
-    return mockUpcomingJobs.filter(job => {
-      const matchesSearch = searchQuery === '' ||
-        job.title.toLowerCase().includes(searchLower) ||
-        (job.category && job.category.toLowerCase().includes(searchLower)) ||
-        (job.location && job.location.toLowerCase().includes(searchLower)) ||
-        (job.skills && job.skills.some(skill => skill.toLowerCase().includes(searchLower)));
+    const searchLower = searchQuery.trim().toLowerCase();
+    
+    // If search query is empty, just filter by status
+    if (!searchLower) {
+      return mockUpcomingJobs.filter(job => {
+        if (statusFilter === 'upcoming') {
+          return job.status === 'pending' || job.status === 'confirmed';
+        } else if (statusFilter === 'completed') {
+          return job.status === 'completed';
+        } else if (statusFilter === 'cancelled') {
+          return job.status === 'cancelled';
+        }
+        return true;
+      });
+    }
 
-      // Map UI status filter to data status values
-      let statusMatches = false;
-      if (statusFilter === 'all') {
-        statusMatches = true;
-      } else if (statusFilter === 'upcoming') {
-        // Show both pending and confirmed jobs as 'Upcoming'
-        statusMatches = job.status === 'pending' || job.status === 'confirmed';
+    // Search across multiple job properties
+    return mockUpcomingJobs.filter(job => {
+      // Check if any of the job properties match the search query
+      const matchesSearch = [
+        job.title,
+        job.category,
+        job.location,
+        job.description,
+        job.client?.name,
+        job.payment?.toString(),
+        job.duration,
+        job.experienceLevel,
+        ...(job.skills || [])
+      ].some(value => value && value.toString().toLowerCase().includes(searchLower));
+
+      // Filter by status
+      let statusMatches = true;
+      if (statusFilter === 'upcoming') {
+        statusMatches = job.status === 'pending' || job.status === 'confirmed' || job.status === 'upcoming';
       } else if (statusFilter === 'completed') {
         statusMatches = job.status === 'completed';
       } else if (statusFilter === 'cancelled') {
@@ -97,27 +117,39 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
       return [];
     }
     
-    const searchLower = searchQuery.toLowerCase();
+    const searchLower = searchQuery.trim().toLowerCase();
     
+    // If search query is empty, just filter by status
+    if (!searchLower) {
+      return mockApplications.filter(app => {
+        if (statusFilter === 'pending') return app.status === 'pending';
+        if (statusFilter === 'accepted') return app.status === 'accepted';
+        if (statusFilter === 'rejected') return app.status === 'rejected';
+        return true;
+      });
+    }
+    
+    // Search across multiple application properties
     return mockApplications.filter(app => {
-      // Search matching
-      const matchesSearch = searchQuery === '' ||
-        (app.jobTitle && app.jobTitle.toLowerCase().includes(searchLower)) ||
-        (app.location && app.location.toLowerCase().includes(searchLower)) ||
-        (app.description && app.description.toLowerCase().includes(searchLower));
+      // Check if any of the application properties match the search query
+      const matchesSearch = [
+        app.jobTitle,
+        app.location,
+        app.description,
+        app.clientName,
+        app.budget?.toString(),
+        app.duration,
+        app.appliedDate?.toString()
+      ].some(value => value && value.toString().toLowerCase().includes(searchLower));
 
       if (!matchesSearch) return false;
       
       // Status filtering based on the current filter
-      if (statusFilter === 'pending' && app.status === 'pending') {
-        return true;
-      } else if (statusFilter === 'accepted' && app.status === 'accepted') {
-        return true;
-      } else if (statusFilter === 'rejected' && app.status === 'rejected') {
-        return true;
-      }
+      if (statusFilter === 'pending') return app.status === 'pending';
+      if (statusFilter === 'accepted') return app.status === 'accepted';
+      if (statusFilter === 'rejected') return app.status === 'rejected';
       
-      return false;
+      return true;
     });
   }, [searchQuery, statusFilter]);
 
@@ -199,74 +231,82 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
   };
 
   return (
-    <div className="w-full text-foreground bg-[#111111] min-h-screen">
-      <Tabs value={activeTab} className="w-full" onValueChange={handleTabChange}>
-        <div className="w-full max-w-[1800px] mx-auto">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4 px-6">
-        <TabsList className="grid w-full sm:w-auto grid-cols-2 h-10">
-          <TabsTrigger value="upcoming">My Jobs</TabsTrigger>
-          <TabsTrigger value="applications">My Proposals</TabsTrigger>
-        </TabsList>
-        
-        {activeTab !== 'earnings' && (
-          <div className={`flex items-center w-full gap-3 ${!showSearch ? '-ml-2' : ''}`}>
-            <div className={`transition-all duration-300 ease-in-out ${showSearch ? 'flex-1' : 'w-10'}`}>
-              {!showSearch && <div className="w-2"></div>}
-              {showSearch ? (
-                <div className="relative w-full flex items-center">
-                  <Search className="absolute left-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="search"
-                    placeholder="Search jobs..."
-                    className="pl-10 pr-10 w-full bg-background text-foreground h-10"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    autoFocus
-                  />
-                  <button
-                    className="absolute right-2 h-8 w-8 p-0 text-gray-500 hover:text-foreground flex items-center justify-center"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setSearchQuery('');
-                      setShowSearch(false);
-                    }}
-                  >
-                    <X className="h-5 w-5" />
-                    <span className="sr-only">Cancel search</span>
-                  </button>
+    <div className="w-full text-foreground bg-[#111111] h-full flex flex-col">
+      {/* Fixed Header */}
+      <div className="w-full bg-[#111111] border-b border-gray-800 sticky top-[64px] z-40">
+        <div className="max-w-[1800px] mx-auto px-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+              <TabsList className="grid w-full sm:w-auto grid-cols-2 h-10">
+                <TabsTrigger value="upcoming">My Jobs</TabsTrigger>
+                <TabsTrigger value="applications">My Proposals</TabsTrigger>
+              </TabsList>
+            </Tabs>
+            
+            {activeTab !== 'earnings' && (
+              <div className="flex items-center w-full sm:w-auto gap-3">
+                <div className={`transition-all duration-300 ease-in-out ${showSearch ? 'flex-1' : 'w-10'}`}>
+                  {!showSearch && <div className="w-2"></div>}
+                  {showSearch ? (
+                    <div className="relative w-full flex items-center">
+                      <Search className="absolute left-3 h-4 w-4 text-gray-600" />
+                      <Input
+                        type="search"
+                        placeholder="Search jobs..."
+                        className="pl-10 pr-10 w-full bg-background text-black h-10"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        autoFocus
+                      />
+                      <button
+                        className="absolute right-2 h-8 w-8 p-0 text-gray-500 hover:text-foreground flex items-center justify-center"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setSearchQuery('');
+                          setShowSearch(false);
+                        }}
+                      >
+                        <X className="h-5 w-5" />
+                        <span className="sr-only">Cancel search</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      className="h-10 w-10 p-0 text-gray-400 hover:text-gray-600 flex items-center justify-center"
+                      onClick={() => setShowSearch(true)}
+                    >
+                      <Search className="h-5 w-5" />
+                      <span className="sr-only">Search</span>
+                    </button>
+                  )}
                 </div>
-              ) : (
-                <button
-                  className="h-10 w-10 p-0 text-muted-foreground hover:text-foreground flex items-center justify-center"
-                  onClick={() => setShowSearch(true)}
-                >
-                  <Search className="h-5 w-5" />
-                  <span className="sr-only">Search</span>
-                </button>
-              )}
-            </div>
-            {!showSearch && (
-              <div className="flex items-center gap-2">
-                {statusOptions.map((option) => (
-                  <button
-                    key={option.value}
-                    onClick={() => handleFilterChange(option.value)}
-                    className={`px-3 py-1.5 text-xs rounded-full border transition-colors ${
-                      statusFilter === option.value
-                        ? 'bg-purple-600 border-purple-600 text-white'
-                        : 'bg-gray-900/50 border-gray-700 text-gray-300 hover:bg-gray-800/50'
-                    }`}
-                  >
-                    {option.label}
-                  </button>
-                ))}
+                {!showSearch && (
+                  <div className="flex items-center gap-2">
+                    {statusOptions.map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={() => handleFilterChange(option.value)}
+                        className={`px-3 py-1.5 text-xs rounded-full border transition-colors ${
+                          statusFilter === option.value
+                            ? 'bg-purple-600 border-purple-600 text-white'
+                            : 'bg-gray-900/50 border-gray-700 text-gray-300 hover:bg-gray-800/50'
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
-            </div>
-          )}
           </div>
+        </div>
+      </div>
 
-          <div className="w-full">
+      {/* Scrollable Content */}
+      <div className="overflow-y-auto h-[calc(100vh-120px)] relative scroll-smooth overscroll-contain">
+        <div className="w-full px-4 pb-16 pt-4">
+          <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeTab}
@@ -276,148 +316,151 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
                 transition={{ duration: 0.15 }}
                 className="w-full"
               >
-          
-          <TabsContent value="upcoming" className="mt-0 w-full">
-            {/* Upcoming Jobs Section */}
-            <div className="w-full space-y-6">
-              {filteredJobs.length > 0 ? (
-                filteredJobs.map((job, index) => (
-                  <div key={job.id} className="w-full">
-                    <JobCard job={job} index={index} />
+                <TabsContent value="upcoming" className="mt-0 w-full">
+                  {/* Upcoming Jobs Section */}
+                  <div className="w-full space-y-6">
+                    {filteredJobs.length > 0 ? (
+                      <div className="space-y-6">
+                        {filteredJobs.map((job, index) => (
+                          <div key={job.id} className="w-full">
+                            <JobCard job={job} index={index} />
+                          </div>
+                        ))}
+                        <div className="h-24" /> {/* Extra space at the bottom */}
+                      </div>
+                    ) : (
+                      <div className="space-y-6">
+                        <div className="h-24" /> {/* Extra space at the top when no jobs */}
+                        <Card className="p-8 border-gray-800 bg-gray-900/50 text-center">
+                          <h3 className="text-xl font-medium text-white mb-2">No jobs found</h3>
+                          <p className="text-gray-400">
+                            {searchQuery ? 'Try adjusting your search query.' : 'You have no upcoming jobs.'}
+                          </p>
+                        </Card>
+                      </div>
+                    )}
                   </div>
-                ))
-              ) : (
-                <Card className="p-8 border-gray-800 bg-gray-900/50 text-center">
-                  <h3 className="text-xl font-medium text-white mb-2">No jobs found</h3>
-                  <p className="text-gray-400">
-                    {searchQuery ? 'Try adjusting your search query.' : 'You have no upcoming jobs.'}
-                  </p>
-                </Card>
-              )}
-            </div>
-          </TabsContent>
+                </TabsContent>
 
-          <TabsContent value="applications" className="mt-0 w-full">
-            {/* Applications Section */}
-            <div className="w-full space-y-6">
-              {filteredApplications.length > 0 ? (
-                filteredApplications.map((application, index) => (
-                  <div key={application.id} className="w-full">
-                    <ApplicationCard 
-                      application={application}
-                      index={index}
-                      onViewDetails={() => onViewDetails(application)}
-                    />
+                <TabsContent value="applications" className="mt-0 w-full">
+                  {/* Applications Section */}
+                  <div className="w-full space-y-6">
+                    {filteredApplications.length > 0 ? (
+                      filteredApplications.map((application, index) => (
+                        <div key={application.id} className="w-full">
+                          <ApplicationCard 
+                            application={application}
+                            index={index}
+                            onViewDetails={() => onViewDetails(application)}
+                          />
+                        </div>
+                      ))
+                    ) : (
+                      <Card className="p-8 border-gray-800 bg-gray-900/50 text-center">
+                        <h3 className="text-xl font-medium text-white mb-2">No applications found</h3>
+                        <p className="text-gray-400">
+                          {searchQuery ? 'Try adjusting your search query.' : 'You have not applied to any jobs yet.'}
+                        </p>
+                      </Card>
+                    )}
                   </div>
-                ))
-              ) : (
-                <Card className="p-8 border-gray-800 bg-gray-900/50 text-center">
-                  <h3 className="text-xl font-medium text-white mb-2">No applications found</h3>
-                  <p className="text-gray-400">
-                    {searchQuery ? 'Try adjusting your search query.' : 'You have not applied to any jobs yet.'}
-                  </p>
-                </Card>
-              )}
-            </div>
-          </TabsContent>
+                </TabsContent>
 
-          <TabsContent value="earnings" className="mt-0">
-            {/* Earnings Dashboard */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-              <Card className="bg-gray-900/50 border-gray-800 p-6 flex flex-col">
-                <h3 className="text-gray-400 font-medium mb-2">Total Earnings</h3>
-                <div className="flex items-center gap-2 mb-1">
-                  <IndianRupee className="h-5 w-5 text-purple-500" />
-                  <span className="text-3xl font-semibold text-white">
-                    {mockEarnings.totalEarnings.toLocaleString()}
-                  </span>
-                </div>
-                <p className="text-green-500 text-sm">+12% from last month</p>
-              </Card>
-              
-              <Card className="bg-gray-900/50 border-gray-800 p-6 flex flex-col">
-                <h3 className="text-gray-400 font-medium mb-2">Pending Payouts</h3>
-                <div className="flex items-center gap-2 mb-1">
-                  <IndianRupee className="h-5 w-5 text-purple-500" />
-                  <span className="text-3xl font-semibold text-white">
-                    {mockEarnings.pendingPayouts.toLocaleString()}
-                  </span>
-                </div>
-                <p className="text-gray-500 text-sm">Expected in 3-5 days</p>
-              </Card>
-              
-              <Card className="bg-gray-900/50 border-gray-800 p-6 flex flex-col">
-                <h3 className="text-gray-400 font-medium mb-2">Completed Jobs</h3>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-3xl font-semibold text-white">
-                    {mockEarnings.completedJobs}
-                  </span>
-                </div>
-                <div className="flex items-center">
-                  <p className="text-gray-500 text-sm mr-2">Average Rating:</p>
-                  {renderRating(mockEarnings.averageRating)}
-                </div>
-              </Card>
-            </div>
+                <TabsContent value="earnings" className="mt-0 w-full">
+                  {/* Earnings Dashboard */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <Card className="bg-gray-900/50 border-gray-800 p-6 flex flex-col">
+                      <h3 className="text-gray-400 font-medium mb-2">Total Earnings</h3>
+                      <div className="flex items-center gap-2 mb-1">
+                        <IndianRupee className="h-5 w-5 text-purple-500" />
+                        <span className="text-3xl font-semibold text-white">
+                          {mockEarnings.totalEarnings.toLocaleString()}
+                        </span>
+                      </div>
+                      <p className="text-green-500 text-sm">+12% from last month</p>
+                    </Card>
+                    
+                    <Card className="bg-gray-900/50 border-gray-800 p-6 flex flex-col">
+                      <h3 className="text-gray-400 font-medium mb-2">Pending Payouts</h3>
+                      <div className="flex items-center gap-2 mb-1">
+                        <IndianRupee className="h-5 w-5 text-purple-500" />
+                        <span className="text-3xl font-semibold text-white">
+                          {mockEarnings.pendingPayouts.toLocaleString()}
+                        </span>
+                      </div>
+                      <p className="text-gray-500 text-sm">Expected in 3-5 days</p>
+                    </Card>
+                    
+                    <Card className="bg-gray-900/50 border-gray-800 p-6 flex flex-col">
+                      <h3 className="text-gray-400 font-medium mb-2">Completed Jobs</h3>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-3xl font-semibold text-white">
+                          {mockEarnings.completedJobs}
+                        </span>
+                      </div>
+                      <div className="flex items-center">
+                        <p className="text-gray-500 text-sm mr-2">Average Rating:</p>
+                        {renderRating(mockEarnings.averageRating)}
+                      </div>
+                    </Card>
+                  </div>
 
-            <h2 className="text-xl font-semibold text-white mb-4">Recent Transactions</h2>
-            <Card className="bg-gray-900/50 border-gray-800 overflow-hidden mb-6">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-gray-800">
-                      <th className="text-left py-4 px-6 text-gray-400 font-medium">Date</th>
-                      <th className="text-left py-4 px-6 text-gray-400 font-medium">Job</th>
-                      <th className="text-left py-4 px-6 text-gray-400 font-medium">Client</th>
-                      <th className="text-left py-4 px-6 text-gray-400 font-medium">Amount</th>
-                      <th className="text-left py-4 px-6 text-gray-400 font-medium">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {mockEarnings.recentTransactions.map((transaction, index) => (
-                      <tr 
-                        key={transaction.id} 
-                        className={`border-b border-gray-800 ${index === mockEarnings.recentTransactions.length - 1 ? 'border-b-0' : ''}`}
-                      >
-                        <td className="py-4 px-6 text-gray-300">{format(new Date(transaction.date), 'MMM d, yyyy')}</td>
-                        <td className="py-4 px-6 text-white font-medium">{transaction.jobTitle}</td>
-                        <td className="py-4 px-6 text-gray-300">{transaction.client}</td>
-                        <td className="py-4 px-6 text-white font-medium">₹{transaction.amount.toLocaleString()}</td>
-                        <td className="py-4 px-6">
-                          <span className={`px-2 py-1 rounded-full text-xs ${
-                            transaction.status === 'completed' 
-                              ? 'bg-green-900/30 text-green-500 border border-green-800'
-                              : 'bg-yellow-900/30 text-yellow-500 border border-yellow-800'
-                          }`}>
-                            {transaction.status === 'completed' ? 'Paid' : 'Pending'}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </Card>
+                  <h2 className="text-xl font-semibold text-white mb-4">Recent Transactions</h2>
+                  <Card className="bg-gray-900/50 border-gray-800 overflow-hidden mb-6">
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="border-b border-gray-800">
+                            <th className="text-left py-4 px-6 text-gray-400 font-medium">Date</th>
+                            <th className="text-left py-4 px-6 text-gray-400 font-medium">Job</th>
+                            <th className="text-left py-4 px-6 text-gray-400 font-medium">Client</th>
+                            <th className="text-left py-4 px-6 text-gray-400 font-medium">Amount</th>
+                            <th className="text-left py-4 px-6 text-gray-400 font-medium">Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {mockEarnings.recentTransactions.map((transaction, index) => (
+                            <tr 
+                              key={transaction.id} 
+                              className={`border-b border-gray-800 ${index === mockEarnings.recentTransactions.length - 1 ? 'border-b-0' : ''}`}
+                            >
+                              <td className="py-4 px-6 text-gray-300">{format(new Date(transaction.date), 'MMM d, yyyy')}</td>
+                              <td className="py-4 px-6 text-white font-medium">{transaction.jobTitle}</td>
+                              <td className="py-4 px-6 text-gray-300">{transaction.client}</td>
+                              <td className="py-4 px-6 text-white font-medium">₹{transaction.amount.toLocaleString()}</td>
+                              <td className="py-4 px-6">
+                                <span className={`px-2 py-1 rounded-full text-xs ${
+                                  transaction.status === 'completed' 
+                                    ? 'bg-green-900/30 text-green-500 border border-green-800'
+                                    : 'bg-yellow-900/30 text-yellow-500 border border-yellow-800'
+                                }`}>
+                                  {transaction.status === 'completed' ? 'Paid' : 'Pending'}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </Card>
 
-            <div className="flex items-center justify-center mt-4">
-              <Button variant="outline" size="sm" className="flex items-center gap-1 bg-gray-900/50 border-gray-800 text-gray-400 hover:text-white">
-                <ChevronLeft className="h-4 w-4" /> 
-                Previous
-              </Button>
-              <span className="px-6 text-gray-400">Page 1 of 1</span>
-              <Button variant="outline" size="sm" className="flex items-center gap-1 bg-gray-900/50 border-gray-800 text-gray-400 hover:text-white">
-                Next
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </TabsContent>
-                  </motion.div>
+                  <div className="flex items-center justify-center mt-4">
+                    <Button variant="outline" size="sm" className="flex items-center gap-1 bg-gray-900/50 border-gray-800 text-gray-400 hover:text-white">
+                      <ChevronLeft className="h-4 w-4" /> 
+                      Previous
+                    </Button>
+                    <span className="px-6 text-gray-400">Page 1 of 1</span>
+                    <Button variant="outline" size="sm" className="flex items-center gap-1 bg-gray-900/50 border-gray-800 text-gray-400 hover:text-white">
+                      Next
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </TabsContent>
+              </motion.div>
             </AnimatePresence>
-          </div>
+          </Tabs>
         </div>
-      </Tabs>
+      </div>
     </div>
   );
-}
-
-export default JobDashboard;
+};

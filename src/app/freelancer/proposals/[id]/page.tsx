@@ -562,7 +562,7 @@ export default function ProposalDetailsPage() {
                     </div>
                     <div>
                       <h2 className="font-medium">{proposal.clientName || 'Unknown Client'}</h2>
-                      <p className="text-sm text-gray-400">Client</p>
+                      <p className="text-sm text-gray-400">{proposal.location || 'Location not specified'}</p>
                     </div>
                   </div>
                   
@@ -587,11 +587,6 @@ export default function ProposalDetailsPage() {
                             '2023'}
                         </p>
                       </div>
-                    </div>
-                    
-                    <div>
-                      <h3 className="text-xs font-medium text-gray-400 mb-1">Location</h3>
-                      <p className="text-sm">{proposal.location}</p>
                     </div>
                     
                     <div className="pt-2 border-t border-gray-800">
