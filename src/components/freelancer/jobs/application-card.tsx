@@ -54,8 +54,7 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, i
       onClick={handleCardClick}
     >
       <motion.div
-        whileHover={{ scale: 1.01 }}
-        className="p-5 rounded-xl bg-[#1E1E1E] border border-white/5 hover:border-white/10 transition-all duration-200 w-full shadow-lg hover:shadow-purple-500/5"
+        className="p-5 rounded-xl bg-[#1E1E1E] border border-white/5 w-full shadow-lg"
       >
         <div className="space-y-4">
           {/* Status and Time */}

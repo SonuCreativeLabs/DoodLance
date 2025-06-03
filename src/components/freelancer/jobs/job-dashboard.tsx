@@ -233,15 +233,15 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
   return (
     <div className="w-full text-foreground bg-[#111111] h-full flex flex-col">
       {/* Fixed Header */}
-      <div className="w-full bg-[#111111] border-b border-gray-800 sticky top-[64px] z-40">
+      <div className="w-full bg-[#111111] fixed top-[64px] left-0 right-0 z-40 pt-2">
         <div className="max-w-[1800px] mx-auto px-6">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-              <TabsList className="grid w-full sm:w-auto grid-cols-2 h-10">
-                <TabsTrigger value="upcoming">My Jobs</TabsTrigger>
-                <TabsTrigger value="applications">My Proposals</TabsTrigger>
-              </TabsList>
-            </Tabs>
+          <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+            <TabsList className="grid w-full sm:w-auto grid-cols-2 h-9 mb-1 mt-1">
+              <TabsTrigger value="upcoming">My Jobs</TabsTrigger>
+              <TabsTrigger value="applications">My Proposals</TabsTrigger>
+            </TabsList>
+          </Tabs>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 py-2">
             
             {activeTab !== 'earnings' && (
               <div className="flex items-center w-full sm:w-auto gap-3">
@@ -303,9 +303,9 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
         </div>
       </div>
 
-      {/* Scrollable Content */}
-      <div className="overflow-y-auto h-[calc(100vh-120px)] relative scroll-smooth overscroll-contain">
-        <div className="w-full px-4 pb-16 pt-4">
+      {/* Scrollable Content - Add margin top to account for fixed header */}
+      <div className="mt-20 overflow-y-auto h-[calc(100vh-120px)] relative scroll-smooth overscroll-contain">
+        <div className="w-full pb-16">
           <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
             <AnimatePresence mode="wait">
               <motion.div
@@ -344,7 +344,7 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
 
                 <TabsContent value="applications" className="mt-0 w-full">
                   {/* Applications Section */}
-                  <div className="w-full space-y-6">
+                  <div className="w-full space-y-6 pb-24">
                     {filteredApplications.length > 0 ? (
                       filteredApplications.map((application, index) => (
                         <div key={application.id} className="w-full">
