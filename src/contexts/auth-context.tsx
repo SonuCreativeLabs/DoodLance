@@ -1,7 +1,7 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState } from 'react'
-import { User, AuthError } from '@supabase/supabase-js'
+import { createContext, useContext, useEffect, useState, useCallback } from 'react'
+import type { User, AuthError } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 
@@ -22,6 +22,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter()
 
   useEffect(() => {
+    if (!supabase) {
+      setLoading(false)
+      return
+    }
+
     // Check active sessions and sets the user
     supabase.auth.getSession().then(({ data: { session } }) => {
       console.log('Current session:', session)
@@ -36,11 +41,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false)
     })
 
-    return () => subscription.unsubscribe()
+    return () => {
+      if (subscription) {
+        subscription.unsubscribe()
+      }
+    }
   }, [])
 
   const signIn = async (email: string, password: string) => {
     try {
+      if (!supabase) {
+        console.warn('Supabase not initialized - sign in skipped')
+        return { error: { message: 'Authentication service not available' } as AuthError }
+      }
+
       console.log('Attempting sign in for:', email)
       const { data, error } = await supabase.auth.signInWithPassword({ 
         email, 
@@ -92,6 +106,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUp = async (email: string, password: string) => {
     try {
+      if (!supabase) {
+        console.warn('Supabase not initialized - sign up skipped')
+        return { 
+          error: { message: 'Registration service not available' } as AuthError,
+          data: { user: null }
+        }
+      }
+
       console.log('Attempting sign up for:', email)
       
       // Proceed with signup
@@ -142,6 +164,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const resendVerificationEmail = async (email: string) => {
     try {
+      if (!supabase) {
+        console.warn('Supabase not initialized - verification email not sent')
+        return { error: { message: 'Email service not available' } as AuthError }
+      }
+
       console.log('Resending verification email to:', email)
       const { error } = await supabase.auth.resend({
         type: 'signup',
@@ -165,7 +192,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     try {
-      console.log('Attempting sign out')
+      if (!supabase) {
+        console.warn('Supabase not initialized - sign out skipped')
+        return
+      }
+      
       const { error } = await supabase.auth.signOut()
       if (error) throw error
       router.push('/')
