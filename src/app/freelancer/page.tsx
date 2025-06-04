@@ -11,24 +11,12 @@ export default function FreelancerHome() {
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative min-h-[340px] bg-gradient-to-br from-purple-600 via-purple-700 to-purple-900 overflow-hidden"
+        className="relative min-h-[340px] bg-gradient-to-br from-[#6B46C1] via-[#4C1D95] to-[#2D1B69] overflow-hidden"
       >
         {/* Background Elements */}
         <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-[url('/images/grid-pattern.svg')] opacity-20"></div>
-          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
-          <motion.div 
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="absolute -right-20 -top-20 w-80 h-80 bg-purple-400 rounded-full blur-3xl opacity-20"
-          />
-          <motion.div 
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="absolute -left-20 -bottom-20 w-80 h-80 bg-purple-500 rounded-full blur-3xl opacity-20"
-          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+
           <svg
             className="absolute bottom-0 w-full h-32"
             viewBox="0 0 1440 120"
