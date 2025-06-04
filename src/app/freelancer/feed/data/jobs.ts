@@ -200,7 +200,9 @@ const generateJobs = (): Job[] => {
       clientJobs: Math.floor(Math.random() * 50) + 1,
       proposals: Math.floor(Math.random() * 30),
       duration,
-      experience
+      experience,
+      company: clientName,
+      companyLogo: `https://ui-avatars.com/api/?name=${encodeURIComponent(clientName)}&background=6B46C1&color=fff&bold=true`
     };
     return job;
   };
