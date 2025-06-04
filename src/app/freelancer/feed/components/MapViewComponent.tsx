@@ -83,6 +83,16 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
     }));
   }, [jobs]);
 
+  // Function to close all popups
+  const closeAllPopups = () => {
+    markersRef.current.forEach(marker => {
+      const popup = marker.getPopup();
+      if (popup) {
+        popup.remove();
+      }
+    });
+  };
+
   // Initialize map
   useEffect(() => {
     if (!mapContainer.current) return;
@@ -223,12 +233,19 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
         'Current location',
         () => {
           if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition((position) => {
-              map.current?.flyTo({
-                center: [position.coords.longitude, position.coords.latitude],
-                zoom: 14
-              });
-            });
+            navigator.geolocation.getCurrentPosition(
+              (position) => {
+                map.current?.flyTo({
+                  center: [position.coords.longitude, position.coords.latitude],
+                  zoom: 14
+                });
+              },
+              (error) => {
+                console.warn('Location access was denied or failed. Using default location.');
+                // Optionally show a toast notification to the user
+              },
+              { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            );
           }
         }
       );
@@ -246,6 +263,28 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
       // Set loading to false when map is ready
       map.current.on('load', () => {
         setIsLoading(false);
+      });
+
+      // Add map load event
+      map.current.on('load', () => {
+        console.log('Map loaded successfully');
+        setIsLoading(false);
+      });
+
+      // Add click handler to close popups when clicking on the map
+      map.current.on('click', (e) => {
+        // Close all popups when clicking on the map
+        closeAllPopups();
+      });
+
+      // Stop propagation for popup clicks to prevent map click from triggering
+      map.current.on('click', '.mapboxgl-popup', (e) => {
+        e.originalEvent.stopPropagation();
+      });
+
+      // Stop propagation for marker clicks
+      map.current.on('click', '.mapboxgl-marker', (e) => {
+        e.originalEvent.stopPropagation();
       });
 
       // Handle map errors
@@ -314,21 +353,36 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
       const markerEl = document.createElement('div');
       markerEl.className = 'custom-marker';
       markerEl.innerHTML = `
-        <svg width="26" height="32" viewBox="0 0 32 40" fill="none" xmlns="http://www.w3.org/2000/svg" class="location-pin" style="pointer-events: none;">
-          <path 
-            d="M16 0C7.163 0 0 7.163 0 16C0 28 16 40 16 40C16 40 32 28 32 16C32 7.163 24.837 0 16 0Z" 
-            fill="#1d59eb"
-            class="pin-body"
-          />
-          <circle cx="16" cy="14" r="4" fill="white" class="pin-dot" />
+        <svg width="24" height="36" viewBox="0 0 24 36" fill="none" xmlns="http://www.w3.org/2000/svg" class="location-pin" style="pointer-events: none;">
+          <defs>
+            <filter id="shadow" x="-10%" y="-10%" width="120%" height="150%">
+              <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#3b82f6" flood-opacity="0.6"/>
+            </filter>
+          </defs>
+          <g filter="url(#shadow)">
+            <path 
+              d="M12 0C5.373 0 0 5.373 0 12C0 21 12 36 12 36S24 21 24 12C24 5.373 18.627 0 12 0Z" 
+              fill="#1d59eb"
+              class="pin-body"
+            />
+            <path 
+              d="M12 0C5.373 0 0 5.373 0 12C0 21 12 36 12 36S24 21 24 12C24 5.373 18.627 0 12 0Z" 
+              fill="#1d59eb"
+              class="pin-body"
+              transform="scale(0.8 1)" 
+              transform-origin="12 18"
+            />
+            <circle cx="12" cy="10" r="3" fill="white" class="pin-dot" />
+          </g>
         </svg>
       `;
       
       // Style the marker container
-      markerEl.style.width = '26px';
-      markerEl.style.height = '32px';
+      markerEl.style.width = '24px';
+      markerEl.style.height = '36px';
       markerEl.style.display = 'flex';
       markerEl.style.justifyContent = 'center';
+      markerEl.style.filter = 'drop-shadow(0 2px 6px rgba(59, 130, 246, 0.4))';
 
       // Create popup content
       const popupContent = `
@@ -364,7 +418,7 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
 
       // Create popup with connecting line to pin
       const popup = new mapboxgl.Popup({
-        offset: [0, -15], // Position above the pin
+        offset: [0, 30], // Position even lower (was 5, now 30)
         closeButton: false,
         closeOnClick: false,
         maxWidth: '340px',
@@ -433,7 +487,7 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
                 // Center the map on the marker with a slight offset
                 map.current.flyTo({
                   center: job.coords,
-                  offset: [0, -80], // Adjust this value to position the marker relative to the popup
+                  offset: [0, 0], // Changed from -40 to 0 to move the view even lower
                   essential: true,
                   duration: 500
                 });
