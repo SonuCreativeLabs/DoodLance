@@ -1,210 +1,403 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { CalendarIcon, ClockIcon, IndianRupeeIcon } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { useRouter } from 'next/navigation';
+import { Search, ChevronLeft, ChevronRight, X, IndianRupee } from 'lucide-react';
 
-// Mock data for demonstration
-const mockUpcomingJobs = [
-  {
-    id: '1',
-    title: 'House Cleaning',
-    clientName: 'Raj Kumar',
-    date: '2024-04-25',
-    time: '14:00',
-    status: 'confirmed',
-    payment: 1500,
-    location: 'Anna Nagar, Chennai'
-  },
-  {
-    id: '2',
-    title: 'Garden Maintenance',
-    clientName: 'Priya S',
-    date: '2024-04-26',
-    time: '10:00',
-    status: 'pending',
-    payment: 800,
-    location: 'T Nagar, Chennai'
-  }
-];
+// Import components, types, utils, and mock data from our modular files
+import { JobCard, ApplicationCard } from './index';
+import { Job, Application } from './types';
+import { mockUpcomingJobs, mockApplications, mockEarnings } from './mock-data';
 
-const mockApplications = [
-  {
-    id: '1',
-    jobTitle: 'Office Cleaning',
-    appliedDate: '2024-04-20',
-    status: 'interviewing',
-    clientName: 'TechCorp Ltd',
-    budget: { min: 1000, max: 2000 },
-    progress: 66
-  },
-  {
-    id: '2',
-    jobTitle: 'Home Gardening',
-    appliedDate: '2024-04-19',
-    status: 'applied',
-    clientName: 'Meera R',
-    budget: { min: 500, max: 1000 },
-    progress: 33
-  }
-];
+interface JobDashboardProps {
+  searchParams?: {
+    tab?: string;
+    status?: string;
+  };
+}
 
-const mockEarnings = {
-  totalEarnings: 15000,
-  pendingPayouts: 3000,
-  recentTransactions: [
-    {
-      id: '1',
-      amount: 1500,
-      status: 'completed',
-      date: '2024-04-18',
-      jobTitle: 'House Cleaning'
-    },
-    {
-      id: '2',
-      amount: 1000,
-      status: 'pending',
-      date: '2024-04-17',
-      jobTitle: 'Garden Work'
+export function JobDashboard({ searchParams }: JobDashboardProps) {
+  // State management
+  const router = useRouter();
+  const initialTab = searchParams?.tab === 'applications' ? 'applications' : 'upcoming';
+  const initialStatus = searchParams?.status || (initialTab === 'upcoming' ? 'upcoming' : 'pending');
+  
+  const [activeTab, setActiveTab] = useState(initialTab);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showSearch, setShowSearch] = useState(false);
+  const [statusFilter, setStatusFilter] = useState(initialStatus);
+
+  // Initialize state from URL params and update when they change
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    // Extract tab from URL parameters
+    let tabFromUrl = 'upcoming';
+    if (searchParams?.tab === 'applications') {
+      tabFromUrl = 'applications';
     }
-  ]
-};
+    
+    // Extract status from URL parameters with defaults
+    let statusFromUrl = searchParams?.status || (tabFromUrl === 'upcoming' ? 'upcoming' : 'pending');
+    
+    // Validate status based on current tab
+    if (tabFromUrl === 'upcoming' && !['upcoming', 'completed', 'cancelled'].includes(statusFromUrl)) {
+      statusFromUrl = 'upcoming';
+    } else if (tabFromUrl === 'applications' && !['pending', 'accepted', 'rejected'].includes(statusFromUrl)) {
+      statusFromUrl = 'pending';
+    }
+    
+    // Update component state
+    setActiveTab(tabFromUrl);
+    setStatusFilter(statusFromUrl);
+  }, [searchParams]);
 
-export function JobDashboard() {
-  const [activeTab, setActiveTab] = useState('upcoming');
+  // Filter jobs and applications based on search and status
+  const filteredJobs = useMemo(() => {
+    const searchLower = searchQuery.trim().toLowerCase();
+    
+    // If search query is empty, just filter by status
+    if (!searchLower) {
+      return mockUpcomingJobs.filter(job => {
+        if (statusFilter === 'upcoming') return job.status === 'pending' || job.status === 'confirmed';
+        if (statusFilter === 'completed') return job.status === 'completed';
+        if (statusFilter === 'cancelled') return job.status === 'cancelled';
+        return true;
+      });
+    }
 
-  const getStatusColor = (status: string) => {
-    const colors = {
-      confirmed: 'bg-green-100 text-green-800',
-      pending: 'bg-yellow-100 text-yellow-800',
-      interviewing: 'bg-blue-100 text-blue-800',
-      applied: 'bg-gray-100 text-gray-800',
-      completed: 'bg-green-100 text-green-800'
-    };
-    return colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-800';
+    // Search across multiple job properties
+    return mockUpcomingJobs.filter(job => {
+      const matchesSearch = [
+        job.title,
+        job.category,
+        job.location,
+        job.description,
+        job.client?.name,
+        job.payment?.toString(),
+        job.duration,
+        job.experienceLevel,
+        ...(job.skills || [])
+      ].some(value => value && value.toString().toLowerCase().includes(searchLower));
+
+      // Filter by status
+      let statusMatches = true;
+      if (statusFilter === 'upcoming') {
+        statusMatches = job.status === 'pending' || job.status === 'confirmed' || job.status === 'upcoming';
+      } else if (statusFilter === 'completed') {
+        statusMatches = job.status === 'completed';
+      } else if (statusFilter === 'cancelled') {
+        statusMatches = job.status === 'cancelled';
+      }
+      
+      return matchesSearch && statusMatches;
+    });
+  }, [searchQuery, statusFilter]);
+
+  const filteredApplications = useMemo(() => {
+    if (!mockApplications || mockApplications.length === 0) {
+      return [];
+    }
+    
+    const searchLower = searchQuery.trim().toLowerCase();
+    
+    // If search query is empty, just filter by status
+    if (!searchLower) {
+      return mockApplications.filter(app => {
+        if (statusFilter === 'pending') return app.status === 'pending';
+        if (statusFilter === 'accepted') return app.status === 'accepted';
+        if (statusFilter === 'rejected') return app.status === 'rejected';
+        return true;
+      });
+    }
+    
+    // Search across multiple application properties
+    return mockApplications.filter(app => {
+      const matchesSearch = [
+        app.jobTitle,
+        app.location,
+        app.description,
+        app.clientName,
+        app.budget?.toString(),
+        app.duration,
+        app.appliedDate?.toString()
+      ].some(value => value && value.toString().toLowerCase().includes(searchLower));
+
+      if (!matchesSearch) return false;
+      
+      // Status filtering based on the current filter
+      if (statusFilter === 'pending') return app.status === 'pending';
+      if (statusFilter === 'accepted') return app.status === 'accepted';
+      if (statusFilter === 'rejected') return app.status === 'rejected';
+      
+      return true;
+    });
+  }, [searchQuery, statusFilter]);
+
+  // Status filter options
+  const statusOptions = useMemo(() => {
+    if (activeTab === 'upcoming') {
+      return [
+        { value: 'upcoming', label: 'Upcoming' },
+        { value: 'completed', label: 'Completed' },
+        { value: 'cancelled', label: 'Cancelled' }
+      ] as const;
+    } else if (activeTab === 'applications') {
+      return [
+        { value: 'pending', label: 'Pending' },
+        { value: 'accepted', label: 'Accepted' },
+        { value: 'rejected', label: 'Rejected' }
+      ] as const;
+    }
+    return [] as const;
+  }, [activeTab]);
+
+  // Event handlers
+  const handleTabChange = (value: string) => {
+    const newTab = value === 'applications' ? 'applications' : 'upcoming';
+    const defaultStatus = newTab === 'applications' ? 'pending' : 'upcoming';
+    
+    // Update URL with new tab and status using Next.js router
+    const params = new URLSearchParams();
+    params.set('tab', newTab);
+    params.set('status', defaultStatus);
+    router.push(`/freelancer/jobs?${params.toString()}`);
+    
+    // Update state
+    setActiveTab(newTab);
+    setStatusFilter(defaultStatus);
   };
 
+  const handleFilterChange = (newFilter: string) => {
+    // Update URL with the new status filter using Next.js router
+    const params = new URLSearchParams();
+    params.set('tab', activeTab);
+    params.set('status', newFilter);
+    router.push(`/freelancer/jobs?${params.toString()}`);
+    
+    // Update state
+    setStatusFilter(newFilter);
+  };
+
+  const renderRating = (rating: number) => {
+    return (
+      <div className="inline-flex items-center">
+        {[1, 2, 3, 4, 5].map(star => (
+          <svg 
+            key={star}
+            className={`w-4 h-4 ${star <= Math.round(rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+          </svg>
+        ))}
+        <span className="ml-1 text-sm text-gray-400">{rating.toFixed(1)}</span>
+      </div>
+    );
+  };
+
+  const onViewDetails = (application: Application) => {
+    console.log('View details of application:', application);
+  };
+
+  const onMessageClient = (clientId: string) => {
+    console.log('Message client with ID:', clientId);
+  };
+
+  // Prevent wheel events on header from scrolling the page
+  useEffect(() => {
+    const handleWheel = (e: Event) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('.scrollable-content')) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
+
+    const header = document.querySelector('.fixed-header');
+    if (header) {
+      header.addEventListener('wheel', handleWheel as EventListener, { passive: false });
+      return () => {
+        header.removeEventListener('wheel', handleWheel as EventListener);
+      };
+    }
+  }, []);
+
   return (
-    <Tabs defaultValue="upcoming" className="w-full" onValueChange={setActiveTab}>
-      <TabsList className="grid w-full grid-cols-3 mb-6">
-        <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
-        <TabsTrigger value="applications">Applications</TabsTrigger>
-        <TabsTrigger value="earnings">Earnings</TabsTrigger>
-      </TabsList>
-
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={activeTab}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          transition={{ duration: 0.2 }}
-        >
-          <TabsContent value="upcoming" className="mt-0">
-            <div className="space-y-4">
-              {mockUpcomingJobs.map((job) => (
-                <Card key={job.id} className="p-4">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="font-semibold text-lg">{job.title}</h3>
-                      <p className="text-gray-600">{job.clientName}</p>
-                      <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
-                        <span className="flex items-center gap-1">
-                          <CalendarIcon className="w-4 h-4" />
-                          {job.date}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <ClockIcon className="w-4 h-4" />
-                          {job.time}
-                        </span>
-                      </div>
-                      <p className="text-sm text-gray-500 mt-1">{job.location}</p>
+    <div className="w-full text-foreground bg-[#111111] min-h-screen flex flex-col">
+      {/* Fixed Header */}
+      <div className="fixed-header w-full bg-[#111111] fixed top-0 left-0 right-0 z-40 border-b border-gray-800">
+        <div className="w-full px-2">
+          <Tabs 
+            value={activeTab} 
+            onValueChange={handleTabChange} 
+            className="w-full pt-16"
+          >
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 py-4">
+              <TabsList className="grid w-full sm:w-auto grid-cols-2 h-10">
+                <TabsTrigger value="upcoming">My Jobs</TabsTrigger>
+                <TabsTrigger value="applications">My Proposals</TabsTrigger>
+              </TabsList>
+              
+              <div className="flex items-center w-full sm:w-auto gap-3">
+                <div className={`transition-all duration-300 ease-in-out ${showSearch ? 'flex-1' : 'w-10'}`}>
+                  {showSearch ? (
+                    <div className="relative w-full flex items-center">
+                      <Search className="absolute left-3 h-4 w-4 text-gray-400" />
+                      <Input
+                        type="search"
+                        placeholder="Search..."
+                        className="pl-10 pr-10 w-full bg-gray-900 text-white h-10"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        autoFocus
+                      />
+                      <button
+                        className="absolute right-2 h-6 w-6 p-0 text-gray-400 hover:text-white flex items-center justify-center"
+                        onClick={() => {
+                          setSearchQuery('');
+                          setShowSearch(false);
+                        }}
+                      >
+                        <X className="h-5 w-5" />
+                        <span className="sr-only">Cancel search</span>
+                      </button>
                     </div>
-                    <div className="text-right">
-                      <Badge className={getStatusColor(job.status)}>
-                        {job.status.charAt(0).toUpperCase() + job.status.slice(1)}
-                      </Badge>
-                      <p className="mt-2 font-medium flex items-center justify-end">
-                        <IndianRupeeIcon className="w-4 h-4" />
-                        {job.payment}
-                      </p>
-                    </div>
+                  ) : (
+                    <button
+                      className="h-10 w-10 p-0 text-gray-400 hover:text-white flex items-center justify-center"
+                      onClick={() => setShowSearch(true)}
+                    >
+                      <Search className="h-5 w-5" />
+                      <span className="sr-only">Search</span>
+                    </button>
+                  )}
+                </div>
+                
+                {activeTab !== 'earnings' && statusOptions.length > 0 && !showSearch && (
+                  <div className="flex items-center gap-2">
+                    {statusOptions.map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={() => handleFilterChange(option.value)}
+                        className={`px-3 py-1.5 text-xs rounded-full border transition-colors ${
+                          statusFilter === option.value
+                            ? 'bg-purple-600 border-purple-600 text-white'
+                            : 'bg-gray-900/50 border-gray-700 text-gray-300 hover:bg-gray-800/50'
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
                   </div>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="applications" className="mt-0">
-            <div className="space-y-4">
-              {mockApplications.map((application) => (
-                <Card key={application.id} className="p-4">
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="font-semibold text-lg">{application.jobTitle}</h3>
-                        <p className="text-gray-600">{application.clientName}</p>
-                      </div>
-                      <Badge className={getStatusColor(application.status)}>
-                        {application.status.charAt(0).toUpperCase() + application.status.slice(1)}
-                      </Badge>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm text-gray-500">
-                        <span>Application Progress</span>
-                        <span>{application.progress}%</span>
-                      </div>
-                      <Progress value={application.progress} className="h-2" />
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-500">Budget Range:</span>
-                      <span className="font-medium">₹{application.budget.min} - ₹{application.budget.max}</span>
-                    </div>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="earnings" className="mt-0">
-            <Card className="p-6">
-              <div className="grid grid-cols-2 gap-4 mb-6">
-                <div className="text-center p-4 bg-green-50 rounded-lg">
-                  <p className="text-sm text-gray-600">Total Earnings</p>
-                  <p className="text-2xl font-semibold text-green-600 mt-1">₹{mockEarnings.totalEarnings}</p>
-                </div>
-                <div className="text-center p-4 bg-blue-50 rounded-lg">
-                  <p className="text-sm text-gray-600">Pending Payouts</p>
-                  <p className="text-2xl font-semibold text-blue-600 mt-1">₹{mockEarnings.pendingPayouts}</p>
-                </div>
+                )}
               </div>
-              <div>
-                <h3 className="font-semibold mb-4">Recent Transactions</h3>
-                <div className="space-y-3">
-                  {mockEarnings.recentTransactions.map((transaction) => (
-                    <div key={transaction.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                      <div>
-                        <p className="font-medium">{transaction.jobTitle}</p>
-                        <p className="text-sm text-gray-500">{transaction.date}</p>
+            </div>
+
+            <div className="scrollable-content h-[calc(100vh-180px)] overflow-y-auto pt-4 pb-32 w-full scrollbar-hide">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeTab}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.15 }}
+                  className="w-full px-2"
+                >
+                  {/* Upcoming Jobs Tab */}
+                  <TabsContent value="upcoming" className="mt-0 w-full">
+                    {filteredJobs.length > 0 ? (
+                      <div className="space-y-4 w-full">
+                        {filteredJobs.map((job) => (
+                          <JobCard
+                            key={job.id}
+                            job={job}
+                            index={filteredJobs.indexOf(job)}
+                          />
+                        ))}
                       </div>
-                      <div className="text-right">
-                        <p className="font-medium">₹{transaction.amount}</p>
-                        <Badge className={getStatusColor(transaction.status)}>
-                          {transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
-                        </Badge>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center py-12 text-center">
+                        <div className="bg-gray-800 p-4 rounded-full mb-4">
+                          <svg
+                            className="h-12 w-12 text-gray-500"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={1.5}
+                              d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                          </svg>
+                        </div>
+                        <h3 className="text-lg font-medium text-gray-300 mb-1">
+                          No {statusFilter === 'upcoming' ? 'upcoming' : statusFilter} jobs found
+                        </h3>
+                        <p className="text-gray-500 max-w-md">
+                          {searchQuery
+                            ? 'Try adjusting your search or filter to find what you\'re looking for.'
+                            : 'When you have upcoming jobs, they will appear here.'}
+                        </p>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </Card>
-          </TabsContent>
-        </motion.div>
-      </AnimatePresence>
-    </Tabs>
+                    )}
+                  </TabsContent>
+
+                  {/* Applications Tab */}
+                  <TabsContent value="applications" className="mt-0 w-full">
+                    {filteredApplications.length > 0 ? (
+                      <div className="space-y-4 w-full">
+                        {filteredApplications.map((application) => (
+                          <ApplicationCard
+                            key={application.id}
+                            application={application}
+                            index={filteredApplications.indexOf(application)}
+                            onViewDetails={() => onViewDetails(application)}
+                          />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center py-12 text-center">
+                        <div className="bg-gray-800 p-4 rounded-full mb-4">
+                          <svg
+                            className="h-12 w-12 text-gray-500"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={1.5}
+                              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                            />
+                          </svg>
+                        </div>
+                        <h3 className="text-lg font-medium text-gray-300 mb-1">
+                          No {statusFilter} applications found
+                        </h3>
+                        <p className="text-gray-500 max-w-md">
+                          {searchQuery
+                            ? 'Try adjusting your search or filter to find what you\'re looking for.'
+                            : 'When you submit proposals, they will appear here.'}
+                        </p>
+                      </div>
+                    )}
+                  </TabsContent>
+                </motion.div>
+              </AnimatePresence>
+            </div>
+          </Tabs>
+        </div>
+      </div>
+    </div>
   );
-} 
+}

@@ -20,15 +20,42 @@ export default function FreelancerLayout({ children }: FreelancerLayoutProps) {
 
   const navItems = [
     { href: '/freelancer', label: 'Home', icon: Home },
+    { href: '/freelancer/jobs', label: 'My Jobs', icon: Briefcase },
     { href: '/freelancer/feed', label: 'Feed', icon: Compass },
-    { href: '/freelancer/jobs', label: 'Jobs', icon: Briefcase },
     { href: '/freelancer/inbox', label: 'Inbox', icon: Inbox },
     { href: '/freelancer/profile', label: 'Profile', icon: User },
   ]
 
-  // For feed page, we want a minimal layout with just the content
-  if (pathname === '/freelancer/feed') {
-    return <div className="h-[100dvh] overflow-hidden">{children}</div>;
+  // For feed, job details, and proposal details pages, we want a minimal layout with just the content and bottom nav
+  if (pathname === '/freelancer/feed' || 
+      pathname?.startsWith('/freelancer/jobs/') || 
+      pathname?.startsWith('/freelancer/proposals/')) {
+    return (
+      <div className="h-[100dvh] overflow-hidden">
+        {children}
+        {/* Mobile Navigation - Show for feed page */}
+        <div className="md:hidden fixed bottom-0 left-0 right-0 border-t border-white/10 bg-[#111111]/95 backdrop-blur-lg z-50">
+          <div className="flex items-center justify-around h-16">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const active = isActive(item.href);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`flex flex-col items-center justify-center flex-1 h-full transition-colors duration-200 ${
+                    active ? 'text-purple-400' : 'text-white/60 hover:text-white'
+                  }`}
+                >
+                  <Icon className={`w-5 h-5 ${active ? 'text-purple-400' : 'text-white/60'}`} />
+                  <span className="text-xs mt-1">{item.label}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -46,7 +73,7 @@ export default function FreelancerLayout({ children }: FreelancerLayoutProps) {
               href="/freelancer" 
               className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-purple-600 font-bold text-lg hover:from-purple-500 hover:to-purple-700 transition-all duration-300"
             >
-              SkilledMice
+              DoodLance
             </Link>
             <div className="hidden md:flex items-center space-x-1">
               {navItems.map((item) => {
@@ -125,7 +152,7 @@ export default function FreelancerLayout({ children }: FreelancerLayoutProps) {
       )}
 
       <div className="h-16" /> {/* Spacer for fixed header */}
-      <main className="min-h-[calc(100vh-4rem)] overflow-y-auto relative z-10">{children}</main>
+      <main className="flex flex-col min-h-[calc(100vh-4rem)] relative z-10">{children}</main>
     </div>
   )
 } 

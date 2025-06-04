@@ -1,4 +1,4 @@
-# SkilledMice - Hyper-local Service Marketplace
+# DoodLance - Hyper-local Service Marketplace
 
 A Progressive Web App (PWA) that connects local service providers with clients, built with Next.js.
 

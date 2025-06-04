@@ -18,6 +18,22 @@ const nextConfig = {
       },
     ]
   },
+  // Enable React Strict Mode for development
+  reactStrictMode: true,
+  // Enable production browser source maps
+  productionBrowserSourceMaps: true,
+  // Disable static pages optimization for now
+  output: 'standalone',
+  // Custom error handling
+  async rewrites() {
+    return [
+      // Handle client-side routing for all routes
+      {
+        source: '/:path*',
+        destination: '/:path*',
+      },
+    ]
+  },
 }
 
 module.exports = nextConfig
