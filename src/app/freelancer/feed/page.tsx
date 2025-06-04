@@ -69,26 +69,51 @@ export default function FeedPage() {
 
   // Get user's current location
   useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const { latitude, longitude } = position.coords;
-          // Get human-readable address
-          const address = await reverseGeocode(latitude, longitude);
-          setCurrentLocation(address);
-          setLocation(address);
-        },
-        (error) => {
-          console.error('Error getting location:', error);
-          setCurrentLocation('Chennai, India'); // Default to Chennai if location access is denied
-          setLocation('Chennai, India');
-        },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-      );
-    } else {
-      setCurrentLocation('Chennai, India');
-      setLocation('Chennai, India');
-    }
+    const handleGeolocation = async () => {
+      if (!navigator.geolocation) {
+        console.warn('Geolocation is not supported by your browser');
+        setCurrentLocation('Chennai, India');
+        setLocation('Chennai, India');
+        return;
+      }
+
+      try {
+        const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0
+          });
+        });
+
+        const { latitude, longitude } = position.coords;
+        const address = await reverseGeocode(latitude, longitude);
+        setCurrentLocation(address);
+        setLocation(address);
+      } catch (error) {
+        // Handle different types of geolocation errors
+        const geolocationError = error as GeolocationPositionError;
+        let errorMessage = 'Unable to retrieve your location';
+        
+        switch(geolocationError.code) {
+          case geolocationError.PERMISSION_DENIED:
+            errorMessage = 'Location access was denied. Using default location.';
+            break;
+          case geolocationError.POSITION_UNAVAILABLE:
+            errorMessage = 'Location information is unavailable. Using default location.';
+            break;
+          case geolocationError.TIMEOUT:
+            errorMessage = 'Location request timed out. Using default location.';
+            break;
+        }
+        
+        console.warn(errorMessage, geolocationError);
+        setCurrentLocation('Chennai, India');
+        setLocation('Chennai, India');
+      }
+    };
+
+    handleGeolocation();
   }, []);
 
   // Constants for sheet positions
