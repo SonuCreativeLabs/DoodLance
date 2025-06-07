@@ -53,39 +53,31 @@ export function ChatList({ onChatSelect, selectedChatId, chats: propChats = [] }
   }
 
   return (
-    <div className="space-y-2">
-      {/* Debug: Show if no chats */}
-      {/* {!chats || chats.length === 0 ? (
-        <div className="p-4 text-center text-white/60">
-          No chats available
-        </div>
-      ) : null} */}
+    <div className="divide-y divide-white/5">
       {chats.map((chat, index) => (
         <motion.div
           key={chat.id}
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 5 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ 
-            duration: 0.3,
-            delay: 0.05 * index,
-            ease: [0.16, 1, 0.3, 1]
+            duration: 0.2,
+            delay: 0.02 * index,
+            ease: 'easeOut'
           }}
           className="w-full"
         >
           <motion.button
-            whileHover={{ scale: 1.01 }}
-            whileTap={{ scale: 0.99 }}
+            whileHover={{ backgroundColor: 'rgba(255, 255, 255, 0.02)' }}
+            whileTap={{ backgroundColor: 'rgba(255, 255, 255, 0.03)' }}
             onClick={() => onChatSelect(chat.id)}
-            className={`w-full p-4 text-left rounded-xl transition-all duration-300 group border ${
-              selectedChatId === chat.id 
-                ? 'bg-gradient-to-r from-purple-600/20 to-purple-400/20 border-purple-500/30' 
-                : 'border-white/10 hover:border-white/20 hover:bg-white/5'
+            className={`w-full px-4 py-3 text-left transition-colors duration-200 ${
+              selectedChatId === chat.id ? 'bg-white/5' : ''
             }`}
           >
-            <div className="flex items-start gap-3 w-full">
-              {/* Avatar with Fallback */}
-              <div className="relative flex-shrink-0 mt-1">
-                <div className="h-12 w-12 rounded-xl overflow-hidden ring-2 ring-purple-500/30 group-hover:ring-purple-500/50 transition-all duration-300 bg-gray-700 flex items-center justify-center">
+            <div className="flex items-center gap-3 w-full">
+              {/* Avatar */}
+              <div className="relative flex-shrink-0">
+                <div className="h-10 w-10 rounded-full overflow-hidden bg-gray-700 flex items-center justify-center">
                   <img 
                     src={chat.avatar} 
                     alt={chat.name} 
@@ -98,65 +90,62 @@ export function ChatList({ onChatSelect, selectedChatId, chats: propChats = [] }
                     }}
                   />
                   <div 
-                    className="absolute inset-0 bg-gradient-to-br from-purple-600 to-blue-600 flex items-center justify-center text-white font-bold text-lg"
+                    className="hidden absolute inset-0 bg-gradient-to-br from-purple-600 to-blue-600 items-center justify-center text-white font-medium text-sm"
                     style={{ display: 'none' }}
                   >
                     {chat.name.split(' ').map(n => n[0]).join('').toUpperCase()}
                   </div>
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
                 {chat.online && (
-                  <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-gradient-to-r from-green-500 to-green-400 ring-2 ring-[#111111] shadow-lg" />
+                  <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-green-500 border-2 border-[#111111]" />
                 )}
               </div>
 
-              {/* Content - Simplified Layout */}
+              {/* Content */}
               <div className="flex-1 min-w-0">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1 min-w-0 pr-3">
-                    {/* Name Row */}
-                    <div className="flex items-center gap-2">
-                      <h3 className={`font-semibold text-sm truncate ${selectedChatId === chat.id ? 'text-purple-400' : 'text-white group-hover:text-purple-400'} transition-colors duration-300`}>
-                        {chat.name}
-                      </h3>
-                      {chat.unread && (
-                        <span className="h-2 w-2 rounded-full bg-purple-500 flex-shrink-0"></span>
-                      )}
-                    </div>
-                    
-                    {/* Job Title and Message - Aligned */}
-                    <div className="mt-1 space-y-0.5">
-                      <div className="text-[13px] text-white/90 font-medium truncate pl-0">
-                        {chat.jobTitle}
-                      </div>
-                      <div className="text-[13px] text-white/60 truncate pl-0">
-                        {chat.lastMessage}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Time - aligned with name */}
-                  <span className="text-xs text-white/50 whitespace-nowrap">
-                    {chat.time}
-                  </span>
-                </div>
-
-                {/* Budget and Status */}
-                <div className="flex items-center justify-between w-full mt-2">
-                  {chat.budget && (
-                    <span className="text-xs font-semibold text-purple-400">
-                      {chat.budget}
+                <div className="flex items-center justify-between">
+                  <h3 className={`text-sm font-medium truncate ${
+                    chat.unread ? 'text-white' : 'text-white/90'
+                  }`}>
+                    {chat.name}
+                  </h3>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs text-white/40">
+                      {chat.time}
                     </span>
-                  )}
+                    {chat.unread && (
+                      <span className="h-2 w-2 rounded-full bg-purple-500 flex-shrink-0" />
+                    )}
+                  </div>
+                </div>
+                
+                <div className="mt-0.5">
+                  <p className={`text-xs font-medium truncate ${
+                    chat.unread ? 'text-white/80' : 'text-white/60'
+                  }`}>
+                    {chat.jobTitle}
+                  </p>
+                  <p className={`text-xs truncate ${
+                    chat.unread ? 'text-white/70' : 'text-white/40'
+                  }`}>
+                    {chat.lastMessage}
+                  </p>
+                </div>
+                
+                <div className="flex items-center gap-1.5 mt-1">
                   {chat.status && (
-                    <span className={`text-[11px] px-2 py-0.5 rounded-full ${
-                      chat.status === 'Completed' ? 'bg-green-900/30 text-green-400' :
-                      chat.status === 'Ongoing' ? 'bg-blue-900/30 text-blue-400' :
-                      chat.status === 'Upcoming' ? 'bg-purple-900/30 text-purple-400' :
-                      chat.status === 'Cancelled' ? 'bg-red-900/30 text-red-400' :
-                      'bg-yellow-900/30 text-yellow-400'
+                    <span className={`text-[10px] px-2 py-0.5 rounded ${
+                      chat.status === 'Completed' ? 'bg-green-500/10 text-green-400' :
+                      chat.status === 'Ongoing' ? 'bg-blue-500/10 text-blue-400' :
+                      chat.status === 'Upcoming' ? 'bg-yellow-500/10 text-yellow-400' :
+                      'bg-gray-500/10 text-gray-400'
                     }`}>
                       {chat.status}
+                    </span>
+                  )}
+                  {chat.budget && (
+                    <span className="text-[10px] px-2 py-0.5 rounded bg-purple-500/10 text-purple-400">
+                      {chat.budget}
                     </span>
                   )}
                 </div>

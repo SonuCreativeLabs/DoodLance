@@ -104,8 +104,13 @@ function InboxPageInner() {
     return matchesSearch && matchesStatus;
   });
   
-  // Calculate unread messages count for filtered chats
-  const unreadCount = filteredChats.filter(chat => chat.unread).length;
+  // Calculate unread messages count for filtered chats - ensure it's consistent between server and client
+  const [unreadCount, setUnreadCount] = useState(0);
+  
+  // Update unread count in an effect to avoid hydration mismatch
+  useEffect(() => {
+    setUnreadCount(filteredChats.filter(chat => chat.unread).length);
+  }, [filteredChats]);
 
   useEffect(() => {
     setFullChatView(!!selectedChat);
