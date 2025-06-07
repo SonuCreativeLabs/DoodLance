@@ -10,6 +10,10 @@ interface Chat {
   time: string;
   online: boolean;
   jobTitle: string;
+  budget?: string;
+  status?: string;
+  unread?: boolean;
+  rating?: number;
 }
 
 interface ChatListProps {
@@ -18,50 +22,133 @@ interface ChatListProps {
   chats: Chat[];
 }
 
-export function ChatList({ onChatSelect, selectedChatId, chats }: ChatListProps) {
+export function ChatList({ onChatSelect, selectedChatId, chats: propChats = [] }: ChatListProps) {
+  // Debug: Log the chats data
+  console.log('ChatList rendering with chats:', propChats);
+  
+  // Add test chat if no chats are provided
+  const chats = propChats.length > 0 ? propChats : [{
+    id: 'test-1',
+    name: 'Test User',
+    avatar: 'https://i.pravatar.cc/150?img=1',
+    lastMessage: 'This is a test message',
+    time: 'Just now',
+    online: true,
+    jobTitle: 'Test Job',
+    budget: '₹1,000',
+    status: 'New',
+    unread: true,
+    rating: 5
+  }];
+
+  if (!chats || chats.length === 0) {
+    return (
+      <div className="flex-1 flex items-center justify-center p-8">
+        <div className="text-center">
+          <div className="text-white/60 mb-2">No messages yet</div>
+          <div className="text-sm text-white/40">Your conversations will appear here</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-2">
+    <div className="divide-y divide-white/5">
       {chats.map((chat, index) => (
         <motion.div
           key={chat.id}
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 5 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 * index }}
+          transition={{ 
+            duration: 0.2,
+            delay: 0.02 * index,
+            ease: 'easeOut'
+          }}
+          className="w-full"
         >
           <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+            whileHover={{ backgroundColor: 'rgba(255, 255, 255, 0.02)' }}
+            whileTap={{ backgroundColor: 'rgba(255, 255, 255, 0.03)' }}
             onClick={() => onChatSelect(chat.id)}
-            className={`w-full p-4 rounded-xl transition-all duration-300 group ${selectedChatId === chat.id 
-              ? 'bg-gradient-to-r from-purple-600/20 to-purple-400/20 border border-purple-500/30' 
-              : 'hover:bg-white/5 border border-transparent hover:border-white/10'
+            className={`w-full px-4 py-3 text-left transition-colors duration-200 ${
+              selectedChatId === chat.id ? 'bg-white/5' : ''
             }`}
           >
-            <div className="flex items-center gap-4">
-              <div className="relative">
-                <div className="relative h-12 w-12 rounded-xl overflow-hidden ring-2 ring-purple-500/30 group-hover:ring-purple-500/50 transition-all duration-300">
+            <div className="flex items-center gap-3 w-full">
+              {/* Avatar */}
+              <div className="relative flex-shrink-0">
+                <div className="h-10 w-10 rounded-full overflow-hidden bg-gray-700 flex items-center justify-center">
                   <img 
                     src={chat.avatar} 
                     alt={chat.name} 
                     className="w-full h-full object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      const fallback = target.nextElementSibling as HTMLElement;
+                      if (fallback) fallback.style.display = 'flex';
+                    }}
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <div 
+                    className="hidden absolute inset-0 bg-gradient-to-br from-purple-600 to-blue-600 items-center justify-center text-white font-medium text-sm"
+                    style={{ display: 'none' }}
+                  >
+                    {chat.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                  </div>
                 </div>
                 {chat.online && (
-                  <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-gradient-to-r from-green-500 to-green-400 ring-2 ring-[#111111] shadow-lg" />
+                  <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-green-500 border-2 border-[#111111]" />
                 )}
               </div>
-              <div className="flex-1 min-w-0 text-left">
-                <div className="flex items-center justify-between gap-2">
-                  <h3 className={`font-medium text-sm truncate ${selectedChatId === chat.id ? 'text-purple-400' : 'text-white group-hover:text-purple-400'} transition-colors duration-300`}>
+
+              {/* Content */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between">
+                  <h3 className={`text-sm font-medium truncate ${
+                    chat.unread ? 'text-white' : 'text-white/90'
+                  }`}>
                     {chat.name}
                   </h3>
-                  <span className="text-xs text-white/40 whitespace-nowrap">
-                    {chat.time}
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs text-white/40">
+                      {chat.time}
+                    </span>
+                    {chat.unread && (
+                      <span className="h-2 w-2 rounded-full bg-purple-500 flex-shrink-0" />
+                    )}
+                  </div>
                 </div>
-                <p className="text-xs text-white/60 truncate">{chat.jobTitle}</p>
-                <p className="text-xs text-white/40 truncate mt-1 line-clamp-1">{chat.lastMessage}</p>
+                
+                <div className="mt-0.5">
+                  <p className={`text-xs font-medium truncate ${
+                    chat.unread ? 'text-white/80' : 'text-white/60'
+                  }`}>
+                    {chat.jobTitle}
+                  </p>
+                  <p className={`text-xs truncate ${
+                    chat.unread ? 'text-white/70' : 'text-white/40'
+                  }`}>
+                    {chat.lastMessage}
+                  </p>
+                </div>
+                
+                <div className="flex items-center gap-1.5 mt-1">
+                  {chat.status && (
+                    <span className={`text-[10px] px-2 py-0.5 rounded ${
+                      chat.status === 'Completed' ? 'bg-green-500/10 text-green-400' :
+                      chat.status === 'Ongoing' ? 'bg-blue-500/10 text-blue-400' :
+                      chat.status === 'Upcoming' ? 'bg-yellow-500/10 text-yellow-400' :
+                      'bg-gray-500/10 text-gray-400'
+                    }`}>
+                      {chat.status}
+                    </span>
+                  )}
+                  {chat.budget && (
+                    <span className="text-[10px] px-2 py-0.5 rounded bg-purple-500/10 text-purple-400">
+                      {chat.budget}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           </motion.button>

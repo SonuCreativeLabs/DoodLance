@@ -38,11 +38,20 @@ export function ChatList({ chats, selectedChatId, onSelectChat }: ChatListProps)
               <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-green-500 ring-2 ring-[#23232b]" />
             )}
           </div>
-          <div className="flex-1 min-w-0 space-y-1">
-            <div className="flex justify-between items-center">
-              <div className="flex flex-col">
-                <h3 className="font-semibold text-white group-hover:text-purple-400 transition-colors">{chat.recipientName}</h3>
-                <p className="text-xs text-white/40 font-medium">{chat.recipientJobTitle}</p>
+          <div className="flex-1 min-w-0">
+            <div className="flex justify-between items-start">
+              <div>
+                <h3 className="font-semibold text-white group-hover:text-purple-400 transition-colors">
+                  {chat.recipientName}
+                </h3>
+                <div className="space-y-1 mt-1">
+                  <p className="text-xs text-white/40 font-medium">
+                    {chat.recipientJobTitle}
+                  </p>
+                  <p className="text-sm text-white/70 truncate leading-relaxed">
+                    {chat.lastMessage}
+                  </p>
+                </div>
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
                 <span className="text-xs text-white/40 tabular-nums">
@@ -55,7 +64,6 @@ export function ChatList({ chats, selectedChatId, onSelectChat }: ChatListProps)
                 )}
               </div>
             </div>
-            <p className="text-sm text-white/70 truncate leading-relaxed">{chat.lastMessage}</p>
           </div>
         </div>
       ))}
