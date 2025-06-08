@@ -1,15 +1,50 @@
 "use client";
 
-import React from 'react';
-import { Star, Clock, Calendar, MapPin } from 'lucide-react';
-
+import React, { useState, useEffect } from 'react';
+import { Star, Clock, Calendar, MapPin, ArrowLeft } from 'lucide-react';
+import JobDetailsFull from './JobDetailsFull';
+import OverlayPortal from './OverlayPortal';
 import { Job } from '../types';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 interface ProfessionalsFeedProps {
   jobs: Job[];
 }
 
 export default function ProfessionalsFeed({ jobs }: ProfessionalsFeedProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+  const [showFullView, setShowFullView] = useState(false);
+
+  // Check for job ID in URL
+  useEffect(() => {
+    const jobId = searchParams.get('jobId');
+    if (jobId) {
+      const job = jobs.find(j => j.id === jobId);
+      if (job) {
+        setSelectedJob(job);
+        setShowFullView(true);
+      }
+    }
+  }, [searchParams, jobs]);
+
+  const handleJobClick = (job: Job) => {
+    setSelectedJob(job);
+    router.push(`?jobId=${job.id}`, { scroll: false });
+    setShowFullView(true);
+  };
+
+  const handleBack = () => {
+    router.back();
+    setShowFullView(false);
+  };
+
+  const handleApply = (jobId: string) => {
+    console.log('Applying to job:', jobId);
+    // Handle apply logic here
+    handleBack();
+  };
   if (!jobs || jobs.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-10 text-white/60">
@@ -18,10 +53,28 @@ export default function ProfessionalsFeed({ jobs }: ProfessionalsFeedProps) {
     );
   }
   console.log('ProfessionalsFeed - Rendering jobs:', jobs.length);
+  // If in full view, only show the selected job
+  if (showFullView && selectedJob) {
+    return (
+      <OverlayPortal>
+        <JobDetailsFull
+          job={selectedJob}
+          onBack={handleBack}
+          onApply={handleApply}
+        />
+      </OverlayPortal>
+    );
+  }
+
+  // Otherwise show the list of jobs
   return (
     <div className="space-y-4 pb-24">
       {jobs.map((job) => (
-        <div key={job.id} className="bg-[#1E1E1E] rounded-2xl p-5 shadow-lg border border-white/5 hover:border-white/10 transition-all duration-200 w-full hover:shadow-purple-500/10">
+        <div 
+          key={job.id} 
+          onClick={() => handleJobClick(job)}
+          className="bg-[#1E1E1E] rounded-2xl p-5 shadow-lg border border-white/5 hover:border-white/10 transition-all duration-200 w-full hover:shadow-purple-500/10 cursor-pointer"
+        >
           {/* Job Header */}
           <div className="flex justify-between items-start gap-4 mb-3">
             <div className="flex-1 min-w-0">
@@ -89,7 +142,13 @@ export default function ProfessionalsFeed({ jobs }: ProfessionalsFeedProps) {
                 {job.proposals} proposals
               </span>
             </div>
-            <button className="bg-purple-600 hover:bg-purple-500 text-white px-5 py-2 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-2 hover:shadow-lg hover:shadow-purple-500/20">
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                handleApply(job.id);
+              }}
+              className="bg-purple-600 hover:bg-purple-500 text-white px-5 py-2 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-2 hover:shadow-lg hover:shadow-purple-500/20"
+            >
               <span>Apply Now</span>
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
@@ -98,6 +157,8 @@ export default function ProfessionalsFeed({ jobs }: ProfessionalsFeedProps) {
           </div>
         </div>
       ))}
+
+
     </div>
   );
 }
