@@ -1,6 +1,8 @@
 "use client"
 
 import { Bell, Wallet, Home, Inbox, Briefcase, User, Compass } from 'lucide-react'
+import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { ChatViewProvider, useChatView } from '@/contexts/ChatViewContext';
@@ -9,13 +11,37 @@ interface FreelancerLayoutProps {
   children: React.ReactNode
 }
 
-function FreelancerLayoutInner({ children }: FreelancerLayoutProps) {
-  const pathname = usePathname()
-  let fullChatView = false;
-  try {
-    // Only call if inside provider
-    fullChatView = useChatView().fullChatView;
-  } catch (e) {}
+// Wrapper component to handle the chat view context
+function LayoutContent({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  
+  // Use a ref to track if we're in a browser environment
+  const [isMounted, setIsMounted] = useState(false);
+  
+  useEffect(() => {
+    setIsMounted(true);
+    return () => setIsMounted(false);
+  }, []);
+  
+  // Always call the hook at the top level
+  const chatView = useChatView();
+  // Only access the context value after mount
+  const fullChatView = isMounted ? chatView?.fullChatView || false : false;
+  
+  return (
+    <FreelancerLayoutInner fullChatView={fullChatView} pathname={pathname}>
+      {children}
+    </FreelancerLayoutInner>
+  );
+}
+
+// Inner layout component that receives fullChatView as a prop
+function FreelancerLayoutInner({ 
+  children, 
+  fullChatView = false,
+  pathname 
+}: FreelancerLayoutProps & { fullChatView?: boolean; pathname: string }) {
+  // Rest of the component logic remains the same
 
   const isActive = (path: string) => {
     if (path === '/freelancer') {
@@ -33,12 +59,25 @@ function FreelancerLayoutInner({ children }: FreelancerLayoutProps) {
   ]
 
   // For feed, job details, and proposal details pages, we want a minimal layout with just the content and bottom nav
-  if (pathname === '/freelancer/feed' || 
-      pathname?.startsWith('/freelancer/jobs/') || 
-      pathname?.startsWith('/freelancer/proposals/')) {
+  const isMinimalLayout = pathname === '/freelancer/feed' || 
+    pathname?.startsWith('/freelancer/jobs/') || 
+    pathname?.startsWith('/freelancer/proposals/');
+
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
+
+  if (isMinimalLayout) {
     return (
       <div className="h-[100dvh] overflow-hidden">
         {children}
+        {mounted && createPortal(
+          <div id="modal-root" className="z-[9999]" />,
+          document.body
+        )}
         {/* Mobile Navigation - Show for feed page */}
         <div className="md:hidden fixed bottom-0 left-0 right-0 border-t border-white/10 bg-[#111111]/95 backdrop-blur-lg z-50">
           <div className="flex items-center justify-around h-16">
@@ -165,7 +204,7 @@ function FreelancerLayoutInner({ children }: FreelancerLayoutProps) {
 export default function FreelancerLayout(props: FreelancerLayoutProps) {
   return (
     <ChatViewProvider>
-      <FreelancerLayoutInner {...props} />
+      <LayoutContent {...props} />
     </ChatViewProvider>
   );
 }

@@ -6,6 +6,7 @@ import Link from "next/link"
 import { Home, Briefcase, PlusCircle, MessageSquare } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { usePathname } from "next/navigation"
+import { ChatViewProvider } from "@/contexts/ChatViewContext"
 
 interface ClientLayoutProps {
   children: ReactNode
@@ -24,10 +25,12 @@ export default function ClientLayout({ children, className }: ClientLayoutProps)
   const shouldHideNavbar = pathname.includes('/client/nearby') || pathname.includes('/client/services');
 
   return (
-    <div className={cn("min-h-screen bg-[#111111] flex flex-col", className)}>
-      <main className={cn("flex-1 flex flex-col", !shouldHideNavbar && "pb-16")}>
-        {children}
-      </main>
+    <ChatViewProvider>
+      <div className={cn("min-h-screen bg-[#111111] flex flex-col", className)}>
+        <main className={cn("flex-1 flex flex-col", !shouldHideNavbar && "pb-16")}>
+          {children}
+        </main>
+    
       
       {/* Bottom Navigation */}
       {!shouldHideNavbar && (
@@ -117,6 +120,7 @@ export default function ClientLayout({ children, className }: ClientLayoutProps)
           </div>
         </nav>
       )}
-    </div>
+      </div>
+    </ChatViewProvider>
   )
-} 
+}

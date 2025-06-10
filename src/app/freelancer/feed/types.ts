@@ -20,8 +20,21 @@ export interface Professional {
 export type WorkMode = 'remote' | 'onsite' | 'hybrid';
 
 export type JobType = 'freelance' | 'part-time' | 'full-time' | 'contract';
-export type JobDuration = 'hourly' | 'daily' | 'weekly' | 'monthly';
+export type JobDuration = 'hourly' | 'daily' | 'weekly' | 'monthly' | 'one-time';
 export type ExperienceLevel = 'Entry Level' | 'Intermediate' | 'Expert';
+
+export interface ClientInfo {
+  name: string;
+  image?: string;
+  memberSince?: string;
+  freelancerAvatars?: string[];
+  freelancersWorked?: number;
+  moneySpent?: number;
+  rating?: number;
+  jobsCompleted?: number;
+  location?: string;
+  phoneNumber?: string;
+}
 
 export interface Job {
   id: string;
@@ -30,6 +43,7 @@ export interface Job {
   category: string;
   rate: number;
   budget: number;
+  priceUnit: string;
   location: string;
   coords: [number, number];
   skills: string[];
@@ -39,10 +53,11 @@ export interface Job {
   company: string;
   companyLogo: string;
   clientName: string;
-  clientImage: string;
-  clientRating: string;
+  clientImage?: string;
+  clientRating: string | number;
   clientJobs: number;
   proposals: number;
-  duration: JobDuration;
+  duration?: JobDuration;
   experience: ExperienceLevel;
+  client?: ClientInfo;
 }

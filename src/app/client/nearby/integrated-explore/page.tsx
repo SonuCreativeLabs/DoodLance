@@ -3,12 +3,12 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { PanInfo } from 'framer-motion';
 import MapView from '../MapViewComponent';
-import ProfessionalsFeed from '../ProfessionalsFeedComponent';
+import ProfessionalsFeed, { BaseProfessional } from '@/app/freelancer/feed/components/ProfessionalsFeed';
 import { Search, Map, Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { categories } from '../constants';
 import { professionals } from '../mockData';
-import type { Freelancer } from '../types';
+import { Freelancer } from '../types';
 import SearchFilters from '../components/SearchFilters';
 
 export default function IntegratedExplorePage() {
@@ -30,7 +30,26 @@ export default function IntegratedExplorePage() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedTimeOptions, setSelectedTimeOptions] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [filteredProfessionals, setFilteredProfessionals] = useState<Freelancer[]>(professionals);
+  const [filteredProfessionals, setFilteredProfessionals] = useState<BaseProfessional[]>([]);
+  
+  // Map Freelancer to BaseProfessional with default values for required fields
+  const mapToProfessional = (freelancer: Freelancer): BaseProfessional => ({
+    ...freelancer,
+    id: freelancer.id.toString(),
+    title: freelancer.name,
+    service: freelancer.service,
+    coords: [0, 0], // Default coordinates
+    availability: ['Available now'],
+    avatar: freelancer.image,
+    skills: [],
+    // Map any other fields as needed
+  });
+  
+  // Initialize filtered professionals
+  useEffect(() => {
+    const mappedProfessionals = professionals.map(mapToProfessional);
+    setFilteredProfessionals(mappedProfessionals);
+  }, [professionals]);
   
   // Set initial sheet position to collapsed state (70vh)
   const initialSheetY = typeof window !== 'undefined' ? window.innerHeight * 0.7 : 0;

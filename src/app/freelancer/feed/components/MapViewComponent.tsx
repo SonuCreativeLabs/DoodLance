@@ -1,34 +1,26 @@
 "use client";
 
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useMemo, useCallback } from 'react';
+import { ErrorBoundary } from 'react-error-boundary';
+import { createPortal } from 'react-dom';
+import JobDetailsFull from './JobDetailsFull';
+import OverlayPortal from './OverlayPortal';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
+import dynamic from 'next/dynamic';
+// Import types from the shared types file first
+import { 
+  ClientInfo, 
+  JobDuration, 
+  ExperienceLevel, 
+  JobType,
+  WorkMode,
+  Job as SharedJob
+} from '../types';
 
-// Define the Job interface that matches your data structure
-type SalaryPeriod = 'hour' | 'day' | 'week' | 'month' | 'year';
-
-type JobType = 'freelance' | 'part-time' | 'full-time' | 'contract';
-type JobDuration = 'hourly' | 'daily' | 'weekly' | 'monthly';
-type ExperienceLevel = 'Entry Level' | 'Intermediate' | 'Expert';
-
-interface Company {
-  name: string;
-  logo?: string;
-  description?: string;
-  website?: string;
-  size?: string;
-  founded?: number;
-  industry?: string;
-}
-
-interface Salary {
-  min: number;
-  max: number;
-  currency: string;
-  period: SalaryPeriod;
-}
-
-export interface Job {
+// Define the Job type that properly extends SharedJob
+type Job = Omit<SharedJob, 'client' | 'clientName' | 'clientImage' | 'clientRating' | 'clientJobs' | 'proposals' | 'coords'> & {
+  // Required properties from SharedJob
   id: string;
   title: string;
   description: string;
@@ -36,245 +28,276 @@ export interface Job {
   rate: number;
   budget: number;
   location: string;
-  coords: [number, number]; // [lng, lat] format for Mapbox
   skills: string[];
-  workMode: 'remote' | 'onsite' | 'hybrid';
+  workMode: WorkMode;
   type: JobType;
   postedAt: string;
+  company: string;
+  companyLogo: string;
   clientName: string;
-  clientImage: string;
-  clientRating: string;
+  clientImage?: string;
+  clientRating: string | number;
   clientJobs: number;
   proposals: number;
   duration: JobDuration;
   experience: ExperienceLevel;
-  salary?: Salary;
-}
+  
+  // Additional properties
+  coordinates: [number, number];
+  coords: [number, number];
+  client?: ClientInfo;
+  
+  // Make all properties optional for the input type
+  [key: string]: any;
+};
+
+// Define the Job interface for map view
+type JobWithCoordinates = Job & {
+  // Make coordinates optional to handle both Job types
+  coordinates?: [number, number];
+  coords?: [number, number];
+};
+
+// Dynamically import JobDetailsFull with no SSR and simple loading spinner
+const DynamicJobDetailsFull = dynamic(() => import('./JobDetailsFull'), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center h-[500px]">
+      <div className="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+    </div>
+  )
+});
 
 interface MapViewProps {
-  jobs: Job[];
-  selectedCategory: string;
+  jobs: JobWithCoordinates[];
+  selectedCategory: string | null;
   style?: React.CSSProperties;
 }
 
+declare global {
+  interface Window {
+    openJobDetails: (jobId: string) => void;
+  }
+}
+
 const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, style = {} }) => {
+  // Error boundary fallback component
+  const ErrorFallback = ({ error, resetErrorBoundary }: { error: Error; resetErrorBoundary: () => void }) => (
+    <div className="flex items-center justify-center h-full bg-gray-50">
+      <div className="p-6 max-w-md w-full bg-white rounded-lg shadow-md">
+        <h2 className="text-xl font-semibold text-red-600 mb-2">Something went wrong</h2>
+        <p className="text-gray-700 mb-4">{error.message}</p>
+        <button
+          onClick={resetErrorBoundary}
+          className="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+        >
+          Try again
+        </button>
+      </div>
+    </div>
+  );
+
+  const [selectedJob, setSelectedJob] = useState<JobWithCoordinates | null>(null);
+  const [currentJobIndex, setCurrentJobIndex] = useState<number>(-1);
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
+  const popupRef = useRef<mapboxgl.Popup | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  
+  const [filteredJobs, setFilteredJobs] = useState<JobWithCoordinates[]>([]);
+  const [error, setErrorState] = useState<{message: string; details?: any} | null>(null);
+  const [isJobDetailsOpen, setIsJobDetailsOpen] = useState(false);
+  const lastOpenedPopup = useRef<{jobId: string | null; marker: mapboxgl.Marker | null}>({jobId: null, marker: null});
+
   // Process jobs with default values
-  const processedJobs = React.useMemo(() => {
-    return jobs.map(job => ({
-      ...job,
-      coords: job.coords || [0, 0] as [number, number],
-      skills: job.skills || [],
-      description: job.description || '',
-      category: job.category || 'Uncategorized',
-      title: job.title || 'Untitled Job',
-      location: job.location || 'Location not specified',
-      clientRating: job.clientRating || '0',
-      clientJobs: job.clientJobs || 0,
-      budget: job.budget || 0,
-      rate: job.rate || 0,
-      postedAt: job.postedAt || new Date().toISOString(),
-      duration: job.duration || 'Not specified'
-    }));
+  const processedJobs = useMemo(() => {
+    return (jobs || []).map((jobInput: JobWithCoordinates): Job => {
+      // Extract coordinates safely - check both coords and coordinates
+      let coords: [number, number] = [0, 0];
+      
+      if (Array.isArray(jobInput.coords) && jobInput.coords.length === 2) {
+        coords = [jobInput.coords[0], jobInput.coords[1]];
+      } else if (Array.isArray(jobInput.coordinates) && jobInput.coordinates.length === 2) {
+        coords = [jobInput.coordinates[0], jobInput.coordinates[1]];
+      } else if (typeof jobInput.location === 'string') {
+        // Try to extract coords from location string if available
+        const match = jobInput.location.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+        if (match) {
+          coords = [parseFloat(match[1]), parseFloat(match[2])];
+        }
+      }
+      
+      // Create default client info
+      const defaultClient: ClientInfo = {
+        name: jobInput.clientName || 'Unknown Client',
+        rating: typeof jobInput.clientRating === 'number' ? jobInput.clientRating : 0,
+        jobsCompleted: jobInput.clientJobs || 0,
+        location: jobInput.location || 'Remote',
+        image: jobInput.clientImage || '',
+        memberSince: new Date().toISOString()
+      };
+      
+      // Use provided client or default
+      const client = jobInput.client || defaultClient;
+      
+      // Return the job with all required properties
+      return {
+        ...jobInput,
+        id: jobInput.id || `job-${Math.random().toString(36).substr(2, 9)}`,
+        title: jobInput.title || 'Untitled Job',
+        description: jobInput.description || '',
+        category: jobInput.category || 'General',
+        rate: typeof jobInput.rate === 'number' ? jobInput.rate : 0,
+        budget: typeof jobInput.budget === 'number' ? jobInput.budget : 0,
+        location: jobInput.location || 'Remote',
+        skills: Array.isArray(jobInput.skills) ? jobInput.skills : [],
+        workMode: ['remote', 'onsite', 'hybrid'].includes(jobInput.workMode || '') 
+          ? jobInput.workMode as WorkMode 
+          : 'onsite',
+        type: ['freelance', 'part-time', 'full-time', 'contract'].includes(jobInput.type || '')
+          ? jobInput.type as JobType
+          : 'freelance',
+        postedAt: jobInput.postedAt || new Date().toISOString(),
+        company: jobInput.company || '',
+        companyLogo: jobInput.companyLogo || '',
+        clientName: client.name,
+        clientImage: client.image,
+        clientRating: client.rating || 0,
+        clientJobs: client.jobsCompleted || 0,
+        proposals: jobInput.proposals || 0,
+        duration: ['hourly', 'daily', 'weekly', 'monthly', 'one-time'].includes(jobInput.duration || '')
+          ? jobInput.duration as JobDuration
+          : 'one-time',
+        experience: ['Entry Level', 'Intermediate', 'Expert'].includes(jobInput.experience || '')
+          ? jobInput.experience as ExperienceLevel
+          : 'Entry Level',
+        coordinates: coords,
+        coords,
+        client
+      };
+    });
   }, [jobs]);
 
-  // Function to close all popups
-  const closeAllPopups = () => {
-    markersRef.current.forEach(marker => {
-      const popup = marker.getPopup();
-      if (popup) {
-        popup.remove();
-      }
-    });
-  };
+  // Expose openJobDetails to window for popup clicks
+  const handleOpenJobDetails = useCallback((jobId: string) => {
+    const job = processedJobs.find(j => j.id === jobId);
+    if (!job) return;
+    
+    setSelectedJob(job);
+    setIsJobDetailsOpen(true);
+    
+    // Center map on selected job
+    if (map.current) {
+      map.current.flyTo({
+        center: job.coordinates,
+        zoom: 12,
+        essential: true
+      });
+    }
+  }, [processedJobs]);
+  
+  // Handle job selection from the list - using the single implementation below
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      (window as any).openJobDetails = handleOpenJobDetails;
+      return () => {
+        delete (window as any).openJobDetails;
+      };
+    }
+  }, [handleOpenJobDetails]);
 
   // Initialize map
   useEffect(() => {
-    if (!mapContainer.current) return;
-
-    const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
-    if (!mapboxToken) {
-      setError('Mapbox access token is not configured');
-      setIsLoading(false);
-      return;
-    }
+    if (map.current || !mapContainer.current) return;
 
     try {
-      // Initialize map
-      map.current = new mapboxgl.Map({
-        container: mapContainer.current!,
-        style: 'mapbox://styles/mapbox/streets-v12',
-        center: [80.2707, 13.0827], // Chennai coordinates
-        zoom: 11,
-        accessToken: mapboxToken,
-      });
-
-      // Handle missing image errors
-      map.current.on('styleimagemissing', (e) => {
-        const id = e.id; // Get the missing image id
-        if (id.startsWith('in-state-')) {
-          // Create a blank transparent pixel
-          const blankImage = new Uint8Array(4);
-          map.current?.addImage(id, { width: 1, height: 1, data: blankImage });
-        }
-      });
-
-      // Create custom controls container
-      const controlsContainer = document.createElement('div');
-      controlsContainer.className = 'map-controls';
-      controlsContainer.style.position = 'absolute';
-      // Ultra-slim controls
-      controlsContainer.style.top = '120px';
-      controlsContainer.style.right = '8px';
-      controlsContainer.style.display = 'flex';
-      controlsContainer.style.flexDirection = 'column';
-      controlsContainer.style.gap = '4px';
-      controlsContainer.style.zIndex = '1000';
-      controlsContainer.style.borderRadius = '8px';
-      controlsContainer.style.overflow = 'hidden';
-      controlsContainer.style.boxShadow = '0 1px 3px rgba(0,0,0,0.08)';
-      controlsContainer.style.transition = 'all 0.15s ease';
-      controlsContainer.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
-      controlsContainer.style.padding = '4px';
-      controlsContainer.style.border = '1px solid rgba(0, 0, 0, 0.05)';
-      
-      // Create control buttons with consistent styling
-      const createControlButton = (iconSvg: string, title: string, onClick: () => void) => {
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.title = title;
-        button.style.width = '28px';
-        button.style.height = '28px';
-        button.style.border = 'none';
-        button.style.background = 'transparent';
-        button.style.display = 'flex';
-        button.style.alignItems = 'center';
-        button.style.justifyContent = 'center';
-        button.style.cursor = 'pointer';
-        button.style.transition = 'all 0.2s';
-        button.style.padding = '0';
-        button.style.margin = '0';
-        button.style.borderRadius = '6px';
-        button.style.color = '#333';
-        // Minimalist SVG icons
-        const svg = new DOMParser().parseFromString(iconSvg, 'image/svg+xml').firstChild as SVGElement;
-        svg.setAttribute('width', '14');
-        svg.setAttribute('height', '14');
-        svg.setAttribute('fill', 'currentColor');
-        svg.setAttribute('stroke', 'currentColor');
-        svg.setAttribute('stroke-width', '1.5');
-        svg.setAttribute('stroke-linecap', 'round');
-        svg.setAttribute('stroke-linejoin', 'round');
-        button.innerHTML = '';
-        button.appendChild(svg);
-        
-        // Hover effect with better contrast
-        button.addEventListener('mouseenter', () => {
-          button.style.backgroundColor = 'rgba(0, 0, 0, 0.04)';
-          button.style.transform = 'scale(1.05)';
-          button.style.boxShadow = '0 2px 6px rgba(0,0,0,0.1)';
-        });
-        
-        button.addEventListener('mouseleave', () => {
-          button.style.backgroundColor = 'transparent';
-          button.style.transform = 'scale(1)';
-          button.style.boxShadow = 'none';
-        });
-        
-        button.addEventListener('mousedown', () => {
-          button.style.backgroundColor = 'rgba(0, 0, 0, 0.08)';
-          button.style.transform = 'scale(0.96)';
-          button.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
-        });
-        
-        button.addEventListener('mouseup', () => {
-          button.style.backgroundColor = 'rgba(0, 0, 0, 0.04)';
-          button.style.transform = 'scale(1.03)';
-          button.style.boxShadow = '0 2px 6px rgba(0,0,0,0.1)';
-        });
-        
-        button.addEventListener('click', (e) => {
-          e.stopPropagation();
-          onClick();
-        });
-        
-        return button;
-      };
-      
-      // Zoom in button
-      const zoomInButton = createControlButton(
-        `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M8 3.5V12.5" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/>
-          <path d="M3.5 8H12.5" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/>
-        </svg>`,
-        'Zoom in',
-        () => map.current?.zoomIn()
-      );
-      
-      // Zoom out button
-      const zoomOutButton = createControlButton(
-        `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M3.5 8H12.5" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/>
-        </svg>`,
-        'Zoom out',
-        () => map.current?.zoomOut()
-      );
-      
-      // Current location button with pin icon
-      const locationButton = createControlButton(
-        `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12 2C8.13 2 5 5.13 5 9C5 13.17 9.42 18.92 11.24 21.11C11.64 21.59 12.37 21.59 12.77 21.11C14.58 18.92 19 13.17 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" fill="currentColor"/>
-        </svg>`,
-        'Current location',
-        () => {
-          if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-              (position) => {
-                map.current?.flyTo({
-                  center: [position.coords.longitude, position.coords.latitude],
-                  zoom: 14
-                });
-              },
-              (error) => {
-                console.warn('Location access was denied or failed. Using default location.');
-                // Optionally show a toast notification to the user
-              },
-              { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-            );
-          }
-        }
-      );
-      
-      // Add buttons to container
-      controlsContainer.appendChild(zoomInButton);
-      controlsContainer.appendChild(zoomOutButton);
-      controlsContainer.appendChild(locationButton);
-      
-      // Add controls to map container
-      if (mapContainer.current) {
-        mapContainer.current.appendChild(controlsContainer);
+      if (!process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN) {
+        throw new Error('Mapbox access token is not defined');
       }
 
-      // Set loading to false when map is ready
-      map.current.on('load', () => {
-        setIsLoading(false);
+      mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
+
+      map.current = new mapboxgl.Map({
+        container: mapContainer.current,
+        style: 'mapbox://styles/mapbox/streets-v11',
+        center: [0, 0],
+        zoom: 2
       });
 
-      // Add map load event
+      // Add controls after map has loaded
       map.current.on('load', () => {
-        console.log('Map loaded successfully');
-        setIsLoading(false);
+        if (!map.current) return;
+        
+        // Create a container for the controls
+        const controlsContainer = document.createElement('div');
+        controlsContainer.className = 'mapboxgl-ctrl-bottom-right';
+        map.current.getContainer().appendChild(controlsContainer);
+        
+        // Add navigation control (zoom buttons)
+        const nav = new mapboxgl.NavigationControl({
+          showCompass: false,
+          showZoom: true,
+          visualizePitch: false
+        });
+        
+        // Add geolocate control with enhanced options
+        const geolocate = new mapboxgl.GeolocateControl({
+          positionOptions: {
+            enableHighAccuracy: true
+          },
+          trackUserLocation: true,
+          showUserLocation: true,
+          showUserHeading: true,
+          showAccuracyCircle: true,
+          fitBoundsOptions: {
+            maxZoom: 15
+          }
+        });
+        
+        // Add controls to the map with explicit positions
+        map.current.addControl(nav, 'bottom-right');
+        map.current.addControl(geolocate, 'bottom-right');
+        
+        // Add event listeners for geolocation
+        geolocate.on('geolocate', (e: any) => {
+          const { longitude, latitude } = e.coords;
+          map.current?.flyTo({
+            center: [longitude, latitude],
+            zoom: 14,
+            essential: true
+          });
+        });
+        
+        // Auto-trigger geolocation on first load
+        setTimeout(() => {
+          const geolocateBtn = document.querySelector('.mapboxgl-ctrl-geolocate');
+          if (geolocateBtn) {
+            (geolocateBtn as HTMLElement).click();
+          }
+        }, 1000);
+        
+        // Force controls to be visible
+        setTimeout(() => {
+          const controls = document.querySelectorAll('.mapboxgl-ctrl-bottom-right .mapboxgl-ctrl');
+          controls.forEach((control, index) => {
+            const el = control as HTMLElement;
+            el.style.margin = '10px 0';
+            el.style.opacity = '1';
+            el.style.visibility = 'visible';
+          });
+        }, 100);
       });
 
       // Add click handler to close popups when clicking on the map
       map.current.on('click', (e) => {
         // Close all popups when clicking on the map
-        closeAllPopups();
+        markersRef.current.forEach((marker) => {
+          const popup = marker.getPopup();
+          if (popup) {
+            popup.remove();
+          }
+        });
       });
 
       // Stop propagation for popup clicks to prevent map click from triggering
@@ -288,11 +311,42 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
       });
 
       // Handle map errors
-      map.current.on('error', (e) => {
+      const handleMapError = (e: any) => {
         console.error('Map error:', e.error);
-        setError('Failed to load map. Please try refreshing the page.');
+        setErrorState({
+          message: 'Failed to load map. Please try refreshing the page.',
+          details: e.error
+        });
         setIsLoading(false);
-      });
+      };
+      
+      map.current.on('error', handleMapError);
+      
+          // Cleanup function for map events
+      const cleanupMapEvents = () => {
+        if (map.current) {
+          map.current.off('error', handleMapError);
+          // Remove click handlers from the document
+          document.removeEventListener('click', handleDocumentClick);
+        }
+      };
+
+      // Add click handler to document to close popups when clicking outside
+      const handleDocumentClick = (e: MouseEvent) => {
+        const target = e.target as HTMLElement;
+        if (!target.closest('.mapboxgl-popup') && !target.closest('.mapboxgl-marker')) {
+          // Close all popups when clicking outside
+          markersRef.current.forEach((marker) => {
+            const popup = marker.getPopup();
+            if (popup?.isOpen()) {
+              popup.remove();
+            }
+          });
+        }
+      };
+
+      // Add document click handler
+      document.addEventListener('click', handleDocumentClick);
 
       // Cleanup function
       return () => {
@@ -308,7 +362,10 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
       };
     } catch (error) {
       console.error('Error initializing map:', error);
-      setError('Failed to initialize map. Please check your connection and try again.');
+      setErrorState({
+        message: 'Failed to initialize map. Please check your connection and try again.',
+        details: error
+      });
       setIsLoading(false);
     }
   }, []);
@@ -317,7 +374,7 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
   useEffect(() => {
     if (!map.current) return;
 
-    // Filter jobs based on category
+    // Filter jobs based on selected category
     const filteredJobs = selectedCategory === 'For You'
       ? processedJobs.filter((job) => {
           const jobText = [
@@ -339,7 +396,6 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
     markersRef.current = [];
 
     // Add markers for filtered jobs
-    console.log(`Adding ${filteredJobs.length} job markers to the map`);
     filteredJobs.forEach((job) => {
       // Skip jobs without valid coordinates
       if (!job.coords || job.coords.length !== 2 || typeof job.coords[0] !== 'number' || typeof job.coords[1] !== 'number') {
@@ -347,8 +403,6 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
         return;
       }
       
-      console.log(`Adding marker for job: ${job.title} at [${job.coords[0]}, ${job.coords[1]}]`);
-
       // Create a smaller location pin marker
       const markerEl = document.createElement('div');
       markerEl.className = 'custom-marker';
@@ -384,52 +438,179 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
       markerEl.style.justifyContent = 'center';
       markerEl.style.filter = 'drop-shadow(0 2px 6px rgba(59, 130, 246, 0.4))';
 
-      // Create popup content
-      const popupContent = `
-        <div class="bg-[#111111]/90 backdrop-blur-xl border border-white/10 shadow-lg rounded-xl p-4 w-[300px] text-white">
-          <div class="space-y-3">
-            <div class="flex items-center justify-between">
-              <h3 class="text-lg font-semibold truncate">${job.title}</h3>
-              <span class="px-2 py-1 text-sm font-medium bg-purple-500/20 text-purple-300 rounded-lg">₹${job.budget.toLocaleString('en-IN')}</span>
-            </div>
-            <p class="text-sm text-gray-300 line-clamp-2">${job.description}</p>
-            <div class="flex items-center gap-2 text-sm text-gray-400">
-              <span class="flex items-center gap-1">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
-                  <path fill-rule="evenodd" d="M9.69 18.933l.07.04.028.016a.76.76 0 00.723 0l.028-.015.071-.041a16.975 16.975 0 001.144-.742 19.58 19.58 0 002.683-2.282c1.944-1.99 3.963-4.98 3.963-8.827a8.25 8.25 0 00-16.5 0c0 3.846 2.02 6.837 3.963 8.827a19.58 19.58 0 002.682 2.282 16.975 16.975 0 001.145.742zM12 13.5a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" />
+      // Create a safe stringified version of the job object
+      const safeJobString = JSON.stringify(job)
+        .replace(/</g, '\\u003c')
+        .replace(/>/g, '\\u003e')
+        .replace(/"/g, '\\"')
+        .replace(/'/g, '\\\'');
+
+      // Create popup content with navigation and click handler
+      const popupContent = document.createElement('div');
+      
+      // Create the job card HTML with embedded navigation
+      const createJobCardHTML = (job: JobWithCoordinates) => {
+        const currentIndex = processedJobs.findIndex(j => j.id === job.id);
+        const hasNext = currentIndex < processedJobs.length - 1;
+        const hasPrev = currentIndex > 0;
+        
+        return `
+          <div class="bg-[#111111] border border-white/5 shadow-2xl rounded-2xl w-[320px] text-white overflow-hidden flex flex-col" 
+               style="backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);">
+            
+            <!-- Navigation Buttons -->
+            <div class="flex justify-between items-center px-4 py-2.5 bg-[#111111]">
+              <button class="nav-btn prev-btn flex items-center justify-center w-8 h-8 rounded-full bg-gray-800/50 hover:bg-gray-700/70 transition-colors ${!hasPrev ? 'opacity-50 cursor-not-allowed' : 'text-white'}" 
+                      ${!hasPrev ? 'disabled' : ''}>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                 </svg>
-                ${job.location}
-              </span>
-              <span class="flex items-center gap-1">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
-                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.75-13a.75.75 0 00-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 000-1.5h-3.25V5z" clip-rule="evenodd" />
+              </button>
+              <div class="flex-1 text-center">
+                <span class="text-xs font-medium text-white">${currentIndex + 1} / ${processedJobs.length}</span>
+              </div>
+              <button class="nav-btn next-btn flex items-center justify-center w-8 h-8 rounded-full bg-gray-800/50 hover:bg-gray-700/70 transition-colors ${!hasNext ? 'opacity-50 cursor-not-allowed' : 'text-white'}" 
+                      ${!hasNext ? 'disabled' : ''}>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                 </svg>
-                ${job.duration}
-              </span>
+              </button>
             </div>
-            <div class="flex flex-wrap gap-2">
-              ${job.skills.slice(0, 3).map(skill => `
-                <span class="px-2 py-1 text-xs bg-purple-500/10 text-purple-300 rounded-lg">${skill}</span>
-              `).join('')}
+            <!-- Header with Title -->
+            <div class="px-4 pt-2 pb-2">
+              <h3 class="text-base font-bold text-white line-clamp-1">${job.title}</h3>
+              <p class="text-xs text-gray-300 mt-1 line-clamp-2">${job.description}</p>
+            </div>
+            
+            <!-- Job Details -->
+            <div class="px-3 pb-3 pt-1 space-y-2">
+              <div class="flex items-center gap-3 text-xs text-gray-400">
+                <div class="flex items-center gap-1.5">
+                  <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                  </svg>
+                  <span>${job.location || 'Location not specified'}</span>
+                </div>
+                <span class="text-gray-500">•</span>
+                <div class="flex items-center gap-1.5">
+                  <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                  </svg>
+                  <span>${job.postedAt ? new Date(job.postedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Date not specified'}</span>
+                </div>
+              </div>
+              
+              <!-- Skills -->
+              ${job.skills && job.skills.length > 0 ? `
+                <div class="flex flex-wrap gap-1.5 mt-2">
+                  ${job.skills.slice(0, 3).map(skill => `
+                    <span class="px-2 py-0.5 text-[10px] font-medium bg-gray-700/50 text-gray-200 rounded-full border border-gray-600/50">
+                      ${skill}
+                    </span>
+                  `).join('')}
+                </div>
+              ` : ''}
+            </div>
+            
+            <!-- Apply Button with Price -->
+            <div class="p-4 pt-2">
+              <div class="flex items-center justify-between gap-3">
+                <div class="flex flex-col">
+                  <span class="text-xs text-white/60">Budget</span>
+                  <div class="flex items-baseline gap-1.5">
+                    <span class="text-xl font-bold text-white">
+                      ₹${job.budget.toLocaleString('en-IN')}
+                    </span>
+                    <span class="text-sm text-white/70">
+                      ${job.category === 'Sports' ? '/ session' :
+                        job.category?.toLowerCase().includes('tutoring') ? '/ session' :
+                        job.category?.toLowerCase().includes('coach') ? '/ session' :
+                        job.category?.toLowerCase().includes('fitness') ? '/ session' :
+                        job.category?.toLowerCase().includes('makeup') ? '/ session' :
+                        job.category?.toLowerCase().includes('diet') ? '/ plan' :
+                        '/ project'}
+                    </span>
+                  </div>
+                </div>
+                <button class="apply-now-btn px-4 h-8 text-xs font-semibold text-white bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 rounded-md transition-all duration-200 shadow-sm hover:shadow whitespace-nowrap flex items-center justify-center"
+                        data-job-id="${job.id}"
+                        onclick="event.stopPropagation(); document.querySelector('.apply-now-btn[data-job-id=\'${job.id}\']').click();">
+                  Apply Now
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      `;
+        `;
+      };
+      
+      popupContent.innerHTML = createJobCardHTML(job);
+      popupContent.style.cursor = 'pointer';
+      
+      // Add click handler to the popup content
+      popupContent.addEventListener('click', (e) => {
+        const target = e.target as HTMLElement;
+        const currentIndex = processedJobs.findIndex(j => j.id === job.id);
+        const hasNext = currentIndex < processedJobs.length - 1;
+        const hasPrev = currentIndex > 0;
+        
+        // Handle navigation buttons
+        if (target.closest('.nav-btn')) {
+          e.stopPropagation();
+          const isNext = target.closest('.next-btn');
+          const isPrev = target.closest('.prev-btn');
+          
+          if (isNext && hasNext) {
+            navigateToJob(currentIndex + 1);
+          } else if (isPrev && hasPrev) {
+            navigateToJob(currentIndex - 1);
+          }
+          return;
+        }
+        
+        // Don't trigger if clicking on the apply button or navigation
+        if (!target.closest('.apply-now-btn')) {
+          setSelectedJob(job);
+          setIsJobDetailsOpen(true);
+        }
+      });
+      
+      // Function to navigate to a specific job
+      const navigateToJob = (index: number) => {
+        if (index >= 0 && index < processedJobs.length) {
+          const nextJob = processedJobs[index];
+          const marker = markersRef.current.find(m => (m as any)._jobId === nextJob.id);
+          if (marker && map.current) {
+            // Close current popup
+            popup.remove();
+            
+            // Open the popup for the next job
+            setTimeout(() => {
+              marker.togglePopup();
+              
+              // Center the map on the marker
+              const lngLat = marker.getLngLat();
+              map.current?.flyTo({
+                center: [lngLat.lng, lngLat.lat],
+                essential: true
+              });
+            }, 100);
+          }
+        }
+      };
 
       // Create popup with connecting line to pin
       const popup = new mapboxgl.Popup({
-        offset: [0, 30], // Position even lower (was 5, now 30)
+        offset: [0, 20], // Position popup lower below the pin
         closeButton: false,
         closeOnClick: false,
         maxWidth: '340px',
         className: 'custom-popup',
         anchor: 'bottom'
-      }).setHTML(`
-        <div class="popup-content">
-          ${popupContent}
-          <div class="popup-connector"></div>
-        </div>
-      `);
+      }).setDOMContent(popupContent);
+      
+      // Add custom class for styling the popup tip
+      popup.addClassName('custom-popup-tip');
 
       // Add marker to map with popup
       try {
@@ -437,25 +618,28 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
           element: markerEl,
           anchor: 'bottom'
         })
-          .setLngLat(job.coords)
-          .setPopup(popup)
+          .setLngLat(job.coords as [number, number])
+          .setPopup(popup) // Set the popup on the marker
           .addTo(map.current!);
+        
+        // Store job ID on marker for later reference
+        (marker as any)._jobId = job.id;
           
         console.log(`Marker added successfully for job: ${job.title}`);
         
-        // Use Mapbox's built-in popup toggle
+        // Make marker clickable
         markerEl.style.cursor = 'pointer';
         
-        // Add click handler to toggle the popup
+        // Add click handler to handle marker clicks
         markerEl.addEventListener('click', (e) => {
           e.stopPropagation();
           
           // Close all other popups
           markersRef.current.forEach(m => {
             if (m !== marker) {
-              const popup = m.getPopup();
-              if (popup && popup.isOpen()) {
-                popup.remove();
+              const otherPopup = m.getPopup();
+              if (otherPopup?.isOpen()) {
+                otherPopup.remove();
               }
             }
           });
@@ -466,32 +650,19 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
             if (currentPopup.isOpen()) {
               currentPopup.remove();
             } else {
-              // Create a new popup to ensure it's fresh
-              const newPopup = new mapboxgl.Popup({
-                offset: [0, -10],
-                closeButton: false,
-                closeOnClick: false,
-                maxWidth: '340px',
-                className: 'custom-popup',
-                anchor: 'bottom'
-              })
-                .setLngLat(job.coords)
-                .setHTML(popupContent)
-                .addTo(map.current!);
-
-              // Update the marker's popup reference
-              marker.setPopup(newPopup);
+              // Show the popup and center the map
+              marker.togglePopup();
               
-              // Center the map on the marker with an offset to account for the category section
               if (map.current) {
-                // Center the map on the marker with a slight offset
                 map.current.flyTo({
-                  center: job.coords,
-                  offset: [0, 0], // Changed from -40 to 0 to move the view even lower
-                  essential: true,
-                  duration: 500
+                  center: job.coords as [number, number],
+                  zoom: 12,
+                  essential: true
                 });
               }
+              
+              // Store the marker for back navigation
+              lastOpenedPopup.current = { jobId: job.id, marker };
             }
           }
         });
@@ -533,57 +704,232 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
     }
   }, [processedJobs, selectedCategory]);
 
+  // Handle closing job details
+  const handleCloseJobDetails = useCallback(() => {
+    setIsJobDetailsOpen(false);
+    
+    // Show the popup for the last selected job when returning from full view
+    if (lastOpenedPopup.current.jobId && lastOpenedPopup.current.marker && map.current) {
+      const popup = lastOpenedPopup.current.marker.getPopup();
+      if (popup) {
+        // Small timeout to ensure the map has finished any transitions
+        setTimeout(() => {
+          popup.addTo(map.current!);
+          
+          // Center the map on the marker with a slight offset
+          const markerLngLat = lastOpenedPopup.current.marker?.getLngLat();
+          if (markerLngLat) {
+            map.current?.flyTo({
+              center: [markerLngLat.lng, markerLngLat.lat],
+              zoom: 12,
+              essential: true
+            });
+          }
+        }, 50);
+      }
+    }
+    
+    // Focus the map container for keyboard navigation
+    if (mapContainer.current) {
+      mapContainer.current.focus();
+    }
+  }, []);
+  
+  // Handle job selection
+  const handleJobSelect = useCallback((jobId: string) => {
+    const job = processedJobs.find(j => j.id === jobId);
+    if (!job) return;
+    
+    setSelectedJob(job);
+    
+    // Find the marker for this job
+    const marker = markersRef.current.find(m => {
+      const markerJobId = (m as any)._jobId;
+      return markerJobId === jobId;
+    });
+    
+    // If we have a marker, store it for later use when returning from full view
+    if (marker) {
+      lastOpenedPopup.current = { jobId, marker };
+    }
+    
+    // Center map on the selected job
+    if (map.current && job.coords && job.coords.length === 2) {
+      map.current.flyTo({
+        center: job.coords as [number, number],
+        zoom: 12,
+        essential: true
+      });
+    }
+    
+    // Close any open popups when selecting from the list
+    markersRef.current.forEach(m => {
+      const popup = m.getPopup();
+      if (popup?.isOpen()) {
+        popup.remove();
+      }
+      
+      // Open the popup for the selected job
+      if (m === marker && popup) {
+        popup.addTo(map.current!);
+      }
+    });
+    
+    // Open the full view
+    setIsJobDetailsOpen(true);
+  }, [processedJobs]);
+  
+  const handleApplyToJob = useCallback(() => {
+    console.log('Applying to job:', selectedJob?.id);
+    // Handle apply logic here
+  }, [selectedJob]);
+
+  // If there's an error, show error message
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-full bg-gray-50">
+        <div className="p-6 max-w-md w-full bg-white rounded-lg shadow-md">
+          <h2 className="text-xl font-semibold text-red-600 mb-2">Error Loading Map</h2>
+          <p className="text-gray-700 mb-4">{error.message}</p>
+          {error.details && (
+            <details className="mb-4">
+              <summary className="text-sm text-gray-500 cursor-pointer">View details</summary>
+              <pre className="mt-2 p-2 bg-gray-100 rounded text-xs overflow-auto">
+                {JSON.stringify(error.details, null, 2)}
+              </pre>
+            </details>
+          )}
+          <button
+            onClick={() => window.location.reload()}
+            className="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+          >
+            Reload Page
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="relative w-full h-full">
-      {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/30 z-10">
-          <div className="bg-white p-4 rounded-lg shadow-lg flex items-center space-x-2">
-            <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-            <span className="text-gray-800">Loading map...</span>
-          </div>
-        </div>
+      <ErrorBoundary
+        FallbackComponent={ErrorFallback}
+        onError={(error: Error) => {
+          console.error('Error in MapViewComponent:', error);
+          setErrorState({
+            message: 'An unexpected error occurred.',
+            details: error
+          });
+        }}
+      >
+        <div 
+          ref={mapContainer} 
+          className="absolute inset-0 w-full h-full"
+          style={{ zIndex: 1 }}
+        />
+      </ErrorBoundary>
+
+      {/* Job Details Full View */}
+      {isJobDetailsOpen && selectedJob && (
+        <OverlayPortal>
+          <JobDetailsFull
+            job={selectedJob}
+            onBack={handleCloseJobDetails}
+            onApply={(jobId: string, proposal: string) => {
+              console.log(`Applying to job ${jobId} with proposal:`, proposal);
+              // Handle apply logic here
+              handleApplyToJob();
+            }}
+          />
+        </OverlayPortal>
       )}
       
-      {error && (
-        <div className="absolute top-4 right-4 bg-red-500 text-white p-3 rounded-lg shadow-lg z-10 max-w-xs">
-          <div className="flex items-start">
-            <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <div className="ml-3">
-              <p className="text-sm font-medium">{error}</p>
-            </div>
-          </div>
-        </div>
-      )}
-      
-      <div
-        ref={mapContainer}
-        className="w-full h-full rounded-lg overflow-hidden shadow-sm relative"
-        style={style}
-      />
       <style jsx global>{`
+        /* Map controls */
+        .mapboxgl-ctrl-top-right {
+          top: 20px !important;
+          right: 10px !important;
+          z-index: 10 !important;
+        }
+        
+        .mapboxgl-ctrl-group {
+          border-radius: 8px !important;
+          overflow: hidden !important;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.2) !important;
+        }
+        
+        .mapboxgl-ctrl button {
+          width: 40px !important;
+          height: 40px !important;
+          background-color: white !important;
+          border: none !important;
+          border-bottom: 1px solid #eee !important;
+          cursor: pointer !important;
+          padding: 0 !important;
+          margin: 0 !important;
+        }
+        
+        .mapboxgl-ctrl button:last-child {
+          border-bottom: none !important;
+        }
+        
+        .mapboxgl-ctrl button:hover {
+          background-color: #f8f8f8 !important;
+        }
+        
+        .mapboxgl-ctrl-icon {
+          opacity: 1 !important;
+          background-size: 20px 20px !important;
+          background-position: center !important;
+          background-repeat: no-repeat !important;
+        }
+        
+        .mapboxgl-ctrl-zoom-in .mapboxgl-ctrl-icon {
+          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z' fill='%23333'/%3E%3C/svg%3E") !important;
+        }
+        
+        .mapboxgl-ctrl-zoom-out .mapboxgl-ctrl-icon {
+          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M19 13H5v-2h14v2z' fill='%23333'/%3E%3C/svg%3E") !important;
+        }
+        
+        .mapboxgl-ctrl-geolocate .mapboxgl-ctrl-icon {
+          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3c-.46-4.17-3.77-7.44-7.94-7.94V1h-2v2.06C6.83 3.56 3.52 6.83 3.06 11H1v2h2.06c.46 4.17 3.77 7.44 7.94 7.94V23h2v-2.06c4.17-.46 7.44-3.77 7.94-7.94H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z' fill='%23333'/%3E%3C/svg%3E") !important;
+        }
+        .mapboxgl-ctrl-bottom-right {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+        .mapboxgl-ctrl-group {
+          background: white;
+          border-radius: 8px;
+          box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+          overflow: hidden;
+        }
+        .mapboxgl-ctrl button {
+          width: 36px;
+          height: 36px;
+        }
+        .mapboxgl-ctrl button + button {
+          border-top: 1px solid #eee;
+        }
+        .mapboxgl-ctrl button:hover {
+          background-color: #f5f5f5;
+        }
+        .mapboxgl-ctrl-icon {
+          background-size: 20px 20px;
+        }
+
+        .marker {
+          width: 24px;
+          height: 36px;
+          display: flex;
+          justify-content: center;
+          filter: drop-shadow(0 2px 6px rgba(59, 130, 246, 0.4));
+        }
         .mapboxgl-popup {
-          z-index: 1000;
-          pointer-events: auto !important;
-          /* Let Mapbox handle the positioning */
-          padding-bottom: 15px; /* Space for the connector */
-        }
-        
-        .popup-content {
-          position: relative;
-        }
-        
-        .popup-connector {
-          position: absolute;
-          bottom: -15px;
-          left: 50%;
-          transform: translateX(-50%);
-          width: 2px;
-          height: 20px;
-          background: linear-gradient(to bottom, rgba(0,0,0,0.1), transparent);
+          will-change: transform;
+          pointer-events: auto;
         }
         .mapboxgl-popup-content {
           padding: 0 !important;
@@ -591,6 +937,7 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
           overflow: hidden;
           background: transparent !important;
           box-shadow: 0 10px 25px rgba(0,0,0,0.2) !important;
+          position: relative;
         }
         .mapboxgl-popup-tip {
           display: none !important;
@@ -599,7 +946,10 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
           display: none;
         }
         .mapboxgl-popup-anchor-bottom {
-          margin-top: 10px; /* Adjust as needed */
+          margin-top: 0;
+        }
+        .mapboxgl-popup-anchor-bottom .mapboxgl-popup-content {
+          margin-bottom: 10px;
         }
       `}</style>
     </div>

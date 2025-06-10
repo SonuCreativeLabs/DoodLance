@@ -36,7 +36,11 @@ export default function FeedPage() {
   
   // Data State
   const [selectedCategory, setSelectedCategory] = useState('For You');
-  const [filteredJobs, setFilteredJobs] = useState<Job[]>([]);
+  // Extend Job type to include coordinates for MapView
+  type JobWithCoordinates = Job & {
+    coordinates: [number, number];
+  };
+  const [filteredJobs, setFilteredJobs] = useState<JobWithCoordinates[]>([]);
   
   // State for filters
   const [location, setLocation] = useState<string>('Chennai, Tamil Nadu, India');
@@ -160,89 +164,58 @@ export default function FeedPage() {
   const userSkills = ['cricket', 'developer'];
 
   // Filter jobs based on selected tab and filters
-  const filterJobs = () => {
+  const filterJobs = (): JobWithCoordinates[] => {
     console.log('\n=== Starting job filtering ===');
     
-    // Start with all jobs
-    let filtered = [...jobs];
-    
-    // For "For You" tab - show ONLY cricket and developer jobs
-    if (selectedCategory === 'For You') {
-      // First, get all job categories for debugging
-      const allCategories = [...new Set(jobs.map(job => job.category))];
-      console.log('All job categories:', allCategories);
+    // Start with all jobs and ensure they have coordinates
+    let filtered = jobs.map(job => {
+      // Check if job has coordinates in any form
+      let coords: [number, number];
       
-      // Only include jobs that are explicitly in our allowed categories
-      const allowedCategories = [
-        'Development', // Matches tech jobs
-        'Sports & Fitness' // Matches cricket jobs
-      ];
+      // First check for coords array
+      if (Array.isArray(job.coords) && job.coords.length === 2) {
+        coords = [job.coords[0], job.coords[1]] as [number, number];
+      } 
+      // Then check for coordinates array (using type assertion to access safely)
+      else if ('coordinates' in job && Array.isArray((job as any).coordinates) && (job as any).coordinates.length === 2) {
+        coords = [(job as any).coordinates[0], (job as any).coordinates[1]] as [number, number];
+      } 
+      // If no coordinates found, use default (Chennai)
+      else {
+        coords = [80.2707, 13.0827];
+      }
+      
+      return {
+        ...job,
+        coordinates: coords
+      } as JobWithCoordinates;
+    });
+    
+    // For "For You" tab - filter jobs based on user's skills
+    if (selectedCategory === 'For You') {
+      console.log('Filtering jobs for user skills:', userSkills);
       
       filtered = filtered.filter(job => {
-        // Check if job is in our allowed categories
-        const isAllowedCategory = allowedCategories.includes(job.category);
+        // Combine job title, description, category, and skills into a single searchable string
+        const jobText = [
+          job.title || '',
+          job.description || '',
+          job.category || '',
+          ...(job.skills || [])
+        ].join(' ').toLowerCase();
         
-        // If not in allowed categories, definitely filter it out
-        if (!isAllowedCategory) {
-          console.log(`Filtered out job - wrong category: ${job.title} (${job.category})`);
+        // Check if any of the user's skills match the job
+        const hasMatchingSkill = userSkills.some(skill => 
+          jobText.includes(skill.toLowerCase())
+        );
+        
+        if (!hasMatchingSkill) {
+          console.log(`Filtered out job - no matching skills: ${job.title}`);
           return false;
         }
         
-        // For developer jobs
-        if (job.category === 'Development') {
-          const devKeywords = [
-            'javascript', 'typescript', 'python', 'java', 'react', 'angular', 'vue', 'node',
-            'frontend', 'backend', 'fullstack', 'mobile', 'app', 'web', 'developer', 'programmer',
-            'software', 'engineer', 'coding', 'programming', 'developer'
-          ];
-          
-          const jobText = [
-            job.title,
-            job.description,
-            job.category,
-            ...(job.skills || [])
-          ].join(' ').toLowerCase();
-          
-          const hasDevKeywords = devKeywords.some(keyword => 
-            jobText.includes(keyword.toLowerCase())
-          );
-          
-          if (!hasDevKeywords) {
-            console.log(`Filtered out dev job - no dev keywords: ${job.title}`);
-            return false;
-          }
-          
-          console.log(`Including dev job: ${job.title}`);
-          return true;
-        }
-        
-        // For cricket jobs
-        if (job.category === 'Sports & Fitness') {
-          const cricketKeywords = [
-            'cricket', 'coach', 'training', 'player', 'bowling', 'batting', 'fielding',
-            'wicket', 'spin', 'batsman', 'bowler', 'ipl', 't20', 'odi', 'match', 'net practice',
-            'cricket'
-          ];
-          
-          const jobText = [
-            job.title,
-            job.description,
-            job.category,
-            ...(job.skills || [])
-          ].join(' ').toLowerCase();
-          
-          const hasCricketKeywords = cricketKeywords.some(keyword => 
-            jobText.includes(keyword.toLowerCase())
-          );
-          
-          if (!hasCricketKeywords) {
-            console.log(`Filtered out sports job - no cricket keywords: ${job.title}`);
-            return false;
-          }
-          
-          console.log(`Including cricket job: ${job.title}`);
-          return true;
-        }
+        console.log(`Including job - matched user skill: ${job.title}`);
+        return true;
         
         // Shouldn't reach here if our category filtering is working
         console.log(`Unexpected job category: ${job.category} - ${job.title}`);
@@ -351,8 +324,26 @@ export default function FeedPage() {
 
   // Initialize with all jobs on mount
   useEffect(() => {
-    setFilteredJobs([...jobs]);
-  }, []);
+    // Ensure all jobs have coordinates before setting the state
+    const jobsWithCoords = jobs.map(job => {
+      let coords: [number, number];
+      
+      if (Array.isArray(job.coords) && job.coords.length === 2) {
+        coords = [job.coords[0], job.coords[1]] as [number, number];
+      } else if ('coordinates' in job && Array.isArray((job as any).coordinates) && (job as any).coordinates.length === 2) {
+        coords = [(job as any).coordinates[0], (job as any).coordinates[1]] as [number, number];
+      } else {
+        coords = [80.2707, 13.0827]; // Default to Chennai coordinates
+      }
+      
+      return {
+        ...job,
+        coordinates: coords
+      } as JobWithCoordinates;
+    });
+    
+    setFilteredJobs(jobsWithCoords);
+  }, [jobs]);
 
   // Filter jobs when any filter changes
   useEffect(() => {
@@ -428,7 +419,7 @@ export default function FeedPage() {
                   backdrop-blur-sm border transform ${
                     selectedCategory === 'For You'
                       ? 'bg-gradient-to-r from-purple-600/90 to-purple-500/90 text-white border-purple-500/30 shadow-lg shadow-purple-500/20 scale-100'
-                      : 'bg-black/30 text-white/90 hover:bg-white/10 border-white/5 hover:border-white/10 scale-95 hover:scale-100'
+                      : 'bg-black/30 text-white/90 border-white/5 scale-95'
                   }`}
                 onClick={() => setSelectedCategory('For You')}
               >
@@ -443,7 +434,7 @@ export default function FeedPage() {
                     backdrop-blur-sm border transform ${
                       selectedCategory === 'Explore'
                         ? 'bg-gradient-to-r from-purple-600/90 to-purple-500/90 text-white border-purple-500/30 shadow-lg shadow-purple-500/20 scale-100'
-                        : 'bg-black/30 text-white/90 hover:bg-white/10 border-white/5 hover:border-white/10 scale-95 hover:scale-100'
+                        : 'bg-black/30 text-white/90 border-white/5 scale-95'
                     }`}
                   onClick={() => setSelectedCategory('Explore')}
                 >

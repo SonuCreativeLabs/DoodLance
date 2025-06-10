@@ -18,7 +18,7 @@ interface BookingCardProps {
 const BookingCard = ({ booking, showActions = true }: BookingCardProps) => {
   return (
     <div
-      className="group bg-[#23232b] rounded-xl p-6 border border-[#23232b] transition-all duration-300"
+      className="bg-[#111111] rounded-xl p-6 border border-gray-700"
     >
       <div className="flex items-start gap-4">
         <div className="relative">
@@ -87,7 +87,7 @@ const ApplicationCard = ({ application }: { application: Application }) => {
       initial={{ scale: 0.95, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       exit={{ scale: 0.95, opacity: 0 }}
-      className="group bg-[#23232b] rounded-xl p-6 border border-[#23232b] transition-all duration-300"
+      className="bg-[#111111] rounded-xl p-6 border border-gray-700"
     >
       <div className="flex items-start gap-4">
         <div className="relative">
@@ -482,20 +482,20 @@ export default function BookingsPage() {
                       filteredHistory.map((job) => (
                         <div
                           key={job.id}
-                          className="group bg-[#23232b] rounded-xl p-6 border border-[#23232b] transition-all duration-300"
+                          className="bg-[#111111] rounded-xl p-6 border border-gray-700"
                         >
                           <div className="flex items-start gap-4">
                             <div className="relative">
-                              <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full opacity-20 blur-lg group-hover:opacity-30 transition-opacity"></div>
+                              <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full opacity-20 blur-lg"></div>
                               <img
                                 src={job.freelancer.image}
                                 alt={job.freelancer.name}
-                                className="w-16 h-16 rounded-full border-2 border-white/20 group-hover:border-purple-500/50 relative z-10 transition-all"
+                                className="w-16 h-16 rounded-full border-2 border-white/20 relative z-10"
                               />
                             </div>
                             <div className="flex-1">
                               <div className="flex items-center justify-between">
-                                <h3 className="font-semibold text-white group-hover:text-purple-400 transition-colors">{job.title}</h3>
+                                <h3 className="font-semibold text-white">{job.title}</h3>
                                 <div className="flex items-center">
                                   {[...Array(job.yourRating)].map((_, i) => (
                                     <Star key={i} className="w-4 h-4 text-purple-400 fill-current" />
@@ -511,13 +511,13 @@ export default function BookingsPage() {
                                 <Button 
                                   size="sm" 
                                   variant="outline" 
-                                  className="flex-1 border-purple-500/20 text-white/70 hover:bg-purple-500/10 hover:border-purple-500/30 transition-all duration-300"
+                                  className="flex-1 border-gray-700 text-white/70"
                                 >
                                   View Details
                                 </Button>
                                 <Button 
                                   size="sm" 
-                                  className="flex-1 bg-gradient-to-r from-purple-600 via-purple-500 to-purple-400 text-white border-0 hover:shadow-lg hover:from-purple-700 hover:to-purple-500 transition-all duration-300"
+                                  className="flex-1 bg-gradient-to-r from-purple-600 to-purple-400 text-white"
                                 >
                                   Book Again
                                 </Button>

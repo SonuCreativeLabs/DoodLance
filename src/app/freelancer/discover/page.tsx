@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { LocalMap } from '@/components/map/local-map';
-import { NeighborhoodFeed } from '@/components/feed/neighborhood-feed';
+import NeighborhoodFeed from '@/components/freelancer/feed/neighborhood-feed';
 import { categorizeJob } from '@/lib/services/job-categorization';
 
 // Mock data for demonstration
@@ -163,8 +163,7 @@ export default function DiscoverPage() {
           >
             <NeighborhoodFeed
               gigs={gigs}
-              onGigSelect={handleGigClick}
-              selectedGigId={selectedGig}
+              onGigClick={handleGigClick}
             />
           </motion.div>
         )}

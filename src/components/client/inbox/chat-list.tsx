@@ -3,6 +3,8 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { formatDistanceToNow } from 'date-fns';
 
+export type ChatStatus = 'Upcoming' | 'Ongoing' | 'Completed' | 'Cancelled';
+
 interface Chat {
   id: string;
   recipientName: string;
@@ -12,6 +14,7 @@ interface Chat {
   timestamp: Date;
   unreadCount: number;
   online: boolean;
+  status: ChatStatus;
 }
 
 interface ChatListProps {
@@ -38,17 +41,29 @@ export function ChatList({ chats, selectedChatId, onSelectChat }: ChatListProps)
               <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-green-500 ring-2 ring-[#23232b]" />
             )}
           </div>
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 overflow-hidden">
             <div className="flex justify-between items-start">
-              <div>
-                <h3 className="font-semibold text-white group-hover:text-purple-400 transition-colors">
+              <div className="min-w-0">
+                <h3 className="font-semibold text-white group-hover:text-purple-400 transition-colors truncate">
                   {chat.recipientName}
                 </h3>
                 <div className="space-y-1 mt-1">
-                  <p className="text-xs text-white/40 font-medium">
-                    {chat.recipientJobTitle}
-                  </p>
-                  <p className="text-sm text-white/70 truncate leading-relaxed">
+                  <div className="flex justify-between items-center gap-2">
+                    <p className="text-xs text-white/40 font-medium truncate">
+                      {chat.recipientJobTitle}
+                    </p>
+                    <span 
+                      className={`text-[10px] px-2 py-0.5 rounded-full font-medium flex-shrink-0 ${
+                        chat.status === 'Upcoming' ? 'bg-blue-500/20 text-blue-400' :
+                        chat.status === 'Ongoing' ? 'bg-purple-500/20 text-purple-400' :
+                        chat.status === 'Completed' ? 'bg-green-500/20 text-green-400' :
+                        'bg-red-500/20 text-red-400'
+                      }`}
+                    >
+                      {chat.status}
+                    </span>
+                  </div>
+                  <p className="text-sm text-white/70 truncate w-full">
                     {chat.lastMessage}
                   </p>
                 </div>
