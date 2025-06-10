@@ -419,7 +419,7 @@ export default function FeedPage() {
                   backdrop-blur-sm border transform ${
                     selectedCategory === 'For You'
                       ? 'bg-gradient-to-r from-purple-600/90 to-purple-500/90 text-white border-purple-500/30 shadow-lg shadow-purple-500/20 scale-100'
-                      : 'bg-black/30 text-white/90 hover:bg-white/10 border-white/5 hover:border-white/10 scale-95 hover:scale-100'
+                      : 'bg-black/30 text-white/90 border-white/5 scale-95'
                   }`}
                 onClick={() => setSelectedCategory('For You')}
               >
@@ -434,7 +434,7 @@ export default function FeedPage() {
                     backdrop-blur-sm border transform ${
                       selectedCategory === 'Explore'
                         ? 'bg-gradient-to-r from-purple-600/90 to-purple-500/90 text-white border-purple-500/30 shadow-lg shadow-purple-500/20 scale-100'
-                        : 'bg-black/30 text-white/90 hover:bg-white/10 border-white/5 hover:border-white/10 scale-95 hover:scale-100'
+                        : 'bg-black/30 text-white/90 border-white/5 scale-95'
                     }`}
                   onClick={() => setSelectedCategory('Explore')}
                 >

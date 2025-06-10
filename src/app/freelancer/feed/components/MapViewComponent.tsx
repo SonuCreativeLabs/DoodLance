@@ -225,6 +225,70 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
         zoom: 2
       });
 
+      // Add controls after map has loaded
+      map.current.on('load', () => {
+        if (!map.current) return;
+        
+        // Create a container for the controls
+        const controlsContainer = document.createElement('div');
+        controlsContainer.className = 'mapboxgl-ctrl-bottom-right';
+        map.current.getContainer().appendChild(controlsContainer);
+        
+        // Add navigation control (zoom buttons)
+        const nav = new mapboxgl.NavigationControl({
+          showCompass: false,
+          showZoom: true,
+          visualizePitch: false
+        });
+        
+        // Add geolocate control with enhanced options
+        const geolocate = new mapboxgl.GeolocateControl({
+          positionOptions: {
+            enableHighAccuracy: true
+          },
+          trackUserLocation: true,
+          showUserLocation: true,
+          showUserHeading: true,
+          showAccuracyCircle: true,
+          fitBoundsOptions: {
+            maxZoom: 15
+          }
+        });
+        
+        // Add controls to the map with explicit positions
+        map.current.addControl(nav, 'bottom-right');
+        map.current.addControl(geolocate, 'bottom-right');
+        
+        // Add event listeners for geolocation
+        geolocate.on('geolocate', (e: any) => {
+          const { longitude, latitude } = e.coords;
+          map.current?.flyTo({
+            center: [longitude, latitude],
+            zoom: 14,
+            essential: true
+          });
+        });
+        
+        // Auto-trigger geolocation on first load
+        setTimeout(() => {
+          const geolocateBtn = document.querySelector('.mapboxgl-ctrl-geolocate');
+          if (geolocateBtn) {
+            (geolocateBtn as HTMLElement).click();
+          }
+        }, 1000);
+        
+        // Force controls to be visible
+        setTimeout(() => {
+          const controls = document.querySelectorAll('.mapboxgl-ctrl-bottom-right .mapboxgl-ctrl');
+          controls.forEach((control, index) => {
+            const el = control as HTMLElement;
+            el.style.margin = '10px 0';
+            el.style.opacity = '1';
+            el.style.visibility = 'visible';
+          });
+        }, 100);
+      });
+
       // Add click handler to close popups when clicking on the map
       map.current.on('click', (e) => {
         // Close all popups when clicking on the map
@@ -395,49 +459,46 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
                style="backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);">
             
             <!-- Navigation Buttons -->
-            <div class="flex justify-between items-center px-4 py-2 bg-gray-800/80 border-b border-gray-700">
-              <button class="nav-btn prev-btn flex items-center gap-1 text-xs ${!hasPrev ? 'opacity-50 cursor-not-allowed' : 'hover:text-purple-400'} text-white" 
+            <div class="flex justify-between items-center px-4 py-2.5 bg-[#111111]">
+              <button class="nav-btn prev-btn flex items-center justify-center w-8 h-8 rounded-full bg-gray-800/50 hover:bg-gray-700/70 transition-colors ${!hasPrev ? 'opacity-50 cursor-not-allowed' : 'text-white'}" 
                       ${!hasPrev ? 'disabled' : ''}>
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                 </svg>
-                <span>Previous</span>
               </button>
-              <span class="text-xs text-gray-400 px-2 bg-gray-700/50 rounded-full">${currentIndex + 1} / ${processedJobs.length}</span>
-              <button class="nav-btn next-btn flex items-center gap-1 text-xs ${!hasNext ? 'opacity-50 cursor-not-allowed' : 'hover:text-purple-400'} text-white" 
+              <div class="flex-1 text-center">
+                <span class="text-xs font-medium text-white">${currentIndex + 1} / ${processedJobs.length}</span>
+              </div>
+              <button class="nav-btn next-btn flex items-center justify-center w-8 h-8 rounded-full bg-gray-800/50 hover:bg-gray-700/70 transition-colors ${!hasNext ? 'opacity-50 cursor-not-allowed' : 'text-white'}" 
                       ${!hasNext ? 'disabled' : ''}>
-                <span>Next</span>
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                 </svg>
               </button>
             </div>
-            
-            <!-- Header with Title and Price -->
-            <div class="p-4 pb-2">
-              <div class="flex justify-between items-start gap-2">
-                <h3 class="text-base font-bold text-white line-clamp-1">${job.title}</h3>
-                <span class="px-2.5 py-1 bg-purple-500/10 text-purple-300 rounded-full text-xs font-semibold whitespace-nowrap">
-                  ₹${job.budget.toLocaleString('en-IN')}
-                </span>
-              </div>
+            <!-- Header with Title -->
+            <div class="px-4 pt-2 pb-2">
+              <h3 class="text-base font-bold text-white line-clamp-1">${job.title}</h3>
               <p class="text-xs text-gray-300 mt-1 line-clamp-2">${job.description}</p>
             </div>
             
             <!-- Job Details -->
-            <div class="p-3 space-y-2">
-              <div class="flex items-center gap-1.5 text-xs text-gray-400">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                </svg>
-                <span>${job.location || 'Location not specified'}</span>
-              </div>
-              <div class="flex items-center gap-1.5 text-xs text-gray-400">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                <span>${job.duration || 'Duration not specified'}</span>
+            <div class="px-3 pb-3 pt-1 space-y-2">
+              <div class="flex items-center gap-3 text-xs text-gray-400">
+                <div class="flex items-center gap-1.5">
+                  <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                  </svg>
+                  <span>${job.location || 'Location not specified'}</span>
+                </div>
+                <span class="text-gray-500">•</span>
+                <div class="flex items-center gap-1.5">
+                  <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                  </svg>
+                  <span>${job.postedAt ? new Date(job.postedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Date not specified'}</span>
+                </div>
               </div>
               
               <!-- Skills -->
@@ -452,13 +513,32 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
               ` : ''}
             </div>
             
-            <!-- Apply Button -->
+            <!-- Apply Button with Price -->
             <div class="p-4 pt-2">
-              <button class="w-full apply-now-btn px-4 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg"
-                      data-job-id="${job.id}"
-                      onclick="event.stopPropagation(); document.querySelector('.apply-now-btn[data-job-id=\'${job.id}\']').click();">
-                Apply Now
-              </button>
+              <div class="flex items-center justify-between gap-3">
+                <div class="flex flex-col">
+                  <span class="text-xs text-white/60">Budget</span>
+                  <div class="flex items-baseline gap-1.5">
+                    <span class="text-xl font-bold text-white">
+                      ₹${job.budget.toLocaleString('en-IN')}
+                    </span>
+                    <span class="text-sm text-white/70">
+                      ${job.category === 'Sports' ? '/ session' :
+                        job.category?.toLowerCase().includes('tutoring') ? '/ session' :
+                        job.category?.toLowerCase().includes('coach') ? '/ session' :
+                        job.category?.toLowerCase().includes('fitness') ? '/ session' :
+                        job.category?.toLowerCase().includes('makeup') ? '/ session' :
+                        job.category?.toLowerCase().includes('diet') ? '/ plan' :
+                        '/ project'}
+                    </span>
+                  </div>
+                </div>
+                <button class="apply-now-btn px-4 h-8 text-xs font-semibold text-white bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 rounded-md transition-all duration-200 shadow-sm hover:shadow whitespace-nowrap flex items-center justify-center"
+                        data-job-id="${job.id}"
+                        onclick="event.stopPropagation(); document.querySelector('.apply-now-btn[data-job-id=\'${job.id}\']').click();">
+                  Apply Now
+                </button>
+              </div>
             </div>
           </div>
         `;
@@ -521,7 +601,7 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
 
       // Create popup with connecting line to pin
       const popup = new mapboxgl.Popup({
-        offset: [0, -15], // Position popup above the pin
+        offset: [0, 20], // Position popup lower below the pin
         closeButton: false,
         closeOnClick: false,
         maxWidth: '340px',
@@ -742,7 +822,11 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
           });
         }}
       >
-        <div ref={mapContainer} className="absolute inset-0 w-full h-full" />
+        <div 
+          ref={mapContainer} 
+          className="absolute inset-0 w-full h-full"
+          style={{ zIndex: 1 }}
+        />
       </ErrorBoundary>
 
       {/* Job Details Full View */}
@@ -761,6 +845,81 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
       )}
       
       <style jsx global>{`
+        /* Map controls */
+        .mapboxgl-ctrl-top-right {
+          top: 20px !important;
+          right: 10px !important;
+          z-index: 10 !important;
+        }
+        
+        .mapboxgl-ctrl-group {
+          border-radius: 8px !important;
+          overflow: hidden !important;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.2) !important;
+        }
+        
+        .mapboxgl-ctrl button {
+          width: 40px !important;
+          height: 40px !important;
+          background-color: white !important;
+          border: none !important;
+          border-bottom: 1px solid #eee !important;
+          cursor: pointer !important;
+          padding: 0 !important;
+          margin: 0 !important;
+        }
+        
+        .mapboxgl-ctrl button:last-child {
+          border-bottom: none !important;
+        }
+        
+        .mapboxgl-ctrl button:hover {
+          background-color: #f8f8f8 !important;
+        }
+        
+        .mapboxgl-ctrl-icon {
+          opacity: 1 !important;
+          background-size: 20px 20px !important;
+          background-position: center !important;
+          background-repeat: no-repeat !important;
+        }
+        
+        .mapboxgl-ctrl-zoom-in .mapboxgl-ctrl-icon {
+          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z' fill='%23333'/%3E%3C/svg%3E") !important;
+        }
+        
+        .mapboxgl-ctrl-zoom-out .mapboxgl-ctrl-icon {
+          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M19 13H5v-2h14v2z' fill='%23333'/%3E%3C/svg%3E") !important;
+        }
+        
+        .mapboxgl-ctrl-geolocate .mapboxgl-ctrl-icon {
+          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3c-.46-4.17-3.77-7.44-7.94-7.94V1h-2v2.06C6.83 3.56 3.52 6.83 3.06 11H1v2h2.06c.46 4.17 3.77 7.44 7.94 7.94V23h2v-2.06c4.17-.46 7.44-3.77 7.94-7.94H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z' fill='%23333'/%3E%3C/svg%3E") !important;
+        }
+        .mapboxgl-ctrl-bottom-right {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+        .mapboxgl-ctrl-group {
+          background: white;
+          border-radius: 8px;
+          box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+          overflow: hidden;
+        }
+        .mapboxgl-ctrl button {
+          width: 36px;
+          height: 36px;
+        }
+        .mapboxgl-ctrl button + button {
+          border-top: 1px solid #eee;
+        }
+        .mapboxgl-ctrl button:hover {
+          background-color: #f5f5f5;
+        }
+        .mapboxgl-ctrl-icon {
+          background-size: 20px 20px;
+        }
+
         .marker {
           width: 24px;
           height: 36px;

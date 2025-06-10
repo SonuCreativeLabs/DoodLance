@@ -3,6 +3,94 @@
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
 
+/* Mapbox Controls - Tiny Buttons */
+.mapboxgl-ctrl {
+  margin: 0 3px 3px 0 !important;
+  border-radius: 1px !important;
+  overflow: visible !important;
+  box-shadow: none !important;
+}
+
+.mapboxgl-ctrl button {
+  width: 18px !important;
+  height: 18px !important;
+  min-width: 18px !important;
+  min-height: 18px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  background: white !important;
+  border-radius: 1px !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: 0 0 1px rgba(0, 0, 0, 0.2) !important;
+}
+
+.mapboxgl-ctrl button:hover {
+  background: #f8f8f8 !important;
+}
+
+.mapboxgl-ctrl button + button {
+  border-top: 1px solid #f0f0f0 !important;
+  margin-top: 2px !important;
+}
+
+.mapboxgl-ctrl-group {
+  border-radius: 1px !important;
+  overflow: visible !important;
+  box-shadow: none !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+  background: transparent !important;
+  padding: 0 !important;
+}
+
+.mapboxgl-ctrl-bottom-right {
+  bottom: 44px !important;
+  right: 8px !important;
+  z-index: 1000 !important;
+}
+
+/* Custom Geolocation Icon */
+.mapboxgl-ctrl-geolocate .mapboxgl-ctrl-icon {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23333'%3E%3Cpath d='M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3c-.46-4.17-3.77-7.48-7.94-7.94V1h-2v2.06C6.83 3.52 3.52 6.83 3.06 11H1v2h2.06c.46 4.17 3.77 7.48 7.94 7.94V23h2v-2.06c4.17-.46 7.48-3.77 7.94-7.94H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z'/%3E%3C/svg%3E") !important;
+  background-size: 14px 14px !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  opacity: 0.9 !important;
+  width: 20px !important;
+  height: 20px !important;
+  margin: -1px !important; /* Center the icon in the button */
+}
+
+/* Hide default Mapbox geolocate icon */
+.mapboxgl-ctrl-geolocate .mapboxgl-ctrl-icon::before {
+  display: none !important;
+}
+
+/* Icon sizes */
+.mapboxgl-ctrl-icon {
+  width: 10px !important;
+  height: 10px !important;
+  background-size: contain !important;
+  opacity: 0.9 !important;
+}
+
+/* Remove all extra spacing */
+.mapboxgl-ctrl-group > button {
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: 1 !important;
+}
+
+/* Remove any transform scaling */
+.mapboxgl-ctrl-group {
+  transform: none !important;
+}
+
 :root {
   /* Base colors */
   --background: #FFFFFF;
