@@ -1,7 +1,5 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
-
-// Define the database schema type for better TypeScript support
-type Database = {}
+import type { Database } from '@/types/database.types'
 
 let supabase: SupabaseClient<Database> | null = null
 
