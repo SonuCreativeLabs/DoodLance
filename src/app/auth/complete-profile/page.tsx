@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/auth-context'
+import { PostgrestError } from '@supabase/supabase-js'
+import type { UserProfile, UserProfileInsert } from '@/types/database.types'
 
 type UserRole = 'client' | 'freelancer'
 
@@ -31,6 +33,11 @@ export default function CompleteProfile() {
       return
     }
 
+    if (!supabase) {
+      setError('System error: Authentication service is not available')
+      return
+    }
+
     if (!formData.firstName || !formData.lastName) {
       setError('Please enter your full name')
       return
@@ -53,44 +60,64 @@ export default function CompleteProfile() {
       }
 
       // First, check if a profile already exists
-      const { data: profiles } = await supabase
+      const { data: profiles, error: fetchError } = await supabase!
         .from('user_profiles')
         .select('*')
         .eq('id', user.id)
         .limit(1)
+        .returns<UserProfile[]>()
+
+      if (fetchError) {
+        console.error('Error fetching profile:', fetchError)
+        setError('Failed to fetch profile. Please try again.')
+        setLoading(false)
+        return
+      }
 
       const existingProfile = profiles?.[0]
 
       // Prepare the profile data
-      const profileData = {
+      const profileData: UserProfileInsert = {
         id: user.id,
         first_name: formData.firstName,
         last_name: formData.lastName,
         phone_number: formData.phoneNumber,
         role: formData.role,
-        email: user.email,
-        updated_at: new Date().toISOString()
+        email: user.email || ''
       }
 
-      let profileError
-      if (existingProfile) {
-        // Update existing profile
-        console.log('Updating existing profile for user:', user.id)
-        const { error } = await supabase
-          .from('user_profiles')
-          .update(profileData)
-          .eq('id', user.id)
-        profileError = error
-      } else {
-        // Insert new profile
-        console.log('Creating new profile for user:', user.id)
-        const { error } = await supabase
-          .from('user_profiles')
-          .insert({
-            ...profileData,
-            created_at: new Date().toISOString()
-          })
-        profileError = error
+      let profileError: PostgrestError | null = null;
+      
+      try {
+        if (existingProfile) {
+          // Update existing profile
+          console.log('Updating existing profile for user:', user.id);
+          const { error } = await supabase!
+            .from('user_profiles')
+            .update(profileData)
+            .eq('id', user.id)
+            .select()
+            .single();
+          profileError = error;
+        } else {
+          // Insert new profile
+          console.log('Creating new profile for user:', user.id);
+          const { error } = await supabase!
+            .from('user_profiles')
+            .insert({
+              ...profileData,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            } as UserProfileInsert)
+            .select()
+            .single();
+          profileError = error;
+        }
+      } catch (err) {
+        console.error('Error saving profile:', err);
+        setError('Failed to save profile. Please try again.');
+        setLoading(false);
+        return;
       }
 
       if (profileError) {
