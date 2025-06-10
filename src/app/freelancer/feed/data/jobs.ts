@@ -59,7 +59,25 @@ const devSkills = [
 const cricketSkills = [
   ['Cricket Coaching', 'Batting Coach', 'Bowling Coach', 'Fielding Coach'],
   ['Fitness Training', 'Sports Nutrition', 'Injury Prevention'],
-  ['Team Management', 'Match Strategy', 'Video Analysis']
+  ['Team Management', 'Match Strategy', 'Video Analysis'],
+  ['Spin Bowling Specialist', 'Leg Spin', 'Off Spin', 'Googly'],
+  ['Wicket Keeping Coach', 'Glove Work', 'Stance', 'Reflex Training']
+];
+
+const sportsSkills = [
+  ['Badminton Coach', 'Footwork', 'Smashes', 'Drops'],
+  ['Swimming Instructor', 'Freestyle', 'Breaststroke', 'Water Safety'],
+  ['Tennis Coach', 'Forehand', 'Backhand', 'Serve Techniques']
+];
+
+const dietCookingSkills = [
+  ['Meal Planning', 'Macro Counting', 'Special Diets', 'Grocery Shopping'],
+  ['Keto Meal Prep', 'Low-Carb Cooking', 'Meal Planning', 'Nutrition']
+];
+
+const makeupSkills = [
+  ['Bridal Makeup', 'Airbrush', 'Contouring', 'Natural Look'],
+  ['Special Effects', 'Prosthetics', 'Character Makeup', 'Theatrical']
 ];
 
 const offlineServiceSkills = [
@@ -97,10 +115,17 @@ const jobCategories = {
     cooking: ['Personal Chef', 'Meal Prep Specialist', 'Catering Service Provider']
   },
   tech: {
-    frontend: ['Frontend Developer', 'React Developer', 'UI Developer'],
-    backend: ['Backend Developer', 'Node.js Developer', 'API Specialist'],
-    mobile: ['Mobile App Developer', 'React Native Developer', 'iOS/Android Developer'],
-    fullstack: ['Full Stack Developer', 'MERN Stack Developer', 'Web Application Developer']
+    frontend: ['Frontend Developer'],
+    backend: ['Backend Developer'],
+    mobile: ['Mobile App Developer']
+  },
+  sports: {
+    cricket: ['Cricket Batting Coach', 'Cricket Bowling Specialist', 'Fielding Coach'],
+    other: ['Badminton Coach', 'Swimming Instructor', 'Tennis Coach']
+  },
+  lifestyle: {
+    diet: ['Meal Prep Specialist', 'Keto Diet Consultant', 'Sports Nutritionist'],
+    makeup: ['Bridal Makeup Artist', 'Special Effects Makeup Artist']
   }
 };
 
@@ -126,105 +151,149 @@ const generateJobs = (): Job[] => {
 
   // Define job categories with mixed pricing units (₹500-5,000)
   const categoryRates = {
-    // Tech jobs
+    // Tech jobs (higher value, specialized skills)
     frontend: { 
-      min: 800, 
-      max: 5000, 
+      min: 1000, 
+      max: 150000, 
       unit: 'project',
       periods: [
-        { type: 'project', min: 2000, max: 5000, multiplier: 1 },
-        { type: 'monthly', min: 3000, max: 5000, multiplier: 1 },
-        { type: 'hourly', min: 500, max: 1500, multiplier: 1 }
+        { type: 'project', min: 10000, max: 150000, multiplier: 1 },
+        { type: 'monthly', min: 30000, max: 150000, multiplier: 1 },
+        { type: 'hourly', min: 800, max: 3000, multiplier: 1 }
       ]
     },
     backend: { 
-      min: 1000, 
-      max: 5000, 
-      unit: 'month',
+      min: 1500, 
+      max: 200000, 
+      unit: 'project',
       periods: [
-        { type: 'monthly', min: 2500, max: 5000, multiplier: 1 },
-        { type: 'project', min: 3000, max: 5000, multiplier: 1 },
-        { type: 'hourly', min: 600, max: 1800, multiplier: 1 }
+        { type: 'project', min: 20000, max: 200000, multiplier: 1 },
+        { type: 'monthly', min: 40000, max: 200000, multiplier: 1 },
+        { type: 'hourly', min: 1000, max: 4000, multiplier: 1 }
       ]
     },
     mobile: { 
-      min: 1000, 
-      max: 5000, 
+      min: 1500, 
+      max: 180000, 
       unit: 'project',
       periods: [
-        { type: 'project', min: 3000, max: 5000, multiplier: 1 },
-        { type: 'monthly', min: 3500, max: 5000, multiplier: 1 },
-        { type: 'hourly', min: 700, max: 2000, multiplier: 1 }
+        { type: 'project', min: 15000, max: 180000, multiplier: 1 },
+        { type: 'monthly', min: 35000, max: 180000, multiplier: 1 },
+        { type: 'hourly', min: 900, max: 3500, multiplier: 1 }
       ]
     },
     
-    // Offline services
+    // Home services (moderate pricing, based on service complexity)
     plumbing: { 
-      min: 500, 
-      max: 5000, 
+      min: 200, 
+      max: 8000, 
       unit: 'job',
       periods: [
-        { type: 'fixed', min: 500, max: 3000, multiplier: 1 },
-        { type: 'emergency', min: 2000, max: 5000, multiplier: 1.5 },
-        { type: 'visit', min: 800, max: 2500, multiplier: 1 }
+        { type: 'fixed', min: 200, max: 5000, multiplier: 1 },
+        { type: 'emergency', min: 500, max: 10000, multiplier: 1.5 },
+        { type: 'visit', min: 200, max: 1000, multiplier: 1 }
       ]
     },
     electrical: { 
-      min: 800, 
-      max: 5000, 
+      min: 300, 
+      max: 10000, 
       unit: 'visit',
       periods: [
-        { type: 'visit', min: 1000, max: 3500, multiplier: 1 },
-        { type: 'fixed', min: 1500, max: 4500, multiplier: 1 },
-        { type: 'emergency', min: 2500, max: 5000, multiplier: 1.5 }
+        { type: 'visit', min: 300, max: 2000, multiplier: 1 },
+        { type: 'fixed', min: 500, max: 8000, multiplier: 1 },
+        { type: 'emergency', min: 1000, max: 15000, multiplier: 1.8 }
       ]
     },
     
-    // Creative services
+    // Creative services (varies by project scope)
     design: { 
-      min: 1000, 
-      max: 5000, 
+      min: 2000, 
+      max: 100000, 
       unit: 'project',
       periods: [
-        { type: 'project', min: 2000, max: 5000, multiplier: 1 },
-        { type: 'monthly', min: 3000, max: 5000, multiplier: 1 },
-        { type: 'hourly', min: 600, max: 2000, multiplier: 1 }
+        { type: 'project', min: 5000, max: 100000, multiplier: 1 },
+        { type: 'monthly', min: 20000, max: 100000, multiplier: 1 },
+        { type: 'hourly', min: 500, max: 2500, multiplier: 1 }
       ]
     },
     
-    // Tutoring and education
+    // Education (lower rates for tutoring, higher for specialized training)
     tutoring: { 
-      min: 500, 
-      max: 5000, 
-      unit: 'month',
+      min: 200, 
+      max: 10000, 
+      unit: 'session',
       periods: [
-        { type: 'monthly', min: 2000, max: 5000, multiplier: 1 },
-        { type: 'session', min: 500, max: 2500, multiplier: 1 },
-        { type: 'hourly', min: 500, max: 1500, multiplier: 1 }
+        { type: 'hourly', min: 200, max: 1500, multiplier: 1 },
+        { type: 'session', min: 500, max: 5000, multiplier: 1 },
+        { type: 'monthly', min: 3000, max: 10000, multiplier: 1 }
       ]
     },
     
-    // Fitness and wellness
+    // Fitness and wellness (moderate pricing)
     fitness: { 
-      min: 800, 
-      max: 5000, 
+      min: 300, 
+      max: 20000, 
+      unit: 'session',
+      periods: [
+        { type: 'session', min: 300, max: 3000, multiplier: 1 },
+        { type: 'package', min: 2000, max: 10000, multiplier: 1 },
+        { type: 'monthly', min: 4000, max: 20000, multiplier: 1 }
+      ]
+    },
+    
+    // Sports coaching (varies by sport and level)
+    cricket: { 
+      min: 500, 
+      max: 15000, 
+      unit: 'session',
+      periods: [
+        { type: 'session', min: 500, max: 5000, multiplier: 1 },
+        { type: 'package', min: 3000, max: 15000, multiplier: 1 },
+        { type: 'monthly', min: 8000, max: 30000, multiplier: 1 }
+      ]
+    },
+    sports: { 
+      min: 300, 
+      max: 10000, 
+      unit: 'session',
+      periods: [
+        { type: 'session', min: 300, max: 3000, multiplier: 1 },
+        { type: 'package', min: 2000, max: 10000, multiplier: 1 },
+        { type: 'monthly', min: 5000, max: 20000, multiplier: 1 }
+      ]
+    },
+    
+    // Health and beauty (moderate to high end)
+    diet: { 
+      min: 500, 
+      max: 25000, 
       unit: 'package',
       periods: [
-        { type: 'package', min: 2000, max: 5000, multiplier: 1 },
-        { type: 'session', min: 800, max: 3000, multiplier: 1 },
-        { type: 'monthly', min: 2500, max: 5000, multiplier: 1 }
+        { type: 'session', min: 1000, max: 5000, multiplier: 1 },
+        { type: 'package', min: 3000, max: 15000, multiplier: 1 },
+        { type: 'monthly', min: 8000, max: 25000, multiplier: 1 }
+      ]
+    },
+    makeup: { 
+      min: 1000, 
+      max: 50000, 
+      unit: 'event',
+      periods: [
+        { type: 'session', min: 1000, max: 10000, multiplier: 1 },
+        { type: 'package', min: 5000, max: 30000, multiplier: 1 },
+        { type: 'event', min: 5000, max: 50000, multiplier: 1.5 }
       ]
     },
     
-    // Marketing and business
+    // Business services (higher value)
     marketing: { 
-      min: 1000, 
-      max: 5000, 
-      unit: 'month',
+      min: 5000, 
+      max: 300000, 
+      unit: 'project',
       periods: [
-        { type: 'monthly', min: 3000, max: 5000, multiplier: 1 },
-        { type: 'project', min: 2000, max: 5000, multiplier: 1 },
-        { type: 'hourly', min: 700, max: 2000, multiplier: 1 }
+        { type: 'project', min: 10000, max: 300000, multiplier: 1 },
+        { type: 'monthly', min: 25000, max: 200000, multiplier: 1 },
+        { type: 'hourly', min: 1000, max: 5000, multiplier: 1 }
       ]
     }
   };
@@ -309,8 +378,9 @@ const generateJobs = (): Job[] => {
       budget = rate;
     }
     
-    // Ensure budget doesn't exceed 5000
-    budget = Math.min(Math.round(budget), 5000);
+    // Ensure budget is reasonable for the category
+    const maxBudget = rateInfo.max || 50000; // Use category max or default to 50,000
+    budget = Math.min(Math.round(budget), maxBudget);
     const { name: location, coords: baseCoords } = getRandomArea();
     const coords = generateNearbyCoords(baseCoords);
     const clientName = clientNames[Math.floor(Math.random() * clientNames.length)];
@@ -406,20 +476,72 @@ const generateJobs = (): Job[] => {
     });
   });
 
-  // Generate cricket/sports jobs (9 jobs)
+  // Generate cricket coaching jobs (5 jobs)
   cricketSkills.forEach((skills, index) => {
-    const title = `Cricket ${skills[0]}`;
-    const description = `Looking for an experienced cricket coach specializing in ${skills[1]} and ${skills[2]}. Local candidates preferred.`;
+    const jobType = skills[0].includes('Coach') ? 'Coach' : 'Specialist';
+    const title = `Cricket ${jobType} - ${skills[1]}`;
+    const description = `Professional cricket ${jobType.toLowerCase()} with expertise in ${skills.slice(1, 3).join(' and ')}. ${skills[3] ? `Specializes in ${skills[3]}.` : ''} Local candidates preferred.`;
     
     jobs.push(createJobWithClient({
       id: `cricket-${index + 1}`,
       title,
       description,
-      category: 'Sports & Fitness',
-      skills,
+      category: 'Sports',
+      skills: [...new Set([...skills, 'Cricket'])],
       workMode: 'onsite',
-      minRate: 800,
+      minRate: 500,
+      maxRate: 3000
+    }));
+  });
+
+  // Generate other sports jobs (3 jobs)
+  sportsSkills.forEach((skills, index) => {
+    const title = skills[0];
+    const description = `Experienced ${skills[0].toLowerCase()} available for private lessons. Specializes in ${skills.slice(1, 3).join(' and ')}. All skill levels welcome.`;
+    
+    jobs.push(createJobWithClient({
+      id: `sports-${index + 1}`,
+      title,
+      description,
+      category: 'Sports Coaching',
+      skills: [...new Set([...skills, 'Fitness', 'Training'])],
+      workMode: 'onsite',
+      minRate: 400,
       maxRate: 2500
+    }));
+  });
+
+  // Generate diet and nutrition jobs (2 jobs)
+  dietCookingSkills.forEach((skills, index) => {
+    const title = skills[0].includes('Keto') ? 'Keto Diet Specialist' : 'Meal Planning Expert';
+    const description = `Certified ${title.toLowerCase()} offering ${skills[0].toLowerCase()} services. Specializes in ${skills.slice(1, 3).join(' and ')}.`;
+    
+    jobs.push(createJobWithClient({
+      id: `diet-${index + 1}`,
+      title,
+      description,
+      category: 'Diet & Nutrition',
+      skills: [...new Set([...skills, 'Nutrition', 'Healthy Cooking'])],
+      workMode: 'hybrid',
+      minRate: 800,
+      maxRate: 3000
+    }));
+  });
+
+  // Generate makeup artist jobs (2 jobs)
+  makeupSkills.forEach((skills, index) => {
+    const title = skills[0];
+    const description = `Professional makeup artist specializing in ${skills[0].toLowerCase()}. Services include ${skills.slice(1, 3).join(', ')} and more.`;
+    
+    jobs.push(createJobWithClient({
+      id: `makeup-${index + 1}`,
+      title,
+      description,
+      category: 'Beauty & Makeup',
+      skills: [...new Set([...skills, 'Makeup Artistry', 'Cosmetics'])],
+      workMode: 'onsite',
+      minRate: 1000,
+      maxRate: 5000
     }));
   });
 

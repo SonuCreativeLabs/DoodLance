@@ -191,83 +191,31 @@ export default function FeedPage() {
       } as JobWithCoordinates;
     });
     
-    // For "For You" tab - show ONLY cricket and developer jobs
+    // For "For You" tab - filter jobs based on user's skills
     if (selectedCategory === 'For You') {
-      // First, get all job categories for debugging
-      const allCategories = [...new Set(jobs.map(job => job.category))];
-      console.log('All job categories:', allCategories);
-      
-      // Only include jobs that are explicitly in our allowed categories
-      const allowedCategories = [
-        'Development', // Matches tech jobs
-        'Sports & Fitness' // Matches cricket jobs
-      ];
+      console.log('Filtering jobs for user skills:', userSkills);
       
       filtered = filtered.filter(job => {
-        // Check if job is in our allowed categories
-        const isAllowedCategory = allowedCategories.includes(job.category);
+        // Combine job title, description, category, and skills into a single searchable string
+        const jobText = [
+          job.title || '',
+          job.description || '',
+          job.category || '',
+          ...(job.skills || [])
+        ].join(' ').toLowerCase();
         
-        // If not in allowed categories, definitely filter it out
-        if (!isAllowedCategory) {
-          console.log(`Filtered out job - wrong category: ${job.title} (${job.category})`);
+        // Check if any of the user's skills match the job
+        const hasMatchingSkill = userSkills.some(skill => 
+          jobText.includes(skill.toLowerCase())
+        );
+        
+        if (!hasMatchingSkill) {
+          console.log(`Filtered out job - no matching skills: ${job.title}`);
           return false;
         }
         
-        // For developer jobs
-        if (job.category === 'Development') {
-          const devKeywords = [
-            'javascript', 'typescript', 'python', 'java', 'react', 'angular', 'vue', 'node',
-            'frontend', 'backend', 'fullstack', 'mobile', 'app', 'web', 'developer', 'programmer',
-            'software', 'engineer', 'coding', 'programming', 'developer'
-          ];
-          
-          const jobText = [
-            job.title,
-            job.description,
-            job.category,
-            ...(job.skills || [])
-          ].join(' ').toLowerCase();
-          
-          const hasDevKeywords = devKeywords.some(keyword => 
-            jobText.includes(keyword.toLowerCase())
-          );
-          
-          if (!hasDevKeywords) {
-            console.log(`Filtered out dev job - no dev keywords: ${job.title}`);
-            return false;
-          }
-          
-          console.log(`Including dev job: ${job.title}`);
-          return true;
-        }
-        
-        // For cricket jobs
-        if (job.category === 'Sports & Fitness') {
-          const cricketKeywords = [
-            'cricket', 'coach', 'training', 'player', 'bowling', 'batting', 'fielding',
-            'wicket', 'spin', 'batsman', 'bowler', 'ipl', 't20', 'odi', 'match', 'net practice',
-            'cricket'
-          ];
-          
-          const jobText = [
-            job.title,
-            job.description,
-            job.category,
-            ...(job.skills || [])
-          ].join(' ').toLowerCase();
-          
-          const hasCricketKeywords = cricketKeywords.some(keyword => 
-            jobText.includes(keyword.toLowerCase())
-          );
-          
-          if (!hasCricketKeywords) {
-            console.log(`Filtered out sports job - no cricket keywords: ${job.title}`);
-            return false;
-          }
-          
-          console.log(`Including cricket job: ${job.title}`);
-          return true;
-        }
+        console.log(`Including job - matched user skill: ${job.title}`);
+        return true;
         
         // Shouldn't reach here if our category filtering is working
         console.log(`Unexpected job category: ${job.category} - ${job.title}`);

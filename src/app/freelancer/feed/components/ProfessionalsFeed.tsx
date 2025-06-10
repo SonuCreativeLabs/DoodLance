@@ -135,40 +135,18 @@ export default function ProfessionalsFeed({
           className="group bg-gradient-to-br from-[#1E1E1E] to-[#1A1A1A] rounded-2xl p-6 shadow-xl hover:shadow-purple-500/20 transition-all duration-300 w-full border border-white/5 hover:border-white/10 min-h-[220px] h-full"
           onClick={() => filteredProfessionals ? handleProfessionalClick(item) : handleJobClick(item as Job)}
         >
-          <div className="space-y-4">
-            <div className="flex justify-between items-start gap-2">
-              <div className="flex-1">
-                <h3 className="text-[15px] font-semibold text-white leading-none line-clamp-2">
-                  {item.title || item.name}
-                </h3>
-                <div className="flex items-center gap-2 mt-5">
-                  <span className="text-[12px] font-medium text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded-full">
-                    {item.category || item.service}
-                  </span>
-                  {item.workMode && (
-                    <span className="px-2 py-0.5 text-[11px] rounded-full bg-white/5 text-white/70">
-                      {item.workMode}
-                    </span>
-                  )}
-                </div>
-              </div>
-              <div className="flex flex-col items-center">
-                <span className="text-[17px] font-semibold text-white">
-                  ₹{item.budget?.toLocaleString()}
+          <div className="space-y-3">
+            <div className="flex flex-col gap-2">
+              <h3 className="text-[15px] font-semibold text-white leading-tight line-clamp-2 break-words">
+                {item.title || item.name}
+              </h3>
+              <div className="flex items-center gap-2">
+                <span className="text-[12px] font-medium text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded-full whitespace-nowrap">
+                  {item.category || item.service}
                 </span>
-                {item.priceUnit && (
-                  <span className="text-[12px] text-white/60">
-                    {item.priceUnit === 'hour' ? 'hourly' : 
-                     item.priceUnit === 'day' ? 'daily' :
-                     item.priceUnit === 'week' ? 'weekly' :
-                     item.priceUnit === 'month' ? 'monthly' :
-                     item.priceUnit === 'job' ? 'fixed price' :
-                     item.priceUnit === 'project' ? 'project' :
-                     item.priceUnit === 'session' ? 'session' :
-                     item.priceUnit === 'visit' ? 'visit' :
-                     item.priceUnit === 'emergency' ? 'emergency' :
-                     item.priceUnit === 'package' ? 'package' :
-                     item.priceUnit}
+                {item.workMode && (
+                  <span className="px-2 py-0.5 text-[11px] rounded-full bg-white/5 text-white/70">
+                    {item.workMode}
                   </span>
                 )}
               </div>
@@ -179,8 +157,24 @@ export default function ProfessionalsFeed({
               {item.description || `${item.name} is available for ${item.service}`}
             </p>
 
+            {/* Location and Date */}
+            <div className="flex items-center gap-4 text-[12px] text-white/60 pt-1">
+              <div className="flex items-center gap-1.5">
+                <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
+                <span className="truncate max-w-[120px]" title={item.location}>{item.location}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5 flex-shrink-0" />
+                <span>{
+                  item.postedAt 
+                    ? new Date(item.postedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                    : item.availability?.[0] || 'Available now'
+                }</span>
+              </div>
+            </div>
+
             {/* Skills */}
-            <div className="flex gap-2 items-center">
+            <div className="flex gap-2 items-center pt-1">
               {(item.skills || []).slice(0, 2).map((skill: string, i: number) => (
                 <span
                   key={i}
@@ -197,22 +191,21 @@ export default function ProfessionalsFeed({
             </div>
 
             {/* Footer */}
-            <div className="flex items-center justify-between pt-4 border-t border-white/5 mt-3">
-              <div className="flex items-center gap-3 text-[12px] text-white/60">
-                <div className="flex items-center gap-1.5">
-                  <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
-                  <span className="truncate max-w-[100px]">{item.location}</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5 flex-shrink-0" />
-                  <span>{
-                    item.postedAt 
-                      ? new Date(item.postedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-                      : item.availability?.[0] || 'Available now'
-                  }</span>
-                </div>
+            <div className="flex items-center justify-between pt-3 border-t border-white/5 mt-3">
+              <div className="flex items-baseline gap-1">
+                <span className="text-[17px] font-semibold text-white">
+                  ₹{item.budget?.toLocaleString()}
+                </span>
+                <span className="text-[13px] text-white/60">
+                  {item.category === 'Sports' ? ' / session' :
+                   item.category?.toLowerCase().includes('tutoring') ? ' / session' :
+                   item.category?.toLowerCase().includes('coach') ? ' / session' :
+                   item.category?.toLowerCase().includes('fitness') ? ' / session' :
+                   item.category?.toLowerCase().includes('makeup') ? ' / session' :
+                   item.category?.toLowerCase().includes('diet') ? ' / plan' :
+                   ' / project'}
+                </span>
               </div>
-              
               <button
                 onClick={(e) => {
                   e.stopPropagation();
