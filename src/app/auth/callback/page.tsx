@@ -4,22 +4,44 @@ import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 
+type UserProfile = {
+  id: string;
+  role: 'client' | 'freelancer';
+  // Add other profile fields as needed
+}
+
 export default function AuthCallback() {
   const router = useRouter()
 
   useEffect(() => {
     const handleEmailConfirmation = async () => {
+      if (!supabase) {
+        console.error('Supabase client is not initialized')
+        router.push('/auth/signin')
+        return
+      }
+
       try {
         // Get the session to check if the user is authenticated
-        const { data: { session } } = await supabase.auth.getSession()
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+        
+        if (sessionError) {
+          throw sessionError
+        }
         
         if (session?.user) {
           // Check if user has a profile with role
-          const { data: profile } = await supabase
+          const { data: profile, error: profileError } = await supabase
             .from('user_profiles')
             .select('role')
             .eq('id', session.user.id)
-            .single()
+            .single<Pick<UserProfile, 'role'>>()
+
+          if (profileError) {
+            console.error('Error fetching profile:', profileError)
+            router.push('/auth/complete-profile')
+            return
+          }
 
           if (profile?.role) {
             // If user has a role, redirect to their interface
