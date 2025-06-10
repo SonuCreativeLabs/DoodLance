@@ -14,18 +14,19 @@ interface FreelancerLayoutProps {
 // Wrapper component to handle the chat view context
 function LayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  let fullChatView = false;
   
-  // Safely access the chat view context if available
-  try {
-    const chatView = useChatView();
-    if (chatView) {
-      fullChatView = chatView.fullChatView;
-    }
-  } catch (e) {
-    // Context not available, use default value
-    console.log('ChatView context not available, using default value');
-  }
+  // Use a ref to track if we're in a browser environment
+  const [isMounted, setIsMounted] = useState(false);
+  
+  useEffect(() => {
+    setIsMounted(true);
+    return () => setIsMounted(false);
+  }, []);
+  
+  // Always call the hook at the top level
+  const chatView = useChatView();
+  // Only access the context value after mount
+  const fullChatView = isMounted ? chatView?.fullChatView || false : false;
   
   return (
     <FreelancerLayoutInner fullChatView={fullChatView} pathname={pathname}>
@@ -58,16 +59,18 @@ function FreelancerLayoutInner({
   ]
 
   // For feed, job details, and proposal details pages, we want a minimal layout with just the content and bottom nav
-  if (pathname === '/freelancer/feed' || 
-      pathname?.startsWith('/freelancer/jobs/') || 
-      pathname?.startsWith('/freelancer/proposals/')) {
-    const [mounted, setMounted] = useState(false);
+  const isMinimalLayout = pathname === '/freelancer/feed' || 
+    pathname?.startsWith('/freelancer/jobs/') || 
+    pathname?.startsWith('/freelancer/proposals/');
 
-    useEffect(() => {
-      setMounted(true);
-      return () => setMounted(false);
-    }, []);
+  const [mounted, setMounted] = useState(false);
 
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
+
+  if (isMinimalLayout) {
     return (
       <div className="h-[100dvh] overflow-hidden">
         {children}

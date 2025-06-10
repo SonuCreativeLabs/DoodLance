@@ -1,17 +1,60 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Star, Clock, Calendar, MapPin, ArrowLeft } from 'lucide-react';
+import { Star, Clock, MapPin, ArrowLeft } from 'lucide-react';
 import JobDetailsFull from './JobDetailsFull';
 import OverlayPortal from './OverlayPortal';
 import { Job } from '../types';
 import { useRouter, useSearchParams } from 'next/navigation';
 
+// Define a base professional type with common fields
+export type BaseProfessional = {
+  id: string | number;
+  name?: string;
+  title?: string;
+  service?: string;
+  category?: string;
+  rating?: number;
+  reviews?: number;
+  completedJobs?: number;
+  location: string;
+  responseTime?: string;
+  image?: string;
+  avatar?: string;
+  distance?: number;
+  price?: number;
+  rate?: number;
+  priceUnit?: string;
+  budget?: number;
+  coords?: [number, number];
+  availability?: string[];
+  skills?: string[];
+  workMode?: 'remote' | 'onsite' | 'hybrid';
+  type?: string;
+  postedAt?: string;
+  description?: string;
+};
+
 interface ProfessionalsFeedProps {
-  jobs: Job[];
+  jobs?: Job[];
+  filteredProfessionals?: BaseProfessional[];
+  onProfessionalSelect?: (professional: BaseProfessional) => void;
+  onJobSelect?: (job: Job) => void;
+  onApply?: (jobId: string) => void;
+  className?: string;
 }
 
-export default function ProfessionalsFeed({ jobs }: ProfessionalsFeedProps) {
+export default function ProfessionalsFeed({ 
+  jobs = [], 
+  filteredProfessionals, 
+  onProfessionalSelect,
+  onJobSelect,
+  onApply,
+  className = ''
+}: ProfessionalsFeedProps) {
+  // Use filteredProfessionals if available, otherwise use jobs
+  type ItemType = Job | BaseProfessional;
+  const items: ItemType[] = (filteredProfessionals || jobs || []) as ItemType[];
   const router = useRouter();
   const searchParams = useSearchParams();
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
@@ -21,18 +64,32 @@ export default function ProfessionalsFeed({ jobs }: ProfessionalsFeedProps) {
   useEffect(() => {
     const jobId = searchParams.get('jobId');
     if (jobId) {
-      const job = jobs.find(j => j.id === jobId);
+      const job = items.find((j: any) => j.id === jobId) as Job;
       if (job) {
         setSelectedJob(job);
         setShowFullView(true);
       }
     }
-  }, [searchParams, jobs]);
+  }, [searchParams, items]);
 
-  const handleJobClick = (job: Job) => {
-    setSelectedJob(job);
-    router.push(`?jobId=${job.id}`, { scroll: false });
-    setShowFullView(true);
+  const handleJobClick = (item: Job) => {
+    setSelectedJob(item);
+    if (onJobSelect) {
+      onJobSelect(item);
+    } else {
+      // Default behavior if no onJobSelect handler is provided
+      router.push(`?jobId=${item.id}`, { scroll: false });
+      setShowFullView(true);
+    }
+  };
+
+  const handleProfessionalClick = (professional: BaseProfessional) => {
+    if (onProfessionalSelect) {
+      onProfessionalSelect(professional);
+    } else {
+      // Default behavior if no onProfessionalSelect handler is provided
+      console.log('Professional selected:', professional);
+    }
   };
 
   const handleBack = () => {
@@ -41,124 +98,141 @@ export default function ProfessionalsFeed({ jobs }: ProfessionalsFeedProps) {
   };
 
   const handleApply = (jobId: string) => {
-    console.log('Applying to job:', jobId);
-    // Handle apply logic here
-    handleBack();
+    if (onApply) {
+      onApply(jobId);
+    } else {
+      // Default apply behavior
+      console.log('Applying to job:', jobId);
+      handleBack();
+    }
   };
-  if (!jobs || jobs.length === 0) {
+
+  if (!items || items.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-10 text-white/60">
-        <p className="text-sm">No jobs found</p>
+        {filteredProfessionals ? 'No professionals found' : 'No jobs found'}
       </div>
     );
   }
-  console.log('ProfessionalsFeed - Rendering jobs:', jobs.length);
-  // If in full view, only show the selected job
-  if (showFullView && selectedJob) {
+
+  console.log('ProfessionalsFeed - Rendering items:', items.length);
+
+  // If in full view, only show the selected job (only for job items)
+  if (showFullView && selectedJob && !filteredProfessionals) {
     return (
       <OverlayPortal>
-        <JobDetailsFull
-          job={selectedJob}
-          onBack={handleBack}
-          onApply={handleApply}
-        />
+        <JobDetailsFull job={selectedJob} onBack={handleBack} onApply={handleApply} />
       </OverlayPortal>
     );
   }
 
-  // Otherwise show the list of jobs
+  // Otherwise show the list of items
   return (
     <div className="space-y-4 pb-24">
-      {jobs.map((job) => (
-        <div 
-          key={job.id} 
-          onClick={() => handleJobClick(job)}
-          className="bg-[#1E1E1E] rounded-2xl p-5 shadow-lg border border-white/5 hover:border-white/10 transition-all duration-200 w-full hover:shadow-purple-500/10 cursor-pointer"
+      {items.map((item: any) => (
+        <div
+          key={item.id}
+          className="group bg-gradient-to-br from-[#1E1E1E] to-[#1A1A1A] rounded-2xl p-6 shadow-xl hover:shadow-purple-500/20 transition-all duration-300 w-full border border-white/5 hover:border-white/10 min-h-[220px] h-full"
+          onClick={() => filteredProfessionals ? handleProfessionalClick(item) : handleJobClick(item as Job)}
         >
-          {/* Job Header */}
-          <div className="flex justify-between items-start gap-4 mb-3">
-            <div className="flex-1 min-w-0">
-              <h3 className="text-[15px] font-semibold text-white leading-tight mb-1.5 line-clamp-2">
-                {job.title}
-              </h3>
-              
-              {/* Location and Date */}
-              <div className="flex items-center gap-3 text-[13px] text-white/60">
-                <div className="flex items-center gap-1.5">
-                  <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
-                  <span className="truncate max-w-[180px]">{job.location}</span>
+          <div className="space-y-4">
+            <div className="flex justify-between items-start gap-2">
+              <div className="flex-1">
+                <h3 className="text-[15px] font-semibold text-white leading-none line-clamp-2">
+                  {item.title || item.name}
+                </h3>
+                <div className="flex items-center gap-2 mt-5">
+                  <span className="text-[12px] font-medium text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded-full">
+                    {item.category || item.service}
+                  </span>
+                  {item.workMode && (
+                    <span className="px-2 py-0.5 text-[11px] rounded-full bg-white/5 text-white/70">
+                      {item.workMode}
+                    </span>
+                  )}
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5 flex-shrink-0" />
-                  <span>{new Date(job.postedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
-                </div>
+              </div>
+              <div className="flex flex-col items-center">
+                <span className="text-[17px] font-semibold text-white">
+                  ₹{item.budget?.toLocaleString()}
+                </span>
+                {item.priceUnit && (
+                  <span className="text-[12px] text-white/60">
+                    {item.priceUnit === 'hour' ? 'hourly' : 
+                     item.priceUnit === 'day' ? 'daily' :
+                     item.priceUnit === 'week' ? 'weekly' :
+                     item.priceUnit === 'month' ? 'monthly' :
+                     item.priceUnit === 'job' ? 'fixed price' :
+                     item.priceUnit === 'project' ? 'project' :
+                     item.priceUnit === 'session' ? 'session' :
+                     item.priceUnit === 'visit' ? 'visit' :
+                     item.priceUnit === 'emergency' ? 'emergency' :
+                     item.priceUnit === 'package' ? 'package' :
+                     item.priceUnit}
+                  </span>
+                )}
               </div>
             </div>
-            
-            {/* Budget */}
-            <div className="flex-shrink-0 bg-black/30 rounded-xl px-3 py-2 text-center min-w-[90px]">
-              <div className="text-[15px] font-bold text-purple-400 leading-none">
-                ₹{job.budget.toLocaleString('en-IN')}
-              </div>
-              <div className="text-[11px] text-white/60 font-medium mt-1">
-                {job.duration}
-              </div>
-            </div>
-          </div>
 
-          {/* Job Description */}
-          <p className="text-[13px] text-white/70 mt-3 line-clamp-2 leading-[1.5] tracking-wide">
-            {job.description}
-          </p>
-          
-          {/* Skills/Tags */}
-          <div className="flex items-center gap-2 mt-4 overflow-hidden">
-            <div className="flex items-center gap-2 overflow-hidden">
-              {job.skills.slice(0, 2).map((skill, i) => (
-                <span key={i} className="text-xs font-medium bg-black/30 text-white/90 px-3 py-1.5 rounded-full border border-white/10 hover:border-white/20 transition-colors whitespace-nowrap">
+            {/* Description */}
+            <p className="text-[13px] text-white/80 line-clamp-2 leading-relaxed">
+              {item.description || `${item.name} is available for ${item.service}`}
+            </p>
+
+            {/* Skills */}
+            <div className="flex gap-2 items-center">
+              {(item.skills || []).slice(0, 2).map((skill: string, i: number) => (
+                <span
+                  key={i}
+                  className="px-2.5 py-1 h-6 flex items-center text-[11px] rounded-full bg-white/5 text-white/70 backdrop-blur-sm whitespace-nowrap"
+                >
                   {skill}
                 </span>
               ))}
+              {(item.skills || []).length > 2 && (
+                <span className="px-2.5 py-1 h-6 flex items-center text-[11px] rounded-full bg-white/5 text-white/50 whitespace-nowrap">
+                  +{(item.skills || []).length - 2} more
+                </span>
+              )}
             </div>
-            {job.skills.length > 2 && (
-              <span className="text-xs font-medium bg-black/20 text-white/70 px-3 py-1.5 rounded-full hover:bg-black/30 transition-colors flex-shrink-0">
-                +{job.skills.length - 2} more
-              </span>
-            )}
-          </div>
 
-          {/* Job Footer */}
-          <div className="flex justify-between items-center mt-5 pt-4 border-t border-white/[0.07]">
-            <div className="flex items-center gap-3 text-xs text-white/70">
-              <span className="flex items-center gap-1.5">
-                <Star className="w-3.5 h-3.5" />
-                {job.clientRating}
-              </span>
-              <span>•</span>
-              <span className="flex items-center gap-1.5">
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            {/* Footer */}
+            <div className="flex items-center justify-between pt-4 border-t border-white/5 mt-3">
+              <div className="flex items-center gap-3 text-[12px] text-white/60">
+                <div className="flex items-center gap-1.5">
+                  <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span className="truncate max-w-[100px]">{item.location}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span>{
+                    item.postedAt 
+                      ? new Date(item.postedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                      : item.availability?.[0] || 'Available now'
+                  }</span>
+                </div>
+              </div>
+              
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (filteredProfessionals) {
+                    onProfessionalSelect?.(item);
+                  } else {
+                    handleApply(item.id);
+                  }
+                }}
+                className="px-4 py-1.5 text-xs font-medium text-white bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-400 hover:to-purple-500 rounded-full transition-all duration-300 flex items-center justify-center gap-1.5 group-hover:shadow-lg group-hover:shadow-purple-500/20"
+              >
+                <span>Apply Now</span>
+                <svg className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                 </svg>
-                {job.proposals} proposals
-              </span>
+              </button>
             </div>
-            <button 
-              onClick={(e) => {
-                e.stopPropagation();
-                handleApply(job.id);
-              }}
-              className="bg-purple-600 hover:bg-purple-500 text-white px-5 py-2 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-2 hover:shadow-lg hover:shadow-purple-500/20"
-            >
-              <span>Apply Now</span>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-              </svg>
-            </button>
           </div>
         </div>
       ))}
-
-
     </div>
   );
 }

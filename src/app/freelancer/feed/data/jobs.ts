@@ -1,4 +1,4 @@
-import { Job } from '../types';
+import { Job, ExperienceLevel } from '../types';
 
 // Helper function to generate random coordinates near a point
 const generateNearbyCoords = (baseCoords: [number, number], radiusKm = 0.5): [number, number] => {
@@ -124,10 +124,118 @@ const generateJobs = (): Job[] => {
     };
   };
 
-  // Helper function to generate a job
+  // Define job categories with mixed pricing units (₹500-5,000)
+  const categoryRates = {
+    // Tech jobs
+    frontend: { 
+      min: 800, 
+      max: 5000, 
+      unit: 'project',
+      periods: [
+        { type: 'project', min: 2000, max: 5000, multiplier: 1 },
+        { type: 'monthly', min: 3000, max: 5000, multiplier: 1 },
+        { type: 'hourly', min: 500, max: 1500, multiplier: 1 }
+      ]
+    },
+    backend: { 
+      min: 1000, 
+      max: 5000, 
+      unit: 'month',
+      periods: [
+        { type: 'monthly', min: 2500, max: 5000, multiplier: 1 },
+        { type: 'project', min: 3000, max: 5000, multiplier: 1 },
+        { type: 'hourly', min: 600, max: 1800, multiplier: 1 }
+      ]
+    },
+    mobile: { 
+      min: 1000, 
+      max: 5000, 
+      unit: 'project',
+      periods: [
+        { type: 'project', min: 3000, max: 5000, multiplier: 1 },
+        { type: 'monthly', min: 3500, max: 5000, multiplier: 1 },
+        { type: 'hourly', min: 700, max: 2000, multiplier: 1 }
+      ]
+    },
+    
+    // Offline services
+    plumbing: { 
+      min: 500, 
+      max: 5000, 
+      unit: 'job',
+      periods: [
+        { type: 'fixed', min: 500, max: 3000, multiplier: 1 },
+        { type: 'emergency', min: 2000, max: 5000, multiplier: 1.5 },
+        { type: 'visit', min: 800, max: 2500, multiplier: 1 }
+      ]
+    },
+    electrical: { 
+      min: 800, 
+      max: 5000, 
+      unit: 'visit',
+      periods: [
+        { type: 'visit', min: 1000, max: 3500, multiplier: 1 },
+        { type: 'fixed', min: 1500, max: 4500, multiplier: 1 },
+        { type: 'emergency', min: 2500, max: 5000, multiplier: 1.5 }
+      ]
+    },
+    
+    // Creative services
+    design: { 
+      min: 1000, 
+      max: 5000, 
+      unit: 'project',
+      periods: [
+        { type: 'project', min: 2000, max: 5000, multiplier: 1 },
+        { type: 'monthly', min: 3000, max: 5000, multiplier: 1 },
+        { type: 'hourly', min: 600, max: 2000, multiplier: 1 }
+      ]
+    },
+    
+    // Tutoring and education
+    tutoring: { 
+      min: 500, 
+      max: 5000, 
+      unit: 'month',
+      periods: [
+        { type: 'monthly', min: 2000, max: 5000, multiplier: 1 },
+        { type: 'session', min: 500, max: 2500, multiplier: 1 },
+        { type: 'hourly', min: 500, max: 1500, multiplier: 1 }
+      ]
+    },
+    
+    // Fitness and wellness
+    fitness: { 
+      min: 800, 
+      max: 5000, 
+      unit: 'package',
+      periods: [
+        { type: 'package', min: 2000, max: 5000, multiplier: 1 },
+        { type: 'session', min: 800, max: 3000, multiplier: 1 },
+        { type: 'monthly', min: 2500, max: 5000, multiplier: 1 }
+      ]
+    },
+    
+    // Marketing and business
+    marketing: { 
+      min: 1000, 
+      max: 5000, 
+      unit: 'month',
+      periods: [
+        { type: 'monthly', min: 3000, max: 5000, multiplier: 1 },
+        { type: 'project', min: 2000, max: 5000, multiplier: 1 },
+        { type: 'hourly', min: 700, max: 2000, multiplier: 1 }
+      ]
+    }
+  };
+
   // Define job durations and experience levels
-  const jobDurations = ['hourly', 'daily', 'weekly', 'monthly'] as const;
   const experienceLevels = ['Entry Level', 'Intermediate', 'Expert'] as const;
+  const workModeMultipliers = {
+    'onsite': 1,
+    'hybrid': 1.2,
+    'remote': 1.5
+  };
 
   const createJob = ({
     id,
@@ -136,8 +244,6 @@ const generateJobs = (): Job[] => {
     category,
     skills,
     workMode,
-    minRate = 300,
-    maxRate = 2000
   }: {
     id: string;
     title: string;
@@ -145,10 +251,15 @@ const generateJobs = (): Job[] => {
     category: string;
     skills: string[];
     workMode: 'remote' | 'onsite' | 'hybrid';
-    minRate?: number;
-    maxRate?: number;
   }) => {
-    // Generate a more realistic rate based on category and experience
+    // Determine category and get base rate
+    const categoryKey = Object.keys(categoryRates).find(key => 
+      category.toLowerCase().includes(key)
+    ) || 'data';
+    
+    const rateInfo = categoryRates[categoryKey as keyof typeof categoryRates] || { min: 300, max: 2000, unit: 'hour' };
+    
+    // Generate a more realistic rate based on experience
     const experience = experienceLevels[Math.floor(Math.random() * experienceLevels.length)];
     
     // Adjust base rate based on experience
@@ -156,31 +267,57 @@ const generateJobs = (): Job[] => {
     if (experience === 'Intermediate') experienceMultiplier = 1.5;
     if (experience === 'Expert') experienceMultiplier = 2.5;
     
-    // Base rate for Chennai freelance work
-    const baseRate = Math.floor(Math.random() * (maxRate - minRate)) + minRate;
-    const rate = Math.floor(baseRate * experienceMultiplier);
+    // Apply work mode multiplier (remote work often pays more)
+    const workModeMultiplier = workModeMultipliers[workMode] || 1;
     
-    // Generate budget based on duration
-    const duration = jobDurations[Math.floor(Math.random() * jobDurations.length)];
+    // Select a random pricing period for this job
+    const periods = rateInfo.periods || [
+      { type: 'fixed', min: rateInfo.min, max: rateInfo.max, multiplier: 1 }
+    ];
+    const period = periods[Math.floor(Math.random() * periods.length)];
+    
+    // Calculate base rate with all multipliers
+    const baseRate = Math.floor(
+      (Math.random() * (period.max - period.min) + period.min) * 
+      (period.multiplier || 1) *
+      experienceMultiplier * 
+      workModeMultiplier
+    );
+    
+    // Round to nearest 50 for non-hourly rates
+    const rate = period.type === 'hourly' ? baseRate : Math.round(baseRate / 50) * 50;
+      
+    // Set price unit based on category
+    const priceUnit = rateInfo.unit;
+    
+    // Calculate budget based on the unit
     let budget = rate;
-    
-    switch(duration) {
-      case 'hourly':
-        budget = rate * (Math.floor(Math.random() * 8) + 1); // 1-8 hours
-        break;
-      case 'daily':
-        budget = rate * 8 * (Math.floor(Math.random() * 3) + 1); // 1-3 days
-        break;
-      case 'weekly':
-        budget = rate * 8 * 5 * (Math.floor(Math.random() * 4) + 1); // 1-4 weeks
-        break;
-      case 'monthly':
-        budget = rate * 8 * 5 * 4 * (Math.floor(Math.random() * 3) + 1); // 1-3 months
-        break;
+    if (priceUnit === 'job' || priceUnit === 'service' || priceUnit === 'event' || priceUnit === 'room' || priceUnit === 'project') {
+      // For one-time jobs, use the rate as is (already within 500-5000 range)
+      budget = rate;
+    } else if (priceUnit === 'hour') {
+      // For hourly work, calculate a small project budget (5-10 hours)
+      budget = rate * (Math.floor(Math.random() * 6) + 5);
+    } else if (priceUnit === 'day') {
+      // For daily work, calculate a weekly budget (2-4 days)
+      budget = rate * (Math.floor(Math.random() * 3) + 2);
+    } else if (priceUnit === 'week') {
+      // For weekly work, calculate a monthly budget (2-3 weeks)
+      budget = rate * (Math.floor(Math.random() * 2) + 2);
+    } else if (priceUnit === 'month' || priceUnit === 'session' || priceUnit === 'package') {
+      // For monthly or session-based work, keep as is
+      budget = rate;
     }
+    
+    // Ensure budget doesn't exceed 5000
+    budget = Math.min(Math.round(budget), 5000);
     const { name: location, coords: baseCoords } = getRandomArea();
     const coords = generateNearbyCoords(baseCoords);
     const clientName = clientNames[Math.floor(Math.random() * clientNames.length)];
+    // Set default company info (simplified for demo)
+    const company = 'DoodLance';
+    const companyLogo = '/images/logo.png';
+    
     const job: Job = {
       id,
       title,
@@ -188,21 +325,34 @@ const generateJobs = (): Job[] => {
       category,
       rate,
       budget,
+      priceUnit,
       location: locations[Math.floor(Math.random() * locations.length)],
       coords,
       skills,
       workMode,
       type: 'freelance',
       postedAt: new Date(Date.now() - Math.floor(Math.random() * 7 * 24 * 60 * 60 * 1000)).toISOString(),
+      company,
+      companyLogo,
       clientName,
       clientImage: `https://ui-avatars.com/api/?name=${encodeURIComponent(clientName)}&background=6B46C1&color=fff&bold=true`,
       clientRating: (Math.floor(Math.random() * 10) / 2 + 3).toFixed(1),
       clientJobs: Math.floor(Math.random() * 50) + 1,
       proposals: Math.floor(Math.random() * 30),
-      duration,
-      experience,
-      company: clientName,
-      companyLogo: `https://ui-avatars.com/api/?name=${encodeURIComponent(clientName)}&background=6B46C1&color=fff&bold=true`
+      duration: 'one-time',
+      experience: experience as ExperienceLevel,
+      client: {
+        name: clientName,
+        image: `https://ui-avatars.com/api/?name=${encodeURIComponent(clientName)}&background=6B46C1&color=fff&bold=true`,
+        memberSince: new Date(Date.now() - Math.floor(Math.random() * 3 * 365 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0],
+        freelancerAvatars: Array(3).fill(0).map((_, i) => `https://i.pravatar.cc/150?img=${Math.floor(Math.random() * 70) + 1}`),
+        freelancersWorked: Math.floor(Math.random() * 50) + 5,
+        moneySpent: Math.floor(Math.random() * 50000) + 5000,
+        rating: parseFloat((Math.random() * 2 + 3).toFixed(1)),
+        jobsCompleted: Math.floor(Math.random() * 100) + 10,
+        location: locations[Math.floor(Math.random() * locations.length)],
+        phoneNumber: `+91 ${Math.floor(7000000000 + Math.random() * 3000000000)}`
+      }
     };
     return job;
   };
@@ -256,7 +406,7 @@ const generateJobs = (): Job[] => {
     });
   });
 
-  // Generate cricket/sports jobs (10 jobs)
+  // Generate cricket/sports jobs (9 jobs)
   cricketSkills.forEach((skills, index) => {
     const title = `Cricket ${skills[0]}`;
     const description = `Looking for an experienced cricket coach specializing in ${skills[1]} and ${skills[2]}. Local candidates preferred.`;
@@ -270,6 +420,44 @@ const generateJobs = (): Job[] => {
       workMode: 'onsite',
       minRate: 800,
       maxRate: 2500
+    }));
+  });
+
+  // Add 3 more unique jobs to reach 45
+  const additionalJobs = [
+    {
+      title: 'Event Photographer',
+      description: 'Need a professional photographer for a corporate event. Must have own equipment and portfolio.',
+      category: 'Photography',
+      skills: ['Event Photography', 'Portrait Photography', 'Photo Editing'],
+      workMode: 'onsite',
+      minRate: 2000,
+      maxRate: 8000
+    },
+    {
+      title: 'Video Editor',
+      description: 'Looking for a skilled video editor for YouTube content. Experience with Premiere Pro required.',
+      category: 'Video Production',
+      skills: ['Video Editing', 'Color Grading', 'Motion Graphics'],
+      workMode: 'remote',
+      minRate: 1500,
+      maxRate: 6000
+    },
+    {
+      title: 'Interior Designer',
+      description: 'Need an interior designer for a 2BHK apartment. Space planning and 3D visualization skills required.',
+      category: 'Interior Design',
+      skills: ['Space Planning', '3D Visualization', 'Material Selection'],
+      workMode: 'hybrid',
+      minRate: 3000,
+      maxRate: 9000
+    }
+  ];
+
+  additionalJobs.forEach((job, index) => {
+    jobs.push(createJobWithClient({
+      id: `additional-${index + 1}`,
+      ...job
     }));
   });
 

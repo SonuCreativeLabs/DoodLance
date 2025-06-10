@@ -43,6 +43,7 @@ export interface Job {
   category: string;
   rate: number;
   budget: number;
+  priceUnit: string;
   location: string;
   coords: [number, number];
   skills: string[];
@@ -56,7 +57,7 @@ export interface Job {
   clientRating: string | number;
   clientJobs: number;
   proposals: number;
-  duration: JobDuration;
+  duration?: JobDuration;
   experience: ExperienceLevel;
   client?: ClientInfo;
 }

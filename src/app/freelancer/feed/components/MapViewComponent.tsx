@@ -52,7 +52,11 @@ type Job = Omit<SharedJob, 'client' | 'clientName' | 'clientImage' | 'clientRati
 };
 
 // Define the Job interface for map view
-type JobWithCoordinates = Job;
+type JobWithCoordinates = Job & {
+  // Make coordinates optional to handle both Job types
+  coordinates?: [number, number];
+  coords?: [number, number];
+};
 
 // Dynamically import JobDetailsFull with no SSR and simple loading spinner
 const DynamicJobDetailsFull = dynamic(() => import('./JobDetailsFull'), {
@@ -107,56 +111,70 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
 
   // Process jobs with default values
   const processedJobs = useMemo(() => {
-    return (jobs || []).map((jobInput: any): Job => {
-      // Extract coordinates safely
-      const coords = jobInput.coords || jobInput.coordinates || [0, 0];
-      const coordinates: [number, number] = Array.isArray(coords) && coords.length === 2 
-        ? [coords[0], coords[1]] 
-        : [0, 0];
+    return (jobs || []).map((jobInput: JobWithCoordinates): Job => {
+      // Extract coordinates safely - check both coords and coordinates
+      let coords: [number, number] = [0, 0];
+      
+      if (Array.isArray(jobInput.coords) && jobInput.coords.length === 2) {
+        coords = [jobInput.coords[0], jobInput.coords[1]];
+      } else if (Array.isArray(jobInput.coordinates) && jobInput.coordinates.length === 2) {
+        coords = [jobInput.coordinates[0], jobInput.coordinates[1]];
+      } else if (typeof jobInput.location === 'string') {
+        // Try to extract coords from location string if available
+        const match = jobInput.location.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+        if (match) {
+          coords = [parseFloat(match[1]), parseFloat(match[2])];
+        }
+      }
       
       // Create default client info
       const defaultClient: ClientInfo = {
-        name: 'Unknown Client',
-        rating: 0,
-        jobsCompleted: 0,
-        location: 'Remote',
-        image: '' // Add missing required property
+        name: jobInput.clientName || 'Unknown Client',
+        rating: typeof jobInput.clientRating === 'number' ? jobInput.clientRating : 0,
+        jobsCompleted: jobInput.clientJobs || 0,
+        location: jobInput.location || 'Remote',
+        image: jobInput.clientImage || '',
+        memberSince: new Date().toISOString()
       };
       
       // Use provided client or default
-      const client: ClientInfo = jobInput.client || defaultClient;
-      const now = new Date().toISOString();
+      const client = jobInput.client || defaultClient;
       
-      // Create the job object with all required fields
-      const job: Job = {
-        // Required fields with defaults
-        id: jobInput.id || Math.random().toString(36).substr(2, 9),
+      // Return the job with all required properties
+      return {
+        ...jobInput,
+        id: jobInput.id || `job-${Math.random().toString(36).substr(2, 9)}`,
         title: jobInput.title || 'Untitled Job',
         description: jobInput.description || '',
-        category: jobInput.category || 'Uncategorized',
-        rate: Number(jobInput.rate) || 0,
-        budget: Number(jobInput.budget) || 0,
+        category: jobInput.category || 'General',
+        rate: typeof jobInput.rate === 'number' ? jobInput.rate : 0,
+        budget: typeof jobInput.budget === 'number' ? jobInput.budget : 0,
         location: jobInput.location || 'Remote',
-        coords: coordinates,
-        coordinates, // Keep both for backward compatibility
         skills: Array.isArray(jobInput.skills) ? jobInput.skills : [],
-        workMode: (jobInput.workMode as WorkMode) || 'remote',
-        type: (jobInput.type as JobType) || 'full-time',
-        postedAt: jobInput.postedAt || now,
-        company: jobInput.company || 'Freelance',
+        workMode: ['remote', 'onsite', 'hybrid'].includes(jobInput.workMode || '') 
+          ? jobInput.workMode as WorkMode 
+          : 'onsite',
+        type: ['freelance', 'part-time', 'full-time', 'contract'].includes(jobInput.type || '')
+          ? jobInput.type as JobType
+          : 'freelance',
+        postedAt: jobInput.postedAt || new Date().toISOString(),
+        company: jobInput.company || '',
         companyLogo: jobInput.companyLogo || '',
-        clientName: jobInput.clientName || client.name || 'Unknown Client',
-        clientImage: jobInput.clientImage || client.image,
-        clientRating: jobInput.clientRating || 0,
-        clientJobs: Number(jobInput.clientJobs) || 0,
+        clientName: client.name,
+        clientImage: client.image,
+        clientRating: client.rating || 0,
+        clientJobs: client.jobsCompleted || 0,
         proposals: jobInput.proposals || 0,
-        duration: (jobInput.duration as JobDuration) || 'one-time',
-        experience: (jobInput.experience as ExperienceLevel) || 'intermediate',
-        // Add client object
+        duration: ['hourly', 'daily', 'weekly', 'monthly', 'one-time'].includes(jobInput.duration || '')
+          ? jobInput.duration as JobDuration
+          : 'one-time',
+        experience: ['Entry Level', 'Intermediate', 'Expert'].includes(jobInput.experience || '')
+          ? jobInput.experience as ExperienceLevel
+          : 'Entry Level',
+        coordinates: coords,
+        coords,
         client
       };
-      
-      return job;
     });
   }, [jobs]);
 
