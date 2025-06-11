@@ -36,10 +36,38 @@ export default function FeedPage() {
   
   // Data State
   const [selectedCategory, setSelectedCategory] = useState('For You');
-  // Extend Job type to include coordinates for MapView
-  type JobWithCoordinates = Job & {
+  // Define JobWithCoordinates type that matches the MapView component's expectations
+  type JobWithCoordinates = {
+    // Required properties from Job
+    id: string;
+    title: string;
+    description: string;
+    category: string;
+    rate: number;
+    budget: number;
+    priceUnit: string;
+    location: string;
+    skills: string[];
+    workMode: 'remote' | 'onsite' | 'hybrid';
+    type: 'freelance' | 'part-time' | 'full-time' | 'contract';
+    postedAt: string;
+    company: string;
+    companyLogo: string;
+    clientName: string;
+    clientImage?: string;
+    clientRating: string | number;
+    clientJobs: number;
+    proposals: number;
+    duration: 'hourly' | 'daily' | 'weekly' | 'monthly' | 'one-time';
+    experience: 'Entry Level' | 'Intermediate' | 'Expert';
+    // Coordinate properties (required by MapView)
+    coords: [number, number];
     coordinates: [number, number];
-  };
+    // Optional properties
+    client?: any;
+    // Allow additional properties
+    [key: string]: any;
+  }
   const [filteredJobs, setFilteredJobs] = useState<JobWithCoordinates[]>([]);
   
   // State for filters
@@ -176,19 +204,55 @@ export default function FeedPage() {
       if (Array.isArray(job.coords) && job.coords.length === 2) {
         coords = [job.coords[0], job.coords[1]] as [number, number];
       } 
-      // Then check for coordinates array (using type assertion to access safely)
-      else if ('coordinates' in job && Array.isArray((job as any).coordinates) && (job as any).coordinates.length === 2) {
-        coords = [(job as any).coordinates[0], (job as any).coordinates[1]] as [number, number];
-      } 
       // If no coordinates found, use default (Chennai)
       else {
         coords = [80.2707, 13.0827];
       }
       
-      return {
+      // Create a new job object with the required properties
+      const jobWithCoords: JobWithCoordinates = {
+        // Spread all existing job properties
         ...job,
-        coordinates: coords
-      } as JobWithCoordinates;
+        // Ensure coordinates are set
+        coordinates: coords,
+        coords: coords,
+        // Ensure all required properties have default values
+        id: job.id ?? '',
+        title: job.title ?? '',
+        description: job.description ?? '',
+        category: job.category ?? '',
+        rate: job.rate ?? 0,
+        budget: job.budget ?? 0,
+        priceUnit: job.priceUnit ?? 'project',
+        location: job.location ?? 'Chennai, India',
+        skills: Array.isArray(job.skills) ? job.skills : [],
+        workMode: (job.workMode === 'remote' || job.workMode === 'onsite' || job.workMode === 'hybrid') 
+          ? job.workMode 
+          : 'onsite',
+        type: (job.type === 'freelance' || job.type === 'part-time' || job.type === 'full-time' || job.type === 'contract')
+          ? job.type
+          : 'freelance',
+        postedAt: job.postedAt ?? new Date().toISOString(),
+        company: job.company ?? 'Unknown',
+        companyLogo: job.companyLogo ?? '',
+        clientName: job.clientName ?? 'Anonymous',
+        clientImage: job.clientImage,
+        clientRating: typeof job.clientRating === 'number' || typeof job.clientRating === 'string' 
+          ? job.clientRating 
+          : 0,
+        clientJobs: typeof job.clientJobs === 'number' ? job.clientJobs : 0,
+        proposals: typeof job.proposals === 'number' ? job.proposals : 0,
+        duration: (job.duration === 'hourly' || job.duration === 'daily' || job.duration === 'weekly' || 
+                 job.duration === 'monthly' || job.duration === 'one-time')
+          ? job.duration
+          : 'one-time',
+        experience: (job.experience === 'Entry Level' || job.experience === 'Intermediate' || job.experience === 'Expert')
+          ? job.experience
+          : 'Intermediate',
+        client: job.client
+      };
+      
+      return jobWithCoords;
     });
     
     // For "For You" tab - filter jobs based on user's skills
@@ -326,20 +390,62 @@ export default function FeedPage() {
   useEffect(() => {
     // Ensure all jobs have coordinates before setting the state
     const jobsWithCoords = jobs.map(job => {
+      // Check if job has coordinates in any form
       let coords: [number, number];
       
+      // First check for coords array
       if (Array.isArray(job.coords) && job.coords.length === 2) {
         coords = [job.coords[0], job.coords[1]] as [number, number];
-      } else if ('coordinates' in job && Array.isArray((job as any).coordinates) && (job as any).coordinates.length === 2) {
-        coords = [(job as any).coordinates[0], (job as any).coordinates[1]] as [number, number];
-      } else {
-        coords = [80.2707, 13.0827]; // Default to Chennai coordinates
+      } 
+      // If no coordinates found, use default (Chennai)
+      else {
+        coords = [80.2707, 13.0827];
       }
       
-      return {
+      // Create a new job object with the required properties
+      const jobWithCoords: JobWithCoordinates = {
+        // Spread all existing job properties
         ...job,
-        coordinates: coords
-      } as JobWithCoordinates;
+        // Ensure coordinates are set
+        coordinates: coords,
+        coords: coords,
+        // Ensure all required properties have default values
+        id: job.id ?? '',
+        title: job.title ?? '',
+        description: job.description ?? '',
+        category: job.category ?? '',
+        rate: job.rate ?? 0,
+        budget: job.budget ?? 0,
+        priceUnit: job.priceUnit ?? 'project',
+        location: job.location ?? 'Chennai, India',
+        skills: Array.isArray(job.skills) ? job.skills : [],
+        workMode: (job.workMode === 'remote' || job.workMode === 'onsite' || job.workMode === 'hybrid') 
+          ? job.workMode 
+          : 'onsite',
+        type: (job.type === 'freelance' || job.type === 'part-time' || job.type === 'full-time' || job.type === 'contract')
+          ? job.type
+          : 'freelance',
+        postedAt: job.postedAt ?? new Date().toISOString(),
+        company: job.company ?? 'Unknown',
+        companyLogo: job.companyLogo ?? '',
+        clientName: job.clientName ?? 'Anonymous',
+        clientImage: job.clientImage,
+        clientRating: typeof job.clientRating === 'number' || typeof job.clientRating === 'string' 
+          ? job.clientRating 
+          : 0,
+        clientJobs: typeof job.clientJobs === 'number' ? job.clientJobs : 0,
+        proposals: typeof job.proposals === 'number' ? job.proposals : 0,
+        duration: (job.duration === 'hourly' || job.duration === 'daily' || job.duration === 'weekly' || 
+                 job.duration === 'monthly' || job.duration === 'one-time')
+          ? job.duration
+          : 'one-time',
+        experience: (job.experience === 'Entry Level' || job.experience === 'Intermediate' || job.experience === 'Expert')
+          ? job.experience
+          : 'Intermediate',
+        client: job.client
+      };
+      
+      return jobWithCoords;
     });
     
     setFilteredJobs(jobsWithCoords);
