@@ -67,6 +67,21 @@ export const sidebarCategories = [
 ]
 
 export const serviceItems = [
+  // Sports & Fitness Services
+  {
+    id: 'cricket-coaching',
+    name: 'Cricket Coaching',
+    category: 'sports',
+    providerCount: 28,
+    mostBooked: true,
+    image: 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?auto=format&fit=crop&w=800&q=80',
+    icon: '🏏',
+    rating: 4.8,
+    reviews: 124,
+    price: '₹500/hr',
+    description: 'Professional cricket coaching for all skill levels. Learn batting, bowling, and fielding techniques from experienced coaches.'
+  },
+  
   // Home & Repair Services
   {
     id: 'general-repair',
@@ -92,11 +107,11 @@ export const serviceItems = [
 // Popular services for home page
 export const popularServices = [
   {
-    id: 'plumbing',
-    title: 'Plumbing',
-    icon: '🔧',
-    providerCount: 32,
-    image: 'https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?auto=format&fit=crop&w=800&q=80',
+    id: 'cricket-coaching',
+    title: 'Cricket',
+    icon: '🏏',
+    providerCount: 28,
+    image: 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?auto=format&fit=crop&w=800&q=80',
     discount: '10% Off'
   },
   {

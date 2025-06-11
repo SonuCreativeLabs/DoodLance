@@ -18,6 +18,12 @@ export default function ForgotPassword() {
     setSuccess(false)
     setLoading(true)
 
+    if (!supabase) {
+      setError('Authentication service is not available. Please try again later.')
+      setLoading(false)
+      return
+    }
+
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/auth/reset-password`,
@@ -29,6 +35,7 @@ export default function ForgotPassword() {
         setSuccess(true)
       }
     } catch (err) {
+      console.error('Password reset error:', err)
       setError('An unexpected error occurred. Please try again.')
     } finally {
       setLoading(false)

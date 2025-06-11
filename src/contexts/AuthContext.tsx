@@ -1,6 +1,17 @@
 import { supabase } from '@/lib/supabase'
 
 const signUp = async (email: string, password: string) => {
+  if (!supabase) {
+    console.error('Supabase client is not initialized');
+    return { 
+      error: {
+        message: 'Authentication service is not available',
+        status: 503
+      }, 
+      data: null 
+    };
+  }
+
   try {
     const { data, error } = await supabase.auth.signUp({
       email,

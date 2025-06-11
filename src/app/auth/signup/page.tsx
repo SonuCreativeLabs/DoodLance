@@ -93,6 +93,13 @@ export default function SignUp() {
       }
 
       // Then, create the user profile
+      if (!supabase) {
+        console.error('Supabase client not initialized')
+        setError('Service unavailable. Please try again later.')
+        setLoading(false)
+        return
+      }
+
       const { error: profileError } = await supabase
         .from('user_profiles')
         .insert({

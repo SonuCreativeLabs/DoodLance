@@ -78,6 +78,21 @@ const sidebarCategories = [
 
 // Service items
 const serviceItems = [
+  // Sports & Fitness Services
+  {
+    id: 'cricket',
+    name: 'Cricket',
+    category: 'sports',
+    providerCount: 28,
+    mostBooked: true,
+    image: 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?auto=format&fit=crop&w=800&q=80',
+    fallbackEmoji: '🏏',
+    rating: 4.8,
+    reviews: 124,
+    price: '₹500/hr',
+    description: 'Professional cricket services including coaching, practice sessions, and match arrangements.'
+  },
+  
   // Home & Repair Services
   {
     id: 'general-repair',
