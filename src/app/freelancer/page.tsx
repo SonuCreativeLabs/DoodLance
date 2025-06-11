@@ -1,28 +1,61 @@
 "use client"
 import Image from "next/image"
 import { motion } from "framer-motion"
-import { CircleDollarSign, Calendar, ChevronRight, Star, MapPin, Wallet, TrendingUp, Award, Clock, Users, Target, Award as AwardIcon, Dumbbell } from "lucide-react"
+import { CircleDollarSign, Calendar, ChevronRight, Star, MapPin, Wallet, TrendingUp, Award, Clock, Users, Target, Award as AwardIcon, Dumbbell, Code, Trophy } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useState, useEffect } from "react"
 
 export default function FreelancerHome() {
+  const [jobCount, setJobCount] = useState(0);
+
+  useEffect(() => {
+    // Import jobs data and filter logic dynamically
+    Promise.all([
+      import('@/app/freelancer/feed/data/jobs'),
+      import('@/app/freelancer/feed/types')
+    ]).then(([jobsModule, typesModule]) => {
+      // User's skills for personalized job matching (should match the ones in feed/page.tsx)
+      const userSkills = ['cricket', 'developer'];
+      
+      // Filter jobs to match the "For You" tab logic
+      const forYouJobs = jobsModule.jobs.filter(job => {
+        // Combine job title, description, category, and skills into a single searchable string
+        const jobText = [
+          job.title || '',
+          job.description || '',
+          job.category || '',
+          ...(job.skills || [])
+        ].join(' ').toLowerCase();
+        
+        // Check if any of the user's skills match the job
+        return userSkills.some(skill => 
+          jobText.includes(skill.toLowerCase())
+        );
+      });
+      
+      setJobCount(forYouJobs.length);
+    }).catch(error => {
+      console.error('Failed to load jobs:', error);
+    });
+  }, []);
   return (
     <div className="min-h-screen bg-[#111111] pb-24">
       {/* Hero Banner */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative min-h-[360px] overflow-hidden"
+        className="relative min-h-[150px] overflow-hidden rounded-b-3xl mx-3 -mt-1"
       >
         {/* Background Elements */}
         <div className="absolute inset-0">
           {/* Main Gradient */}
-          <div className="absolute inset-0 bg-gradient-to-br from-purple-900 via-purple-800 to-purple-600"></div>
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-900 via-purple-800 to-purple-600 rounded-b-3xl"></div>
           
           {/* Animated Gradient Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-r from-purple-600/90 via-purple-500/80 to-purple-400/90 animate-gradient-x"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-600/90 via-purple-500/80 to-purple-400/90 animate-gradient-x rounded-b-3xl"></div>
           
           {/* Subtle Pattern Overlay */}
-          <div className="absolute inset-0 opacity-30" style={{
+          <div className="absolute inset-0 opacity-30 rounded-b-3xl" style={{
             backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.2) 1px, transparent 0)',
             backgroundSize: '20px 20px'
           }}></div>
@@ -32,39 +65,38 @@ export default function FreelancerHome() {
           <div className="absolute -left-20 -bottom-20 w-80 h-80 rounded-full bg-purple-600/20 blur-3xl"></div>
           
           {/* Gradient Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-black/10 to-transparent"></div>
-          
-          {/* Wave SVG */}
-          <svg
-            className="absolute bottom-0 w-full h-32"
-            viewBox="0 0 1440 120"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            preserveAspectRatio="none"
-          >
-            <path
-              d="M0 120L60 110C120 100 240 80 360 70C480 60 600 60 720 65C840 70 960 80 1080 85C1200 90 1320 90 1380 90L1440 90V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0V120Z"
-              fill="#111111"
-            />
-          </svg>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-black/10 to-transparent rounded-b-3xl"></div>
         </div>
 
         {/* Hero Content */}
-        <div className="relative container mx-auto px-4 pt-12 pb-16">
+        <div className="relative z-10 container mx-auto px-4 h-full flex flex-col justify-center py-4">
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="max-w-4xl space-y-6"
+            className="max-w-4xl space-y-3"
           >
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-sm border border-white/10">
-              <div className="w-2.5 h-2.5 rounded-full bg-green-400 animate-pulse"></div>
-              <span className="text-sm font-medium text-white/90">Online & Ready for Work</span>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 backdrop-blur-sm border border-white/10 hover:border-white/20 transition-colors">
+              <div className="relative w-2 h-2">
+                <div className="absolute inset-0 bg-green-400 rounded-full opacity-75 animate-ping"></div>
+                <div className="absolute inset-0.5 bg-green-400 rounded-full"></div>
+              </div>
+              <span className="text-xs font-medium text-white/90">
+                Online & Ready for Work
+              </span>
             </div>
             <div>
-              <h1 className="text-4xl md:text-5xl font-bold text-white mb-4 leading-tight">Welcome back!</h1>
-              <p className="text-lg md:text-xl text-white/80 leading-relaxed">
-                You have <span className="text-purple-200 font-medium">3 new job recommendations</span> matching your skills
+              <h1 className="text-2xl md:text-3xl font-bold text-white leading-tight mb-1">Welcome back, <span className="text-white font-extrabold">Sonu</span>!</h1>
+              <p className="text-[15px] md:text-[16px] text-white/80 leading-tight">
+                You have{' '}
+                <a 
+                  href="/freelancer/feed"
+                  className="inline-flex items-center gap-1 px-2 py-0.5 -mx-1 rounded-md hover:bg-white/5 transition-colors group"
+                >
+                  <span className="font-bold text-purple-200 group-hover:text-white">{jobCount} new jobs</span>
+                  <ChevronRight className="w-3.5 h-3.5 text-purple-300 group-hover:translate-x-0.5 transition-transform" />
+                </a>
+                <span className="ml-1">matching your skills</span>
               </p>
             </div>
           </motion.div>
@@ -262,7 +294,7 @@ export default function FreelancerHome() {
         >
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
-              <h2 className="text-lg font-semibold text-white">Recommended Jobs</h2>
+              <h2 className="text-lg font-semibold text-gray-200">Recommended Jobs</h2>
               <span className="px-2 py-0.5 rounded-full bg-[#bf82fb]/20 text-transparent bg-clip-text bg-gradient-to-r from-[#bf82fb] to-[#9537ea] text-xs font-medium">2 New</span>
             </div>
             <motion.button 
@@ -482,14 +514,12 @@ export default function FreelancerHome() {
             <div className="relative">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-[#6B46C1]/15 flex items-center justify-center">
-                    <svg className="w-5 h-5 text-transparent bg-clip-text bg-gradient-to-r from-[#B794F4] to-[#805AD5]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M12 16L7 11L8.4 9.55L12 13.15L15.6 9.55L17 11L12 16ZM7 19H17V13H7V19ZM7.5 11H16.5L15.25 8H8.75L7.5 11Z" fill="currentColor"/>
-                    </svg>
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gray-600/20 to-gray-700/20 flex items-center justify-center">
+                    <Trophy className="w-5 h-5 text-gray-400" />
                   </div>
                   <div>
                     <h3 className="text-sm font-medium text-white group-hover:opacity-90 transition-colors">Cricket Coaching</h3>
-                    <p className="text-xs text-white/60">5 years coaching experience</p>
+                    <p className="text-xs text-gray-400/80 font-medium">5 years experience</p>
                   </div>
                 </div>
                 <span className="text-sm text-white/60">Expert</span>
@@ -507,14 +537,12 @@ export default function FreelancerHome() {
             <div className="relative">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-[#6B46C1]/15 flex items-center justify-center">
-                    <svg className="w-5 h-5 text-transparent bg-clip-text bg-gradient-to-r from-[#B794F4] to-[#805AD5]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M7 21C6.45 21 5.97917 20.8042 5.5875 20.4125C5.19583 20.0208 5 19.55 5 19V13H3V11L5 6H19L21 11V13H19V19C19 19.55 18.8042 20.0208 18.4125 20.4125C18.0208 20.8042 17.55 21 17 21H7ZM7 19H17V13H7V19ZM7.5 11H16.5L15.25 8H8.75L7.5 11Z" fill="currentColor"/>
-                    </svg>
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gray-600/20 to-gray-700/20 flex items-center justify-center">
+                    <Code className="w-5 h-5 text-gray-400" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-medium text-white group-hover:opacity-90 transition-colors">Developer</h3>
-                    <p className="text-xs text-white/60">1.5 years experience</p>
+                    <h3 className="text-sm font-medium text-white group-hover:opacity-90 transition-colors">Full-Stack Developer</h3>
+                    <p className="text-xs text-gray-400/80 font-medium">1.5 years experience</p>
                   </div>
                 </div>
                 <span className="text-sm text-white/60">Intermediate</span>

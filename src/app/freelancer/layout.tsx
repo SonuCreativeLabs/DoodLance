@@ -151,9 +151,9 @@ function FreelancerLayoutInner({
                 </a>
               </div>
               <div className="relative">
-                <a href="/freelancer/wallet" className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-[#6B46C1] to-[#4C1D95] hover:from-[#5B35B0] hover:to-[#3D1B7A] transition-all duration-300 shadow-lg shadow-purple-600/20 hover:shadow-purple-600/30 group">
-                  <Wallet className="w-4 h-4 text-white/90 group-hover:text-white transition-colors duration-300" />
-                  <span className="text-sm font-medium text-white/90 group-hover:text-white transition-colors duration-300">₹24,500</span>
+                <a href="/freelancer/wallet" className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-l from-purple-600 to-purple-400 hover:from-purple-500 hover:to-purple-300 transition-all duration-300 shadow-lg shadow-purple-600/20 hover:shadow-purple-600/30 group">
+                  <Wallet className="w-4 h-4 text-white transition-colors duration-300" />
+                  <span className="text-sm font-medium text-white transition-colors duration-300">₹24,500</span>
                 </a>
               </div>
               <button className="relative w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 backdrop-blur-lg transition-all duration-300 border border-white/5 hover:border-purple-500/30 p-0.5 group overflow-hidden">
