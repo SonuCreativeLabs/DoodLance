@@ -10,7 +10,7 @@ interface StatCardProps {
 }
 
 const StatCard = ({ title, value, description, progress, icon }: StatCardProps) => (
-  <Card className="bg-[#1E1E1E] border border-white/5 rounded-xl overflow-hidden hover:border-white/10 transition-colors">
+  <Card className="bg-[#1E1E1E] border border-white/5 rounded-lg overflow-hidden hover:border-white/10 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/5">
     <CardHeader className="pb-2">
       <div className="flex justify-between items-center">
         <CardTitle className="text-sm font-medium text-white/70">{title}</CardTitle>
@@ -47,7 +47,7 @@ interface StatsCardsProps {
 
 export function StatsCards({ completed, inProgress, rating, responseTime }: StatsCardsProps) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mt-6">
       <StatCard 
         title="Completed Jobs" 
         value={completed} 

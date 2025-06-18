@@ -58,21 +58,10 @@ export function MonthlyActivities() {
   const percentChange = 42; // Example percentage change
 
   return (
-    <Card className="bg-[#1E1E1E] border border-white/5 rounded-xl overflow-hidden hover:border-white/10 transition-colors">
-      <CardHeader>
-        <div className="flex justify-between items-start">
-          <div>
-            <CardTitle className="text-lg font-semibold flex items-center gap-2">
-              <BarChart3 className="h-5 w-5 text-purple-400" />
-              Monthly Activities
-            </CardTitle>
-            <p className="text-sm text-white/60 mt-1">Track your monthly progress</p>
-          </div>
-          <div className="flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-lg">
-            <Calendar className="h-4 w-4 text-purple-400" />
-            <span className="text-sm">Last 6 months</span>
-          </div>
-        </div>
+    <Card className="border border-white/5 bg-[#1E1E1E] rounded-xl overflow-hidden hover:shadow-lg hover:shadow-purple-500/5 transition-all duration-300">
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <CardTitle className="text-lg font-semibold">Monthly Activities</CardTitle>
+        <Calendar className="h-5 w-5 text-purple-400" />
       </CardHeader>
       <CardContent>
         <div className="flex items-end justify-between">

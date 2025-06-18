@@ -104,12 +104,8 @@ function FreelancerLayoutInner({
   }
 
   return (
-    <div className="min-h-screen bg-black text-white relative">
-      {/* Background gradients */}
-      <div className="fixed inset-0 z-0">
-        <div className="absolute top-0 -left-40 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 -right-40 w-96 h-96 bg-purple-400/20 rounded-full blur-3xl" />
-      </div>
+    <div className="min-h-screen bg-[#111111] text-white relative">
+      {/* Removed gradient background */}
       {!fullChatView && (
         <nav className="fixed top-0 left-0 right-0 border-b border-white/10 bg-[#111111]/95 backdrop-blur-xl z-[100]">
           <div className="container mx-auto px-4 h-16 flex items-center justify-between">

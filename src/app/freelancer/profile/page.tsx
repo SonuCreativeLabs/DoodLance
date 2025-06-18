@@ -1,19 +1,27 @@
 "use client"
 
-import { useState } from 'react';
-import { Star, Edit2, Plus, Briefcase, MessageSquare, CalendarDays, Settings } from 'lucide-react';
+import { Briefcase, Code, Award, Star, FileText, Calendar, MessageSquare, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 // Import components
 import { ProfileHeader } from '@/components/freelancer/profile/ProfileHeader';
 import { StatsCards } from '@/components/freelancer/profile/StatsCards';
 import { MonthlyActivities } from '@/components/freelancer/profile/MonthlyActivities';
-import { PortfolioSection } from '@/components/freelancer/profile/PortfolioSection';
-import { SkillsSection } from '@/components/freelancer/profile/SkillsSection';
-import { ExperienceSection, Experience } from '@/components/freelancer/profile/ExperienceSection';
+import { ProfileSectionCard } from '@/components/freelancer/profile/ProfileSectionCard';
 
 // Types
+type Experience = {
+  id: string;
+  role: string;
+  company: string;
+  location: string;
+  startDate: string;
+  endDate?: string; // Made optional for current positions
+  isCurrent: boolean;
+  description: string;
+};
+
 type Service = {
   id: string;
   title: string;
@@ -92,8 +100,8 @@ const experiences: Experience[] = [
     role: 'Senior UI/UX Designer',
     company: 'TechCorp',
     location: 'San Francisco, CA',
-    startDate: '2020',
-    endDate: '2023',
+    startDate: '2020-01-01',
+    endDate: '2023-12-31',
     isCurrent: false,
     description: 'Led a team of 5 designers to create user-centered designs for web and mobile applications.'
   },
@@ -102,8 +110,8 @@ const experiences: Experience[] = [
     role: 'Product Designer',
     company: 'DesignHub',
     location: 'Remote',
-    startDate: '2023',
-    endDate: null,
+    startDate: '2023-01-01',
+    endDate: undefined,
     isCurrent: true,
     description: 'Designing intuitive user experiences for enterprise SaaS products.'
   }
@@ -117,17 +125,17 @@ type ExtendedFreelancerData = FreelancerData & {
 };
 
 const freelancerData: ExtendedFreelancerData = {
-  name: "Alex Johnson",
-  title: "Senior UI/UX Designer & Frontend Developer",
-  about: "I'm a passionate UI/UX designer with over 5 years of experience creating beautiful and functional digital experiences. I specialize in user-centered design and frontend development.",
+  name: "Sonu Sharma",
+  title: "AI Engineer & Full-Stack Developer",
+  about: "I'm a passionate AI engineer and full-stack developer with expertise in building intelligent applications. I specialize in AI agents, prompt engineering, and modern web development.",
   rating: 4.9,
-  reviewCount: 128,
-  responseTime: "2h 15m",
-  deliveryTime: "3 days",
-  completionRate: 98,
+  reviewCount: 42,
+  responseTime: "1h",
+  deliveryTime: "2 days",
+  completionRate: 100,
   online: true,
-  location: "San Francisco, CA",
-  skills: ["UI/UX Design", "Figma", "Adobe XD", "React", "TypeScript", "User Research"],
+  location: "Bangalore, India",
+  skills: ["AI Development", "React", "TypeScript", "Node.js", "Prompt Engineering", "Vibe Code", "AI Agents"],
   services: [
     {
       id: "1",
@@ -147,14 +155,14 @@ const freelancerData: ExtendedFreelancerData = {
   portfolio: [
     {
       id: "1",
-      title: "E-commerce Website",
-      category: "Web Design",
+      title: "AI-Powered Chatbot",
+      category: "AI Development",
       image: "/placeholder-portfolio-1.jpg"
     },
     {
       id: "2",
-      title: "Mobile App UI",
-      category: "App Design",
+      title: "Custom AI Agent",
+      category: "AI Development",
       image: "/placeholder-portfolio-2.jpg"
     }
   ],
@@ -190,41 +198,75 @@ const freelancerData: ExtendedFreelancerData = {
 
 // Main Profile Page Component
 export default function ProfilePage() {
-  const [activeTab, setActiveTab] = useState<string>("overview");
-  const [profileData] = useState<FreelancerData>(freelancerData);
-  
   return (
-    <div className="min-h-screen bg-[#111111] text-white p-4 md:p-8">
-      <div className="max-w-7xl mx-auto space-y-6">
-        <ProfileHeader 
-          name={freelancerData.name}
-          title={freelancerData.title}
-          rating={freelancerData.rating}
-          reviewCount={freelancerData.reviewCount}
-          location={freelancerData.location}
-          online={freelancerData.online}
-          skills={freelancerData.skills}
-        />
+    <div className="min-h-screen bg-[#111111] text-white">
+      <ProfileHeader 
+        name={freelancerData.name}
+        title={freelancerData.title}
+        rating={freelancerData.rating}
+        reviewCount={freelancerData.reviewCount}
+        online={freelancerData.online}
+        location={freelancerData.location}
+        skills={freelancerData.skills}
+      />
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-6">
-            <StatsCards 
-              completed={freelancerData.completedJobs}
-              inProgress={freelancerData.activeJobs}
-              rating={freelancerData.rating}
-              responseTime={freelancerData.responseTime}
-            />
-            
-            <ExperienceSection experiences={experiences} />
-            
-            <PortfolioSection portfolio={portfolioItems} />
-            
-            <SkillsSection skills={freelancerData.skills} />
-          </div>
-          
-          <div className="space-y-6">
-            <MonthlyActivities />
-          </div>
+      <div className="container mx-auto px-4 py-6">
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold mb-2">My Profile</h1>
+          <p className="text-white/60">Manage your profile and showcase your work to potential clients</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <ProfileSectionCard
+            title="Portfolio"
+            description="Showcase your best work with descriptions, images, and links"
+            href="/freelancer/profile/portfolio"
+            icon={<Briefcase className="h-5 w-5" />}
+            count={portfolioItems.length}
+          />
+
+          <ProfileSectionCard
+            title="Skills"
+            description="Highlight your expertise and proficiency levels"
+            href="/freelancer/profile/skills"
+            icon={<Code className="h-5 w-5" />}
+            count={freelancerData.skills?.length || 0}
+          />
+
+          <ProfileSectionCard
+            title="Experience"
+            description="List your professional experience and achievements"
+            href="/freelancer/profile/experience"
+            icon={<Award className="h-5 w-5" />}
+            count={experiences.length}
+          />
+
+          <ProfileSectionCard
+            title="Service Packages"
+            description="Define your service offerings and pricing"
+            href="/freelancer/profile/services"
+            icon={<FileText className="h-5 w-5" />}
+            count={freelancerData.services?.length || 0}
+          />
+
+          <ProfileSectionCard
+            title="Client Reviews"
+            description="View and manage client feedback"
+            href="/freelancer/profile/reviews"
+            icon={<Star className="h-5 w-5" />}
+            count={freelancerData.clientReviews?.length || 0}
+          />
+
+          <ProfileSectionCard
+            title="Availability"
+            description="Set your working hours and availability"
+            href="/freelancer/profile/availability"
+            icon={<Calendar className="h-5 w-5" />}
+          />
+        </div>
+
+        <div className="mt-12">
+          <MonthlyActivities />
         </div>
       </div>
     </div>
