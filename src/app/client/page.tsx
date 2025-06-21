@@ -302,7 +302,15 @@ export default function ClientHome() {
         {/* Hero Banner + Why SkillBridge unified background */}
         <div className="relative pb-16 min-h-[600px] md:h-auto overflow-hidden">
           {/* Background Elements */}
-          <div className="absolute inset-0 bg-gradient-to-br from-[#6B46C1] via-[#4C1D95] to-[#2D1B69]">
+          <div className="absolute inset-0 bg-gradient-to-br from-[#6B46C1] via-[#4C1D95] to-[#2D1B69] overflow-hidden">
+            {/* Cover Image */}
+            <div className="absolute inset-0 w-full h-full">
+              <img
+                src="/images/cover.jpg"
+                alt="Cover"
+                className="w-full h-full object-cover opacity-20"
+              />
+            </div>
             <div className="absolute bottom-0 w-full">
               <svg
                 className="w-full h-32"

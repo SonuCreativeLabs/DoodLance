@@ -18,16 +18,16 @@ module.exports = {
     extend: {
       colors: {
         primary: {
-          DEFAULT: "#FF8A3D",
-          hover: "#FF7A2D",
-          light: "#FFA66B",
-          dark: "#E67A2D"
+          DEFAULT: "#6B46C1",
+          hover: "#5B35B0",
+          light: "#8B66D1",
+          dark: "#4C1D95"
         },
         secondary: {
-          DEFAULT: "#FF6B6B",
-          hover: "#FF5B5B",
-          light: "#FF8B8B",
-          dark: "#E65B5B"
+          DEFAULT: "#8B66D1",
+          hover: "#7B56C1",
+          light: "#9B76E1",
+          dark: "#5B35B0"
         },
         purple: {
           DEFAULT: "#6B46C1",
@@ -47,9 +47,9 @@ module.exports = {
           muted: "#718096"
         },
         accent: {
-          DEFAULT: "#FF8A3D",
-          hover: "#FF7A2D",
-          light: "#FFA66B"
+          DEFAULT: "#6B46C1",
+          hover: "#5B35B0",
+          light: "#8B66D1"
         },
         success: {
           DEFAULT: "#48BB78",
@@ -69,8 +69,8 @@ module.exports = {
         foreground: "hsl(var(--foreground))"
       },
       gradientColorStops: {
-        'primary-start': '#FF8A3D',
-        'primary-end': '#FF6B6B',
+        'primary-start': '#6B46C1',
+        'primary-end': '#8B66D1',
         'purple-start': '#6B46C1',
         'purple-mid': '#4C1D95',
         'purple-end': '#2D1B69'

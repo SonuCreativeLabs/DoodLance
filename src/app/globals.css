@@ -97,15 +97,15 @@
   --foreground: #1A1A1A;
   
   /* Primary colors */
-  --primary: #FF8A3D;
+  --primary: #6B46C1;
   --primary-foreground: #FFFFFF;
   
   /* Secondary colors */
-  --secondary: #FF6B6B;
+  --secondary: #8B66D1;
   --secondary-foreground: #FFFFFF;
   
   /* Accent colors */
-  --accent: #FF8A3D;
+  --accent: #6B46C1;
   --accent-foreground: #FFFFFF;
 
   /* Purple colors */
@@ -120,7 +120,7 @@
   --card-foreground: #1A1A1A;
   --nav-background: #FFFFFF;
   --nav-foreground: #4A5568;
-  --nav-active: #FF8A3D;
+  --nav-active: #6B46C1;
   --search-background: #F8F9FA;
   --search-placeholder: #718096;
   --search-text: #1A1A1A;
@@ -128,16 +128,16 @@
   /* Service cards */
   --service-card-bg: #FFFFFF;
   --service-card-text: #1A1A1A;
-  --service-card-hover: rgba(255, 138, 61, 0.1);
+  --service-card-hover: rgba(107, 70, 193, 0.1);
   --service-card-border: #F8F9FA;
-  --service-card-shadow: rgba(255, 138, 61, 0.1);
+  --service-card-shadow: rgba(107, 70, 193, 0.1);
   
   /* States */
   --destructive: #F56565;
   --destructive-foreground: #FFFFFF;
   --border: #F8F9FA;
   --input: #F8F9FA;
-  --ring: #FF8A3D;
+  --ring: #6B46C1;
 }
 
 /* Theme Variables */
@@ -151,19 +151,19 @@
 @media (prefers-color-scheme: dark) {
   :root {
     /* Base colors */
-    --background: #1A1A1A;
+    --background: #111111;
     --foreground: #FFFFFF;
     
     /* Primary colors */
-    --primary: #FF8A3D;
+    --primary: #8B66D1;
     --primary-foreground: #FFFFFF;
     
     /* Secondary colors */
-    --secondary: #FF6B6B;
+    --secondary: #9B76E1;
     --secondary-foreground: #FFFFFF;
     
     /* Accent colors */
-    --accent: #FF8A3D;
+    --accent: #8B66D1;
     --accent-foreground: #FFFFFF;
 
     /* Purple colors */
@@ -178,7 +178,7 @@
     --card-foreground: #FFFFFF;
     --nav-background: #2D2D2D;
     --nav-foreground: #A0AEC0;
-    --nav-active: #FF8A3D;
+    --nav-active: #8B66D1;
     --search-background: #2D2D2D;
     --search-placeholder: #A0AEC0;
     --search-text: #FFFFFF;
@@ -186,7 +186,7 @@
     /* Service cards */
     --service-card-bg: #2D2D2D;
     --service-card-text: #FFFFFF;
-    --service-card-hover: rgba(255, 138, 61, 0.2);
+    --service-card-hover: rgba(139, 102, 209, 0.2);
     --service-card-border: #3D3D3D;
     --service-card-shadow: rgba(0, 0, 0, 0.2);
     
@@ -195,7 +195,7 @@
     --destructive-foreground: #FFFFFF;
     --border: #3D3D3D;
     --input: #2D2D2D;
-    --ring: #FF8A3D;
+    --ring: #8B66D1;
   }
 }
 

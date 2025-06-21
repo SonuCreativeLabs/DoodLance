@@ -1,5 +1,7 @@
 # DoodLance - Hyper-local Service Marketplace
 
+DoodLance is a hybrid on-demand service marketplace that connects clients with local service providers across various niches. 
+
 A Progressive Web App (PWA) that connects local service providers with clients, built with Next.js.
 
 ## Features
