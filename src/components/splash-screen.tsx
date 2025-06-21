@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import Image from "next/image";
 
 interface SplashScreenProps {
   onComplete: () => void;
@@ -39,13 +38,16 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
             }}
             className="relative w-40 h-40 mb-8"
           >
-            <Image
-              src="/logo.svg"
-              alt="DoodLance Logo"
-              fill
-              className="object-contain"
-              priority
-            />
+            <svg width="160" height="160" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" className="object-contain">
+              <circle cx="256" cy="256" r="240" stroke="#4F46E5" strokeWidth="16" strokeDasharray="20,10"/>
+              <path d="M256 140C200 140 160 180 160 240C160 280 180 310 220 330L220 370C220 380 230 390 240 390L272 390C282 390 292 380 292 370L292 330C332 310 352 280 352 240C352 180 312 140 256 140Z" fill="#4F46E5"/>
+              <circle cx="200" cy="200" r="30" fill="#4F46E5"/>
+              <circle cx="312" cy="200" r="30" fill="#4F46E5"/>
+              <circle cx="256" cy="260" r="15" fill="white"/>
+              <path d="M236 280 L276 280" stroke="white" strokeWidth="8" strokeLinecap="round"/>
+              <path d="M160 100A10 10 0 0 1 180 100A10 10 0 0 1 160 100" fill="#4F46E5" transform="rotate(45, 170, 100)"/>
+              <path d="M332 100A10 10 0 0 1 352 100A10 10 0 0 1 332 100" fill="#4F46E5" transform="rotate(-45, 342, 100)"/>
+            </svg>
           </motion.div>
           <motion.h1
             initial={{ y: 20, opacity: 0 }}
