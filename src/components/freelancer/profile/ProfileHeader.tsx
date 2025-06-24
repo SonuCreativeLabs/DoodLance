@@ -8,6 +8,21 @@ import { Badge } from "@/components/ui/badge";
 import { Star, Edit2, Camera, Upload, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
+// CoverImage component defined outside the ProfileHeader component
+const CoverImage = () => (
+  <div className="relative w-full h-full">
+    <img
+      src="/images/cover-pic.JPG"
+      alt="Profile Cover"
+      className="w-full h-full object-cover"
+      onError={(e) => {
+        console.error('Failed to load cover image');
+        e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDEyMDAgMzAwIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjNkI0NkMxIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIzMiIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIj5Dcmlja2V0IENvdmVyPC90ZXh0Pjwvc3ZnPg=='
+      }}
+    />
+  </div>
+);
+
 interface ProfileHeaderProps {
   name: string;
   title: string;
@@ -21,35 +36,20 @@ interface ProfileHeaderProps {
 }
 
 export function ProfileHeader({
-  name,
-  title,
-  rating,
-  reviewCount,
-  location,
-  online,
-  skills,
-  avatarUrl = "/placeholder-user.jpg",
-  coverImageUrl = "/images/cover-sonu.jpg"
+  name = "Sathish Sonu",
+  title = "Cricketer & AI Engineer",
+  rating = 4.8,
+  reviewCount = 42,
+  location = "Chennai, India",
+  online = true,
+  skills = ["Cricket", "Cycling", "Off Spin", "Batting", "Vibe Coder", "Prompt Engg", "AI Agent Builder"],
+  avatarUrl = "/images/profile-sonu.jpg",
+  coverImageUrl = "/images/cover-pic.JPG"
 }: ProfileHeaderProps) {
   const [coverImage, setCoverImage] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [imageError, setImageError] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Using the new cover image without shadow
-  const CoverImage = () => (
-    <div className="relative w-full h-full">
-      <img
-        src="/images/cover-pic.JPG"
-        alt="Profile Cover"
-        className="w-full h-full object-cover"
-        onError={(e) => {
-          console.error('Failed to load cover image');
-          e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDEyMDAgMzAwIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjNkI0NkMxIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIzMiIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIj5Dcmlja2V0IENvdmVyPC90ZXh0Pjwvc3ZnPg=='
-        }}
-      />
-    </div>
-  );
 
   const handleCoverImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -84,57 +84,50 @@ export function ProfileHeader({
     fileInputRef.current?.click();
   };
   return (
-    <div className="relative w-full bg-[#111111] px-4">
+    <div className="relative w-full bg-[#111111]">
       {/* Cover Photo */}
-      <div className="max-w-6xl mx-auto mt-4">
-        <div className="relative group h-48 md:h-64 bg-gradient-to-r from-purple-900 to-purple-700 rounded-t-xl overflow-hidden">
-          {/* Main Image */}
-          <div className="absolute inset-0 w-full h-full">
-            <div className="relative w-full h-full">
-              <CoverImage />
-            </div>
-          </div>
-          
-          {/* Edit Button */}
-          <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
-            <Button 
-              variant="secondary" 
-              size="sm" 
-              onClick={handleEditClick}
-              disabled={isUploading}
-              className="bg-black/70 hover:bg-black/80 text-white backdrop-blur-sm"
-            >
-              {isUploading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Uploading...
-                </>
-              ) : (
-                <>
-                  <Camera className="mr-2 h-4 w-4" />
-                  Change Cover
-                </>
-              )}
-            </Button>
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleCoverImageChange}
-              accept="image/*"
-              className="hidden"
-            />
-          </div>
-          
-          {/* No gradient overlay */}
+      <div className="relative h-48 md:h-64 w-full bg-gradient-to-r from-purple-900 to-purple-700">
+        <div className="absolute inset-0 w-full h-full">
+          <CoverImage />
+        </div>
+        
+        {/* Edit Cover Button */}
+        <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+          <Button 
+            variant="secondary" 
+            size="sm" 
+            onClick={handleEditClick}
+            disabled={isUploading}
+            className="bg-black/70 hover:bg-black/80 text-white backdrop-blur-sm"
+          >
+            {isUploading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Uploading...
+              </>
+            ) : (
+              <>
+                <Camera className="mr-2 h-4 w-4" />
+                Change Cover
+              </>
+            )}
+          </Button>
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleCoverImageChange}
+            accept="image/*"
+            className="hidden"
+          />
         </div>
       </div>
-      
-      {/* Profile Info */}
-      <div className="relative px-6 pb-6 bg-[#111111]">
-        <div className="flex flex-col sm:flex-row gap-6">
-          {/* Avatar */}
-          <div className="relative -mt-16 group sm:-mt-20">
-            <div className="relative w-32 h-32 sm:w-40 sm:h-40 rounded-full border-4 border-[#1E1E1E] overflow-hidden">
+
+      {/* Profile Content */}
+      <div className="max-w-6xl mx-auto px-4">
+        {/* Profile Picture - Centered and overlapping the cover */}
+        <div className="flex justify-center -mt-16 mb-4">
+          <div className="relative group">
+            <div className="relative w-32 h-32 sm:w-40 sm:h-40 rounded-full border-4 border-[#1E1E1E] overflow-hidden bg-[#111111]">
               <Avatar className="w-full h-full">
                 <AvatarImage src="/images/profile-sonu.jpg" alt={name} />
                 <AvatarFallback>{name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
@@ -146,63 +139,45 @@ export function ProfileHeader({
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Profile Info */}
+        <div className="text-center mb-4">
+          <h1 className="text-2xl font-bold text-white">{name}</h1>
+          <p className="text-purple-400 mt-0.5">{title}</p>
           
-          {/* Profile Details */}
-          <div className="flex-1 mt-4 sm:mt-0">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <h1 className="text-2xl sm:text-3xl font-bold text-white">Sathish Sonu</h1>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="h-6 w-6 text-white/60 hover:text-white hover:bg-white/10 -ml-1"
-                  title="Edit profile"
-                >
-                  <Edit2 className="h-3.5 w-3.5" />
-                </Button>
-              </div>
-              <p className="text-lg text-purple-400">Cricketer & AI Engineer</p>
-            </div>
-            
-            <div className="mt-4">
-              <div className="flex flex-wrap items-center gap-4 text-sm">
-                <div className="flex items-center">
-                  {[...Array(5)].map((_, i) => (
-                    <Star
-                      key={i}
-                      className={`h-4 w-4 ${i < Math.floor(rating) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-500'}`}
-                    />
-                  ))}
-                  <span className="ml-1 font-medium">{rating.toFixed(1)}</span>
-                  <span className="mx-1">·</span>
-                  <span className="text-white/60">{reviewCount} reviews</span>
-                </div>
-                
-                <div className="flex items-center text-white/70">
-                  <span className="h-1.5 w-1.5 rounded-full bg-green-500 mr-1.5"></span>
-                  {online ? 'Online' : 'Offline'}
-                </div>
-                
-                <div className="text-white/70">
-                  Chennai, India
-                </div>
-              </div>
-              
-              {/* Skills */}
-              <div className="flex flex-wrap gap-2 pt-2">
-                {['Off Spin', 'Batting', 'Bowling', 'Cricket Coaching', 'AI Engineering', 'AI Agent Builder']
-                  .map((skill, i) => (
-                    <Badge 
-                      key={i} 
-                      variant="secondary" 
-                      className="bg-white/5 text-white/80 border-white/10 hover:bg-white/10 rounded-full"
-                    >
-                      {skill}
-                    </Badge>
-                  ))}
-              </div>
+          <div className="mt-2 flex flex-col items-center gap-0.5 text-sm text-white/70">
+            <div>{location}</div>
+            <div className="flex items-center gap-1">
+              {[...Array(5)].map((_, i) => (
+                <Star
+                  key={i}
+                  className={`h-4 w-4 ${i < Math.floor(rating) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-500'}`}
+                />
+              ))}
+              <span className="ml-1 font-medium text-white">{rating.toFixed(1)}</span>
+              <span className="mx-1">·</span>
+              <span>{reviewCount} reviews</span>
+              <span className="mx-1">·</span>
+              <span className="flex items-center">
+                <span className="h-2 w-2 rounded-full bg-green-500 mr-1.5"></span>
+                {online ? 'Online' : 'Offline'}
+              </span>
             </div>
           </div>
+        </div>
+
+        {/* Skills */}
+        <div className="flex flex-wrap justify-center gap-2 pb-6">
+          {skills.map((skill, i) => (
+            <Badge 
+              key={i} 
+              variant="secondary" 
+              className="bg-white/5 text-white/80 border-white/10 hover:bg-white/10 rounded-full"
+            >
+              {skill}
+            </Badge>
+          ))}
         </div>
       </div>
     </div>

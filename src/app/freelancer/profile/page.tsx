@@ -1,6 +1,6 @@
 "use client"
 
-import { Briefcase, Code, Award, Star, FileText, Calendar, MessageSquare, Settings } from 'lucide-react';
+import { Briefcase, Code, Award, Star, FileText, Calendar, MessageSquare, Settings, User, Mail, Phone, Globe, MapPin, GraduationCap, Languages, Edit2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -125,8 +125,8 @@ type ExtendedFreelancerData = FreelancerData & {
 };
 
 const freelancerData: ExtendedFreelancerData = {
-  name: "Sonu Sharma",
-  title: "AI Engineer & Full-Stack Developer",
+  name: "Sathish Sonu",
+  title: "Cricketer & AI Engineer",
   about: "I'm a passionate AI engineer and full-stack developer with expertise in building intelligent applications. I specialize in AI agents, prompt engineering, and modern web development.",
   rating: 4.9,
   reviewCount: 42,
@@ -134,8 +134,8 @@ const freelancerData: ExtendedFreelancerData = {
   deliveryTime: "2 days",
   completionRate: 100,
   online: true,
-  location: "Bangalore, India",
-  skills: ["AI Development", "React", "TypeScript", "Node.js", "Prompt Engineering", "Vibe Code", "AI Agents"],
+  location: "Chennai, India",
+  skills: ["Cricket", "Cycling", "Off Spin", "Batting", "Vibe Coder", "Prompt Engg", "AI Agent Builder"],
   services: [
     {
       id: "1",
@@ -215,8 +215,23 @@ export default function ProfilePage() {
           <h1 className="text-2xl font-bold mb-2">My Profile</h1>
           <p className="text-white/60">Manage your profile and showcase your work to potential clients</p>
         </div>
+        
+        <div className="mb-8">
+          <StatsCards 
+            rating={freelancerData.rating}
+            completed={124}
+            inProgress={5}
+            responseTime="1 hour"
+          />
+        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <ProfileSectionCard
+            title="Personal Details"
+            description="View and edit your contact information, location, and professional background"
+            href="/freelancer/profile/personal"
+            icon={<User className="h-5 w-5" />}
+          />
           <ProfileSectionCard
             title="Portfolio"
             description="Showcase your best work with descriptions, images, and links"
