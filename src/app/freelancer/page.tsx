@@ -104,6 +104,16 @@ export default function FreelancerHome() {
       </motion.div>
 
       <div className="container mx-auto px-4 py-12 bg-[#111111] relative z-0">
+        {/* Section Title */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="mb-6"
+        >
+          <h2 className="text-2xl font-bold text-white mb-2">Your Dashboard</h2>
+          <p className="text-white/60">Overview of your freelancing activities and earnings</p>
+        </motion.div>
 
         {/* Earnings Cards Section */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">

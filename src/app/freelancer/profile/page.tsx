@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 // Import components
 import { ProfileHeader } from '@/components/freelancer/profile/ProfileHeader';
-import { StatsCards } from '@/components/freelancer/profile/StatsCards';
+import { ProfileStatsCard } from '@/components/freelancer/profile/ProfileStatsCard';
 import { MonthlyActivities } from '@/components/freelancer/profile/MonthlyActivities';
 import { ProfileSectionCard } from '@/components/freelancer/profile/ProfileSectionCard';
 
@@ -211,20 +211,26 @@ export default function ProfilePage() {
       />
 
       <div className="container mx-auto px-4 py-6">
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold mb-2">My Profile</h1>
-          <p className="text-white/60">Manage your profile and showcase your work to potential clients</p>
-        </div>
-        
-        <div className="mb-8">
-          <StatsCards 
-            rating={freelancerData.rating}
-            completed={124}
-            inProgress={5}
-            responseTime="1 hour"
-          />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <div className="lg:col-span-2">
+            <ProfileStatsCard 
+              completed={124}
+              inProgress={5}
+              responseTime="1 hour"
+              totalEarnings="$12,450"
+              pendingJobs={3}
+            />
+          </div>
+          <div className="lg:col-span-1">
+            <MonthlyActivities />
+          </div>
         </div>
 
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold text-white mb-2">My Profile</h2>
+          <p className="text-white/60">Manage your professional profile and settings</p>
+        </div>
+        
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <ProfileSectionCard
             title="Personal Details"
@@ -278,10 +284,6 @@ export default function ProfilePage() {
             href="/freelancer/profile/availability"
             icon={<Calendar className="h-5 w-5" />}
           />
-        </div>
-
-        <div className="mt-12">
-          <MonthlyActivities />
         </div>
       </div>
     </div>
