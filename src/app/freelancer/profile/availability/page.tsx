@@ -1,12 +1,14 @@
+'use client';
+
+import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Clock, Calendar } from "lucide-react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 
-// Mock data for availability
-const days = [
+// Initial days data
+const initialDays = [
   { id: 'monday', name: 'Monday', available: true, hours: '9:00 AM - 6:00 PM' },
   { id: 'tuesday', name: 'Tuesday', available: true, hours: '9:00 AM - 6:00 PM' },
   { id: 'wednesday', name: 'Wednesday', available: true, hours: '9:00 AM - 6:00 PM' },
@@ -24,6 +26,15 @@ const timezones = [
 ];
 
 export default function AvailabilityPage() {
+  const [days, setDays] = useState(initialDays);
+  
+  const toggleDayAvailability = (dayId: string) => {
+    setDays(days.map(day => 
+      day.id === dayId 
+        ? { ...day, available: !day.available, hours: !day.available ? '9:00 AM - 6:00 PM' : 'Not available' }
+        : day
+    ));
+  };
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
@@ -54,11 +65,20 @@ export default function AvailabilityPage() {
                 {days.map((day) => (
                   <div key={day.id} className="flex items-center justify-between p-3 rounded-lg bg-[#2A2A2A]">
                     <div className="flex items-center gap-3">
-                      <Switch 
-                        id={day.id} 
-                        defaultChecked={day.available} 
-                        className="data-[state=checked]:bg-purple-500"
-                      />
+                      <div 
+                        className={`relative inline-flex items-center h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${day.available ? 'bg-green-500' : 'bg-[#2D2D2D]'}`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          // In a real app, you would update the day's availability state here
+                        }}
+                        role="switch"
+                        aria-checked={day.available}
+                      >
+                        <span 
+                          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${day.available ? 'translate-x-5' : 'translate-x-0'}`}
+                        />
+                      </div>
                       <Label htmlFor={day.id} className="font-medium">
                         {day.name}
                       </Label>

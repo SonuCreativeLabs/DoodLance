@@ -36,7 +36,7 @@ interface PortfolioFormProps {
   onCancel: () => void;
 }
 
-function PortfolioForm({ portfolio, onSave, onCancel }: PortfolioFormProps) {
+export function PortfolioForm({ portfolio, onSave, onCancel }: PortfolioFormProps) {
   const [title, setTitle] = useState(portfolio?.title || '');
   const [category, setCategory] = useState(portfolio?.category || '');
   const [description, setDescription] = useState(portfolio?.description || '');
@@ -238,7 +238,7 @@ export function PortfolioSection({
       title: 'Sports Quota Scholar',
       category: 'Academic Achievement',
       description: 'Awarded sports scholarship for outstanding cricket performance at the state level. Balanced academic responsibilities with rigorous training schedules while maintaining excellent performance in both areas.',
-      image: 'https://images.unsplash.com/photo-1501503069356-3fce54d8c4e2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+      image: 'https://images.unsplash.com/photo-1543351611-58f69d7c1784?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
       skills: ['Time Management', 'Discipline', 'Academic Excellence', 'Athletic Performance'],
       date: '2020-07-10'
     },
@@ -303,7 +303,8 @@ export function PortfolioSection({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+
       {/* View Portfolio Item Dialog */}
       <Dialog open={!!viewingItem} onOpenChange={(open) => !open && setViewingItem(null)}>
         <DialogContent className="bg-[#1E1E1E] border-white/10 max-w-3xl max-h-[90vh] overflow-y-auto">
@@ -391,70 +392,55 @@ export function PortfolioSection({
         </DialogContent>
       </Dialog>
 
-      <Card className="bg-[#1E1E1E] border border-white/5 rounded-xl overflow-hidden hover:border-white/10 transition-colors">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-lg font-semibold">Portfolio</CardTitle>
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="bg-white/5 border-white/10 hover:bg-white/10"
-                onClick={handleAddWork}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Work
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="bg-[#1E1E1E] border-white/10 max-w-2xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle className="text-white">
-                  {editingItem ? 'Edit Work' : 'Add New Work'}
-                </DialogTitle>
-              </DialogHeader>
-              <PortfolioForm 
-                portfolio={editingItem} 
-                onSave={handleSaveWork} 
-                onCancel={() => setIsDialogOpen(false)} 
-              />
-            </DialogContent>
-          </Dialog>
-        </CardHeader>
-        <CardContent>
-          {portfolio.length === 0 ? (
-          <div className="text-center py-8 border border-dashed border-white/10 rounded-lg">
-            <ImageIcon className="mx-auto h-12 w-12 text-white/30 mb-2" />
-            <h3 className="text-white/80 font-medium">No portfolio items yet</h3>
-            <p className="text-sm text-white/50 mt-1 max-w-md mx-auto">
-              Showcase your best work to attract potential clients. Add your first project to get started.
-            </p>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="mt-4 bg-white/5 border-white/10 hover:bg-white/10"
-              onClick={handleAddWork}
+{/* Portfolio Items Grid */}
+      {portfolio.length === 0 ? (
+        <div className="text-center py-12 border border-dashed border-white/10 rounded-lg">
+          <ImageIcon className="mx-auto h-12 w-12 text-white/30 mb-2" />
+          <h3 className="text-white/80 font-medium">No portfolio items yet</h3>
+          <p className="text-sm text-white/50 mt-1 max-w-md mx-auto">
+            Showcase your best work to attract potential clients. Add your first project to get started.
+          </p>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="mt-4 bg-white/5 border-white/10 hover:bg-white/10"
+            onClick={handleAddWork}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Your First Project
+          </Button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {portfolio.map((item) => (
+            <div 
+              key={item.id} 
+              className="group relative aspect-video rounded-lg overflow-hidden cursor-pointer"
+              onClick={() => handleViewWork(item)}
             >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Your First Project
-            </Button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {portfolio.map((item) => (
-              <div 
-                key={item.id} 
-                className="group relative aspect-video rounded-lg overflow-hidden cursor-pointer"
-                onClick={() => handleViewWork(item)}
-              >
-                <div className="relative w-full h-full">
+              <div className="relative w-full h-full">
+                <div className="absolute inset-0 flex items-center justify-center bg-gray-800/50">
                   <Image
                     src={item.image || '/placeholder-project.jpg'}
                     alt={item.title}
                     fill
                     className="object-cover transition-all duration-300 group-hover:scale-105"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.onerror = null;
+                      target.src = '/placeholder-project.jpg';
+                    }}
+                    unoptimized={process.env.NODE_ENV !== 'production'}
+                    priority={item.id === '1' || item.id === '2' || item.id === '3'}
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent p-4 flex flex-col justify-between opacity-0 group-hover:opacity-100 transition-opacity">
-                    <div className="flex justify-end gap-2">
+                </div>
+                <div className="absolute inset-0 p-4 flex flex-col justify-end bg-gradient-to-t from-black/60 via-black/30 to-transparent">
+                  <div className="flex justify-between items-end">
+                    <div>
+                      <h3 className="font-medium text-white">{item.title}</h3>
+                      <p className="text-xs text-white/70">{item.category}</p>
+                    </div>
+                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -476,22 +462,13 @@ export function PortfolioSection({
                         <Trash2 className="h-3.5 w-3.5 text-white group-hover/delete:text-red-400 transition-colors" />
                       </button>
                     </div>
-                    <div>
-                      <h3 className="font-medium text-white">{item.title}</h3>
-                      <p className="text-xs text-white/70">{item.category}</p>
-                    </div>
                   </div>
                 </div>
-                <div className="absolute inset-0 p-4 flex flex-col justify-end bg-gradient-to-t from-black/60 to-transparent">
-                  <h3 className="font-medium text-white">{item.title}</h3>
-                  <p className="text-xs text-white/70">{item.category}</p>
-                </div>
               </div>
-            ))}
-          </div>
-        )}
-        </CardContent>
-      </Card>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

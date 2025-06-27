@@ -117,91 +117,121 @@ function SkillItem({ id, skill, description, onEdit, onDelete }: SkillItemProps)
       </Button>
       <div className="flex-1">
         <div className="flex items-center gap-1">
-          <Badge 
-            variant="secondary" 
-            className="bg-white/5 text-white/90 border border-white/10 hover:bg-white/10 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1 group-hover:border-white/20"
-          >
-            {skill}
-            {description && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-4 w-4 ml-1 -mr-1 text-white/50 hover:text-white hover:bg-transparent"
-                      onClick={(e) => e.preventDefault()}
-                    >
-                      <Info className="h-3 w-3" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="top" className="max-w-xs bg-gray-800 text-white border border-white/10">
-                    <p className="text-sm">{description}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-5 w-5 ml-0.5 text-white/50 hover:text-white hover:bg-transparent"
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              className="group relative"
               onClick={() => {
                 setEditedSkill(skill);
                 setEditedDescription(description || '');
                 setIsEditing(true);
               }}
             >
-              <Pencil className="h-3 w-3" />
-            </Button>
+              <Badge 
+                variant="secondary" 
+                className="bg-white/5 text-white/90 border border-white/10 hover:bg-white/10 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors group-hover:border-white/20 pr-8"
+              >
+                <div className="flex items-center gap-1.5">
+                  <span>{skill}</span>
+                  {description && (
+                    <TooltipProvider>
+                      <Tooltip delayDuration={100}>
+                        <TooltipTrigger asChild>
+                          <div 
+                            className="h-4 w-4 flex-shrink-0 flex items-center justify-center text-white/50 group-hover:text-white transition-colors"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Info className="h-3 w-3" />
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent 
+                          side="top" 
+                          sideOffset={4}
+                          className="max-w-xs bg-[var(--card-background)] text-[var(--card-foreground)] text-sm p-3 rounded-lg border border-[var(--border)] shadow-lg"
+                        >
+                          <p className="leading-relaxed">{description}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  )}
+                </div>
+              </Badge>
+              <div className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                <Pencil className="h-3 w-3 text-white/60" />
+              </div>
+            </button>
             <Button 
               variant="ghost" 
               size="icon" 
-              className="h-5 w-5 text-white/50 hover:text-red-400 hover:bg-transparent"
-              onClick={() => onDelete(id)}
-            >
-              <X className="h-3 w-3" />
-            </Button>
-          </Badge>
-        </div>
-        {!description && (
-          <p className="text-xs text-white/40 mt-1 ml-1">
-            <button 
-              className="hover:text-white/60 underline underline-offset-2"
-              onClick={() => {
-                setEditedSkill(skill);
-                setEditedDescription('');
-                setIsEditing(true);
+              className="h-7 w-7 rounded-full text-white/60 hover:text-red-400 hover:bg-red-400/10 ml-0.5"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(id);
               }}
             >
-              Add description
-            </button>
-          </p>
-        )}
+              <X className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   );
 }
 
+interface SkillItemType {
+  id: string;
+  name: string;
+  description?: string;
+}
+
 interface SkillsSectionProps {
-  initialSkills?: string[];
+  initialSkills?: Array<string | SkillItemType>;
   className?: string;
 }
 
+const defaultSkills: SkillItemType[] = [
+  {
+    id: 'batting',
+    name: "Batting",
+    description: "Specialized in top-order batting with a solid technique and aggressive stroke play. Strong in building innings and adapting to different match situations and bowling attacks."
+  },
+  {
+    id: 'off-spin',
+    name: "Off Spin",
+    description: "Skilled off-spin bowler with excellent control and variation. Specialized in building pressure and taking crucial wickets in the middle overs of limited-overs cricket."
+  },
+  {
+    id: 'ai-dev',
+    name: "AI Development",
+    description: "Expert in developing machine learning models and AI solutions using Python, TensorFlow, and PyTorch. Experience in building and deploying AI applications at scale."
+  },
+  {
+    id: 'ai-agents',
+    name: "AI Agents",
+    description: "Design and implementation of autonomous AI agents using reinforcement learning and natural language processing. Specialized in creating agents that can reason, learn, and adapt."
+  },
+  {
+    id: 'prompt-eng',
+    name: "Prompt Engineering",
+    description: "Expert in crafting effective prompts for large language models. Specialized in optimizing model outputs for various applications including content generation and data analysis."
+  },
+  {
+    id: 'vibe-code',
+    name: "Vibe Code",
+    description: "Creating clean, efficient, and maintainable code with a focus on developer experience and code aesthetics. Strong advocate for clean architecture and best practices."
+  }
+] as SkillItemType[];
+
 export function SkillsSection({ 
-  initialSkills = [
-    "Cricket (Top Order Bat & Off Spin)",
-    "AI Development",
-    "AI Agents",
-    "Prompt Engineering",
-    "Vibe Code"
-  ],
+  initialSkills = defaultSkills,
   className 
 }: SkillsSectionProps) {
-  const [skills, setSkills] = useState<{id: string; name: string}[]>(
+  const [skills, setSkills] = useState<SkillItemType[]>(
     initialSkills.map(skill => ({
       id: Math.random().toString(36).substr(2, 9),
-      name: skill
-    }))
+      name: typeof skill === 'string' ? skill : skill.name,
+      description: typeof skill === 'object' ? skill.description : undefined
+    } as SkillItemType))
   );
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newSkill, setNewSkill] = useState('');
@@ -310,6 +340,7 @@ export function SkillsSection({
                   key={skill.id}
                   id={skill.id}
                   skill={skill.name}
+                  description={skill.description}
                   onEdit={handleEditSkill}
                   onDelete={handleDeleteSkill}
                 />
