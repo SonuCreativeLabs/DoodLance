@@ -96,13 +96,12 @@ const SectionCard = ({
             </>
           ) : (
             <Button 
-              size="icon" 
+              size="sm" 
               variant="ghost" 
               onClick={onEdit}
-              className="text-purple-400 hover:bg-purple-500/10 hover:text-purple-300 h-8 w-8"
-              aria-label="Edit"
+              className="text-purple-400 hover:bg-purple-500/10 hover:text-purple-300 h-8 px-3"
             >
-              <Pencil className="h-4 w-4" />
+              <Pencil className="h-3.5 w-3.5 mr-1.5" /> Edit
             </Button>
           )}
         </div>
@@ -136,10 +135,8 @@ const FormField = ({
   </div>
 );
 
-type EditSection = 'personal' | 'contact' | 'location' | null;
-
 export default function PersonalDetailsPage() {
-  const [editingSection, setEditingSection] = useState<EditSection>(null);
+  const [isEditing, setIsEditing] = useState(false);
   
   const [personalInfo, setPersonalInfo] = useState<PersonalInfo>({
     fullName: "Sathish Sonu",
@@ -165,28 +162,20 @@ export default function PersonalDetailsPage() {
   const [editContact, setEditContact] = useState<ContactInfo>({ ...contactInfo });
   const [editLocation, setEditLocation] = useState<LocationInfo>({ ...locationInfo });
 
-  const handleSave = (section: EditSection) => {
-    if (section === 'personal') {
-      setPersonalInfo({ ...editPersonalInfo });
-    } else if (section === 'contact') {
-      setContactInfo({ ...editContact });
-    } else if (section === 'location') {
-      setLocationInfo({ ...editLocation });
-    }
-    setEditingSection(null);
+  const handleSave = () => {
+    setPersonalInfo({ ...editPersonalInfo });
+    setContactInfo({ ...editContact });
+    setLocationInfo({ ...editLocation });
+    setIsEditing(false);
   };
 
-  const handleCancel = (section: EditSection) => {
-    if (section === 'personal') {
-      setEditPersonalInfo({ ...personalInfo });
-    } else if (section === 'contact') {
-      setEditContact({ ...contactInfo });
-    } else if (section === 'location') {
-      setEditLocation({ ...locationInfo });
-    }
-    setEditingSection(null);
+  const handleCancel = () => {
+    setEditPersonalInfo({ ...personalInfo });
+    setEditContact({ ...contactInfo });
+    setEditLocation({ ...locationInfo });
+    setIsEditing(false);
   };
-  
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>, section: 'personal' | 'contact' | 'location', field: string) => {
     const value = e.target.value;
     
@@ -208,35 +197,68 @@ export default function PersonalDetailsPage() {
     }
   };
 
-  const startEditing = (section: EditSection) => {
-    setEditingSection(section);
-    // Reset edit states when starting to edit
+  const startEditing = () => {
     setEditPersonalInfo({ ...personalInfo });
     setEditContact({ ...contactInfo });
     setEditLocation({ ...locationInfo });
+    setIsEditing(true);
   };
 
   const formatFullAddress = (loc: LocationInfo) => {
     return `${loc.address}, ${loc.city}, ${loc.country} ${loc.postalCode}`;
   };
 
-  const renderSection = (section: EditSection) => {
-    if (editingSection !== null && editingSection !== section) {
-      return null; // Hide other sections when one is being edited
-    }
-    
-    const isEditing = editingSection === section;
-    
-    if (section === 'personal') {
-      return (
+  return (
+    <div className="max-w-4xl mx-auto px-4 py-8 pb-32">
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-4">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            asChild 
+            className="text-gray-400 hover:bg-white/5 hover:text-white transition-colors"
+          >
+            <Link href="/freelancer/profile">
+              <ArrowLeft className="h-5 w-5" />
+            </Link>
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+              Personal Details
+            </h1>
+            <p className="text-sm text-white/60">Manage your personal information and contact details</p>
+          </div>
+        </div>
+        <Button 
+          variant="outline"
+          size="sm"
+          className={cn(
+            "border-white/10 hover:border-purple-500/30 hover:bg-white/5 hover:text-white transition-colors",
+            isEditing ? "text-red-500 hover:text-red-400" : "text-purple-400 hover:text-purple-300"
+          )}
+          onClick={isEditing ? handleCancel : startEditing}
+        >
+          {isEditing ? (
+            <>
+              <X className="h-4 w-4 mr-1.5" /> Cancel
+            </>
+          ) : (
+            <>
+              <Pencil className="h-4 w-4 mr-1.5" /> Edit Profile
+            </>
+          )}
+        </Button>
+      </div>
+
+      <div className="space-y-6">
+        {/* Personal Information */}
         <SectionCard 
-          key="personal"
           title="Personal Information" 
           icon={User}
-          onEdit={!isEditing ? () => startEditing('personal') : undefined}
+          onEdit={isEditing ? undefined : startEditing}
           isEditing={isEditing}
-          onSave={() => handleSave('personal')}
-          onCancel={() => handleCancel('personal')}
+          onSave={handleSave}
+          onCancel={handleCancel}
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {isEditing ? (
@@ -281,24 +303,6 @@ export default function PersonalDetailsPage() {
                       className="min-h-[100px] bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50"
                     />
                   </FormField>
-                  
-                  <div className="mt-6 flex justify-end space-x-3 pt-4 border-t border-white/10">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => handleCancel('personal')}
-                      className="px-4 py-2 text-sm font-medium text-white/90 hover:bg-white/5 border border-white/20 hover:border-white/30 transition-colors"
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      type="button"
-                      onClick={() => handleSave('personal')}
-                      className="px-4 py-2 text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 transition-colors rounded-md shadow-sm"
-                    >
-                      Save Changes
-                    </Button>
-                  </div>
                 </div>
               </>
             ) : (
@@ -334,17 +338,15 @@ export default function PersonalDetailsPage() {
             )}
           </div>
         </SectionCard>
-      );
-    } else if (section === 'contact') {
-      return (
+
+        {/* Contact Information */}
         <SectionCard 
-          key="contact"
           title="Contact Information" 
           icon={Mail}
-          onEdit={!isEditing ? () => startEditing('contact') : undefined}
+          onEdit={isEditing ? undefined : startEditing}
           isEditing={isEditing}
-          onSave={() => handleSave('contact')}
-          onCancel={() => handleCancel('contact')}
+          onSave={handleSave}
+          onCancel={handleCancel}
         >
           {isEditing ? (
             <div className="space-y-4">
@@ -377,24 +379,6 @@ export default function PersonalDetailsPage() {
                   placeholder="https://example.com"
                 />
               </FormField>
-
-              <div className="mt-6 flex justify-end space-x-3 pt-4 border-t border-white/10">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => handleCancel('contact')}
-                  className="px-4 py-2 text-sm font-medium text-white/90 hover:bg-white/5 border border-white/20 hover:border-white/30 transition-colors"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="button"
-                  onClick={() => handleSave('contact')}
-                  className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 transition-colors rounded-md shadow-sm"
-                >
-                  Save Changes
-                </Button>
-              </div>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -435,17 +419,15 @@ export default function PersonalDetailsPage() {
             </div>
           )}
         </SectionCard>
-      );
-    } else if (section === 'location') {
-      return (
+
+        {/* Location */}
         <SectionCard 
-          key="location"
           title="Location" 
           icon={MapPin}
-          onEdit={!isEditing ? () => startEditing('location') : undefined}
+          onEdit={isEditing ? undefined : startEditing}
           isEditing={isEditing}
-          onSave={() => handleSave('location')}
-          onCancel={() => handleCancel('location')}
+          onSave={handleSave}
+          onCancel={handleCancel}
         >
           {isEditing ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -480,24 +462,6 @@ export default function PersonalDetailsPage() {
                   className="bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50"
                 />
               </FormField>
-
-              <div className="mt-6 flex justify-end space-x-3 pt-4 border-t border-white/10 col-span-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => handleCancel('location')}
-                  className="px-4 py-2 text-sm font-medium text-white/90 hover:bg-white/5 border border-white/20 hover:border-white/30 transition-colors"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="button"
-                  onClick={() => handleSave('location')}
-                  className="px-4 py-2 text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 transition-colors rounded-md shadow-sm"
-                >
-                  Save Changes
-                </Button>
-              </div>
             </div>
           ) : (
             <div className="space-y-1">
@@ -519,47 +483,23 @@ export default function PersonalDetailsPage() {
             </div>
           )}
         </SectionCard>
-      );
-    }
-    return null;
-  };
-
-  return (
-    <div className="max-w-4xl mx-auto px-4 py-8 pb-32">
-      <div className="flex items-center gap-4 mb-8">
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          onClick={() => {
-            if (editingSection !== null) {
-              handleCancel(editingSection);
-            } else {
-              window.history.back();
-            }
-          }}
-          className="text-gray-400 hover:bg-white/5 hover:text-white transition-colors"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <div>
-          <h1 className="text-2xl font-bold text-white">
-            Personal Details
-          </h1>
-          <p className="text-sm text-white/60">Manage your personal information and contact details</p>
-        </div>
-      </div>
-
-      <div className="space-y-6">
-        {editingSection === null ? (
-          // Show all sections in view mode
-          <>
-            {renderSection('personal')}
-            {renderSection('contact')}
-            {renderSection('location')}
-          </>
-        ) : (
-          // Show only the section being edited
-          renderSection(editingSection)
+        
+        {isEditing && (
+          <div className="flex justify-end gap-3 pt-2">
+            <Button 
+              variant="outline"
+              onClick={handleCancel}
+              className="border-white/10 hover:bg-white/5 hover:border-white/20 text-white"
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleSave}
+              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
+            >
+              Save Changes
+            </Button>
+          </div>
         )}
       </div>
     </div>
