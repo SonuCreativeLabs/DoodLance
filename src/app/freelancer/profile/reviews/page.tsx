@@ -1,6 +1,7 @@
-import { ArrowLeft, Star, StarHalf, MessageSquare } from "lucide-react";
+import { ArrowLeft, Star, StarHalf, MessageSquare, CheckCircle } from "lucide-react";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 // Client Testimonials
 const reviews = [
@@ -83,73 +84,123 @@ export default function ReviewsPage() {
   const totalReviews = reviews.length;
 
   return (
-    <div className="container mx-auto px-4 py-8 pb-24">
+    <div className="container mx-auto px-4 py-8 pb-24 max-w-5xl">
+      {/* Header Section */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
         <div className="flex items-center space-x-4 mb-4 md:mb-0">
           <Link 
             href="/freelancer/profile" 
             className="inline-flex items-center text-sm text-purple-400 hover:text-purple-300 transition-colors duration-200 group"
+            aria-label="Back to profile"
           >
-            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/10 group-hover:bg-white/10 transition-colors duration-200">
+            <div className="flex items-center justify-center w-9 h-9 rounded-full bg-white/5 border border-white/10 group-hover:bg-white/10 transition-colors duration-200">
               <ArrowLeft className="h-4 w-4" />
             </div>
+            <span className="ml-2 hidden sm:inline-block">Back to Profile</span>
           </Link>
-          <div>
-            <h1 className="text-2xl font-bold">Client Testimonials</h1>
+          <div className="ml-2">
+            <h1 className="text-3xl font-bold text-white">
+              Client Reviews
+            </h1>
             <p className="text-white/60 text-sm mt-1">What my clients say about working with me</p>
           </div>
         </div>
-        <div className="bg-[#1E1E1E] border border-white/5 rounded-lg p-4 w-full md:w-auto">
-          <div className="flex items-center space-x-2">
-            <div className="text-3xl font-bold text-yellow-400">{averageRating.toFixed(1)}</div>
-            <div className="flex flex-col">
+        
+        {/* Simple Rating Summary */}
+        <div className="flex items-center justify-between w-full py-4">
+          <div>
+            <p className="text-white/70 text-sm mb-1">Average Rating</p>
+            <div className="flex items-center">
+              <span className="text-3xl font-bold text-white mr-3">{averageRating.toFixed(1)}</span>
               <div className="flex">
                 {renderStars(averageRating)}
               </div>
-              <div className="text-sm text-white/60">
-                Based on {totalReviews} {totalReviews === 1 ? 'review' : 'reviews'}
-              </div>
             </div>
+          </div>
+          <div className="text-right">
+            <p className="text-white/70 text-sm">Based on</p>
+            <p className="text-lg font-medium text-white">
+              {totalReviews} {totalReviews === 1 ? 'Review' : 'Reviews'}
+            </p>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6">
+      {/* Reviews Grid */}
+      <div className="grid grid-cols-1 gap-5">
         {reviews.map((review) => (
-          <Card key={review.id} className="border-white/5 bg-[#1E1E1E] hover:border-white/10 transition-all duration-300 hover:shadow-lg">
-            <CardContent className="p-6">
-              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                <div className="flex items-start space-x-4">
-                  <div className="h-12 w-12 rounded-full bg-gradient-to-br from-purple-600 to-blue-500 flex items-center justify-center text-white font-semibold text-lg flex-shrink-0">
-                    {review.author.split(' ').map(n => n[0]).join('')}
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-lg">{review.author}</h4>
-                    <p className="text-sm text-purple-400">{review.role}</p>
-                    <div className="flex items-center mt-1">
-                      {renderStars(review.rating)}
-                      <span className="ml-2 text-sm text-white/60">
-                        {review.rating.toFixed(1)}
-                      </span>
+          <Card 
+            key={review.id} 
+            className="border-white/5 bg-[#1A1A1A] hover:border-white/10 transition-all duration-300 hover:shadow-xl hover:shadow-purple-500/5 overflow-hidden"
+          >
+            <CardContent className="p-0">
+              <div className="p-6">
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                  <div className="flex items-start space-x-4">
+                    <Avatar className="h-12 w-12">
+                      <AvatarImage src={review.avatar} alt={review.author} />
+                      <AvatarFallback className="bg-gradient-to-br from-purple-600 to-blue-500 text-white font-medium">
+                        {review.author.split(' ').map(n => n[0]).join('')}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <div className="space-y-1.5">
+                        <h4 className="font-semibold text-lg text-white leading-tight">{review.author}</h4>
+                        <div className="flex flex-wrap gap-1.5">
+                          {review.role.split(',').map((role, idx) => (
+                            <span 
+                              key={idx}
+                              className="inline-flex items-center h-5 text-[11px] font-medium px-2.5 rounded-full bg-gradient-to-r from-purple-500/10 to-blue-500/10 text-purple-300 border border-purple-500/20 hover:border-purple-400/40 transition-all duration-200"
+                            >
+                              {role.trim()}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
-                <div className="text-sm text-white/50 sm:text-right">
-                  {new Date(review.date).toLocaleDateString('en-US', { 
-                    year: 'numeric', 
-                    month: 'short', 
-                    day: 'numeric' 
-                  })}
+                
+                <div className="mt-3">
+                  <div className="flex items-center mb-2">
+                    {renderStars(review.rating)}
+                    <span className="ml-1.5 text-sm font-medium text-white/70">
+                      {review.rating.toFixed(1)}
+                    </span>
+                  </div>
+                  <p className="text-white/90 leading-relaxed italic mb-3">"{review.comment}"</p>
+                  <div className="flex items-center justify-between pt-1">
+                    <div className="text-xs text-white/40">
+                      {new Date(review.date).toLocaleDateString('en-US', { 
+                        year: 'numeric', 
+                        month: 'short', 
+                        day: 'numeric' 
+                      })}
+                    </div>
+                    <div className="flex items-center space-x-2">
+                    <button 
+                      className="flex items-center text-xs text-white/60 hover:text-purple-400 hover:bg-white/5 transition-colors px-3 py-1.5 rounded-full"
+                      aria-label="Reply to review"
+                    >
+                      <MessageSquare className="h-3.5 w-3.5 mr-1.5" />
+                      <span>Reply</span>
+                    </button>
+                    <button 
+                      className="flex items-center text-xs text-white/60 hover:text-purple-400 hover:bg-white/5 transition-colors px-3 py-1.5 rounded-full"
+                      aria-label="Share review"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5">
+                        <circle cx="18" cy="5" r="3"></circle>
+                        <circle cx="6" cy="12" r="3"></circle>
+                        <circle cx="18" cy="19" r="3"></circle>
+                        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                        <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                      </svg>
+                      <span>Share</span>
+                    </button>
+                    </div>
+                  </div>
                 </div>
-              </div>
-              
-              <div className="mt-4 pl-2 border-l-2 border-purple-500/30">
-                <p className="text-white/90 leading-relaxed">"{review.comment}"</p>
-              </div>
-              
-              <div className="mt-4 pt-3 border-t border-white/5 flex items-center text-sm text-purple-400">
-                <MessageSquare className="h-4 w-4 mr-2" />
-                Verified Review
               </div>
             </CardContent>
           </Card>

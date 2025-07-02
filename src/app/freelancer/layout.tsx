@@ -6,6 +6,7 @@ import { createPortal } from 'react-dom';
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { ChatViewProvider, useChatView } from '@/contexts/ChatViewContext';
+import { useModal } from '@/contexts/ModalContext';
 
 interface FreelancerLayoutProps {
   children: React.ReactNode
@@ -41,6 +42,7 @@ function FreelancerLayoutInner({
   fullChatView = false,
   pathname 
 }: FreelancerLayoutProps & { fullChatView?: boolean; pathname: string }) {
+  const { isModalOpen } = useModal();
   // Rest of the component logic remains the same
 
   const isActive = (path: string) => {
@@ -106,7 +108,7 @@ function FreelancerLayoutInner({
   return (
     <div className="min-h-screen bg-[#111111] text-white relative">
       {/* Removed gradient background */}
-      {!fullChatView && (
+      {!fullChatView && !isModalOpen && (
         <nav className="fixed top-0 left-0 right-0 border-b border-white/10 bg-[#111111]/95 backdrop-blur-xl z-[100]">
           <div className="container mx-auto px-4 h-16 flex items-center justify-between">
             <div className="flex items-center space-x-8">
@@ -165,7 +167,7 @@ function FreelancerLayoutInner({
         </nav>
       )}
       {/* Mobile Navigation - Only show for non-feed pages and not in fullChatView */}
-      {!fullChatView && pathname !== '/freelancer/feed' && (
+      {!fullChatView && pathname !== '/freelancer/feed' && !isModalOpen && (
         <div className="md:hidden fixed bottom-0 left-0 right-0 border-t border-white/10 bg-[#111111]/95 backdrop-blur-lg z-50">
           <div className="container mx-auto px-4">
             <div className="flex items-center justify-between py-3">
@@ -191,7 +193,7 @@ function FreelancerLayoutInner({
           </div>
         </div>
       )}
-      {!fullChatView && <div className="h-16" />}
+      {!fullChatView && !isModalOpen && <div className="h-16" />}
       <main className="flex flex-col min-h-[calc(100vh-4rem)] relative z-10">{children}</main>
     </div>
   )
