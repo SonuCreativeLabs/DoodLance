@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { ChatViewProvider, useChatView } from '@/contexts/ChatViewContext';
 import { useModal } from '@/contexts/ModalContext';
+import { DateRangeProvider } from '@/contexts/DateRangeContext';
 
 interface FreelancerLayoutProps {
   children: React.ReactNode
@@ -201,8 +202,10 @@ function FreelancerLayoutInner({
 
 export default function FreelancerLayout(props: FreelancerLayoutProps) {
   return (
-    <ChatViewProvider>
-      <LayoutContent {...props} />
-    </ChatViewProvider>
+    <DateRangeProvider>
+      <ChatViewProvider>
+        <LayoutContent {...props} />
+      </ChatViewProvider>
+    </DateRangeProvider>
   );
 }

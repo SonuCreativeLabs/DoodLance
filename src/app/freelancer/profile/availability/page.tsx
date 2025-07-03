@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useDateRange } from '@/contexts/DateRangeContext';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Clock, Calendar, Plus, X, Pencil, Check, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, Clock, Calendar, Plus, X, Pencil, Check, ChevronLeft, ChevronRight, List } from "lucide-react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -46,13 +47,10 @@ export default function AvailabilityPage() {
   const [currentWeekStart, setCurrentWeekStart] = useState(startOfWeek(new Date()));
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
   const [isDateRangeModalOpen, setIsDateRangeModalOpen] = useState(false);
-  const [dateRange, setDateRange] = useState({
-    start: new Date(2024, 5, 1), // June 1, 2024
-    end: new Date(2024, 5, 30)   // June 30, 2024
-  });
-
+  const { dateRange, updateDateRange } = useDateRange();
+  
   const handleDateRangeSelect = (start: Date, end: Date) => {
-    setDateRange({ start, end });
+    updateDateRange(start, end);
   };
   
   // Generate dates for the current week
@@ -149,70 +147,75 @@ export default function AvailabilityPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
-        <Link href="/freelancer/profile" className="inline-flex items-center text-sm text-purple-400 hover:text-purple-300 mb-4">
-          <ArrowLeft className="h-4 w-4 mr-1" />
-          Back to Profile
-        </Link>
-        <div>
-          <h1 className="text-2xl font-bold">My Availability</h1>
-          <p className="text-white/60 mt-1">Set your working hours and timezone</p>
+        <div className="flex items-center mb-4">
+          <div className="flex items-center space-x-4">
+            <Link 
+              href="/freelancer/profile" 
+              className="inline-flex items-center text-sm text-purple-400 hover:text-purple-300 transition-colors duration-200 group"
+            >
+              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/10 group-hover:bg-white/10 transition-colors duration-200">
+                <ArrowLeft className="h-4 w-4" />
+              </div>
+            </Link>
+            <div>
+              <h1 className="text-xl font-bold">My Availability</h1>
+              <p className="text-white/60 text-sm mt-0.5">Set your working hours and timezone</p>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Date Range Section */}
       <div className="mb-4">
-        <h2 className="text-lg font-medium mb-1">Availability Date Range</h2>
-        <p className="text-sm text-white/60 mb-4">Your selected availability period</p>
+        <div className="flex items-center mb-1">
+          <Calendar className="h-5 w-5 text-purple-400 mr-2" />
+          <h2 className="text-lg font-medium">Select Your Availability Window</h2>
+        </div>
+        <p className="text-sm text-white/60 mb-4">Choose the dates you'll be available for bookings</p>
       </div>
       
       {/* Date Range Card */}
       <Card className="bg-[#1E1E1E] border border-white/5 mb-6">
         <CardContent className="pt-6">
-          <div className="flex items-center justify-between bg-[#2A2A2A] rounded-lg p-4">
+          <div className="flex items-center justify-between">
             <div className="text-center flex-1">
               <div className="text-xs text-white/60 mb-1">From</div>
-              <div className="font-medium">{format(dateRange.start, 'MMMM d, yyyy')}</div>
+              <div className="font-medium">{format(dateRange.start, 'MMM d, yyyy')}</div>
               <div className="text-xs text-white/60 mt-1">{format(dateRange.start, 'EEEE')}</div>
             </div>
             <div className="h-12 w-px bg-white/10 mx-2"></div>
             <div className="text-center flex-1">
               <div className="text-xs text-white/60 mb-1">To</div>
-              <div className="font-medium">{format(dateRange.end, 'MMMM d, yyyy')}</div>
+              <div className="font-medium">{format(dateRange.end, 'MMM d, yyyy')}</div>
               <div className="text-xs text-white/60 mt-1">{format(dateRange.end, 'EEEE')}</div>
             </div>
           </div>
-          <Button 
-            variant="outline" 
-            className="w-full mt-4 border-dashed border-white/10 text-white/80 hover:bg-white/5 hover:text-white"
-            onClick={() => setIsDateRangeModalOpen(true)}
-          >
-            <Pencil className="h-4 w-4 mr-2 text-purple-400" />
-            <span className="text-purple-400">Change Date Range</span>
-          </Button>
+          <Link href="/freelancer/profile/listings" className="w-full">
+            <Button 
+              variant="outline"
+              className="w-full mt-4 h-10 rounded-lg border border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 hover:text-white transition-colors duration-200 flex items-center justify-center"
+            >
+              <List className="h-4 w-4 mr-2" />
+              <span className="font-medium">Your Listings</span>
+            </Button>
+          </Link>
         </CardContent>
       </Card>
       
-      <DateRangeModal 
-        isOpen={isDateRangeModalOpen}
-        onClose={() => setIsDateRangeModalOpen(false)}
-        onSelect={handleDateRangeSelect}
-        initialStartDate={dateRange.start}
-        initialEndDate={dateRange.end}
-      />
+
+
+      <div className="mb-4">
+        <div className="flex items-center gap-2 mb-1">
+          <Clock className="h-5 w-5 text-purple-400" />
+          <h2 className="text-lg font-medium">Working Hours</h2>
+        </div>
+        <p className="text-sm text-white/60 mb-4">Set your weekly availability for client bookings</p>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
           <Card className="bg-[#1E1E1E] border border-white/5">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="h-5 w-5 text-purple-400" />
-                Working Hours
-              </CardTitle>
-              <CardDescription className="text-white/60">
-                Set your weekly availability for client bookings
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
+            <CardContent className="pt-6">
               <div className="space-y-4">
                 {days.map((day) => (
                   <div key={day.id} className="rounded-lg bg-[#2A2A2A] overflow-hidden">
