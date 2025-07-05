@@ -16,6 +16,7 @@ interface DateRangeModalProps {
   onPauseDates?: (dates: Date[]) => void;
   initialStartDate?: Date;
   initialEndDate?: Date;
+  pausedDates?: Date[];
   fixedStartDate?: boolean;
   mode?: ModalMode;
 }
@@ -33,17 +34,46 @@ export function DateRangeModal({
   onPauseDates = () => {},
   initialStartDate = new Date(2025, 5, 1), // June 1, 2025
   initialEndDate = new Date(2025, 5, 30),   // June 30, 2025
+  pausedDates: initialPausedDates = [],
   fixedStartDate = false,
   mode = 'select'
 }: DateRangeModalProps) {
   const [startDate, setStartDate] = useState<Date | null>(initialStartDate);
   const [endDate, setEndDate] = useState<Date | null>(initialEndDate);
   const [tempEndDate, setTempEndDate] = useState<Date | null>(null);
-  const [pausedDates, setPausedDates] = useState<Date[]>([]);
+  const [pausedDates, setPausedDates] = useState<Date[]>(initialPausedDates);
   const [isSelecting, setIsSelecting] = useState(false);
   const [selectionStart, setSelectionStart] = useState<Date | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStartDate, setDragStartDate] = useState<Date | null>(null);
   const [visibleMonths, setVisibleMonths] = useState<Date[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
+  
+  // Handle drag start
+  const handleDragStart = useCallback((date: Date) => {
+    if (mode === 'pause') return;
+    setIsDragging(true);
+    setDragStartDate(date);
+  }, [mode]);
+  
+  // Handle drag over
+  const handleDragOver = useCallback((e: React.MouseEvent, date: Date) => {
+    if (!isDragging || !dragStartDate || mode === 'pause') return;
+    e.preventDefault();
+    
+    // Only update if the date is different and in the future
+    if (endDate && !isSameDay(date, endDate) && !isPastDate(date)) {
+      setEndDate(date);
+    }
+  }, [isDragging, dragStartDate, endDate, mode]);
+  
+  // Handle drag end
+  const handleDragEnd = useCallback(() => {
+    if (isDragging) {
+      setIsDragging(false);
+      setDragStartDate(null);
+    }
+  }, [isDragging]);
   
   // Reset dates when modal is opened/closed or when initial dates change
   useEffect(() => {
@@ -160,8 +190,31 @@ export function DateRangeModal({
   // Handle date click
   const handleDateClick = useCallback((date: Date) => {
     if (mode === 'pause') {
+      // Create a new date object for comparison
+      const clickedDate = new Date(date);
+      clickedDate.setHours(0, 0, 0, 0);
+      
+      // Check if the clicked date is already paused
+      const isDatePaused = pausedDates.some((pausedDate: Date) => {
+        const d = new Date(pausedDate);
+        d.setHours(0, 0, 0, 0);
+        return d.getTime() === clickedDate.getTime();
+      });
+      
+      if (isDatePaused) {
+        // If date is already paused, unselect it
+        setPausedDates((prev: Date[]) => 
+          prev.filter(pausedDate => {
+            const d = new Date(pausedDate);
+            d.setHours(0, 0, 0, 0);
+            return d.getTime() !== clickedDate.getTime();
+          })
+        );
+        return;
+      }
+      
+      // If date is not paused, proceed with selection
       if (!isSelecting) {
-        // First click - start selection
         setIsSelecting(true);
         setSelectionStart(date);
         
@@ -169,16 +222,8 @@ export function DateRangeModal({
         const newDate = new Date(date);
         newDate.setHours(0, 0, 0, 0);
         
-        // Use a Set for faster lookups
-        const dateStrings = new Set(pausedDates.map(dateItem => {
-          const normalizedDate = new Date(dateItem);
-          normalizedDate.setHours(0, 0, 0, 0);
-          return normalizedDate.getTime();
-        }));
-        
-        if (!dateStrings.has(newDate.getTime())) {
-          setPausedDates(prev => [...prev, newDate]);
-        }
+        // Add the new date to paused dates
+        setPausedDates((prev: Date[]) => [...prev, newDate]);
       } else if (selectionStart) {
         // Batch state updates
         requestAnimationFrame(() => {
@@ -264,13 +309,7 @@ export function DateRangeModal({
     startDate,
     endDate,
     onSelect,
-    onPauseDates,
-    setIsSelecting,
-    setSelectionStart,
-    setPausedDates,
-    setEndDate,
-    setStartDate,
-    setTempEndDate
+    onPauseDates
   ]);
 
   const handleMouseEnter = (day: Date) => {
@@ -298,6 +337,58 @@ export function DateRangeModal({
     onClose();
   };
 
+  // Handle pause mode changes
+  const togglePauseDate = useCallback((date: Date) => {
+    setPausedDates(prev => {
+      // Normalize dates to compare just the date part (ignoring time)
+      const normalizedDate = new Date(date);
+      normalizedDate.setHours(0, 0, 0, 0);
+      
+      const isPaused = prev.some(d => {
+        const normalizedD = new Date(d);
+        normalizedD.setHours(0, 0, 0, 0);
+        return normalizedD.getTime() === normalizedDate.getTime();
+      });
+      
+      if (isPaused) {
+        return prev.filter(d => {
+          const normalizedD = new Date(d);
+          normalizedD.setHours(0, 0, 0, 0);
+          return normalizedD.getTime() !== normalizedDate.getTime();
+        });
+      } else {
+        return [...prev, new Date(normalizedDate)]; // Ensure we store a new Date object
+      }
+    });
+  }, []);
+
+  // Handle modal close
+  const handleClose = () => {
+    if (mode !== 'pause') {
+      // Only reset these for date range selection mode
+      setStartDate(initialStartDate);
+      setEndDate(initialEndDate);
+      setTempEndDate(null);
+    }
+    // Don't reset pausedDates to maintain selection when reopening
+    onClose();
+  };
+
+  // Handle save
+  const handleSave = () => {
+    if (mode === 'pause') {
+      // Ensure we're passing proper Date objects
+      const validPausedDates = pausedDates
+        .filter(date => date instanceof Date && !isNaN(date.getTime()))
+        .map(date => new Date(date)); // Create new Date objects to avoid reference issues
+      
+      onPauseDates(validPausedDates);
+    } else if (startDate && endDate) {
+      onSelect(startDate, endDate);
+    }
+    onClose();
+  };
+
   // Check if a date is in the selected range
   const isDateInRange = (date: Date): boolean => {
     if (mode === 'pause') {
@@ -320,10 +411,8 @@ export function DateRangeModal({
     const start = startDate < effectiveEndDate ? startDate : effectiveEndDate;
     const end = startDate < effectiveEndDate ? effectiveEndDate : startDate;
     
-    return isWithinInterval(date, { 
-      start,
-      end
-    }) && !isSameDay(date, start) && !isSameDay(date, end);
+    // Include both start and end dates in the range
+    return isWithinInterval(date, { start, end });
   };
 
   const calculateDaysBetween = (start: Date, end: Date) => {
@@ -427,16 +516,24 @@ export function DateRangeModal({
     return checkDate < today;
   };
 
-  // Check if a date is within the available range (July 1-15, 2025)
+  // Check if a date is within the available range of the selected availability
   const isDateInAvailableRange = (date: Date): boolean => {
-    const startDate = new Date(2025, 6, 1); // July 1, 2025 (months are 0-based)
-    const endDate = new Date(2025, 6, 15);   // July 15, 2025
+    // Get the date range from the modal's state
+    const start = startDate ? new Date(startDate) : initialStartDate ? new Date(initialStartDate) : new Date();
+    const end = endDate ? new Date(endDate) : initialEndDate ? new Date(initialEndDate) : new Date();
     
     // Reset hours for accurate date comparison
     const checkDate = new Date(date);
     checkDate.setHours(0, 0, 0, 0);
     
-    return checkDate >= startDate && checkDate <= endDate;
+    // Normalize the range dates
+    const normalizedStart = new Date(start);
+    normalizedStart.setHours(0, 0, 0, 0);
+    
+    const normalizedEnd = new Date(end);
+    normalizedEnd.setHours(23, 59, 59, 999);
+    
+    return checkDate >= normalizedStart && checkDate <= normalizedEnd;
   };
 
   // Check if a date is selectable (within available range or already paused)
@@ -502,21 +599,22 @@ export function DateRangeModal({
               'relative h-10 w-10 flex items-center justify-center text-sm font-medium mx-auto',
               'transition-all duration-200',
               isTodayDate && !isSelected && !isPast ? 'font-bold text-[#6B46C1] dark:text-[#8B66D1]' : '',
-              // Only show range highlights when not in pause mode
-              mode !== 'pause' && isStart ? 'rounded-l-full bg-[#8B5CF6] text-white font-medium border-2 border-[#8B5CF6] z-10' : '',
-              mode !== 'pause' && isEnd ? 'rounded-r-full bg-[#8B5CF6] text-white font-medium border-2 border-[#8B5CF6] z-10' : '',
+              // Start date styling
+              mode !== 'pause' && isStart ? 'bg-[#8B5CF6] text-white font-medium border-2 border-[#8B5CF6] z-10 rounded-l-full' : '',
+              // End date styling
+              mode !== 'pause' && isEnd ? 'bg-[#8B5CF6] text-white font-medium border-2 border-[#8B5CF6] z-10 rounded-r-full' : '',
+              // Single day selection
               mode !== 'pause' && isSelected && isStart && isEnd ? 'rounded-full bg-[#8B5CF6] text-white font-medium border-2 border-[#8B5CF6] z-10' : '',
-              mode !== 'pause' && isInRange && !isPast ? 'bg-[#F5F3FF] dark:bg-[#2D1B69]/30' : '',
-              mode === 'pause' && !isPast && pausedDates.some(d => isSameDay(d, date)) ? 'before:absolute before:bg-yellow-500/20 before:border before:border-yellow-400/30 before:rounded-full before:w-8 before:h-8 before:left-1/2 before:top-1/2 before:-translate-x-1/2 before:-translate-y-1/2' : '',
-              !isSelected && !isInRange && !isPast && !(mode === 'pause' && pausedDates.some(d => isSameDay(d, date))) ? 'hover:bg-gray-50 dark:hover:bg-gray-700/30 rounded-full' : ''
+              // Hover state for unselected dates
+              !isSelected && !isInRange && !isPast && !(mode === 'pause' && pausedDates.some(d => isSameDay(d, date))) ? 'hover:bg-gray-50 dark:hover:bg-gray-700/30' : '',
+              // Range background (in-between dates)
+              mode !== 'pause' && isInRange && !isPast && !isStart && !isEnd ? 'bg-[#F5F3FF] dark:bg-[#2D1B69]/30' : '',
+              // Pause mode styling
+              mode === 'pause' && !isPast && pausedDates.some(d => isSameDay(d, date)) ? 'before:absolute before:bg-yellow-500/20 before:border before:border-yellow-400/30 before:rounded-full before:w-8 before:h-8 before:left-1/2 before:top-1/2 before:-translate-x-1/2 before:-translate-y-1/2' : ''
             ];
 
-            // Add styles for non-selectable dates in pause mode or past dates
-            const isPausedDate = !isPast && pausedDates.some(d => isSameDay(d, date));
-            const isInAvailableRange = isDateInAvailableRange(date);
-            
-            // For past dates, always apply disabled styling
-            if (isPast) {
+            // For past dates (excluding the start date if it's today)
+            if (isPast && !isStart) {
               buttonClasses = [
                 'relative h-10 w-10 flex items-center justify-center text-sm font-medium mx-auto',
                 'text-gray-500/80 dark:text-gray-400/80',
@@ -524,8 +622,13 @@ export function DateRangeModal({
                 'transition-all duration-200'
               ];
             } 
+            // For selected dates (start or end date)
+            else if (isSelected) {
+              // Keep all the selected date styling
+              buttonClasses = buttonClasses.filter(cls => !cls.includes('opacity') && !cls.includes('cursor-not-allowed'));
+            }
             // For non-past dates that are selectable
-            else if (isSelected || isInRange || isPausedDate || (mode === 'pause' && isInAvailableRange)) {
+            else if (isInRange || (mode === 'pause' && isDateInAvailableRange(date))) {
               buttonClasses = buttonClasses.filter(cls => !cls.includes('opacity') && !cls.includes('cursor-not-allowed'));
             } 
             // For non-past dates that are not selectable (only in pause mode)
@@ -534,7 +637,21 @@ export function DateRangeModal({
             }
 
             return (
-              <div key={`day-${index}`} className="relative w-10 h-10 mx-auto">
+              <div 
+                key={`day-${index}`} 
+                className="relative w-10 h-10 mx-auto"
+                onMouseMove={(e) => handleDragOver(e, date)}
+              >
+                {isEnd && !isPast && mode !== 'pause' && (
+                  <div 
+                    className="absolute right-0 top-0 h-full w-3 z-20 cursor-ew-resize flex items-center justify-center space-x-px"
+                    onMouseDown={() => handleDragStart(date)}
+                    onDoubleClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="h-2 w-px bg-white/50 group-hover/endDate:bg-white transition-colors" />
+                    <div className="h-2 w-px bg-white/50 group-hover/endDate:bg-white transition-colors" />
+                  </div>
+                )}
                 <button
                   type="button"
                   onClick={() => {
@@ -556,7 +673,9 @@ export function DateRangeModal({
                     }
                   }}
                   disabled={mode === 'pause' ? !isDateSelectable(date) : isPast}
-                  className={`absolute inset-0 w-full h-full flex items-center justify-center ${buttonClasses.filter(Boolean).join(' ')}`}
+                  className={`absolute inset-0 w-full h-full flex items-center justify-center ${buttonClasses.filter(Boolean).join(' ')} ${
+                    isEnd && !isPast && mode !== 'pause' ? 'group/endDate' : ''
+                  }`}
                 style={mode !== 'pause' ? {
                   ...(isInRange && !isStart && !isEnd && {
                     background: 'linear-gradient(90deg, rgba(139, 92, 246, 0.1) 0%, rgba(139, 92, 246, 0.15) 50%, rgba(139, 92, 246, 0.1) 100%)',
@@ -565,10 +684,14 @@ export function DateRangeModal({
                   ...(isStart && {
                     borderTopRightRadius: 0,
                     borderBottomRightRadius: 0,
+                    borderTopLeftRadius: '6px',
+                    borderBottomLeftRadius: '6px',
                   }),
                   ...(isEnd && {
                     borderTopLeftRadius: 0,
                     borderBottomLeftRadius: 0,
+                    borderTopRightRadius: '6px',
+                    borderBottomRightRadius: '6px',
                   }),
                 } : {}}
                 aria-label={`${format(date, 'EEEE, MMMM d, yyyy')}${isSelected ? ' (selected)' : ''}${isPast ? ' (past date)' : ''}`}
@@ -609,6 +732,20 @@ export function DateRangeModal({
     // If useModal throws, we'll proceed without modal context
     console.warn('ModalContext not available, proceeding without it');
   }
+
+  // Add mouse up and mouse leave events to handle drag end
+  useEffect(() => {
+    const handleMouseUp = () => handleDragEnd();
+    const handleMouseLeave = () => handleDragEnd();
+    
+    window.addEventListener('mouseup', handleMouseUp);
+    window.addEventListener('mouseleave', handleMouseLeave);
+    
+    return () => {
+      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('mouseleave', handleMouseLeave);
+    };
+  }, [handleDragEnd]);
 
   // Handle modal state changes
   useEffect(() => {

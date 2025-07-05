@@ -21,11 +21,65 @@ interface Availability {
   pausedCount: number;
 }
 
+const calculateDaysBetween = (start: Date, end: Date): number => {
+  // Normalize both dates to the start of the day (midnight)
+  const startDate = new Date(start);
+  startDate.setHours(0, 0, 0, 0);
+  
+  const endDate = new Date(end);
+  endDate.setHours(0, 0, 0, 0);
+  
+  // Calculate the difference in days
+  const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  // Add 1 to include both start and end dates if they're different
+  return diffDays === 0 ? 1 : diffDays + 1;
+};
+
 export default function AvailabilityListingsPage() {
   const [isDateRangeModalOpen, setIsDateRangeModalOpen] = useState(false);
   const [isPauseModalOpen, setIsPauseModalOpen] = useState(false);
   const [selectedAvailability, setSelectedAvailability] = useState<Availability | null>(null);
   const [pausedDates, setPausedDates] = useState<Date[]>([]);
+  const [isCreatingNew, setIsCreatingNew] = useState(false);
+  const [availabilities, setAvailabilities] = useState<Availability[]>([
+    {
+      id: '1',
+      title: 'Summer Coaching Availability',
+      fromDate: new Date(2025, 6, 1),
+      toDate: new Date(2025, 6, 15),
+      totalDays: 15,
+      isActive: true,
+      gigs: 45,
+      hours: 67.5,
+      pausedCount: 2
+    },
+    {
+      id: '2',
+      title: 'Weekend Special',
+      fromDate: new Date(2025, 5, 1),
+      toDate: new Date(2025, 5, 30),
+      totalDays: 30,
+      isActive: false,
+      gigs: 90,
+      hours: 135,
+      pausedCount: 0
+    },
+    {
+      id: '3',
+      title: 'Summer Break Camp',
+      fromDate: new Date(2025, 5, 15),
+      toDate: new Date(2025, 5, 25),
+      totalDays: 11,
+      isActive: false,
+      gigs: 33,
+      hours: 49.5,
+      pausedCount: 1
+    },
+  ]);
+  
+  const { dateRange, updateDateRange } = useDateRange();
 
   const handleExtendClick = (availability: Availability) => {
     setSelectedAvailability(availability);
@@ -34,14 +88,31 @@ export default function AvailabilityListingsPage() {
 
   const handlePauseClick = (availability: Availability) => {
     setSelectedAvailability(availability);
-    setPausedDates([]);
+    // Load any previously paused dates for this availability
+    const savedPausedDates = typeof window !== 'undefined' 
+      ? JSON.parse(localStorage.getItem(`pausedDates_${availability.id}`) || '[]')
+          .map((dateStr: string) => new Date(dateStr))
+      : [];
+    setPausedDates(savedPausedDates);
     setIsPauseModalOpen(true);
   };
 
   const handlePauseDates = (dates: Date[]) => {
     if (selectedAvailability) {
+      // Save paused dates to localStorage
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem(
+            `pausedDates_${selectedAvailability.id}`,
+            JSON.stringify(dates.map(date => date.toISOString()))
+          );
+        } catch (error) {
+          console.error('Error saving paused dates:', error);
+        }
+      }
+      
       // Update the availability with paused dates
-      setAvailabilities(availabilities.map(avail => 
+      const updatedAvailabilities = availabilities.map(avail => 
         avail.id === selectedAvailability.id 
           ? { 
               ...avail, 
@@ -50,51 +121,57 @@ export default function AvailabilityListingsPage() {
               // and update the backend with the paused dates
             } 
           : avail
-      ));
+      );
+      
+      setAvailabilities(updatedAvailabilities);
+      setPausedDates([...dates]); // Create a new array reference
       setIsPauseModalOpen(false);
     }
   };
 
-  const calculateDaysBetween = (start: Date, end: Date): number => {
-    // Normalize both dates to the start of the day (midnight)
-    const startDate = new Date(start);
-    startDate.setHours(0, 0, 0, 0);
-    
-    const endDate = new Date(end);
-    endDate.setHours(0, 0, 0, 0);
-    
-    // Calculate the difference in days
-    const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
-    // Add 1 to include both start and end dates if they're different
-    return diffDays === 0 ? 1 : diffDays + 1;
-  };
+
 
   const handleDateRangeSelect = (start: Date, end: Date) => {
-    if (selectedAvailability) {
-      const totalDays = calculateDaysBetween(start, end);
+    const totalDays = calculateDaysBetween(start, end);
+    const totalGigs = totalDays * 3;
+    const totalHours = parseFloat((totalGigs * 1.5).toFixed(1));
+    
+    if (isCreatingNew) {
+      // Create a new availability
+      const newAvailability: Availability = {
+        id: Date.now().toString(),
+        title: `New Availability ${availabilities.length + 1}`,
+        fromDate: start,
+        toDate: end,
+        totalDays,
+        isActive: true,
+        gigs: totalGigs,
+        hours: totalHours,
+        pausedCount: 0
+      };
       
-      // Update the availability with new date range and calculated days
+      setAvailabilities([newAvailability, ...availabilities]);
+      setIsCreatingNew(false);
+    } else if (selectedAvailability) {
+      // Update existing availability
       const updatedAvailabilities = availabilities.map(avail => 
         avail.id === selectedAvailability.id 
           ? { 
               ...avail, 
               fromDate: start, 
               toDate: end,
-              totalDays: totalDays,
-              // Recalculate gigs (3 per day)
-              gigs: totalDays * 3,
-              // Recalculate hours based on gigs (1.5 hours per gig)
-              hours: parseFloat((totalDays * 3 * 1.5).toFixed(1))
+              totalDays,
+              gigs: totalGigs,
+              hours: totalHours
             } 
           : avail
       );
       
       setAvailabilities(updatedAvailabilities);
-      updateDateRange(start, end);
-      setIsDateRangeModalOpen(false);
     }
+    
+    updateDateRange(start, end);
+    setIsDateRangeModalOpen(false);
   };
   
   // Update initial availabilities with calculated days and hours
@@ -113,43 +190,6 @@ export default function AvailabilityListingsPage() {
       })
     );
   }, []);
-
-  const { dateRange, updateDateRange } = useDateRange();
-  const [availabilities, setAvailabilities] = useState<Availability[]>([
-    {
-      id: '1',
-      title: 'Summer Coaching Availability',
-      fromDate: new Date(2025, 6, 1),
-      toDate: new Date(2025, 6, 15),
-      totalDays: 15,
-      isActive: true,
-      gigs: 45, // 3 gigs per day * 15 days
-      hours: 67.5,
-      pausedCount: 2
-    },
-    {
-      id: '2',
-      title: 'Weekend Special',
-      fromDate: new Date(2025, 5, 1),
-      toDate: new Date(2025, 5, 30),
-      totalDays: 30,
-      isActive: false,
-      gigs: 90, // 3 gigs per day * 30 days
-      hours: 135, // 90 gigs * 1.5 hours per gig
-      pausedCount: 0
-    },
-    {
-      id: '3',
-      title: 'Summer Break Camp',
-      fromDate: new Date(2025, 5, 15),
-      toDate: new Date(2025, 5, 25),
-      totalDays: 11,
-      isActive: false,
-      gigs: 33, // 3 gigs per day * 11 days
-      hours: 49.5,
-      pausedCount: 1
-    },
-  ]);
 
   const formatDate = (date: Date) => {
     return format(date, 'MMM d, yyyy');
@@ -177,6 +217,11 @@ export default function AvailabilityListingsPage() {
         <div className="w-full max-w-2xl mx-auto mt-2">
           <div className="relative group w-full">
             <Button 
+              onClick={() => {
+                setIsCreatingNew(true);
+                setSelectedAvailability(null);
+                setIsDateRangeModalOpen(true);
+              }}
               className="relative z-10 w-full bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white 
                        py-3 rounded-lg font-medium text-sm shadow-lg shadow-purple-900/20
                        transition-all duration-200 transform hover:-translate-y-0.5 hover:shadow-xl hover:shadow-purple-900/30
@@ -230,11 +275,14 @@ export default function AvailabilityListingsPage() {
       
       <DateRangeModal 
         isOpen={isDateRangeModalOpen}
-        onClose={() => setIsDateRangeModalOpen(false)}
+        onClose={() => {
+          setIsDateRangeModalOpen(false);
+          setIsCreatingNew(false);
+        }}
         onSelect={handleDateRangeSelect}
-        initialStartDate={selectedAvailability?.fromDate}
-        initialEndDate={selectedAvailability?.toDate}
-        fixedStartDate={true}
+        initialStartDate={isCreatingNew ? new Date() : selectedAvailability?.fromDate}
+        initialEndDate={isCreatingNew ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) : selectedAvailability?.toDate}
+        fixedStartDate={!isCreatingNew}
       />
       
       <DateRangeModal 
@@ -244,6 +292,7 @@ export default function AvailabilityListingsPage() {
         onPauseDates={handlePauseDates}
         initialStartDate={selectedAvailability?.fromDate || new Date()}
         initialEndDate={selectedAvailability?.toDate || new Date()}
+        pausedDates={pausedDates}
         mode="pause"
       />
     </div>
