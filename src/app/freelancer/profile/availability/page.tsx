@@ -52,6 +52,7 @@ export default function AvailabilityPage() {
   // Booking notice state
   const [enableAdvanceNotice, setEnableAdvanceNotice] = useState(false);
   const [noticeHours, setNoticeHours] = useState(2);
+  const [noticeInput, setNoticeInput] = useState('2');
   
   const handleDateRangeSelect = (start: Date, end: Date) => {
     updateDateRange(start, end);
@@ -273,21 +274,21 @@ export default function AvailabilityPage() {
                           <div className="text-sm text-white/60 italic">No time slots added</div>
                         ) : (
                           day.timeSlots.map((slot) => (
-                            <div key={slot.id} className="flex items-center gap-2 p-2 bg-[#333333] rounded-md">
+                            <div key={slot.id} className="flex items-center gap-2 p-2 bg-[#333333] rounded-lg">
                               {slot.isEditing ? (
                                 <>
                                   <input
                                     type="time"
                                     value={slot.start}
                                     onChange={(e) => updateTimeSlot(day.id, slot.id, 'start', e.target.value)}
-                                    className="bg-[#2A2A2A] border border-white/10 rounded px-2 py-1 text-sm w-24"
+                                    className="bg-[#2A2A2A] border border-white/10 rounded px-2 py-1 text-sm w-24 text-white [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-100"
                                   />
                                   <span className="text-white/60">to</span>
                                   <input
                                     type="time"
                                     value={slot.end}
                                     onChange={(e) => updateTimeSlot(day.id, slot.id, 'end', e.target.value)}
-                                    className="bg-[#2A2A2A] border border-white/10 rounded px-2 py-1 text-sm w-24"
+                                    className="bg-[#2A2A2A] border border-white/10 rounded px-2 py-1 text-sm w-24 text-white [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-100"
                                   />
                                   <Button 
                                     type="button" 
@@ -368,8 +369,42 @@ export default function AvailabilityPage() {
                         type="number"
                         min="1"
                         max="24"
-                        value={noticeHours}
-                        onChange={(e) => setNoticeHours(parseInt(e.target.value) || 1)}
+                        value={noticeInput}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          setNoticeInput(value);
+                          
+                          if (value === '') return;
+                          
+                          const num = parseInt(value, 10);
+                          if (!isNaN(num) && num >= 1 && num <= 24) {
+                            setNoticeHours(num);
+                          }
+                        }}
+                        onBlur={() => {
+                          if (noticeInput === '') {
+                            setNoticeHours(1);
+                            setNoticeInput('1');
+                          } else {
+                            const num = parseInt(noticeInput, 10);
+                            if (isNaN(num) || num < 1) {
+                              setNoticeHours(1);
+                              setNoticeInput('1');
+                            } else if (num > 24) {
+                              setNoticeHours(24);
+                              setNoticeInput('24');
+                            } else {
+                              setNoticeHours(num);
+                              setNoticeInput(num.toString());
+                            }
+                          }
+                        }}
+                        onKeyDown={(e) => {
+                          // Prevent negative numbers and decimal points
+                          if (['-', '.', 'e', 'E'].includes(e.key)) {
+                            e.preventDefault();
+                          }
+                        }}
                         className="w-20 bg-[#2A2A2A] border border-white/10 rounded-md p-2 text-sm focus:ring-1 focus:ring-purple-500 focus:border-transparent"
                       />
                       <span className="text-sm text-white/60">hours notice</span>
