@@ -471,7 +471,7 @@ export function ServicePackages({ services = [] }: ServicePackagesProps) {
                 <div className="mt-2">
                   <p className="text-2xl font-bold text-white">
                     ₹{pkg.price.replace(/^₹/, '')}
-                    <span className="text-sm font-normal text-white/60 ml-1">/session</span>
+                    <span className="text-sm font-normal text-white/60 ml-1">/gig</span>
                   </p>
                 </div>
                 <p className="mt-2 text-sm text-white/60">{pkg.description}</p>
