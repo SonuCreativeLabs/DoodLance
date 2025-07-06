@@ -3,10 +3,11 @@
 import { useState, useEffect } from 'react';
 import { useDateRange } from '@/contexts/DateRangeContext';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Clock, Calendar, Plus, X, Pencil, Check, ChevronLeft, ChevronRight, List, Info, Zap } from "lucide-react";
+import { ArrowLeft, Clock, Calendar, Plus, X, Pencil, Check, ChevronLeft, ChevronRight, List, Info, Zap, MapPin, Navigation, Bell, Minus } from "lucide-react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { format, addDays, startOfWeek, isSameDay } from 'date-fns';
 import { DateRangeModal } from "@/components/calendar/DateRangeModal";
 
@@ -53,6 +54,9 @@ export default function AvailabilityPage() {
   const [enableAdvanceNotice, setEnableAdvanceNotice] = useState(false);
   const [noticeHours, setNoticeHours] = useState(2);
   const [noticeInput, setNoticeInput] = useState('2');
+  
+  // Service radius state (in kilometers)
+  const [serviceRadius, setServiceRadius] = useState(10);
   
   const handleDateRangeSelect = (start: Date, end: Date) => {
     updateDateRange(start, end);
@@ -348,7 +352,10 @@ export default function AvailabilityPage() {
             <div className="p-5">
               <div className="relative mb-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-base font-medium text-white">Booking Notice</h3>
+                  <div className="flex items-center gap-2">
+                    <Bell className="h-5 w-5 text-purple-400" />
+                    <h3 className="text-base font-medium text-white">Booking Notice</h3>
+                  </div>
                   <button
                     onClick={() => setEnableAdvanceNotice(!enableAdvanceNotice)}
                     className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 ${enableAdvanceNotice ? 'bg-purple-600' : 'bg-[#2A2A2A]'}`}
@@ -363,57 +370,91 @@ export default function AvailabilityPage() {
               
               {enableAdvanceNotice ? (
                 <div className="space-y-4">
-                  <div className="space-y-3 p-3 bg-[#2A2A2A]/50 rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="number"
-                        min="1"
-                        max="24"
-                        value={noticeInput}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          setNoticeInput(value);
+                  <div className="p-4 bg-[#2A2A2A]/50 rounded-lg">
+                    <div className="flex flex-col gap-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-white/90">Minimum notice period</span>
+                        <div className="flex items-center gap-2 bg-[#1E1E1E] border border-white/5 rounded-lg p-1">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newValue = Math.max(1, noticeHours - 1);
+                              setNoticeHours(newValue);
+                              setNoticeInput(newValue.toString());
+                            }}
+                            className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-white/5 transition-colors text-white/80 hover:text-white disabled:opacity-30 disabled:pointer-events-none"
+                            aria-label="Decrease hours"
+                            disabled={noticeHours <= 1}
+                          >
+                            <Minus className="h-3.5 w-3.5" />
+                          </button>
                           
-                          if (value === '') return;
+                          <div className="relative w-12">
+                            <input
+                              type="number"
+                              min="1"
+                              max="24"
+                              value={noticeInput}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                setNoticeInput(value);
+                                
+                                if (value === '') return;
+                                
+                                const num = parseInt(value, 10);
+                                if (!isNaN(num) && num >= 1 && num <= 24) {
+                                  setNoticeHours(num);
+                                }
+                              }}
+                              onBlur={() => {
+                                if (noticeInput === '') {
+                                  setNoticeHours(1);
+                                  setNoticeInput('1');
+                                } else {
+                                  const num = parseInt(noticeInput, 10);
+                                  if (isNaN(num) || num < 1) {
+                                    setNoticeHours(1);
+                                    setNoticeInput('1');
+                                  } else if (num > 24) {
+                                    setNoticeHours(24);
+                                    setNoticeInput('24');
+                                  } else {
+                                    setNoticeHours(num);
+                                    setNoticeInput(num.toString());
+                                  }
+                                }
+                              }}
+                              onKeyDown={(e) => {
+                                if (['-', '.', 'e', 'E'].includes(e.key)) {
+                                  e.preventDefault();
+                                }
+                              }}
+                              className="w-full text-center bg-transparent text-sm font-medium text-white focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none pr-6"
+                            />
+                            <span className="absolute right-0 top-1/2 -translate-y-1/2 text-sm text-white/60 pointer-events-none pl-1">hrs</span>
+                          </div>
                           
-                          const num = parseInt(value, 10);
-                          if (!isNaN(num) && num >= 1 && num <= 24) {
-                            setNoticeHours(num);
-                          }
-                        }}
-                        onBlur={() => {
-                          if (noticeInput === '') {
-                            setNoticeHours(1);
-                            setNoticeInput('1');
-                          } else {
-                            const num = parseInt(noticeInput, 10);
-                            if (isNaN(num) || num < 1) {
-                              setNoticeHours(1);
-                              setNoticeInput('1');
-                            } else if (num > 24) {
-                              setNoticeHours(24);
-                              setNoticeInput('24');
-                            } else {
-                              setNoticeHours(num);
-                              setNoticeInput(num.toString());
-                            }
-                          }
-                        }}
-                        onKeyDown={(e) => {
-                          // Prevent negative numbers and decimal points
-                          if (['-', '.', 'e', 'E'].includes(e.key)) {
-                            e.preventDefault();
-                          }
-                        }}
-                        className="w-20 bg-[#2A2A2A] border border-white/10 rounded-md p-2 text-sm focus:ring-1 focus:ring-purple-500 focus:border-transparent"
-                      />
-                      <span className="text-sm text-white/60">hours notice</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newValue = Math.min(24, noticeHours + 1);
+                              setNoticeHours(newValue);
+                              setNoticeInput(newValue.toString());
+                            }}
+                            className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-white/5 transition-colors text-white/80 hover:text-white disabled:opacity-30 disabled:pointer-events-none"
+                            aria-label="Increase hours"
+                            disabled={noticeHours >= 24}
+                          >
+                            <Plus className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                      <p className="text-xs text-white/50 leading-tight mt-2">
+                        {noticeHours === 1 
+                          ? 'Clients must book at least 1 hour in advance.'
+                          : `Clients must book at least ${noticeHours} hours in advance.`}
+                      </p>
                     </div>
-                    <p className="text-xs text-white/50">
-                      {noticeHours === 1 
-                        ? 'Clients must book at least 1 hour in advance.'
-                        : `Clients must book at least ${noticeHours} hours in advance.`}
-                    </p>
                   </div>
                 </div>
               ) : (
@@ -433,6 +474,66 @@ export default function AvailabilityPage() {
                   <span className="font-medium text-white/80">Tip:</span> {enableAdvanceNotice 
                     ? 'Set a notice period to manage your schedule better.'
                     : 'Turn on advance notice to prevent last-minute bookings.'}
+                </p>
+              </div>
+            </div>
+          </Card>
+
+          {/* Service Radius Section */}
+          <Card className="bg-[#1E1E1E] border border-white/5 mt-6">
+            <div className="p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <Navigation className="h-5 w-5 text-purple-400" />
+                <h3 className="text-base font-medium text-white">Service Radius</h3>
+              </div>
+              
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-white/80">Maximum distance for clients</span>
+                  <div className="text-sm font-medium text-white">
+                    {serviceRadius} km
+                  </div>
+                </div>
+                
+                <div className="px-2 relative">
+                  <div className="relative w-full h-8 flex items-center">
+                    <div className="absolute w-full h-1 bg-[#2A2A2A] rounded-full">
+                      <div className="absolute top-0 left-0 h-full bg-purple-500 rounded-full" 
+                           style={{ width: `${serviceRadius}%` }}></div>
+                      
+                      {/* Tick marks */}
+                      {[0, 25, 50, 75, 100].map((tick) => (
+                        <div 
+                          key={tick}
+                          className={`absolute top-1/2 w-0.5 h-2 -mt-1 -ml-0.5 ${tick <= serviceRadius ? 'bg-purple-400' : 'bg-white/20'}`}
+                          style={{ left: `${tick}%` }}
+                        />
+                      ))}
+                    </div>
+                    <input
+                      type="range"
+                      min="1"
+                      max="100"
+                      value={serviceRadius}
+                      onChange={(e) => setServiceRadius(parseInt(e.target.value))}
+                      className="absolute w-full h-2 opacity-0 cursor-pointer z-10"
+                    />
+                    <div 
+                      className="absolute h-4 w-4 rounded-full bg-purple-500 -ml-2 z-20 shadow-lg"
+                      style={{ left: `${serviceRadius}%` }}
+                    />
+                  </div>
+                  <div className="flex justify-between text-xs text-white/50 mt-3 px-1">
+                    <span>1 km</span>
+                    <span>25 km</span>
+                    <span>50 km</span>
+                    <span>75 km</span>
+                    <span>100+ km</span>
+                  </div>
+                </div>
+                
+                <p className="text-xs text-white/50">
+                  Clients within {serviceRadius} km will be able to find and book your services.
                 </p>
               </div>
             </div>
