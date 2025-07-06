@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useDateRange } from '@/contexts/DateRangeContext';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Clock, Calendar, Plus, X, Pencil, Check, ChevronLeft, ChevronRight, List } from "lucide-react";
+import { ArrowLeft, Clock, Calendar, Plus, X, Pencil, Check, ChevronLeft, ChevronRight, List, Info, Zap } from "lucide-react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -48,6 +48,10 @@ export default function AvailabilityPage() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
   const [isDateRangeModalOpen, setIsDateRangeModalOpen] = useState(false);
   const { dateRange, updateDateRange } = useDateRange();
+  
+  // Booking notice state
+  const [enableAdvanceNotice, setEnableAdvanceNotice] = useState(false);
+  const [noticeHours, setNoticeHours] = useState(2);
   
   const handleDateRangeSelect = (start: Date, end: Date) => {
     updateDateRange(start, end);
@@ -190,14 +194,28 @@ export default function AvailabilityPage() {
               <div className="text-xs text-white/60 mt-1">{format(dateRange.end, 'EEEE')}</div>
             </div>
           </div>
-          <Link href="/freelancer/profile/listings" className="w-full">
-            <Button 
-              variant="outline"
-              className="w-full mt-4 h-10 rounded-lg border border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 hover:text-white transition-colors duration-200 flex items-center justify-center"
+          <Link href="/freelancer/profile/listings" className="w-full block">
+            <button 
+              className="w-full mt-4 h-12 rounded-xl bg-[#2A2A2A] hover:bg-[#333] border border-white/5 text-white/90 hover:text-white transition-all duration-200 flex items-center justify-center gap-2 group px-6 shadow-sm hover:shadow-purple-500/10"
             >
-              <List className="h-4 w-4 mr-2" />
-              <span className="font-medium">Your Listings</span>
-            </Button>
+              <List className="h-4 w-4 text-purple-400 group-hover:text-purple-300 transition-colors" />
+              <span className="text-sm font-medium">Manage Your Listings</span>
+              <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                width="16" 
+                height="16" 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                strokeWidth="2" 
+                strokeLinecap="round" 
+                strokeLinejoin="round"
+                className="ml-1 text-white/60 group-hover:translate-x-1 transition-transform"
+              >
+                <path d="M5 12h14"></path>
+                <path d="m12 5 7 7-7 7"></path>
+              </svg>
+            </button>
           </Link>
         </CardContent>
       </Card>
@@ -321,49 +339,68 @@ export default function AvailabilityPage() {
             </CardContent>
           </Card>
 
-          <Card className="bg-[#1E1E1E] border border-white/5">
-            <CardHeader>
-              <CardTitle>Time Off</CardTitle>
-              <CardDescription className="text-white/60">
-                Schedule time off when you're not available
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-col items-center justify-center py-8 text-center rounded-lg border-2 border-dashed border-white/10">
-                <Calendar className="h-10 w-10 text-white/30 mb-2" />
-                <p className="text-white/60 mb-2">No time off scheduled</p>
-                <Button variant="outline" className="border-white/10 hover:bg-white/5">
-                  Add Time Off
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+
         </div>
 
         <div className="space-y-6">
           <Card className="bg-[#1E1E1E] border border-white/5">
-            <CardHeader>
-              <CardTitle>Booking Notice</CardTitle>
-              <CardDescription className="text-white/60">
-                Set how far in advance clients can book
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center gap-2">
-                  <input
-                    type="number"
-                    min="1"
-                    defaultValue="24"
-                    className="w-20 bg-[#2A2A2A] border border-white/10 rounded-md p-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  />
-                  <span className="text-sm text-white/80">hours notice required</span>
+            <div className="p-5">
+              <div className="relative mb-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-base font-medium text-white">Booking Notice</h3>
+                  <button
+                    onClick={() => setEnableAdvanceNotice(!enableAdvanceNotice)}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 ${enableAdvanceNotice ? 'bg-purple-600' : 'bg-[#2A2A2A]'}`}
+                  >
+                    <span className="sr-only">Enable advance notice</span>
+                    <span
+                      className={`${enableAdvanceNotice ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
+                    />
+                  </button>
                 </div>
-                <p className="text-xs text-white/50">
-                  Clients must book at least this far in advance
+              </div>
+              
+              {enableAdvanceNotice ? (
+                <div className="space-y-4">
+                  <div className="space-y-3 p-3 bg-[#2A2A2A]/50 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        min="1"
+                        max="24"
+                        value={noticeHours}
+                        onChange={(e) => setNoticeHours(parseInt(e.target.value) || 1)}
+                        className="w-20 bg-[#2A2A2A] border border-white/10 rounded-md p-2 text-sm focus:ring-1 focus:ring-purple-500 focus:border-transparent"
+                      />
+                      <span className="text-sm text-white/60">hours notice</span>
+                    </div>
+                    <p className="text-xs text-white/50">
+                      {noticeHours === 1 
+                        ? 'Clients must book at least 1 hour in advance.'
+                        : `Clients must book at least ${noticeHours} hours in advance.`}
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center gap-3 p-3 bg-[#2A2A2A]/30 rounded-lg border border-dashed border-white/10">
+                  <div className="p-2 rounded-full bg-purple-500/10">
+                    <Zap className="h-4 w-4 text-purple-400" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-white">Instant Bookings</p>
+                    <p className="text-xs text-white/50">Clients can book your time immediately</p>
+                  </div>
+                </div>
+              )}
+              
+              <div className="mt-4 p-3 bg-[#2A2A2A]/50 rounded-md">
+                <p className="text-xs text-white/60">
+                  <span className="font-medium text-white/80">Tip:</span> {enableAdvanceNotice 
+                    ? 'Set a notice period to manage your schedule better.'
+                    : 'Turn on advance notice to prevent last-minute bookings.'}
                 </p>
               </div>
-            </CardContent>
+            </div>
           </Card>
 
           <Button className="w-full bg-purple-600 hover:bg-purple-700">

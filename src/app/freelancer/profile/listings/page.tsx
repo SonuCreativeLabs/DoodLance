@@ -196,7 +196,7 @@ export default function AvailabilityListingsPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 pb-24">
       <div className="mb-8">
         <div className="flex items-center mb-4">
           <div className="flex items-center space-x-4">
@@ -322,7 +322,7 @@ function AvailabilityCard({ availability, formatDate, onPause, onExtend }: Avail
           {/* Header with status */}
           <div className="flex justify-between items-start mb-4">
             <div className={`flex items-center text-sm ${isActive ? 'text-white/80' : 'text-white/50'}`}>
-              <Calendar className={`h-4 w-4 mr-2 ${isActive ? 'text-purple-400' : 'text-white/30'}`} />
+              <Calendar className={`h-4 w-4 mr-2 ${isActive ? 'text-gray-400' : 'text-white/30'}`} />
               <span>{formatDate(availability.fromDate)} - {formatDate(availability.toDate)}</span>
             </div>
             <span className={`inline-flex items-center px-2 h-5 rounded text-xs font-medium ${
@@ -378,28 +378,25 @@ function AvailabilityCard({ availability, formatDate, onPause, onExtend }: Avail
         {isActive && (
           <CardFooter className="px-4 pb-4 pt-0">
             <div className="w-full flex gap-3">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="flex-1 h-9 bg-transparent hover:bg-white/5 border-white/10 text-purple-300 hover:text-purple-200 transition-colors"
+              <button 
                 onClick={() => onExtend(availability)}
+                className="group relative flex-1 h-10 rounded-xl overflow-hidden bg-gradient-to-r from-white/5 to-white/[0.03] hover:from-white/10 hover:to-white/5 transition-all duration-300 flex items-center justify-center gap-2 px-4 text-sm font-medium text-white/90 hover:text-white border border-white/5 hover:border-white/10 shadow-sm"
               >
-                <svg className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                <svg className="h-3.5 w-3.5 text-[#8B5CF6] group-hover:text-[#A78BFA] transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
                 </svg>
-                Extend
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="flex-1 h-9 bg-transparent hover:bg-white/5 border-white/10 text-white/80 hover:text-white transition-colors"
+                <span>Extend</span>
+              </button>
+              <button 
                 onClick={() => onPause(availability)}
+                className="group relative flex-1 h-10 rounded-xl overflow-hidden bg-gradient-to-r from-white/5 to-white/[0.03] hover:from-white/10 hover:to-white/5 transition-all duration-300 flex items-center justify-center gap-2 px-4 text-sm font-medium text-white/90 hover:text-white border border-white/5 hover:border-white/10 shadow-sm hover:shadow-yellow-500/10"
               >
-                <svg className="h-3.5 w-3.5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <svg className="h-3.5 w-3.5 text-yellow-400 group-hover:text-yellow-300 transition-colors z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                Pause
-              </Button>
+                <span className="z-10">Pause</span>
+              </button>
             </div>
           </CardFooter>
         )}
