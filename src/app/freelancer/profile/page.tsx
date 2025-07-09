@@ -1,6 +1,6 @@
 "use client"
 
-import { Briefcase, Code, Award, Star, FileText, Calendar, MessageSquare, Settings, User, Mail, Phone, Globe, MapPin, GraduationCap, Languages, Edit2 } from 'lucide-react';
+import { Briefcase, Code, Award, Star, FileText, Calendar, MessageSquare, Settings, User, Mail, Phone, Globe, MapPin, GraduationCap, Languages, Edit2, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -283,6 +283,13 @@ export default function ProfilePage() {
             description="Set your working hours and availability"
             href="/freelancer/profile/availability"
             icon={<Calendar className="h-5 w-5" />}
+          />
+          
+          <ProfileSectionCard
+            title="Identity Verification"
+            description="Complete your KYC verification to unlock all features"
+            href="/freelancer/profile/verification/upload"
+            icon={<CheckCircle className="h-5 w-5" />}
           />
         </div>
       </div>

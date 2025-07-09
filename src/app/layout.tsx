@@ -5,6 +5,7 @@ import { Inter } from "next/font/google";
 import { AuthProvider } from "@/contexts/auth-context";
 import { RoleProvider } from "@/contexts/role-context";
 import { ModalProvider } from "@/contexts/ModalContext";
+import { LayoutProvider } from "@/contexts/LayoutContext";
 import { SplashScreen } from "@/components/splash-screen";
 import { useEffect, useState } from "react";
 
@@ -48,13 +49,15 @@ export default function RootLayout({
         <AuthProvider>
           <RoleProvider>
             <ModalProvider>
-              {showSplash ? (
-                <SplashScreen onComplete={() => setShowSplash(false)} />
-              ) : (
-                <main className="flex flex-col h-screen">
-                  {children}
-                </main>
-              )}
+              <LayoutProvider>
+                {showSplash ? (
+                  <SplashScreen onComplete={() => setShowSplash(false)} />
+                ) : (
+                  <main className="flex flex-col h-screen">
+                    {children}
+                  </main>
+                )}
+              </LayoutProvider>
             </ModalProvider>
           </RoleProvider>
         </AuthProvider>
