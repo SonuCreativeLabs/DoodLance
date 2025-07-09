@@ -199,7 +199,7 @@ const freelancerData: ExtendedFreelancerData = {
 // Main Profile Page Component
 export default function ProfilePage() {
   return (
-    <div className="min-h-screen bg-[#111111] text-white">
+    <div className="min-h-screen bg-[#111111] text-white pb-20 md:pb-24">
       <ProfileHeader 
         name={freelancerData.name}
         title={freelancerData.title}
@@ -288,7 +288,7 @@ export default function ProfilePage() {
           <ProfileSectionCard
             title="Identity Verification"
             description="Complete your KYC verification to unlock all features"
-            href="/freelancer/profile/verification/upload"
+            href="/freelancer/profile/verification"
             icon={<CheckCircle className="h-5 w-5" />}
           />
         </div>

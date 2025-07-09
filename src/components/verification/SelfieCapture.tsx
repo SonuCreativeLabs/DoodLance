@@ -168,17 +168,20 @@ export function SelfieCapture({
   // Show error state if camera access fails
   if (cameraError) {
     return (
-      <div className="w-full space-y-6 text-center">
-        <div className="bg-[#1E1E1E] border border-red-500/30 rounded-lg p-6">
-          <XCircle className="h-12 w-12 mx-auto text-red-500 mb-4" />
-          <h3 className="text-lg font-medium text-white mb-2">Enable Camera</h3>
-          <p className="text-white/70 mb-6">
+      <div className="w-full max-w-md mx-auto">
+        <div className="bg-card border border-border/50 rounded-xl p-6 text-center shadow-lg">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-500/10 mb-4">
+            <Camera className="h-8 w-8 text-red-400" />
+          </div>
+          <h3 className="text-xl font-semibold text-foreground mb-2">Camera Access Required</h3>
+          <p className="text-muted-foreground mb-6">
             {cameraError}
           </p>
           <Button 
             onClick={startCamera} 
-            variant="outline"
-            className="w-full max-w-xs"
+            variant="destructive"
+            size="lg"
+            className="w-full bg-red-500 hover:bg-red-600"
           >
             Try Again
           </Button>
@@ -188,42 +191,47 @@ export function SelfieCapture({
   }
 
   return (
-    <div className="w-full space-y-4">
+    <div className="w-full max-w-md mx-auto">
       {showInstructions ? (
-        <div className="bg-[#1E1E1E] border border-white/10 rounded-lg p-6 text-center">
-          <Camera className="h-12 w-12 mx-auto text-purple-400 mb-4" />
-          <h3 className="text-lg font-medium text-white mb-2">Take a Selfie</h3>
-          <p className="text-white/70 mb-6">
-            Verify your identity with a quick selfie. Enable camera access to continue.
-          </p>
-          <div className="space-y-3 max-w-md mx-auto">
-            <div className="flex items-start space-x-3">
-              <div className="flex-shrink-0 mt-0.5">
-                <div className="flex items-center justify-center h-5 w-5 rounded-full bg-purple-500/20 text-purple-400 text-xs">1</div>
-              </div>
-              <p className="text-sm text-white/80 text-left">Face the camera directly</p>
-            </div>
-            <div className="flex items-start space-x-3">
-              <div className="flex-shrink-0 mt-0.5">
-                <div className="flex items-center justify-center h-5 w-5 rounded-full bg-purple-500/20 text-purple-400 text-xs">2</div>
-              </div>
-              <p className="text-sm text-white/80 text-left">Use good lighting</p>
-            </div>
-            <div className="flex items-start space-x-3">
-              <div className="flex-shrink-0 mt-0.5">
-                <div className="flex items-center justify-center h-5 w-5 rounded-full bg-purple-500/20 text-purple-400 text-xs">3</div>
-              </div>
-              <p className="text-sm text-white/80 text-left">No masks or filters</p>
-            </div>
+        <div className="bg-card border border-border/50 rounded-xl p-8 text-center shadow-lg">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-6">
+            <Camera className="h-8 w-8 text-primary" />
           </div>
-          <Button 
-            onClick={startCamera} 
-            className="mt-6 w-full max-w-xs mx-auto"
-            size="lg"
-          >
-            Continue with Camera
-          </Button>
-
+          <h3 className="text-xl font-semibold text-foreground mb-3">Verify Your Identity</h3>
+          <p className="text-muted-foreground mb-8">
+            Take a quick selfie to verify your identity. We'll guide you through the process.
+          </p>
+          
+          <div className="space-y-4 mb-8 text-left">
+            {[
+              'Face the camera directly with good lighting',
+              'Ensure your face is clearly visible',
+              'No hats, masks, or sunglasses',
+              'Stand in a well-lit area'
+            ].map((item, index) => (
+              <div key={index} className="flex items-start gap-3">
+                <div className="flex-shrink-0 mt-0.5">
+                  <div className="flex items-center justify-center h-6 w-6 rounded-full bg-primary/10 text-primary text-sm">
+                    {index + 1}
+                  </div>
+                </div>
+                <p className="text-foreground/90 text-sm">{item}</p>
+              </div>
+            ))}
+          </div>
+          
+          <div className="space-y-3">
+            <Button 
+              onClick={startCamera}
+              size="lg"
+              className="w-full"
+            >
+              Start Camera
+            </Button>
+            <p className="text-xs text-muted-foreground mt-2">
+              We'll ask for camera permission in the next step
+            </p>
+          </div>
         </div>
       ) : (
         <>
