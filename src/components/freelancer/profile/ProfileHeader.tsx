@@ -1,11 +1,12 @@
 'use client';
 
 import { useState, useRef, useEffect, ChangeEvent } from 'react';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Star, Edit2, Camera, Upload, Loader2 } from "lucide-react";
+import { Star, Edit2, Camera, Upload, Loader2, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 
 // CoverImage component defined outside the ProfileHeader component
@@ -50,6 +51,7 @@ export function ProfileHeader({
   const [isUploading, setIsUploading] = useState(false);
   const [imageError, setImageError] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
 
   const handleCoverImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -87,45 +89,53 @@ export function ProfileHeader({
     <div className="relative w-full bg-[#111111]">
       {/* Cover Photo */}
       <div className="relative h-48 md:h-64 w-full bg-gradient-to-r from-purple-900 to-purple-700">
+        {/* Switch to Client Button - Top-right of cover */}
+        <div className="absolute top-4 right-4 z-10">
+          <Button 
+            variant="ghost"
+            size="sm"
+            onClick={() => router.push('/client')}
+            className="h-8 px-3 text-xs rounded-full bg-white hover:bg-white text-[#111111] flex items-center gap-1.5 font-medium shadow-[0_2px_10px_rgba(107,70,193,0.3)] hover:shadow-[0_4px_15px_rgba(107,70,193,0.4)] transition-all duration-200"
+          >
+            <RefreshCw className="h-3 w-3" />
+            <span>Switch to Client</span>
+          </Button>
+        </div>
         <div className="absolute inset-0 w-full h-full">
           <CoverImage />
         </div>
         
         {/* Edit Cover Button */}
-        <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
-          <Button 
-            variant="secondary" 
-            size="sm" 
-            onClick={handleEditClick}
-            disabled={isUploading}
-            className="bg-black/70 hover:bg-black/80 text-white backdrop-blur-sm"
-          >
-            {isUploading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Uploading...
-              </>
-            ) : (
-              <>
-                <Camera className="mr-2 h-4 w-4" />
-                Change Cover
-              </>
-            )}
-          </Button>
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleCoverImageChange}
-            accept="image/*"
-            className="hidden"
-          />
+        <div className="absolute bottom-4 right-4">
+          <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+            <Button 
+              variant="secondary" 
+              size="sm" 
+              onClick={handleEditClick}
+              disabled={isUploading}
+              className="h-10 w-10 rounded-full bg-white hover:bg-white/90 p-0 flex items-center justify-center"
+            >
+              {isUploading ? (
+                <Loader2 className="h-5 w-5 animate-spin text-[#1E1E1E]" />
+              ) : (
+                <Camera className="h-5 w-5 text-[#1E1E1E]" />
+              )}
+            </Button>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleCoverImageChange}
+              accept="image/*"
+              className="hidden"
+            />
+          </div>
         </div>
       </div>
 
       {/* Profile Content */}
-      <div className="max-w-6xl mx-auto px-4">
-        {/* Profile Picture - Centered and overlapping the cover */}
-        <div className="flex justify-center -mt-16 mb-4">
+      <div className="max-w-6xl mx-auto px-4 relative">
+        <div className="flex flex-col items-center md:flex-row md:items-end md:justify-between -mt-16 mb-4">
+          {/* Profile Picture */}
           <div className="relative group">
             <div className="relative w-32 h-32 sm:w-40 sm:h-40 rounded-full border-4 border-[#1E1E1E] overflow-hidden bg-[#111111]">
               <Avatar className="w-full h-full">
@@ -139,6 +149,8 @@ export function ProfileHeader({
               </div>
             </div>
           </div>
+          
+
         </div>
 
         {/* Profile Info */}
