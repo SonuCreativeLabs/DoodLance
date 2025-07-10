@@ -1,9 +1,26 @@
+'use client';
+
+import { useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Plus } from "lucide-react";
 import Link from "next/link";
 import { SkillsSection } from "@/components/freelancer/profile/SkillsSection";
+import { useLayout } from '@/contexts/LayoutContext';
 
 export default function SkillsPage() {
+  const { hideHeader, hideNavbar, showHeader, showNavbar } = useLayout();
+
+  useEffect(() => {
+    // Hide header and navbar when component mounts
+    hideHeader();
+    hideNavbar();
+
+    // Show header and navbar when component unmounts
+    return () => {
+      showHeader();
+      showNavbar();
+    };
+  }, [hideHeader, hideNavbar, showHeader, showNavbar]);
   return (
     <div className="container mx-auto px-4 py-8 pb-24">
       <div className="mb-8">
@@ -19,13 +36,15 @@ export default function SkillsPage() {
             </Link>
             <div>
               <h1 className="text-xl font-bold">My Skills</h1>
-              <p className="text-white/60 text-sm mt-0.5">Showcase your expertise and proficiency levels</p>
+              <p className="text-white/60 text-sm mt-0.5">
+                List all your skills - every talent has value here. Turn what you love into opportunities.
+              </p>
             </div>
           </div>
         </div>
       </div>
       
-      <div className="space-y-6 pb-8">
+      <div className="space-y-3 pb-8">
         <SkillsSection />
       </div>
     </div>

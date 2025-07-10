@@ -2,6 +2,7 @@
 import Image from "next/image"
 import { motion } from "framer-motion"
 import { CircleDollarSign, Calendar, ChevronRight, Star, MapPin, Wallet, TrendingUp, Award, Clock, Users, Target, Award as AwardIcon, Dumbbell, Code, Trophy } from "lucide-react"
+import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { useState, useEffect } from "react"
 
@@ -121,9 +122,9 @@ export default function FreelancerHome() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="bg-gradient-to-br from-[#6B46C1]/10 via-[#4C1D95]/10 to-[#2D1B69]/10 backdrop-blur-lg rounded-2xl p-6 border border-white/10 hover:border-purple-500/30 relative transition-all duration-300 shadow-lg shadow-purple-900/10 hover:shadow-purple-900/20"
+            className="bg-gradient-to-br from-[#1E1E1E] to-[#121212] rounded-2xl p-6 border border-white/10 transition-all duration-300 shadow-lg"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-purple-800/10 to-transparent rounded-2xl"></div>
+
             <div className="relative">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold text-white">Today's Earnings</h2>
@@ -142,9 +143,9 @@ export default function FreelancerHome() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="bg-gradient-to-br from-[#6B46C1]/10 via-[#4C1D95]/10 to-[#2D1B69]/10 backdrop-blur-lg rounded-2xl p-6 border border-white/10 hover:border-purple-500/30 relative transition-all duration-300 shadow-lg shadow-purple-900/10 hover:shadow-purple-900/20"
+              className="bg-gradient-to-br from-[#1E1E1E] to-[#121212] rounded-2xl p-6 border border-white/10 transition-all duration-300 shadow-lg"
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-purple-800/10 to-transparent rounded-2xl"></div>
+  
               <div className="relative">
                 <div className="flex flex-col h-full justify-between">
                   <div>
@@ -164,9 +165,9 @@ export default function FreelancerHome() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              className="bg-gradient-to-br from-[#6B46C1]/10 via-[#4C1D95]/10 to-[#2D1B69]/10 backdrop-blur-lg rounded-2xl p-6 border border-white/10 hover:border-purple-500/30 relative transition-all duration-300 shadow-lg shadow-purple-900/10 hover:shadow-purple-900/20"
+              className="bg-gradient-to-br from-[#1E1E1E] to-[#121212] rounded-2xl p-6 border border-white/10 transition-all duration-300 shadow-lg"
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-purple-800/10 to-transparent rounded-2xl"></div>
+  
               <div className="relative">
                 <div className="flex flex-col h-full justify-between">
                   <div>
@@ -192,9 +193,8 @@ export default function FreelancerHome() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="bg-gradient-to-br from-[#6B46C1]/10 via-[#4C1D95]/10 to-[#2D1B69]/10 backdrop-blur-lg rounded-2xl p-6 border border-white/10 hover:border-purple-500/30 relative transition-all duration-300 shadow-lg shadow-purple-900/10 hover:shadow-purple-900/20 mb-8"
+          className="bg-gradient-to-br from-[#1E1E1E] to-[#121212] rounded-2xl p-6 border border-white/10 transition-all duration-300 shadow-lg mb-8"
         >
-          <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-purple-800/10 to-transparent rounded-2xl"></div>
           <div className="relative">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center w-full py-1 px-0">
@@ -247,7 +247,7 @@ export default function FreelancerHome() {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.7 }}
-                className="flex items-center gap-4 p-5 rounded-2xl bg-gradient-to-br from-white/5 to-white/[0.03] border border-white/10 backdrop-blur-sm hover:border-white/20 transition-all duration-300 shadow-lg shadow-purple-900/10"
+                className="flex items-center gap-4 p-5 rounded-2xl bg-gradient-to-br from-[#1E1E1E] to-[#121212] border border-white/10 hover:border-purple-500/30 transition-all duration-300 shadow-lg hover:shadow-purple-900/20"
               >
                 <div className="w-10 h-10 rounded-xl bg-[#6B46C1]/15 flex items-center justify-center">
                   <Calendar className="h-5 w-5 text-[#B794F4]" />
@@ -265,7 +265,7 @@ export default function FreelancerHome() {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.8 }}
-                className="flex items-center gap-4 p-5 rounded-2xl bg-gradient-to-br from-white/5 to-white/[0.03] border border-white/10 backdrop-blur-sm hover:border-white/20 transition-all duration-300 shadow-lg shadow-purple-900/10"
+                className="flex items-center gap-4 p-5 rounded-2xl bg-gradient-to-br from-[#1E1E1E] to-[#121212] border border-white/10 hover:border-purple-500/30 transition-all duration-300 shadow-lg hover:shadow-purple-900/20"
               >
                 <div className="w-10 h-10 rounded-xl bg-[#6B46C1]/15 flex items-center justify-center">
                   <MapPin className="h-5 w-5 text-[#B794F4]" />
@@ -304,17 +304,16 @@ export default function FreelancerHome() {
           className="mb-8"
         >
           <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <h2 className="text-lg font-semibold text-gray-200">Recommended Jobs</h2>
-              <span className="px-2 py-0.5 rounded-full bg-[#bf82fb]/20 text-transparent bg-clip-text bg-gradient-to-r from-[#bf82fb] to-[#9537ea] text-xs font-medium">2 New</span>
-            </div>
-            <motion.button 
-              whileHover={{ x: 3 }}
-              className="text-transparent bg-clip-text bg-gradient-to-r from-[#b16bf3] to-[#9334e9] hover:from-[#c08af5] hover:to-[#a24ae8] text-sm font-medium flex items-center transition-all duration-300"
-            >
-              View All
-              <ChevronRight className="w-4 h-4 ml-1" />
-            </motion.button>
+            <h2 className="text-lg font-semibold text-gray-200">Recommended Jobs</h2>
+            <Link href="/freelancer/feed?tab=for-you">
+              <motion.button 
+                whileHover={{ x: 3 }}
+                className="text-transparent bg-clip-text bg-gradient-to-r from-[#b16bf3] to-[#9334e9] hover:from-[#c08af5] hover:to-[#a24ae8] text-sm font-medium flex items-center transition-all duration-300"
+              >
+                View All
+                <ChevronRight className="w-4 h-4 ml-1" />
+              </motion.button>
+            </Link>
           </div>
           <div className="grid gap-4">
             {/* Junior Cricket Coach Job */}
@@ -322,9 +321,9 @@ export default function FreelancerHome() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1 }}
-              className="bg-gradient-to-br from-[#6B46C1]/10 via-[#4C1D95]/10 to-[#2D1B69]/10 backdrop-blur-lg rounded-2xl p-6 border border-white/10 hover:border-purple-500/30 relative transition-all duration-300 shadow-lg shadow-purple-900/10 hover:shadow-purple-900/20"
+              className="bg-gradient-to-br from-[#1E1E1E] to-[#121212] rounded-2xl p-6 border border-white/10 transition-all duration-300 shadow-lg"
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-purple-800/10 to-transparent rounded-2xl"></div>
+  
               <div className="relative">
                 <div className="flex items-center justify-between mb-3">
                   <div className="space-y-1">
@@ -408,9 +407,9 @@ export default function FreelancerHome() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1.1 }}
-              className="bg-gradient-to-br from-[#6B46C1]/10 via-[#4C1D95]/10 to-[#2D1B69]/10 backdrop-blur-lg rounded-2xl p-6 border border-white/10 hover:border-purple-500/30 relative transition-all duration-300 shadow-lg shadow-purple-900/10 hover:shadow-purple-900/20"
+              className="bg-gradient-to-br from-[#1E1E1E] to-[#121212] rounded-2xl p-6 border border-white/10 transition-all duration-300 shadow-lg"
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-purple-800/10 to-transparent rounded-2xl"></div>
+  
               <div className="relative">
                 <div className="flex items-center justify-between mb-3">
                   <div className="space-y-1">
@@ -498,30 +497,25 @@ export default function FreelancerHome() {
           transition={{ delay: 1.2 }}
           className="mb-8"
         >
+          {/* Skills Header - Moved outside the card */}
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-white">Your Skills</h2>
+            <motion.button 
+              whileHover={{ x: 3 }}
+              className="text-transparent bg-clip-text bg-gradient-to-r from-[#b16bf3] to-[#9334e9] hover:from-[#c08af5] hover:to-[#a24ae8] text-sm font-medium flex items-center transition-all duration-300"
+            >
+              Add New
+              <ChevronRight className="w-4 h-4 ml-1" />
+            </motion.button>
+          </div>
+          
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 1.3 }}
-            className="bg-gradient-to-br from-[#6B46C1]/10 via-[#4C1D95]/10 to-[#2D1B69]/10 backdrop-blur-lg rounded-2xl px-6 py-4 border border-white/10 hover:border-purple-500/30 relative transition-all duration-300 shadow-lg shadow-purple-900/10 hover:shadow-purple-900/20 space-y-4"
+            className="bg-gradient-to-br from-[#1E1E1E] to-[#121212] rounded-2xl px-6 py-4 border border-white/10 transition-all duration-300 shadow-lg space-y-4"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-purple-800/10 to-transparent rounded-2xl"></div>
-            
-            {/* Skills Header */}
-            <div className="relative z-10">
-              <div className="mb-2">
-                <div className="flex items-center justify-between mb-1">
-                  <h2 className="text-lg font-semibold text-white">Your Skills</h2>
-                  <motion.button 
-                    whileHover={{ x: 3 }}
-                    className="text-transparent bg-clip-text bg-gradient-to-r from-[#b16bf3] to-[#9334e9] hover:from-[#c08af5] hover:to-[#a24ae8] text-sm font-medium flex items-center transition-all duration-300"
-                  >
-                    Add New
-                    <ChevronRight className="w-4 h-4 ml-1" />
-                  </motion.button>
-                </div>
-              </div>
-            </div>
-            
+            {/* Skills content */}
             <div className="relative">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
@@ -536,12 +530,12 @@ export default function FreelancerHome() {
                 <span className="text-sm text-white/60">Expert</span>
               </div>
               <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                  <motion.div 
-                    initial={{ width: 0 }}
-                    animate={{ width: "90%" }}
-                    transition={{ delay: 1.4, duration: 0.8, ease: "easeOut" }}
-                    className="h-full bg-gradient-to-r from-purple-600 to-purple-400 rounded-full" 
-                  />
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: "90%" }}
+                  transition={{ delay: 1.4, duration: 0.8, ease: "easeOut" }}
+                  className="h-full bg-gradient-to-r from-purple-600 to-purple-400 rounded-full" 
+                />
               </div>
             </div>
 
@@ -559,12 +553,12 @@ export default function FreelancerHome() {
                 <span className="text-sm text-white/60">Intermediate</span>
               </div>
               <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                  <motion.div 
-                    initial={{ width: 0 }}
-                    animate={{ width: "65%" }}
-                    transition={{ delay: 1.5, duration: 0.8, ease: "easeOut" }}
-                    className="h-full bg-gradient-to-r from-purple-600 to-purple-400 rounded-full" 
-                  />
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: "65%" }}
+                  transition={{ delay: 1.5, duration: 0.8, ease: "easeOut" }}
+                  className="h-full bg-gradient-to-r from-purple-600 to-purple-400 rounded-full" 
+                />
               </div>
             </div>
           </motion.div>
