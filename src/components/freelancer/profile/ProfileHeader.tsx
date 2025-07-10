@@ -88,16 +88,16 @@ export function ProfileHeader({
   return (
     <div className="relative w-full bg-[#111111]">
       {/* Cover Photo */}
-      <div className="relative h-48 md:h-64 w-full bg-gradient-to-r from-purple-900 to-purple-700">
+      <div className="group relative h-48 md:h-64 w-full bg-gradient-to-r from-purple-900 to-purple-700">
         {/* Switch to Client Button - Top-right of cover */}
         <div className="absolute top-4 right-4 z-10">
           <Button 
-            variant="ghost"
+            variant="default"
             size="sm"
             onClick={() => router.push('/client')}
-            className="h-8 px-3 text-xs rounded-full bg-white hover:bg-white text-[#111111] flex items-center gap-1.5 font-medium shadow-[0_2px_10px_rgba(107,70,193,0.3)] hover:shadow-[0_4px_15px_rgba(107,70,193,0.4)] transition-all duration-200"
+            className="group relative h-8 px-3 text-xs rounded-full overflow-hidden bg-gradient-to-r from-[#1A1A1A] via-[#0F0F0F] to-[#1A1A1A] text-white flex items-center gap-1.5 font-medium transition-all duration-300 border border-white/10 hover:border-purple-500/50 hover:shadow-[0_0_15px_rgba(168,85,247,0.3)] hover:scale-[1.02]"
           >
-            <RefreshCw className="h-3 w-3" />
+            <RefreshCw className="h-3.5 w-3.5 text-purple-400 transition-transform duration-300 group-hover:rotate-180" />
             <span>Switch to Client</span>
           </Button>
         </div>
@@ -113,7 +113,7 @@ export function ProfileHeader({
               size="sm" 
               onClick={handleEditClick}
               disabled={isUploading}
-              className="h-10 w-10 rounded-full bg-white hover:bg-white/90 p-0 flex items-center justify-center"
+              className="h-10 w-10 rounded-full bg-white hover:bg-white/90 p-0 flex items-center justify-center shadow-md hover:shadow-lg transition-all duration-200"
             >
               {isUploading ? (
                 <Loader2 className="h-5 w-5 animate-spin text-[#1E1E1E]" />

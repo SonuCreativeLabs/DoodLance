@@ -118,61 +118,63 @@ function PackageForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-4 text-white">
       <div className="space-y-2">
-        <Label>Package Name</Label>
+        <Label className="text-sm font-medium text-white/80">Package Name</Label>
         <Input
           name="name"
           value={formData.name || ''}
           onChange={handleChange}
           placeholder="e.g., Basic Coaching, AC Service, Consultation"
-          className="bg-[#2D2D2D] border-white/10 text-white placeholder-white/40 focus:border-white/50 focus:ring-1 focus:ring-white/30 transition-all focus:outline-none"
+          className="h-11 bg-[#2A2A2A] border-white/10 text-white placeholder-white/40 focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 transition-all focus:outline-none rounded-lg"
           required
         />
       </div>
 
-      <div className="space-y-2">
-        <Label>Price</Label>
-        <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/70">₹</span>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label>Price</Label>
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/70">₹</span>
+            <Input
+              name="price"
+              type="text"
+              value={formData.price || ''}
+              onChange={handleChange}
+              placeholder="2,500"
+              className="pl-8 bg-[#2D2D2D] border-white/10 text-white placeholder-white/40 focus:border-white/50 focus:ring-1 focus:ring-white/30 transition-all w-full"
+              required
+            />
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label>Service Duration</Label>
           <Input
-            name="price"
-            type="text"
-            value={formData.price || ''}
+            name="deliveryTime"
+            value={formData.deliveryTime || ''}
             onChange={handleChange}
-            placeholder="2,500"
-            className="pl-8 bg-[#2D2D2D] border-white/10 text-white placeholder-white/40 focus:border-white/50 focus:ring-1 focus:ring-white/30 transition-all w-full"
+            placeholder="e.g., 2 hours"
+            className="bg-[#2D2D2D] border-white/10 text-white placeholder-white/40 focus:border-white/50 focus:ring-1 focus:ring-white/30 transition-all w-full"
             required
           />
         </div>
       </div>
 
       <div className="space-y-2">
-        <Label>Service Duration</Label>
-        <Input
-          name="deliveryTime"
-          value={formData.deliveryTime || ''}
-          onChange={handleChange}
-          placeholder="e.g., 2 hours, 1 day, 1 week"
-          className="bg-[#2D2D2D] border-white/10 text-white placeholder-white/40 focus:border-white/50 focus:ring-1 focus:ring-white/30 transition-all focus:outline-none"
-          required
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label>Description</Label>
+        <Label className="text-sm font-medium text-white/80">Description</Label>
         <Textarea
           name="description"
           value={formData.description || ''}
           onChange={handleChange}
           placeholder="Briefly describe what clients will receive in this package"
-          className="bg-[#2D2D2D] border-white/10 text-white placeholder-white/40 focus:border-white/50 focus:ring-1 focus:ring-white/30 transition-all min-h-[100px]"
+          className="bg-[#2A2A2A] border-white/10 text-white placeholder-white/40 focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 transition-all min-h-[100px] rounded-lg"
           required
         />
       </div>
 
       <div className="space-y-2">
         <div className="flex items-center gap-2">
-          <Label>Features</Label>
-          <span className="text-xs text-white/50">(Optional)</span>
+          <Label className="text-sm font-medium text-white/80">Features</Label>
+          <span className="text-xs text-white/40">(Optional)</span>
         </div>
         <div className="space-y-2">
           {formData.features?.map((feature, index) => (
@@ -181,14 +183,14 @@ function PackageForm({
                 value={feature}
                 onChange={(e) => handleFeatureChange(index, e.target.value)}
                 placeholder={`Include key benefit or feature`}
-                className="bg-[#2D2D2D] border-white/10 text-white placeholder-white/40 focus:border-white/50 focus:ring-1 focus:ring-white/30 transition-all"
+                className="bg-[#2A2A2A] border-white/10 text-white placeholder-white/40 focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 transition-all rounded-lg h-10"
                 required
               />
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="text-red-500 hover:bg-red-500/20 hover:text-red-400 transition-colors"
+                className="text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-colors h-9 w-9 rounded-lg"
                 onClick={() => removeFeature(index)}
               >
                 <Trash2 className="h-4 w-4" />
@@ -198,16 +200,11 @@ function PackageForm({
           <div className="mt-2">
             <button
               type="button"
-              className="flex items-center text-sm text-white/60 hover:text-white transition-colors group"
-              onClick={() => setFormData(prev => ({
-                ...prev,
-                features: [...(Array.isArray(prev.features) ? prev.features : ['']), '']
-              }))}
+              onClick={addFeature}
+              className="text-sm text-purple-400 hover:text-purple-300 flex items-center gap-2 mt-2 px-3 py-1.5 rounded-lg hover:bg-purple-500/10 transition-colors w-auto"
             >
-              <div className="flex items-center justify-center w-5 h-5 mr-1 rounded-full bg-white/5 group-hover:bg-white/10 transition-colors">
-                <Plus className="h-3 w-3" />
-              </div>
-              <span>Add another feature</span>
+              <Plus className="h-4 w-4" />
+              Add another feature
             </button>
           </div>
         </div>
@@ -233,20 +230,23 @@ function PackageForm({
         </Label>
       </div>
 
-      <div className="flex justify-end space-x-3 pt-6">
-        <button 
-          type="button"
-          onClick={onCancel}
-          className="px-5 py-2 text-sm font-medium rounded-md text-white/80 hover:text-white transition-colors hover:bg-white/5"
-        >
-          Cancel
-        </button>
-        <button 
-          type="submit"
-          className="px-5 py-2 text-sm font-medium rounded-md bg-white text-[#1E1E1E] hover:bg-white/90 transition-colors shadow-sm"
-        >
-          {initialData?.id ? 'Update Package' : 'Create Package'}
-        </button>
+      <div className="pt-4 border-t border-white/5">
+        <div className="flex justify-end gap-3">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onCancel}
+            className="h-10 px-6 rounded-lg border-white/10 text-white/80 hover:bg-white/5 hover:text-white transition-colors"
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            className="h-10 px-6 rounded-lg bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-700 hover:to-purple-600 shadow-md hover:shadow-purple-500/30 transition-all"
+          >
+            {initialData?.id ? 'Update Package' : 'Create Package'}
+          </Button>
+        </div>
       </div>
     </form>
   );
@@ -417,163 +417,166 @@ export function ServicePackages({ services = [] }: ServicePackagesProps) {
   };
 
   return (
-    <>
-      <Card className="bg-[#1E1E1E] border-white/5">
-      <CardHeader>
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <CardTitle className="text-xl font-bold text-white">Service Packages</CardTitle>
-            <p className="text-sm text-white/60">Manage your service offerings and pricing</p>
-          </div>
-          <div className="w-full sm:w-auto flex justify-end">
-            <Button 
-              onClick={handleAddNewPackage}
-              size="sm" 
-              className="gap-2 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 w-full sm:w-auto justify-center sm:justify-start"
-            >
-              <Plus className="h-4 w-4" />
-              Add Package
-            </Button>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {packages.map((pkg) => (
-            <div 
-              key={pkg.id} 
-              className={`relative rounded-xl border ${pkg.popular ? 'border-purple-500/30 ring-1 ring-purple-500/20' : 'border-white/5'} bg-[#1E1E1E] p-6`}
-            >
-              <div className="absolute -top-3 right-3">
-                <button
-                  type="button"
-                  className="group h-8 w-8 rounded-full flex items-center justify-center bg-[#2D2D2D] hover:bg-red-500/10 border border-white/5 hover:border-red-500/30 transition-all duration-200"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDeletePackage(pkg.id);
-                  }}
-                  title="Delete package"
-                >
-                  <Trash2 className="h-4 w-4 text-white/60 group-hover:text-red-400 transition-colors" />
-                </button>
+    <div className="space-y-6">
+      <div className="flex justify-end">
+        <Button 
+          onClick={handleAddNewPackage}
+          variant="default"
+          size="sm" 
+          className="w-full h-10 gap-2 bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-700 hover:to-purple-600 shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center rounded-lg"
+          style={{ borderRadius: '0.5rem' }}
+        >
+          <Plus className="h-4 w-4" />
+          <span>Add Package</span>
+        </Button>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {packages.map((pkg) => (
+          <div 
+            key={pkg.id} 
+            className={`relative rounded-xl border ${pkg.popular ? 'border-purple-500/30 ring-1 ring-purple-500/20' : 'border-white/5'} bg-[#1E1E1E] p-6`}
+          >
+            <div className="absolute -top-3 right-3">
+              <button
+                type="button"
+                className="group h-7 w-7 rounded-full flex items-center justify-center bg-red-500/80 hover:bg-red-600 border border-red-500 hover:border-red-400 transition-all duration-200 shadow-md hover:shadow-red-500/30"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDeletePackage(pkg.id);
+                }}
+                title="Delete package"
+              >
+                <Trash2 className="h-3.5 w-3.5 text-white transition-colors" />
+              </button>
+            </div>
+            
+            {pkg.popular && (
+              <div className="absolute -top-3 left-3">
+                <Badge className="bg-gradient-to-r from-purple-600 to-purple-800 text-white px-3 py-1 text-xs font-medium">
+                  <Star className="h-3 w-3 mr-1" />
+                  Most Popular
+                </Badge>
               </div>
-              {pkg.popular && (
-                <div className="absolute -top-3 left-3">
-                  <Badge className="bg-gradient-to-r from-purple-600 to-purple-800 text-white px-3 py-1 text-xs font-medium">
-                    <Star className="h-3 w-3 mr-1" />
-                    Most Popular
-                  </Badge>
-                </div>
-              )}
-              
-              <div className="text-center">
-                <h3 className="text-lg font-semibold text-white">{pkg.name}</h3>
-                <div className="mt-2">
+            )}
+            
+            <div className="text-center">
+              <h3 className="text-lg font-semibold text-white">{pkg.name}</h3>
+              <div className="mt-2 space-y-1">
+                <div className="flex items-baseline justify-center gap-1">
                   <p className="text-2xl font-bold text-white">
                     ₹{pkg.price.replace(/^₹/, '')}
-                    <span className="text-sm font-normal text-white/60 ml-1">/gig</span>
                   </p>
+                  <span className="text-sm font-normal text-white/60">/gig</span>
                 </div>
-                <p className="mt-2 text-sm text-white/60">{pkg.description}</p>
-              </div>
-
-              <ul className="mt-6 space-y-3">
-                {pkg.features.map((feature, index) => (
-                  <li key={index} className="flex items-start">
-                    <CheckCircle2 className="h-5 w-5 flex-shrink-0 text-purple-400 mr-2 mt-0.5" />
-                    <span className="text-sm text-white/80">{feature}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <div className="mt-6 text-xs text-white/60">
-                <div className="flex items-center justify-center">
-                  <Clock className="h-3.5 w-3.5 mr-1" />
+                <div className="flex items-center justify-center text-xs text-white/60 mt-1.5">
+                  <Clock className="h-3 w-3 mr-1" />
                   <span>{pkg.deliveryTime}</span>
                 </div>
               </div>
-
-              <div className="mt-6 space-y-2">
-                <Button 
-                  className={`w-full ${pkg.popular ? 'bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800' : 'bg-white/5 hover:bg-white/10'}`}
-                  size="sm"
-                  onClick={() => handleEditPackage(pkg)}
-                >
-                  Edit Package
-                </Button>
-              </div>
+              <p className="mt-2 text-sm text-white/60">{pkg.description}</p>
             </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
 
-    {/* Delete Confirmation Dialog */}
-    <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-      <DialogContent className="w-[320px] bg-[#1E1E1E] border-white/10 rounded-xl overflow-hidden p-0">
-        <div className="p-5 text-center">
-          <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-red-500/10 mb-3">
-            <Trash2 className="h-4 w-4 text-red-500" />
-          </div>
-          <DialogTitle className="text-lg font-semibold text-white mb-1">
-            Delete Package?
-          </DialogTitle>
-          <p className="text-[13px] text-white/70 mb-4 leading-snug">
-            This will permanently delete the package and cannot be undone.
-          </p>
-          <div className="flex flex-col space-y-2 mt-4">
-            <button
-              type="button"
-              onClick={confirmDelete}
-              className="px-4 py-2 text-sm font-medium rounded-lg bg-red-500/90 hover:bg-red-600 text-white transition-all duration-200 flex items-center justify-center gap-1.5"
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-              Yes, Delete It
-            </button>
-            <button
-              type="button"
-              onClick={cancelDelete}
-              className="px-4 py-2 text-sm font-medium rounded-lg border border-white/10 bg-transparent hover:bg-white/5 text-white/90 hover:text-white transition-all duration-200"
-            >
-              No, Keep It
-            </button>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+            <ul className="mt-6 space-y-3">
+              {pkg.features.map((feature, index) => (
+                <li key={index} className="flex items-start">
+                  <CheckCircle2 className="h-5 w-5 flex-shrink-0 text-purple-400 mr-2 mt-0.5" />
+                  <span className="text-sm text-white/80">{feature}</span>
+                </li>
+              ))}
+            </ul>
 
-    {/* Add New Package Card - Separate */}
-    <Card className="mt-6 bg-[#1E1E1E] border-white/5">
-      <CardContent className="p-6">
-        <div 
-          className="rounded-xl border-2 border-dashed border-white/10 p-8 hover:border-purple-500/50 transition-colors cursor-pointer flex flex-col items-center justify-center"
-          onClick={handleAddNewPackage}
-        >
-          <div className="h-12 w-12 rounded-full bg-white/5 flex items-center justify-center mb-4 hover:bg-white/10 transition-colors">
-            <Plus className="h-6 w-6 text-purple-400" />
-          </div>
-          <h3 className="text-lg font-medium text-white mb-1">Add New Package</h3>
-          <p className="text-sm text-white/60 text-center max-w-md">Click here to create a new service package for your clients</p>
-        </div>
-      </CardContent>
-    </Card>
 
-    {/* Add/Edit Package Dialog */}
-    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-      <DialogContent className="w-[90%] max-w-md max-h-[75vh] overflow-y-auto bg-[#1E1E1E] border-white/10 p-6 pt-8">
-        <DialogHeader>
-          <DialogTitle className="text-white text-xl">
-            {editingPackage ? 'Edit Service Package' : 'Create New Service Package'}
-          </DialogTitle>
-        </DialogHeader>
-        
-        <PackageForm
-          initialData={editingPackage || undefined}
-          onSave={handleSavePackage}
-          onCancel={() => setIsDialogOpen(false)}
-        />
-      </DialogContent>
+
+            <div className="mt-6 space-y-2">
+              <Button 
+                className={`w-full ${pkg.popular ? 'bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800' : 'bg-white/5 hover:bg-white/10'}`}
+                size="sm"
+                onClick={() => handleEditPackage(pkg)}
+              >
+                Edit Package
+              </Button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Add New Package Card */}
+      <Card className="bg-[#1E1E1E] border-white/5">
+        <CardContent className="p-6">
+          <div 
+            className="rounded-xl border-2 border-dashed border-white/10 p-8 hover:border-purple-500/50 transition-colors cursor-pointer flex flex-col items-center justify-center"
+            onClick={handleAddNewPackage}
+          >
+            <div className="h-12 w-12 rounded-full bg-white/5 flex items-center justify-center mb-4 hover:bg-white/10 transition-colors">
+              <Plus className="h-6 w-6 text-purple-400" />
+            </div>
+            <h3 className="text-lg font-medium text-white mb-1">Add New Package</h3>
+            <p className="text-sm text-white/60 text-center max-w-md">Click here to create a new service package for your clients</p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="w-[320px] bg-[#1E1E1E] border-white/10 rounded-xl overflow-hidden p-0">
+          <div className="p-5 text-center">
+            <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-red-500/10 mb-3">
+              <Trash2 className="h-4 w-4 text-red-500" />
+            </div>
+            <DialogTitle className="text-lg font-semibold text-white mb-1">
+              Delete Package?
+            </DialogTitle>
+            <p className="text-[13px] text-white/70 mb-4 leading-snug">
+              This will permanently delete the package and cannot be undone.
+            </p>
+            <div className="flex flex-col space-y-2 mt-4">
+              <button
+                type="button"
+                onClick={confirmDelete}
+                className="px-4 py-2 text-sm font-medium rounded-lg bg-red-500/90 hover:bg-red-600 text-white transition-all duration-200 flex items-center justify-center gap-1.5"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                Yes, Delete It
+              </button>
+              <button
+                type="button"
+                onClick={cancelDelete}
+                className="px-4 py-2 text-sm font-medium rounded-lg border border-white/10 bg-transparent hover:bg-white/5 text-white/90 hover:text-white transition-all duration-200"
+              >
+                No, Keep It
+              </button>
+            </div>
+          </div>
+        </DialogContent>
       </Dialog>
-    </>
+
+      {/* Add/Edit Package Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="w-[90%] max-w-md max-h-[90vh] overflow-y-auto bg-[#1E1E1E] border border-white/5 rounded-xl p-0 shadow-2xl transition-all duration-300">
+          <div className="relative">
+            {/* Gradient header */}
+            <div className="bg-gradient-to-r from-purple-900/80 to-purple-800/50 p-6 pb-4 border-b border-white/5">
+              <DialogHeader>
+                <DialogTitle className="text-white text-xl font-semibold tracking-tight">
+                  {editingPackage ? 'Edit Service Package' : 'Create New Package'}
+                </DialogTitle>
+                <p className="text-sm text-white/60 mt-1">
+                  {editingPackage ? 'Update your service package details' : 'Create a new service package for your clients'}
+                </p>
+              </DialogHeader>
+            </div>
+
+            <div className="p-6 space-y-6">
+              <PackageForm
+                initialData={editingPackage || undefined}
+                onSave={handleSavePackage}
+                onCancel={() => setIsDialogOpen(false)}
+              />
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }
