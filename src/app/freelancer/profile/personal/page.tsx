@@ -390,7 +390,7 @@ export default function PersonalDetailsPage() {
                 <Button
                   type="button"
                   onClick={() => handleSave('contact')}
-                  className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 transition-colors rounded-md shadow-sm"
+                  className="px-4 py-2 text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 transition-colors rounded-md shadow-sm"
                 >
                   Save Changes
                 </Button>
@@ -525,27 +525,29 @@ export default function PersonalDetailsPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8 pb-32">
-      <div className="flex items-center gap-4 mb-8">
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          onClick={() => {
-            if (editingSection !== null) {
-              handleCancel(editingSection);
-            } else {
-              window.history.back();
-            }
-          }}
-          className="text-gray-400 hover:bg-white/5 hover:text-white transition-colors"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <div>
-          <h1 className="text-2xl font-bold text-white">
-            Personal Details
-          </h1>
-          <p className="text-sm text-white/60">Manage your personal information and contact details</p>
+    <div className="container mx-auto px-4 py-8">
+      <div className="mb-8">
+        <div className="flex items-center mb-4">
+          <div className="flex items-center space-x-4">
+            <Link 
+              href="/freelancer/profile" 
+              className="inline-flex items-center text-sm text-purple-400 hover:text-purple-300 transition-colors duration-200 group"
+              onClick={(e) => {
+                if (editingSection !== null) {
+                  e.preventDefault();
+                  handleCancel(editingSection);
+                }
+              }}
+            >
+              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/10 group-hover:bg-white/10 transition-colors duration-200">
+                <ArrowLeft className="h-4 w-4" />
+              </div>
+            </Link>
+            <div>
+              <h1 className="text-xl font-bold">Personal Details</h1>
+              <p className="text-white/60 text-sm mt-0.5">Manage your personal information and contact details</p>
+            </div>
+          </div>
         </div>
       </div>
 
