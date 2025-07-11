@@ -84,45 +84,43 @@ export default function ReviewsPage() {
   const totalReviews = reviews.length;
 
   return (
-    <div className="container mx-auto px-4 py-8 pb-24 max-w-5xl">
-      {/* Header Section */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
-        <div className="flex items-center space-x-4 mb-4 md:mb-0">
-          <Link 
-            href="/freelancer/profile" 
-            className="inline-flex items-center text-sm text-purple-400 hover:text-purple-300 transition-colors duration-200 group"
-            aria-label="Back to profile"
-          >
-            <div className="flex items-center justify-center w-9 h-9 rounded-full bg-white/5 border border-white/10 group-hover:bg-white/10 transition-colors duration-200">
-              <ArrowLeft className="h-4 w-4" />
+    <div className="container mx-auto px-4 py-8">
+      <div className="mb-8">
+        <div className="flex items-center mb-4">
+          <div className="flex items-center space-x-4">
+            <Link 
+              href="/freelancer/profile" 
+              className="inline-flex items-center text-sm text-purple-400 hover:text-purple-300 transition-colors duration-200 group"
+              aria-label="Back to profile"
+            >
+              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/10 group-hover:bg-white/10 transition-colors duration-200">
+                <ArrowLeft className="h-4 w-4" />
+              </div>
+            </Link>
+            <div>
+              <h1 className="text-xl font-bold">Client Reviews</h1>
+              <p className="text-white/60 text-sm mt-0.5">What your clients say about your work</p>
             </div>
-            <span className="ml-2 hidden sm:inline-block">Back to Profile</span>
-          </Link>
-          <div className="ml-2">
-            <h1 className="text-3xl font-bold text-white">
-              Client Reviews
-            </h1>
-            <p className="text-white/60 text-sm mt-1">What my clients say about working with me</p>
           </div>
         </div>
-        
-        {/* Simple Rating Summary */}
-        <div className="flex items-center justify-between w-full py-4">
-          <div>
-            <p className="text-white/70 text-sm mb-1">Average Rating</p>
-            <div className="flex items-center">
-              <span className="text-3xl font-bold text-white mr-3">{averageRating.toFixed(1)}</span>
-              <div className="flex">
-                {renderStars(averageRating)}
-              </div>
+      </div>
+      
+      {/* Rating Summary */}
+      <div className="flex items-center justify-between w-full py-4 mb-6">
+        <div>
+          <p className="text-white/70 text-sm mb-1">Average Rating</p>
+          <div className="flex items-center">
+            <span className="text-3xl font-bold text-white mr-3">{averageRating.toFixed(1)}</span>
+            <div className="flex">
+              {renderStars(averageRating)}
             </div>
           </div>
-          <div className="text-right">
-            <p className="text-white/70 text-sm">Based on</p>
-            <p className="text-lg font-medium text-white">
-              {totalReviews} {totalReviews === 1 ? 'Review' : 'Reviews'}
-            </p>
-          </div>
+        </div>
+        <div className="text-right">
+          <p className="text-white/70 text-sm">Based on</p>
+          <p className="text-lg font-medium text-white">
+            {totalReviews} {totalReviews === 1 ? 'Review' : 'Reviews'}
+          </p>
         </div>
       </div>
 

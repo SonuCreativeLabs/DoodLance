@@ -6,6 +6,7 @@ import { AuthProvider } from "@/contexts/auth-context";
 import { RoleProvider } from "@/contexts/role-context";
 import { ModalProvider } from "@/contexts/ModalContext";
 import { LayoutProvider } from "@/contexts/LayoutContext";
+import { DateRangeProvider } from "@/contexts/DateRangeContext";
 import { SplashScreen } from "@/components/splash-screen";
 import { useEffect, useState } from "react";
 
@@ -50,6 +51,7 @@ export default function RootLayout({
           <RoleProvider>
             <ModalProvider>
               <LayoutProvider>
+                <DateRangeProvider>
                 {showSplash ? (
                   <SplashScreen onComplete={() => setShowSplash(false)} />
                 ) : (
@@ -57,6 +59,7 @@ export default function RootLayout({
                     {children}
                   </main>
                 )}
+                </DateRangeProvider>
               </LayoutProvider>
             </ModalProvider>
           </RoleProvider>

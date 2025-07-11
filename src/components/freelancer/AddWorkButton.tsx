@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { PortfolioForm } from './profile/PortfolioSection';
 
@@ -13,26 +14,36 @@ export function AddWorkButton() {
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button 
-          variant="ghost"
-          size="icon"
-          className="group relative w-10 h-10 rounded-full bg-gradient-to-br from-purple-600 to-purple-800 hover:from-purple-500 hover:to-purple-700 text-white shadow-lg hover:shadow-purple-500/30 transition-all duration-300 transform hover:scale-105"
+          variant="default" 
+          size="sm" 
+          className="w-full h-10 gap-2 bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-700 hover:to-purple-600 shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center rounded-lg"
+          style={{ borderRadius: '0.5rem' }}
           aria-label="Add work"
+          onClick={() => setIsOpen(true)}
         >
-          <Plus className="h-5 w-5 transition-transform duration-300 group-hover:rotate-90" />
-          <span className="absolute inset-0 rounded-full bg-gradient-to-br from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          <Plus className="h-4 w-4" />
+          <span>Add Work</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="bg-[#1E1E1E] border-white/10 max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-white">
-            Add New Work
-          </DialogTitle>
-        </DialogHeader>
-        <PortfolioForm 
-          portfolio={null} 
-          onSave={() => setIsOpen(false)}
-          onCancel={() => setIsOpen(false)}
-        />
+      <DialogContent className="bg-gradient-to-br from-[#0F0F0F] to-[#1A1A1A] border-white/10 max-w-4xl w-[95vw] h-[90vh] p-0 rounded-2xl flex flex-col [&>button]:hidden">
+        <div className="p-6 pb-0 relative">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold text-white mb-2">
+              Add New Work
+            </DialogTitle>
+          </DialogHeader>
+          <DialogPrimitive.Close className="absolute right-6 top-6 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
+            <X className="h-5 w-5 text-white" />
+            <span className="sr-only">Close</span>
+          </DialogPrimitive.Close>
+        </div>
+        <div className="flex-1 overflow-y-auto px-6 pb-6">
+          <PortfolioForm 
+            portfolio={null}
+            onSave={() => setIsOpen(false)}
+            onCancel={() => setIsOpen(false)}
+          />
+        </div>
       </DialogContent>
     </Dialog>
   );

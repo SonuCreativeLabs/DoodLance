@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, ArrowRight, FileText, Check, X, UploadCloud, AlertCircle, Loader2, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';

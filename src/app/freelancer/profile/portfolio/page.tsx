@@ -7,9 +7,9 @@ import { AddWorkButton } from "@/components/freelancer/AddWorkButton";
 
 export default function PortfolioPage() {
   return (
-    <div className="container mx-auto px-4 py-8 pb-24">
+    <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center mb-4">
           <div className="flex items-center space-x-4">
             <Link 
               href="/freelancer/profile" 
@@ -19,11 +19,16 @@ export default function PortfolioPage() {
                 <ArrowLeft className="h-4 w-4" />
               </div>
             </Link>
-            <h1 className="text-2xl font-bold">My Portfolio</h1>
+            <div>
+              <h1 className="text-xl font-bold">My Portfolio</h1>
+              <p className="text-white/60 text-sm mt-0.5">Showcase your best work and achievements to potential clients</p>
+            </div>
           </div>
-          <AddWorkButton />
         </div>
-        <p className="text-white/60 mt-2">Showcase your best work and achievements to potential clients</p>
+      </div>
+
+      <div className="mb-8">
+        <AddWorkButton />
       </div>
 
       <PortfolioSection />
