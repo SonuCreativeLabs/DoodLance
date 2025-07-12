@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useModal } from '@/contexts/ModalContext';
 import { format, addMonths, isSameDay, isWithinInterval, isToday } from 'date-fns';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -38,6 +37,16 @@ export function DateRangeModal({
   fixedStartDate = false,
   mode = 'select'
 }: DateRangeModalProps) {
+  // Debug effect to log when props change
+  useEffect(() => {
+    console.log('DateRangeModal - Props:', {
+      isOpen,
+      mode,
+      initialStartDate,
+      initialEndDate,
+      fixedStartDate
+    });
+  }, [isOpen, mode, initialStartDate, initialEndDate, fixedStartDate]);
   const [startDate, setStartDate] = useState<Date | null>(initialStartDate);
   const [endDate, setEndDate] = useState<Date | null>(initialEndDate);
   const [tempEndDate, setTempEndDate] = useState<Date | null>(null);
@@ -720,18 +729,7 @@ export function DateRangeModal({
     );
   };
 
-  // Use try-catch to handle cases where useModal might not be available
-  type ModalContextType = {
-    setIsModalOpen?: (isOpen: boolean) => void;
-  };
-  
-  let modalContext: ModalContextType = {};
-  try {
-    modalContext = useModal();
-  } catch (e) {
-    // If useModal throws, we'll proceed without modal context
-    console.warn('ModalContext not available, proceeding without it');
-  }
+  // Removed useModal hook to prevent conflicts with isOpen prop
 
   // Add mouse up and mouse leave events to handle drag end
   useEffect(() => {
@@ -750,23 +748,29 @@ export function DateRangeModal({
   // Handle modal state changes
   useEffect(() => {
     if (isOpen) {
-      modalContext?.setIsModalOpen?.(true);
       // Prevent body scroll when modal is open
       document.body.style.overflow = 'hidden';
     }
     
     return () => {
-      modalContext?.setIsModalOpen?.(false);
       // Re-enable body scroll when modal is closed
       document.body.style.overflow = '';
     };
-  }, [isOpen, modalContext]);
+  }, [isOpen]);
 
   // Don't render anything if not open or dates aren't loaded yet
-  if (!isOpen || (mode === 'select' && !startDate)) return null;
+  if (!isOpen) {
+    console.log('DateRangeModal - Not rendering: isOpen is false');
+    return null;
+  }
+  
+  if (mode === 'select' && !startDate) {
+    console.log('DateRangeModal - Not rendering: No start date in select mode');
+    return null;
+  }
 
   return (
-    <div className="fixed inset-0 z-[1000] bg-[#111111] flex flex-col">
+    <div className="fixed inset-0 z-[9999] bg-[#111111] flex flex-col" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}>
       {/* Header */}
       <div className="sticky top-0 z-10 px-4 py-3 border-b border-white/10 bg-[#111111] backdrop-blur-sm">
         <div className="flex items-center">

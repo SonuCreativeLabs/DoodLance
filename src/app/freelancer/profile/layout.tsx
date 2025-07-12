@@ -3,6 +3,7 @@
 import { usePathname } from 'next/navigation';
 import { useEffect } from 'react';
 import { useLayout } from '@/contexts/LayoutContext';
+import { ModalProvider } from '@/contexts/ModalContext';
 
 export default function ProfileLayout({
   children,
@@ -29,5 +30,5 @@ export default function ProfileLayout({
     };
   }, [pathname, isMainProfilePage, hideHeader, hideNavbar, showHeader, showNavbar]);
 
-  return <>{children}</>;
+  return <ModalProvider>{children}</ModalProvider>;
 }

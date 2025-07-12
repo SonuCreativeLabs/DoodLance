@@ -38,11 +38,22 @@ const calculateDaysBetween = (start: Date, end: Date): number => {
 };
 
 export default function AvailabilityListingsPage() {
+  // State declarations
   const [isDateRangeModalOpen, setIsDateRangeModalOpen] = useState(false);
   const [isPauseModalOpen, setIsPauseModalOpen] = useState(false);
   const [selectedAvailability, setSelectedAvailability] = useState<Availability | null>(null);
   const [pausedDates, setPausedDates] = useState<Date[]>([]);
   const [isCreatingNew, setIsCreatingNew] = useState(false);
+  
+  // Debug effect for modal state
+  useEffect(() => {
+    console.log('Modal state updated:', {
+      isDateRangeModalOpen,
+      isPauseModalOpen,
+      isCreatingNew,
+      selectedAvailability: selectedAvailability?.id || null
+    });
+  }, [isDateRangeModalOpen, isPauseModalOpen, isCreatingNew, selectedAvailability]);
   const [availabilities, setAvailabilities] = useState<Availability[]>([
     {
       id: '1',
@@ -216,21 +227,37 @@ export default function AvailabilityListingsPage() {
         </div>
         <div className="w-full max-w-2xl mx-auto mt-2">
           <div className="relative group w-full">
-            <Button 
-              onClick={() => {
-                setIsCreatingNew(true);
+            <div 
+              onClick={(e) => {
+                e.stopPropagation();
+                console.log('=== Create New Availability button clicked ===');
+                console.log('Current state before update:', { 
+                  isDateRangeModalOpen, 
+                  isCreatingNew, 
+                  selectedAvailability: selectedAvailability?.id || null 
+                });
+                
                 setSelectedAvailability(null);
+                setIsCreatingNew(true);
                 setIsDateRangeModalOpen(true);
               }}
-              className="relative z-10 w-full bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white 
-                       py-3 rounded-lg font-medium text-sm shadow-lg shadow-purple-900/20
-                       transition-all duration-200 transform hover:-translate-y-0.5 hover:shadow-xl hover:shadow-purple-900/30
-                       border border-purple-400/20 flex items-center justify-center"
+              className="w-full h-10 gap-2 bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-700 hover:to-purple-600 shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center rounded-lg cursor-pointer relative z-10"
+              style={{
+                borderRadius: '0.5rem',
+                pointerEvents: 'auto',
+                userSelect: 'none',
+                WebkitTapHighlightColor: 'transparent'
+              }}
             >
               <Plus className="h-4 w-4 mr-2" />
-              Create New Availability
-            </Button>
-            <div className="absolute -inset-1 bg-gradient-to-r from-purple-600/30 to-purple-400/30 rounded-xl blur opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <span>Create New Availability</span>
+            </div>
+            <div 
+              className="absolute -inset-1 bg-gradient-to-r from-purple-600/30 to-purple-400/30 rounded-xl blur opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+              style={{
+                pointerEvents: 'none'
+              }}
+            ></div>
           </div>
         </div>
       </div>
