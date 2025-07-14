@@ -1,6 +1,7 @@
 "use client"
 
 import { Briefcase, Code, Award, Star, FileText, Calendar, MessageSquare, Settings, User, Mail, Phone, Globe, MapPin, GraduationCap, Languages, Edit2, CheckCircle } from 'lucide-react';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -236,61 +237,88 @@ export default function ProfilePage() {
             title="Personal Details"
             description="View and edit your contact information, location, and professional background"
             href="/freelancer/profile/personal"
-            icon={<User className="h-5 w-5" />}
+            icon={<User className="h-4 w-4" />}
           />
           <ProfileSectionCard
             title="Portfolio"
             description="Showcase your best work with descriptions, images, and links"
             href="/freelancer/profile/portfolio"
-            icon={<Briefcase className="h-5 w-5" />}
-            count={portfolioItems.length}
+            icon={<Briefcase className="h-4 w-4" />}
           />
 
           <ProfileSectionCard
             title="Skills"
             description="Highlight your expertise and proficiency levels"
             href="/freelancer/profile/skills"
-            icon={<Code className="h-5 w-5" />}
-            count={freelancerData.skills?.length || 0}
+            icon={<Code className="h-4 w-4" />}
           />
 
           <ProfileSectionCard
             title="Experience"
             description="List your professional experience and achievements"
             href="/freelancer/profile/experience"
-            icon={<Award className="h-5 w-5" />}
-            count={experiences.length}
+            icon={<Award className="h-4 w-4" />}
           />
 
           <ProfileSectionCard
             title="Service Packages"
             description="Define your service offerings and pricing"
             href="/freelancer/profile/services"
-            icon={<FileText className="h-5 w-5" />}
-            count={freelancerData.services?.length || 0}
+            icon={<FileText className="h-4 w-4" />}
           />
 
           <ProfileSectionCard
             title="Client Reviews"
             description="View and manage client feedback"
             href="/freelancer/profile/reviews"
-            icon={<Star className="h-5 w-5" />}
-            count={freelancerData.clientReviews?.length || 0}
+            icon={<Star className="h-4 w-4" />}
           />
 
           <ProfileSectionCard
             title="Availability"
             description="Set your working hours and availability"
             href="/freelancer/profile/availability"
-            icon={<Calendar className="h-5 w-5" />}
+            icon={<Calendar className="h-4 w-4" />}
           />
           
           <ProfileSectionCard
             title="Identity Verification"
             description="Complete your KYC verification to unlock all features"
             href="/freelancer/profile/verification"
-            icon={<CheckCircle className="h-5 w-5" />}
+            icon={<CheckCircle className="h-4 w-4" />}
           />
+          
+          <Link 
+            href="/client" 
+            className="w-full h-full flex items-center justify-between p-4 bg-gradient-to-l from-[var(--purple)] to-[var(--purple-hover)] hover:opacity-90 rounded-xl transition-all duration-200 group"
+          >
+            <div className="flex items-center gap-3">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
+                <path d="M21 2v6h-6" />
+                <path d="M3 12a9 9 0 0 1 15-6.7L21 8" />
+                <path d="M3 22v-6h6" />
+                <path d="M21 12a9 9 0 0 1-15 6.7L3 16" />
+              </svg>
+              <div className="text-left">
+                <div className="text-sm font-medium text-white">Switch to Client</div>
+                <div className="text-xs text-white/80">Access client dashboard</div>
+              </div>
+            </div>
+            <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              width="18" 
+              height="18" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="currentColor" 
+              strokeWidth="2.5" 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              className="h-4 w-4 text-white/80 group-hover:translate-x-0.5 transition-transform"
+            >
+              <path d="m9 18 6-6-6-6"/>
+            </svg>
+          </Link>
         </div>
       </div>
     </div>

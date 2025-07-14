@@ -1,4 +1,3 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 
@@ -7,7 +6,6 @@ interface ProfileSectionCardProps {
   description: string;
   href: string;
   icon?: React.ReactNode;
-  count?: number;
 }
 
 export function ProfileSectionCard({
@@ -15,27 +13,19 @@ export function ProfileSectionCard({
   description,
   href,
   icon,
-  count,
 }: ProfileSectionCardProps) {
   return (
     <Link href={href} className="block h-full group">
-      <div className="h-full bg-gradient-to-br from-[#1E1E1E] to-[#121212] border border-white/10 hover:border-purple-500/30 transition-all duration-300 rounded-2xl overflow-hidden hover:shadow-lg hover:shadow-purple-900/20 p-6">
+      <div className="h-full bg-gradient-to-br from-[#1E1E1E] to-[#121212] border border-white/10 hover:border-purple-500/30 transition-all duration-200 rounded-xl overflow-hidden hover:shadow-md hover:shadow-purple-900/10 p-4">
         <div className="flex flex-col h-full">
-          <div className="flex flex-row items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+          <div className="flex flex-row items-center justify-between">
+            <h3 className="text-base font-medium text-white flex items-center gap-2">
               {icon && <span className="text-purple-400">{icon}</span>}
               {title}
             </h3>
-            <div className="flex items-center gap-2">
-              {count !== undefined && (
-                <span className="text-xs px-2 py-1 rounded-full bg-purple-500/20 text-purple-300">
-                  {count}
-                </span>
-              )}
-              <ArrowRight className="h-4 w-4 text-white/40 group-hover:text-white/80 transition-colors" />
-            </div>
+            <ArrowRight className="h-3.5 w-3.5 text-white/40 group-hover:text-white/80 transition-colors flex-shrink-0" />
           </div>
-          <p className="text-sm text-white/60 mt-2">{description}</p>
+          <p className="text-xs text-white/50 mt-1.5 line-clamp-2">{description}</p>
         </div>
       </div>
     </Link>
