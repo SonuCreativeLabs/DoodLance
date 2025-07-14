@@ -29,7 +29,18 @@ interface PortfolioFormProps {
   onCancel: () => void;
 }
 
-export function PortfolioForm({ portfolio, onSave, onCancel }: PortfolioFormProps) {
+interface PortfolioFormProps {
+  portfolio: PortfolioItem | null;
+  onSave: (item: Omit<PortfolioItem, 'id'>) => void;
+  onCancel: () => void;
+  hideActions?: boolean;
+}
+
+interface PortfolioSectionProps {
+  initialPortfolio?: PortfolioItem[];
+}
+
+export function PortfolioForm({ portfolio, onSave, onCancel, hideActions = false }: PortfolioFormProps) {
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('');
   const [description, setDescription] = useState('');
@@ -100,10 +111,13 @@ export function PortfolioForm({ portfolio, onSave, onCancel }: PortfolioFormProp
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 mt-4">
-      <div className="space-y-2">
-        <Label htmlFor="title">Project Title <span className="text-red-500">*</span></Label>
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div>
+        <Label htmlFor="title" className="text-sm font-medium text-white/80 mb-1.5 block">
+          Project Title <span className="text-red-500">*</span>
+        </Label>
         <Input
+          type="text"
           id="title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
@@ -114,89 +128,102 @@ export function PortfolioForm({ portfolio, onSave, onCancel }: PortfolioFormProp
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="category">Category <span className="text-white/50 text-xs">(optional)</span></Label>
+        <Label htmlFor="category" className="text-sm font-medium text-white/80 mb-1.5 block">
+          Category <span className="text-white/50 text-xs">(optional)</span>
+        </Label>
         <Input
+          type="text"
           id="category"
           value={category}
           onChange={(e) => setCategory(e.target.value)}
-          placeholder="e.g., Web Development, App Design"
+          placeholder="e.g., Web Development, Graphic Design"
           className="bg-white/5 border-white/10 text-white placeholder:text-white/40 focus-visible:ring-1 focus-visible:ring-purple-500"
         />
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="description">Description <span className="text-red-500">*</span></Label>
+        <Label htmlFor="description" className="text-sm font-medium text-white/80 mb-1.5 block">
+          Project Description <span className="text-red-400 text-xs">*</span>
+        </Label>
         <Textarea
           id="description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="Describe your project in detail..."
-          className="min-h-[120px] bg-white/5 border-white/10 text-white placeholder:text-white/40 focus-visible:ring-1 focus-visible:ring-purple-500"
+          placeholder="Describe the project, your role, and any key achievements..."
+          className="min-h-[100px] bg-white/5 border-white/10 text-white placeholder-white/40"
+          required
         />
       </div>
 
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <Label>Project Images <span className="text-white/50 text-xs">(optional)</span></Label>
+          <Label className="text-sm font-medium text-white/80">Project Images <span className="text-white/50 text-xs">(optional)</span></Label>
           <span className="text-xs text-white/40">
             {images.length}/10 images
           </span>
         </div>
-        
-        {/* Image Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+        <div className="mt-1 grid grid-cols-5 gap-2">
           {images.map((img, index) => (
-            <div key={index} className="relative group aspect-square rounded-lg overflow-hidden border border-white/10">
-              <Image
-                src={img}
-                alt={`Project image ${index + 1}`}
-                fill
-                className="object-cover"
-              />
+            <div key={index} className="relative group aspect-square">
+              <div className="w-full h-full rounded-lg overflow-hidden border border-white/10 bg-white/5">
+                <Image
+                  src={img}
+                  alt={`Preview ${index + 1}`}
+                  width={200}
+                  height={200}
+                  className="w-full h-full object-cover"
+                />
+              </div>
               <button
                 type="button"
-                onClick={() => removeImage(index)}
-                className="absolute top-1 right-1 p-1 bg-black/70 rounded-full hover:bg-red-500 transition-colors"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  removeImage(index);
+                }}
+                className="absolute -top-1 -right-1 p-0.5 bg-red-500/90 rounded-full text-white hover:bg-red-600 transition-colors"
+                aria-label="Remove image"
               >
-                <X className="h-3.5 w-3.5 text-white" />
+                <X className="h-2.5 w-2.5" />
               </button>
             </div>
           ))}
-          
-          {images.length < 10 && (
-            <label 
-              htmlFor="image-upload"
-              className={`aspect-square border-2 border-dashed border-white/10 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-purple-400/50 transition-colors ${isUploading ? 'opacity-50' : ''}`}
-            >
-              <input
-                id="image-upload"
-                type="file"
-                className="sr-only"
-                accept="image/*"
-                onChange={handleImageUpload}
-                multiple
-                disabled={isUploading || images.length >= 10}
-              />
-              <Upload className="h-5 w-5 text-white/60 mb-1.5" />
-              <span className="text-xs text-white/60">
-                {isUploading ? 'Uploading...' : 'Add Image'}
-              </span>
-            </label>
-          )}
         </div>
         
-        {images.length === 0 && (
-          <div className="text-xs text-white/40 mt-1">
-            Upload up to 10 images to showcase your work (PNG, JPG, or WebP)
+        {images.length < 10 && (
+          <div className="mt-4">
+            <div className="space-y-2 w-full">
+              <label
+                className={`flex items-center justify-center w-full py-2.5 px-4 rounded-md border border-dashed border-white/20 hover:border-white/40 text-white/80 hover:text-white text-sm transition-colors cursor-pointer ${isUploading ? 'opacity-70' : ''}`}
+                htmlFor="image-upload"
+              >
+                <Upload className="h-3.5 w-3.5 mr-2 text-inherit" />
+                {isUploading ? 'Uploading...' : 'Upload Files'}
+                <VisuallyHidden>
+                  <input
+                    id="image-upload"
+                    type="file"
+                    accept="image/*,video/*"
+                    multiple
+                    onChange={handleImageUpload}
+                    disabled={isUploading}
+                  />
+                </VisuallyHidden>
+              </label>
+              <p className="text-xs text-white/50 text-center font-light">
+                Supported formats: JPG, PNG, GIF, MP4, MOV • Maximum file size: 5MB
+              </p>
+            </div>
           </div>
         )}
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="url">Project URL <span className="text-white/50 text-xs">(optional)</span></Label>
+        <Label htmlFor="url" className="text-sm font-medium text-white/80 mb-1.5 block">
+          Project URL <span className="text-white/50 text-xs">(optional)</span>
+        </Label>
         <Input
-          id="url"
           type="url"
+          id="url"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
           placeholder="https://example.com"
@@ -205,40 +232,44 @@ export function PortfolioForm({ portfolio, onSave, onCancel }: PortfolioFormProp
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="skills">Skills Used <span className="text-white/50 text-xs">(optional)</span></Label>
+        <Label htmlFor="skills" className="text-sm font-medium text-white/80 mb-1.5 block">
+          Skills Used <span className="text-red-400 text-xs">*</span>
+        </Label>
         <Input
           type="text"
           id="skills"
           value={skills}
           onChange={(e) => setSkills(e.target.value)}
           placeholder="e.g., React, Node.js, UI/UX Design"
-          className="bg-white/5 border-white/10 text-white placeholder:text-white/40 focus-visible:ring-1 focus-visible:ring-purple-500"
+          className="bg-white/5 border-white/10 text-white placeholder-white/40"
+          required
         />
         <p className="text-xs text-white/40">Separate skills with commas</p>
       </div>
 
-      <div className="flex justify-center gap-4 pt-6">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onCancel}
-          className="rounded-full border-white/10 text-white/90 hover:text-white hover:bg-white/5 px-6 py-2"
-        >
-          Cancel
-        </Button>
-        <Button 
-          type="submit" 
-          className="rounded-full bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white shadow-md hover:shadow-lg transition-all duration-200 px-6 py-2"
-        >
-          {portfolio ? 'Update Work' : 'Add Work'}
-        </Button>
-      </div>
+      {!hideActions && (
+        <div className="border-t border-white/10 pt-6 mt-6">
+          <div className="flex justify-end gap-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onCancel}
+              className="h-10 px-6 rounded-xl border-white/10 text-white/80 hover:bg-white/5 hover:text-white transition-colors"
+            >
+              Cancel
+            </Button>
+            <Button 
+              type="submit" 
+              className="h-10 px-6 rounded-xl bg-[var(--primary)] text-white hover:bg-[var(--primary)]/90 shadow-md transition-all"
+              disabled={!title.trim() || !description.trim()}
+            >
+              {portfolio ? 'Update Work' : 'Add Work'}
+            </Button>
+          </div>
+        </div>
+      )}
     </form>
   );
-}
-
-interface PortfolioSectionProps {
-  initialPortfolio?: PortfolioItem[];
 }
 
 export function PortfolioSection({ 
@@ -504,31 +535,58 @@ export function PortfolioSection({
       <Lightbox />
       {/* Add/Edit Work Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="bg-gradient-to-br from-[#0F0F0F] to-[#1A1A1A] border-white/10 max-w-4xl w-[95vw] h-[90vh] p-0 rounded-2xl flex flex-col [&>button]:hidden">
-          <div className="p-6 pb-0 relative">
-            <DialogHeader>
-              <DialogTitle className="text-2xl font-bold text-white mb-2">
+        <DialogContent className="sm:max-w-[800px] w-[calc(100%-2rem)] max-h-[90vh] flex flex-col p-0 bg-[#1E1E1E] border border-white/10 rounded-xl shadow-xl overflow-hidden">
+          {/* Header */}
+          <div className="border-b border-white/10 bg-[#1E1E1E] px-5 py-3">
+            <DialogHeader className="space-y-0.5">
+              <DialogTitle className="text-lg font-semibold text-white">
                 {editingItem ? 'Edit Work' : 'Add New Work'}
               </DialogTitle>
+              <p className="text-xs text-white/60">
+                {editingItem ? 'Update your portfolio work details' : 'Add a new project to your portfolio'}
+              </p>
             </DialogHeader>
-            <DialogPrimitive.Close className="absolute right-6 top-6 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
-              <XIcon className="h-5 w-5 text-white" />
-              <span className="sr-only">Close</span>
-            </DialogPrimitive.Close>
           </div>
-          <div className="flex-1 overflow-y-auto px-6 pb-6">
+
+          {/* Scrollable Content */}
+          <div className="flex-1 overflow-y-auto px-5 py-3">
             <PortfolioForm 
               portfolio={editingItem}
               onSave={handleSaveWork}
               onCancel={() => setIsDialogOpen(false)}
+              hideActions={true}
             />
+          </div>
+          
+          {/* Fixed Footer with Actions */}
+          <div className="border-t border-white/10 p-4 bg-[#1E1E1E] flex-shrink-0">
+            <div className="flex justify-center gap-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsDialogOpen(false)}
+                className="h-10 px-8 rounded-xl border-white/10 text-white/80 hover:bg-white/5 hover:text-white transition-colors"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                onClick={() => {
+                  const form = document.querySelector('form');
+                  if (form) form.requestSubmit();
+                }}
+                className="h-10 px-8 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-700 hover:to-purple-600 shadow-md hover:shadow-purple-500/30 transition-all"
+              >
+                {editingItem ? 'Update Work' : 'Add Work'}
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* Modern View Portfolio Item Dialog */}
+      {/* View Portfolio Item Dialog */}
       <Dialog open={!!viewingItem} onOpenChange={(open) => !open && setViewingItem(null)}>
-        <DialogContent className="bg-gradient-to-br from-[#0F0F0F] to-[#1A1A1A] border-white/10 max-w-4xl w-[95vw] max-h-[95vh] overflow-hidden p-0 rounded-2xl [&>button]:hidden">
+        <DialogContent className="sm:max-w-[900px] w-[calc(100%-2rem)] max-h-[90vh] flex flex-col p-0 bg-[#1E1E1E] border-0 rounded-xl shadow-xl overflow-hidden">
           {viewingItem && (
             <div className="flex flex-col h-full">
               <div className="relative">
@@ -698,9 +756,9 @@ export function PortfolioSection({
             Showcase your best work to attract potential clients. Add your first project to get started.
           </p>
           <Button 
-            variant="outline" 
-            size="sm" 
-            className="mt-4 bg-white/5 border-white/10 hover:bg-white/10"
+            variant="default" 
+            size="lg" 
+            className="mt-4 bg-[var(--primary)] text-white hover:bg-[var(--primary)]/90 transition-colors rounded-xl h-11 px-6"
             onClick={handleAddWork}
           >
             <Plus className="h-4 w-4 mr-2" />

@@ -127,28 +127,47 @@ export function ExperienceSection({ experiences: initialExperiences }: Experienc
   return (
     <div className="space-y-3">
       <div className="w-full mb-6">
-        <Button 
-          variant="default" 
-          size="sm" 
-          className="w-full h-10 gap-2 bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-700 hover:to-purple-600 shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center rounded-lg"
-          style={{ borderRadius: '0.5rem' }}
-          onClick={() => setIsDialogOpen(true)}
-        >
-          <Plus className="h-4 w-4" />
-          <span>Add Work Experience</span>
-        </Button>
+          <Button 
+            variant="default" 
+            size="sm" 
+            className="w-full h-10 gap-2 bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-700 hover:to-purple-600 shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center rounded-xl"
+            onClick={() => {
+              setNewExperience({
+                role: '',
+                company: '',
+                location: '',
+                startDate: '',
+                endDate: null,
+                description: '',
+                isCurrent: true
+              });
+              setEditingExperience(null);
+              setIsDialogOpen(true);
+            }}
+          >
+            <Plus className="h-4 w-4" />
+            <span>Add Work Experience</span>
+          </Button>
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent className="bg-gradient-to-br from-[#0F0F0F] to-[#1A1A1A] border-white/10 max-w-2xl w-[95vw] p-0 rounded-2xl [&>button]:hidden">
-            <DialogHeader className="p-6 pb-0">
-              <DialogTitle className="text-2xl font-bold text-white">
-                {editingExperience ? 'Edit Work Experience' : 'Add Work Experience'}
-              </DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleAddExperience} className="p-6 pt-4">
-              <div className="space-y-4">
+          <DialogContent className="sm:max-w-[500px] w-[calc(100%-2rem)] p-0 bg-[#1E1E1E] border-0 rounded-xl shadow-xl overflow-hidden">
+            {/* Header */}
+            <div className="border-b border-white/10 bg-[#1E1E1E] px-5 py-3">
+              <DialogHeader className="space-y-0.5">
+                <DialogTitle className="text-lg font-semibold text-white">
+                  {editingExperience ? 'Edit Work Experience' : 'Add Work Experience'}
+                </DialogTitle>
+                <p className="text-xs text-white/60">
+                  {editingExperience ? 'Update your work experience details' : 'Add your professional work history'}
+                </p>
+              </DialogHeader>
+            </div>
+
+            {/* Content */}
+            <div className="px-5 py-4">
+              <form id="experience-form" onSubmit={handleAddExperience} className="space-y-3">
                 <div>
-                  <Label htmlFor="role" className="text-sm font-medium text-white/80 mb-1.5 block">
+                  <Label htmlFor="role" className="text-sm font-medium text-white/80 mb-1 block">
                     Role <span className="text-red-500">*</span>
                   </Label>
                   <Input
@@ -202,7 +221,7 @@ export function ExperienceSection({ experiences: initialExperiences }: Experienc
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="col-span-1">
-                    <Label htmlFor="startDate" className="text-sm font-medium text-white/80 mb-1.5 block">
+                    <Label htmlFor="startDate" className="text-sm font-medium text-white/80 mb-1 block">
                       Start Date <span className="text-red-500">*</span>
                     </Label>
                     <Input
@@ -223,7 +242,7 @@ export function ExperienceSection({ experiences: initialExperiences }: Experienc
                   </div>
 
                   <div className="col-span-1">
-                    <Label htmlFor="endDate" className="text-sm font-medium text-white/80 mb-1.5 block">
+                    <Label htmlFor="endDate" className="text-sm font-medium text-white/80 mb-1 block">
                       End Date {!newExperience.isCurrent && <span className="text-red-500">*</span>}
                     </Label>
                     <Input
@@ -242,7 +261,7 @@ export function ExperienceSection({ experiences: initialExperiences }: Experienc
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between pt-2">
+                <div className="flex items-center justify-between pt-1">
                   <Label htmlFor="isCurrent" className="text-sm font-medium text-white/80">
                     I currently work here
                   </Label>
@@ -258,53 +277,64 @@ export function ExperienceSection({ experiences: initialExperiences }: Experienc
                   </div>
                 </div>
                 
-                <div className="flex justify-end gap-3 pt-6 border-t border-white/10 mt-6">
-                  <Button 
-                    type="button"
-                    variant="outline" 
-                    onClick={() => setIsDialogOpen(false)}
-                    className="px-6 h-10 text-sm border-white/10 text-white/80 hover:bg-white/5 hover:text-white transition-colors rounded-lg"
-                  >
-                    Cancel
-                  </Button>
-                  <Button 
-                    type="submit"
-                    className="px-6 h-10 text-sm bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white font-medium shadow-lg shadow-purple-500/20 disabled:opacity-50 disabled:pointer-events-none transition-all rounded-lg"
-                    disabled={!newExperience.role.trim() || !newExperience.company.trim() || !newExperience.startDate || (!newExperience.isCurrent && !newExperience.endDate)}
-                  >
-                    {editingExperience ? 'Update Experience' : 'Save Work Experience'}
-                  </Button>
-                </div>
+                {/* Removed duplicate action buttons - keeping only the fixed footer buttons */}
+              </form>
+            </div>
+            
+            {/* Footer with Actions */}
+            <div className="border-t border-white/10 p-4 bg-[#1E1E1E]">
+              <div className="flex justify-center gap-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsDialogOpen(false)}
+                  className="h-10 px-8 rounded-xl border-white/10 text-white/80 hover:bg-white/5 hover:text-white transition-colors"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  form="experience-form"
+                  disabled={!newExperience.role.trim() || !newExperience.company.trim() || !newExperience.startDate || (!newExperience.isCurrent && !newExperience.endDate)}
+                  className="h-10 px-8 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-700 hover:to-purple-600 shadow-md hover:shadow-purple-500/30 transition-all"
+                >
+                  <span className="whitespace-nowrap">{editingExperience ? 'Update Experience' : 'Save Experience'}</span>
+                </Button>
               </div>
-            </form>
-
-
+            </div>
           </DialogContent>
         </Dialog>
 
         {/* Delete Confirmation Dialog */}
         <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-          <DialogContent className="bg-gradient-to-br from-[#0F0F0F] to-[#1A1A1A] border-white/10 max-w-md w-[95vw] p-6 rounded-2xl">
-            <DialogHeader>
-              <DialogTitle className="text-xl font-bold text-white">Delete Experience</DialogTitle>
-            </DialogHeader>
-            <p className="text-white/80 mt-2">
-              Are you sure you want to delete this work experience? This action cannot be undone.
-            </p>
-            <div className="flex justify-end gap-3 mt-6">
-              <Button 
-                variant="outline"
-                onClick={cancelDelete}
-                className="px-4 h-9 text-sm border-white/10 text-white/80 hover:bg-white/5 hover:text-white transition-colors"
-              >
-                Cancel
-              </Button>
-              <Button 
-                onClick={confirmDelete}
-                className="px-4 h-9 text-sm bg-red-600 hover:bg-red-700 text-white font-medium transition-colors"
-              >
-                Delete
-              </Button>
+          <DialogContent className="sm:max-w-[400px] w-[calc(100%-2rem)] p-0 bg-[#1E1E1E] border-0 rounded-xl shadow-xl overflow-hidden">
+            <div className="p-5 text-center">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-500/10 mb-3">
+                <Trash2 className="h-5 w-5 text-red-500" />
+              </div>
+              <DialogTitle className="text-lg font-semibold text-white mb-1">
+                Delete Experience?
+              </DialogTitle>
+              <p className="text-sm text-white/70 mb-6 leading-snug">
+                This will permanently delete the work experience and cannot be undone.
+              </p>
+              <div className="flex flex-col space-y-2">
+                <button
+                  type="button"
+                  onClick={confirmDelete}
+                  className="px-4 py-2 text-sm font-medium rounded-xl bg-red-500/90 hover:bg-red-600 text-white transition-all duration-200 flex items-center justify-center gap-1.5"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  Yes, Delete It
+                </button>
+                <button
+                  type="button"
+                  onClick={cancelDelete}
+                  className="px-4 py-2 text-sm font-medium rounded-xl border border-white/10 bg-transparent hover:bg-white/5 text-white/90 hover:text-white transition-all duration-200"
+                >
+                  No, Keep It
+                </button>
+              </div>
             </div>
           </DialogContent>
         </Dialog>

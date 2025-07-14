@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle2, Clock, Zap, ShieldCheck, Star, Pencil, Trash2, Plus } from "lucide-react";
+import { CheckCircle2, Clock, Zap, ShieldCheck, Star, Pencil, Trash2, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -27,10 +27,12 @@ function PackageForm({
   initialData,
   onSave,
   onCancel,
+  hideActions = false,
 }: {
   initialData?: Partial<ServicePackage>;
   onSave: (pkg: Partial<ServicePackage>) => void;
   onCancel: () => void;
+  hideActions?: boolean;
 }) {
   const [formData, setFormData] = useState<Partial<ServicePackage>>(() => {
     const defaultData = {
@@ -230,24 +232,26 @@ function PackageForm({
         </Label>
       </div>
 
-      <div className="pt-4 border-t border-white/5">
-        <div className="flex justify-end gap-3">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onCancel}
-            className="h-10 px-6 rounded-lg border-white/10 text-white/80 hover:bg-white/5 hover:text-white transition-colors"
-          >
-            Cancel
-          </Button>
-          <Button
-            type="submit"
-            className="h-10 px-6 rounded-lg bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-700 hover:to-purple-600 shadow-md hover:shadow-purple-500/30 transition-all"
-          >
-            {initialData?.id ? 'Update Package' : 'Create Package'}
-          </Button>
+      {!hideActions && (
+        <div className="pt-4 border-t border-white/5">
+          <div className="flex justify-end gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onCancel}
+              className="h-10 px-6 rounded-lg border-white/10 text-white/80 hover:bg-white/5 hover:text-white transition-colors"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              className="h-10 px-6 rounded-lg bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-700 hover:to-purple-600 shadow-md hover:shadow-purple-500/30 transition-all"
+            >
+              {initialData?.id ? 'Update Package' : 'Create Package'}
+            </Button>
+          </div>
         </div>
-      </div>
+      )}
     </form>
   );
 }
@@ -553,26 +557,50 @@ export function ServicePackages({ services = [] }: ServicePackagesProps) {
 
       {/* Add/Edit Package Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="w-[90%] max-w-md max-h-[90vh] overflow-y-auto bg-[#1E1E1E] border border-white/5 rounded-xl p-0 shadow-2xl transition-all duration-300">
-          <div className="relative">
-            {/* Gradient header */}
-            <div className="bg-gradient-to-r from-purple-900/80 to-purple-800/50 p-6 pb-4 border-b border-white/5">
-              <DialogHeader>
-                <DialogTitle className="text-white text-xl font-semibold tracking-tight">
-                  {editingPackage ? 'Edit Service Package' : 'Create New Package'}
-                </DialogTitle>
-                <p className="text-sm text-white/60 mt-1">
-                  {editingPackage ? 'Update your service package details' : 'Create a new service package for your clients'}
-                </p>
-              </DialogHeader>
-            </div>
+        <DialogContent className="sm:max-w-[600px] w-[calc(100%-2rem)] max-h-[90vh] flex flex-col p-0 bg-[#1E1E1E] border-0 rounded-xl shadow-xl overflow-hidden">
+          {/* Header */}
+          <div className="border-b border-white/10 bg-[#1E1E1E] px-5 py-3">
+            <DialogHeader className="space-y-0.5">
+              <DialogTitle className="text-lg font-semibold text-white">
+                {editingPackage ? 'Edit Service Package' : 'Create New Package'}
+              </DialogTitle>
+              <p className="text-xs text-white/60">
+                {editingPackage ? 'Update your service package details' : 'Create a new service package for your clients'}
+              </p>
+            </DialogHeader>
+          </div>
 
-            <div className="p-6 space-y-6">
-              <PackageForm
-                initialData={editingPackage || undefined}
-                onSave={handleSavePackage}
-                onCancel={() => setIsDialogOpen(false)}
-              />
+          {/* Scrollable Content */}
+          <div className="flex-1 overflow-y-auto px-5 py-3">
+            <PackageForm
+              initialData={editingPackage || undefined}
+              onSave={handleSavePackage}
+              onCancel={() => setIsDialogOpen(false)}
+              hideActions={true}
+            />
+          </div>
+          
+          {/* Fixed Footer with Actions */}
+          <div className="border-t border-white/10 p-4 bg-[#1E1E1E] flex-shrink-0">
+            <div className="flex justify-center gap-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsDialogOpen(false)}
+                className="h-10 px-8 rounded-xl border-white/10 text-white/80 hover:bg-white/5 hover:text-white transition-colors"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                onClick={() => {
+                  const form = document.querySelector('form');
+                  if (form) form.requestSubmit();
+                }}
+                className="h-10 px-8 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-700 hover:to-purple-600 shadow-md hover:shadow-purple-500/30 transition-all"
+              >
+                {editingPackage ? 'Update Package' : 'Create Package'}
+              </Button>
             </div>
           </div>
         </DialogContent>

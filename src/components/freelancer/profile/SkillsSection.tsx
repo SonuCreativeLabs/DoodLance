@@ -6,13 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogClose } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface SkillItemType {
   id: string;
@@ -255,11 +256,16 @@ const SkillItem = memo(function SkillItem({ id, skill, description = '', experie
       <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
         <DialogContent className="w-[90vw] max-w-[400px] bg-[#1E1E1E] border border-white/10 rounded-xl overflow-hidden p-0">
           <div className="relative">
-            {/* Header with gradient background */}
-            <div className="bg-gradient-to-r from-[#2A2A2A] to-[#252525] p-6 pb-4">
-              <div className="text-center">
-                <DialogTitle className="text-2xl font-bold text-white">{skill}</DialogTitle>
-              </div>
+            {/* Header */}
+            <div className="border-b border-white/10 bg-[#1E1E1E] px-5 py-3">
+              <DialogHeader className="space-y-0.5">
+                <DialogTitle className="text-lg font-semibold text-white">
+                  {skill}
+                </DialogTitle>
+                <p className="text-xs text-white/60">
+                  Skill Details
+                </p>
+              </DialogHeader>
             </div>
             
             {/* Content */}
@@ -406,13 +412,13 @@ export function SkillsSection({
     setSkills(prev => prev.filter(skill => skill.id !== id));
   };
 
-  const handleDragEnd = (event: any) => {
+  const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     
     if (over && active.id !== over.id) {
       setSkills((items) => {
-        const oldIndex = items.findIndex(item => item.id === active.id.toString());
-        const newIndex = items.findIndex(item => item.id === over.id.toString());
+        const oldIndex = items.findIndex((item: SkillItemType) => item.id === active.id.toString());
+        const newIndex = items.findIndex((item: SkillItemType) => item.id === over.id.toString());
         return arrayMove(items, oldIndex, newIndex);
       });
     }
@@ -422,26 +428,32 @@ export function SkillsSection({
     <div className={cn("space-y-3", className)}>
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogTrigger asChild>
-            <Button 
-              variant="default" 
-              size="sm" 
-              className="w-full h-10 gap-2 bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-700 hover:to-purple-600 shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center rounded-lg"
-              style={{ borderRadius: '0.5rem' }}
-              onClick={() => setIsDialogOpen(true)}
-            >
-              <Plus className="h-4 w-4" />
-              <span>Add Skill</span>
-            </Button>
+          <Button 
+            variant="default" 
+            size="sm" 
+            className="w-full h-10 gap-2 bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-700 hover:to-purple-600 shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center rounded-xl"
+            onClick={() => setIsDialogOpen(true)}
+          >
+            <Plus className="h-4 w-4" />
+            <span>Add Skill</span>
+          </Button>
         </DialogTrigger>
-        <DialogContent className="w-[calc(100%-2rem)] max-w-2xl mx-auto bg-[#1E1E1E] border-white/5 rounded-xl p-0 overflow-hidden">
-          <div className="p-6 space-y-6">
-            <DialogHeader className="text-left">
-              <DialogTitle className="text-xl font-bold text-foreground">Add New Skill</DialogTitle>
-              <p className="text-sm mt-1.5 font-normal" style={{ opacity: 0.6 }}>
-                Add the skills that best represent your expertise. Be specific to attract the right clients for your services.
+        
+        <DialogContent className="sm:max-w-[600px] w-[calc(100%-2rem)] max-h-[90vh] flex flex-col p-0 bg-[#1E1E1E] border-0 rounded-xl shadow-xl overflow-hidden">
+          {/* Header */}
+          <div className="border-b border-white/10 bg-[#1E1E1E] px-5 py-3">
+            <DialogHeader className="space-y-0.5">
+              <DialogTitle className="text-lg font-semibold text-white">
+                Add New Skill
+              </DialogTitle>
+              <p className="text-xs text-white/60">
+                Add the skills that best represent your expertise
               </p>
             </DialogHeader>
-            
+          </div>
+
+          {/* Scrollable Content */}
+          <div className="flex-1 overflow-y-auto px-5 py-3">
             <div className="space-y-4">
               <div>
                 <Label htmlFor="new-skill" className="text-xs font-medium text-foreground/80 mb-1.5 block">
@@ -496,9 +508,9 @@ export function SkillsSection({
                       onChange={(e) => setNewLevel(e.target.value as 'Beginner' | 'Intermediate' | 'Expert')}
                       className="flex h-10 w-full rounded-md border border-gray-700 bg-[#2A2A2A] pl-10 pr-3 py-2 text-sm text-white ring-offset-background appearance-none cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                     >
-                    <option value="Beginner">Beginner</option>
-                    <option value="Intermediate">Intermediate</option>
-                    <option value="Expert">Expert</option>
+                      <option value="Beginner">Beginner</option>
+                      <option value="Intermediate">Intermediate</option>
+                      <option value="Expert">Expert</option>
                     </select>
                   </div>
                 </div>
@@ -517,20 +529,24 @@ export function SkillsSection({
                 />
               </div>
             </div>
-            
-            <div className="flex justify-center gap-3 pt-2">
-              <DialogClose asChild>
-                <Button variant="ghost" size="sm" className="h-9 text-muted-foreground hover:bg-transparent hover:text-foreground">
-                  Cancel
-                </Button>
-              </DialogClose>
-              <Button 
-                variant="default"
-                size="sm"
+          </div>
+          
+          {/* Fixed Footer with Actions */}
+          <div className="border-t border-white/10 p-4 bg-[#1E1E1E] flex-shrink-0">
+            <div className="flex justify-center gap-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsDialogOpen(false)}
+                className="h-10 px-8 rounded-xl border-white/10 text-white/80 hover:bg-white/5 hover:text-white transition-colors"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
                 onClick={handleAddSkill}
-                className="h-9 px-6 rounded-lg !important"
-                style={{ borderRadius: '0.5rem' }}
                 disabled={!newSkill.trim()}
+                className="h-10 px-8 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-700 hover:to-purple-600 shadow-md hover:shadow-purple-500/30 transition-all"
               >
                 Add Skill
               </Button>
