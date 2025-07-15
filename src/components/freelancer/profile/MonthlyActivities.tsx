@@ -153,7 +153,7 @@ const ActivityChart = ({
                 {isActive && (
                   <div className="absolute -top-10 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none z-50">
                     <div className="bg-black/90 text-white text-xs px-3 py-1.5 rounded-md whitespace-nowrap shadow-2xl border border-white/10">
-                      {value} {value === 1 ? 'activity' : 'activities'}
+                      {value} {value === 1 ? 'gig' : 'gigs'}
                       <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-2.5 h-2.5 bg-black/90 rotate-45 -z-10 border-b border-r border-white/10"></div>
                     </div>
                   </div>
@@ -306,7 +306,75 @@ const ActivityTab = ({
   </button>
 );
 
-export function MonthlyActivities() {
+interface StatCardProps {
+  label: string;
+  value: string;
+  change: string;
+  isPositive: boolean;
+}
+
+interface MonthlyActivitiesProps {
+  isLoading: boolean;
+}
+
+function StatsGrid({ activeTab, currentDate, daysForTab }: { activeTab: TimeRange, currentDate: Date, daysForTab: Date[] }) {
+  const activityData = useMemo(() => generateData(activeTab, currentDate), [activeTab, currentDate]);
+
+  // Helper to get stats for the selected period
+  let completed = 0, active = 0, earnings = 0, hours = 0;
+  if (activeTab === 'daily') {
+    // Use selected day (currentDate)
+    const found = activityData.find(item => {
+      if (!item.date) return false;
+      return isSameDay(item.date, currentDate);
+    });
+    completed = found && found.value > 0 ? found.value : 0;
+    active = completed > 0 ? 1 : 0;
+    earnings = completed * 1000;
+    hours = completed * 2;
+  } else if (activeTab === 'weekly') {
+    // Sum all days in the week
+    completed = activityData.reduce((sum, item) => sum + (item.value || 0), 0);
+    active = activityData.filter(item => (item.value || 0) > 0).length;
+    earnings = completed * 1000;
+    hours = completed * 2;
+  } else if (activeTab === 'monthly') {
+    // Sum all months (should be just one bar per month, but keep logic consistent)
+    completed = activityData.reduce((sum, item) => sum + (item.value || 0), 0);
+    active = activityData.filter(item => (item.value || 0) > 0).length;
+    earnings = completed * 1000;
+    hours = completed * 2;
+  }
+  // Prevent negative or NaN
+  completed = Math.max(0, Number(completed) || 0);
+  active = Math.max(0, Number(active) || 0);
+  earnings = Math.max(0, Number(earnings) || 0);
+  hours = Math.max(0, Number(hours) || 0);
+
+  const stats = [
+    { label: "Completed Gigs", value: completed.toString(), change: "+12%", isPositive: true },
+    { label: "Active Gigs", value: active.toString(), change: "+5%", isPositive: true },
+    { label: "Total Earnings", value: `₹${earnings.toLocaleString()}`, change: "+8%", isPositive: true },
+    { label: "Working Hours", value: `${hours} hrs`, change: "-2%", isPositive: false },
+  ];
+
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 px-2 md:px-4 mt-2">
+      {stats.map((stat) => (
+        <div key={stat.label} className="relative bg-white/10 backdrop-blur-md border border-white/10 p-2.5 rounded-xl shadow-[0_4px_24px_0_rgba(60,60,60,0.15)] w-full overflow-hidden flex flex-col gap-1">
+          <span className="text-[0.82rem] text-white/50 font-medium tracking-wide mb-0.5">{stat.label}</span>
+          <div className="flex flex-row items-baseline justify-between w-full">
+            <span className="text-lg font-bold text-white drop-shadow-sm">{stat.value}</span>
+            <span className={`text-xs font-semibold ${stat.isPositive ? 'text-green-400' : 'text-red-400'}`} style={{letterSpacing: '0.01em'}}>{stat.change}</span>
+          </div>
+          <span className="pointer-events-none absolute inset-0 rounded-xl" style={{boxShadow: 'inset 0 1px 6px 0 rgba(255,255,255,0.07)'}} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function MonthlyActivities({ isLoading }: MonthlyActivitiesProps) {
   const [activeTab, setActiveTab] = useState<TimeRange>('daily');
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -550,21 +618,16 @@ export function MonthlyActivities() {
     return valid;
   }, [activityData]);
   
-  // Calculate total activities from valid data
+  // Calculate total gigs from valid data
   const totalActivities = useMemo(() => {
     const total = validActivityData.reduce((sum, item) => sum + item.value, 0);
-    console.log('Total activities:', total);
+    console.log('Total gigs:', total);
     return total;
   }, [validActivityData]);
 
   return (
     <div className="space-y-4">
-      {/* Title Section */}
-      <div className="px-1">
-        <h2 className="text-xl sm:text-2xl font-bold text-white">Performance Activity</h2>
-        <p className="text-xs sm:text-sm text-white/60">Track your daily progress</p>
-      </div>
-      
+
       {/* Card Content */}
       <div className="overflow-hidden">
         <div className="p-0">
@@ -615,6 +678,19 @@ export function MonthlyActivities() {
                   Monthly
                 </ActivityTab>
               </div>
+
+              {/* Stat Cards Grid below Tabs */}
+              <div className="w-full">
+                {isLoading ? (
+                  <div className="animate-pulse grid grid-cols-2 md:grid-cols-4 gap-4 px-2 md:px-4 mt-2">
+                    {[1, 2, 3, 4].map((i) => (
+                      <div key={i} className="h-20 bg-[#111111] rounded-xl shadow-[0_4px_24px_0_rgba(60,60,60,0.30)]"></div>
+                    ))}
+                  </div>
+                ) : (
+                  <StatsGrid activeTab={activeTab} currentDate={currentDate} daysForTab={daysForTab} />
+                )}
+              </div>
               
               {/* Stats */}
               <div className="flex flex-col gap-4">
@@ -622,12 +698,12 @@ export function MonthlyActivities() {
                 <div className="flex justify-between items-start">
                   <div>
                     <p className="text-3xl sm:text-4xl font-bold text-white">{totalActivities}</p>
-                    <p className="text-sm text-white/60">Total {activeTab} activities</p>
+                    <p className="text-sm text-white/60">Total {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Gigs</p>
                   </div>
                   
                   {/* Percentage indicator */}
-                  <div className="flex items-center px-3 py-1.5 rounded-full bg-green-500/10 text-green-400 text-xs sm:text-sm h-fit mt-1">
-                    <ArrowUpRight className="h-3 w-3 sm:h-4 sm:w-4 mr-1 flex-shrink-0" />
+                  <div className="flex items-center px-1.5 py-0.5 rounded bg-green-500/5 text-green-400 text-xs mt-2">
+                    <ArrowUpRight className="h-2.5 w-2.5 mr-0.5 flex-shrink-0" />
                     {percentChange}% from last {activeTab === 'daily' ? 'week' : activeTab === 'weekly' ? 'month' : 'year'}
                   </div>
                 </div>

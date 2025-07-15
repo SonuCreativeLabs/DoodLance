@@ -1,93 +1,46 @@
 import { ArrowRight } from 'lucide-react';
 
-interface StatItemProps {
-  label: string;
-  value: string | number;
-  color: string;
-  onViewDetails?: () => void;
-}
-
-const StatItem = ({ label, value, color, onViewDetails }: StatItemProps) => {
-  const baseColor = color.split('from-')[1].split(' ')[0];
-  const gradientClass = `bg-gradient-to-br ${color} to-${baseColor}/20`;
-  
-  return (
-    <div className={`relative p-5 rounded-2xl ${gradientClass} h-full`}>
-      <div className="absolute inset-0 bg-black/30 rounded-2xl" />
-      <div className="relative z-10 h-full">
-        <div className="flex justify-between">
-          <div className="pt-1">
-            <p className="text-sm font-medium text-white/80">{label}</p>
-            <p className="text-2xl font-bold text-white">{value}</p>
-          </div>
-          <div className="flex items-center">
-            <button 
-              onClick={onViewDetails}
-              className="text-xs font-medium text-white/80 hover:text-white flex items-center gap-1"
-            >
-              View details
-              <ArrowRight className="h-3 w-3" />
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 interface ProfileStatsCardProps {
   completed: number;
   inProgress: number;
-  responseTime: string;
+  totalWorkingHours: string;
   totalEarnings: string;
   pendingJobs?: number;
 }
 
+const StatRow = ({ label, value, border = true }: { label: string; value: string | number; border?: boolean }) => (
+  <div className={`flex justify-between items-center py-2.5 ${border ? 'border-b border-white/5' : ''}`}>
+    <span className="text-sm text-white/80">{label}</span>
+    <span className="text-white font-medium">{value}</span>
+  </div>
+);
+
 export function ProfileStatsCard({ 
   completed, 
   inProgress, 
-  responseTime,
+  totalWorkingHours,
   totalEarnings,
   pendingJobs = 3
 }: ProfileStatsCardProps) {
-  const handleViewDetails = (section: string) => {
-    // You can replace this with your navigation logic or modal opening
-    console.log(`Viewing details for ${section}`);
-    // Example: router.push(`/freelancer/stats/${section.toLowerCase().replace(/\s+/g, '-')}`);
-  };
+  const activeJobs = inProgress + (pendingJobs || 0);
+  
+  const stats = [
+    { label: 'Completed Jobs', value: completed },
+    { label: 'Active Jobs', value: activeJobs },
+    { label: 'Total Working Hours', value: totalWorkingHours },
+    { label: 'Total Earnings', value: totalEarnings, border: false }
+  ];
 
   return (
-    <div className="space-y-4 mb-8">
-      <h3 className="text-lg font-semibold text-white">Performance Overview</h3>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatItem 
-          label="Completed Jobs"
-          value={completed}
-          color="from-[#FF8A3D]"
-          onViewDetails={() => handleViewDetails('Completed Jobs')}
+    <div className="space-y-4">
+      {stats.map((stat, index) => (
+        <StatRow 
+          key={stat.label}
+          label={stat.label}
+          value={stat.value}
+          border={index !== stats.length - 1}
         />
-        
-        <StatItem 
-          label="Avg. Response"
-          value={responseTime}
-          color="from-[#6B46C1]"
-          onViewDetails={() => handleViewDetails('Response Time')}
-        />
-        
-        <StatItem 
-          label="Total Earnings"
-          value={totalEarnings}
-          color="from-[#38B2AC]"
-          onViewDetails={() => handleViewDetails('Earnings')}
-        />
-        
-        <StatItem 
-          label="Pending Jobs"
-          value={pendingJobs}
-          color="from-[#4299E1]"
-          onViewDetails={() => handleViewDetails('Pending Jobs')}
-        />
-      </div>
+      ))}
     </div>
   );
 }
