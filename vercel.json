@@ -1,8 +1,19 @@
 {
   "version": 2,
-  "buildCommand": "npm run build",
-  "outputDirectory": ".next",
   "builds": [
-    { "src": "package.json", "use": "@vercel/next" }
+    {
+      "src": "package.json",
+      "use": "@vercel/next"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(?<pathname>.*)",
+      "dest": "/api/$pathname"
+    },
+    {
+      "src": "/(?<pathname>.*)",
+      "dest": "/$pathname"
+    }
   ]
 }
