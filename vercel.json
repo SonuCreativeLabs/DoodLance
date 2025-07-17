@@ -6,6 +6,11 @@
       "use": "@vercel/next"
     }
   ],
+  "build": {
+    "env": {
+      "NEXT_TELEMETRY_DISABLED": "1"
+    }
+  },
   "routes": [
     {
       "src": "/api/(.*)",
@@ -13,9 +18,7 @@
     },
     {
       "src": "/(.*)",
-      "dest": "/"
+      "dest": "/$1"
     }
-  ],
-  "buildCommand": "npm run build",
-  "outputDirectory": ".next"
+  ]
 }

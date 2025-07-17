@@ -1,21 +1,25 @@
 /** @type {import('next').NextConfig} */
 const path = require('path');
 
+// Check if we're running in Vercel
+const isVercel = process.env.VERCEL === '1';
+
 const nextConfig = {
+  output: isVercel ? 'standalone' : undefined,
   images: {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'images.unsplash.com',
+        hostname: '**',
       },
     ],
-    // Enable image optimization for local images
-    domains: ['localhost', '127.0.0.1'],
-    // Keep unoptimized as true for now to debug
-    unoptimized: true,
-    // Ensure images are served from the correct path
-    path: '/_next/image',
-    // Disable image optimization in development
+    domains: [
+      'localhost',
+      '127.0.0.1',
+      'images.unsplash.com',
+      'atmxiuindyakhqmdqzal.supabase.co',
+    ],
+    unoptimized: false,
     disableStaticImages: false,
   },
   // Ensure static files are served correctly
