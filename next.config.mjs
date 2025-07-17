@@ -23,15 +23,15 @@ const nextConfig = {
   
   // Enable experimental features
   experimental: {
-    // Enable server actions
-    serverActions: true,
     // Enable server components external packages
     serverComponentsExternalPackages: ['@prisma/client', 'bcryptjs'],
+    // Enable optimized package imports
+    optimizePackageImports: ['@radix-ui/react-dialog'],
   },
   
-  // Webpack configuration
+  // Configure webpack
   webpack: (config, { isServer }) => {
-    // Important: return the modified config
+    // Add any webpack configuration here if needed
     return config;
   },
 };
