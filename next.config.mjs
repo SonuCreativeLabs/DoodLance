@@ -2,8 +2,8 @@
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Disable React Strict Mode for now to prevent duplicate API calls in development
-  reactStrictMode: false,
+  // Enable React Strict Mode
+  reactStrictMode: true,
   
   // Enable production browser source maps
   productionBrowserSourceMaps: true,
@@ -25,15 +25,10 @@ const nextConfig = {
   experimental: {
     // Enable server components external packages
     serverComponentsExternalPackages: ['@prisma/client', 'bcryptjs'],
-    // Enable optimized package imports
-    optimizePackageImports: ['@radix-ui/react-dialog'],
   },
   
-  // Configure webpack
-  webpack: (config, { isServer }) => {
-    // Add any webpack configuration here if needed
-    return config;
-  },
+  // Disable Babel as we're using SWC
+  swcMinify: true,
 };
 
 export default nextConfig;
