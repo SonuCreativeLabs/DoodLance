@@ -1,12 +1,13 @@
 "use client"
 
-import { Briefcase, Code, Award, Star, FileText, Calendar, MessageSquare, Settings } from 'lucide-react';
+import { Briefcase, Code, Award, Star, FileText, Calendar, MessageSquare, Settings, User, Mail, Phone, Globe, MapPin, GraduationCap, Languages, Edit2, CheckCircle, CircleDollarSign, ChevronRight, BarChart2, Clock, Users, Target, Dumbbell, Trophy } from 'lucide-react';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 // Import components
 import { ProfileHeader } from '@/components/freelancer/profile/ProfileHeader';
-import { StatsCards } from '@/components/freelancer/profile/StatsCards';
+import { ProfileStatsCard } from '@/components/freelancer/profile/ProfileStatsCard';
 import { MonthlyActivities } from '@/components/freelancer/profile/MonthlyActivities';
 import { ProfileSectionCard } from '@/components/freelancer/profile/ProfileSectionCard';
 
@@ -125,8 +126,8 @@ type ExtendedFreelancerData = FreelancerData & {
 };
 
 const freelancerData: ExtendedFreelancerData = {
-  name: "Sonu Sharma",
-  title: "AI Engineer & Full-Stack Developer",
+  name: "Sathish Sonu",
+  title: "Cricketer & AI Engineer",
   about: "I'm a passionate AI engineer and full-stack developer with expertise in building intelligent applications. I specialize in AI agents, prompt engineering, and modern web development.",
   rating: 4.9,
   reviewCount: 42,
@@ -134,8 +135,8 @@ const freelancerData: ExtendedFreelancerData = {
   deliveryTime: "2 days",
   completionRate: 100,
   online: true,
-  location: "Bangalore, India",
-  skills: ["AI Development", "React", "TypeScript", "Node.js", "Prompt Engineering", "Vibe Code", "AI Agents"],
+  location: "Chennai, India",
+  skills: ["Cricket", "Cycling", "Off Spin", "Batting", "Vibe Coder", "Prompt Engg", "AI Agent Builder"],
   services: [
     {
       id: "1",
@@ -199,7 +200,7 @@ const freelancerData: ExtendedFreelancerData = {
 // Main Profile Page Component
 export default function ProfilePage() {
   return (
-    <div className="min-h-screen bg-[#111111] text-white">
+    <div className="min-h-screen bg-[#111111] text-white pb-20 md:pb-24">
       <ProfileHeader 
         name={freelancerData.name}
         title={freelancerData.title}
@@ -211,62 +212,105 @@ export default function ProfilePage() {
       />
 
       <div className="container mx-auto px-4 py-6">
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold mb-2">My Profile</h1>
-          <p className="text-white/60">Manage your profile and showcase your work to potential clients</p>
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold text-white mb-2">My Profile</h2>
+          <p className="text-white/60">Manage your professional profile and settings</p>
         </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <ProfileSectionCard
+            title="Personal Details"
+            description="Manage your profile and contact information"
+            href="/freelancer/profile/personal"
+            icon={<User className="h-4 w-4" />}
+          />
           <ProfileSectionCard
             title="Portfolio"
-            description="Showcase your best work with descriptions, images, and links"
+            description="Showcase your best work with images and details"
             href="/freelancer/profile/portfolio"
-            icon={<Briefcase className="h-5 w-5" />}
-            count={portfolioItems.length}
+            icon={<Briefcase className="h-4 w-4" />}
           />
 
           <ProfileSectionCard
             title="Skills"
             description="Highlight your expertise and proficiency levels"
             href="/freelancer/profile/skills"
-            icon={<Code className="h-5 w-5" />}
-            count={freelancerData.skills?.length || 0}
+            icon={<Code className="h-4 w-4" />}
           />
 
           <ProfileSectionCard
             title="Experience"
             description="List your professional experience and achievements"
             href="/freelancer/profile/experience"
-            icon={<Award className="h-5 w-5" />}
-            count={experiences.length}
+            icon={<Award className="h-4 w-4" />}
           />
 
           <ProfileSectionCard
             title="Service Packages"
             description="Define your service offerings and pricing"
             href="/freelancer/profile/services"
-            icon={<FileText className="h-5 w-5" />}
-            count={freelancerData.services?.length || 0}
+            icon={<FileText className="h-4 w-4" />}
           />
 
           <ProfileSectionCard
             title="Client Reviews"
             description="View and manage client feedback"
             href="/freelancer/profile/reviews"
-            icon={<Star className="h-5 w-5" />}
-            count={freelancerData.clientReviews?.length || 0}
+            icon={<Star className="h-4 w-4" />}
+          />
+
+          <ProfileSectionCard
+            title="Performance Activity"
+            description="Track your performance metrics and analytics"
+            href="/freelancer/profile/performance"
+            icon={<BarChart2 className="h-4 w-4" />}
           />
 
           <ProfileSectionCard
             title="Availability"
             description="Set your working hours and availability"
             href="/freelancer/profile/availability"
-            icon={<Calendar className="h-5 w-5" />}
+            icon={<Calendar className="h-4 w-4" />}
           />
-        </div>
-
-        <div className="mt-12">
-          <MonthlyActivities />
+          
+          <ProfileSectionCard
+            title="Identity Verification"
+            description="Complete your KYC verification to unlock all features"
+            href="/freelancer/profile/verification"
+            icon={<CheckCircle className="h-4 w-4" />}
+          />
+          
+          <Link 
+            href="/client" 
+            className="w-full h-full flex items-center justify-between p-4 bg-gradient-to-l from-[var(--purple)] to-[var(--purple-hover)] hover:opacity-90 rounded-xl transition-all duration-200 group shadow-md shadow-purple-500/20 hover:shadow-purple-500/30"
+          >
+            <div className="flex items-center gap-3">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
+                <path d="M21 2v6h-6" />
+                <path d="M3 12a9 9 0 0 1 15-6.7L21 8" />
+                <path d="M3 22v-6h6" />
+                <path d="M21 12a9 9 0 0 1-15 6.7L3 16" />
+              </svg>
+              <div className="text-left">
+                <div className="text-sm font-medium text-white">Switch to Client</div>
+                <div className="text-xs text-white/80">Access client dashboard</div>
+              </div>
+            </div>
+            <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              width="18" 
+              height="18" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="currentColor" 
+              strokeWidth="2.5" 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              className="h-4 w-4 text-white/80 group-hover:translate-x-0.5 transition-transform"
+            >
+              <path d="m9 18 6-6-6-6"/>
+            </svg>
+          </Link>
         </div>
       </div>
     </div>

@@ -4,50 +4,66 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ServicePackages } from "@/components/freelancer/profile/ServicePackages";
 
-// Mock data for services
+// Professional Services
 const services = [
   {
     id: '1',
-    title: 'Basic Website',
-    description: 'A simple 5-page website with responsive design',
-    price: '₹15,000',
+    title: 'AI Development Consultation',
+    description: 'Expert guidance on AI implementation for your business needs',
+    price: '₹25,000',
     type: 'online' as const,
-    deliveryTime: '2 weeks',
+    deliveryTime: '1 week',
     features: [
-      '5 responsive pages',
-      'Contact form',
-      'Basic SEO setup',
-      '1 month free support'
+      '1-hour consultation session',
+      'Technical requirements analysis',
+      'Solution architecture design',
+      'Implementation roadmap',
+      'Follow-up email support for 1 week'
     ]
   },
   {
     id: '2',
-    title: 'E-commerce Website',
-    description: 'A full-featured online store with product management',
-    price: '₹50,000',
+    title: 'Custom AI Solution Development',
+    description: 'Tailored AI application development for your specific needs',
+    price: '₹1,50,000',
     type: 'online' as const,
-    deliveryTime: '4 weeks',
+    deliveryTime: '4-6 weeks',
     features: [
-      'Product catalog',
-      'Shopping cart',
-      'Payment gateway integration',
-      'Order management',
-      '3 months free support'
+      'Custom AI model development',
+      'API integration',
+      'Testing & deployment',
+      'Documentation',
+      '1 month of maintenance support'
     ]
   },
   {
     id: '3',
-    title: 'UI/UX Design',
-    description: 'Custom UI/UX design for your application',
-    price: '₹25,000',
+    title: 'Cricket Coaching (Batting)',
+    description: 'Personalized batting coaching sessions',
+    price: '₹2,000',
     type: 'in-person' as const,
-    deliveryTime: '3 weeks',
+    deliveryTime: '2 hours',
     features: [
-      'User research',
-      'Wireframing',
-      'High-fidelity mockups',
-      'Interactive prototypes',
-      'Design system'
+      'Technical skill assessment',
+      'Personalized training plan',
+      'Video analysis',
+      'Match simulation drills',
+      'Mental conditioning tips'
+    ]
+  },
+  {
+    id: '4',
+    title: 'Cricket Coaching (Bowling)',
+    description: 'Professional off-spin bowling coaching',
+    price: '₹2,500',
+    type: 'in-person' as const,
+    deliveryTime: '2 hours',
+    features: [
+      'Bowling action analysis',
+      'Variations coaching',
+      'Match situation practice',
+      'Fitness & conditioning advice',
+      'Video analysis session'
     ]
   }
 ];
@@ -56,27 +72,27 @@ export default function ServicesPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
-        <Link href="/freelancer/profile" className="inline-flex items-center text-sm text-purple-400 hover:text-purple-300 mb-4">
-          <ArrowLeft className="h-4 w-4 mr-1" />
-          Back to Profile
-        </Link>
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">My Service Packages</h1>
-            <p className="text-white/60 mt-1">Define and manage your service offerings</p>
+        <div className="flex items-center mb-4">
+          <div className="flex items-center space-x-4">
+            <Link 
+              href="/freelancer/profile" 
+              className="inline-flex items-center text-sm text-purple-400 hover:text-purple-300 transition-colors duration-200 group"
+            >
+              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/10 group-hover:bg-white/10 transition-colors duration-200">
+                <ArrowLeft className="h-4 w-4" />
+              </div>
+            </Link>
+            <div>
+              <h1 className="text-xl font-bold">My Services</h1>
+              <p className="text-white/60 text-sm mt-0.5">Manage the services you offer to clients</p>
+            </div>
           </div>
-          <Button className="bg-purple-600 hover:bg-purple-700">
-            <Plus className="h-4 w-4 mr-2" />
-            Add Service
-          </Button>
         </div>
       </div>
 
-      <Card className="bg-[#1E1E1E] border border-white/5">
-        <CardContent className="p-6">
-          <ServicePackages services={services} />
-        </CardContent>
-      </Card>
+      <div className="space-y-6">
+        <ServicePackages services={services} />
+      </div>
     </div>
   );
 }

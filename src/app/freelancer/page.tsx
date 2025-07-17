@@ -2,6 +2,7 @@
 import Image from "next/image"
 import { motion } from "framer-motion"
 import { CircleDollarSign, Calendar, ChevronRight, Star, MapPin, Wallet, TrendingUp, Award, Clock, Users, Target, Award as AwardIcon, Dumbbell, Code, Trophy } from "lucide-react"
+import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { useState, useEffect } from "react"
 
@@ -104,6 +105,16 @@ export default function FreelancerHome() {
       </motion.div>
 
       <div className="container mx-auto px-4 py-12 bg-[#111111] relative z-0">
+        {/* Section Title */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="mb-6"
+        >
+          <h2 className="text-2xl font-bold text-white mb-2">Your Dashboard</h2>
+          <p className="text-white/60">Overview of your freelancing activities and earnings</p>
+        </motion.div>
 
         {/* Earnings Cards Section */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -111,9 +122,9 @@ export default function FreelancerHome() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="bg-gradient-to-br from-[#6B46C1]/10 via-[#4C1D95]/10 to-[#2D1B69]/10 backdrop-blur-lg rounded-2xl p-6 border border-white/10 hover:border-purple-500/30 relative transition-all duration-300 shadow-lg shadow-purple-900/10 hover:shadow-purple-900/20"
+            className="bg-gradient-to-br from-[#1E1E1E] to-[#121212] rounded-2xl p-6 border border-white/10 transition-all duration-300 shadow-lg"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-purple-800/10 to-transparent rounded-2xl"></div>
+
             <div className="relative">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold text-white">Today's Earnings</h2>
@@ -132,9 +143,9 @@ export default function FreelancerHome() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="bg-gradient-to-br from-[#6B46C1]/10 via-[#4C1D95]/10 to-[#2D1B69]/10 backdrop-blur-lg rounded-2xl p-6 border border-white/10 hover:border-purple-500/30 relative transition-all duration-300 shadow-lg shadow-purple-900/10 hover:shadow-purple-900/20"
+              className="bg-gradient-to-br from-[#1E1E1E] to-[#121212] rounded-2xl p-6 border border-white/10 transition-all duration-300 shadow-lg"
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-purple-800/10 to-transparent rounded-2xl"></div>
+  
               <div className="relative">
                 <div className="flex flex-col h-full justify-between">
                   <div>
@@ -154,9 +165,9 @@ export default function FreelancerHome() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              className="bg-gradient-to-br from-[#6B46C1]/10 via-[#4C1D95]/10 to-[#2D1B69]/10 backdrop-blur-lg rounded-2xl p-6 border border-white/10 hover:border-purple-500/30 relative transition-all duration-300 shadow-lg shadow-purple-900/10 hover:shadow-purple-900/20"
+              className="bg-gradient-to-br from-[#1E1E1E] to-[#121212] rounded-2xl p-6 border border-white/10 transition-all duration-300 shadow-lg"
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-purple-800/10 to-transparent rounded-2xl"></div>
+  
               <div className="relative">
                 <div className="flex flex-col h-full justify-between">
                   <div>
@@ -182,9 +193,8 @@ export default function FreelancerHome() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="bg-gradient-to-br from-[#6B46C1]/10 via-[#4C1D95]/10 to-[#2D1B69]/10 backdrop-blur-lg rounded-2xl p-6 border border-white/10 hover:border-purple-500/30 relative transition-all duration-300 shadow-lg shadow-purple-900/10 hover:shadow-purple-900/20 mb-8"
+          className="bg-gradient-to-br from-[#1E1E1E] to-[#121212] rounded-2xl p-6 border border-white/10 transition-all duration-300 shadow-lg mb-8"
         >
-          <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-purple-800/10 to-transparent rounded-2xl"></div>
           <div className="relative">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center w-full py-1 px-0">
@@ -206,28 +216,33 @@ export default function FreelancerHome() {
                   <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
                 </motion.div>
                 {/* Name and Rating */}
-                <div className="flex flex-col justify-center flex-grow min-w-0 ml-1">
-                  <div className="flex items-center gap-4">
-                    <h2 className="text-base font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#bf82fb] to-[#9537ea] group-hover:opacity-90 transition-colors truncate max-w-[120px]">John Doe</h2>
-                    <span className="flex items-center gap-1 whitespace-nowrap">
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="#fbbf24" className="h-4 w-4 flex-shrink-0">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.967a1 1 0 00.95.69h4.178c.969 0 1.371 1.24.588 1.81l-3.385 2.46a1 1 0 00-.364 1.118l1.287 3.966c.3.921-.755 1.688-1.54 1.118l-3.385-2.46a1 1 0 00-1.176 0l-3.385 2.46c-.784.57-1.838-.197-1.54-1.118l1.287-3.966a1 1 0 00-.364-1.118L2.045 9.394c-.783-.57-.38-1.81.588-1.81h4.178a1 1 0 00.95-.69l1.286-3.967z" />
-                      </svg>
-                      <span className="text-sm text-white font-semibold">4.8</span>
-                      <span className="text-xs text-white/70">(120 reviews)</span>
-                    </span>
-                  </div>
-                </div>
+                <div className="flex flex-col justify-center flex-grow min-w-0 ml-4">
+  <div className="flex flex-col sm:flex-row sm:items-center sm:gap-4 gap-0 w-full">
+    {/* Name + Rating */}
+    <div className="flex flex-row items-center gap-3 min-w-0 w-full">
+      <h2 className="text-lg sm:text-2xl font-bold text-white leading-tight max-w-full whitespace-nowrap overflow-visible">Sathish Sonu</h2>
+      <span className="flex items-center px-1.5 py-0.5 rounded-full bg-yellow-400/10 border border-yellow-300/30 ml-1 sm:ml-3 gap-0.5">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="#fbbf24" className="h-3 w-3 flex-shrink-0">
+          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.967a1 1 0 00.95.69h4.178c.969 0 1.371 1.24.588 1.81l-3.385 2.46a1 1 0 00-.364 1.118l1.287 3.966c.3.921-.755 1.688-1.54 1.118l-3.385-2.46a1 1 0 00-1.176 0l-3.385 2.46c-.784.57-1.838-.197-1.54-1.118l1.287-3.966a1 1 0 00-.364-1.118L2.045 9.394c-.783-.57-.38-1.81.588-1.81h4.178a1 1 0 00.95-.69l1.286-3.967z" />
+        </svg>
+        <span className="text-xs font-semibold text-yellow-300">4.8</span>
+      </span>
+    </div>
+    {/* Edit Icon stays here on desktop */}
+  </div>
+  <div className="flex flex-row items-center gap-2 mt-1">
+    <span className="text-sm font-medium text-purple-400">Cricketer & AI Engineer</span>
+  </div>
+</div>
                 {/* Edit Icon Button */}
-                <motion.button
-                  whileHover={{ scale: 1.04 }}
-                  whileTap={{ scale: 0.97 }}
-                  className="flex items-center px-2.5 py-1 text-xs font-semibold text-white border border-[#9334e9] rounded-xl bg-[#9334e9] hover:bg-[#7f2bcf] transition-all duration-200 outline-none focus:ring-2 focus:ring-[#9334e9] shadow-md whitespace-nowrap ml-16 shadow-[#9334e9]/30"
+                <Link
+                  href="/freelancer/profile/personal"
+                  className="ml-3 p-1 rounded-full hover:bg-[#9334e9]/20 transition-colors focus:outline-none focus:ring-2 focus:ring-[#9334e9] flex items-center justify-center"
                   title="Edit Profile"
                   aria-label="Edit Profile"
                 >
-                  Edit Profile
-                </motion.button>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-edit-2 h-4 w-4 text-white/70 hover:text-white/90"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 3 21l.5-4.5Z"/></svg>
+                </Link>
               </div>
               
             </div>
@@ -236,16 +251,16 @@ export default function FreelancerHome() {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.7 }}
-                className="flex items-center gap-4 p-5 rounded-2xl bg-gradient-to-br from-white/5 to-white/[0.03] border border-white/10 backdrop-blur-sm hover:border-white/20 transition-all duration-300 shadow-lg shadow-purple-900/10"
+                className="flex items-center gap-4 p-5 rounded-2xl bg-gradient-to-br from-[#1E1E1E] to-[#121212] border border-white/10 hover:border-purple-500/30 transition-all duration-300 shadow-lg hover:shadow-purple-900/20"
               >
                 <div className="w-10 h-10 rounded-xl bg-[#6B46C1]/15 flex items-center justify-center">
                   <Calendar className="h-5 w-5 text-[#B794F4]" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-transparent bg-clip-text bg-gradient-to-r from-[#bf82fb] to-[#9537ea] group-hover:opacity-90 transition-colors">Ready to work</p>
+                  <p className="text-sm font-medium text-white group-hover:opacity-90 transition-colors">Ready to work</p>
                   <p className="text-xs text-white/60">Toggle your availability</p>
                 </div>
-                <div className="relative inline-flex h-6 w-11 items-center rounded-full bg-[#9334e9] group-hover:bg-[#7f2bcf] transition-colors cursor-pointer shadow-inner">
+                <div className="relative inline-flex h-6 w-11 items-center rounded-full bg-green-500 group-hover:bg-green-600 transition-colors cursor-pointer shadow-inner">
                   <span className="sr-only">Toggle availability</span>
                   <span className={`absolute h-5 w-5 transform rounded-full bg-white transition-all duration-300 shadow-sm ${true ? 'translate-x-6' : 'translate-x-1'}`}></span>
                 </div>
@@ -254,13 +269,13 @@ export default function FreelancerHome() {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.8 }}
-                className="flex items-center gap-4 p-5 rounded-2xl bg-gradient-to-br from-white/5 to-white/[0.03] border border-white/10 backdrop-blur-sm hover:border-white/20 transition-all duration-300 shadow-lg shadow-purple-900/10"
+                className="flex items-center gap-4 p-5 rounded-2xl bg-gradient-to-br from-[#1E1E1E] to-[#121212] border border-white/10 hover:border-purple-500/30 transition-all duration-300 shadow-lg hover:shadow-purple-900/20"
               >
                 <div className="w-10 h-10 rounded-xl bg-[#6B46C1]/15 flex items-center justify-center">
                   <MapPin className="h-5 w-5 text-[#B794F4]" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-transparent bg-clip-text bg-gradient-to-r from-[#bf82fb] to-[#9537ea] group-hover:opacity-90 transition-colors whitespace-nowrap overflow-hidden text-ellipsis">Availability & Radius</p>
+                  <p className="text-sm font-medium text-white group-hover:opacity-90 transition-colors whitespace-nowrap overflow-hidden text-ellipsis">Availability & Radius</p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1">
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-white/60">Mon-Fri</span>
@@ -273,10 +288,10 @@ export default function FreelancerHome() {
                   </div>
                 </div>
                 <a
-                  href="/freelancer/availability"
+                  href="/freelancer/profile/availability"
                   tabIndex={0}
                   aria-label="Edit Availability"
-                  className="text-sm font-medium text-transparent bg-clip-text bg-gradient-to-r from-[#b16bf3] to-[#9334e9] hover:from-[#c08af5] hover:to-[#a24ae8] transition-all duration-300"
+                  className="text-sm font-medium text-white/70 hover:text-white/90 transition-colors duration-200"
                   style={{ display: 'inline-flex', alignItems: 'center' }}
                 >
                   Edit
@@ -293,17 +308,16 @@ export default function FreelancerHome() {
           className="mb-8"
         >
           <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <h2 className="text-lg font-semibold text-gray-200">Recommended Jobs</h2>
-              <span className="px-2 py-0.5 rounded-full bg-[#bf82fb]/20 text-transparent bg-clip-text bg-gradient-to-r from-[#bf82fb] to-[#9537ea] text-xs font-medium">2 New</span>
-            </div>
-            <motion.button 
-              whileHover={{ x: 3 }}
-              className="text-transparent bg-clip-text bg-gradient-to-r from-[#b16bf3] to-[#9334e9] hover:from-[#c08af5] hover:to-[#a24ae8] text-sm font-medium flex items-center transition-all duration-300"
-            >
-              View All
-              <ChevronRight className="w-4 h-4 ml-1" />
-            </motion.button>
+            <h2 className="text-lg font-semibold text-gray-200">Recommended Jobs</h2>
+            <Link href="/freelancer/feed?tab=for-you">
+              <motion.button 
+                whileHover={{ x: 3 }}
+                className="text-white/70 hover:text-white/90 text-sm font-medium flex items-center transition-colors duration-200"
+              >
+                View All
+                <ChevronRight className="w-4 h-4 ml-1" />
+              </motion.button>
+            </Link>
           </div>
           <div className="grid gap-4">
             {/* Junior Cricket Coach Job */}
@@ -311,9 +325,9 @@ export default function FreelancerHome() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1 }}
-              className="bg-gradient-to-br from-[#6B46C1]/10 via-[#4C1D95]/10 to-[#2D1B69]/10 backdrop-blur-lg rounded-2xl p-6 border border-white/10 hover:border-purple-500/30 relative transition-all duration-300 shadow-lg shadow-purple-900/10 hover:shadow-purple-900/20"
+              className="bg-gradient-to-br from-[#1E1E1E] to-[#121212] rounded-2xl p-6 border border-white/10 transition-all duration-300 shadow-lg"
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-purple-800/10 to-transparent rounded-2xl"></div>
+  
               <div className="relative">
                 <div className="flex items-center justify-between mb-3">
                   <div className="space-y-1">
@@ -384,7 +398,7 @@ export default function FreelancerHome() {
                   <motion.button 
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="px-4 py-2 bg-gradient-to-r from-[#6B46C1] to-[#4C1D95] hover:from-[#5B35B0] hover:to-[#3D1B7A] text-white text-sm font-medium rounded-lg transition-all duration-300 shadow-lg shadow-purple-600/20 hover:shadow-purple-600/30"
+                    className="px-4 py-2 bg-gradient-to-r from-[#6B46C1] to-[#4C1D95] hover:from-[#5B35B0] hover:to-[#3D1B7A] text-white text-sm font-medium rounded-xl transition-all duration-300 shadow-lg shadow-purple-600/20 hover:shadow-purple-600/30"
                   >
                     Quick Apply
                   </motion.button>
@@ -397,9 +411,9 @@ export default function FreelancerHome() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1.1 }}
-              className="bg-gradient-to-br from-[#6B46C1]/10 via-[#4C1D95]/10 to-[#2D1B69]/10 backdrop-blur-lg rounded-2xl p-6 border border-white/10 hover:border-purple-500/30 relative transition-all duration-300 shadow-lg shadow-purple-900/10 hover:shadow-purple-900/20"
+              className="bg-gradient-to-br from-[#1E1E1E] to-[#121212] rounded-2xl p-6 border border-white/10 transition-all duration-300 shadow-lg"
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-purple-800/10 to-transparent rounded-2xl"></div>
+  
               <div className="relative">
                 <div className="flex items-center justify-between mb-3">
                   <div className="space-y-1">
@@ -470,7 +484,7 @@ export default function FreelancerHome() {
                     <motion.button 
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
-                      className="px-4 py-2 bg-gradient-to-r from-[#6B46C1] to-[#4C1D95] hover:from-[#5B35B0] hover:to-[#3D1B7A] text-white text-sm font-medium rounded-lg transition-all duration-300 shadow-lg shadow-purple-600/20 hover:shadow-purple-600/30"
+                      className="px-4 py-2 bg-gradient-to-r from-[#6B46C1] to-[#4C1D95] hover:from-[#5B35B0] hover:to-[#3D1B7A] text-white text-sm font-medium rounded-xl transition-all duration-300 shadow-lg shadow-purple-600/20 hover:shadow-purple-600/30"
                     >
                       Quick Apply
                     </motion.button>
@@ -487,73 +501,57 @@ export default function FreelancerHome() {
           transition={{ delay: 1.2 }}
           className="mb-8"
         >
+          {/* Skills Header - Moved outside the card */}
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-white">Your Skills</h2>
+            <Link href="/freelancer/profile/skills">
+              <motion.button 
+                whileHover={{ x: 3 }}
+                className="text-white/70 hover:text-white/90 text-sm font-medium flex items-center transition-colors duration-200"
+              >
+                Add New
+                <ChevronRight className="w-4 h-4 ml-1" />
+              </motion.button>
+            </Link>
+          </div>
+          
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 1.3 }}
-            className="bg-gradient-to-br from-[#6B46C1]/10 via-[#4C1D95]/10 to-[#2D1B69]/10 backdrop-blur-lg rounded-2xl px-6 py-4 border border-white/10 hover:border-purple-500/30 relative transition-all duration-300 shadow-lg shadow-purple-900/10 hover:shadow-purple-900/20 space-y-4"
+            className="bg-gradient-to-br from-[#1E1E1E] to-[#121212] rounded-2xl px-5 py-3 border border-white/10 transition-all duration-300 shadow-lg"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-purple-800/10 to-transparent rounded-2xl"></div>
-            
-            {/* Skills Header */}
-            <div className="relative z-10">
-              <div className="mb-2">
-                <div className="flex items-center justify-between mb-1">
-                  <h2 className="text-lg font-semibold text-white">Your Skills</h2>
-                  <motion.button 
-                    whileHover={{ x: 3 }}
-                    className="text-transparent bg-clip-text bg-gradient-to-r from-[#b16bf3] to-[#9334e9] hover:from-[#c08af5] hover:to-[#a24ae8] text-sm font-medium flex items-center transition-all duration-300"
-                  >
-                    Add New
-                    <ChevronRight className="w-4 h-4 ml-1" />
-                  </motion.button>
-                </div>
-              </div>
-            </div>
-            
-            <div className="relative">
-              <div className="flex items-center justify-between mb-3">
+            {/* Skills content */}
+            <div className="py-2">
+              <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gray-600/20 to-gray-700/20 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gray-600/20 to-gray-700/20 flex-shrink-0 flex items-center justify-center">
                     <Trophy className="w-5 h-5 text-gray-400" />
                   </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-white group-hover:opacity-90 transition-colors">Cricket Coaching</h3>
-                    <p className="text-xs text-gray-400/80 font-medium">5 years experience</p>
+                  <div className="min-w-0">
+                    <h3 className="text-sm font-medium text-white truncate">Cricket Coaching</h3>
+                    <p className="text-xs text-gray-400/80 font-medium mt-0.5">5 years experience</p>
                   </div>
                 </div>
-                <span className="text-sm text-white/60">Expert</span>
-              </div>
-              <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                  <motion.div 
-                    initial={{ width: 0 }}
-                    animate={{ width: "90%" }}
-                    transition={{ delay: 1.4, duration: 0.8, ease: "easeOut" }}
-                    className="h-full bg-gradient-to-r from-purple-600 to-purple-400 rounded-full" 
-                  />
+                <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 ml-2 whitespace-nowrap">Expert</span>
               </div>
             </div>
 
-            <div className="relative">
-              <div className="flex items-center justify-between mb-3">
+            {/* Divider */}
+            <div className="h-px bg-white/5 w-full my-2"></div>
+
+            <div className="py-2">
+              <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gray-600/20 to-gray-700/20 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gray-600/20 to-gray-700/20 flex-shrink-0 flex items-center justify-center">
                     <Code className="w-5 h-5 text-gray-400" />
                   </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-white group-hover:opacity-90 transition-colors">Full-Stack Developer</h3>
-                    <p className="text-xs text-gray-400/80 font-medium">1.5 years experience</p>
+                  <div className="min-w-0">
+                    <h3 className="text-sm font-medium text-white truncate">Full-Stack Developer</h3>
+                    <p className="text-xs text-gray-400/80 font-medium mt-0.5">1.5 years experience</p>
                   </div>
                 </div>
-                <span className="text-sm text-white/60">Intermediate</span>
-              </div>
-              <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                  <motion.div 
-                    initial={{ width: 0 }}
-                    animate={{ width: "65%" }}
-                    transition={{ delay: 1.5, duration: 0.8, ease: "easeOut" }}
-                    className="h-full bg-gradient-to-r from-purple-600 to-purple-400 rounded-full" 
-                  />
+                <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-400 ml-2 whitespace-nowrap">Intermediate</span>
               </div>
             </div>
           </motion.div>

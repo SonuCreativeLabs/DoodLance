@@ -6,6 +6,9 @@ import { createPortal } from 'react-dom';
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { ChatViewProvider, useChatView } from '@/contexts/ChatViewContext';
+import { useModal } from '@/contexts/ModalContext';
+import { DateRangeProvider } from '@/contexts/DateRangeContext';
+import { useLayout } from '@/contexts/LayoutContext';
 
 interface FreelancerLayoutProps {
   children: React.ReactNode
@@ -41,13 +44,17 @@ function FreelancerLayoutInner({
   fullChatView = false,
   pathname 
 }: FreelancerLayoutProps & { fullChatView?: boolean; pathname: string }) {
+  const { isHeaderVisible, isNavbarVisible } = useLayout();
+  const { isModalOpen } = useModal();
   // Rest of the component logic remains the same
 
   const isActive = (path: string) => {
-    if (path === '/freelancer') {
-      return pathname === '/freelancer';
+    // Handle home page specifically
+    if (path === '/freelancer' || path === '/freelancer/') {
+      return pathname === '/freelancer' || pathname === '/freelancer/';
     }
-    return pathname === path || pathname?.startsWith(path + '/');
+    // For other paths, check if current path starts with the nav item path
+    return pathname?.startsWith(path);
   }
 
   const navItems = [
@@ -58,11 +65,6 @@ function FreelancerLayoutInner({
     { href: '/freelancer/profile', label: 'Profile', icon: User },
   ]
 
-  // For feed, job details, and proposal details pages, we want a minimal layout with just the content and bottom nav
-  const isMinimalLayout = pathname === '/freelancer/feed' || 
-    pathname?.startsWith('/freelancer/jobs/') || 
-    pathname?.startsWith('/freelancer/proposals/');
-
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -70,43 +72,10 @@ function FreelancerLayoutInner({
     return () => setMounted(false);
   }, []);
 
-  if (isMinimalLayout) {
-    return (
-      <div className="h-[100dvh] overflow-hidden">
-        {children}
-        {mounted && createPortal(
-          <div id="modal-root" className="z-[9999]" />,
-          document.body
-        )}
-        {/* Mobile Navigation - Show for feed page */}
-        <div className="md:hidden fixed bottom-0 left-0 right-0 border-t border-white/10 bg-[#111111]/95 backdrop-blur-lg z-50">
-          <div className="flex items-center justify-around h-16">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const active = isActive(item.href);
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`flex flex-col items-center justify-center flex-1 h-full transition-colors duration-200 ${
-                    active ? 'text-purple-400' : 'text-white/60 hover:text-white'
-                  }`}
-                >
-                  <Icon className={`w-5 h-5 ${active ? 'text-purple-400' : 'text-white/60'}`} />
-                  <span className="text-xs mt-1">{item.label}</span>
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-[#111111] text-white relative">
-      {/* Removed gradient background */}
-      {!fullChatView && (
+      {/* Header */}
+      {isHeaderVisible && !fullChatView && !isModalOpen && (
         <nav className="fixed top-0 left-0 right-0 border-b border-white/10 bg-[#111111]/95 backdrop-blur-xl z-[100]">
           <div className="container mx-auto px-4 h-16 flex items-center justify-between">
             <div className="flex items-center space-x-8">
@@ -164,8 +133,8 @@ function FreelancerLayoutInner({
           </div>
         </nav>
       )}
-      {/* Mobile Navigation - Only show for non-feed pages and not in fullChatView */}
-      {!fullChatView && pathname !== '/freelancer/feed' && (
+      {/* Mobile Navigation */}
+      {isNavbarVisible && !fullChatView && !isModalOpen && (
         <div className="md:hidden fixed bottom-0 left-0 right-0 border-t border-white/10 bg-[#111111]/95 backdrop-blur-lg z-50">
           <div className="container mx-auto px-4">
             <div className="flex items-center justify-between py-3">
@@ -191,16 +160,20 @@ function FreelancerLayoutInner({
           </div>
         </div>
       )}
-      {!fullChatView && <div className="h-16" />}
-      <main className="flex flex-col min-h-[calc(100vh-4rem)] relative z-10">{children}</main>
+      {!fullChatView && !isModalOpen && isHeaderVisible && <div className="h-16" />}
+      <main className={`flex flex-col relative z-10 ${isHeaderVisible ? 'min-h-[calc(100vh-4rem)]' : 'min-h-screen'}`}>
+        {children}
+      </main>
     </div>
   )
 }
 
 export default function FreelancerLayout(props: FreelancerLayoutProps) {
   return (
-    <ChatViewProvider>
-      <LayoutContent {...props} />
-    </ChatViewProvider>
+    <DateRangeProvider>
+      <ChatViewProvider>
+        <LayoutContent {...props} />
+      </ChatViewProvider>
+    </DateRangeProvider>
   );
 }

@@ -4,6 +4,9 @@ import "./globals.css";
 import { Inter } from "next/font/google";
 import { AuthProvider } from "@/contexts/auth-context";
 import { RoleProvider } from "@/contexts/role-context";
+import { ModalProvider } from "@/contexts/ModalContext";
+import { LayoutProvider } from "@/contexts/LayoutContext";
+import { DateRangeProvider } from "@/contexts/DateRangeContext";
 import { SplashScreen } from "@/components/splash-screen";
 import { useEffect, useState } from "react";
 
@@ -46,13 +49,19 @@ export default function RootLayout({
       <body className={`${inter.className} antialiased`}>
         <AuthProvider>
           <RoleProvider>
-            {showSplash ? (
-              <SplashScreen onComplete={() => setShowSplash(false)} />
-            ) : (
-              <main className="flex flex-col h-screen">
-                {children}
-              </main>
-            )}
+            <ModalProvider>
+              <LayoutProvider>
+                <DateRangeProvider>
+                {showSplash ? (
+                  <SplashScreen onComplete={() => setShowSplash(false)} />
+                ) : (
+                  <main className="flex flex-col h-screen">
+                    {children}
+                  </main>
+                )}
+                </DateRangeProvider>
+              </LayoutProvider>
+            </ModalProvider>
           </RoleProvider>
         </AuthProvider>
       </body>
