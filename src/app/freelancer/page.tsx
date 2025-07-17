@@ -241,7 +241,7 @@ export default function FreelancerHome() {
                   title="Edit Profile"
                   aria-label="Edit Profile"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-edit-2 h-4 w-4 text-[#9334e9]"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 3 21l.5-4.5Z"/></svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-edit-2 h-4 w-4 text-white/70 hover:text-white/90"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 3 21l.5-4.5Z"/></svg>
                 </Link>
               </div>
               
@@ -291,7 +291,7 @@ export default function FreelancerHome() {
                   href="/freelancer/profile/availability"
                   tabIndex={0}
                   aria-label="Edit Availability"
-                  className="text-sm font-medium text-transparent bg-clip-text bg-gradient-to-r from-[#b16bf3] to-[#9334e9] hover:from-[#c08af5] hover:to-[#a24ae8] transition-all duration-300"
+                  className="text-sm font-medium text-white/70 hover:text-white/90 transition-colors duration-200"
                   style={{ display: 'inline-flex', alignItems: 'center' }}
                 >
                   Edit
@@ -312,7 +312,7 @@ export default function FreelancerHome() {
             <Link href="/freelancer/feed?tab=for-you">
               <motion.button 
                 whileHover={{ x: 3 }}
-                className="text-transparent bg-clip-text bg-gradient-to-r from-[#b16bf3] to-[#9334e9] hover:from-[#c08af5] hover:to-[#a24ae8] text-sm font-medium flex items-center transition-all duration-300"
+                className="text-white/70 hover:text-white/90 text-sm font-medium flex items-center transition-colors duration-200"
               >
                 View All
                 <ChevronRight className="w-4 h-4 ml-1" />
@@ -398,7 +398,7 @@ export default function FreelancerHome() {
                   <motion.button 
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="px-4 py-2 bg-gradient-to-r from-[#6B46C1] to-[#4C1D95] hover:from-[#5B35B0] hover:to-[#3D1B7A] text-white text-sm font-medium rounded-lg transition-all duration-300 shadow-lg shadow-purple-600/20 hover:shadow-purple-600/30"
+                    className="px-4 py-2 bg-gradient-to-r from-[#6B46C1] to-[#4C1D95] hover:from-[#5B35B0] hover:to-[#3D1B7A] text-white text-sm font-medium rounded-xl transition-all duration-300 shadow-lg shadow-purple-600/20 hover:shadow-purple-600/30"
                   >
                     Quick Apply
                   </motion.button>
@@ -484,7 +484,7 @@ export default function FreelancerHome() {
                     <motion.button 
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
-                      className="px-4 py-2 bg-gradient-to-r from-[#6B46C1] to-[#4C1D95] hover:from-[#5B35B0] hover:to-[#3D1B7A] text-white text-sm font-medium rounded-lg transition-all duration-300 shadow-lg shadow-purple-600/20 hover:shadow-purple-600/30"
+                      className="px-4 py-2 bg-gradient-to-r from-[#6B46C1] to-[#4C1D95] hover:from-[#5B35B0] hover:to-[#3D1B7A] text-white text-sm font-medium rounded-xl transition-all duration-300 shadow-lg shadow-purple-600/20 hover:shadow-purple-600/30"
                     >
                       Quick Apply
                     </motion.button>
@@ -504,65 +504,54 @@ export default function FreelancerHome() {
           {/* Skills Header - Moved outside the card */}
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-white">Your Skills</h2>
-            <motion.button 
-              whileHover={{ x: 3 }}
-              className="text-transparent bg-clip-text bg-gradient-to-r from-[#b16bf3] to-[#9334e9] hover:from-[#c08af5] hover:to-[#a24ae8] text-sm font-medium flex items-center transition-all duration-300"
-            >
-              Add New
-              <ChevronRight className="w-4 h-4 ml-1" />
-            </motion.button>
+            <Link href="/freelancer/profile/skills">
+              <motion.button 
+                whileHover={{ x: 3 }}
+                className="text-white/70 hover:text-white/90 text-sm font-medium flex items-center transition-colors duration-200"
+              >
+                Add New
+                <ChevronRight className="w-4 h-4 ml-1" />
+              </motion.button>
+            </Link>
           </div>
           
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 1.3 }}
-            className="bg-gradient-to-br from-[#1E1E1E] to-[#121212] rounded-2xl px-6 py-4 border border-white/10 transition-all duration-300 shadow-lg space-y-4"
+            className="bg-gradient-to-br from-[#1E1E1E] to-[#121212] rounded-2xl px-5 py-3 border border-white/10 transition-all duration-300 shadow-lg"
           >
             {/* Skills content */}
-            <div className="relative">
-              <div className="flex items-center justify-between mb-3">
+            <div className="py-2">
+              <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gray-600/20 to-gray-700/20 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gray-600/20 to-gray-700/20 flex-shrink-0 flex items-center justify-center">
                     <Trophy className="w-5 h-5 text-gray-400" />
                   </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-white group-hover:opacity-90 transition-colors">Cricket Coaching</h3>
-                    <p className="text-xs text-gray-400/80 font-medium">5 years experience</p>
+                  <div className="min-w-0">
+                    <h3 className="text-sm font-medium text-white truncate">Cricket Coaching</h3>
+                    <p className="text-xs text-gray-400/80 font-medium mt-0.5">5 years experience</p>
                   </div>
                 </div>
-                <span className="text-sm text-white/60">Expert</span>
-              </div>
-              <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                <motion.div 
-                  initial={{ width: 0 }}
-                  animate={{ width: "90%" }}
-                  transition={{ delay: 1.4, duration: 0.8, ease: "easeOut" }}
-                  className="h-full bg-gradient-to-r from-purple-600 to-purple-400 rounded-full" 
-                />
+                <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 ml-2 whitespace-nowrap">Expert</span>
               </div>
             </div>
 
-            <div className="relative">
-              <div className="flex items-center justify-between mb-3">
+            {/* Divider */}
+            <div className="h-px bg-white/5 w-full my-2"></div>
+
+            <div className="py-2">
+              <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gray-600/20 to-gray-700/20 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gray-600/20 to-gray-700/20 flex-shrink-0 flex items-center justify-center">
                     <Code className="w-5 h-5 text-gray-400" />
                   </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-white group-hover:opacity-90 transition-colors">Full-Stack Developer</h3>
-                    <p className="text-xs text-gray-400/80 font-medium">1.5 years experience</p>
+                  <div className="min-w-0">
+                    <h3 className="text-sm font-medium text-white truncate">Full-Stack Developer</h3>
+                    <p className="text-xs text-gray-400/80 font-medium mt-0.5">1.5 years experience</p>
                   </div>
                 </div>
-                <span className="text-sm text-white/60">Intermediate</span>
-              </div>
-              <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                <motion.div 
-                  initial={{ width: 0 }}
-                  animate={{ width: "65%" }}
-                  transition={{ delay: 1.5, duration: 0.8, ease: "easeOut" }}
-                  className="h-full bg-gradient-to-r from-purple-600 to-purple-400 rounded-full" 
-                />
+                <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-400 ml-2 whitespace-nowrap">Intermediate</span>
               </div>
             </div>
           </motion.div>
