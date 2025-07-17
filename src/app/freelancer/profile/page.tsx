@@ -220,13 +220,13 @@ export default function ProfilePage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <ProfileSectionCard
             title="Personal Details"
-            description="View and edit your contact information, location, and professional background"
+            description="Manage your profile and contact information"
             href="/freelancer/profile/personal"
             icon={<User className="h-4 w-4" />}
           />
           <ProfileSectionCard
             title="Portfolio"
-            description="Showcase your best work with descriptions, images, and links"
+            description="Showcase your best work with images and details"
             href="/freelancer/profile/portfolio"
             icon={<Briefcase className="h-4 w-4" />}
           />

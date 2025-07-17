@@ -216,29 +216,33 @@ export default function FreelancerHome() {
                   <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
                 </motion.div>
                 {/* Name and Rating */}
-                <div className="flex flex-col justify-center flex-grow min-w-0 ml-1">
-                  <div className="flex items-center gap-4">
-                    <h2 className="text-base font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#bf82fb] to-[#9537ea] group-hover:opacity-90 transition-colors truncate max-w-[120px]">Sathish Sonu</h2>
-                    <span className="flex items-center gap-1 whitespace-nowrap">
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="#fbbf24" className="h-4 w-4 flex-shrink-0">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.967a1 1 0 00.95.69h4.178c.969 0 1.371 1.24.588 1.81l-3.385 2.46a1 1 0 00-.364 1.118l1.287 3.966c.3.921-.755 1.688-1.54 1.118l-3.385-2.46a1 1 0 00-1.176 0l-3.385 2.46c-.784.57-1.838-.197-1.54-1.118l1.287-3.966a1 1 0 00-.364-1.118L2.045 9.394c-.783-.57-.38-1.81.588-1.81h4.178a1 1 0 00.95-.69l1.286-3.967z" />
-                      </svg>
-                      <span className="text-sm text-white font-semibold">4.8</span>
-                      <span className="text-xs text-white/70">(42 reviews)</span>
-                    </span>
-                  </div>
-                  <p className="text-xs text-purple-400 mt-0.5">Cricketer & AI Engineer</p>
-                </div>
+                <div className="flex flex-col justify-center flex-grow min-w-0 ml-4">
+  <div className="flex flex-col sm:flex-row sm:items-center sm:gap-4 gap-0 w-full">
+    {/* Name + Rating */}
+    <div className="flex flex-row items-center gap-3 min-w-0 w-full">
+      <h2 className="text-lg sm:text-2xl font-bold text-white leading-tight max-w-full whitespace-nowrap overflow-visible">Sathish Sonu</h2>
+      <span className="flex items-center px-1.5 py-0.5 rounded-full bg-yellow-400/10 border border-yellow-300/30 ml-1 sm:ml-3 gap-0.5">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="#fbbf24" className="h-3 w-3 flex-shrink-0">
+          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.967a1 1 0 00.95.69h4.178c.969 0 1.371 1.24.588 1.81l-3.385 2.46a1 1 0 00-.364 1.118l1.287 3.966c.3.921-.755 1.688-1.54 1.118l-3.385-2.46a1 1 0 00-1.176 0l-3.385 2.46c-.784.57-1.838-.197-1.54-1.118l1.287-3.966a1 1 0 00-.364-1.118L2.045 9.394c-.783-.57-.38-1.81.588-1.81h4.178a1 1 0 00.95-.69l1.286-3.967z" />
+        </svg>
+        <span className="text-xs font-semibold text-yellow-300">4.8</span>
+      </span>
+    </div>
+    {/* Edit Icon stays here on desktop */}
+  </div>
+  <div className="flex flex-row items-center gap-2 mt-1">
+    <span className="text-sm font-medium text-purple-400">Cricketer & AI Engineer</span>
+  </div>
+</div>
                 {/* Edit Icon Button */}
-                <motion.button
-                  whileHover={{ scale: 1.04 }}
-                  whileTap={{ scale: 0.97 }}
-                  className="flex items-center px-2.5 py-1 text-xs font-semibold text-white border border-[#9334e9] rounded-xl bg-[#9334e9] hover:bg-[#7f2bcf] transition-all duration-200 outline-none focus:ring-2 focus:ring-[#9334e9] shadow-md whitespace-nowrap ml-16 shadow-[#9334e9]/30"
+                <Link
+                  href="/freelancer/profile/personal"
+                  className="ml-3 p-1 rounded-full hover:bg-[#9334e9]/20 transition-colors focus:outline-none focus:ring-2 focus:ring-[#9334e9] flex items-center justify-center"
                   title="Edit Profile"
                   aria-label="Edit Profile"
                 >
-                  Edit Profile
-                </motion.button>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-edit-2 h-4 w-4 text-[#9334e9]"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 3 21l.5-4.5Z"/></svg>
+                </Link>
               </div>
               
             </div>
@@ -253,10 +257,10 @@ export default function FreelancerHome() {
                   <Calendar className="h-5 w-5 text-[#B794F4]" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-transparent bg-clip-text bg-gradient-to-r from-[#bf82fb] to-[#9537ea] group-hover:opacity-90 transition-colors">Ready to work</p>
+                  <p className="text-sm font-medium text-white group-hover:opacity-90 transition-colors">Ready to work</p>
                   <p className="text-xs text-white/60">Toggle your availability</p>
                 </div>
-                <div className="relative inline-flex h-6 w-11 items-center rounded-full bg-[#9334e9] group-hover:bg-[#7f2bcf] transition-colors cursor-pointer shadow-inner">
+                <div className="relative inline-flex h-6 w-11 items-center rounded-full bg-green-500 group-hover:bg-green-600 transition-colors cursor-pointer shadow-inner">
                   <span className="sr-only">Toggle availability</span>
                   <span className={`absolute h-5 w-5 transform rounded-full bg-white transition-all duration-300 shadow-sm ${true ? 'translate-x-6' : 'translate-x-1'}`}></span>
                 </div>
@@ -271,7 +275,7 @@ export default function FreelancerHome() {
                   <MapPin className="h-5 w-5 text-[#B794F4]" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-transparent bg-clip-text bg-gradient-to-r from-[#bf82fb] to-[#9537ea] group-hover:opacity-90 transition-colors whitespace-nowrap overflow-hidden text-ellipsis">Availability & Radius</p>
+                  <p className="text-sm font-medium text-white group-hover:opacity-90 transition-colors whitespace-nowrap overflow-hidden text-ellipsis">Availability & Radius</p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1">
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-white/60">Mon-Fri</span>
@@ -284,7 +288,7 @@ export default function FreelancerHome() {
                   </div>
                 </div>
                 <a
-                  href="/freelancer/availability"
+                  href="/freelancer/profile/availability"
                   tabIndex={0}
                   aria-label="Edit Availability"
                   className="text-sm font-medium text-transparent bg-clip-text bg-gradient-to-r from-[#b16bf3] to-[#9334e9] hover:from-[#c08af5] hover:to-[#a24ae8] transition-all duration-300"

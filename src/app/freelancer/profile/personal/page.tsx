@@ -23,13 +23,19 @@ import {
   User as UserIcon,
   Mail as MailIcon,
   Phone as PhoneIcon,
-  MapPin as MapPinIcon
+  MapPin as MapPinIcon,
+  Briefcase,
+  VenetianMask,
+  Asterisk,
+  CircleUser,
+  Quote
 } from 'lucide-react';
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 type PersonalInfo = {
   fullName: string;
+  jobTitle: string;
   gender: string;
   dateOfBirth: string;
   bio: string;
@@ -48,15 +54,7 @@ type LocationInfo = {
   postalCode: string;
 };
 
-const SectionCard = ({ 
-  title, 
-  icon: Icon, 
-  children,
-  onEdit,
-  isEditing,
-  onSave,
-  onCancel
-}: { 
+interface SectionCardProps {
   title: string; 
   icon: React.ElementType; 
   children: React.ReactNode;
@@ -64,11 +62,23 @@ const SectionCard = ({
   isEditing?: boolean;
   onSave?: () => void;
   onCancel?: () => void;
-}) => (
+  className?: string;
+}
+
+const SectionCard = ({ 
+  title, 
+  icon: Icon, 
+  children,
+  onEdit,
+  isEditing,
+  onSave,
+  onCancel,
+  className = ''
+}: SectionCardProps) => (
   <div className="bg-gradient-to-br from-[#1E1E1E] to-[#121212] rounded-2xl p-6 border border-white/10 hover:border-purple-500/30 transition-all duration-300 shadow-lg shadow-purple-900/10 hover:shadow-purple-900/20">
     <div className="flex items-center justify-between mb-6">
       <div className="flex items-center gap-3">
-        <div className="p-2 rounded-lg bg-purple-900/20 text-purple-400">
+        <div className="text-purple-400">
           <Icon className="h-5 w-5" />
         </div>
         <h2 className="text-lg font-semibold text-white">{title}</h2>
@@ -99,16 +109,16 @@ const SectionCard = ({
               size="icon" 
               variant="ghost" 
               onClick={onEdit}
-              className="text-purple-400 hover:bg-purple-500/10 hover:text-purple-300 h-8 w-8"
+              className="text-gray-400 hover:bg-gray-500/10 hover:text-gray-300 h-8 w-8"
               aria-label="Edit"
             >
-              <Pencil className="h-4 w-4" />
+              <Pencil className="h-4 w-4 text-current" />
             </Button>
           )}
         </div>
       )}
     </div>
-    <div className="space-y-4">
+    <div className={`space-y-4 ${className}`}>
       {children}
     </div>
   </div>
@@ -121,13 +131,12 @@ const FormField = ({
   className = ''
 }: { 
   label: string; 
-  icon: React.ElementType; 
+  icon?: React.ElementType; 
   children: React.ReactNode;
   className?: string;
 }) => (
   <div className={cn("flex flex-col gap-2", className)}>
-    <Label className="flex items-center gap-2 text-sm font-medium text-white/70">
-      <Icon className="h-4 w-4 text-purple-400" />
+    <Label className="text-sm font-medium text-white/70">
       {label}
     </Label>
     <div className="relative">
@@ -143,6 +152,7 @@ export default function PersonalDetailsPage() {
   
   const [personalInfo, setPersonalInfo] = useState<PersonalInfo>({
     fullName: "Sathish Sonu",
+    jobTitle: "Cricketer & AI Engineer",
     gender: "Male",
     dateOfBirth: "1990-01-15",
     bio: "Professional Cricketer & AI Engineer with a passion for technology and sports."
@@ -242,39 +252,53 @@ export default function PersonalDetailsPage() {
             {isEditing ? (
               <>
                 <div className="space-y-4">
-                  <FormField label="Full Name" icon={UserIcon}>
+                  <FormField label="Full Name">
                     <Input
                       value={editPersonalInfo.fullName}
                       onChange={(e) => handleInputChange(e, 'personal', 'fullName')}
                       className="bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50"
                     />
                   </FormField>
-                  
-                  <FormField label="Gender" icon={User}>
-                    <select
-                      value={editPersonalInfo.gender}
-                      onChange={(e) => handleInputChange(e, 'personal', 'gender')}
-                      className="flex h-10 w-full rounded-md border border-input bg-white/5 px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-white"
-                    >
-                      <option value="Male">Male</option>
-                      <option value="Female">Female</option>
-                      <option value="Other">Other</option>
-                      <option value="Prefer not to say">Prefer not to say</option>
-                    </select>
+                  <FormField label="Job Title">
+                    <Input
+                      value={editPersonalInfo.jobTitle}
+                      onChange={(e) => handleInputChange(e, 'personal', 'jobTitle')}
+                      className="bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50"
+                      placeholder="e.g., Web Developer, Designer"
+                    />
+                  </FormField>
+                  <FormField label="Gender">
+                    <div className="relative">
+                      <select
+                        value={editPersonalInfo.gender}
+                        onChange={(e) => handleInputChange(e, 'personal', 'gender')}
+                        className="flex h-10 w-full rounded-lg bg-white/5 border border-white/10 text-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1E1E1E] transition-colors cursor-pointer appearance-none pr-10"
+                      >
+                      <option value="Male" className="bg-[#1E1E1E] text-white">Male</option>
+                      <option value="Female" className="bg-[#1E1E1E] text-white">Female</option>
+                      <option value="Other" className="bg-[#1E1E1E] text-white">Other</option>
+                        <option value="Prefer not to say" className="bg-[#1E1E1E] text-white">Prefer not to say</option>
+                      </select>
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
+                          <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                      </div>
+                    </div>
                   </FormField>
                 </div>
                 
                 <div className="space-y-4">
-                  <FormField label="Date of Birth" icon={Calendar}>
+                  <FormField label="Date of Birth">
                     <Input
                       type="date"
                       value={editPersonalInfo.dateOfBirth}
                       onChange={(e) => handleInputChange(e, 'personal', 'dateOfBirth')}
-                      className="bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50"
+                      className="bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50 [&::-webkit-calendar-picker-indicator]:invert"
                     />
                   </FormField>
                   
-                  <FormField label="Bio" icon={Info}>
+                  <FormField label="Bio">
                     <Textarea
                       value={editPersonalInfo.bio}
                       onChange={(e) => handleInputChange(e, 'personal', 'bio')}
@@ -282,55 +306,73 @@ export default function PersonalDetailsPage() {
                     />
                   </FormField>
                   
-                  <div className="mt-6 flex justify-end space-x-3 pt-4 border-t border-white/10">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => handleCancel('personal')}
-                      className="px-4 py-2 text-sm font-medium text-white/90 hover:bg-white/5 border border-white/20 hover:border-white/30 transition-colors"
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      type="button"
-                      onClick={() => handleSave('personal')}
-                      className="px-4 py-2 text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 transition-colors rounded-md shadow-sm"
-                    >
-                      Save Changes
-                    </Button>
+                  <div className="mt-6 pt-4 border-t border-white/10">
+                    <div className="flex justify-center gap-4">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => handleCancel('personal')}
+                        className="h-10 px-8 rounded-xl border-white/10 text-white/80 hover:bg-white/5 hover:text-white transition-colors"
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        type="button"
+                        onClick={() => handleSave('personal')}
+                        className="h-10 px-8 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-700 hover:to-purple-600 shadow-md hover:shadow-purple-500/30 transition-all"
+                      >
+                        Save Changes
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </>
             ) : (
               <>
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-sm font-medium text-white/70 mb-1">Full Name</p>
-                    <p className="text-white">{personalInfo.fullName}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-white/70 mb-1">Gender</p>
-                    <p className="text-white/90">{personalInfo.gender}</p>
-                  </div>
-                </div>
-                
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-sm font-medium text-white/70 mb-1">Date of Birth</p>
-                    <p className="text-white/90">
-                      {new Date(personalInfo.dateOfBirth).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                      })}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-white/70 mb-1">Bio</p>
-                    <p className="text-white/80 whitespace-pre-line">{personalInfo.bio}</p>
-                  </div>
-                </div>
-              </>
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="space-y-1">
+      <p className="text-sm font-medium text-white/70 mb-0.5">Full Name</p>
+      <div className="flex items-center gap-2">
+        <CircleUser className="h-4 w-4 text-white/60" />
+        <span className="text-white/90 font-medium text-base">{personalInfo.fullName}</span>
+      </div>
+    </div>
+    <div className="space-y-1">
+      <p className="text-sm font-medium text-white/70 mb-0.5">Job Title</p>
+      <div className="flex items-center gap-2">
+        <Briefcase className="h-4 w-4 text-white/60" />
+        <span className="text-white/90 font-medium text-base">{personalInfo.jobTitle || <span className="text-white/40">Not set</span>}</span>
+      </div>
+    </div>
+    <div className="space-y-1">
+      <p className="text-sm font-medium text-white/70 mb-0.5">Gender</p>
+      <div className="flex items-center gap-2">
+        <User className="h-4 w-4 text-white/60" />
+        <span className="text-white/90">{personalInfo.gender}</span>
+      </div>
+    </div>
+    <div className="space-y-1">
+      <p className="text-sm font-medium text-white/70 mb-0.5">Date of Birth</p>
+      <div className="flex items-center gap-2">
+        <Calendar className="h-4 w-4 text-white/60" />
+        <span className="text-white/90">
+          {new Date(personalInfo.dateOfBirth).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          })}
+        </span>
+      </div>
+    </div>
+    <div className="space-y-1 md:col-span-2">
+      <p className="text-sm font-medium text-white/70 mb-0.5">Bio</p>
+      <div className="flex items-start gap-2">
+        <Quote className="h-6 w-6 text-white/60" />
+        <span className="text-white/80 whitespace-pre-line">{personalInfo.bio}</span>
+      </div>
+    </div>
+  </div>
+</>
             )}
           </div>
         </SectionCard>
@@ -340,7 +382,7 @@ export default function PersonalDetailsPage() {
         <SectionCard 
           key="contact"
           title="Contact Information" 
-          icon={Mail}
+          icon={MailIcon} className="text-white/60"
           onEdit={!isEditing ? () => startEditing('contact') : undefined}
           isEditing={isEditing}
           onSave={() => handleSave('contact')}
@@ -349,7 +391,7 @@ export default function PersonalDetailsPage() {
           {isEditing ? (
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField label="Email" icon={MailIcon}>
+                <FormField label="Email" icon={MailIcon} className="text-white/60">
                   <Input
                     type="email"
                     value={editContact.email}
@@ -358,7 +400,7 @@ export default function PersonalDetailsPage() {
                   />
                 </FormField>
                 
-                <FormField label="Phone" icon={PhoneIcon}>
+                <FormField label="Phone" icon={PhoneIcon} className="text-white/60">
                   <Input
                     type="tel"
                     value={editContact.phone}
@@ -368,7 +410,7 @@ export default function PersonalDetailsPage() {
                 </FormField>
               </div>
               
-              <FormField label="Website" icon={Globe}>
+              <FormField label="Website" icon={Globe} className="text-white/60">
                 <Input
                   type="url"
                   value={editContact.website}
@@ -378,59 +420,50 @@ export default function PersonalDetailsPage() {
                 />
               </FormField>
 
-              <div className="mt-6 flex justify-end space-x-3 pt-4 border-t border-white/10">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => handleCancel('contact')}
-                  className="px-4 py-2 text-sm font-medium text-white/90 hover:bg-white/5 border border-white/20 hover:border-white/30 transition-colors"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="button"
-                  onClick={() => handleSave('contact')}
-                  className="px-4 py-2 text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 transition-colors rounded-md shadow-sm"
-                >
-                  Save Changes
-                </Button>
+              <div className="mt-6 pt-4 border-t border-white/10">
+                <div className="flex justify-center gap-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => handleCancel('contact')}
+                    className="px-4 py-2 text-sm font-medium text-white/90 border border-white/20 hover:border-white/30 rounded-md transition-colors"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={() => handleSave('contact')}
+                    className="px-4 py-2 text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 rounded-md transition-colors"
+                  >
+                    Save Changes
+                  </Button>
+                </div>
               </div>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
                 <p className="text-sm font-medium text-white/70 mb-1">Email</p>
-                <a 
-                  href={`mailto:${contactInfo.email}`}
-                  className="text-purple-300 hover:text-purple-200 hover:underline inline-flex items-center gap-1.5"
-                >
-                  <MailIcon className="h-4 w-4" />
+                <div className="text-white/90 inline-flex items-center gap-1.5">
+                  <MailIcon className="h-4 w-4 text-white/60" />
                   {contactInfo.email}
-                </a>
+                </div>
               </div>
               
               <div>
                 <p className="text-sm font-medium text-white/70 mb-1">Phone</p>
-                <a 
-                  href={`tel:${contactInfo.phone.replace(/\D/g, '')}`}
-                  className="text-white/90 hover:text-white hover:underline inline-flex items-center gap-1.5"
-                >
-                  <PhoneIcon className="h-4 w-4" />
+                <div className="text-white/90 inline-flex items-center gap-1.5">
+                  <PhoneIcon className="h-4 w-4 text-white/60" />
                   {contactInfo.phone}
-                </a>
+                </div>
               </div>
               
               <div>
                 <p className="text-sm font-medium text-white/70 mb-1">Website</p>
-                <a 
-                  href={contactInfo.website.startsWith('http') ? contactInfo.website : `https://${contactInfo.website}`} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-blue-400 hover:text-blue-300 hover:underline inline-flex items-center gap-1.5"
-                >
-                  <Globe className="h-4 w-4" />
+                <div className="text-white/90 inline-flex items-center gap-1.5">
+                  <Globe className="h-4 w-4 text-white/60" />
                   {contactInfo.website.replace(/^https?:\/\//, '')}
-                </a>
+                </div>
               </div>
             </div>
           )}
@@ -446,74 +479,83 @@ export default function PersonalDetailsPage() {
           isEditing={isEditing}
           onSave={() => handleSave('location')}
           onCancel={() => handleCancel('location')}
+          className="space-y-4"
         >
           {isEditing ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <FormField label="Address" icon={MapPinIcon}>
-                <Input
-                  value={editLocation.address}
-                  onChange={(e) => handleInputChange(e, 'location', 'address')}
-                  className="bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50"
-                />
-              </FormField>
-              
-              <FormField label="City" icon={MapIcon}>
-                <Input
-                  value={editLocation.city}
-                  onChange={(e) => handleInputChange(e, 'location', 'city')}
-                  className="bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50"
-                />
-              </FormField>
-              
-              <FormField label="Country" icon={MapIcon}>
-                <Input
-                  value={editLocation.country}
-                  onChange={(e) => handleInputChange(e, 'location', 'country')}
-                  className="bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50"
-                />
-              </FormField>
-              
-              <FormField label="Postal Code" icon={MapPinIcon}>
-                <Input
-                  value={editLocation.postalCode}
-                  onChange={(e) => handleInputChange(e, 'location', 'postalCode')}
-                  className="bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50"
-                />
-              </FormField>
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField label="Address">
+                  <Input
+                    value={editLocation.address}
+                    onChange={(e) => handleInputChange(e, 'location', 'address')}
+                    className="bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50"
+                  />
+                </FormField>
+                
+                <FormField label="City">
+                  <Input
+                    value={editLocation.city}
+                    onChange={(e) => handleInputChange(e, 'location', 'city')}
+                    className="bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50"
+                  />
+                </FormField>
+                
+                <FormField label="Country">
+                  <Input
+                    value={editLocation.country}
+                    onChange={(e) => handleInputChange(e, 'location', 'country')}
+                    className="bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50"
+                  />
+                </FormField>
+                
+                <FormField label="Postal Code">
+                  <Input
+                    value={editLocation.postalCode}
+                    onChange={(e) => handleInputChange(e, 'location', 'postalCode')}
+                    className="bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50"
+                  />
+                </FormField>
+              </div>
 
-              <div className="mt-6 flex justify-end space-x-3 pt-4 border-t border-white/10 col-span-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => handleCancel('location')}
-                  className="px-4 py-2 text-sm font-medium text-white/90 hover:bg-white/5 border border-white/20 hover:border-white/30 transition-colors"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="button"
-                  onClick={() => handleSave('location')}
-                  className="px-4 py-2 text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 transition-colors rounded-md shadow-sm"
-                >
-                  Save Changes
-                </Button>
+              <div className="pt-4 border-t border-white/10">
+                <div className="flex justify-center gap-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => handleCancel('location')}
+                    className="h-10 px-8 rounded-xl border-white/10 text-white/80 hover:bg-white/5 hover:text-white transition-colors"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={() => handleSave('location')}
+                    className="h-10 px-8 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-700 hover:to-purple-600 shadow-md hover:shadow-purple-500/30 transition-all"
+                  >
+                    Save Changes
+                  </Button>
+                </div>
               </div>
             </div>
           ) : (
-            <div className="space-y-1">
-              <p className="text-white/90">{locationInfo.address}</p>
-              <p className="text-white/70">
-                {locationInfo.city}, {locationInfo.country} {locationInfo.postalCode}
-              </p>
-              <div className="pt-2">
+            <div className="space-y-3">
+              <div>
+                <p className="text-white/90 font-medium">{locationInfo.address}</p>
+                <p className="text-white/70 text-sm mt-1">
+                  {locationInfo.city}, {locationInfo.country} {locationInfo.postalCode}
+                </p>
+              </div>
+              <div className="pt-1">
                 <a
                   href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(formatFullAddress(locationInfo))}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center text-sm text-purple-300 hover:text-purple-200 hover:underline mt-2"
+                  className="inline-flex items-center text-sm text-purple-400 hover:text-purple-300 transition-colors group"
                 >
-                  <MapPinIcon className="h-4 w-4 mr-1.5" />
-                  View on Map
+                  <span className="inline-flex items-center px-3 py-1.5 bg-white/5 rounded-full border border-white/10 group-hover:border-purple-500/30 transition-colors">
+                    <MapPinIcon className="h-3.5 w-3.5 mr-1.5" />
+                    View on Map
+                  </span>
                 </a>
               </div>
             </div>
