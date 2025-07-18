@@ -1,8 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'export',
+  // Remove output: 'export' to enable server-side rendering for dynamic routes
   images: {
     unoptimized: true,
+    domains: ['atmxiuindyakhqmdqzal.supabase.co'],
   },
   // Enable React Strict Mode
   reactStrictMode: true,
@@ -18,7 +19,16 @@ const nextConfig = {
   pageExtensions: ['tsx', 'ts', 'jsx', 'js'],
   // Add any necessary webpack configuration
   webpack: (config, { isServer }) => {
-    // Add any webpack configurations here if needed
+    // Fixes npm packages that depend on `fs` module
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+        dns: false,
+      };
+    }
     return config;
   },
   // Environment variables
@@ -46,6 +56,10 @@ const nextConfig = {
         ],
       },
     ];
+  },
+  // Disable static optimization for all pages
+  experimental: {
+    serverActions: true,
   },
 };
 
