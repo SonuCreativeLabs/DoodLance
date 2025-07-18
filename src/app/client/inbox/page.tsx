@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import dynamic from 'next/dynamic';
-import { Search, Plus, Filter, ChevronDown, Check } from 'lucide-react';
+import { Search, Plus, Filter, ChevronDown, Check, MessageSquare } from 'lucide-react';
 import { useChatView } from '@/contexts/ChatViewContext';
 import { professionals } from '../nearby/mockData';
 
@@ -288,7 +288,7 @@ function InboxPage() {
   // Show loading state on server
   if (!isClient) {
     return (
-      <div className="flex h-full bg-[#111111] text-white items-center justify-center">
+      <div className="flex h-full w-full max-w-full overflow-x-hidden bg-[#111111] text-white items-center justify-center">
         <div className="animate-pulse">Loading messages...</div>
       </div>
     );
@@ -326,21 +326,12 @@ function InboxPage() {
   };
 
   return (
-    <div className="flex h-full bg-[#111111] text-white" suppressHydrationWarning>
+    <div className="flex h-full w-full max-w-full overflow-hidden bg-[#111111] text-white">
       {/* Chat List Panel */}
-      <div 
-        className={`w-full md:w-96 border-r border-white/10 flex flex-col ${
-          selectedChatId ? 'hidden md:flex' : 'flex'
-        }`}
-      >
-        <div className="p-4 border-b border-white/10">
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              <h1 className="text-2xl font-bold">Messages</h1>
-              <p className="text-sm text-white/60">
-                {filteredChats.reduce((total, chat) => total + (chat.unreadCount || 0), 0)} unread messages
-              </p>
-            </div>
+      <div className={`w-full md:w-96 flex flex-col overflow-hidden ${selectedChatId ? 'hidden md:flex' : 'flex'}`}>
+        <div className="p-4 border-b border-white/10 sticky top-0 z-10 bg-[#111111]">
+          <div className="flex items-center justify-between w-full">
+            <h1 className="text-xl font-bold">Messages</h1>
             <div className="relative" ref={filterRef}>
               <button 
                 ref={filterButtonRef}
@@ -363,13 +354,13 @@ function InboxPage() {
                     {statusOptions.map((status) => (
                       <button
                         key={status}
-                        className={`w-full text-left px-4 py-2 text-sm hover:bg-white/5 flex items-center justify-between ${
-                          statusFilter === status ? 'text-primary' : ''
-                        }`}
+                        className="w-full text-left px-4 py-2 text-sm hover:bg-white/5 flex items-center justify-between"
                         onClick={() => handleStatusFilter(status)}
                       >
                         {status}
-                        {statusFilter === status && <Check className="w-4 h-4" />}
+                        {statusFilter === status && (
+                          <Check className="w-4 h-4 text-purple-500" />
+                        )}
                       </button>
                     ))}
                   </motion.div>
@@ -378,37 +369,34 @@ function InboxPage() {
             </div>
           </div>
           
-          {/* Search */}
-          <div className="mb-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-white/50" />
-              <input
-                type="text"
-                placeholder="Search messages..."
-                className="w-full pl-10 pr-4 py-2 bg-white/5 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
+          {/* Search Bar */}
+          <div className="mt-4 relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search messages..."
+              className="w-full pl-10 pr-4 py-2 bg-[#1E1E1E] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
           </div>
-          
-
         </div>
         
-        <div className="flex-1 overflow-hidden">
-        {filteredChats && (
-          <ChatList 
-            chats={filteredChats} 
-            selectedChatId={selectedChatId || undefined} 
-            onSelectChat={handleSelectChat} 
-          />
-        )}
-      </div>
+        {/* Chat List */}
+        <div className="flex-1 overflow-y-auto">
+          {filteredChats && (
+            <ChatList 
+              chats={filteredChats} 
+              selectedChatId={selectedChatId || undefined} 
+              onSelectChat={handleSelectChat} 
+            />
+          )}
+        </div>
       </div>
       
-      {/* Chat View */}
+      {/* Chat View - Only show when a chat is selected */}
       <div className="flex-1 flex flex-col bg-[#1a1a1a] border-l border-white/10">
-        {selectedChat ? (
+        {selectedChat && (
           <ChatView
             chatId={selectedChat.id}
             recipientName={selectedChat.recipientName}
@@ -418,10 +406,6 @@ function InboxPage() {
             onBack={() => setSelectedChatId(null)}
             messages={mockMessages[selectedChat.id] || []}
           />
-        ) : (
-          <div className="flex items-center justify-center h-full text-gray-400">
-            Select a chat to start messaging
-          </div>
         )}
       </div>
     </div>
