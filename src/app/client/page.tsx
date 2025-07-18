@@ -332,11 +332,11 @@ export default function ClientHome() {
             {/* Adjusted space for optimal position */}
             <div className="pt-28 md:pt-32">
               <div className="max-w-2xl mx-auto text-center">
-                <h1 className="text-4xl md:text-6xl font-bold text-white mb-4 tracking-tight">
-                  Find Local Services
+                <h1 className="text-3xl md:text-5xl font-bold text-white mb-4 tracking-tight leading-tight">
+                  Your Neighborhood's Got Talent.
                 </h1>
                 <p className="text-lg md:text-xl text-white/80 mb-8">
-                  Connect with skilled professionals in your neighborhood
+                  Hire anyone for anything<br />right from your neighborhood.
                 </p>
               </div>
 

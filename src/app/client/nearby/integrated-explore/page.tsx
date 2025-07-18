@@ -51,8 +51,8 @@ export default function IntegratedExplorePage() {
     setFilteredProfessionals(mappedProfessionals);
   }, [professionals]);
   
-  // Set initial sheet position to collapsed state (70vh)
-  const initialSheetY = typeof window !== 'undefined' ? window.innerHeight * 0.7 : 0;
+  // Set initial sheet position to collapsed state (62vh - adjusted 2% lower)
+  const initialSheetY = typeof window !== 'undefined' ? window.innerHeight * 0.62 : 0;
 
   const handleTimeOptionClick = (option: string) => {
     setSelectedTimeOptions(prev => {
@@ -120,22 +120,13 @@ export default function IntegratedExplorePage() {
 
       {/* Fixed Header - Always at top */}
       <div className="fixed top-0 left-0 right-0 z-[3] px-0 pt-3 flex flex-col items-center bg-[#111111]">
-        <div className="w-full max-w-md flex items-center gap-2 mb-2 px-3">
+        <div className="w-full max-w-md mb-2 px-3">
           <button
-            className="p-1.5 rounded-full bg-[#111111] border border-white/10 text-white/80 hover:bg-[#111111] hover:text-white shadow flex-shrink-0"
-            onClick={() => router.back()}
-            aria-label="Back"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-            </svg>
-          </button>
-          <button
-            className="flex-1 flex items-center gap-2 px-4 py-2 rounded-full bg-[#111111] border border-white/10 shadow hover:bg-[#111111]/80 focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className="w-full flex items-center gap-2 px-4 py-2 rounded-full bg-[#111111] border border-white/10 shadow hover:bg-[#111111]/80 focus:outline-none focus:ring-2 focus:ring-purple-500"
             onClick={() => setShowFilterModal(true)}
           >
             <Search className="w-5 h-5 text-purple-400" />
-            <span className="flex-1 text-base text-white/80 font-medium text-left">Start your search</span>
+            <span className="text-base text-white/80 font-medium text-left">Start your search</span>
           </button>
         </div>
         <div className="w-full flex flex-col">
@@ -171,13 +162,13 @@ export default function IntegratedExplorePage() {
           top: '100px',
           height: 'calc(100vh - 100px)',
           touchAction: "pan-y",
-          transform: `translateY(${isSheetCollapsed ? '70vh' : '0px'})`,
+          transform: `translateY(${isSheetCollapsed ? '62vh' : '0px'})`,
           willChange: 'transform',
           overflow: isSheetCollapsed ? 'hidden' : 'visible'
         }}
         initial={{ y: initialSheetY }}
         animate={{
-          y: isSheetCollapsed ? (typeof window !== 'undefined' ? window.innerHeight * 0.7 : 0) : 0
+          y: isSheetCollapsed ? (typeof window !== 'undefined' ? window.innerHeight * 0.62 : 0) : 0
         }}
         transition={{
           type: "spring",
@@ -188,7 +179,7 @@ export default function IntegratedExplorePage() {
         dragElastic={0.1}
         dragConstraints={{
           top: 0,
-          bottom: typeof window !== 'undefined' ? window.innerHeight * 0.7 : 0
+          bottom: typeof window !== 'undefined' ? window.innerHeight * 0.62 : 0
         }}
         dragMomentum={false}
         onDragEnd={(event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
