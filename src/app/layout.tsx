@@ -9,6 +9,7 @@ import { LayoutProvider } from "@/contexts/LayoutContext";
 import { DateRangeProvider } from "@/contexts/DateRangeContext";
 import { SplashScreen } from "@/components/splash-screen";
 import { useEffect, useState } from "react";
+import { NavbarProvider } from "@/contexts/NavbarContext";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -56,7 +57,9 @@ export default function RootLayout({
                   <SplashScreen onComplete={() => setShowSplash(false)} />
                 ) : (
                   <main className="flex flex-col h-screen">
-                    {children}
+                    <NavbarProvider>
+                      {children}
+                    </NavbarProvider>
                   </main>
                 )}
                 </DateRangeProvider>

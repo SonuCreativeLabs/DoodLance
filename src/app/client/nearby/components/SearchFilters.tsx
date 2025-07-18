@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useRef } from 'react';
-import { Search, X, Calendar } from 'lucide-react';
+import React, { useRef, useEffect, useState } from 'react';
+import { X, Search as SearchIcon, Clock, Calendar } from "lucide-react";
+import { useNavbar } from "@/contexts/NavbarContext";
 import { areas, serviceTypes, availabilityOptions, timeOptions } from '../constants';
 
 interface SearchFiltersProps {
@@ -54,33 +55,49 @@ export default function SearchFilters({
   handleClearFilters,
 }: SearchFiltersProps) {
   const dateInputRef = useRef<HTMLInputElement | null>(null);
+  const { setNavbarVisibility } = useNavbar();
+
+  useEffect(() => {
+    if (showFilterModal) {
+      document.body.style.overflow = 'hidden';
+      setNavbarVisibility(false);
+    } else {
+      document.body.style.overflow = 'unset';
+      setNavbarVisibility(true);
+    }
+
+    return () => {
+      document.body.style.overflow = 'unset';
+      setNavbarVisibility(true);
+    };
+  }, [showFilterModal, setNavbarVisibility]);
 
   if (!showFilterModal) return null;
 
   return (
-    <div className="fixed inset-0 z-[4] flex flex-col bg-[#111111] text-white animate-fadeIn">
-      {/* Modal header */}
-      <div className="flex items-center justify-between px-6 py-5 border-b border-white/10 bg-[#111111]">
-        <h2 className="text-xl font-extrabold">Search & Filters</h2>
+    <div className="fixed inset-0 z-[4] flex flex-col bg-[#111111] text-white overflow-y-auto pb-16">
+      {/* Header */}
+      <div className="sticky top-0 z-10 flex items-center justify-between p-4 border-b border-white/10 bg-[#111111]">
+        <h2 className="text-lg font-extrabold">Search & Filters</h2>
         <button
-          className="p-2 rounded-full bg-[#111111] hover:bg-[#111111]/80 text-white/60 hover:text-white"
+          className="p-1.5 rounded-full bg-[#111111] hover:bg-[#111111]/80 text-white/60 hover:text-white"
           onClick={() => setShowFilterModal(false)}
           aria-label="Close filters"
         >
-          <X className="w-6 h-6" />
+          <X className="w-5 h-5" />
         </button>
       </div>
 
-      {/* Modal content */}
-      <div className="flex-1 overflow-y-auto px-6 py-6">
+      {/* Content */}
+      <div className="flex-1 p-4 max-w-2xl w-full mx-auto">
         {/* Search input */}
         <div className="mb-6">
-          <div className="flex items-center gap-2 bg-[#111111] rounded-full px-4 py-3 border border-white/10">
-            <Search className="w-5 h-5 text-purple-400" />
+          <div className="flex items-center gap-2 bg-[#111111] rounded-xl px-4 py-3 border border-white/10">
+            <SearchIcon className="w-5 h-5 text-purple-400" />
             <input
               type="text"
               placeholder="Search for services, professionals, or areas..."
-              className="flex-1 bg-transparent outline-none text-lg text-white font-semibold placeholder:text-white/60"
+              className="flex-1 bg-transparent outline-none text-base text-white font-medium placeholder:text-white/60"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
             />
@@ -89,11 +106,11 @@ export default function SearchFilters({
 
         {/* Area Filter */}
         <div className="mb-6">
-          <label className="block mb-1 text-white/90 font-bold">Area</label>
+          <label className="block mb-2 text-sm text-white/90 font-medium">Area</label>
           <select
             value={selectedArea}
             onChange={e => setSelectedArea(e.target.value)}
-            className="w-full px-3 py-3 rounded-lg bg-[#111111] text-white border border-white/10 text-lg font-semibold"
+            className="w-full px-4 py-3 text-sm rounded-xl bg-[#111111] text-white border border-white/10 font-medium"
           >
             {areas.map(area => (
               <option key={area} value={area}>{area}</option>
@@ -103,11 +120,11 @@ export default function SearchFilters({
 
         {/* Service Type Filter */}
         <div className="mb-6">
-          <label className="block mb-1 text-white/90 font-bold">Service Type</label>
+          <label className="block mb-2 text-sm text-white/90 font-medium">Service Type</label>
           <select
             value={selectedService}
             onChange={e => setSelectedService(e.target.value)}
-            className="w-full px-3 py-3 rounded-lg bg-[#111111] text-white border border-white/10 text-lg font-semibold"
+            className="w-full px-4 py-3 text-sm rounded-xl bg-[#111111] text-white border border-white/10 font-medium"
           >
             <option value="All">All Services</option>
             {serviceTypes.map(service => (
@@ -118,53 +135,59 @@ export default function SearchFilters({
 
         {/* Distance Filter */}
         <div className="mb-6">
-          <label className="block mb-1 text-white/90 font-bold">Distance (km)</label>
+          <div className="flex justify-between items-center mb-2">
+            <label className="text-sm text-white/90 font-medium">Distance (km)</label>
+            <span className="text-sm text-white/80 font-medium">{range[0]} km</span>
+          </div>
           <input
             type="range"
             min={1}
             max={50}
             value={range[0]}
             onChange={e => setRange([parseInt(e.target.value)])}
-            className="w-full accent-purple-500"
+            className="w-full h-2 accent-purple-500"
           />
-          <div className="text-right text-base text-white/80 font-bold">{range[0]} km</div>
         </div>
 
         {/* Price Range Filter */}
         <div className="mb-6">
-          <label className="block mb-1 text-white/90 font-bold">Price Range (₹)</label>
-          <input
-            type="range"
-            min={0}
-            max={20000}
-            step={100}
-            value={priceRange[0]}
-            onChange={e => setPriceRange([parseInt(e.target.value), priceRange[1]])}
-            className="w-full accent-purple-500"
-          />
-          <input
-            type="range"
-            min={0}
-            max={20000}
-            step={100}
-            value={priceRange[1]}
-            onChange={e => setPriceRange([priceRange[0], parseInt(e.target.value)])}
-            className="w-full accent-purple-500 mt-1"
-          />
-          <div className="text-right text-base text-white/80 font-bold">
-            ₹{priceRange[0]} - ₹{priceRange[1] === 20000 ? '20,000+' : priceRange[1]}
+          <div className="flex justify-between items-center mb-2">
+            <label className="text-sm text-white/90 font-medium">Price Range</label>
+            <span className="text-sm text-white/80 font-medium">
+              ₹{priceRange[0]} - ₹{priceRange[1] === 20000 ? '20k+' : priceRange[1]}
+            </span>
+          </div>
+          <div className="space-y-2">
+            <input
+              type="range"
+              min={0}
+              max={20000}
+              step={100}
+              value={priceRange[0]}
+              onChange={e => setPriceRange([parseInt(e.target.value), priceRange[1]])}
+              className="w-full h-2 accent-purple-500"
+            />
+            <input
+              type="range"
+              min={0}
+              max={20000}
+              step={100}
+              value={priceRange[1]}
+              onChange={e => setPriceRange([priceRange[0], parseInt(e.target.value)])}
+              className="w-full h-2 accent-purple-500"
+            />
           </div>
         </div>
 
         {/* Rating Filter */}
         <div className="mb-6">
-          <label className="block mb-1 text-white/90 font-bold">Minimum Rating</label>
-          <div className="flex gap-2">
+          <label className="block mb-2 text-sm text-white/90 font-medium">Min. Rating</label>
+          <div className="grid grid-cols-4 gap-2">
             {[0, 3, 4, 4.5].map(rating => (
               <button
                 key={rating}
                 onClick={() => setMinRating(rating)}
-                className={`px-4 py-2 rounded-lg text-base font-bold ${
+                className={`py-2 rounded-xl text-sm font-medium ${
                   minRating === rating
                     ? 'bg-purple-600 text-white'
                     : 'bg-[#111111] text-white/70 border border-white/10'
@@ -178,13 +201,13 @@ export default function SearchFilters({
 
         {/* Availability Filter */}
         <div className="mb-6">
-          <label className="block mb-1 text-white/90 font-bold">Availability</label>
-          <div className="flex gap-2 flex-wrap">
+          <label className="block mb-2 text-sm text-white/90 font-medium">Availability</label>
+          <div className="grid grid-cols-2 gap-2">
             {availabilityOptions.map(option => (
               <button
                 key={option}
                 onClick={() => setAvailability(option)}
-                className={`px-4 py-2 rounded-lg text-base font-bold ${
+                className={`py-2 rounded-xl text-sm font-medium ${
                   availability === option
                     ? 'bg-purple-600 text-white'
                     : 'bg-[#111111] text-white/70 border border-white/10'
@@ -195,22 +218,25 @@ export default function SearchFilters({
             ))}
             <button
               onClick={() => setAvailability('Pick Date')}
-              className={`px-4 py-2 rounded-lg text-base font-bold flex items-center gap-1 ${
+              className={`py-2 rounded-xl text-sm font-medium flex items-center justify-center gap-2 ${
                 availability === 'Pick Date'
                   ? 'bg-purple-600 text-white'
                   : 'bg-[#111111] text-white/70 border border-white/10'
               }`}
             >
-              <Calendar className="w-5 h-5" /> Pick Date
+              <Calendar className="w-4 h-4" />
+              Pick Date
             </button>
             {availability === 'Pick Date' && (
-              <input
-                ref={dateInputRef}
-                type="date"
-                className="ml-2 px-2 py-2 rounded bg-[#111111] text-white border border-white/10"
-                value={selectedDate ?? ''}
-                onChange={e => setSelectedDate(e.target.value)}
-              />
+              <div className="relative">
+                <input
+                  ref={dateInputRef}
+                  type="date"
+                  className="py-2 px-3 text-sm rounded-xl bg-[#111111] text-white border border-white/10 w-full appearance-none [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-100"
+                  value={selectedDate ?? ''}
+                  onChange={e => setSelectedDate(e.target.value)}
+                />
+              </div>
             )}
           </div>
         </div>
@@ -218,16 +244,16 @@ export default function SearchFilters({
         {/* Preferred Time Filter */}
         {(availability === 'Available Today' || availability === 'Pick Date') && (
           <div className="mb-6">
-            <label className="block mb-1 text-white/90 font-bold">Preferred Time</label>
-            <div className="flex gap-2 flex-wrap">
+            <label className="block mb-2 text-sm text-white/90 font-medium">Time</label>
+            <div className="grid grid-cols-3 gap-2">
               {timeOptions.map(option => (
                 <button
                   key={option}
                   onClick={() => handleTimeOptionClick(option)}
-                  className={`px-4 py-2 rounded-lg text-base font-bold ${
+                  className={`py-2 rounded-xl text-sm font-medium ${
                     selectedTimeOptions.includes(option)
                       ? 'bg-purple-600 text-white'
-                      : 'bg-[#111111] text-white/70 border border-white/10'
+                      : 'bg-[#111111] text-white/70 border border-white/10 hover:bg-[#222] transition-colors'
                   }`}
                 >
                   {option}
@@ -236,24 +262,29 @@ export default function SearchFilters({
             </div>
           </div>
         )}
+      </div>
 
-        {/* Action Buttons */}
-        <div className="flex gap-2 mt-8">
-          <button
-            className="flex-1 py-4 bg-purple-600 hover:bg-purple-700 text-white font-extrabold rounded-lg text-lg transition-colors"
-            onClick={handleSaveFilters}
-          >
-            Show Results
-          </button>
-          <button
-            onClick={handleClearFilters}
-            className="flex-1 flex items-center justify-center gap-2 bg-[#111111] hover:bg-[#111111]/80 rounded-lg px-4 py-4 text-white/70 text-lg border border-white/10 transition-colors font-bold"
-          >
-            <X className="w-5 h-5" />
-            Clear All
-          </button>
+      {/* Action Buttons - Enhanced Design */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 p-4 bg-gradient-to-t from-[#1a1a1a] via-[#1a1a1a]/95 to-transparent">
+        <div className="max-w-md mx-auto w-full">
+          <div className="bg-[#1a1a1a] rounded-xl p-1.5 flex shadow-lg border border-white/5">
+            <button
+              onClick={handleClearFilters}
+              className="flex-1 py-3 rounded-lg bg-[#111111] hover:bg-[#111111]/80 text-white/90 text-sm font-medium border border-white/5 transition-all duration-200 flex items-center justify-center gap-2 active:scale-[0.98]"
+            >
+              <X className="w-4 h-4" />
+              Clear All
+            </button>
+            <div className="w-2.5"></div>
+            <button
+              onClick={handleSaveFilters}
+              className="flex-1 py-3 rounded-lg bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-600 hover:to-purple-500/90 text-white text-sm font-medium transition-all duration-200 active:scale-[0.98] shadow-lg shadow-purple-500/20"
+            >
+              Show Results
+            </button>
+          </div>
         </div>
       </div>
     </div>
   );
-} 
+}

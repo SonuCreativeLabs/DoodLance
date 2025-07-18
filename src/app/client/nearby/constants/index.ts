@@ -2,6 +2,8 @@ import { Category } from '../types';
 
 export const categories: Category[] = [
   { id: 1, name: 'All', icon: '🌟' },
+  { id: 10, name: 'Sports', icon: '🏏' },
+  { id: 11, name: 'Influencer', icon: '📱' },
   { id: 2, name: 'Home Services', icon: '🏠' },
   { id: 3, name: 'Education', icon: '📚' },
   { id: 4, name: 'Health', icon: '💪' },
