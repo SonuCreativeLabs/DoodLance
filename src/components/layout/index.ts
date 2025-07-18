@@ -1,2 +1,1 @@
-export { FreelancerNav } from "./freelancer-nav"
-export { FreelancerHeader } from "./freelancer-header" 
+export { FreelancerHeader } from "./freelancer-header"
