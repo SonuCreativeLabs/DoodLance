@@ -26,7 +26,7 @@ export default function ClientLayout({ children, className }: ClientLayoutProps)
   return (
     <ChatViewProvider>
       <div className={cn("min-h-screen bg-[#111111] flex flex-col overflow-x-hidden", className)}>
-        <main className={cn("flex-1 flex flex-col w-full overflow-x-hidden", isNavbarVisible ? "pb-16" : "pb-0")}>
+        <main className={cn("flex-1 flex flex-col w-full overflow-x-hidden", isNavbarVisible ? "pb-2" : "pb-0")}>
           <div className="w-full max-w-full overflow-x-hidden">
             {children}
           </div>
