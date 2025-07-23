@@ -155,16 +155,39 @@ const freelancerData: ExtendedFreelancerData = {
   ],
   portfolio: [
     {
-      id: "1",
-      title: "AI-Powered Chatbot",
-      category: "AI Development",
-      image: "/placeholder-portfolio-1.jpg"
+      id: '1',
+      title: '3x Division Cricket Champion',
+      category: 'Cricket Achievement',
+      image: 'https://images.unsplash.com/photo-1543351611-58f69d7c1784?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+      description: 'Won the Division Level Cricket Tournament three consecutive years (2020, 2021, 2022) as a top-order batsman and off-spin bowler. Demonstrated exceptional leadership and performance under pressure.'
     },
     {
-      id: "2",
-      title: "Custom AI Agent",
-      category: "AI Development",
-      image: "/placeholder-portfolio-2.jpg"
+      id: '2',
+      title: 'State Level College Champion',
+      category: 'Cricket Achievement',
+      image: 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+      description: 'Led college team to victory in the State Level Inter-College Cricket Tournament. Scored 3 consecutive half-centuries in the knockout stages and took crucial wickets in the final match.'
+    },
+    {
+      id: '3',
+      title: 'Sports Quota Scholar',
+      category: 'Academic Achievement',
+      image: 'https://images.unsplash.com/photo-1543351611-58f69d7c1784?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+      description: 'Awarded sports scholarship for outstanding cricket performance at the state level. Balanced academic responsibilities with rigorous training schedules while maintaining excellent performance in both areas.'
+    },
+    {
+      id: '4',
+      title: 'AI-Powered Cricket Analytics',
+      category: 'AI/ML Development',
+      image: 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+      description: 'Developed a machine learning model to analyze cricket match data and predict outcomes with 85% accuracy. The system processes player statistics, pitch conditions, and historical match data to provide actionable insights for coaches and players.'
+    },
+    {
+      id: '5',
+      title: 'Vibe Code Framework',
+      category: 'Open Source AI',
+      image: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+      description: 'An open-source framework for building AI agents with personality and contextual awareness. The framework enables developers to create more human-like AI interactions with built-in emotional intelligence and contextual understanding.'
     }
   ],
   clientReviews: [

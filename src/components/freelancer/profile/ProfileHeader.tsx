@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, ChangeEvent } from 'react';
+import { ProfilePreview } from './ProfilePreview';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -34,6 +35,7 @@ interface ProfileHeaderProps {
   skills: string[];
   avatarUrl?: string;
   coverImageUrl?: string;
+  isPreview?: boolean;
 }
 
 export function ProfileHeader({
@@ -45,11 +47,13 @@ export function ProfileHeader({
   online = true,
   skills = ["Cricket", "Cycling", "Off Spin", "Batting", "Vibe Coder", "Prompt Engg", "AI Agent Builder"],
   avatarUrl = "/images/profile-sonu.jpg",
-  coverImageUrl = "/images/cover-pic.JPG"
+  coverImageUrl = "/images/cover-pic.JPG",
+  isPreview = false
 }: ProfileHeaderProps) {
   const [coverImage, setCoverImage] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
@@ -86,21 +90,23 @@ export function ProfileHeader({
     fileInputRef.current?.click();
   };
   return (
-    <div className="relative w-full bg-[#111111]">
+    <div className="relative w-full bg-[#0f0f0f]">
       {/* Cover Photo */}
       <div className="group relative h-48 md:h-64 w-full bg-gradient-to-r from-purple-900 to-purple-700">
         {/* Switch to Client Button - Top-right of cover */}
-        <div className="absolute top-4 right-4 z-10">
-          <Button 
-            variant="default"
-            size="sm"
-            onClick={() => router.push('/client')}
-            className="group relative h-8 px-3 text-xs rounded-full overflow-hidden bg-gradient-to-r from-[#1A1A1A] via-[#0F0F0F] to-[#1A1A1A] text-white flex items-center gap-1.5 font-medium transition-all duration-300 border border-white/10 hover:border-purple-500/50 hover:shadow-[0_0_15px_rgba(168,85,247,0.3)] hover:scale-[1.02]"
-          >
-            <RefreshCw className="h-3.5 w-3.5 text-purple-400 transition-transform duration-300 group-hover:rotate-180" />
-            <span>Switch to Client</span>
-          </Button>
-        </div>
+        {!isPreview && (
+          <div className="absolute top-4 right-4 z-10">
+            <Button 
+              variant="default"
+              size="sm"
+              onClick={() => router.push('/client')}
+              className="group relative h-8 px-3 text-xs rounded-full overflow-hidden bg-gradient-to-r from-[#1A1A1A] via-[#0F0F0F] to-[#1A1A1A] text-white flex items-center gap-1.5 font-medium transition-all duration-300 border border-white/10 hover:border-purple-500/50 hover:shadow-[0_0_15px_rgba(168,85,247,0.3)] hover:scale-[1.02]"
+            >
+              <RefreshCw className="h-3.5 w-3.5 text-purple-400 transition-transform duration-300 group-hover:rotate-180" />
+              <span>Switch to Client</span>
+            </Button>
+          </div>
+        )}
         <div className="absolute inset-0 w-full h-full">
           <CoverImage />
         </div>
@@ -180,7 +186,7 @@ export function ProfileHeader({
         </div>
 
         {/* Skills */}
-        <div className="flex flex-wrap justify-center gap-2 pb-6">
+        <div className="flex flex-wrap justify-center gap-2 pb-4">
           {skills.map((skill, i) => (
             <Badge 
               key={i} 
@@ -191,7 +197,233 @@ export function ProfileHeader({
             </Badge>
           ))}
         </div>
+        
+        {/* Preview Profile Button */}
+        <div className="flex justify-center pb-6">
+          {!isPreview && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setIsPreviewOpen(true)}
+              className="text-xs px-4 py-1.5 h-8 bg-transparent border-white/20 text-white/80 hover:bg-white/10 hover:text-white hover:border-white/40 transition-colors duration-200"
+            >
+              Preview Profile
+            </Button>
+          )}
+        </div>
       </div>
+      
+      {/* Profile Preview Modal */}
+      <ProfilePreview 
+        isOpen={isPreviewOpen}
+        onClose={() => setIsPreviewOpen(false)}
+        profileData={{
+          name,
+          title,
+          rating: 4.9, // Average from reviews
+          reviewCount: 6, // Total number of reviews
+          location,
+          online,
+          skills,
+          about: 'Professional Cricketer and AI Engineer with a passion for both sports and technology. I bring the same dedication and strategic thinking from the cricket field to developing intelligent AI solutions.',
+          responseTime: '1-2 hours',
+          deliveryTime: '1-2 weeks',
+          completionRate: 100,
+          completedJobs: 24, // Example number
+          activeJobs: 3, // Example number
+          experience: [
+            {
+              id: '1',
+              role: 'Cricketer (All-Rounder)',
+              company: 'Professional Cricket',
+              location: 'India',
+              startDate: '2015',
+              endDate: undefined,
+              isCurrent: true,
+              description: 'Professional cricketer specializing in top-order batting and off-spin bowling. Experienced in high-pressure matches with a focus on building strong team performances.'
+            },
+            {
+              id: '2',
+              role: 'AI Engineer & Developer',
+              company: 'Freelance',
+              location: 'Remote',
+              startDate: '2020',
+              endDate: undefined,
+              isCurrent: true,
+              description: 'Developing AI solutions and applications with a focus on machine learning, natural language processing, and automation. Specializing in creating intelligent systems that solve complex problems.'
+            },
+            {
+              id: '3',
+              role: 'Cricket Coach',
+              company: 'Local Academy',
+              location: 'India',
+              startDate: '2018',
+              endDate: '2020',
+              isCurrent: false,
+              description: 'Coached young cricketers in batting techniques, bowling skills, and match strategies. Helped develop the next generation of cricket talent with a focus on both technical skills and mental toughness.'
+            }
+          ],
+          services: [
+            {
+              id: '1',
+              title: 'AI Development Consultation',
+              description: 'Expert guidance on AI implementation for your business needs',
+              price: '₹25,000',
+              type: 'online',
+              deliveryTime: '1 week',
+              features: [
+                '1-hour consultation session',
+                'Technical requirements analysis',
+                'Solution architecture design',
+                'Implementation roadmap',
+                'Follow-up email support for 1 week'
+              ]
+            },
+            {
+              id: '2',
+              title: 'Custom AI Solution Development',
+              description: 'Tailored AI application development for your specific needs',
+              price: '₹1,50,000',
+              type: 'online',
+              deliveryTime: '4-6 weeks',
+              features: [
+                'Custom AI model development',
+                'API integration',
+                'Testing & deployment',
+                'Documentation',
+                '1 month of maintenance support'
+              ]
+            },
+            {
+              id: '3',
+              title: 'Cricket Coaching (Batting)',
+              description: 'Personalized batting coaching sessions',
+              price: '₹2,000',
+              type: 'in-person',
+              deliveryTime: '2 hours',
+              features: [
+                'Technical skill assessment',
+                'Personalized training plan',
+                'Video analysis',
+                'Match simulation drills',
+                'Mental conditioning tips'
+              ]
+            },
+            {
+              id: '4',
+              title: 'Cricket Coaching (Bowling)',
+              description: 'Professional off-spin bowling coaching',
+              price: '₹2,500',
+              type: 'in-person',
+              deliveryTime: '2 hours',
+              features: [
+                'Bowling action analysis',
+                'Variations coaching',
+                'Match situation practice',
+                'Fitness & conditioning advice',
+                'Video analysis session'
+              ]
+            }
+          ],
+          portfolio: [
+            {
+              id: '1',
+              title: '3x Division Cricket Champion',
+              category: 'Cricket Achievement',
+              image: 'https://images.unsplash.com/photo-1543351611-58f69d7c1784?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80'
+            },
+            {
+              id: '2',
+              title: 'State Level College Champion',
+              category: 'Cricket Achievement',
+              image: 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80'
+            },
+            {
+              id: '3',
+              title: 'Sports Quota Scholar',
+              category: 'Academic Achievement',
+              image: 'https://images.unsplash.com/photo-1543351611-58f69d7c1784?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80'
+            },
+            {
+              id: '4',
+              title: 'AI-Powered Cricket Analytics',
+              category: 'AI/ML Development',
+              image: 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80'
+            },
+            {
+              id: '5',
+              title: 'Vibe Code Framework',
+              category: 'Open Source AI',
+              image: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80'
+            }
+          ],
+          reviews: [
+            {
+              id: '1',
+              author: 'Rahul Sharma',
+              role: 'U-19 Cricket Team Captain',
+              rating: 5,
+              comment: 'Sonu transformed my batting technique completely. His one-on-one sessions helped me improve my average by 35% in just 3 months. His knowledge of the game is exceptional!',
+              date: '2024-05-10',
+              isVerified: true
+            },
+            {
+              id: '2',
+              author: 'Neha Patel',
+              role: 'Startup Founder',
+              rating: 5,
+              comment: 'The AI solution developed by Sonu automated our customer service, reducing response time by 80%. His technical expertise and problem-solving skills are top-notch!',
+              date: '2024-04-18',
+              isVerified: true
+            },
+            {
+              id: '3',
+              author: 'Vikram Singh',
+              role: 'Cricket Academy Director',
+              rating: 5,
+              comment: 'As a coach, Sonu has a unique ability to identify and correct technical flaws. Our academy players have shown remarkable improvement under his guidance.',
+              date: '2024-03-25',
+              isVerified: true
+            },
+            {
+              id: '4',
+              author: 'Ananya Gupta',
+              role: 'Tech Entrepreneur',
+              rating: 4.5,
+              comment: 'Worked with Sonu on a complex AI project. His understanding of machine learning models and their practical implementation is impressive. Delivered beyond expectations!',
+              date: '2024-02-15',
+              isVerified: true
+            },
+            {
+              id: '5',
+              author: 'Arjun Mehta',
+              role: 'Professional Cricketer',
+              rating: 5,
+              comment: 'The best off-spin coach I\'ve worked with. His insights into bowling variations and game situations have taken my bowling to the next level.',
+              date: '2024-01-30',
+              isVerified: true
+            },
+            {
+              id: '6',
+              author: 'Priya Desai',
+              role: 'Product Manager',
+              rating: 5,
+              comment: 'Sonu developed a custom AI tool that saved our team 20+ hours of work per week. His ability to understand business needs and translate them into technical solutions is remarkable.',
+              date: '2023-12-10',
+              isVerified: true
+            }
+          ],
+          availability: [
+            { day: 'Monday', available: true },
+            { day: 'Tuesday', available: true },
+            { day: 'Wednesday', available: true },
+            { day: 'Thursday', available: true },
+            { day: 'Friday', available: true },
+            { day: 'Saturday', available: false },
+            { day: 'Sunday', available: false }
+          ]
+        }}
+      />
     </div>
   );
 }

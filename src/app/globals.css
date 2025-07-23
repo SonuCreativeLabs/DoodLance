@@ -3,6 +3,37 @@
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
 
+/* Hide scrollbar for Chrome, Safari and Opera */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.hide-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+/* Smooth scrolling for the entire app */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Sticky navigation bar */
+.sticky-nav {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background-color: var(--nav-background);
+  padding: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+/* Hide header and navbar when preview is open */
+.preview-open [data-component-name="FreelancerLayoutInner"] {
+  display: none !important;
+}
+
 /* Mapbox Controls - Tiny Buttons */
 .mapboxgl-ctrl {
   margin: 0 3px 3px 0 !important;
