@@ -90,7 +90,7 @@ export function ProfileHeader({
     fileInputRef.current?.click();
   };
   return (
-    <div className="relative w-full bg-[#0f0f0f]">
+    <div className="relative w-full bg-[#0f0f0f] profile-header">
       {/* Cover Photo */}
       <div className="group relative h-48 md:h-64 w-full bg-gradient-to-r from-purple-900 to-purple-700">
         {/* Switch to Client Button - Top-right of cover */}

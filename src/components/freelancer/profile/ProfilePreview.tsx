@@ -5,36 +5,37 @@ import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { 
-  Award, 
-  Briefcase, 
-  Calendar, 
-  Check, 
-  CheckCircle, 
-  ChevronDown, 
-  ChevronUp, 
-  Clock, 
-  ExternalLink, 
-  FileText, 
-  Globe, 
-  LayoutGrid, 
-  Link as LinkIcon, 
-  Mail, 
-  MapPin, 
-  MessageSquare, 
-  MoreHorizontal, 
+import {
+  ArrowLeft,
+  ArrowRight,
+  Award,
+  Briefcase,
+  Calendar,
+  Check,
+  CheckCircle,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronUp,
+  Clock,
+  ExternalLink,
+  FileText,
+  Globe,
+  LayoutGrid,
+  Link as LinkIcon,
+  Mail,
+  MapPin,
+  MessageCircle,
+  MessageSquare,
+  MoreHorizontal,
+  Paperclip,
+  Phone,
+  Plus,
   Share2,
-  Paperclip, 
-  Phone, 
-  Plus, 
-  Star, 
-  ThumbsUp, 
-  User, 
-  X,
-  ChevronRight, 
-  ChevronLeft, 
-  ArrowRight, 
-  ArrowLeft 
+  Star,
+  ThumbsUp,
+  User,
+  X
 } from 'lucide-react';
 
 // UI Components
@@ -138,9 +139,13 @@ const getAvailabilityText = (availability: Array<{day: string, available: boolea
   return `Available: ${availableDays.join(', ')}`;
 };
 
-export function ProfilePreview({ isOpen, onClose, profileData }: ProfilePreviewProps) {
-  const [mounted, setMounted] = useState(false);
-  const [activeSection, setActiveSection] = useState('about');
+export function ProfilePreview({ 
+  isOpen = false, 
+  onClose = () => {}, 
+  profileData 
+}: Partial<ProfilePreviewProps> & { profileData: ProfilePreviewProps['profileData'] }) {
+  const [activeSection, setActiveSection] = useState('top');
+  const [isMounted, setIsMounted] = useState(false);
   const scrollTimer = useRef<NodeJS.Timeout>();
   const isScrolling = useRef(false);
   const scrollEndTimer = useRef<NodeJS.Timeout>();
@@ -151,51 +156,47 @@ export function ProfilePreview({ isOpen, onClose, profileData }: ProfilePreviewP
   useEffect(() => {
     if (!isOpen) return;
     
-    const scrollContainer = document.querySelector('.overflow-y-auto') || window;
+    const scrollContainer = document.querySelector('.overflow-y-auto') as HTMLElement | null;
+    if (!scrollContainer) {
+      console.warn('Scroll container not found');
+      return;
+    }
     
     const updateActiveSection = () => {
       if (isScrolling.current) return;
       
       const sections = ['about', 'services', 'portfolio', 'experience', 'reviews'];
       const viewportHeight = window.innerHeight;
-      let newActiveSection = activeSection;
+      let newActiveSection = 'top';
+      let maxVisible = 0;
       
-      // Find which section is currently in view
+      // Check if we're at the top of the page
+      const header = document.querySelector('.profile-header');
+      if (header) {
+        const headerRect = header.getBoundingClientRect();
+        if (headerRect.top >= 0 && headerRect.bottom > viewportHeight * 0.7) {
+          setActiveSection('top');
+          return;
+        }
+      }
+      
+      // Find which section has the most visible area in the viewport
       for (const section of sections) {
         const element = document.getElementById(section);
         if (!element) continue;
         
         const rect = element.getBoundingClientRect();
-        const isInView = (
-          rect.top <= viewportHeight * 0.3 && // Section top is in the top 30% of viewport
-          rect.bottom >= viewportHeight * 0.2  // Section bottom is in the viewport
-        );
+        const visibleHeight = Math.min(rect.bottom, viewportHeight) - Math.max(rect.top, 0);
+        const visibleRatio = visibleHeight / viewportHeight;
         
-        if (isInView) {
+        if (visibleRatio > maxVisible) {
+          maxVisible = visibleRatio;
           newActiveSection = section;
-          break;
         }
       }
       
-      // If no section is in view, find the one closest to the top
-      if (newActiveSection === activeSection) {
-        let closestDistance = Infinity;
-        
-        for (const section of sections) {
-          const element = document.getElementById(section);
-          if (!element) continue;
-          
-          const rect = element.getBoundingClientRect();
-          const distance = Math.abs(rect.top);
-          
-          if (distance < closestDistance) {
-            closestDistance = distance;
-            newActiveSection = section;
-          }
-        }
-      }
-      
-      if (newActiveSection !== activeSection) {
+      // If we found a section with significant visibility, update the active tab
+      if (maxVisible > 0.2 && newActiveSection !== activeSection) {
         setActiveSection(newActiveSection);
       }
     };
@@ -213,23 +214,32 @@ export function ProfilePreview({ isOpen, onClose, profileData }: ProfilePreviewP
     
     // Handle smooth scrolling to section
     const scrollToSection = (sectionId: string) => {
-      const element = document.getElementById(sectionId);
-      if (element && !isScrolling.current) {
-        isScrolling.current = true;
-        element.scrollIntoView({ behavior: 'smooth' });
-        
-        // Reset the scrolling flag after the scroll is complete
-        if (scrollEndTimer.current) {
-          clearTimeout(scrollEndTimer.current);
+      isScrolling.current = true;
+      setActiveSection(sectionId);
+      
+      if (sectionId === 'top') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        const element = document.getElementById(sectionId);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
         }
-        scrollEndTimer.current = setTimeout(() => {
-          isScrolling.current = false;
-        }, 1000); // Slightly longer than the scroll duration
       }
+      
+      // Reset the scrolling flag after the scroll is complete
+      if (scrollEndTimer.current) {
+        clearTimeout(scrollEndTimer.current);
+      }
+      scrollEndTimer.current = setTimeout(() => {
+        isScrolling.current = false;
+      }, 1000);
     };
     
-    // Add scroll listener
-    scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
+    // Store the scrollToSection function in the component's scope
+    (window as any).scrollToSection = scrollToSection;
+    
+    // Add scroll listener to the window
+    window.addEventListener('scroll', handleScroll, { passive: true });
     
     // Initial check
     updateActiveSection();
@@ -242,35 +252,42 @@ export function ProfilePreview({ isOpen, onClose, profileData }: ProfilePreviewP
       if (scrollEndTimer.current) {
         clearTimeout(scrollEndTimer.current);
       }
-      scrollContainer.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('scroll', handleScroll);
+      delete (window as any).scrollToSection;
     };
-  }, [isOpen]);
+  }, [isOpen, activeSection]);
   
   // Handle tab click - scroll to section
   const handleTabClick = (sectionId: string) => {
+    if (sectionId === activeSection) return;
+    
     setActiveSection(sectionId);
-    const element = document.getElementById(sectionId);
-    if (element) {
-      isScrolling.current = true;
-      element.scrollIntoView({ behavior: 'smooth' });
-      
-      // Reset the scrolling flag after the scroll is complete
-      if (scrollEndTimer.current) {
-        clearTimeout(scrollEndTimer.current);
+    
+    if (sectionId === 'top') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      const element = document.getElementById(sectionId);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
       }
-      scrollEndTimer.current = setTimeout(() => {
-        isScrolling.current = false;
-      }, 1000); // Slightly longer than the scroll duration
     }
+    
+    // Reset the scrolling flag after the scroll is complete
+    if (scrollEndTimer.current) {
+      clearTimeout(scrollEndTimer.current);
+    }
+    scrollEndTimer.current = setTimeout(() => {
+      isScrolling.current = false;
+    }, 1000);
   };
   
-  // Set mounted to true when component mounts
+  // Set mounted state when component mounts
   useEffect(() => {
-    setMounted(true);
+    setIsMounted(true);
     
     return () => {
       // Cleanup function
-      setMounted(false);
+      setIsMounted(false);
     };
   }, []);
   
@@ -297,7 +314,7 @@ export function ProfilePreview({ isOpen, onClose, profileData }: ProfilePreviewP
     };
   }, [isOpen]);
   
-  if (!isOpen || !mounted) return null;
+  if (!isOpen || !isMounted) return null;
 
   const handleBackdropClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
@@ -344,36 +361,59 @@ export function ProfilePreview({ isOpen, onClose, profileData }: ProfilePreviewP
         
         <div className="w-full max-w-4xl mx-auto">
           {/* Optimized Sticky Navigation with Smooth Transitions */}
-          <div className="sticky top-0 z-10 w-full bg-[#0f0f0f] border-b border-white/10">
+          <div className="sticky top-0 z-50 w-full bg-[#0f0f0f] border-b border-white/10 backdrop-blur-sm">
             <div className="w-full max-w-4xl mx-auto">
-              <nav className="px-2">
-                <ul className="flex justify-between">
-                  {['about', 'services', 'portfolio', 'experience', 'reviews'].map((item) => {
-                    const isActive = activeSection === item;
-                    return (
-                      <li key={item} className="flex-1 text-center">
-                        <a
-                          href={`#${item}`}
-                          onClick={(e) => {
-                            e.preventDefault();
-                            handleTabClick(item);
-                          }}
-                          className={`relative block py-3 text-xs font-medium transition-colors duration-200 ${
-                            isActive ? 'text-white' : 'text-white/60 hover:text-white/90'
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-[#0f0f0f] to-transparent z-10 pointer-events-none"></div>
+                <div className="absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-[#0f0f0f] to-transparent z-10 pointer-events-none"></div>
+                <nav className="relative px-4 overflow-x-auto scrollbar-hide">
+                  <ul className="flex space-x-8 min-w-max">
+                    <li className="flex-shrink-0">
+                      <a
+                        href="#top"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleTabClick('top');
+                        }}
+                        className={`relative block py-3 px-1 text-sm font-medium transition-colors duration-200 whitespace-nowrap ${
+                          activeSection === 'top' ? 'text-white' : 'text-white/60 hover:text-white/90'
+                        }`}
+                      >
+                        Profile
+                        <span 
+                          className={`absolute bottom-0 left-0 right-0 h-0.5 rounded-full transition-all duration-200 ${
+                            activeSection === 'top' ? 'bg-white scale-100' : 'scale-0'
                           }`}
-                        >
-                          {item.charAt(0).toUpperCase() + item.slice(1)}
-                          <span 
-                            className={`absolute bottom-0 left-1/2 h-0.5 w-8 -translate-x-1/2 rounded-full transition-all duration-200 ${
-                              isActive ? 'bg-white scale-100' : 'scale-0'
+                        />
+                      </a>
+                    </li>
+                    {['about', 'services', 'portfolio', 'experience', 'reviews'].map((item) => {
+                      const isActive = activeSection === item;
+                      return (
+                        <li key={item} className="flex-shrink-0">
+                          <a
+                            href={`#${item}`}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handleTabClick(item);
+                            }}
+                            className={`relative block py-3 px-1 text-sm font-medium transition-colors duration-200 whitespace-nowrap ${
+                              isActive ? 'text-white' : 'text-white/60 hover:text-white/90'
                             }`}
-                          />
-                        </a>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </nav>
+                          >
+                            {item.charAt(0).toUpperCase() + item.slice(1)}
+                            <span 
+                              className={`absolute bottom-0 left-0 right-0 h-0.5 rounded-full transition-all duration-200 ${
+                                isActive ? 'bg-white scale-100' : 'scale-0'
+                              }`}
+                            />
+                          </a>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </nav>
+              </div>
             </div>
           </div>
           
@@ -445,105 +485,135 @@ export function ProfilePreview({ isOpen, onClose, profileData }: ProfilePreviewP
                     ))}
                   </div>
                 </div>
+                <button className="w-full mt-4 py-3 px-4 border border-white/30 hover:bg-white/5 transition-colors text-sm font-medium flex items-center justify-center gap-2 text-white" style={{ borderRadius: '6px' }}>
+                  View All {profileData.reviews.length} Reviews
+                  <ArrowRight className="h-4 w-4" />
+                </button>
               </div>
             </section>
 
             {/* Services Section */}
             <section id="services" className="pt-8 scroll-mt-20 relative group">
               <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold text-white">My Services</h2>
-                <span className="text-sm text-purple-400">{profileData.services.length} services</span>
+              <div className="mb-4">
+                <h2 className="text-xl font-semibold text-white mb-1">My Services</h2>
+                <p className="text-white/60 text-sm">Professional services tailored to your needs</p>
               </div>
               
-              <div className="space-y-4">
-                {profileData.services.map((service) => (
-                  <div key={service.id} className="p-6 rounded-3xl border border-white/10 bg-white/5 hover:border-purple-500/30 transition-colors">
-                    <div className="flex flex-col h-full">
-                      <div className="flex-1">
-                        <div className="flex items-start justify-between">
-                          <h3 className="text-lg font-semibold text-white">{service.title}</h3>
-                          {service.type && (
-                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
-                              service.type === 'online' 
-                                ? 'bg-blue-500/10 text-blue-400' 
-                                : 'bg-green-500/10 text-green-400'
-                            }`}>
-                              {service.type === 'online' ? 'Online' : 'In-Person'}
-                            </span>
-                          )}
-                        </div>
-                        
-                        <p className="text-white/70 mt-2">{service.description}</p>
-                        
-                        {service.features && service.features.length > 0 && (
-                          <ul className="mt-4 space-y-2">
-                            {service.features.map((feature, i) => (
-                              <li key={i} className="flex items-start text-sm text-white/80">
-                                <Check className="h-4 w-4 text-green-400 mr-2 mt-0.5 flex-shrink-0" />
-                                <span>{feature}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                      </div>
-                      
-                      <div className="mt-4 pt-4 relative">
-                        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
-                        <div className="flex items-center justify-between">
-                          <div className="text-2xl font-bold text-white">
-                            {service.price}
+              <div className="relative">
+                <div className="flex -mx-2 overflow-x-auto scrollbar-hide pb-2">
+                  <div className="flex gap-4 px-2">
+                    {profileData.services.map((service) => (
+                      <div key={service.id} className="w-80 flex-shrink-0 p-5 rounded-3xl border border-white/10 bg-white/5 hover:border-purple-500/30 transition-colors">
+                        <div className="flex flex-col h-full">
+                          <div className="flex-1">
+                            <div className="flex items-start justify-between">
+                              <h3 className="text-lg font-semibold text-white">{service.title}</h3>
+                              {service.type && (
+                                <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
+                                  service.type === 'online' 
+                                    ? 'bg-blue-500/10 text-blue-400' 
+                                    : 'bg-green-500/10 text-green-400'
+                                }`}>
+                                  {service.type === 'online' ? 'Online' : 'In-Person'}
+                                </span>
+                              )}
+                            </div>
+                            
+                            <p className="text-white/70 mt-2 text-sm">{service.description}</p>
+                            
+                            {service.features && service.features.length > 0 && (
+                              <ul className="mt-3 space-y-2">
+                                {service.features.map((feature, i) => (
+                                  <li key={i} className="flex items-start text-sm text-white/80">
+                                    <Check className="h-4 w-4 text-green-400 mr-2 mt-0.5 flex-shrink-0" />
+                                    <span>{feature}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
                           </div>
-                          <div className="text-sm text-white/60 bg-white/5 px-3 py-1 rounded-full">
-                            {service.deliveryTime}
+                          
+                          <div className="mt-4 pt-4 relative">
+                            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
+                            <div className="flex flex-col gap-3">
+                              <div className="flex items-center justify-between">
+                                <div className="text-xl font-bold text-white">
+                                  {service.price}
+                                </div>
+                                <div className="text-sm text-white/60 bg-white/5 px-3 py-1 rounded-full">
+                                  {service.deliveryTime}
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <button className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-white/80 hover:text-white transition-colors">
+                                  <MessageCircle className="h-5 w-5" />
+                                </button>
+                                <button className="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-xl text-sm font-medium transition-colors">
+                                  Book Now
+                                </button>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
+                    ))}
                   </div>
-                ))}
+                </div>
               </div>
+              <button className="w-full mt-4 py-3 px-4 border border-white/30 hover:bg-white/5 transition-colors text-sm font-medium flex items-center justify-center gap-2 text-white" style={{ borderRadius: '6px' }}>
+                View All 4 Services
+                <ArrowRight className="h-4 w-4" />
+              </button>
             </section>
 
             {/* Portfolio Section */}
             <section id="portfolio" className="pt-8 scroll-mt-20 relative group">
               <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold text-white">My Portfolio</h2>
-                <span className="text-sm text-purple-400">{profileData.portfolio.length} items</span>
+              <div className="mb-4">
+                <h2 className="text-xl font-semibold text-white mb-1">My Portfolio</h2>
+                <p className="text-white/60 text-sm">Showcase of my best work and projects</p>
               </div>
               
               {profileData.portfolio.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {profileData.portfolio.map((item) => (
-                    <div 
-                      key={item.id} 
-                      className="group relative aspect-video rounded-xl overflow-hidden border border-white/10 hover:border-white/20 transition-all duration-300"
-                    >
-                      <div className="relative w-full h-full">
-                        <div className="absolute inset-0 flex items-center justify-center bg-gray-800/50 rounded-xl">
-                          <img
-                            src={item.image}
-                            alt={item.title}
-                            className="w-full h-full object-cover transition-all duration-300 group-hover:scale-105 rounded-xl"
-                            onError={(e) => {
-                              e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjAwIiBoZWlnaHQ9IjgwMCIgdmlld0JveD0iMCAwIDYwMCA0MDAiPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiMxQTFBMUEiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE4IiBmb250LXdlaWdodD0iYm9sZCIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGRvbWluYW50LWJhc2VsaW5lPSJtaWRkbGUiPk5vIFRodW1ibmFpbCBBdmFpbGFibGU8L3RleHQ+PC9zdmc+'
-                            }}
-                          />
-                          <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity">
-                          </div>
-                        </div>
-                        <div className="absolute inset-0 p-4 flex flex-col justify-end bg-gradient-to-t from-black/70 via-black/40 to-transparent rounded-xl">
-                          <div className="flex justify-between items-end">
-                            <div className="pr-2">
-                              <h3 className="font-medium text-white line-clamp-1">{item.title}</h3>
-                              <p className="text-xs text-white/80 mt-0.5">{item.category}</p>
+                <div className="relative">
+                  <div className="flex -mx-2 overflow-x-auto scrollbar-hide pb-2">
+                    <div className="flex gap-4 px-2">
+                      {profileData.portfolio.map((item) => (
+                        <div 
+                          key={item.id} 
+                          className="w-80 flex-shrink-0 group relative aspect-video rounded-xl overflow-hidden border border-white/10 hover:border-white/20 transition-all duration-300"
+                        >
+                          <div className="relative w-full h-full">
+                            <div className="absolute inset-0 flex items-center justify-center bg-gray-800/50 rounded-xl">
+                              <img
+                                src={item.image}
+                                alt={item.title}
+                                className="w-full h-full object-cover transition-all duration-300 group-hover:scale-105 rounded-xl"
+                                onError={(e) => {
+                                  e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjAwIiBoZWlnaHQ9IjgwMCIgdmlld0JveD0iMCAwIDYwMCA0MDAiPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiMxQTFBMUEiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE4IiBmb250LXdlaWdodD0iYm9sZCIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGRvbWluYW50LWJhc2VsaW5lPSJtaWRkbGUiPk5vIFRodW1ibmFpbCBBdmFpbGFibGU8L3RleHQ+PC9zdmc+'
+                                }}
+                              />
+                              <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity">
+                              </div>
+                            </div>
+                            <div className="absolute inset-0 p-4 flex flex-col justify-end bg-gradient-to-t from-black/70 via-black/40 to-transparent rounded-xl">
+                              <div className="flex justify-between items-end">
+                                <div className="pr-2">
+                                  <h3 className="font-medium text-white line-clamp-1 text-sm">{item.title}</h3>
+                                  <p className="text-xs text-white/80 mt-0.5">{item.category}</p>
+                                </div>
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
+                      ))}
                     </div>
-                  ))}
+                  </div>
+                  <button className="w-full mt-2 py-2.5 px-4 border border-white/30 hover:bg-white/5 transition-colors text-sm font-medium flex items-center justify-center gap-2 text-white" style={{ borderRadius: '6px' }}>
+                    View All {profileData.portfolio.length} Portfolio Items
+                    <ArrowRight className="h-4 w-4" />
+                  </button>
                 </div>
               ) : (
                 <div className="text-center p-8 rounded-3xl border border-white/10 bg-white/5">
@@ -560,7 +630,10 @@ export function ProfilePreview({ isOpen, onClose, profileData }: ProfilePreviewP
                 sectionsRef.current.experience = el;
               }}
             >
-              <h2 className="text-xl font-semibold text-white mb-6">Experience & Qualifications</h2>
+              <div className="mb-6">
+                <h2 className="text-xl font-semibold text-white mb-1">Experience & Qualifications</h2>
+                <p className="text-white/60 text-sm">My professional journey and credentials</p>
+              </div>
               
               {profileData.experience?.length > 0 ? (
                 <div className="relative">
@@ -633,42 +706,48 @@ export function ProfilePreview({ isOpen, onClose, profileData }: ProfilePreviewP
               </div>
               
               {profileData.reviews?.length > 0 ? (
-                <>
-                  <div className="space-y-4">
-                    {profileData.reviews.map((review) => (
-                      <div 
-                        key={review.id} 
-                        className="p-5 rounded-3xl border border-white/10 bg-white/5 hover:border-purple-500/30 transition-colors"
-                      >
-                        <div className="flex justify-between items-start mb-3">
-                          <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center">
-                              <User className="h-5 w-5 text-white/60" />
+                <div className="relative">
+                  <div className="flex -mx-2 overflow-x-auto scrollbar-hide pb-2">
+                    <div className="flex gap-4 px-2">
+                      {profileData.reviews.map((review) => (
+                        <div 
+                          key={review.id} 
+                          className="w-80 flex-shrink-0 p-5 rounded-3xl border border-white/10 bg-white/5 hover:border-purple-500/30 transition-colors flex flex-col h-full"
+                        >
+                          <div className="flex justify-between items-start mb-3">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-2xl bg-white/5 flex items-center justify-center flex-shrink-0">
+                                <User className="h-4 w-4 text-white/60" />
+                              </div>
+                              <div className="min-w-0">
+                                <h4 className="font-medium text-white text-sm truncate">{review.author}</h4>
+                                {review.role && (
+                                  <div className="text-xs text-white/60 truncate">
+                                    {review.role}
+                                  </div>
+                                )}
+                              </div>
                             </div>
-                            <div>
-                              <h4 className="font-medium text-white">{review.author}</h4>
-                              {review.role && (
-                                <div className="text-xs text-white/60">
-                                  {review.role}
-                                </div>
-                              )}
-                            </div>
+                            <span className="text-xs text-white/40 whitespace-nowrap ml-2">{review.date}</span>
                           </div>
-                          <span className="text-xs text-white/40">{review.date}</span>
+                          <div className="flex items-center gap-1 mb-2">
+                            {[...Array(5)].map((_, i) => (
+                              <Star 
+                                key={i} 
+                                className={`h-3.5 w-3.5 ${i < review.rating ? 'text-yellow-400 fill-yellow-400' : 'text-white/20'}`} 
+                              />
+                            ))}
+                          </div>
+                          <p className="text-sm text-white/80 flex-1">{review.comment}</p>
                         </div>
-                        <div className="flex items-center gap-1 mb-2">
-                          {[...Array(5)].map((_, i) => (
-                            <Star 
-                              key={i} 
-                              className={`h-3.5 w-3.5 ${i < review.rating ? 'text-yellow-400 fill-yellow-400' : 'text-white/20'}`} 
-                            />
-                          ))}
-                        </div>
-                        <p className="text-sm text-white/80">{review.comment}</p>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </>
+                  <button className="w-full mt-3 py-2.5 px-4 border border-white/30 hover:bg-white/5 transition-colors text-sm font-medium flex items-center justify-center gap-2 text-white" style={{ borderRadius: '6px' }}>
+                    View All {profileData.reviews.length} Reviews
+                    <ArrowRight className="h-4 w-4" />
+                  </button>
+                </div>
               ) : (
                 <div className="text-center py-12 rounded-3xl border border-white/10 bg-white/5">
                   <MessageSquare className="h-12 w-12 mx-auto text-white/20 mb-4" />
