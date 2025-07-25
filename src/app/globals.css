@@ -25,8 +25,42 @@ html {
   top: 0;
   z-index: 1000;
   background-color: var(--nav-background);
-  padding: 1rem;
+  padding: 1rem 0;
   border-bottom: 1px solid var(--border);
+}
+
+/* Sticky navigation container */
+.sticky-nav-container {
+  position: relative;
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.sticky-nav-container::-webkit-scrollbar {
+  display: none;
+  height: 0;
+  width: 0;
+}
+
+/* Smooth scrolling for navigation */
+.sticky-nav-container nav {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Active tab indicator */
+.sticky-nav .active-tab-indicator {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  background: var(--nav-active, #FF8A3D);
+  transition: all 0.3s ease;
+  will-change: transform, width;
 }
 
 /* Hide header and navbar when preview is open */

@@ -145,130 +145,293 @@ export function ProfilePreview({
   profileData 
 }: Partial<ProfilePreviewProps> & { profileData: ProfilePreviewProps['profileData'] }) {
   const [activeSection, setActiveSection] = useState('top');
-  const [isMounted, setIsMounted] = useState(false);
-  const scrollTimer = useRef<NodeJS.Timeout>();
+  const activeSectionRef = useRef('top');
+  const scrollTimer = useRef<number | null>(null);
+  const scrollEndTimer = useRef<NodeJS.Timeout | null>(null);
   const isScrolling = useRef(false);
-  const scrollEndTimer = useRef<NodeJS.Timeout>();
+  const navContainerRef = useRef<HTMLDivElement>(null);
   const sectionsRef = useRef<{ [key: string]: HTMLElement | null }>({});
   const observer = useRef<IntersectionObserver | null>(null);
   
+  // Define navigation tabs type
+  type NavTab = {
+    id: string;
+    label: string;
+  };
+  
+  // Define navigation tabs
+  const navTabs: NavTab[] = [
+    { id: 'top', label: 'Profile' },
+    { id: 'about', label: 'About' },
+    { id: 'services', label: 'Services' },
+    { id: 'portfolio', label: 'Portfolio' },
+    { id: 'experience', label: 'Experience' },
+    { id: 'reviews', label: 'Reviews' }
+  ];
+  
+  // Function to scroll to the active tab in the navigation
+  const scrollToActiveTab = (sectionId: string) => {
+    if (!navContainerRef.current) return;
+    
+    // If it's the top section, scroll to start
+    if (sectionId === 'top') {
+      navContainerRef.current.scrollTo({
+        left: 0,
+        behavior: 'smooth'
+      });
+      return;
+    }
+    
+    const navElement = document.getElementById(`nav-${sectionId}`);
+    if (!navElement) return;
+    
+    const container = navContainerRef.current;
+    const containerRect = container.getBoundingClientRect();
+    const elementRect = navElement.getBoundingClientRect();
+    
+    // Calculate the center position of the element relative to the container
+    const containerCenter = containerRect.left + (containerRect.width / 2);
+    const elementCenter = elementRect.left + (elementRect.width / 2);
+    const scrollOffset = elementCenter - containerCenter;
+    
+    // Calculate the new scroll position
+    const newScrollLeft = container.scrollLeft + scrollOffset;
+    
+    // Smooth scroll to the calculated position
+    container.scrollTo({
+      left: newScrollLeft,
+      behavior: 'smooth'
+    });
+  };
+
   // Track scroll position and update active section
   useEffect(() => {
     if (!isOpen) return;
     
-    const scrollContainer = document.querySelector('.overflow-y-auto') as HTMLElement | null;
-    if (!scrollContainer) {
-      console.warn('Scroll container not found');
-      return;
-    }
+    // Store section elements for better performance
+    const sectionElements = {
+      about: document.getElementById('about'),
+      services: document.getElementById('services'),
+      portfolio: document.getElementById('portfolio'),
+      experience: document.getElementById('experience'),
+      reviews: document.getElementById('reviews')
+    };
+    
+    // Get section IDs for scroll detection (excluding 'top')
+    const sectionIds = navTabs
+      .filter((tab) => tab.id !== 'top')
+      .map(tab => tab.id);
+    
+    // Function to scroll the active tab into view
+    const scrollActiveTabIntoView = (sectionId: string) => {
+      const navElement = document.querySelector(`a[href="#${sectionId}"]`);
+      const navContainer = navContainerRef.current;
+      
+      if (navElement && navContainer) {
+        const navRect = navElement.getBoundingClientRect();
+        const containerRect = navContainer.getBoundingClientRect();
+        const containerWidth = containerRect.width;
+        const navLeft = navRect.left - containerRect.left;
+        const navRight = navRect.right - containerRect.left;
+        const navWidth = navRect.width;
+        
+        // Calculate scroll position to center the active tab
+        const scrollLeft = navContainer.scrollLeft;
+        const targetScroll = navLeft + scrollLeft - (containerWidth / 2) + (navWidth / 2);
+        
+        // Smoothly scroll the nav container
+        navContainer.scrollTo({
+          left: targetScroll,
+          behavior: 'smooth'
+        });
+      }
+    };
     
     const updateActiveSection = () => {
       if (isScrolling.current) return;
       
-      const sections = ['about', 'services', 'portfolio', 'experience', 'reviews'];
+      const scrollPosition = window.scrollY;
       const viewportHeight = window.innerHeight;
-      let newActiveSection = 'top';
-      let maxVisible = 0;
+      const viewportMiddle = scrollPosition + (viewportHeight / 2);
       
-      // Check if we're at the top of the page
-      const header = document.querySelector('.profile-header');
-      if (header) {
-        const headerRect = header.getBoundingClientRect();
-        if (headerRect.top >= 0 && headerRect.bottom > viewportHeight * 0.7) {
-          setActiveSection('top');
+      // Check all sections including 'top'
+      for (const sectionId of ['top', ...sectionIds]) {
+        const element = sectionId === 'top' 
+          ? document.getElementById('top')
+          : sectionElements[sectionId as keyof typeof sectionElements];
+        
+        if (!element) continue;
+        
+        const rect = element.getBoundingClientRect();
+        const elementTop = window.scrollY + rect.top;
+        const elementBottom = elementTop + rect.height;
+        
+        // If the middle of the viewport is within this section
+        if (viewportMiddle >= elementTop && viewportMiddle <= elementBottom) {
+          if (activeSectionRef.current !== sectionId) {
+            activeSectionRef.current = sectionId;
+            setActiveSection(sectionId);
+            scrollToActiveTab(sectionId);
+          }
           return;
         }
       }
       
-      // Find which section has the most visible area in the viewport
-      for (const section of sections) {
-        const element = document.getElementById(section);
-        if (!element) continue;
-        
-        const rect = element.getBoundingClientRect();
-        const visibleHeight = Math.min(rect.bottom, viewportHeight) - Math.max(rect.top, 0);
-        const visibleRatio = visibleHeight / viewportHeight;
-        
-        if (visibleRatio > maxVisible) {
-          maxVisible = visibleRatio;
-          newActiveSection = section;
-        }
-      }
+      // Default to the first section if none are in view
+      let newActiveSection = sectionIds[0] || 'top';
       
-      // If we found a section with significant visibility, update the active tab
-      if (maxVisible > 0.2 && newActiveSection !== activeSection) {
+      // Update active section if it has changed
+      if (newActiveSection !== activeSectionRef.current) {
+        activeSectionRef.current = newActiveSection;
         setActiveSection(newActiveSection);
+        scrollToActiveTab(newActiveSection);
       }
     };
     
-    // Debounce scroll handler
+    // Throttle scroll handler
+    let ticking = false;
     const handleScroll = () => {
-      if (scrollTimer.current) {
-        clearTimeout(scrollTimer.current);
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateActiveSection();
+          ticking = false;
+        });
+        ticking = true;
       }
-      
-      scrollTimer.current = setTimeout(() => {
-        updateActiveSection();
-      }, 50);
     };
     
-    // Handle smooth scrolling to section
-    const scrollToSection = (sectionId: string) => {
-      isScrolling.current = true;
-      setActiveSection(sectionId);
-      
-      if (sectionId === 'top') {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      } else {
-        const element = document.getElementById(sectionId);
-        if (element) {
-          element.scrollIntoView({ behavior: 'smooth' });
+    // Initialize the observer ref if it doesn't exist
+    if (!observer.current) {
+      observer.current = new IntersectionObserver((entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            const sectionId = entry.target.id;
+            if (sectionId && sectionId !== activeSectionRef.current) {
+              activeSectionRef.current = sectionId;
+              setActiveSection(sectionId);
+              scrollActiveTabIntoView(sectionId);
+            }
+          }
         }
-      }
-      
-      // Reset the scrolling flag after the scroll is complete
-      if (scrollEndTimer.current) {
-        clearTimeout(scrollEndTimer.current);
-      }
-      scrollEndTimer.current = setTimeout(() => {
-        isScrolling.current = false;
-      }, 1000);
-    };
+      }, {
+        root: null,
+        rootMargin: '0px',
+        threshold: 0.5 // Trigger when 50% of the section is visible
+      });
+    }
     
-    // Store the scrollToSection function in the component's scope
-    (window as any).scrollToSection = scrollToSection;
+    // Store the current observer in a const for the cleanup function
+    const currentObserver = observer.current;
     
-    // Add scroll listener to the window
-    window.addEventListener('scroll', handleScroll, { passive: true });
+    // Observe all section elements
+    Object.values(sectionElements).forEach(el => {
+      if (el) currentObserver.observe(el);
+    });
     
     // Initial check
     updateActiveSection();
     
-    // Cleanup
+    // Add scroll event listener
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    
+    // Set up resize observer to handle window resizing
+    const handleResize = () => {
+      scrollToActiveTab(activeSectionRef.current);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    
+    // Clean up
     return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleResize);
+      
+      // Unobserve all elements
+      Object.values(sectionElements).forEach(el => {
+        if (el && currentObserver) {
+          currentObserver.unobserve(el);
+        }
+      });
+      
+      // Clean up timers
       if (scrollTimer.current) {
-        clearTimeout(scrollTimer.current);
+        cancelAnimationFrame(scrollTimer.current);
+        scrollTimer.current = null;
       }
+      
       if (scrollEndTimer.current) {
         clearTimeout(scrollEndTimer.current);
+        scrollEndTimer.current = null;
       }
-      window.removeEventListener('scroll', handleScroll);
-      delete (window as any).scrollToSection;
+      
+      // Reset scrolling flag
+      isScrolling.current = false;
     };
-  }, [isOpen, activeSection]);
-  
+  }, [isOpen]);
+
   // Handle tab click - scroll to section
   const handleTabClick = (sectionId: string) => {
-    if (sectionId === activeSection) return;
+    if (sectionId === activeSectionRef.current) return;
     
+    // Update the active section immediately
+    activeSectionRef.current = sectionId;
     setActiveSection(sectionId);
+    isScrolling.current = true;
     
+    // Scroll the navigation to make the active tab visible
+    scrollToActiveTab(sectionId);
+    
+    // Scroll to the section
     if (sectionId === 'top') {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      const profileSection = document.getElementById('top');
+      if (profileSection) {
+        profileSection.scrollIntoView({ 
+          behavior: 'smooth',
+          block: 'start'
+        });
+      } else {
+        // Fallback to window scroll if section not found
+        window.scrollTo({
+          top: 0,
+          behavior: 'smooth'
+        });
+      }
+      
+      // Reset scrolling flag after animation completes
+      setTimeout(() => {
+        isScrolling.current = false;
+      }, 1000);
     } else {
       const element = document.getElementById(sectionId);
       if (element) {
-        element.scrollIntoView({ behavior: 'smooth' });
+        const headerOffset = 150; // Increased offset to account for sticky header and some padding
+        const elementPosition = element.getBoundingClientRect().top + window.pageYOffset;
+        const offsetPosition = elementPosition - headerOffset;
+
+        // Use the browser's native smooth scrolling for better performance
+        element.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        });
+        
+        // Manually adjust the scroll position to account for the fixed header
+        const adjustScroll = () => {
+          const currentScroll = window.pageYOffset;
+          const targetScroll = offsetPosition;
+          
+          if (Math.abs(currentScroll - targetScroll) > 1) {
+            window.scrollTo({
+              top: targetScroll,
+              behavior: 'smooth'
+            });
+            requestAnimationFrame(adjustScroll);
+          } else {
+            isScrolling.current = false;
+          }
+        };
+        
+        // Start the adjustment
+        requestAnimationFrame(adjustScroll);
       }
     }
     
@@ -281,13 +444,12 @@ export function ProfilePreview({
     }, 1000);
   };
   
-  // Set mounted state when component mounts
+  // Component mount cleanup
   useEffect(() => {
-    setIsMounted(true);
+    // Any mount initialization can go here
     
     return () => {
       // Cleanup function
-      setIsMounted(false);
     };
   }, []);
   
@@ -314,7 +476,7 @@ export function ProfilePreview({
     };
   }, [isOpen]);
   
-  if (!isOpen || !isMounted) return null;
+  if (!isOpen) return null;
 
   const handleBackdropClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
@@ -354,56 +516,55 @@ export function ProfilePreview({
 
       {/* Scrollable Content */}
       <div className="flex-1 overflow-y-auto">
-        {/* Full Width Profile Header */}
-        <div className="w-full bg-[#0f0f0f]">
-          <ProfileHeader {...profileData} isPreview={true} />
-        </div>
+        {/* Profile Section */}
+        <section id="top" className="scroll-mt-20">
+          <div className="w-full bg-[#0f0f0f]">
+            <ProfileHeader {...profileData} isPreview={true} />
+          </div>
+        </section>
         
         <div className="w-full max-w-4xl mx-auto">
           {/* Optimized Sticky Navigation with Smooth Transitions */}
           <div className="sticky top-0 z-50 w-full bg-[#0f0f0f] border-b border-white/10 backdrop-blur-sm">
-            <div className="w-full max-w-4xl mx-auto">
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-[#0f0f0f] to-transparent z-10 pointer-events-none"></div>
-                <div className="absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-[#0f0f0f] to-transparent z-10 pointer-events-none"></div>
-                <nav className="relative px-4 overflow-x-auto scrollbar-hide">
-                  <ul className="flex space-x-8 min-w-max">
-                    <li className="flex-shrink-0">
-                      <a
-                        href="#top"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleTabClick('top');
-                        }}
-                        className={`relative block py-3 px-1 text-sm font-medium transition-colors duration-200 whitespace-nowrap ${
-                          activeSection === 'top' ? 'text-white' : 'text-white/60 hover:text-white/90'
-                        }`}
-                      >
-                        Profile
-                        <span 
-                          className={`absolute bottom-0 left-0 right-0 h-0.5 rounded-full transition-all duration-200 ${
-                            activeSection === 'top' ? 'bg-white scale-100' : 'scale-0'
-                          }`}
-                        />
-                      </a>
-                    </li>
-                    {['about', 'services', 'portfolio', 'experience', 'reviews'].map((item) => {
-                      const isActive = activeSection === item;
+            <div className="relative">
+              {/* Left gradient overlay */}
+              <div className="absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-[#0f0f0f] to-transparent z-10 pointer-events-none"></div>
+              
+              {/* Right gradient overlay */}
+              <div className="absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-[#0f0f0f] to-transparent z-10 pointer-events-none"></div>
+              
+              {/* Navigation container with horizontal scroll */}
+              <div 
+                ref={navContainerRef}
+                className="relative w-full overflow-x-auto scrollbar-hide"
+                style={{
+                  scrollBehavior: 'smooth',
+                  WebkitOverflowScrolling: 'touch',
+                  scrollSnapType: 'x mandatory',
+                  scrollPadding: '0 1.5rem'
+                }}
+              >
+                <nav className="relative">
+                  <div className="flex items-center px-6">
+                    <ul className="flex space-x-6 py-1.5 pr-6">
+                    {navTabs.map((tab) => {
+                      const isActive = activeSection === tab.id;
                       return (
-                        <li key={item} className="flex-shrink-0">
+                        <li key={tab.id} className="flex-shrink-0 snap-start">
                           <a
-                            href={`#${item}`}
+                            id={`nav-${tab.id}`}
+                            href={`#${tab.id}`}
                             onClick={(e) => {
                               e.preventDefault();
-                              handleTabClick(item);
+                              handleTabClick(tab.id);
                             }}
-                            className={`relative block py-3 px-1 text-sm font-medium transition-colors duration-200 whitespace-nowrap ${
+                            className={`relative block py-2 text-xs font-medium transition-colors duration-200 whitespace-nowrap ${
                               isActive ? 'text-white' : 'text-white/60 hover:text-white/90'
                             }`}
                           >
-                            {item.charAt(0).toUpperCase() + item.slice(1)}
+                            {tab.label}
                             <span 
-                              className={`absolute bottom-0 left-0 right-0 h-0.5 rounded-full transition-all duration-200 ${
+                              className={`absolute bottom-0 left-1 right-1 h-[2px] rounded-full transition-all duration-200 ${
                                 isActive ? 'bg-white scale-100' : 'scale-0'
                               }`}
                             />
@@ -411,7 +572,8 @@ export function ProfilePreview({
                         </li>
                       );
                     })}
-                  </ul>
+                    </ul>
+                  </div>
                 </nav>
               </div>
             </div>
@@ -485,10 +647,6 @@ export function ProfilePreview({
                     ))}
                   </div>
                 </div>
-                <button className="w-full mt-4 py-3 px-4 border border-white/30 hover:bg-white/5 transition-colors text-sm font-medium flex items-center justify-center gap-2 text-white" style={{ borderRadius: '6px' }}>
-                  View All {profileData.reviews.length} Reviews
-                  <ArrowRight className="h-4 w-4" />
-                </button>
               </div>
             </section>
 
@@ -625,11 +783,14 @@ export function ProfilePreview({
             </section>
 
             {/* Experience Section */}
-            <section id="experience" className="pt-8 scroll-mt-20 relative group"
-              ref={(el) => {
-                sectionsRef.current.experience = el;
+            <section 
+              id="experience" 
+              className="pt-8 scroll-mt-20 relative group"
+              ref={(el: HTMLElement | null) => {
+                if (el) sectionsRef.current.experience = el;
               }}
             >
+              <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
               <div className="mb-6">
                 <h2 className="text-xl font-semibold text-white mb-1">Experience & Qualifications</h2>
                 <p className="text-white/60 text-sm">My professional journey and credentials</p>
@@ -758,27 +919,7 @@ export function ProfilePreview({
             </section>
           </div>
         </div>
-
-          {/* CTA Buttons - Fixed at bottom */}
-          <div className="fixed bottom-0 left-0 right-0 bg-[#111111]/95 backdrop-blur-sm py-3 relative">
-            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
-            <div className="max-w-4xl mx-auto px-4">
-              <div className="grid grid-cols-2 gap-3">
-                <Button className="w-full bg-purple-600 hover:bg-purple-700 text-white h-12 text-base transition-all duration-200 hover:shadow-[0_0_15px_rgba(139,92,246,0.4)]">
-                  <MessageSquare className="h-5 w-5 mr-2" />
-                  Message Me
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="w-full border-purple-500 text-purple-400 hover:bg-purple-500/10 h-12 text-base transition-all duration-200 hover:shadow-[0_0_15px_rgba(139,92,246,0.2)]"
-                >
-                  <CheckCircle className="h-5 w-5 mr-2" />
-                  Hire Me
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
+      </div>
       </div>
     </div>
   ), document.body);
