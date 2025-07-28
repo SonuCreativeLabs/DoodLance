@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useDateRange } from '@/contexts/DateRangeContext';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Plus, Calendar, Clock, Check, X } from "lucide-react";
+import { Calendar, Clock, Check, X, Plus, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { format } from 'date-fns';
@@ -206,63 +206,49 @@ export default function AvailabilityListingsPage() {
     return format(date, 'MMM d, yyyy');
   };
 
+  const handleCreateNew = () => {
+    setSelectedAvailability(null);
+    setIsCreatingNew(true);
+    setIsDateRangeModalOpen(true);
+  };
+
   return (
-    <div className="container mx-auto px-4 py-8 pb-24">
-      <div className="mb-8">
-        <div className="flex items-center mb-4">
-          <div className="flex items-center space-x-4">
-            <Link 
-              href="/freelancer/profile/availability" 
-              className="inline-flex items-center text-sm text-purple-400 hover:text-purple-300 transition-colors duration-200 group"
-            >
-              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/10 group-hover:bg-white/10 transition-colors duration-200">
-                <ArrowLeft className="h-4 w-4" />
+    <div className="min-h-screen bg-[#0F0F0F]">
+      {/* Sticky Header */}
+      <div className="sticky top-0 z-10 bg-[#0F0F0F] border-b border-white/5">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <Link 
+                href="/freelancer/profile/availability" 
+                className="inline-flex items-center text-sm text-purple-400 hover:text-purple-300 transition-colors duration-200"
+              >
+                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors duration-200">
+                  <ArrowLeft className="h-4 w-4" />
+                </div>
+              </Link>
+              <div className="ml-3">
+                <h1 className="text-lg font-semibold text-white">Your Listings</h1>
+                <p className="text-white/50 text-xs">Manage all your availability listings</p>
               </div>
-            </Link>
-            <div>
-              <h1 className="text-2xl font-bold text-white">Your Listings</h1>
-              <p className="text-sm text-white/60 mb-4">Manage all your availability listings</p>
             </div>
-          </div>
-        </div>
-        <div className="w-full max-w-2xl mx-auto mt-2">
-          <div className="relative group w-full">
-            <div 
-              onClick={(e) => {
-                e.stopPropagation();
-                console.log('=== Create New Availability button clicked ===');
-                console.log('Current state before update:', { 
-                  isDateRangeModalOpen, 
-                  isCreatingNew, 
-                  selectedAvailability: selectedAvailability?.id || null 
-                });
-                
-                setSelectedAvailability(null);
-                setIsCreatingNew(true);
-                setIsDateRangeModalOpen(true);
-              }}
-              className="w-full h-10 gap-2 bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-700 hover:to-purple-600 shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center rounded-lg cursor-pointer relative z-10"
-              style={{
-                borderRadius: '0.5rem',
-                pointerEvents: 'auto',
-                userSelect: 'none',
-                WebkitTapHighlightColor: 'transparent'
-              }}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              <span>Create New Availability</span>
-            </div>
-            <div 
-              className="absolute -inset-1 bg-gradient-to-r from-purple-600/30 to-purple-400/30 rounded-xl blur opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-              style={{
-                pointerEvents: 'none'
-              }}
-            ></div>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="container mx-auto px-4 py-6">
+        <div className="mb-4">
+          <Button
+            onClick={handleCreateNew}
+            className="w-full md:w-auto bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white shadow-md hover:shadow-lg transition-all duration-200"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Create New Availability
+          </Button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-4 pb-8">
         {availabilities
           .filter(avail => avail.isActive)
           .map((availability) => (
