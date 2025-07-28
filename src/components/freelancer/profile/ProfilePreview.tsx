@@ -144,6 +144,7 @@ export function ProfilePreview({
   onClose = () => {}, 
   profileData 
 }: Partial<ProfilePreviewProps> & { profileData: ProfilePreviewProps['profileData'] }) {
+  const router = useRouter();
   const [activeSection, setActiveSection] = useState('top');
   const activeSectionRef = useRef('top');
   const scrollTimer = useRef<number | null>(null);
@@ -486,32 +487,22 @@ export function ProfilePreview({
 
   return createPortal((
     <div className="fixed inset-0 z-[9999] bg-[#0F0F0F] flex flex-col h-screen w-screen overflow-hidden">
-      {/* Header with back button, title, and share button */}
-      <div className="flex-shrink-0 flex items-center justify-between p-4 border-b border-white/5 bg-[#0F0F0F]">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onClose}
-          className="text-white/70 hover:bg-white/10 hover:text-white"
-        >
-          <ArrowLeft className="h-5 w-5" />
-          <span className="sr-only">Go back</span>
-        </Button>
-        
-        <h2 className="text-base font-medium text-white/90">Profile Preview</h2>
-        
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => {
-            // TODO: Implement share functionality
-            console.log('Share profile');
-          }}
-          className="text-white/70 hover:bg-white/10 hover:text-white"
-        >
-          <Share2 className="h-5 w-5" />
-          <span className="sr-only">Share profile</span>
-        </Button>
+      {/* Header with back button and title */}
+      <div className="px-6 pt-4 pb-3 border-b border-white/5">
+        <div className="flex items-center">
+          <button 
+            onClick={onClose}
+            className="inline-flex items-center text-sm text-purple-400 hover:text-purple-300 transition-colors duration-200"
+          >
+            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors duration-200">
+              <ArrowLeft className="h-4 w-4" />
+            </div>
+          </button>
+          <div className="ml-3">
+            <h1 className="text-lg font-semibold text-white">Profile Preview</h1>
+            <p className="text-white/50 text-xs">Preview how your profile appears to others</p>
+          </div>
+        </div>
       </div>
 
       {/* Scrollable Content */}
@@ -719,8 +710,17 @@ export function ProfilePreview({
                   </div>
                 </div>
               </div>
-              <button className="w-full mt-4 py-3 px-4 border border-white/30 hover:bg-white/5 transition-colors text-sm font-medium flex items-center justify-center gap-2 text-white" style={{ borderRadius: '6px' }}>
-                View All 4 Services
+              <button 
+                onClick={() => {
+                  // Encode the services data to pass in the URL
+                  const servicesData = encodeURIComponent(JSON.stringify(profileData.services));
+                  const freelancerName = encodeURIComponent(profileData.name);
+                  router.push(`/services?services=${servicesData}&freelancerName=${freelancerName}`);
+                }}
+                className="w-full mt-4 py-3 px-4 border border-white/30 hover:bg-white/5 transition-colors text-sm font-medium flex items-center justify-center gap-2 text-white" 
+                style={{ borderRadius: '6px' }}
+              >
+                View All {profileData.services.length} Services
                 <ArrowRight className="h-4 w-4" />
               </button>
             </section>

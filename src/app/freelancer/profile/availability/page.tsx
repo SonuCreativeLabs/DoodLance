@@ -154,25 +154,30 @@ export default function AvailabilityPage() {
     return `${displayHour}:${minutes} ${ampm}`;
   };
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <div className="flex items-center mb-4">
-          <div className="flex items-center space-x-4">
+    <div className="min-h-screen bg-[#0F0F0F] text-white flex flex-col">
+      {/* Sticky Header */}
+      <div className="sticky top-0 z-10 bg-[#0F0F0F] border-b border-white/5">
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex items-center">
             <Link 
               href="/freelancer/profile" 
-              className="inline-flex items-center text-sm text-purple-400 hover:text-purple-300 transition-colors duration-200 group"
+              className="inline-flex items-center text-sm text-purple-400 hover:text-purple-300 transition-colors duration-200"
             >
-              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/10 group-hover:bg-white/10 transition-colors duration-200">
+              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors duration-200">
                 <ArrowLeft className="h-4 w-4" />
               </div>
             </Link>
-            <div>
-              <h1 className="text-xl font-bold">My Availability</h1>
-              <p className="text-white/60 text-sm mt-0.5">Set your working hours and timezone</p>
+            <div className="ml-3">
+              <h1 className="text-lg font-semibold text-white">My Availability</h1>
+              <p className="text-white/50 text-xs">Set your working hours and timezone</p>
             </div>
           </div>
         </div>
       </div>
+      
+      {/* Scrollable Content */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="container mx-auto px-4 py-6">
 
       {/* Date Range Section */}
       <div className="mb-4">
@@ -540,6 +545,8 @@ export default function AvailabilityPage() {
           </Card>
 
 
+        </div>
+      </div>
         </div>
       </div>
     </div>

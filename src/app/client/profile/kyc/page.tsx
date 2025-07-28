@@ -194,25 +194,30 @@ export default function KYCVerification() {
   return (
     <div className="w-full min-h-screen bg-gradient-to-b from-[#18192A] to-[#23243a]">
       {/* App Bar Header */}
-      <header className="fixed top-0 left-0 w-full z-30 bg-[#111111] border-b border-white/10 shadow-sm">
-        <div className="container mx-auto px-4 flex items-center justify-between h-16 md:h-20">
-          <div className="flex items-center gap-3">
+      <header className="fixed top-0 left-0 w-full z-30 bg-[#111111] border-b border-white/5 shadow-sm">
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex items-center">
             <button
               onClick={() => router.back()}
-              className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+              className="inline-flex items-center text-sm text-purple-400 hover:text-purple-300 transition-colors duration-200"
               aria-label="Back"
             >
-              <ArrowLeft className="w-6 h-6 text-white" />
+              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors duration-200">
+                <ArrowLeft className="h-4 w-4" />
+              </div>
             </button>
-            <h1 className="text-xl font-semibold text-white">KYC Verification</h1>
-          </div>
-          <div className="flex items-center gap-2 text-sm text-white/60">
-            <ShieldCheck className="w-5 h-5 text-green-400" />
-            Step {step}/2
+            <div className="ml-3">
+              <h1 className="text-lg font-semibold text-white">KYC Verification</h1>
+              <p className="text-white/50 text-xs">Complete your identity verification</p>
+            </div>
+            <div className="ml-auto flex items-center gap-2 text-sm text-white/60">
+              <ShieldCheck className="w-4 h-4 text-green-400" />
+              <span>Step {step}/2</span>
+            </div>
           </div>
         </div>
       </header>
-      <div className="h-16 md:h-20" /> {/* Spacer for fixed header */}
+      <div className="h-20" /> {/* Spacer for fixed header */}
 
       <main className="container max-w-2xl mx-auto px-4 py-8">
         <form onSubmit={handleSubmit} className="space-y-8">
