@@ -56,6 +56,59 @@ export function ProfileHeader({
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
+  
+  // Check for #preview or section hash in URL on component mount and after navigation
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      
+      if (hash) {
+        // Check if it's a section hash (e.g., #services, #portfolio, #reviews)
+        const section = hash.replace('#', '');
+        const validSections = ['services', 'portfolio', 'reviews'];
+        
+        if (validSections.includes(section)) {
+          // Open the preview modal
+          setIsPreviewOpen(true);
+          
+          // Scroll to the section after a small delay to allow the modal to open
+          setTimeout(() => {
+            const element = document.getElementById(section);
+            if (element) {
+              element.scrollIntoView();
+            }
+          }, 0);
+          
+          // Clean up the URL
+          window.history.replaceState(null, '', window.location.pathname + window.location.search);
+        } else if (hash === '#preview') {
+          // For backward compatibility
+          setIsPreviewOpen(true);
+          // Remove the hash without adding to history
+          window.history.replaceState(null, '', window.location.pathname + window.location.search);
+        }
+      }
+    };
+    
+    // Check on initial load
+    handleHashChange();
+    
+    // Also check when the hash changes
+    window.addEventListener('hashchange', handleHashChange);
+    
+    return () => {
+      window.removeEventListener('hashchange', handleHashChange);
+    };
+  }, []);
+  
+  // Handle preview modal close
+  const handlePreviewClose = () => {
+    setIsPreviewOpen(false);
+    // If we're in a modal state, update the URL to remove the hash
+    if (window.location.hash === '#preview') {
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    }
+  };
 
   const handleCoverImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -111,31 +164,33 @@ export function ProfileHeader({
           <CoverImage />
         </div>
         
-        {/* Edit Cover Button */}
-        <div className="absolute bottom-4 right-4">
-          <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-            <Button 
-              variant="secondary" 
-              size="sm" 
-              onClick={handleEditClick}
-              disabled={isUploading}
-              className="h-10 w-10 rounded-full bg-white hover:bg-white/90 p-0 flex items-center justify-center shadow-md hover:shadow-lg transition-all duration-200"
-            >
-              {isUploading ? (
-                <Loader2 className="h-5 w-5 animate-spin text-[#1E1E1E]" />
-              ) : (
-                <Camera className="h-5 w-5 text-[#1E1E1E]" />
-              )}
-            </Button>
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleCoverImageChange}
-              accept="image/*"
-              className="hidden"
-            />
+        {/* Edit Cover Button - Only show in edit mode */}
+        {!isPreview && (
+          <div className="absolute bottom-4 right-4">
+            <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+              <Button 
+                variant="secondary" 
+                size="sm" 
+                onClick={handleEditClick}
+                disabled={isUploading}
+                className="h-10 w-10 rounded-full bg-white hover:bg-white/90 p-0 flex items-center justify-center shadow-md hover:shadow-lg transition-all duration-200"
+              >
+                {isUploading ? (
+                  <Loader2 className="h-5 w-5 animate-spin text-[#1E1E1E]" />
+                ) : (
+                  <Camera className="h-5 w-5 text-[#1E1E1E]" />
+                )}
+              </Button>
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleCoverImageChange}
+                accept="image/*"
+                className="hidden"
+              />
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Profile Content */}
@@ -145,14 +200,24 @@ export function ProfileHeader({
           <div className="relative group">
             <div className="relative w-32 h-32 sm:w-40 sm:h-40 rounded-full border-4 border-[#1E1E1E] overflow-hidden bg-[#111111]">
               <Avatar className="w-full h-full">
-                <AvatarImage src="/images/profile-sonu.jpg" alt={name} />
+                <AvatarImage src={avatarUrl} alt={name} />
                 <AvatarFallback>{name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
               </Avatar>
-              <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                <Button variant="default" size="icon" className="h-10 w-10 rounded-full bg-white hover:bg-white/90">
-                  <Camera className="h-5 w-5 text-[#1E1E1E]" />
-                </Button>
-              </div>
+              {!isPreview && (
+                <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <Button 
+                    variant="default" 
+                    size="icon" 
+                    className="h-10 w-10 rounded-full bg-white hover:bg-white/90"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      fileInputRef.current?.click();
+                    }}
+                  >
+                    <Camera className="h-5 w-5 text-[#1E1E1E]" />
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
           
@@ -205,7 +270,7 @@ export function ProfileHeader({
               variant="outline" 
               size="sm" 
               onClick={() => setIsPreviewOpen(true)}
-              className="text-xs px-4 py-1.5 h-8 bg-transparent border-white/20 text-white/80 hover:bg-white/10 hover:text-white hover:border-white/40 transition-colors duration-200"
+              className="text-sm font-normal px-5 py-2 h-9 bg-transparent border border-white/30 text-white/90 hover:bg-white/5 hover:border-white/50 transition-all duration-200 rounded-full flex items-center gap-2 backdrop-blur-sm"
             >
               Preview Profile
             </Button>
@@ -216,7 +281,7 @@ export function ProfileHeader({
       {/* Profile Preview Modal */}
       <ProfilePreview 
         isOpen={isPreviewOpen}
-        onClose={() => setIsPreviewOpen(false)}
+        onClose={handlePreviewClose}
         profileData={{
           name,
           title,

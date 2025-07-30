@@ -38,6 +38,7 @@ type PortfolioItem = {
   title: string;
   category: string;
   image: string;
+  description?: string;
 };
 
 type Review = {

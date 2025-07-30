@@ -148,6 +148,48 @@ export function ProfilePreview({
   const [activeSection, setActiveSection] = useState('top');
   const activeSectionRef = useRef('top');
   const scrollTimer = useRef<number | null>(null);
+
+  // Handle view all portfolio click
+  const handleViewAllPortfolio = () => {
+    if (typeof window !== 'undefined') {
+      // Create a URL with the modal state and section hash
+      const url = new URL(window.location.href);
+      url.hash = '#portfolio';
+      const currentUrl = url.toString();
+      
+      console.log('Storing return URL for portfolio:', currentUrl);
+      sessionStorage.setItem('returnToProfilePreview', currentUrl);
+      
+      // Store portfolio data in session storage
+      sessionStorage.setItem('portfolioPreviewData', JSON.stringify(profileData.portfolio));
+      sessionStorage.setItem('freelancerName', profileData.name);
+      
+      // Navigate to portfolio page with preview flag
+      console.log('Navigating to portfolio page');
+      window.location.href = `/freelancer/profile/preview/portfolio#fromPreview`;
+    }
+  };
+
+  // Handle view all reviews click
+  const handleViewAllReviews = () => {
+    if (typeof window !== 'undefined') {
+      // Create a URL with the modal state and section hash
+      const url = new URL(window.location.href);
+      url.hash = '#reviews';
+      const currentUrl = url.toString();
+      
+      console.log('Storing return URL for reviews:', currentUrl);
+      sessionStorage.setItem('returnToProfilePreview', currentUrl);
+      
+      // Store reviews data in session storage
+      sessionStorage.setItem('reviewsPreviewData', JSON.stringify(profileData.reviews));
+      sessionStorage.setItem('freelancerName', profileData.name);
+      
+      // Navigate to reviews page with preview flag
+      console.log('Navigating to reviews page');
+      window.location.href = `/freelancer/profile/preview/reviews#fromPreview`;
+    }
+  };
   const scrollEndTimer = useRef<NodeJS.Timeout | null>(null);
   const isScrolling = useRef(false);
   const navContainerRef = useRef<HTMLDivElement>(null);
@@ -488,7 +530,7 @@ export function ProfilePreview({
   return createPortal((
     <div className="fixed inset-0 z-[9999] bg-[#0F0F0F] flex flex-col h-screen w-screen overflow-hidden">
       {/* Header with back button and title */}
-      <div className="px-6 pt-4 pb-3 border-b border-white/5">
+      <div className="px-4 py-2 border-b border-white/5">
         <div className="flex items-center">
           <button 
             onClick={onClose}
@@ -712,10 +754,21 @@ export function ProfilePreview({
               </div>
               <button 
                 onClick={() => {
-                  // Encode the services data to pass in the URL
-                  const servicesData = encodeURIComponent(JSON.stringify(profileData.services));
-                  const freelancerName = encodeURIComponent(profileData.name);
-                  router.push(`/services?services=${servicesData}&freelancerName=${freelancerName}`);
+                  // Create a URL with the modal state and section hash
+                  const url = new URL(window.location.href);
+                  url.hash = '#services';
+                  const currentUrl = url.toString();
+                  
+                  console.log('Storing return URL for services:', currentUrl);
+                  sessionStorage.setItem('returnToProfilePreview', currentUrl);
+                  
+                  // Store services data in session storage
+                  sessionStorage.setItem('servicesPreviewData', JSON.stringify(profileData.services));
+                  sessionStorage.setItem('freelancerName', profileData.name);
+                  
+                  // Navigate to services page with preview flag
+                  console.log('Navigating to services page');
+                  window.location.href = `/services#fromPreview`;
                 }}
                 className="w-full mt-4 py-3 px-4 border border-white/30 hover:bg-white/5 transition-colors text-sm font-medium flex items-center justify-center gap-2 text-white" 
                 style={{ borderRadius: '6px' }}
@@ -768,7 +821,11 @@ export function ProfilePreview({
                       ))}
                     </div>
                   </div>
-                  <button className="w-full mt-2 py-2.5 px-4 border border-white/30 hover:bg-white/5 transition-colors text-sm font-medium flex items-center justify-center gap-2 text-white" style={{ borderRadius: '6px' }}>
+                  <button 
+                    onClick={handleViewAllPortfolio}
+                    className="w-full mt-2 py-2.5 px-4 border border-white/30 hover:bg-white/5 transition-colors text-sm font-medium flex items-center justify-center gap-2 text-white" 
+                    style={{ borderRadius: '6px' }}
+                  >
                     View All {profileData.portfolio.length} Portfolio Items
                     <ArrowRight className="h-4 w-4" />
                   </button>
@@ -904,7 +961,11 @@ export function ProfilePreview({
                       ))}
                     </div>
                   </div>
-                  <button className="w-full mt-3 py-2.5 px-4 border border-white/30 hover:bg-white/5 transition-colors text-sm font-medium flex items-center justify-center gap-2 text-white" style={{ borderRadius: '6px' }}>
+                  <button 
+                    onClick={handleViewAllReviews}
+                    className="w-full mt-3 py-2.5 px-4 border border-white/30 hover:bg-white/5 transition-colors text-sm font-medium flex items-center justify-center gap-2 text-white" 
+                    style={{ borderRadius: '6px' }}
+                  >
                     View All {profileData.reviews.length} Reviews
                     <ArrowRight className="h-4 w-4" />
                   </button>

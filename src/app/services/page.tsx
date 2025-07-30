@@ -33,26 +33,62 @@ export default function ServicesPage({ searchParams }: ServicesPageProps) {
   
   // Back button handler
   const handleBack = () => {
+    console.log('Back button clicked on services page');
+    // Check if we have a stored URL to return to the profile preview
+    const returnToPreview = sessionStorage.getItem('returnToProfilePreview');
+    console.log('Stored return URL:', returnToPreview);
+    
+    if (returnToPreview) {
+      console.log('Navigating back to profile preview');
+      // Clear the stored URL
+      sessionStorage.removeItem('returnToProfilePreview');
+      // Navigate back to the profile preview with the stored URL
+      window.location.href = returnToPreview;
+      return; // Prevent further execution
+    }
+    
+    // Fallback to browser history if available
     if (window.history.length > 1) {
       router.back();
     } else {
+      // Fallback to the home page
       router.push('/');
     }
   };
 
   useEffect(() => {
     try {
-      // Get services from URL params
-      const servicesParam = params.get('services');
-      if (servicesParam) {
-        const decodedServices = JSON.parse(decodeURIComponent(servicesParam));
-        setServices(decodedServices);
-      }
+      // Check if we're coming from the profile preview modal
+      const isFromPreview = window.location.hash === '#fromPreview';
       
-      // Get freelancer name from URL params if available
-      const nameParam = params.get('freelancerName');
-      if (nameParam) {
-        setFreelancerName(decodeURIComponent(nameParam));
+      if (isFromPreview) {
+        // Get data from session storage
+        const storedServices = sessionStorage.getItem('servicesPreviewData');
+        const storedName = sessionStorage.getItem('freelancerName');
+        
+        if (storedServices) {
+          const parsedServices = JSON.parse(storedServices);
+          setServices(parsedServices);
+          // Clear the stored data after using it
+          sessionStorage.removeItem('servicesPreviewData');
+        }
+        
+        if (storedName) {
+          setFreelancerName(storedName);
+          sessionStorage.removeItem('freelancerName');
+        }
+      } else {
+        // Fallback to URL parameters if not coming from preview
+        const servicesParam = params.get('services');
+        if (servicesParam) {
+          const decodedServices = JSON.parse(decodeURIComponent(servicesParam));
+          setServices(decodedServices);
+        }
+        
+        const nameParam = params.get('freelancerName');
+        if (nameParam) {
+          setFreelancerName(decodeURIComponent(nameParam));
+        }
       }
       
       setLoading(false);

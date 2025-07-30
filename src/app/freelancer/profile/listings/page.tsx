@@ -240,7 +240,7 @@ export default function AvailabilityListingsPage() {
         <div className="mb-4">
           <Button
             onClick={handleCreateNew}
-            className="w-full md:w-auto bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white shadow-md hover:shadow-lg transition-all duration-200"
+            className="w-full md:w-auto bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white shadow-md hover:shadow-lg transition-all duration-200 rounded-[8px] [&>button]:rounded-[8px]"
           >
             <Plus className="w-4 h-4 mr-2" />
             Create New Availability
