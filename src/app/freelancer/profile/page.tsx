@@ -10,6 +10,8 @@ import { ProfileHeader } from '@/components/freelancer/profile/ProfileHeader';
 import { ProfileStatsCard } from '@/components/freelancer/profile/ProfileStatsCard';
 import { MonthlyActivities } from '@/components/freelancer/profile/MonthlyActivities';
 import { ProfileSectionCard } from '@/components/freelancer/profile/ProfileSectionCard';
+import { useSearchParams } from 'next/navigation';
+import { useEffect, useRef } from 'react';
 
 // Types
 type Experience = {
@@ -74,27 +76,7 @@ type FreelancerData = {
   availability: Availability[];
 };
 
-// Mock data
-const portfolioItems = [
-  {
-    id: '1',
-    title: 'E-commerce Website',
-    category: 'Web Development',
-    image: '/placeholder-portfolio-1.jpg'
-  },
-  {
-    id: '2',
-    title: 'Mobile App UI',
-    category: 'UI/UX Design',
-    image: '/placeholder-portfolio-2.jpg'
-  },
-  {
-    id: '3',
-    title: 'Brand Identity',
-    category: 'Graphic Design',
-    image: '/placeholder-portfolio-3.jpg'
-  },
-];
+
 
 const experiences: Experience[] = [
   {
@@ -126,105 +108,55 @@ type ExtendedFreelancerData = FreelancerData & {
   responseTime: string;
 };
 
-const freelancerData: ExtendedFreelancerData = {
-  name: "Sathish Sonu",
-  title: "Cricketer & AI Engineer",
-  about: "I'm a passionate AI engineer and full-stack developer with expertise in building intelligent applications. I specialize in AI agents, prompt engineering, and modern web development.",
-  rating: 4.9,
-  reviewCount: 42,
-  responseTime: "1h",
-  deliveryTime: "2 days",
-  completionRate: 100,
-  online: true,
-  location: "Chennai, India",
-  skills: ["Cricket", "Cycling", "Off Spin", "Batting", "Vibe Coder", "Prompt Engg", "AI Agent Builder"],
-  services: [
-    {
-      id: "1",
-      title: "UI/UX Design",
-      description: "Custom UI/UX design for your web or mobile application.",
-      price: "$500",
-      deliveryTime: "7 days"
-    },
-    {
-      id: "2",
-      title: "Frontend Development",
-      description: "Frontend development with React and TypeScript.",
-      price: "$800",
-      deliveryTime: "14 days"
-    }
-  ],
-  portfolio: [
-    {
-      id: '1',
-      title: '3x Division Cricket Champion',
-      category: 'Cricket Achievement',
-      image: 'https://images.unsplash.com/photo-1543351611-58f69d7c1784?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
-      description: 'Won the Division Level Cricket Tournament three consecutive years (2020, 2021, 2022) as a top-order batsman and off-spin bowler. Demonstrated exceptional leadership and performance under pressure.'
-    },
-    {
-      id: '2',
-      title: 'State Level College Champion',
-      category: 'Cricket Achievement',
-      image: 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
-      description: 'Led college team to victory in the State Level Inter-College Cricket Tournament. Scored 3 consecutive half-centuries in the knockout stages and took crucial wickets in the final match.'
-    },
-    {
-      id: '3',
-      title: 'Sports Quota Scholar',
-      category: 'Academic Achievement',
-      image: 'https://images.unsplash.com/photo-1543351611-58f69d7c1784?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
-      description: 'Awarded sports scholarship for outstanding cricket performance at the state level. Balanced academic responsibilities with rigorous training schedules while maintaining excellent performance in both areas.'
-    },
-    {
-      id: '4',
-      title: 'AI-Powered Cricket Analytics',
-      category: 'AI/ML Development',
-      image: 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
-      description: 'Developed a machine learning model to analyze cricket match data and predict outcomes with 85% accuracy. The system processes player statistics, pitch conditions, and historical match data to provide actionable insights for coaches and players.'
-    },
-    {
-      id: '5',
-      title: 'Vibe Code Framework',
-      category: 'Open Source AI',
-      image: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
-      description: 'An open-source framework for building AI agents with personality and contextual awareness. The framework enables developers to create more human-like AI interactions with built-in emotional intelligence and contextual understanding.'
-    }
-  ],
-  clientReviews: [
-    {
-      id: "1",
-      author: "Sarah Johnson",
-      rating: 5,
-      comment: "Amazing work! Exceeded my expectations.",
-      date: "2023-05-15"
-    },
-    {
-      id: "2",
-      author: "Mike Chen",
-      rating: 5,
-      comment: "Great communication and delivered on time.",
-      date: "2023-04-22"
-    }
-  ],
-  availability: [
-    { day: "Monday", available: true },
-    { day: "Tuesday", available: true },
-    { day: "Wednesday", available: true },
-    { day: "Thursday", available: true },
-    { day: "Friday", available: true },
-    { day: "Saturday", available: false },
-    { day: "Sunday", available: false }
-  ],
-  // Additional properties for ExtendedFreelancerData
-  completedJobs: 124,
-  activeJobs: 5
-};
+import { freelancerData } from './profileData';
 
 // Main Profile Page Component
 export default function ProfilePage() {
+  const searchParams = useSearchParams();
+  const personalDetailsRef = useRef<HTMLDivElement>(null);
+  const portfolioRef = useRef<HTMLDivElement>(null);
+  const skillsRef = useRef<HTMLDivElement>(null);
+
+  const scrollToSection = (ref: React.RefObject<HTMLElement>) => {
+    if (ref.current) {
+      // Get the header height (adjust this value based on your actual header height)
+      const headerHeight = 72; // Approximate height of the header in pixels
+      
+      // Get the element's position relative to the viewport
+      const elementRect = ref.current.getBoundingClientRect();
+      
+      // Calculate the scroll position to place the element just below the header
+      const scrollPosition = window.scrollY + elementRect.top - headerHeight - 16; // 16px extra spacing
+      
+      // Scroll to the calculated position
+      window.scrollTo({
+        top: scrollPosition,
+        behavior: 'smooth'
+      });
+      
+      // Remove the hash without page reload
+      window.history.replaceState(null, '', window.location.pathname);
+    }
+  };
+
+  useEffect(() => {
+    // Small delay to ensure the DOM is fully rendered
+    const timer = setTimeout(() => {
+      const hash = window.location.hash;
+      
+      if (hash === '#personal-details' && personalDetailsRef.current) {
+        scrollToSection(personalDetailsRef);
+      } else if (hash === '#portfolio' && portfolioRef.current) {
+        scrollToSection(portfolioRef);
+      } else if (hash === '#skills' && skillsRef.current) {
+        scrollToSection(skillsRef);
+      }
+    }, 100); // Slightly longer delay to ensure all layouts are settled
+    
+    return () => clearTimeout(timer);
+  }, [searchParams]);
   return (
-    <div className="min-h-screen bg-[#111111] text-white pb-20 md:pb-24">
+    <div className="min-h-screen bg-[#0f0f0f] text-white pb-20 md:pb-24">
       <ProfileHeader 
         name={freelancerData.name}
         title={freelancerData.title}
@@ -235,32 +167,55 @@ export default function ProfilePage() {
         skills={freelancerData.skills}
       />
 
-      <div className="container mx-auto px-4 py-6">
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold text-white mb-2">My Profile</h2>
-          <p className="text-white/60">Manage your professional profile and settings</p>
+      {/* Gradient separation line */}
+      <div className="relative py-1">
+        <div className="absolute inset-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+      </div>
+
+      <div className="container mx-auto px-4 pt-2 pb-6">
+        <div className="mb-4">
+          <h2 className="text-xl font-semibold text-white mb-1">My Profile</h2>
+          <p className="text-sm text-white/60">Manage your professional profile and settings</p>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <ProfileSectionCard
-            title="Personal Details"
-            description="Manage your profile and contact information"
-            href="/freelancer/profile/personal"
-            icon={<User className="h-4 w-4" />}
-          />
-          <ProfileSectionCard
-            title="Portfolio"
-            description="Showcase your best work with images and details"
-            href="/freelancer/profile/portfolio"
-            icon={<Briefcase className="h-4 w-4" />}
-          />
+            <div 
+              id="personal-details" 
+              ref={personalDetailsRef}
+              className="scroll-mt-24" // Add scroll margin to account for fixed header
+            >
+              <ProfileSectionCard
+                title="Personal Details"
+                description="Manage your profile and contact information"
+                href="/freelancer/profile/personal?from=profile#personal-details"
+                icon={<User className="h-4 w-4" />}
+              />
+            </div>
+          <div 
+            id="portfolio" 
+            ref={portfolioRef}
+            className="scroll-mt-24" // Add scroll margin to account for fixed header
+          >
+            <ProfileSectionCard
+              title="Portfolio"
+              description="Showcase your best work with images and details"
+              href="/freelancer/profile/portfolio?from=profile#portfolio"
+              icon={<Briefcase className="h-4 w-4" />}
+            />
+          </div>
 
-          <ProfileSectionCard
-            title="Skills"
-            description="Highlight your expertise and proficiency levels"
-            href="/freelancer/profile/skills"
-            icon={<Code className="h-4 w-4" />}
-          />
+          <div 
+            id="skills" 
+            ref={skillsRef}
+            className="scroll-mt-24" // Add scroll margin to account for fixed header
+          >
+            <ProfileSectionCard
+              title="Skills"
+              description="Highlight your expertise and proficiency levels"
+              href="/freelancer/profile/skills?from=profile#skills"
+              icon={<Code className="h-4 w-4" />}
+            />
+          </div>
 
           <ProfileSectionCard
             title="Experience"

@@ -20,6 +20,7 @@ interface ChatViewProps {
   recipientJobTitle: string;
   online: boolean;
   onBack?: () => void;
+  className?: string;
 }
 
 const mockMessages: Record<string, Message[]> = {
@@ -288,7 +289,8 @@ export function ChatView({
   recipientAvatar, 
   recipientJobTitle, 
   online,
-  onBack 
+  onBack,
+  className = '' 
 }: ChatViewProps) {
   const [newMessage, setNewMessage] = useState('');
   const messages = mockMessages[chatId] || [{
@@ -300,12 +302,26 @@ export function ChatView({
   }];
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ 
+        behavior,
+        block: 'end',
+        inline: 'nearest'
+      });
+    }, 0);
   };
 
   useEffect(() => {
-    scrollToBottom();
+    // Use 'auto' behavior for initial load
+    scrollToBottom('auto');
+  }, []);
+
+  useEffect(() => {
+    // Use smooth behavior for new messages
+    if (messages.length > 0) {
+      scrollToBottom('smooth');
+    }
   }, [messages]);
 
   const handleSend = () => {
@@ -327,7 +343,7 @@ export function ChatView({
     <motion.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="flex flex-col h-screen bg-[#111111] overflow-hidden"
+      className={`flex flex-col h-full bg-[#111111] overflow-hidden ${className}`}
     >
       {/* Fixed Header */}
       <div className="flex-shrink-0 flex items-center justify-between p-2 border-b border-white/10 bg-[#111111]/95 backdrop-blur-xl z-10">
@@ -360,39 +376,37 @@ export function ChatView({
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <button className="p-2 rounded-lg hover:bg-white/5">
-            <Phone className="h-5 w-5 text-white/60" />
+          <button className="p-2 rounded-lg hover:bg-white/5 transition-colors duration-200">
+            <Phone className="h-5 w-5 text-white/60 hover:text-white/80" />
           </button>
-          <button className="p-2 rounded-lg hover:bg-white/5">
-            <Video className="h-5 w-5 text-white/60" />
-          </button>
-          <button className="p-2 rounded-lg hover:bg-white/5">
-            <MoreVertical className="h-5 w-5 text-white/60" />
+          <button className="p-2 rounded-lg hover:bg-white/5 transition-colors duration-200">
+            <Video className="h-5 w-5 text-white/60 hover:text-white/80" />
           </button>
         </div>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.map((message) => (
-          <motion.div
-            key={message.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-          >
-            <div
-              className={`max-w-[80%] rounded-2xl px-4 py-2 ${
-                message.sender === 'user'
-                  ? 'bg-purple-600 text-white rounded-br-none'
-                  : 'bg-white/5 text-white rounded-bl-none'
-              }`}
+      <div className="flex-1 overflow-y-auto p-4 pb-6" style={{ scrollBehavior: 'smooth' }}>
+        <div className="space-y-4">
+          {messages.map((message) => (
+            <motion.div
+              key={message.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
             >
-              <p className="text-sm">{message.content}</p>
-              <div className="flex items-center justify-end mt-1 space-x-1">
-                <span className="text-xs opacity-50">
-                  {format(message.timestamp, 'h:mm a')}
-                </span>
+              <div
+                className={`max-w-[80%] rounded-2xl px-4 py-2 ${
+                  message.sender === 'user'
+                    ? 'bg-purple-600 text-white rounded-br-none'
+                    : 'bg-white/5 text-white rounded-bl-none'
+                }`}
+              >
+                <p className="text-sm break-words">{message.content}</p>
+                <div className="flex items-center justify-end mt-1 space-x-1">
+                  <span className="text-xs opacity-50">
+                    {format(message.timestamp, 'h:mm a')}
+                  </span>
                 {message.sender === 'user' && (
                   <span className={`text-xs ${
                     message.status === 'sent' ? 'text-white/50' : 
@@ -409,15 +423,16 @@ export function ChatView({
                     )}
                   </span>
                 )}
+                </div>
               </div>
-            </div>
-          </motion.div>
-        ))}
-        <div ref={messagesEndRef} />
+            </motion.div>
+          ))}
+          <div ref={messagesEndRef} className="h-4" />
+        </div>
       </div>
 
       {/* Fixed Message Input */}
-      <div className="flex-shrink-0 p-4 border-t border-white/10 bg-[#111111]/95 backdrop-blur-xl">
+      <div className="flex-shrink-0 px-4 pt-4 pb-4 border-t border-white/10 bg-[#111111]/95 backdrop-blur-xl">
         <div className="flex items-center gap-2">
           <button className="p-2 rounded-lg hover:bg-white/5">
             <Paperclip className="h-5 w-5 text-white/60" />

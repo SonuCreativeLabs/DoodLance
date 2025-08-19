@@ -140,27 +140,8 @@ export default function ReviewsPage() {
   }, [searchParams]);
 
   const handleBack = () => {
-    console.log('Back button clicked on reviews page');
-    // Check if we have a stored URL to return to the profile preview
-    const returnToPreview = sessionStorage.getItem('returnToProfilePreview');
-    console.log('Stored return URL:', returnToPreview);
-    
-    if (returnToPreview) {
-      console.log('Navigating back to profile preview');
-      // Clear the stored URL
-      sessionStorage.removeItem('returnToProfilePreview');
-      // Navigate back to the profile preview with the stored URL
-      window.location.href = returnToPreview;
-      return; // Prevent further execution
-    }
-    
-    // Fallback to browser history if available
-    if (window.history.length > 1) {
-      router.back();
-    } else {
-      // Fallback to the profile page
-      router.push('/freelancer/profile');
-    }
+    // Navigate directly to the main profile page
+    window.location.href = '/freelancer/profile';
   };
 
   const renderStars = (rating: number) => {

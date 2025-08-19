@@ -237,7 +237,7 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
           <Tabs 
             value={activeTab} 
             onValueChange={handleTabChange} 
-            className="w-full pt-16"
+            className="w-full pt-2"
           >
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 py-4">
               <TabsList className="grid w-full sm:w-auto grid-cols-2 h-10">

@@ -497,25 +497,38 @@ export function ProfilePreview({
   }, []);
   
   // Handle body scroll lock when modal is open
+  // Store scroll position in a ref to persist between renders
+  const scrollY = useRef(0);
+
   useEffect(() => {
     if (!isOpen) return;
+
+    // Store current scroll position
+    scrollY.current = window.scrollY || document.documentElement.scrollTop;
     
-    // Store the current scroll position
-    const scrollY = window.scrollY;
-    // Prevent body from scrolling
+    // Add a class to the body to handle the lock
+    document.body.classList.add('preview-open');
+    
+    // Apply styles directly to prevent scrolling
     document.body.style.position = 'fixed';
-    document.body.style.top = `-${scrollY}px`;
+    document.body.style.top = `-${scrollY.current}px`;
+    document.body.style.left = '0';
+    document.body.style.right = '0';
     document.body.style.width = '100%';
-    document.documentElement.classList.add('preview-open');
-    
+    document.body.style.overflow = 'hidden';
+
     return () => {
-      // Restore body scrolling and position
-      const scrollY = document.body.style.top;
+      // First, restore all the styles
       document.body.style.position = '';
       document.body.style.top = '';
+      document.body.style.left = '';
+      document.body.style.right = '';
       document.body.style.width = '';
-      document.documentElement.classList.remove('preview-open');
-      window.scrollTo(0, parseInt(scrollY || '0') * -1);
+      document.body.style.overflow = '';
+      document.body.classList.remove('preview-open');
+      
+      // Then restore the scroll position
+      window.scrollTo(0, scrollY.current);
     };
   }, [isOpen]);
   
@@ -529,20 +542,49 @@ export function ProfilePreview({
 
   return createPortal((
     <div className="fixed inset-0 z-[9999] bg-[#0F0F0F] flex flex-col h-screen w-screen overflow-hidden">
-      {/* Header with back button and title */}
+      {/* Header with title and actions (Share, Close) */}
       <div className="px-4 py-2 border-b border-white/5">
-        <div className="flex items-center">
-          <button 
-            onClick={onClose}
-            className="inline-flex items-center text-sm text-purple-400 hover:text-purple-300 transition-colors duration-200"
-          >
-            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors duration-200">
-              <ArrowLeft className="h-4 w-4" />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center">
+            <div className="ml-0">
+              <h1 className="text-lg font-semibold text-white">Profile Preview</h1>
+              <p className="text-white/50 text-xs">Preview how your profile appears to others</p>
             </div>
-          </button>
-          <div className="ml-3">
-            <h1 className="text-lg font-semibold text-white">Profile Preview</h1>
-            <p className="text-white/50 text-xs">Preview how your profile appears to others</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                try {
+                  const shareData = {
+                    title: 'Profile Preview',
+                    text: 'Check out this profile preview',
+                    url: typeof window !== 'undefined' ? window.location.href : ''
+                  };
+                  if (navigator.share) {
+                    navigator.share(shareData).catch(() => {});
+                  } else if (navigator.clipboard && shareData.url) {
+                    navigator.clipboard.writeText(shareData.url).then(() => {
+                      // Optional: show lightweight feedback; keeping silent per minimal change
+                    }).catch(() => {});
+                  }
+                } catch {}
+              }}
+              aria-label="Share profile preview"
+              className="inline-flex items-center text-sm text-purple-400 hover:text-purple-300 transition-colors duration-200"
+            >
+              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors duration-200">
+                <Share2 className="h-4 w-4" />
+              </div>
+            </button>
+            <button 
+              onClick={onClose}
+              aria-label="Close preview"
+              className="inline-flex items-center text-sm text-purple-400 hover:text-purple-300 transition-colors duration-200"
+            >
+              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors duration-200">
+                <X className="h-4 w-4" />
+              </div>
+            </button>
           </div>
         </div>
       </div>
@@ -793,7 +835,32 @@ export function ProfilePreview({
                       {profileData.portfolio.map((item) => (
                         <div 
                           key={item.id} 
-                          className="w-80 flex-shrink-0 group relative aspect-video rounded-xl overflow-hidden border border-white/10 hover:border-white/20 transition-all duration-300"
+                          className="w-80 flex-shrink-0 group relative aspect-video rounded-xl overflow-hidden border border-white/10 hover:border-white/20 transition-all duration-300 cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-500"
+                          role="button"
+                          tabIndex={0}
+                          aria-label={`Open portfolio item: ${item.title}`}
+                          onClick={() => {
+                            if (typeof window !== 'undefined') {
+                              try {
+                                const url = new URL(window.location.href);
+                                url.hash = '#portfolio';
+                                sessionStorage.setItem('returnToProfilePreview', url.toString());
+                              } catch {}
+                              window.location.href = `/freelancer/profile/preview/portfolio/${item.id}`;
+                            }
+                          }}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              if (typeof window !== 'undefined') {
+                                try {
+                                  const url = new URL(window.location.href);
+                                  url.hash = '#portfolio';
+                                  sessionStorage.setItem('returnToProfilePreview', url.toString());
+                                } catch {}
+                                window.location.href = `/freelancer/profile/preview/portfolio/${item.id}`;
+                              }
+                            }
+                          }}
                         >
                           <div className="relative w-full h-full">
                             <div className="absolute inset-0 flex items-center justify-center bg-gray-800/50 rounded-xl">

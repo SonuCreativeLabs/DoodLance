@@ -328,51 +328,49 @@ export default function PersonalDetailsPage() {
                 </div>
               </>
             ) : (
-              <>
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-    <div className="space-y-1">
-      <p className="text-sm font-medium text-white/70 mb-0.5">Full Name</p>
-      <div className="flex items-center gap-2">
-        <CircleUser className="h-4 w-4 text-white/60" />
-        <span className="text-white/90 font-medium text-base">{personalInfo.fullName}</span>
-      </div>
-    </div>
-    <div className="space-y-1">
-      <p className="text-sm font-medium text-white/70 mb-0.5">Job Title</p>
-      <div className="flex items-center gap-2">
-        <Briefcase className="h-4 w-4 text-white/60" />
-        <span className="text-white/90 font-medium text-base">{personalInfo.jobTitle || <span className="text-white/40">Not set</span>}</span>
-      </div>
-    </div>
-    <div className="space-y-1">
-      <p className="text-sm font-medium text-white/70 mb-0.5">Gender</p>
-      <div className="flex items-center gap-2">
-        <User className="h-4 w-4 text-white/60" />
-        <span className="text-white/90">{personalInfo.gender}</span>
-      </div>
-    </div>
-    <div className="space-y-1">
-      <p className="text-sm font-medium text-white/70 mb-0.5">Date of Birth</p>
-      <div className="flex items-center gap-2">
-        <Calendar className="h-4 w-4 text-white/60" />
-        <span className="text-white/90">
-          {new Date(personalInfo.dateOfBirth).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-          })}
-        </span>
-      </div>
-    </div>
-    <div className="space-y-1 md:col-span-2">
-      <p className="text-sm font-medium text-white/70 mb-0.5">Bio</p>
-      <div className="flex items-start gap-2">
-        <Quote className="h-6 w-6 text-white/60" />
-        <span className="text-white/80 whitespace-pre-line">{personalInfo.bio}</span>
-      </div>
-    </div>
-  </div>
-</>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-white/70 mb-0.5">Full Name</p>
+                  <div className="flex items-center gap-2">
+                    <CircleUser className="h-4 w-4 text-white/60" />
+                    <span className="text-white/90 font-medium text-base">{personalInfo.fullName}</span>
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-white/70 mb-0.5">Job Title</p>
+                  <div className="flex items-center gap-2">
+                    <Briefcase className="h-4 w-4 text-white/60" />
+                    <span className="text-white/90 font-medium text-base">{personalInfo.jobTitle || <span className="text-white/40">Not set</span>}</span>
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-white/70 mb-0.5">Gender</p>
+                  <div className="flex items-center gap-2">
+                    <User className="h-4 w-4 text-white/60" />
+                    <span className="text-white/90">{personalInfo.gender}</span>
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-white/70 mb-0.5">Date of Birth</p>
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-white/60" />
+                    <span className="text-white/90">
+                      {new Date(personalInfo.dateOfBirth).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      })}
+                    </span>
+                  </div>
+                </div>
+                <div className="space-y-1 md:col-span-2">
+                  <p className="text-sm font-medium text-white/70 mb-0.5">Bio</p>
+                  <div className="flex items-start gap-2">
+                    <Quote className="h-6 w-6 text-white/60" />
+                    <span className="text-white/80 whitespace-pre-line">{personalInfo.bio}</span>
+                  </div>
+                </div>
+              </div>
             )}
           </div>
         </SectionCard>
@@ -599,14 +597,16 @@ export default function PersonalDetailsPage() {
         <div className="container mx-auto px-4 py-6 space-y-6">
           {editingSection === null ? (
             // Show all sections in view mode
-            <>
+            <div>
               {renderSection('personal')}
               {renderSection('contact')}
               {renderSection('location')}
-            </>
+            </div>
           ) : (
             // Show only the section being edited
-            <>{renderSection(editingSection)}</>
+            <div>
+              {renderSection(editingSection)}
+            </div>
           )}
         </div>
       </div>

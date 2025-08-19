@@ -28,13 +28,13 @@ export default function JobsPage({ searchParams: initialSearchParams }: PageProp
     status
   }), [tab, status]);
   return (
-    <div className="min-h-screen bg-[#111111]">
+    <div className="min-h-screen bg-[#111111] pt-0">
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="container max-w-screen-xl mx-auto px-4 pb-24"
+        className="container max-w-screen-xl mx-auto px-4 pb-24 pt-0"
       >
-        <div className="w-full flex flex-col items-center mb-4">
+        <div className="w-full flex flex-col items-center pt-0">
           <div className="hidden md:flex items-center gap-3">
             <motion.button 
               whileHover={{ scale: 1.02 }}

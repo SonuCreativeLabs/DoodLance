@@ -5,6 +5,7 @@ import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
+import { freelancerData } from '../../profileData';
 
 type PortfolioItem = {
   id: string;
@@ -18,11 +19,13 @@ type PortfolioItem = {
 export default function PortfolioPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [portfolioItems, setPortfolioItems] = useState<PortfolioItem[]>([]);
+  const [portfolioItems] = useState<PortfolioItem[]>(freelancerData.portfolio);
   const [freelancerName, setFreelancerName] = useState('My');
   const [returnUrl, setReturnUrl] = useState('');
 
-  useEffect(() => {
+  // Portfolio data is now always in sync with profileData.ts
+// No need to fetch from sessionStorage or URL params
+/*useEffect(() => {
     // Check if we're coming from the profile preview modal
     const isFromPreview = window.location.hash === '#fromPreview';
     
@@ -74,27 +77,11 @@ export default function PortfolioPage() {
         setReturnUrl(decodeURIComponent(returnUrlParam));
       }
     }
-  }, [searchParams]);
+  }, [searchParams]);*/
 
   const handleBack = () => {
-    console.log('Back button clicked');
-    // Check if we have a stored URL to return to the profile preview
-    const returnToPreview = sessionStorage.getItem('returnToProfilePreview');
-    console.log('Stored return URL:', returnToPreview);
-    
-    if (returnToPreview) {
-      console.log('Navigating back to profile preview');
-      // Clear the stored URL
-      sessionStorage.removeItem('returnToProfilePreview');
-      // Navigate back to the profile preview with the stored URL
-      window.location.href = returnToPreview;
-    } else if (window.history.length > 1) {
-      // Fallback to browser history if available
-      router.back();
-    } else {
-      // Fallback to the profile page
-      router.push('/freelancer/profile');
-    }
+    // Navigate directly to the main profile page
+    window.location.href = '/freelancer/profile';
   };
 
   return (
@@ -112,7 +99,9 @@ export default function PortfolioPage() {
             </div>
           </button>
           <div className="ml-3">
-            <h1 className="text-lg font-semibold text-white">{freelancerName}'s Portfolio</h1>
+            <h1 className="text-lg font-semibold text-white">
+              {freelancerName === 'My' ? 'My Portfolio' : `${freelancerName}\'s Portfolio`}
+            </h1>
             <p className="text-white/50 text-xs">Showcase of my best work and projects</p>
           </div>
         </div>
@@ -125,7 +114,11 @@ export default function PortfolioPage() {
             portfolioItems.map((item) => (
               <div 
                 key={item.id} 
-                className="group relative aspect-video rounded-xl overflow-hidden border border-white/10 hover:border-white/20 transition-all duration-300"
+                className="group relative aspect-video rounded-xl overflow-hidden border border-white/10 hover:border-white/20 transition-all duration-300 cursor-pointer"
+                onClick={() => {
+                  try { sessionStorage.removeItem('returnToProfilePreview'); } catch {}
+                  router.push(`/freelancer/profile/preview/portfolio/${item.id}`);
+                }}
               >
                 <div className="relative w-full h-full">
                   <div className="absolute inset-0 flex items-center justify-center bg-gray-800/50 rounded-xl">
