@@ -18,6 +18,20 @@ export type Review = {
 export default function ReviewsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  // Hide header and navbar for this page
+  useEffect(() => {
+    const header = document.querySelector('header');
+    const navbar = document.querySelector('nav');
+    
+    if (header) header.style.display = 'none';
+    if (navbar) navbar.style.display = 'none';
+    
+    return () => {
+      if (header) header.style.display = '';
+      if (navbar) navbar.style.display = '';
+    };
+  }, []);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [freelancerName, setFreelancerName] = useState('My');
   const [returnUrl, setReturnUrl] = useState('');
@@ -140,8 +154,23 @@ export default function ReviewsPage() {
   }, [searchParams]);
 
   const handleBack = () => {
-    // Navigate directly to the main profile page
-    window.location.href = '/freelancer/profile';
+    if (typeof window !== 'undefined') {
+      // Store a flag to indicate we want to scroll to reviews
+      sessionStorage.setItem('scrollToReviews', 'true');
+      
+      // Check if we have a return URL from the profile preview
+      const returnUrl = sessionStorage.getItem('returnToProfilePreview');
+      
+      if (returnUrl) {
+        // Navigate back to the exact URL that was stored when opening reviews
+        window.location.href = returnUrl;
+      } else {
+        // Fallback to history back if no return URL is found
+        window.history.back();
+      }
+    } else {
+      router.back();
+    }
   };
 
   const renderStars = (rating: number) => {

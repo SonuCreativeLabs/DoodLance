@@ -2,14 +2,34 @@
 import { notFound } from 'next/navigation';
 import { freelancerData } from '../../../profileData';
 import Image from 'next/image';
+import { useEffect } from 'react';
 
 export default function PortfolioDetailPage({ params }: { params: { id: string } }) {
   const item = freelancerData.portfolio.find((p) => p.id === String(params.id));
   if (!item) return notFound();
 
+  // Hide header and navbar for this page
+  useEffect(() => {
+    const header = document.querySelector('header');
+    const navbar = document.querySelector('nav');
+    
+    if (header) header.style.display = 'none';
+    if (navbar) navbar.style.display = 'none';
+    
+    return () => {
+      if (header) header.style.display = '';
+      if (navbar) navbar.style.display = '';
+    };
+  }, []);
+
   const handleCancel = () => {
-    // Navigate directly to the main profile page
-    window.location.href = '/freelancer/profile';
+    // Scroll to portfolio section in the profile preview
+    if (typeof window !== 'undefined') {
+      // Store scroll position before navigating back
+      sessionStorage.setItem('scrollToPortfolio', 'true');
+      // Navigate back to the portfolio page
+      window.history.back();
+    }
   };
 
   return (

@@ -1,239 +1,497 @@
 'use client';
 
-import { useRef, useEffect, useCallback, useMemo, memo } from 'react';
+import { useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { 
-  Share2, 
-  X, 
-  Check, 
-  CheckCircle,
+import { useRouter } from 'next/navigation';
+import Image from 'next/image';
+import Link from 'next/link';
+import { useSectionObserver } from '@/hooks/useSectionObserver';
+import {
+  ArrowLeft,
   ArrowRight,
-  MessageSquare,
+  Award,
+  Briefcase,
+  Calendar,
+  Check,
+  CheckCircle,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronUp,
+  Clock,
+  ExternalLink,
+  FileText,
+  Globe,
+  LayoutGrid,
+  Link as LinkIcon,
+  Mail,
+  MapPin,
   MessageCircle,
-  Award, 
-  Briefcase, 
-  MapPin, 
-  Calendar, 
+  MessageSquare,
+  MoreHorizontal,
+  Paperclip,
+  Phone,
+  Plus,
+  Share2,
   Star,
-  User
+  ThumbsUp,
+  User,
+  X
 } from 'lucide-react';
+
+// UI Components
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Separator } from "@/components/ui/separator";
 
 // Local Components
 import { ProfileHeader } from './ProfileHeader';
 
-// Types
-import type { 
-  ProfileData, 
-  ProfilePreviewProps as Props
-} from '@/types/freelancer/profile';
+interface Experience {
+  id: string;
+  role: string;
+  company: string;
+  location: string;
+  startDate: string;
+  endDate?: string;
+  isCurrent: boolean;
+  description: string;
+}
 
-// Utils
-import { 
-  formatDate, 
-  calculateAverageRating, 
-  groupServicesByType, 
-  formatExperienceDuration, 
-  getRecentExperiences,
-  getAvailabilityText
-} from '@/utils/profileUtils';
+interface Service {
+  id: string;
+  title: string;
+  description: string;
+  price: string;
+  type?: 'online' | 'in-person';
+  deliveryTime: string;
+  features?: string[];
+}
 
-// Memoized component to prevent unnecessary re-renders
-const ProfilePreview = memo(({ 
+interface PortfolioItem {
+  id: string;
+  title: string;
+  category: string;
+  image: string;
+}
+
+interface Review {
+  id: string;
+  author: string;
+  role?: string;
+  rating: number;
+  comment: string;
+  date: string;
+  isVerified?: boolean;
+}
+
+interface Availability {
+  day: string;
+  available: boolean;
+}
+
+interface ProfilePreviewProps {
+  isOpen: boolean;
+  onClose: () => void;
+  profileData: {
+    name: string;
+    title: string;
+    about: string;
+    rating: number;
+    reviewCount: number;
+    responseTime: string;
+    deliveryTime: string;
+    completionRate: number;
+    online: boolean;
+    location: string;
+    skills: string[];
+    experience: Experience[];
+    services: Service[];
+    portfolio: PortfolioItem[];
+    reviews: Review[];
+    availability: Availability[];
+
+    completedJobs?: number;
+    activeJobs?: number;
+  };
+}
+
+// Helper function to format date
+const formatDate = (dateString: string) => {
+  const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long', day: 'numeric' };
+  return new Date(dateString).toLocaleDateString(undefined, options);
+};
+
+// Helper function to get availability text
+const getAvailabilityText = (availability: Array<{day: string, available: boolean}>) => {
+  const availableDays = availability
+    .filter(day => day.available)
+    .map(day => day.day.substring(0, 3));
+  
+  if (availableDays.length === 7) return 'Available every day';
+  if (availableDays.length === 5 && 
+      !availableDays.includes('Sat') && 
+      !availableDays.includes('Sun')) {
+    return 'Available weekdays';
+  }
+  return `Available: ${availableDays.join(', ')}`;
+};
+
+export function ProfilePreview({ 
   isOpen = false, 
   onClose = () => {}, 
   profileData 
-}: Partial<Props> & { profileData: ProfileData }) => {
-  // Refs
-  const scrollY = useRef(0);
-  const scrollTimer = useRef<number | null>(null);
+}: Partial<ProfilePreviewProps> & { profileData: ProfilePreviewProps['profileData'] }) {
+  // Router and refs
+  const router = useRouter();
+  const navContainerRef = useRef<HTMLDivElement>(null);
   
-  /**
-   * Scrolls to a section with retry logic
-   * @param sectionId The ID of the section to scroll to
-   * @param behavior Scroll behavior ('auto' or 'smooth')
-   * @param retryCount Number of times to retry if element is not found
-   * @param delayMs Delay between retries in milliseconds
-   */
-  const scrollToSection = useCallback((sectionId: string, behavior: ScrollBehavior = 'smooth', retryCount = 1, delayMs = 100) => {
+  // Use the section observer hook for scroll and tab management
+  const { activeSection, handleTabClick, isScrolling } = useSectionObserver();
+  
+  // Function to scroll active tab into view
+  const scrollToActiveTab = useCallback((sectionId: string) => {
+    if (!navContainerRef.current) return;
+    
+    const navElement = document.getElementById(`nav-${sectionId}`);
+    if (!navElement) return;
+    
+    const container = navContainerRef.current;
+    const containerRect = container.getBoundingClientRect();
+    const elementRect = navElement.getBoundingClientRect();
+    
+    const containerCenter = containerRect.left + containerRect.width / 2;
+    const elementCenter = elementRect.left + elementRect.width / 2;
+    const scrollOffset = elementCenter - containerCenter;
+    
+    const newScrollLeft = container.scrollLeft + scrollOffset;
+    container.scrollTo({ left: newScrollLeft, behavior: 'smooth' });
+  }, []);
+  
+  // Scroll active tab into view when active section changes
+  useEffect(() => {
+    if (activeSection) {
+      scrollToActiveTab(activeSection);
+    }
+  }, [activeSection, scrollToActiveTab]);
+  
+  // Refs for section elements
+  const sectionsRef = useRef<{[key: string]: HTMLElement | null}>({
+    about: null,
+    services: null,
+    portfolio: null,
+    experience: null,
+    reviews: null,
+  });
+  
+  // Track section elements for observation
+  const sectionElementsRef = useRef<Element[]>([]);
+  
+  // Get all section elements with data-section attribute
+  const getAllSectionElements = useCallback((): Element[] => {
+    if (typeof document === 'undefined') return [];
+    const elements = document.querySelectorAll('[data-section]');
+    return Array.from(elements);
+  }, []);
+  
+  // Handle scroll to specific section when returning from a full page
+  useEffect(() => {
     if (typeof window === 'undefined') return;
     
-    const scroll = (attempt = 0): boolean => {
-      const section = document.getElementById(sectionId);
-      if (section) {
-        section.scrollIntoView({ behavior });
-        return true;
-      } else if (attempt < retryCount) {
-        // If element isn't available yet, try again after a delay
-        scrollTimer.current = window.setTimeout(() => {
-          scroll(attempt + 1);
-        }, delayMs);
-      }
-      return false;
+    // Check if we need to scroll to the reviews section
+    const scrollToReviews = sessionStorage.getItem('scrollToReviews');
+    
+    // Function to scroll to the reviews section
+    const scrollToReviewsSection = () => {
+      // Clear the scroll flag
+      sessionStorage.removeItem('scrollToReviews');
+      
+      // Set a flag to indicate we're scrolling to the reviews section
+      sessionStorage.setItem('scrollToReviews', 'true');
+      
+      // Scroll to the section after a small delay to ensure the modal is fully loaded
+      const timer = setTimeout(() => {
+        const section = document.getElementById('reviews');
+        if (section) {
+          section.scrollIntoView({ behavior: 'smooth' });
+          setActiveSection('reviews');
+          scrollToActiveTab('reviews');
+        }
+      }, 100);
+      
+      return timer;
     };
-
-    // Clear any existing timeout to prevent multiple timers
-    if (scrollTimer.current) {
-      clearTimeout(scrollTimer.current);
-      scrollTimer.current = null;
+    
+    let timer: NodeJS.Timeout | null = null;
+    
+    // Check if we need to scroll to reviews
+    if (scrollToReviews === 'true') {
+      timer = scrollToReviewsSection();
     }
     
-    // Start the scroll attempt
-    scroll();
-  }, []);
-
-  // Handle navigation to full page views
-  const navigateToFullView = useCallback((type: 'portfolio' | 'reviews') => {
-    if (typeof window === 'undefined') return;
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [isOpen]);
+  
+  // Track scroll position and update active section
+  useEffect(() => {
+    if (!isOpen) return;
     
-    const url = new URL(window.location.href);
-    url.hash = `#${type}`;
-    const currentUrl = url.toString();
+    // Store section elements for better performance
+    const sectionElements = {
+      about: document.getElementById('about'),
+      services: document.getElementById('services'),
+      portfolio: document.getElementById('portfolio'),
+      experience: document.getElementById('experience'),
+      reviews: document.getElementById('reviews')
+    };
     
-    // Store current state for return navigation
-    sessionStorage.setItem('returnToProfilePreview', currentUrl);
-    sessionStorage.setItem(`${type}PreviewData`, JSON.stringify(profileData[type]));
-    sessionStorage.setItem('freelancerName', profileData.name);
+    // Get section IDs for scroll detection (excluding 'top')
+    const sectionIds = ['about', 'services', 'portfolio', 'experience', 'reviews'];
     
-    // Navigate to the full view
-    window.location.href = `/freelancer/profile/preview/${type}#fromPreview`;
-  }, [profileData]);
+    // Function to scroll the active tab into view
+    const scrollActiveTabIntoView = (sectionId: string) => {
+      const navElement = document.querySelector(`a[href="#${sectionId}"]`);
+      const navContainer = navContainerRef.current;
+      
+      if (navElement && navContainer) {
+        const navRect = navElement.getBoundingClientRect();
+        const containerRect = navContainer.getBoundingClientRect();
+        const containerWidth = containerRect.width;
+        const navLeft = navRect.left - containerRect.left;
+        const navWidth = navRect.width;
+        
+        // Calculate scroll position to center the active tab
+        const scrollLeft = navContainer.scrollLeft;
+        const targetScroll = navLeft + scrollLeft - (containerWidth / 2) + (navWidth / 2);
+        
+        // Smoothly scroll the nav container
+        navContainer.scrollTo({
+          left: targetScroll,
+          behavior: 'smooth'
+        });
+      }
+    };
+    
+    // Set initial active section to 'top' when the component mounts
+    setActiveSection('top');
+    activeSectionRef.current = 'top';
+    
+    // Get all section elements with data-section attribute
+    const sections = Array.from(document.querySelectorAll('[data-section]'));
+    
+    // Check all sections (excluding 'top' since we handled it above)
+    for (const section of sections) {
+      const rect = section.getBoundingClientRect();
+      const sectionId = section.getAttribute('data-section');
+      if (!sectionId) continue;
+    const sectionsToObserve = getAllSectionElements();
+    
+    // Observe all section elements
+    sectionsToObserve.forEach((el: Element) => {
+      currentObserver.observe(el);
+    });
+    
+    // Handle window resize for responsive adjustments
+    const handleResize = () => {
+      if (activeSectionRef.current) {
+        scrollToActiveTab(activeSectionRef.current);
+      }
+    };
+    
+    window.addEventListener('resize', handleResize);
+    
+    // Set initial active section if none is set
+    if (sectionElementsRef.current.length > 0 && !activeSectionRef.current) {
+      const firstSection = sectionElementsRef.current[0].getAttribute('data-section');
+      if (firstSection) {
+        setActiveSection(firstSection);
+        scrollToActiveTab(firstSection);
+      }
+    }
+    
+    // Clean up
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      
+      // Unobserve all elements
+      if (currentObserver) {
+        sectionElementsRef.current.forEach((el) => {
+          currentObserver.unobserve(el);
+        });
+        sectionElementsRef.current = [];
+      }
+      
+      // Clean up timers
+      if (scrollTimer.current) {
+        cancelAnimationFrame(scrollTimer.current);
+        scrollTimer.current = null;
+      }
+      
+      if (scrollEndTimer.current) {
+        clearTimeout(scrollEndTimer.current);
+        scrollEndTimer.current = null;
+      }
+      
+      // Reset scrolling flag
+      isScrolling.current = false;
+    };
+  }, [isOpen]);
 
-  // Handle view all portfolio click
-  const handleViewAllPortfolio = () => {
-    // Clear other section flags
-    sessionStorage.removeItem('fromServices');
-    sessionStorage.removeItem('fromReviews');
-    sessionStorage.setItem('fromPortfolio', 'true');
-    sessionStorage.setItem('lastVisitedSection', 'portfolio');
-    navigateToFullView('portfolio');
-  };
+  // Use the section observer hook
+  const { activeSection, handleTabClick, isScrolling } = useSectionObserver();
+  const navContainerRef = useRef<HTMLDivElement>(null);
+    
+    // Update active section immediately
+    activeSectionRef.current = sectionId;
+    setActiveSection(sectionId);
+    isScrolling.current = true;
+    
+    // Clear any existing timeouts
+    if (scrollEndTimer.current) {
+      clearTimeout(scrollEndTimer.current);
+    }
+    
+    // Update URL hash without causing a page reload
+    if (typeof window !== 'undefined') {
+      const newUrl = new URL(window.location.href);
+      newUrl.hash = sectionId === 'top' ? '' : `#${sectionId}`;
+      window.history.replaceState({}, '', newUrl.toString());
+    }
+    
+    // Get the scrollable content container - use the modal's scroll container
+    const scrollContainer = document.querySelector('.overflow-y-auto');
+    if (!scrollContainer) return;
+    
+    // Handle top section - scroll to top of the content
+    if (sectionId === 'top') {
+      scrollContainer.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+      scrollToActiveTab(sectionId);
+      
+      scrollEndTimer.current = setTimeout(() => {
+        isScrolling.current = false;
+      }, 1000);
+      return;
+    }
+    
+    // For other sections, find the element and scroll to it
+    const element = document.getElementById(sectionId);
+    if (element) {
+      // Disable any default scroll behavior
+      element.scrollIntoView = () => {};
+      
+      // Calculate the exact position relative to the scroll container
+      const headerOffset = 80; // Height of the sticky header
+      const elementRect = element.getBoundingClientRect();
+      const containerRect = scrollContainer.getBoundingClientRect();
+      
+      // Calculate the exact scroll position needed to show the element at the top of the viewport
+      const scrollPosition = element.offsetTop - headerOffset;
+      
+      // If we're already at or very close to the target position, don't scroll
+      const currentScroll = scrollContainer.scrollTop;
+      if (Math.abs(currentScroll - scrollPosition) < 5) {
+        isScrolling.current = false;
+        return;
+      }
 
-  // Handle view all reviews click
-  const handleViewAllReviews = () => {
-    // Clear other section flags
-    sessionStorage.removeItem('fromServices');
-    sessionStorage.removeItem('fromPortfolio');
-    sessionStorage.setItem('fromReviews', 'true');
-    sessionStorage.setItem('lastVisitedSection', 'reviews');
-    navigateToFullView('reviews');
+      // Smooth scroll to the calculated position
+      scrollContainer.scrollTo({
+        top: scrollPosition,
+        behavior: 'smooth'
+      });
+      
+      // Update the active tab in the navigation
+      scrollToActiveTab(sectionId);
+      
+      // Reset scrolling flag after animation completes
+      scrollEndTimer.current = setTimeout(() => {
+        isScrolling.current = false;
+      }, 1000);
+    }
   };
   
-  // Handle view all services click
-  const handleViewAllServices = () => {
-    // Clear other section flags
-    sessionStorage.removeItem('fromPortfolio');
-    sessionStorage.removeItem('fromReviews');
-    sessionStorage.setItem('fromServices', 'true');
-    sessionStorage.setItem('lastVisitedSection', 'services');
+  // Reset active section when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      // Reset to top when modal opens
+      setActiveSection('top');
+      activeSectionRef.current = 'top';
+      
+      // Ensure the profile tab is scrolled into view
+      setTimeout(() => {
+        scrollToActiveTab('top');
+      }, 100);
+    }
     
-    // Create a URL with the modal state and section hash
-    const url = new URL(window.location.href);
-    url.hash = '#services';
-    const currentUrl = url.toString();
-    
-    sessionStorage.setItem('returnToProfilePreview', currentUrl);
-    
-    // Store services data in session storage
-    sessionStorage.setItem('servicesPreviewData', JSON.stringify(profileData.services));
-    sessionStorage.setItem('freelancerName', profileData.name);
-    
-    // Navigate to services page with preview flag
-    window.location.href = `/services#fromPreview`;
-  };
+    return () => {
+      // Cleanup function
+    };
+  }, [isOpen]);
+  
+  // Handle body scroll lock when modal is open
+  // Store scroll position in a ref to persist between renders
+  const scrollY = useRef(0);
 
-  // Handle scroll behavior when modal opens
   useEffect(() => {
     if (!isOpen) return;
     
     // Store current scroll position
     scrollY.current = window.scrollY || document.documentElement.scrollTop;
     
-    // Lock body scroll using CSS classes
-    document.body.classList.add('preview-open', 'scroll-locked');
-    document.body.style.setProperty('--scroll-y', `-${scrollY.current}px`);
-    
-    // Get the last visited section from session storage
-    const lastVisitedSection = sessionStorage.getItem('lastVisitedSection');
-    const isFromPreview = window.location.hash === '#fromPreview';
-    
-    // Scroll to the appropriate section
-    requestAnimationFrame(() => {
-      const scrollContainer = document.querySelector('.overflow-y-auto') as HTMLElement;
-      
-      // Check for explicit hash first
-      if (window.location.hash && window.location.hash !== '#fromPreview') {
-        const sectionId = window.location.hash.substring(1);
-        if (sectionId) {
-          scrollToSection(sectionId, 'smooth', 3);
-          return;
-        }
-      }
-      
-      // Then check for section-specific flags
-      if (sessionStorage.getItem('fromReviews')) {
-        sessionStorage.removeItem('fromReviews');
-        sessionStorage.setItem('lastVisitedSection', 'reviews');
-        scrollToSection('reviews', 'smooth', 3);
-      } else if (sessionStorage.getItem('fromServices')) {
-        sessionStorage.removeItem('fromServices');
-        sessionStorage.setItem('lastVisitedSection', 'services');
-        scrollToSection('services', 'smooth', 3);
-      } else if (sessionStorage.getItem('fromPortfolio')) {
-        sessionStorage.removeItem('fromPortfolio');
-        sessionStorage.setItem('lastVisitedSection', 'portfolio');
-        scrollToSection('portfolio', 'smooth', 3);
-      } 
-      // If coming from preview but no specific section, use last visited section
-      else if (isFromPreview && lastVisitedSection) {
-        scrollToSection(lastVisitedSection, 'smooth', 3);
-      }
-      // Default to top if no specific section
-      else if (scrollContainer) {
+    // Set initial active section after a small delay to ensure DOM is ready
+    const timer = setTimeout(() => {
+      setActiveSection('top');
+      activeSectionRef.current = 'top';
+      // Force scroll to top to ensure we're at the start
+      const scrollContainer = document.querySelector('.overflow-y-auto');
+      if (scrollContainer) {
         scrollContainer.scrollTo({ top: 0, behavior: 'auto' });
-      } else {
-        window.scrollTo(0, 0);
       }
-    });
+      scrollToActiveTab('top');
+    }, 100);
+    
+    // Add a class to the body to handle the lock
+    document.body.classList.add('preview-open');
+    
+    // Apply styles directly to prevent scrolling
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollY.current}px`;
+    document.body.style.left = '0';
+    document.body.style.right = '0';
+    document.body.style.width = '100%';
+    document.body.style.overflow = 'hidden';
     
     // Cleanup function
     return () => {
-      // Clear any pending scroll timers
-      if (scrollTimer.current) {
-        clearTimeout(scrollTimer.current);
-        scrollTimer.current = null;
-      }
-      
-      // Restore body styles and scroll position
-      document.body.classList.remove('preview-open', 'scroll-locked');
-      document.body.style.removeProperty('--scroll-y');
+      clearTimeout(timer);
+      // Restore body styles
+      document.body.classList.remove('preview-open');
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
+      document.body.style.right = '';
+      document.body.style.width = '';
+      document.body.style.overflow = '';
+      // Restore scroll position
       window.scrollTo(0, scrollY.current);
     };
-  }, [isOpen, scrollToSection]);
+  }, [isOpen]);
+  
+  if (!isOpen) return null;
 
-  // Memoize expensive calculations
-  const averageRating = useMemo(
-    () => calculateAverageRating(profileData.reviews || []),
-    [profileData.reviews]
-  );
-
-  const { online: onlineServices, inPerson: inPersonServices } = useMemo(
-    () => groupServicesByType(profileData.services || []),
-    [profileData.services]
-  );
-
-  const recentExperiences = useMemo(
-    () => getRecentExperiences(profileData.experience || []),
-    [profileData.experience]
-  );
-
-  // Handle backdrop click to close modal
-  const handleBackdropClick = useCallback((e: React.MouseEvent) => {
+  const handleBackdropClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
       onClose();
     }
-  }, [onClose]);
-
-  if (!isOpen) return null;
+  };
 
   return createPortal((
     <div className="fixed inset-0 z-[9999] bg-[#0F0F0F] flex flex-col h-screen w-screen overflow-hidden">
@@ -247,95 +505,30 @@ const ProfilePreview = memo(({
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <div className="relative">
-              <button
-                onClick={async () => {
-                  try {
-                    const shareData = {
-                      title: `${profileData.name}'s Profile`,
-                      text: `Check out ${profileData.name}'s profile on DoodLance`,
-                      url: typeof window !== 'undefined' ? window.location.href : ''
-                    };
-
-                    // Try Web Share API first
-                    if (navigator.share) {
-                      await navigator.share(shareData);
-                      return;
-                    }
-
-                    // Fallback to clipboard
-                    if (navigator.clipboard && shareData.url) {
-                      await navigator.clipboard.writeText(shareData.url);
-                      // Show feedback
-                      const button = document.getElementById('share-button');
-                      if (button) {
-                        button.setAttribute('data-copied', 'true');
-                        setTimeout(() => {
-                          button.setAttribute('data-copied', 'false');
-                        }, 2000);
-                      }
-                      return;
-                    }
-
-                    // Fallback for browsers that don't support either API
-                      const input = document.createElement('input');
-                      input.value = shareData.url;
-                      document.body.appendChild(input);
-                      input.select();
-                      document.execCommand('copy');
-                      document.body.removeChild(input);
-                      
-                      // Show feedback
-                      const button = document.getElementById('share-button');
-                      if (button) {
-                        button.setAttribute('data-copied', 'true');
-                        setTimeout(() => {
-                          button.setAttribute('data-copied', 'false');
-                        }, 2000);
-                      }
-                  } catch (error) {
-                    console.error('Error sharing profile:', error);
-                    // Optionally show an error message to the user
+            <button
+              onClick={() => {
+                try {
+                  const shareData = {
+                    title: 'Profile Preview',
+                    text: 'Check out this profile preview',
+                    url: typeof window !== 'undefined' ? window.location.href : ''
+                  };
+                  if (navigator.share) {
+                    navigator.share(shareData).catch(() => {});
+                  } else if (navigator.clipboard && shareData.url) {
+                    navigator.clipboard.writeText(shareData.url).then(() => {
+                      // Optional: show lightweight feedback; keeping silent per minimal change
+                    }).catch(() => {});
                   }
-                }}
-                id="share-button"
-                aria-label="Share profile preview"
-                className="group relative inline-flex items-center text-sm text-purple-400 hover:text-purple-300 transition-colors duration-200"
-                data-copied="false"
-              >
-                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/10 group-hover:bg-white/10 transition-colors duration-200">
-                  <Share2 className="h-4 w-4" />
-                </div>
-                <span className="share-tooltip">Share Profile</span>
-              </button>
-              <style jsx>{`
-                .share-tooltip {
-                  position: absolute;
-                  top: -30px;
-                  left: 50%;
-                  transform: translateX(-50%);
-                  background: var(--card-background);
-                  color: var(--foreground);
-                  padding: 4px 8px;
-                  border-radius: 4px;
-                  font-size: 12px;
-                  white-space: nowrap;
-                  opacity: 0;
-                  pointer-events: none;
-                  transition: opacity 0.2s;
-                  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-                }
-                button:hover .share-tooltip {
-                  opacity: 1;
-                }
-                button[data-copied="true"] .share-tooltip::after {
-                  content: '✓ Copied!';
-                }
-                button[data-copied="false"] .share-tooltip::after {
-                  content: 'Share Profile';
-                }
-              `}</style>
-            </div>
+                } catch {}
+              }}
+              aria-label="Share profile preview"
+              className="inline-flex items-center text-sm text-purple-400 hover:text-purple-300 transition-colors duration-200"
+            >
+              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors duration-200">
+                <Share2 className="h-4 w-4" />
+              </div>
+            </button>
             <button 
               onClick={onClose}
               aria-label="Close preview"
@@ -359,13 +552,68 @@ const ProfilePreview = memo(({
         </section>
         
         <div className="w-full max-w-4xl mx-auto">
+          {/* Optimized Sticky Navigation with Smooth Transitions */}
+          <div className="sticky top-0 z-50 w-full bg-[#0f0f0f] border-b border-white/10 backdrop-blur-sm">
+            <div className="relative">
+              {/* Left gradient overlay */}
+              <div className="absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-[#0f0f0f] to-transparent z-10 pointer-events-none"></div>
+              
+              {/* Right gradient overlay */}
+              <div className="absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-[#0f0f0f] to-transparent z-10 pointer-events-none"></div>
+              
+              {/* Navigation container with horizontal scroll */}
+              <div 
+                ref={navContainerRef}
+                className="relative w-full overflow-x-auto scrollbar-hide"
+                style={{
+                  scrollBehavior: 'smooth',
+                  WebkitOverflowScrolling: 'touch',
+                  scrollSnapType: 'x mandatory',
+                  scrollPadding: '0 1.5rem'
+                }}
+              >
+                <nav className="relative">
+                  <div className="flex items-center px-6">
+                    <ul className="flex space-x-6 py-1.5 pr-6">
+                    {navTabs.map((tab) => {
+                      const isActive = activeSection === tab.id;
+                      return (
+                        <li key={tab.id} className="flex-shrink-0 snap-start">
+                          <a
+                            id={`nav-${tab.id}`}
+                            href={`#${tab.id}`}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handleTabClick(tab.id);
+                            }}
+                            className={`relative block py-2 text-xs font-medium transition-colors duration-200 whitespace-nowrap ${
+                              isActive ? 'text-white' : 'text-white/60 hover:text-white/90'
+                            }`}
+                          >
+                            {tab.label}
+                            <span 
+                              className={`absolute bottom-0 left-1 right-1 h-[2px] rounded-full transition-all duration-200 ${
+                                isActive ? 'bg-white scale-100' : 'scale-0'
+                              }`}
+                            />
+                          </a>
+                        </li>
+                      );
+                    })}
+                    </ul>
+                  </div>
+                </nav>
+              </div>
+            </div>
+          </div>
+          
           {/* Main Content */}
           <div className="px-6 pb-8">
             <div className="space-y-8">
             {/* About Section */}
             <section id="about" data-section="about" className="scroll-mt-20 pt-8">
               <h2 className="text-xl font-semibold text-white mb-4">About Me</h2>
-              <p className="text-white/80 mb-6 whitespace-pre-line">{profileData.about}</p>
+              <p className="text-white/80 mb-6">{profileData.about}</p>
               
               <div className="flex items-center gap-6 mb-6 text-sm">
                 <div className="flex items-center gap-2">
@@ -500,8 +748,25 @@ const ProfilePreview = memo(({
                 </div>
               </div>
               <button 
-                onClick={handleViewAllServices}
-                className="w-full mt-4 py-3 px-4 border border-white/30 hover:bg-white/5 transition-colors text-sm font-medium flex items-center justify-center gap-2 text-white rounded-[6px]"
+                onClick={() => {
+                  // Create a URL with the modal state and section hash
+                  const url = new URL(window.location.href);
+                  url.hash = '#services';
+                  const currentUrl = url.toString();
+                  
+                  console.log('Storing return URL for services:', currentUrl);
+                  sessionStorage.setItem('returnToProfilePreview', currentUrl);
+                  
+                  // Store services data in session storage
+                  sessionStorage.setItem('servicesPreviewData', JSON.stringify(profileData.services));
+                  sessionStorage.setItem('freelancerName', profileData.name);
+                  
+                  // Navigate to services page with preview flag
+                  console.log('Navigating to services page');
+                  window.location.href = `/services#fromPreview`;
+                }}
+                className="w-full mt-4 py-3 px-4 border border-white/30 hover:bg-white/5 transition-colors text-sm font-medium flex items-center justify-center gap-2 text-white" 
+                style={{ borderRadius: '6px' }}
               >
                 View All {profileData.services.length} Services
                 <ArrowRight className="h-4 w-4" />
@@ -578,7 +843,8 @@ const ProfilePreview = memo(({
                   </div>
                   <button 
                     onClick={handleViewAllPortfolio}
-                    className="w-full mt-2 py-2.5 px-4 border border-white/30 hover:bg-white/5 transition-colors text-sm font-medium flex items-center justify-center gap-2 text-white rounded-[6px]"
+                    className="w-full mt-2 py-2.5 px-4 border border-white/30 hover:bg-white/5 transition-colors text-sm font-medium flex items-center justify-center gap-2 text-white" 
+                    style={{ borderRadius: '6px' }}
                   >
                     View All {profileData.portfolio.length} Portfolio Items
                     <ArrowRight className="h-4 w-4" />
@@ -598,6 +864,9 @@ const ProfilePreview = memo(({
               id="experience" 
               data-section="experience"
               className="pt-8 scroll-mt-20 relative group"
+              ref={(el: HTMLElement | null) => {
+                if (el) sectionsRef.current.experience = el;
+              }}
             >
               <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
               <div className="mb-6">
@@ -718,7 +987,8 @@ const ProfilePreview = memo(({
                   </div>
                   <button 
                     onClick={handleViewAllReviews}
-                    className="w-full mt-3 py-2.5 px-4 border border-white/30 hover:bg-white/5 transition-colors text-sm font-medium flex items-center justify-center gap-2 text-white rounded-[6px]"
+                    className="w-full mt-3 py-2.5 px-4 border border-white/30 hover:bg-white/5 transition-colors text-sm font-medium flex items-center justify-center gap-2 text-white" 
+                    style={{ borderRadius: '6px' }}
                   >
                     View All {profileData.reviews.length} Reviews
                     <ArrowRight className="h-4 w-4" />
@@ -738,14 +1008,4 @@ const ProfilePreview = memo(({
       </div>
     </div>
   ), document.body);
-}, (prevProps, nextProps) => {
-  // Only re-render if isOpen or profileData changes
-  return (
-    prevProps.isOpen === nextProps.isOpen &&
-    prevProps.profileData === nextProps.profileData
-  );
-});
-
-ProfilePreview.displayName = 'ProfilePreview';
-
-export default ProfilePreview;
+}

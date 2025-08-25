@@ -23,6 +23,20 @@ export default function PortfolioPage() {
   const [freelancerName, setFreelancerName] = useState('My');
   const [returnUrl, setReturnUrl] = useState('');
 
+  // Hide header and navbar for this page
+  useEffect(() => {
+    const header = document.querySelector('header');
+    const navbar = document.querySelector('nav');
+    
+    if (header) header.style.display = 'none';
+    if (navbar) navbar.style.display = 'none';
+    
+    return () => {
+      if (header) header.style.display = '';
+      if (navbar) navbar.style.display = '';
+    };
+  }, []);
+
   // Portfolio data is now always in sync with profileData.ts
 // No need to fetch from sessionStorage or URL params
 /*useEffect(() => {
@@ -80,8 +94,23 @@ export default function PortfolioPage() {
   }, [searchParams]);*/
 
   const handleBack = () => {
-    // Navigate directly to the main profile page
-    window.location.href = '/freelancer/profile';
+    if (typeof window !== 'undefined') {
+      // Store a flag to indicate we want to scroll to portfolio
+      sessionStorage.setItem('scrollToPortfolio', 'true');
+      
+      // Check if we have a return URL from the profile preview
+      const returnUrl = sessionStorage.getItem('returnToProfilePreview');
+      
+      if (returnUrl) {
+        // Navigate back to the exact URL that was stored when opening portfolio
+        window.location.href = returnUrl;
+      } else {
+        // Fallback to history back if no return URL is found
+        window.history.back();
+      }
+    } else {
+      router.back();
+    }
   };
 
   return (

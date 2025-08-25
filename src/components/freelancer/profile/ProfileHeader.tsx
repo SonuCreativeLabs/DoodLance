@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, ChangeEvent } from 'react';
-import { ProfilePreview } from './ProfilePreview';
+import ProfilePreview from './ProfilePreview';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
