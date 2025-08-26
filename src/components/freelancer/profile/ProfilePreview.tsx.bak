@@ -1,69 +1,138 @@
 'use client';
 
-import { useRef, useEffect, useCallback, useMemo, memo, useState } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
+import { X, ArrowLeft, ArrowRight, Star, MessageSquare, Share2, Bookmark, MoreHorizontal } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { Progress } from '@/components/ui/progress';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
-  Share2, 
-  X, 
-  Check, 
-  CheckCircle,
-  ArrowRight,
-  MessageSquare,
-  MessageCircle,
-  Award, 
-  Briefcase, 
-  MapPin, 
-  Calendar, 
-  Star,
-  User
-} from 'lucide-react';
-
-// Local Components
-import { ProfileHeader } from './ProfileHeader';
-
-// Types
-import type { 
-  ProfileData, 
-  ProfilePreviewProps as Props
-} from '@/types/freelancer/profile';
-
-// Utils
-import { 
-  formatDate, 
   calculateAverageRating, 
-  groupServicesByType, 
-  formatExperienceDuration, 
-  getRecentExperiences,
-  getAvailabilityText
+  formatPrice, 
+  getInitials, 
+  formatDate, 
+  getTimeAgo,
+  getSkillLevel,
+  getAvailabilityStatus
 } from '@/utils/profileUtils';
 
+type TabId = 'top' | 'about' | 'services' | 'portfolio' | 'experience' | 'reviews';
+
+interface TabType {
+  id: TabId;
+  label: string;
+}
+
+interface ProfileData {
+  name: string;
+  title: string;
+  avatar: string;
+  rating: number;
+  reviews: any[];
+  services: any[];
+  portfolio: any[];
+  experience: any[];
+  skills: any[];
+  location: string;
+  languages: string[];
+  availability: string;
+  responseTime: string;
+  about: string;
+  education: any[];
+  certifications: any[];
+  [key: string]: any;
+}
+
 // Memoized component to prevent unnecessary re-renders
-const ProfilePreview = memo(({ 
-  isOpen = false, 
-  onClose = () => {}, 
+interface ProfilePreviewProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+  profileData: ProfileData;
+}
+
+export default ProfilePreview;
+
+const ProfilePreview: React.FC<ProfilePreviewProps> = ({ 
+  isOpen: isOpenProp = false, 
+  onClose: onCloseProp = () => {}, 
   profileData 
-}: Partial<Props> & { profileData: ProfileData }) => {
+}) => {
+  const [isOpen, setIsOpen] = useState(isOpenProp);
+  const onClose = useCallback(() => {
+    setIsOpen(false);
+    onCloseProp();
+  }, [onCloseProp]);
   // Refs
-  const scrollY = useRef(0);
-  const scrollTimer = useRef<number | null>(null);
+  const scrollY = useRef<number>(0);
+  const scrollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const tabsContainerRef = useRef<HTMLDivElement>(null);
-  const activeTabRef = useRef('top');
-  const isScrollingRef = useRef(false);
-  const [activeTab, setActiveTab] = useState('top');
+  const activeTabRef = useRef<string>('top');
+  const isScrollingRef = useRef<boolean>(false);
+  const [activeTab, setActiveTab] = useState<string>('top');
   
   // Define tabs with their corresponding section IDs
-  const tabs = [
+  const tabs = useMemo(() => [
     { id: 'top', label: 'Profile' },
     { id: 'about', label: 'About' },
     { id: 'services', label: 'Services' },
     { id: 'portfolio', label: 'Portfolio' },
     { id: 'experience', label: 'Experience' },
     { id: 'reviews', label: 'Reviews' }
-  ] as const;
-  
+  ] as const, []);
+
+  // Observer options for intersection observer
+  const observerOptions = useMemo(() => ({
+    root: null,
+    rootMargin: '-20% 0px -60% 0px',
+    threshold: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+  }), []);
+
+  // Handle intersection observer callback
+  const handleIntersect = useCallback((entries: IntersectionObserverEntry[]) => {
+    if (isScrollingRef.current) return;
+
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const sectionId = entry.target.getAttribute('id') || entry.target.getAttribute('data-section');
+        if (sectionId && sectionId !== activeTabRef.current) {
+          setActiveTab(sectionId);
+          activeTabRef.current = sectionId;
+        }
+      }
+    });
+  }, []);
+
+  // Set up intersection observer
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    const observer = new IntersectionObserver(handleIntersect, observerOptions);
+    
+    // Observe all section elements
+    const sectionElements = tabs
+      .map(tab => document.getElementById(tab.id))
+      .filter((el): el is HTMLElement => el !== null);
+    
+    sectionElements.forEach(section => observer.observe(section));
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [tabs, handleIntersect, observerOptions]);
+
+  // Handle modal state changes
+  useEffect(() => {
+    setIsOpen(isOpenProp);
+  }, [isOpenProp]);
+
   type TabId = typeof tabs[number]['id'];
   
-  const scrollToSection = useCallback((sectionId: string, behavior: ScrollBehavior = 'smooth', retryCount = 1, delayMs = 100) => {
+  const scrollToSection = useCallback((sectionId: string, behavior: ScrollBehavior = 'smooth', retryCount: number = 1, delayMs: number = 100): void => {
     if (typeof window === 'undefined') return;
     
     const scroll = (attempt = 0): boolean => {
@@ -91,7 +160,7 @@ const ProfilePreview = memo(({
   }, []);
   
   // Handle tab click with special case for 'top' section
-  const handleTabClick = useCallback((tabId: string, e: React.MouseEvent) => {
+  const handleTabClick = useCallback((tabId: string, e: React.MouseEvent<HTMLAnchorElement>): void => {
     e.preventDefault();
     e.stopPropagation(); // Prevent event bubbling
     console.log('Tab clicked:', tabId);
@@ -146,19 +215,27 @@ const ProfilePreview = memo(({
     
     // Special handling for portfolio section
     if (tabId === 'portfolio') {
-      const portfolioSection = document.querySelector('[data-section="portfolio"]');
+      // Try both id and data-section attributes for better compatibility
+      const portfolioSection = document.getElementById('portfolio') || 
+                             document.querySelector('[data-section="portfolio"]');
       if (portfolioSection) {
         console.log('Scrolling to portfolio section');
+        isScrollingRef.current = true;
+        setActiveTab('portfolio');
+        activeTabRef.current = 'portfolio';
+        
         portfolioSection.scrollIntoView({ 
           behavior: 'smooth', 
           block: 'start' 
         });
+        
         // Update URL hash without causing a scroll
         if (history.pushState) {
           history.pushState(null, '', '#portfolio');
         } else {
           window.location.hash = '#portfolio';
         }
+        
         // Reset scroll flag after a delay
         setTimeout(() => {
           isScrollingRef.current = false;
@@ -330,211 +407,19 @@ const ProfilePreview = memo(({
     sessionStorage.setItem('servicesPreviewData', JSON.stringify(profileData.services));
     sessionStorage.setItem('freelancerName', profileData.name);
     
-    // Navigate to services page with preview flag
-    window.location.href = `/services#fromPreview`;
-  };
-
-  // Handle active tab update using Intersection Observer
+    // Set up intersection observer
   useEffect(() => {
-    if (!isOpen) return;
+    if (typeof window === 'undefined') return;
+  // Store current scroll position
+  scrollY.current = window.scrollY || document.documentElement.scrollTop;
+  
+  // Lock body scroll using CSS classes
+  document.body.classList.add('preview-open', 'scroll-locked');
+  document.body.style.setProperty('--scroll-y', `-${scrollY.current}px`);
 
-    const observerOptions = {
-      root: null, // viewport
-      rootMargin: '-80px 0px -50% 0px', // Adjusted margins for better section detection
-      threshold: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0] // Multiple thresholds for better precision
-    };
-
-    let lastScrollTime = 0;
-    const scrollDebounceTime = 30; // Even faster response time
-
-    const handleIntersect = (entries: IntersectionObserverEntry[]) => {
-      if (isScrollingRef.current) return;
-      
-      const now = Date.now();
-      if (now - lastScrollTime < scrollDebounceTime) return;
-      lastScrollTime = now;
-
-      // Calculate which section is most visible in the viewport
-      let mostVisibleSection = null;
-      let maxVisibility = -1;
-      const viewportHeight = window.innerHeight;
-      const viewportMiddle = viewportHeight / 2;
-      
-      // First pass: find sections that intersect with the viewport
-      const visibleSections = entries.filter(entry => entry.isIntersecting);
-      
-      if (visibleSections.length > 0) {
-        // Find the section with the most area in the viewport
-        visibleSections.forEach(entry => {
-          const rect = entry.boundingClientRect;
-          // Calculate visible height with more weight to sections near the viewport center
-          const visibleTop = Math.max(rect.top, 0);
-          const visibleBottom = Math.min(rect.bottom, viewportHeight);
-          const visibleHeight = Math.max(0, visibleBottom - visibleTop);
-          
-          // Calculate distance from viewport center (closer to center = higher weight)
-          const sectionCenter = (rect.top + rect.bottom) / 2;
-          const distanceFromCenter = Math.abs(sectionCenter - viewportMiddle);
-          const centerWeight = 1 - (distanceFromCenter / viewportMiddle);
-          
-          // Combine visibility ratio with center weight
-          const visibilityRatio = (visibleHeight / viewportHeight) * (0.7 + 0.3 * centerWeight);
-          
-          if (visibilityRatio > maxVisibility) {
-            maxVisibility = visibilityRatio;
-            mostVisibleSection = entry.target.id || entry.target.getAttribute('data-section');
-          }
-        });
-      } else {
-        // Fallback: find the section closest to the viewport
-        let minDistance = Infinity;
-        entries.forEach(entry => {
-          const rect = entry.boundingClientRect;
-          const distance = Math.abs(rect.top + rect.height/2 - viewportMiddle);
-          if (distance < minDistance) {
-            minDistance = distance;
-            mostVisibleSection = entry.target.id;
-          }
-        });
-      }
-
-      // Update active tab if changed and not currently scrolling from a tab click
-      if (mostVisibleSection && 
-          mostVisibleSection !== activeTabRef.current && 
-          !isScrollingRef.current) {
-        updateActiveTab(mostVisibleSection);
-      }
-    };
-
-    const updateActiveTab = (sectionId: string) => {
-      setActiveTab(sectionId);
-      activeTabRef.current = sectionId;
-      
-      const tabElement = document.querySelector(`[data-tab-id="${sectionId}"]`) as HTMLElement;
-      const tabsContainer = tabsContainerRef.current;
-      
-      if (tabElement && tabsContainer) {
-        const tabRect = tabElement.getBoundingClientRect();
-        const containerRect = tabsContainer.getBoundingClientRect();
-        const containerWidth = containerRect.width;
-        
-        // Calculate scroll position to center the tab with padding
-        const scrollTo = Math.max(
-          0, // Don't scroll past the start
-          Math.min(
-            tabElement.offsetLeft - (containerWidth / 2) + (tabRect.width / 2),
-            tabsContainer.scrollWidth - containerWidth // Don't scroll past the end
-          )
-        );
-        
-        // Only scroll if tab is not fully visible or we're at the edges
-        if (tabRect.left < containerRect.left || tabRect.right > containerRect.right) {
-          isScrollingRef.current = true;
-          tabsContainer.scrollTo({
-            left: scrollTo,
-            behavior: 'smooth'
-          });
-          
-          // Re-enable scroll events after animation
-          setTimeout(() => {
-            isScrollingRef.current = false;
-          }, 300);
-        }
-      }
-    };
-
-    const observer = new IntersectionObserver(handleIntersect, observerOptions);
-    
-    // Observe all section elements
-    const sectionElements = tabs
-      .map(tab => document.getElementById(tab.id))
-      .filter(Boolean) as HTMLElement[];
-    
-    sectionElements.forEach(section => observer.observe(section));
-
-    // Initial check for all sections
-    if (sectionElements.length > 0) {
-      // Use requestAnimationFrame to ensure DOM is ready
-      requestAnimationFrame(() => {
-        const entries = sectionElements.map(section => {
-          const rect = section.getBoundingClientRect();
-          const isInView = rect.top < window.innerHeight && rect.bottom > 0;
-          return {
-            target: section,
-            isIntersecting: isInView,
-            intersectionRatio: isInView ? 1 : 0,
-            boundingClientRect: rect,
-            intersectionRect: isInView ? rect : {} as DOMRectReadOnly,
-            rootBounds: document.documentElement.getBoundingClientRect(),
-            time: performance.now()
-          } as unknown as IntersectionObserverEntry;
-        });
-        
-        // Process initial visibility
-        handleIntersect(entries);
-        
-        // Force update after a short delay to catch any missed updates
-        setTimeout(() => {
-          const updatedEntries = sectionElements.map(section => {
-            const rect = section.getBoundingClientRect();
-            return {
-              target: section,
-              isIntersecting: rect.top < window.innerHeight && rect.bottom > 0,
-              boundingClientRect: rect,
-              time: performance.now()
-            } as unknown as IntersectionObserverEntry;
-          });
-          handleIntersect(updatedEntries);
-        }, 100);
-      });
-    }
-
-    return () => {
-      observer.disconnect();
-    };
-  }, [isOpen, tabs]);
-
-  // Handle scroll behavior when modal opens
-  useEffect(() => {
-    if (!isOpen) return;
-    
-    // Store current scroll position
-    scrollY.current = window.scrollY || document.documentElement.scrollTop;
-    
-    // Lock body scroll using CSS classes
-    document.body.classList.add('preview-open', 'scroll-locked');
-    document.body.style.setProperty('--scroll-y', `-${scrollY.current}px`);
-    
-    // Get the last visited section from session storage
-    const lastVisitedSection = sessionStorage.getItem('lastVisitedSection');
-    const isFromPreview = window.location.hash === '#fromPreview';
-    
-    // Scroll to the appropriate section
-    requestAnimationFrame(() => {
-      const scrollContainer = document.querySelector('.overflow-y-auto') as HTMLElement;
-      
-      // Check for explicit hash first
-      if (window.location.hash && window.location.hash !== '#fromPreview') {
-        const sectionId = window.location.hash.substring(1);
-        if (sectionId) {
-          scrollToSection(sectionId, 'smooth', 3);
-          return;
-        }
-      }
-    });
-    
-    // Cleanup function
-    return () => {
-      // Clear any pending scroll timers
-      if (scrollTimer.current) {
-        clearTimeout(scrollTimer.current);
-        scrollTimer.current = null;
-      }
-      
-      // Restore body styles and scroll position
-      document.body.classList.remove('preview-open', 'scroll-locked');
-      document.body.style.removeProperty('--scroll-y');
-      window.scrollTo(0, scrollY.current);
+  // Get the last visited section from session storage
+  const lastVisitedSection = sessionStorage.getItem('lastVisitedSection');
+  const isFromPreview = window.location.hash === '#fromPreview';
     };
   }, [isOpen, scrollToSection]);
 
@@ -562,11 +447,13 @@ const ProfilePreview = memo(({
   }, [onClose]);
 
   if (!isOpen) return null;
-
-  return createPortal((
-    <div className="fixed inset-0 z-[9999] bg-[#0F0F0F] flex flex-col h-screen w-screen overflow-hidden">
-      {/* Header with title and actions (Share, Close) */}
-      <div className="px-4 py-2 border-b border-white/5">
+  
+  return (
+    <ReactPortal>
+      <div className="fixed inset-0 z-[9999] bg-[#0F0F0F] flex flex-col h-screen w-screen overflow-hidden">
+        {/* Header with title and actions (Share, Close) */}
+        <div className="px-4 py-2 border-b border-white/5">
+{{ ... }}
         <div className="flex items-center justify-between">
           <div className="flex items-center">
             <div className="ml-0">
@@ -1106,14 +993,16 @@ const ProfilePreview = memo(({
       </div>
     </div>
   ), document.body);
-}, (prevProps, nextProps) => {
-  // Only re-render if isOpen or profileData changes
+};
+
+const areEqual = (prevProps: ProfilePreviewProps, nextProps: ProfilePreviewProps) => {
   return (
     prevProps.isOpen === nextProps.isOpen &&
     prevProps.profileData === nextProps.profileData
   );
-});
+};
 
-ProfilePreview.displayName = 'ProfilePreview';
+const MemoizedProfilePreview = memo(ProfilePreview, areEqual);
+MemoizedProfilePreview.displayName = 'ProfilePreview';
 
-export default ProfilePreview;
+export default MemoizedProfilePreview;

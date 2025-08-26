@@ -1,534 +1,331 @@
 'use client';
 
-import { useRef, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo, memo } from 'react';
 import { createPortal } from 'react-dom';
-import { useRouter } from 'next/navigation';
-import Image from 'next/image';
-import Link from 'next/link';
-import { useSectionObserver } from '@/hooks/useSectionObserver';
-import {
-  ArrowLeft,
-  ArrowRight,
-  Award,
-  Briefcase,
-  Calendar,
-  Check,
-  CheckCircle,
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  ChevronUp,
-  Clock,
-  ExternalLink,
-  FileText,
-  Globe,
-  LayoutGrid,
-  Link as LinkIcon,
-  Mail,
-  MapPin,
-  MessageCircle,
-  MessageSquare,
-  MoreHorizontal,
-  Paperclip,
-  Phone,
-  Plus,
-  Share2,
-  Star,
-  ThumbsUp,
+import { 
+  X,
   User,
-  X
+  Briefcase,
+  MapPin,
+  Calendar,
+  CheckCircle,
+  Star,
+  MessageCircle,
+  Award,
+  Share2,
+  MessageSquare,
+  Check,
+  ArrowRight
 } from 'lucide-react';
-
-// UI Components
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
 
 // Local Components
 import { ProfileHeader } from './ProfileHeader';
+import { Button } from '@/components/ui/button';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
-interface Experience {
+// Types
+import type { 
+  ProfileData, 
+  ProfilePreviewProps as Props
+} from '@/types/freelancer/profile';
+
+// Utils
+import { 
+  formatDate, 
+  calculateAverageRating, 
+  formatExperienceDuration, 
+  getRecentExperiences,
+  getAvailabilityText
+} from '@/utils/profileUtils';
+
+// Types
+interface TabType {
   id: string;
-  role: string;
-  company: string;
-  location: string;
-  startDate: string;
-  endDate?: string;
-  isCurrent: boolean;
-  description: string;
+  label: string;
 }
 
-interface Service {
-  id: string;
-  title: string;
-  description: string;
-  price: string;
-  type?: 'online' | 'in-person';
-  deliveryTime: string;
-  features?: string[];
-}
+// Tabs configuration
+const tabs: TabType[] = [
+  { id: 'profile', label: 'Profile' },
+  { id: 'about', label: 'About' },
+  { id: 'services', label: 'Services' },
+  { id: 'portfolio', label: 'Portfolio' },
+  { id: 'experience', label: 'Experience' },
+  { id: 'reviews', label: 'Reviews' },
+];
 
-interface PortfolioItem {
-  id: string;
-  title: string;
-  category: string;
-  image: string;
-}
-
-interface Review {
-  id: string;
-  author: string;
-  role?: string;
-  rating: number;
-  comment: string;
-  date: string;
-  isVerified?: boolean;
-}
-
-interface Availability {
-  day: string;
-  available: boolean;
-}
-
-interface ProfilePreviewProps {
-  isOpen: boolean;
-  onClose: () => void;
-  profileData: {
-    name: string;
-    title: string;
-    about: string;
-    rating: number;
-    reviewCount: number;
-    responseTime: string;
-    deliveryTime: string;
-    completionRate: number;
-    online: boolean;
-    location: string;
-    skills: string[];
-    experience: Experience[];
-    services: Service[];
-    portfolio: PortfolioItem[];
-    reviews: Review[];
-    availability: Availability[];
-
-    completedJobs?: number;
-    activeJobs?: number;
-  };
-}
-
-// Helper function to format date
-const formatDate = (dateString: string) => {
-  const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long', day: 'numeric' };
-  return new Date(dateString).toLocaleDateString(undefined, options);
-};
-
-// Helper function to get availability text
-const getAvailabilityText = (availability: Array<{day: string, available: boolean}>) => {
-  const availableDays = availability
-    .filter(day => day.available)
-    .map(day => day.day.substring(0, 3));
-  
-  if (availableDays.length === 7) return 'Available every day';
-  if (availableDays.length === 5 && 
-      !availableDays.includes('Sat') && 
-      !availableDays.includes('Sun')) {
-    return 'Available weekdays';
-  }
-  return `Available: ${availableDays.join(', ')}`;
-};
-
-export function ProfilePreview({ 
+const ProfilePreview = memo(({ 
   isOpen = false, 
   onClose = () => {}, 
   profileData 
-}: Partial<ProfilePreviewProps> & { profileData: ProfilePreviewProps['profileData'] }) {
-  // Router and refs
-  const router = useRouter();
-  const navContainerRef = useRef<HTMLDivElement>(null);
-  
-  // Use the section observer hook for scroll and tab management
-  const { activeSection, handleTabClick, isScrolling } = useSectionObserver();
-  
-  // Function to scroll active tab into view
-  const scrollToActiveTab = useCallback((sectionId: string) => {
-    if (!navContainerRef.current) return;
-    
-    const navElement = document.getElementById(`nav-${sectionId}`);
-    if (!navElement) return;
-    
-    const container = navContainerRef.current;
-    const containerRect = container.getBoundingClientRect();
-    const elementRect = navElement.getBoundingClientRect();
-    
-    const containerCenter = containerRect.left + containerRect.width / 2;
-    const elementCenter = elementRect.left + elementRect.width / 2;
-    const scrollOffset = elementCenter - containerCenter;
-    
-    const newScrollLeft = container.scrollLeft + scrollOffset;
-    container.scrollTo({ left: newScrollLeft, behavior: 'smooth' });
-  }, []);
-  
-  // Scroll active tab into view when active section changes
+}: { 
+  isOpen?: boolean;
+  onClose?: () => void;
+  profileData: ProfileData & { avatar?: string };
+}) => {
+  // State for active section and sticky header
+  const [activeSection, setActiveSection] = useState('profile');
+  const [isSticky, setIsSticky] = useState(false);
+  const headerRef = useRef<HTMLDivElement>(null);
+  const tabsRef = useRef<HTMLDivElement>(null);
+  const observerRef = useRef<IntersectionObserver | null>(null);
+
+  // Set up intersection observer for section highlighting
   useEffect(() => {
-    if (activeSection) {
-      scrollToActiveTab(activeSection);
-    }
-  }, [activeSection, scrollToActiveTab]);
-  
-  // Refs for section elements
-  const sectionsRef = useRef<{[key: string]: HTMLElement | null}>({
-    about: null,
-    services: null,
-    portfolio: null,
-    experience: null,
-    reviews: null,
-  });
-  
-  // Track section elements for observation
-  const sectionElementsRef = useRef<Element[]>([]);
-  
-  // Get all section elements with data-section attribute
-  const getAllSectionElements = useCallback((): Element[] => {
-    if (typeof document === 'undefined') return [];
-    const elements = document.querySelectorAll('[data-section]');
-    return Array.from(elements);
-  }, []);
-  
-  // Handle scroll to specific section when returning from a full page
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
+    const sections = ['profile', 'about', 'services', 'portfolio', 'experience', 'reviews'];
     
-    // Check if we need to scroll to the reviews section
-    const scrollToReviews = sessionStorage.getItem('scrollToReviews');
-    
-    // Function to scroll to the reviews section
-    const scrollToReviewsSection = () => {
-      // Clear the scroll flag
-      sessionStorage.removeItem('scrollToReviews');
-      
-      // Set a flag to indicate we're scrolling to the reviews section
-      sessionStorage.setItem('scrollToReviews', 'true');
-      
-      // Scroll to the section after a small delay to ensure the modal is fully loaded
-      const timer = setTimeout(() => {
-        const section = document.getElementById('reviews');
-        if (section) {
-          section.scrollIntoView({ behavior: 'smooth' });
-          setActiveSection('reviews');
-          scrollToActiveTab('reviews');
-        }
-      }, 100);
-      
-      return timer;
-    };
-    
-    let timer: NodeJS.Timeout | null = null;
-    
-    // Check if we need to scroll to reviews
-    if (scrollToReviews === 'true') {
-      timer = scrollToReviewsSection();
-    }
-    
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            setActiveSection(entry.target.id);
+          }
+        });
+      },
+      {
+        root: null,
+        rootMargin: '-80px 0px 0px 0px',
+        threshold: 0.1
+      }
+    );
+
+    // Observe all sections
+    sections.forEach(section => {
+      const element = document.getElementById(section);
+      if (element) {
+        observerRef.current?.observe(element);
+      }
+    });
+
     return () => {
-      if (timer) clearTimeout(timer);
+      observerRef.current?.disconnect();
     };
   }, [isOpen]);
-  
-  // Track scroll position and update active section
+
+  // Refs for scroll handling
+  const scrollTimer = useRef<NodeJS.Timeout | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Handle scroll for sticky header
   useEffect(() => {
     if (!isOpen) return;
-    
-    // Store section elements for better performance
-    const sectionElements = {
-      about: document.getElementById('about'),
-      services: document.getElementById('services'),
-      portfolio: document.getElementById('portfolio'),
-      experience: document.getElementById('experience'),
-      reviews: document.getElementById('reviews')
-    };
-    
-    // Get section IDs for scroll detection (excluding 'top')
-    const sectionIds = ['about', 'services', 'portfolio', 'experience', 'reviews'];
-    
-    // Function to scroll the active tab into view
-    const scrollActiveTabIntoView = (sectionId: string) => {
-      const navElement = document.querySelector(`a[href="#${sectionId}"]`);
-      const navContainer = navContainerRef.current;
+
+    const handleScroll = () => {
+      if (!headerRef.current) return;
       
-      if (navElement && navContainer) {
-        const navRect = navElement.getBoundingClientRect();
-        const containerRect = navContainer.getBoundingClientRect();
-        const containerWidth = containerRect.width;
-        const navLeft = navRect.left - containerRect.left;
-        const navWidth = navRect.width;
-        
-        // Calculate scroll position to center the active tab
-        const scrollLeft = navContainer.scrollLeft;
-        const targetScroll = navLeft + scrollLeft - (containerWidth / 2) + (navWidth / 2);
-        
-        // Smoothly scroll the nav container
-        navContainer.scrollTo({
-          left: targetScroll,
-          behavior: 'smooth'
-        });
+      const headerHeight = headerRef.current.offsetHeight;
+      const scrollPosition = window.scrollY;
+      
+      if (scrollPosition > headerHeight) {
+        setIsSticky(true);
+      } else {
+        setIsSticky(false);
       }
     };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
     
-    // Set initial active section to 'top' when the component mounts
-    setActiveSection('top');
-    activeSectionRef.current = 'top';
-    
-    // Get all section elements with data-section attribute
-    const sections = Array.from(document.querySelectorAll('[data-section]'));
-    
-    // Check all sections (excluding 'top' since we handled it above)
-    for (const section of sections) {
-      const rect = section.getBoundingClientRect();
-      const sectionId = section.getAttribute('data-section');
-      if (!sectionId) continue;
-    const sectionsToObserve = getAllSectionElements();
-    
-    // Observe all section elements
-    sectionsToObserve.forEach((el: Element) => {
-      currentObserver.observe(el);
-    });
-    
-    // Handle window resize for responsive adjustments
-    const handleResize = () => {
-      if (activeSectionRef.current) {
-        scrollToActiveTab(activeSectionRef.current);
-      }
-    };
-    
-    window.addEventListener('resize', handleResize);
-    
-    // Set initial active section if none is set
-    if (sectionElementsRef.current.length > 0 && !activeSectionRef.current) {
-      const firstSection = sectionElementsRef.current[0].getAttribute('data-section');
-      if (firstSection) {
-        setActiveSection(firstSection);
-        scrollToActiveTab(firstSection);
-      }
-    }
-    
-    // Clean up
     return () => {
-      window.removeEventListener('resize', handleResize);
-      
-      // Unobserve all elements
-      if (currentObserver) {
-        sectionElementsRef.current.forEach((el) => {
-          currentObserver.unobserve(el);
-        });
-        sectionElementsRef.current = [];
-      }
-      
-      // Clean up timers
+      window.removeEventListener('scroll', handleScroll);
       if (scrollTimer.current) {
-        cancelAnimationFrame(scrollTimer.current);
+        clearTimeout(scrollTimer.current);
         scrollTimer.current = null;
       }
-      
-      if (scrollEndTimer.current) {
-        clearTimeout(scrollEndTimer.current);
-        scrollEndTimer.current = null;
-      }
-      
-      // Reset scrolling flag
-      isScrolling.current = false;
     };
   }, [isOpen]);
 
-  // Use the section observer hook
-  const { activeSection, handleTabClick, isScrolling } = useSectionObserver();
-  const navContainerRef = useRef<HTMLDivElement>(null);
-    
-    // Update active section immediately
-    activeSectionRef.current = sectionId;
-    setActiveSection(sectionId);
-    isScrolling.current = true;
-    
-    // Clear any existing timeouts
-    if (scrollEndTimer.current) {
-      clearTimeout(scrollEndTimer.current);
-    }
-    
-    // Update URL hash without causing a page reload
-    if (typeof window !== 'undefined') {
-      const newUrl = new URL(window.location.href);
-      newUrl.hash = sectionId === 'top' ? '' : `#${sectionId}`;
-      window.history.replaceState({}, '', newUrl.toString());
-    }
-    
-    // Get the scrollable content container - use the modal's scroll container
-    const scrollContainer = document.querySelector('.overflow-y-auto');
-    if (!scrollContainer) return;
-    
-    // Handle top section - scroll to top of the content
-    if (sectionId === 'top') {
-      scrollContainer.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-      });
-      scrollToActiveTab(sectionId);
-      
-      scrollEndTimer.current = setTimeout(() => {
-        isScrolling.current = false;
-      }, 1000);
-      return;
-    }
-    
-    // For other sections, find the element and scroll to it
+  // Handle scroll to section
+  const scrollToSection = useCallback((sectionId: string) => {
     const element = document.getElementById(sectionId);
     if (element) {
-      // Disable any default scroll behavior
-      element.scrollIntoView = () => {};
-      
-      // Calculate the exact position relative to the scroll container
-      const headerOffset = 80; // Height of the sticky header
-      const elementRect = element.getBoundingClientRect();
-      const containerRect = scrollContainer.getBoundingClientRect();
-      
-      // Calculate the exact scroll position needed to show the element at the top of the viewport
-      const scrollPosition = element.offsetTop - headerOffset;
-      
-      // If we're already at or very close to the target position, don't scroll
-      const currentScroll = scrollContainer.scrollTop;
-      if (Math.abs(currentScroll - scrollPosition) < 5) {
-        isScrolling.current = false;
-        return;
-      }
+      const headerOffset = headerRef.current?.offsetHeight || 0;
+      const elementPosition = element.getBoundingClientRect().top + window.pageYOffset;
+      const offsetPosition = elementPosition - headerOffset;
 
-      // Smooth scroll to the calculated position
-      scrollContainer.scrollTo({
-        top: scrollPosition,
+      window.scrollTo({
+        top: offsetPosition,
         behavior: 'smooth'
       });
-      
-      // Update the active tab in the navigation
-      scrollToActiveTab(sectionId);
-      
-      // Reset scrolling flag after animation completes
-      scrollEndTimer.current = setTimeout(() => {
-        isScrolling.current = false;
-      }, 1000);
     }
-  };
-  
-  // Reset active section when modal opens
-  useEffect(() => {
-    if (isOpen) {
-      // Reset to top when modal opens
-      setActiveSection('top');
-      activeSectionRef.current = 'top';
-      
-      // Ensure the profile tab is scrolled into view
-      setTimeout(() => {
-        scrollToActiveTab('top');
-      }, 100);
-    }
-    
-    return () => {
-      // Cleanup function
-    };
-  }, [isOpen]);
-  
-  // Handle body scroll lock when modal is open
-  // Store scroll position in a ref to persist between renders
-  const scrollY = useRef(0);
+  }, []);
 
+  // Set up intersection observer for active section detection
   useEffect(() => {
     if (!isOpen) return;
-    
-    // Store current scroll position
-    scrollY.current = window.scrollY || document.documentElement.scrollTop;
-    
-    // Set initial active section after a small delay to ensure DOM is ready
-    const timer = setTimeout(() => {
-      setActiveSection('top');
-      activeSectionRef.current = 'top';
-      // Force scroll to top to ensure we're at the start
-      const scrollContainer = document.querySelector('.overflow-y-auto');
-      if (scrollContainer) {
-        scrollContainer.scrollTo({ top: 0, behavior: 'auto' });
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && entry.intersectionRatio > 0.5) {
+            setActiveSection(entry.target.id);
+          }
+        });
+      },
+      {
+        root: null,
+        rootMargin: '0px',
+        threshold: 0.5,
       }
-      scrollToActiveTab('top');
-    }, 100);
-    
-    // Add a class to the body to handle the lock
-    document.body.classList.add('preview-open');
-    
-    // Apply styles directly to prevent scrolling
-    document.body.style.position = 'fixed';
-    document.body.style.top = `-${scrollY.current}px`;
-    document.body.style.left = '0';
-    document.body.style.right = '0';
-    document.body.style.width = '100%';
-    document.body.style.overflow = 'hidden';
-    
-    // Cleanup function
+    );
+
+    // Observe all sections
+    const sections = document.querySelectorAll('section[id]');
+    sections.forEach((section) => observer.observe(section));
+
     return () => {
-      clearTimeout(timer);
-      // Restore body styles
-      document.body.classList.remove('preview-open');
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.left = '';
-      document.body.style.right = '';
-      document.body.style.width = '';
-      document.body.style.overflow = '';
-      // Restore scroll position
-      window.scrollTo(0, scrollY.current);
+      sections.forEach((section) => observer.unobserve(section));
+      observer.disconnect();
     };
   }, [isOpen]);
-  
-  if (!isOpen) return null;
 
-  const handleBackdropClick = (e: React.MouseEvent) => {
+  // Memoize expensive calculations
+  const averageRating = useMemo(
+    () => profileData.reviews?.reduce((acc, review) => acc + review.rating, 0) / (profileData.reviews?.length || 1) || 0,
+    [profileData.reviews]
+  );
+
+  // Group services by type with proper typing
+  const groupedServices = useMemo(() => {
+    const groups: { online: typeof profileData.services; inPerson: typeof profileData.services } = { 
+      online: [], 
+      inPerson: [] 
+    };
+    
+    profileData.services?.forEach(service => {
+      if (service.type === 'online') {
+        groups.online?.push(service);
+      } else {
+        groups.inPerson?.push(service);
+      }
+    });
+    return groups;
+  }, [profileData.services]);
+  
+  const { online: onlineServices, inPerson: inPersonServices } = groupedServices;
+
+  const recentExperiences = useMemo(
+    () => getRecentExperiences(profileData.experience || []),
+    [profileData.experience]
+  );
+
+  // Handle backdrop click to close modal
+  const handleBackdropClick = useCallback((e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
       onClose();
     }
-  };
+  }, [onClose]);
+
+  if (!isOpen) return null;
+
+  const handleNavClick = useCallback((section: string) => {
+    setActiveSection(section);
+    document.getElementById(section)?.scrollIntoView({ behavior: 'smooth' });
+  }, []);
+
+  if (!isOpen) return null;
 
   return createPortal((
-    <div className="fixed inset-0 z-[9999] bg-[#0F0F0F] flex flex-col h-screen w-screen overflow-hidden">
-      {/* Header with title and actions (Share, Close) */}
-      <div className="px-4 py-2 border-b border-white/5">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center">
-            <div className="ml-0">
-              <h1 className="text-lg font-semibold text-white">Profile Preview</h1>
-              <p className="text-white/50 text-xs">Preview how your profile appears to others</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => {
-                try {
-                  const shareData = {
-                    title: 'Profile Preview',
-                    text: 'Check out this profile preview',
-                    url: typeof window !== 'undefined' ? window.location.href : ''
-                  };
-                  if (navigator.share) {
-                    navigator.share(shareData).catch(() => {});
-                  } else if (navigator.clipboard && shareData.url) {
-                    navigator.clipboard.writeText(shareData.url).then(() => {
-                      // Optional: show lightweight feedback; keeping silent per minimal change
-                    }).catch(() => {});
-                  }
-                } catch {}
-              }}
-              aria-label="Share profile preview"
-              className="inline-flex items-center text-sm text-purple-400 hover:text-purple-300 transition-colors duration-200"
-            >
-              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors duration-200">
-                <Share2 className="h-4 w-4" />
+    <div className="fixed inset-0 z-[9999] bg-[#0F0F0F] flex flex-col h-screen w-screen" onClick={handleBackdropClick} role="dialog" aria-modal="true">
+      {/* Fixed Header */}
+      <div className="flex-none z-30 bg-[#0F0F0F] border-b border-white/5">
+        <div className="px-4 py-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <div className="ml-0">
+                <h1 className="text-lg font-semibold text-white">Profile Preview</h1>
+                <p className="text-white/50 text-xs">Preview how your profile appears to others</p>
               </div>
-            </button>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="relative">
+                <button
+                  onClick={async () => {
+                    try {
+                      const shareData = {
+                        title: `${profileData.name}'s Profile`,
+                        text: `Check out ${profileData.name}'s profile on DoodLance`,
+                        url: typeof window !== 'undefined' ? window.location.href : ''
+                      };
+
+                      // Try Web Share API first
+                      if (navigator.share) {
+                        await navigator.share(shareData);
+                        return;
+                      }
+
+                    // Fallback to clipboard
+                    if (navigator.clipboard && shareData.url) {
+                      await navigator.clipboard.writeText(shareData.url);
+                      // Show feedback
+                      const button = document.getElementById('share-button');
+                      if (button) {
+                        button.setAttribute('data-copied', 'true');
+                        setTimeout(() => {
+                          button.setAttribute('data-copied', 'false');
+                        }, 2000);
+                      }
+                      return;
+                    }
+
+                    // Fallback for browsers that don't support either API
+                      const input = document.createElement('input');
+                      input.value = shareData.url;
+                      document.body.appendChild(input);
+                      input.select();
+                      document.execCommand('copy');
+                      document.body.removeChild(input);
+                      
+                      // Show feedback
+                      const button = document.getElementById('share-button');
+                      if (button) {
+                        button.setAttribute('data-copied', 'true');
+                        setTimeout(() => {
+                          button.setAttribute('data-copied', 'false');
+                        }, 2000);
+                      }
+                  } catch (error) {
+                    console.error('Error sharing profile:', error);
+                    // Optionally show an error message to the user
+                  }
+                }}
+                id="share-button"
+                aria-label="Share profile preview"
+                className="group relative inline-flex items-center text-sm text-purple-400 hover:text-purple-300 transition-colors duration-200"
+                data-copied="false"
+              >
+                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/10 group-hover:bg-white/10 transition-colors duration-200">
+                  <Share2 className="h-4 w-4" />
+                </div>
+                <span className="share-tooltip">Share Profile</span>
+              </button>
+              <style jsx>{`
+                .share-tooltip {
+                  position: absolute;
+                  top: -30px;
+                  left: 50%;
+                  transform: translateX(-50%);
+                  background: var(--card-background);
+                  color: var(--foreground);
+                  padding: 4px 8px;
+                  border-radius: 4px;
+                  font-size: 12px;
+                  white-space: nowrap;
+                  opacity: 0;
+                  pointer-events: none;
+                  transition: opacity 0.2s;
+                  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+                }
+                button:hover .share-tooltip {
+                  opacity: 1;
+                }
+                button[data-copied="true"] .share-tooltip::after {
+                  content: '✓ Copied!';
+                }
+                button[data-copied="false"] .share-tooltip::after {
+                  content: 'Share Profile';
+                }
+              `}</style>
+            </div>
             <button 
               onClick={onClose}
               aria-label="Close preview"
@@ -544,76 +341,61 @@ export function ProfilePreview({
 
       {/* Scrollable Content */}
       <div className="flex-1 overflow-y-auto">
-        {/* Profile Section */}
-        <section id="top" className="scroll-mt-20">
-          <div className="w-full bg-[#0f0f0f]">
-            <ProfileHeader {...profileData} isPreview={true} />
-          </div>
-        </section>
-        
-        <div className="w-full max-w-4xl mx-auto">
-          {/* Optimized Sticky Navigation with Smooth Transitions */}
-          <div className="sticky top-0 z-50 w-full bg-[#0f0f0f] border-b border-white/10 backdrop-blur-sm">
-            <div className="relative">
-              {/* Left gradient overlay */}
-              <div className="absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-[#0f0f0f] to-transparent z-10 pointer-events-none"></div>
-              
-              {/* Right gradient overlay */}
-              <div className="absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-[#0f0f0f] to-transparent z-10 pointer-events-none"></div>
-              
-              {/* Navigation container with horizontal scroll */}
-              <div 
-                ref={navContainerRef}
-                className="relative w-full overflow-x-auto scrollbar-hide"
-                style={{
-                  scrollBehavior: 'smooth',
-                  WebkitOverflowScrolling: 'touch',
-                  scrollSnapType: 'x mandatory',
-                  scrollPadding: '0 1.5rem'
-                }}
-              >
-                <nav className="relative">
-                  <div className="flex items-center px-6">
-                    <ul className="flex space-x-6 py-1.5 pr-6">
-                    {navTabs.map((tab) => {
-                      const isActive = activeSection === tab.id;
-                      return (
-                        <li key={tab.id} className="flex-shrink-0 snap-start">
-                          <a
-                            id={`nav-${tab.id}`}
-                            href={`#${tab.id}`}
-                            onClick={(e) => {
-                              e.preventDefault();
-                              handleTabClick(tab.id);
-                            }}
-                            className={`relative block py-2 text-xs font-medium transition-colors duration-200 whitespace-nowrap ${
-                              isActive ? 'text-white' : 'text-white/60 hover:text-white/90'
-                            }`}
-                          >
-                            {tab.label}
-                            <span 
-                              className={`absolute bottom-0 left-1 right-1 h-[2px] rounded-full transition-all duration-200 ${
-                                isActive ? 'bg-white scale-100' : 'scale-0'
-                              }`}
-                            />
-                          </a>
-                        </li>
-                      );
-                    })}
-                    </ul>
-                  </div>
-                </nav>
+        {/* Sticky Header */}
+        <div 
+          className="sticky top-0 z-10 bg-background/95 backdrop-blur-md border-b border-border transition-all duration-200"
+        >
+          <div className="container mx-auto px-4">
+            <div className="flex items-center justify-between h-16">
+              <div className="flex items-center space-x-4">
+                <Avatar>
+                  <AvatarImage src={profileData.avatar} alt={profileData.name} />
+                  <AvatarFallback>{profileData.name?.charAt(0) || 'U'}</AvatarFallback>
+                </Avatar>
+                <div>
+                  <h2 className="text-lg font-semibold">{profileData.name}</h2>
+                  <p className="text-sm text-muted-foreground">{profileData.title}</p>
+                </div>
+              </div>
+              <Button variant="ghost" size="icon" onClick={onClose}>
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+            
+            {/* Tabs */}
+            <div className="flex overflow-x-auto scrollbar-hide -mx-4 px-4">
+              <div className="flex space-x-8">
+                {tabs.map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => scrollToSection(tab.id)}
+                    className={`py-3 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
+                      activeSection === tab.id
+                        ? 'border-primary text-primary'
+                        : 'border-transparent text-muted-foreground hover:text-foreground hover:border-foreground/20'
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
               </div>
             </div>
           </div>
-          
-          {/* Main Content */}
+        </div>
+        
+        {/* Main Content */}
+        <div className="w-full max-w-4xl mx-auto">
           <div className="px-6 pb-8">
             <div className="space-y-8">
-            {/* About Section */}
-            <section id="about" data-section="about" className="scroll-mt-20 pt-8">
+              {/* Profile Section */}
+              <section id="profile" className="scroll-mt-20 pt-8">
+                {/* Profile content */}
+              </section>
+              
+              {/* About Section */}
+              <section id="about" data-section="about" className="scroll-mt-20 pt-8">
               <h2 className="text-xl font-semibold text-white mb-4">About Me</h2>
-              <p className="text-white/80 mb-6">{profileData.about}</p>
+              <p className="text-white/80 mb-6 whitespace-pre-line">{profileData.about}</p>
               
               <div className="flex items-center gap-6 mb-6 text-sm">
                 <div className="flex items-center gap-2">
@@ -690,55 +472,53 @@ export function ProfilePreview({
                 <div className="flex -mx-2 overflow-x-auto scrollbar-hide pb-2">
                   <div className="flex gap-4 px-2">
                     {profileData.services.map((service) => (
-                      <div key={service.id} className="w-80 flex-shrink-0 p-5 rounded-3xl border border-white/10 bg-white/5 hover:border-purple-500/30 transition-colors">
-                        <div className="flex flex-col h-full">
-                          <div className="flex-1">
-                            <div className="flex items-start justify-between">
-                              <h3 className="text-lg font-semibold text-white">{service.title}</h3>
-                              {service.type && (
-                                <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
-                                  service.type === 'online' 
-                                    ? 'bg-blue-500/10 text-blue-400' 
-                                    : 'bg-green-500/10 text-green-400'
-                                }`}>
-                                  {service.type === 'online' ? 'Online' : 'In-Person'}
-                                </span>
-                              )}
-                            </div>
-                            
-                            <p className="text-white/70 mt-2 text-sm">{service.description}</p>
-                            
-                            {service.features && service.features.length > 0 && (
-                              <ul className="mt-3 space-y-2">
-                                {service.features.map((feature, i) => (
-                                  <li key={i} className="flex items-start text-sm text-white/80">
-                                    <Check className="h-4 w-4 text-green-400 mr-2 mt-0.5 flex-shrink-0" />
-                                    <span>{feature}</span>
-                                  </li>
-                                ))}
-                              </ul>
+                      <div key={service.id} className="w-80 flex-shrink-0 p-5 rounded-3xl border border-white/10 bg-white/5 hover:border-purple-500/30 transition-colors flex flex-col h-full">
+                        <div className="flex-1">
+                          <div className="flex items-start justify-between">
+                            <h3 className="text-lg font-semibold text-white">{service.title}</h3>
+                            {service.type && (
+                              <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
+                                service.type === 'online' 
+                                  ? 'bg-blue-500/10 text-blue-400' 
+                                  : 'bg-green-500/10 text-green-400'
+                              }`}>
+                                {service.type === 'online' ? 'Online' : 'In-Person'}
+                              </span>
                             )}
                           </div>
                           
-                          <div className="mt-4 pt-4 relative">
-                            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
-                            <div className="flex flex-col gap-3">
-                              <div className="flex items-center justify-between">
-                                <div className="text-xl font-bold text-white">
-                                  {service.price}
-                                </div>
-                                <div className="text-sm text-white/60 bg-white/5 px-3 py-1 rounded-full">
-                                  {service.deliveryTime}
-                                </div>
+                          <p className="text-white/70 mt-2 text-sm">{service.description}</p>
+                          
+                          {service.features && service.features.length > 0 && (
+                            <ul className="mt-3 space-y-2">
+                              {service.features.map((feature, i) => (
+                                <li key={i} className="flex items-start text-sm text-white/80">
+                                  <Check className="h-4 w-4 text-green-400 mr-2 mt-0.5 flex-shrink-0" />
+                                  <span>{feature}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
+                        
+                        <div className="mt-4 pt-4 relative">
+                          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
+                          <div className="flex flex-col gap-3">
+                            <div className="flex items-center justify-between">
+                              <div className="text-xl font-bold text-white">
+                                {service.price}
                               </div>
-                              <div className="flex items-center gap-2">
-                                <button className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-white/80 hover:text-white transition-colors">
-                                  <MessageCircle className="h-5 w-5" />
-                                </button>
-                                <button className="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-xl text-sm font-medium transition-colors">
-                                  Book Now
-                                </button>
+                              <div className="text-sm text-white/60 bg-white/5 px-3 py-1 rounded-full">
+                                {service.deliveryTime}
                               </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <button className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-white/80 hover:text-white transition-colors">
+                                <MessageCircle className="h-5 w-5" />
+                              </button>
+                              <button className="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-xl text-sm font-medium transition-colors">
+                                Book Now
+                              </button>
                             </div>
                           </div>
                         </div>
@@ -747,30 +527,9 @@ export function ProfilePreview({
                   </div>
                 </div>
               </div>
-              <button 
-                onClick={() => {
-                  // Create a URL with the modal state and section hash
-                  const url = new URL(window.location.href);
-                  url.hash = '#services';
-                  const currentUrl = url.toString();
-                  
-                  console.log('Storing return URL for services:', currentUrl);
-                  sessionStorage.setItem('returnToProfilePreview', currentUrl);
-                  
-                  // Store services data in session storage
-                  sessionStorage.setItem('servicesPreviewData', JSON.stringify(profileData.services));
-                  sessionStorage.setItem('freelancerName', profileData.name);
-                  
-                  // Navigate to services page with preview flag
-                  console.log('Navigating to services page');
-                  window.location.href = `/services#fromPreview`;
-                }}
-                className="w-full mt-4 py-3 px-4 border border-white/30 hover:bg-white/5 transition-colors text-sm font-medium flex items-center justify-center gap-2 text-white" 
-                style={{ borderRadius: '6px' }}
-              >
-                View All {profileData.services.length} Services
-                <ArrowRight className="h-4 w-4" />
-              </button>
+              <Button variant="outline" size="sm" onClick={() => scrollToSection('services')}>
+                View All <span className="ml-1">→</span>
+              </Button>
             </section>
 
             {/* Portfolio Section */}
@@ -815,24 +574,70 @@ export function ProfilePreview({
                             }
                           }}
                         >
-                          <div className="relative w-full h-full">
-                            <div className="absolute inset-0 flex items-center justify-center bg-gray-800/50 rounded-xl">
-                              <img
-                                src={item.image}
-                                alt={item.title}
-                                className="w-full h-full object-cover transition-all duration-300 group-hover:scale-105 rounded-xl"
-                                onError={(e) => {
-                                  e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjAwIiBoZWlnaHQ9IjgwMCIgdmlld0JveD0iMCAwIDYwMCA0MDAiPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiMxQTFBMUEiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE4IiBmb250LXdlaWdodD0iYm9sZCIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGRvbWluYW50LWJhc2VsaW5lPSJtaWRkbGUiPk5vIFRodW1ibmFpbCBBdmFpbGFibGU8L3RleHQ+PC9zdmc+'
-                                }}
-                              />
-                              <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="fixed inset-0 z-50 overflow-y-auto">
+                            <div className="flex min-h-screen items-center justify-center px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+                              <div 
+                                ref={headerRef}
+                                className={`fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border transition-all duration-200 ${
+                                  isSticky ? 'shadow-md' : ''
+                                }`}
+                              >
+                                <div className="container mx-auto px-4">
+                                  <div className="flex items-center justify-between h-16">
+                                    <div className="flex items-center space-x-4">
+                                      <Avatar>
+                                        <AvatarImage src={profileData.avatar} alt={profileData.name} />
+                                        <AvatarFallback>{profileData.name.charAt(0)}</AvatarFallback>
+                                      </Avatar>
+                                      <div>
+                                        <h2 className="text-lg font-semibold">{profileData.name}</h2>
+                                        <p className="text-sm text-muted-foreground">{profileData.title}</p>
+                                      </div>
+                                    </div>
+                                    <Button variant="ghost" size="icon" onClick={onClose}>
+                                      <X className="h-5 w-5" />
+                                    </Button>
+                                  </div>
+                                  
+                                  {/* Tabs */}
+                                  <div className="flex overflow-x-auto scrollbar-hide -mx-4 px-4">
+                                    <div className="flex space-x-8">
+                                      {tabs.map((tab) => (
+                                        <button
+                                          key={tab.id}
+                                          onClick={() => scrollToSection(tab.id)}
+                                          className={`py-3 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
+                                            activeSection === tab.id
+                                              ? 'border-primary text-primary'
+                                              : 'border-transparent text-muted-foreground hover:text-foreground hover:border-foreground/20'
+                                          }`}
+                                        >
+                                          {tab.label}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  </div>
+                                </div>
                               </div>
-                            </div>
-                            <div className="absolute inset-0 p-4 flex flex-col justify-end bg-gradient-to-t from-black/70 via-black/40 to-transparent rounded-xl">
-                              <div className="flex justify-between items-end">
-                                <div className="pr-2">
-                                  <h3 className="font-medium text-white line-clamp-1 text-sm">{item.title}</h3>
-                                  <p className="text-xs text-white/80 mt-0.5">{item.category}</p>
+                              <div className="relative w-full h-full">
+                                <div className="absolute inset-0 flex items-center justify-center bg-gray-800/50 rounded-xl">
+                                  <img
+                                    src={item.image}
+                                    alt={item.title}
+                                    className="w-full h-full object-cover transition-all duration-300 group-hover:scale-105 rounded-xl"
+                                    onError={(e) => {
+                                      e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjAwIiBoZWlnaHQ9IjgwMCIgdmlld0JveD0iMCAwIDYwMCA0MDAiPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiMxQTFBMUEiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE4IiBmb250LXdlaWdodD0iYm9sZCIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGRvbWluYW50LWJhc2VsaW5lPSJtaWRkbGUiPk5vIFRodW1ibmFpbCBBdmFpbGFibGU8L3RleHQ+PC9zdmc+'
+                                    }}
+                                  />
+                                  <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                </div>
+                                <div className="absolute inset-0 p-4 flex flex-col justify-end bg-gradient-to-t from-black/70 via-black/40 to-transparent rounded-xl">
+                                  <div className="flex justify-between items-end">
+                                    <div className="pr-2">
+                                      <h3 className="font-medium text-white line-clamp-1 text-sm">{item.title}</h3>
+                                      <p className="text-xs text-white/80 mt-0.5">{item.category}</p>
+                                    </div>
+                                  </div>
                                 </div>
                               </div>
                             </div>
@@ -841,14 +646,9 @@ export function ProfilePreview({
                       ))}
                     </div>
                   </div>
-                  <button 
-                    onClick={handleViewAllPortfolio}
-                    className="w-full mt-2 py-2.5 px-4 border border-white/30 hover:bg-white/5 transition-colors text-sm font-medium flex items-center justify-center gap-2 text-white" 
-                    style={{ borderRadius: '6px' }}
-                  >
-                    View All {profileData.portfolio.length} Portfolio Items
-                    <ArrowRight className="h-4 w-4" />
-                  </button>
+                  <Button variant="outline" size="sm" onClick={() => scrollToSection('portfolio')}>
+                    View All <span className="ml-1">→</span>
+                  </Button>
                 </div>
               ) : (
                 <div className="text-center p-8 rounded-3xl border border-white/10 bg-white/5">
@@ -864,9 +664,6 @@ export function ProfilePreview({
               id="experience" 
               data-section="experience"
               className="pt-8 scroll-mt-20 relative group"
-              ref={(el: HTMLElement | null) => {
-                if (el) sectionsRef.current.experience = el;
-              }}
             >
               <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
               <div className="mb-6">
@@ -924,7 +721,8 @@ export function ProfilePreview({
             <section 
               id="reviews" 
               data-section="reviews"
-              className="pt-8 scroll-mt-20 relative group">
+              className="pt-8 scroll-mt-20 relative group"
+            >
               <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
                 <div>
@@ -985,14 +783,9 @@ export function ProfilePreview({
                       ))}
                     </div>
                   </div>
-                  <button 
-                    onClick={handleViewAllReviews}
-                    className="w-full mt-3 py-2.5 px-4 border border-white/30 hover:bg-white/5 transition-colors text-sm font-medium flex items-center justify-center gap-2 text-white" 
-                    style={{ borderRadius: '6px' }}
-                  >
-                    View All {profileData.reviews.length} Reviews
-                    <ArrowRight className="h-4 w-4" />
-                  </button>
+                  <Button variant="outline" size="sm" onClick={() => scrollToSection('reviews')}>
+                    View All <span className="ml-1">→</span>
+                  </Button>
                 </div>
               ) : (
                 <div className="text-center py-12 rounded-3xl border border-white/10 bg-white/5">
@@ -1005,7 +798,10 @@ export function ProfilePreview({
           </div>
         </div>
       </div>
-      </div>
     </div>
   ), document.body);
-}
+
+
+ProfilePreview.displayName = 'ProfilePreview';
+
+export default ProfilePreview;
