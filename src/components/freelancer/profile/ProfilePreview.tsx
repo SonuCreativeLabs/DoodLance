@@ -340,76 +340,87 @@ const ProfilePreview = memo(({
 
     const observerOptions = {
       root: null, // viewport
-      rootMargin: '-80px 0px -50% 0px', // Adjusted margins for better section detection
-      threshold: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0] // Multiple thresholds for better precision
+      rootMargin: '-80px 0px -60% 0px', // Adjusted margins for better section detection
+      threshold: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0] // Multiple thresholds for better precision
     };
 
     let lastScrollTime = 0;
-    const scrollDebounceTime = 30; // Even faster response time
+    const scrollDebounceTime = 50; // ms
+    let isUpdating = false;
+    let lastKnownSection = activeTabRef.current;
 
     const handleIntersect = (entries: IntersectionObserverEntry[]) => {
-      if (isScrollingRef.current) return;
+      // Skip if we're currently programmatically scrolling or already updating
+      if (isScrollingRef.current || isUpdating) return;
       
       const now = Date.now();
       if (now - lastScrollTime < scrollDebounceTime) return;
       lastScrollTime = now;
+      isUpdating = true;
 
-      // Calculate which section is most visible in the viewport
-      let mostVisibleSection = null;
-      let maxVisibility = -1;
-      const viewportHeight = window.innerHeight;
-      const viewportMiddle = viewportHeight / 2;
-      
-      // First pass: find sections that intersect with the viewport
-      const visibleSections = entries.filter(entry => entry.isIntersecting);
-      
-      if (visibleSections.length > 0) {
-        // Find the section with the most area in the viewport
-        visibleSections.forEach(entry => {
-          const rect = entry.boundingClientRect;
-          // Calculate visible height with more weight to sections near the viewport center
-          const visibleTop = Math.max(rect.top, 0);
-          const visibleBottom = Math.min(rect.bottom, viewportHeight);
-          const visibleHeight = Math.max(0, visibleBottom - visibleTop);
-          
-          // Calculate distance from viewport center (closer to center = higher weight)
-          const sectionCenter = (rect.top + rect.bottom) / 2;
-          const distanceFromCenter = Math.abs(sectionCenter - viewportMiddle);
-          const centerWeight = 1 - (distanceFromCenter / viewportMiddle);
-          
-          // Combine visibility ratio with center weight
-          const visibilityRatio = (visibleHeight / viewportHeight) * (0.7 + 0.3 * centerWeight);
-          
-          if (visibilityRatio > maxVisibility) {
-            maxVisibility = visibilityRatio;
-            mostVisibleSection = entry.target.id || entry.target.getAttribute('data-section');
-          }
-        });
-      } else {
-        // Fallback: find the section closest to the viewport
-        let minDistance = Infinity;
+      try {
+        const viewportHeight = window.innerHeight;
+        const viewportMiddle = viewportHeight / 2;
+        
+        // Process all entries to find the most visible section
+        let mostVisibleSection = null;
+        let maxScore = -1;
+        
         entries.forEach(entry => {
+          // Skip if not intersecting at all
+          if (!entry.isIntersecting) return;
+          
           const rect = entry.boundingClientRect;
-          const distance = Math.abs(rect.top + rect.height/2 - viewportMiddle);
-          if (distance < minDistance) {
-            minDistance = distance;
-            mostVisibleSection = entry.target.id;
+          const sectionId = entry.target.id || entry.target.getAttribute('data-section');
+          
+          // Calculate visibility ratio (0 to 1)
+          const visibleHeight = Math.min(rect.bottom, viewportHeight) - Math.max(rect.top, 0);
+          const visibilityRatio = Math.min(1, visibleHeight / viewportHeight);
+          
+          // Calculate center weight (1 when centered, 0 at viewport edges)
+          const sectionCenter = rect.top + (rect.height / 2);
+          const distanceFromCenter = Math.abs(sectionCenter - viewportMiddle);
+          const centerWeight = Math.max(0, 1 - (distanceFromCenter / viewportMiddle));
+          
+          // Combine scores (60% visibility, 40% center position)
+          const score = (visibilityRatio * 0.6) + (centerWeight * 0.4);
+          
+          if (score > maxScore) {
+            maxScore = score;
+            mostVisibleSection = sectionId;
           }
         });
+
+        // Only update if we have a visible section and it's different
+        if (mostVisibleSection && mostVisibleSection !== lastKnownSection) {
+          // Special case for top section
+          if (mostVisibleSection === 'top' && window.scrollY < 100) {
+            updateActiveTab('top');
+            lastKnownSection = 'top';
+          } 
+          // Only update if section is significantly visible
+          else if (maxScore > 0.2) {
+            updateActiveTab(mostVisibleSection);
+            lastKnownSection = mostVisibleSection;
+          }
+        }
+      } catch (error) {
+        console.error('Error in intersection observer:', error);
+      } finally {
+        isUpdating = false;
       }
 
-      // Update active tab if changed and not currently scrolling from a tab click
-      if (mostVisibleSection && 
-          mostVisibleSection !== activeTabRef.current && 
-          !isScrollingRef.current) {
-        updateActiveTab(mostVisibleSection);
-      }
     };
 
     const updateActiveTab = (sectionId: string) => {
+      // Don't update if we're already on this tab
+      if (sectionId === activeTabRef.current) return;
+      
+      // Update the active tab state
       setActiveTab(sectionId);
       activeTabRef.current = sectionId;
       
+      // Find the tab element and container
       const tabElement = document.querySelector(`[data-tab-id="${sectionId}"]`) as HTMLElement;
       const tabsContainer = tabsContainerRef.current;
       

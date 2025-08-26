@@ -12,6 +12,8 @@ import { MonthlyActivities } from '@/components/freelancer/profile/MonthlyActivi
 import { ProfileSectionCard } from '@/components/freelancer/profile/ProfileSectionCard';
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useRef } from 'react';
+import { PortfolioItem } from './preview/portfolio/page';
+import { getSessionFlag, removeSessionItem } from '@/utils/sessionStorage';
 
 // Types
 type Experience = {
@@ -35,13 +37,6 @@ type Service = {
   features?: string[];
 };
 
-type PortfolioItem = {
-  id: string;
-  title: string;
-  category: string;
-  image: string;
-  description?: string;
-};
 
 type Review = {
   id: string;
@@ -139,21 +134,50 @@ export default function ProfilePage() {
     }
   };
 
-  useEffect(() => {
-    // Small delay to ensure the DOM is fully rendered
-    const timer = setTimeout(() => {
-      const hash = window.location.hash;
-      
-      if (hash === '#personal-details' && personalDetailsRef.current) {
-        scrollToSection(personalDetailsRef);
-      } else if (hash === '#portfolio' && portfolioRef.current) {
-        scrollToSection(portfolioRef);
-      } else if (hash === '#skills' && skillsRef.current) {
-        scrollToSection(skillsRef);
-      }
-    }, 100); // Slightly longer delay to ensure all layouts are settled
+  // Helper function to handle section scrolling
+  const scrollToSectionIfNeeded = (sectionId: string, ref: React.RefObject<HTMLElement>) => {
+    if (!ref.current) return false;
     
-    return () => clearTimeout(timer);
+    // Force a reflow to ensure the element is in the DOM
+    void ref.current.offsetHeight;
+    scrollToSection(ref);
+    return true;
+  };
+
+  useEffect(() => {
+    // Function to handle hash changes and section scrolling
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      const isFromPortfolio = getSessionFlag('scrollToPortfolio');
+      
+      // Small delay to ensure the DOM is fully rendered
+      const timer = setTimeout(() => {
+        // Check for section hashes first
+        if (hash === '#personal-details') {
+          scrollToSectionIfNeeded('personal-details', personalDetailsRef);
+        } else if (hash === '#portfolio' || isFromPortfolio) {
+          if (isFromPortfolio) {
+            removeSessionItem('scrollToPortfolio');
+          }
+          scrollToSectionIfNeeded('portfolio', portfolioRef);
+        } else if (hash === '#skills') {
+          scrollToSectionIfNeeded('skills', skillsRef);
+        }
+      }, 50); // Reduced delay for better UX
+      
+      return () => clearTimeout(timer);
+    };
+    
+    // Initial check
+    handleHashChange();
+    
+    // Listen for hash changes
+    window.addEventListener('hashchange', handleHashChange, false);
+    
+    // Clean up
+    return () => {
+      window.removeEventListener('hashchange', handleHashChange, false);
+    };
   }, [searchParams]);
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-white pb-20 md:pb-24">

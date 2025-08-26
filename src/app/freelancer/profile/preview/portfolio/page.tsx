@@ -6,8 +6,9 @@ import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { freelancerData } from '../../profileData';
+import { setSessionFlag, setSessionItem } from '@/utils/sessionStorage';
 
-type PortfolioItem = {
+export type PortfolioItem = {
   id: string;
   title: string;
   category: string;
@@ -95,20 +96,23 @@ export default function PortfolioPage() {
 
   const handleBack = () => {
     if (typeof window !== 'undefined') {
-      // Store a flag to indicate we want to scroll to portfolio
-      sessionStorage.setItem('scrollToPortfolio', 'true');
+      // Set flags for the profile preview to handle the scroll position
+      setSessionFlag('fromPortfolio', true);
+      setSessionItem('lastVisitedSection', 'portfolio');
       
-      // Check if we have a return URL from the profile preview
-      const returnUrl = sessionStorage.getItem('returnToProfilePreview');
+      // Store a flag to indicate we need to scroll to the portfolio section
+      setSessionFlag('scrollToPortfolio', true);
       
-      if (returnUrl) {
-        // Navigate back to the exact URL that was stored when opening portfolio
-        window.location.href = returnUrl;
-      } else {
-        // Fallback to history back if no return URL is found
-        window.history.back();
-      }
+      // Navigate back to the main profile page with the portfolio hash
+      const returnPath = '/freelancer/profile';
+      
+      // Store the return URL in session storage for reference
+      setSessionItem('returnToProfilePreview', `${window.location.origin}${returnPath}#portfolio`);
+      
+      // Use window.location to force a full page load to ensure the section is scrolled to
+      window.location.href = returnPath + '#portfolio';
     } else {
+      // Fallback to browser's back navigation if window is not available
       router.back();
     }
   };

@@ -251,7 +251,7 @@ export function ProfileHeader({
         </div>
 
         {/* Skills */}
-        <div className="flex flex-wrap justify-center gap-2 pb-4">
+        <div className="flex flex-wrap justify-center gap-2 pb-2">
           {skills.map((skill, i) => (
             <Badge 
               key={i} 
@@ -264,15 +264,22 @@ export function ProfileHeader({
         </div>
         
         {/* Preview Profile Button */}
-        <div className="flex justify-center pb-6">
+        <div className="flex justify-center mt-3 mb-4">
           {!isPreview && (
             <Button 
-              variant="outline" 
-              size="sm" 
+              variant="ghost"
               onClick={() => setIsPreviewOpen(true)}
-              className="text-sm font-normal px-5 py-2 h-9 bg-transparent border border-white/30 text-white/90 hover:bg-white/5 hover:border-white/50 transition-all duration-200 rounded-full flex items-center gap-2 backdrop-blur-sm"
+              className="group relative overflow-hidden px-4 py-1.5 h-8 bg-gradient-to-r from-[#6B46C1] via-[#4C1D95] to-[#2D1B69] text-white text-xs font-normal rounded-full shadow hover:shadow-md hover:shadow-[#4C1D95]/40 transition-all duration-200 transform hover:-translate-y-0.5 focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-[#6B46C1]"
             >
-              Preview Profile
+              <span className="relative z-10 flex items-center gap-1.5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+                Preview Profile
+              </span>
+              <span className="absolute inset-0 bg-gradient-to-r from-[#4C1D95] via-[#6B46C1] to-[#4C1D95] opacity-0 group-hover:opacity-30 transition-opacity duration-200 rounded-full"></span>
+              <span className="absolute inset-0 bg-white/5 backdrop-blur-sm opacity-0 group-hover:opacity-40 transition-opacity duration-200 rounded-full"></span>
             </Button>
           )}
         </div>
