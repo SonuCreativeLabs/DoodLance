@@ -2,8 +2,9 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft } from "lucide-react";
+import { Plus } from "lucide-react";
 import Link from "next/link";
+import { PageHeader } from "@/components/common/PageHeader";
 import { DateRange } from "react-date-range";
 import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css';
@@ -48,13 +49,27 @@ export default function AvailabilityPage() {
     setTimeout(() => setSaving(false), 1000);
   };
 
+  const handleCreateNew = () => {
+    // TODO: Handle create new availability
+    console.log("Create new availability");
+  };
+
   return (
-    <section className="max-w-md mx-auto w-full px-4 py-8 text-neutral-100">
-      <div className="flex items-center mb-6">
-        <Link href="/freelancer" aria-label="Back" className="mr-3">
-          <ArrowLeft className="w-6 h-6 text-white hover:text-purple-400 transition" />
-        </Link>
-        <h1 className="text-2xl font-bold text-neutral-100">Edit Availability</h1>
+    <div className="max-w-4xl mx-auto w-full text-neutral-100">
+      <PageHeader
+        title="My Availability"
+        description="Set your working hours and timezone"
+        backLink="/freelancer/profile"
+      />
+      
+      <div className="mb-6">
+        <Button
+          onClick={handleCreateNew}
+          className="w-full md:w-auto bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white shadow-md hover:shadow-lg transition-all duration-200"
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Create New Availability
+        </Button>
       </div>
       <form
         className="space-y-6"
@@ -172,6 +187,6 @@ export default function AvailabilityPage() {
           </Button>
         </div>
       </form>
-    </section>
+    </div>
   );
 }

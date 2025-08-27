@@ -129,58 +129,71 @@ export default function IdUploadPage() {
     }
   };
 
-  // Render step indicators
+  // Modern horizontal step indicator with connecting lines
   const renderStepIndicator = () => {
     const steps = [
-      { id: 'document', label: 'Document', icon: <FileText className="h-4 w-4" /> },
-      { id: 'selfie', label: 'Selfie', icon: <User className="h-4 w-4" /> },
-      { id: 'review', label: 'Review', icon: <Check className="h-4 w-4" /> }
+      { id: 'document', label: 'Document' },
+      { id: 'selfie', label: 'Selfie' },
+      { id: 'review', label: 'Review' }
     ] as const;
 
     const currentStepIndex = steps.findIndex(step => step.id === currentStep);
 
     return (
-      <div className="flex flex-col items-center mb-8">
-        <div className="flex items-center justify-between w-full max-w-[280px] relative">
-          {/* Progress line - positioned between the steps */}
-          <div className="absolute top-4 left-6 right-6 h-1 bg-white/5 -translate-y-1/2 -z-10 rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-primary transition-all duration-500 ease-out rounded-full"
-              style={{
-                width: `${(currentStepIndex / (steps.length - 1)) * 100}%`
-              }}
-            />
-          </div>
-          
-          {/* Steps */}
-          {steps.map((step, index) => {
-            const isCompleted = index < currentStepIndex;
-            const isActive = index === currentStepIndex;
-            const stepNumber = index + 1;
-            
-            return (
-              <div key={step.id} className="flex flex-col items-center">
-                <div 
-                  className={`flex items-center justify-center w-8 h-8 rounded-full transition-all duration-300 relative z-10 ${
-                    isCompleted 
-                      ? 'bg-primary text-primary-foreground scale-100' 
-                      : isActive 
-                        ? 'bg-primary/10 text-primary border-2 border-primary scale-110' 
-                        : 'bg-card border-2 border-white/10 text-white/40 scale-100'
-                  }`}
-                >
-                  {isCompleted ? step.icon : stepNumber}
+      <div className="w-full">
+        <div className="relative max-w-md mx-auto">
+          {/* Steps container */}
+          <div className="flex items-start justify-between px-4">
+            {steps.map((step, index) => {
+              const isCompleted = index < currentStepIndex;
+              const isActive = index === currentStepIndex;
+              const isLast = index === steps.length - 1;
+              
+              return (
+                <div key={step.id} className="relative flex-1 flex flex-col items-center">
+                  {/* Step circle */}
+                  <div 
+                    className={`w-7 h-7 rounded-full flex items-center justify-center relative z-10 transition-all duration-300 ${
+                      isCompleted 
+                        ? 'bg-primary/90 text-white' 
+                        : isActive 
+                          ? 'bg-white border-2 border-primary text-primary' 
+                          : 'bg-white/5 border border-white/10 text-white/40'
+                    }`}
+                  >
+                    {isCompleted ? (
+                      <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
+                    ) : (
+                      <span className="text-xs font-medium">
+                        {index + 1}
+                      </span>
+                    )}
+                  </div>
+                  
+                  {/* Step label */}
+                  <span 
+                    className={`mt-2 text-xs whitespace-nowrap transition-colors ${
+                      isActive ? 'text-white font-medium' : 'text-white/60'
+                    }`}
+                  >
+                    {step.label}
+                  </span>
+                  
+                  {/* Connecting line */}
+                  {!isLast && (
+                    <div className="absolute top-3.5 left-full w-16 h-0.5 bg-white/10 overflow-hidden -translate-x-1/2">
+                      <div 
+                        className="h-full bg-primary/80 transition-all duration-500 ease-out"
+                        style={{
+                          width: isCompleted ? '100%' : index < currentStepIndex ? '100%' : '0%'
+                        }}
+                      />
+                    </div>
+                  )}
                 </div>
-                <span 
-                  className={`text-xs mt-2 font-medium transition-colors ${
-                    isCompleted || isActive ? 'text-white' : 'text-white/40'
-                  }`}
-                >
-                  {step.label}
-                </span>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       </div>
     );
@@ -200,26 +213,20 @@ export default function IdUploadPage() {
     }[currentStep];
 
     return (
-      <div className="mb-8">
-        <div className="flex items-center mb-4">
-          <div className="flex items-center space-x-4">
-            <button 
-              onClick={() => currentStep === 'document' ? router.back() : setCurrentStep('document')}
-              className="inline-flex items-center text-sm text-purple-400 hover:text-purple-300 transition-colors duration-200 group"
-              aria-label="Go back"
-              type="button"
-            >
-              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/10 group-hover:bg-white/10 transition-colors duration-200">
-                <ArrowLeft className="h-4 w-4" />
-              </div>
-            </button>
-            <div>
-              <h1 className="text-xl font-bold">{title}</h1>
-              <p className="text-white/60 text-sm mt-0.5">
-                {description}
-              </p>
-            </div>
+      <div className="flex items-center py-3">
+        <button 
+          onClick={() => currentStep === 'document' ? router.back() : setCurrentStep('document')}
+          className="inline-flex items-center text-sm text-purple-400 hover:text-purple-300 transition-colors duration-200"
+          aria-label="Go back"
+          type="button"
+        >
+          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors duration-200">
+            <ArrowLeft className="h-4 w-4" />
           </div>
+        </button>
+        <div className="ml-3">
+          <h1 className="text-lg font-semibold text-white">{title}</h1>
+          <p className="text-white/50 text-xs">{description}</p>
         </div>
       </div>
     );
@@ -227,17 +234,17 @@ export default function IdUploadPage() {
 
   const renderDocumentStep = () => (
     <form onSubmit={handleDocumentSubmit} className="space-y-6">
-      <div className="space-y-2">
-        <label className="block text-sm font-medium text-white/90 mb-2">
+      <div className="space-y-1.5">
+        <label className="block text-xs font-medium text-white/80">
           ID Type <span className="text-red-500">*</span>
         </label>
         <div className="relative">
           <button
             type="button"
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            className={`w-full flex items-center justify-between p-3 text-left rounded-lg border ${
+            className={`w-full flex items-center justify-between p-2.5 text-left rounded-xl border ${
               isDropdownOpen ? 'border-purple-500' : 'border-white/10'
-            } bg-[#1E1E1E] hover:border-white/20 transition-colors`}
+            } bg-[#1E1E1E] hover:border-white/20 transition-colors text-sm`}
           >
             <div>
               {selectedIdType ? (
@@ -294,39 +301,39 @@ export default function IdUploadPage() {
         </div>
       </div>
 
-      <div className="space-y-2">
-        <label className="block text-sm font-medium text-white/90 mb-2">
+      <div className="space-y-1.5">
+        <label className="block text-xs font-medium text-white/80">
           ID Number <span className="text-red-500">*</span>
         </label>
-        <div className="mt-1">
+        <div>
           <input
             type="text"
             value={idNumber}
             onChange={(e) => setIdNumber(e.target.value)}
-            className="w-full px-4 py-3 bg-[#1E1E1E] border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            className="w-full px-3 py-2 text-sm bg-[#1E1E1E] border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             placeholder={selectedTypeDetails ? `Enter your ${selectedTypeDetails.label} number` : 'Enter your ID number'}
             required
           />
-          <p className="mt-1 text-xs text-white/50">
+          <p className="mt-1 text-[11px] text-white/40">
             Enter the ID number exactly as it appears on your document
           </p>
         </div>
       </div>
 
-      <div className="space-y-2">
-        <label className="block text-sm font-medium text-white/90">
+      <div className="space-y-1.5">
+        <label className="block text-xs font-medium text-white/80">
           Upload Document <span className="text-red-500">*</span>
         </label>
-        <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-dashed border-white/10 rounded-lg">
+        <div className="flex justify-center p-4 border-2 border-dashed border-white/10 rounded-xl">
           <div className="space-y-1 text-center">
             {previewUrl ? (
-              <div className="space-y-3 w-full">
-                <p className="text-sm font-medium text-white/80 text-center">Document Preview</p>
+              <div className="space-y-2 w-full">
+                <p className="text-xs font-medium text-white/80">Document Preview</p>
                 <div className="relative mx-auto">
                   <img 
                     src={previewUrl} 
                     alt="Document preview" 
-                    className="max-h-48 mx-auto rounded-lg border border-white/10"
+                    className="max-h-40 mx-auto rounded border border-white/10"
                   />
                   <button
                     type="button"
@@ -334,21 +341,21 @@ export default function IdUploadPage() {
                       setSelectedFile(null);
                       setPreviewUrl(null);
                     }}
-                    className="absolute -top-2 -right-2 bg-red-500 rounded-full p-1 text-white hover:bg-red-600 transition-colors"
+                    className="absolute -top-2 -right-2 bg-red-500 rounded-full p-0.5 text-white hover:bg-red-600 transition-colors"
                   >
-                    <X className="h-4 w-4" />
+                    <X className="h-3 w-3" />
                   </button>
                 </div>
               </div>
             ) : (
               <>
-                <div className="mx-auto h-12 w-12 text-white/40">
+                <div className="mx-auto h-8 w-8 text-white/40">
                   <UploadCloud className="h-full w-full" />
                 </div>
-                <div className="flex text-sm text-white/60">
+                <div className="flex items-center justify-center text-xs text-white/60">
                   <label
                     htmlFor="file-upload"
-                    className="relative cursor-pointer rounded-md font-medium text-purple-400 hover:text-purple-300 focus-within:outline-none"
+                    className="relative cursor-pointer rounded font-medium text-purple-400 hover:text-purple-300 focus-within:outline-none"
                   >
                     <span>Upload a file</span>
                     <input
@@ -362,7 +369,7 @@ export default function IdUploadPage() {
                   </label>
                   <p className="pl-1">or drag and drop</p>
                 </div>
-                <p className="text-xs text-white/40">
+                <p className="text-[11px] text-white/40">
                   PNG, JPG, PDF up to 5MB
                 </p>
               </>
@@ -371,26 +378,26 @@ export default function IdUploadPage() {
         </div>
       </div>
       
-      <div className="bg-[#1E1E1E] rounded-xl border border-white/10 p-4">
-        <div className="flex items-start gap-3">
-          <AlertCircle className="h-5 w-5 text-yellow-400 flex-shrink-0 mt-0.5" />
+      <div className="bg-[#1E1E1E] rounded-xl border border-white/10 p-3">
+        <div className="flex items-start gap-2">
+          <AlertCircle className="h-4 w-4 text-yellow-400 flex-shrink-0 mt-0.5" />
           <div>
-            <h4 className="text-sm font-medium text-white/90 mb-1">Document Requirements</h4>
-            <ul className="text-xs text-white/60 space-y-1">
-              <li className="flex items-start gap-2">
-                <Check className="h-3.5 w-3.5 text-green-400 mt-0.5 flex-shrink-0" />
+            <h4 className="text-xs font-medium text-white/90">Document Requirements</h4>
+            <ul className="text-[11px] text-white/50 space-y-0.5 mt-1">
+              <li className="flex items-start gap-1.5">
+                <Check className="h-3 w-3 text-green-400 mt-0.5 flex-shrink-0" />
                 <span>Document must be valid and not expired</span>
               </li>
-              <li className="flex items-start gap-2">
-                <Check className="h-3.5 w-3.5 text-green-400 mt-0.5 flex-shrink-0" />
+              <li className="flex items-start gap-1.5">
+                <Check className="h-3 w-3 text-green-400 mt-0.5 flex-shrink-0" />
                 <span>All four corners must be visible</span>
               </li>
-              <li className="flex items-start gap-2">
-                <Check className="h-3.5 w-3.5 text-green-400 mt-0.5 flex-shrink-0" />
+              <li className="flex items-start gap-1.5">
+                <Check className="h-3 w-3 text-green-400 mt-0.5 flex-shrink-0" />
                 <span>Text must be clear and readable</span>
               </li>
-              <li className="flex items-start gap-2">
-                <Check className="h-3.5 w-3.5 text-green-400 mt-0.5 flex-shrink-0" />
+              <li className="flex items-start gap-1.5">
+                <Check className="h-3 w-3 text-green-400 mt-0.5 flex-shrink-0" />
                 <span>No screenshots or edited images</span>
               </li>
             </ul>
@@ -398,21 +405,11 @@ export default function IdUploadPage() {
         </div>
       </div>
 
-      <div className="flex justify-between pt-6">
-        <Button
-          type="button"
-          variant="ghost"
-          onClick={() => router.back()}
-          disabled={isUploading}
-          className="h-11 px-6 text-foreground/80 hover:text-foreground hover:bg-transparent"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back
-        </Button>
+      <div className="flex justify-end pt-2">
         <Button 
           type="submit" 
           disabled={!selectedFile || !selectedIdType || !idNumber}
-          className="h-11 px-8 bg-primary hover:bg-primary/90 text-white transition-all duration-200"
+          className="h-10 px-6 rounded-xl text-sm bg-primary hover:bg-primary/90 text-white transition-all duration-200 font-medium"
         >
           Continue to Selfie
           <ArrowRight className="h-4 w-4 ml-2" />
@@ -422,47 +419,33 @@ export default function IdUploadPage() {
   );
 
   const renderSelfieStep = () => (
-    <div className="space-y-6">
-      <div className="bg-[#1E1E1E] rounded-xl border border-white/10 p-6">
-        <div className="flex items-start gap-4 mb-6">
-          <div className="p-2 bg-purple-500/10 rounded-lg text-purple-400">
-            <User className="h-5 w-5" />
-          </div>
-          <div>
-            <h2 className="text-base font-medium text-white">Take a Selfie</h2>
-            <p className="text-white/60 text-sm mt-1">
-              We need to verify that the ID belongs to you. Please take a clear selfie.
-            </p>
-          </div>
-        </div>
-        
-        <SelfieCapture 
-          onCapture={handleSelfieCapture}
-          onRetake={handleRetakeSelfie}
-          capturedImage={selfieImage}
-          isUploading={isUploading}
-        />
-      </div>
+    <div className="space-y-6 pt-4">
+      <SelfieCapture 
+        onCapture={handleSelfieCapture}
+        onRetake={handleRetakeSelfie}
+        capturedImage={selfieImage}
+        isUploading={isUploading}
+      />
       
-      <div className="flex justify-between pt-6">
+      <div className="flex justify-between items-center pt-4 border-t border-white/5">
         <Button
           type="button"
           variant="ghost"
           onClick={() => setCurrentStep('document')}
           disabled={isUploading}
-          className="h-11 px-6 text-foreground/80 hover:text-foreground hover:bg-transparent"
+          className="h-9 px-4 text-sm text-foreground/80 hover:text-foreground hover:bg-white/5"
         >
-          <ArrowLeft className="h-4 w-4 mr-2" />
+          <ArrowLeft className="h-4 w-4 mr-1.5" />
           Back
         </Button>
         <Button 
           type="button"
           onClick={() => setCurrentStep('review')}
           disabled={!selfieImage}
-          className="h-11 px-8 bg-primary hover:bg-primary/90 text-white transition-all duration-200"
+          className="h-9 px-5 rounded-xl text-sm bg-primary hover:bg-primary/90 text-white transition-all duration-200 font-medium"
         >
           Continue to Review
-          <ArrowRight className="h-4 w-4 ml-2" />
+          <ArrowRight className="h-4 w-4 ml-1.5" />
         </Button>
       </div>
     </div>
@@ -560,19 +543,55 @@ export default function IdUploadPage() {
   );
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      {renderHeader()}
-
-      <div className="max-w-2xl mx-auto pb-8">
-        {renderStepIndicator()}
-        
-        {currentStep === 'document' ? (
-          renderDocumentStep()
-        ) : currentStep === 'selfie' ? (
-          renderSelfieStep()
-        ) : (
-          renderReviewStep()
-        )}
+    <div className="min-h-screen bg-[#0F0F0F] text-white flex flex-col">
+      {/* Sticky Header with Description */}
+      <div className="sticky top-0 z-20 bg-[#0F0F0F] border-b border-white/5">
+        <div className="px-4 py-3">
+          <div className="flex items-start">
+            <button 
+              onClick={() => currentStep === 'document' ? router.back() : setCurrentStep('document')}
+              className="inline-flex items-center text-sm text-purple-400 hover:text-purple-300 transition-colors duration-200 mt-1"
+              aria-label="Go back"
+              type="button"
+            >
+              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors duration-200">
+                <ArrowLeft className="h-4 w-4" />
+              </div>
+            </button>
+            <div className="ml-3">
+              <h1 className="text-lg font-semibold text-white">
+                {currentStep === 'document' ? 'Document Verification' : 
+                 currentStep === 'selfie' ? 'Take a Selfie' : 'Review & Submit'}
+              </h1>
+              <p className="text-sm text-white/60 mt-1">
+                {currentStep === 'document' ? 'Verify your identity with a valid ID' : 
+                 currentStep === 'selfie' ? 'We need to match your selfie with your ID' : 
+                 'Verify your information before submission'}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      {/* Main Content */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="max-w-md mx-auto w-full px-4 py-4">
+          {/* Centered Step Indicator */}
+          <div className="mb-6">
+            {renderStepIndicator()}
+          </div>
+          
+          {/* Dynamic Step Content */}
+          <div className="animate-fade-in">
+            {currentStep === 'document' ? (
+              renderDocumentStep()
+            ) : currentStep === 'selfie' ? (
+              renderSelfieStep()
+            ) : (
+              renderReviewStep()
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

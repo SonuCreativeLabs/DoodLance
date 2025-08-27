@@ -1,13 +1,24 @@
 "use client"
+
 import Image from "next/image"
 import { motion } from "framer-motion"
 import { CircleDollarSign, Calendar, ChevronRight, Star, MapPin, Wallet, TrendingUp, Award, Clock, Users, Target, Award as AwardIcon, Dumbbell, Code, Trophy } from "lucide-react"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { useState, useEffect } from "react"
+import { useLayout } from "@/contexts/LayoutContext"
+
+export const dynamic = 'force-dynamic'
 
 export default function FreelancerHome() {
+  const { showHeader, showNavbar } = useLayout();
   const [jobCount, setJobCount] = useState(0);
+
+  useEffect(() => {
+    // Always show header and navbar for the home page
+    showHeader();
+    showNavbar();
+  }, [showHeader, showNavbar]);
 
   useEffect(() => {
     // Import jobs data and filter logic dynamically

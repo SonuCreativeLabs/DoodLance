@@ -132,7 +132,7 @@ function InboxPageInner() {
   const totalOffset = mainHeaderHeight + messagesHeaderHeight + bottomNavHeight + additionalSpacing;
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-[#111111]">
+    <div className="flex flex-col h-[calc(100vh-64px)] bg-[#111111]">
       <motion.div 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -147,18 +147,19 @@ function InboxPageInner() {
               recipientJobTitle={selectedChat.jobTitle}
               online={selectedChat.online}
               onBack={handleBackClick}
+              className="h-full"
             />
           </div>
         ) : (
           <div className="flex flex-col h-full">
             {/* Fixed Messages Header - positioned below main header */}
             <div 
-              className="fixed left-0 right-0 z-10 bg-[#111111]"
-              style={{ top: `${mainHeaderHeight}px`, height: `${messagesHeaderHeight}px` }}
+              className="sticky top-0 left-0 right-0 z-10 bg-[#111111] pt-2"
+              style={{ height: `${messagesHeaderHeight}px` }}
             >
               <div className="h-full flex flex-col justify-center px-4">
-                <div className="flex flex-col mb-2">
-                  <div className="flex items-start justify-between">
+                <div className="flex flex-col">
+                  <div className="flex items-center justify-between mb-3">
                     <div>
                       <h1 className="text-xl font-bold text-white">Messages</h1>
                       {unreadCount > 0 && (
@@ -217,15 +218,13 @@ function InboxPageInner() {
               </div>
             </div>
             
-            {/* Scrollable Chat List with exact spacing */}
+            {/* Chat List */}
             <div 
-              className="overflow-y-auto px-4 pb-4"
-              style={{
-                height: `calc(100vh - ${totalOffset}px)`,
-                marginTop: `${messagesHeaderHeight}px`,
-                marginBottom: `${bottomNavHeight}px`,
-                scrollbarWidth: 'none', // Hide scrollbar for firefox
-                msOverflowStyle: 'none', // Hide scrollbar for IE/Edge
+              className="flex-1 overflow-y-auto pb-6"
+              style={{ 
+                height: `calc(100vh - ${mainHeaderHeight + messagesHeaderHeight + 16}px)`,
+                marginTop: `-${messagesHeaderHeight}px`,
+                paddingTop: `${messagesHeaderHeight}px`
               }}
             >
               {/* Hide scrollbar for Chrome/Safari */}

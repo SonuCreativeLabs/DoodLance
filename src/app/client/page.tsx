@@ -49,6 +49,19 @@ const mockSearches = [
   { id: 5, text: "Pet grooming", count: 980 },
 ];
 
+const searchExamples = [
+  "Need a plumber in Velachery",
+  "Looking for a pet walker in ECR",
+  "Video grapher for wedding",
+  "Electrician near me",
+  "Carpenter for furniture repair",
+  "Personal trainer at home",
+  "Beautician for bridal makeup",
+  "Car wash service",
+  "Interior designer consultation",
+  "Yoga instructor at home"
+];
+
 const mockLocations = [
   { city: "Chennai", state: "TN" },
   { city: "Bangalore", state: "KA" },
@@ -69,6 +82,11 @@ export default function ClientHome() {
   const [showLocationPicker, setShowLocationPicker] = useState(false);
   const [currentLocation, setCurrentLocation] = useState(mockLocations[0]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentExample, setCurrentExample] = useState(0);
+  const [placeholder, setPlaceholder] = useState("");
+  const [placeholderIndex, setPlaceholderIndex] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [typingSpeed, setTypingSpeed] = useState(100);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isSticky, setIsSticky] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
@@ -81,6 +99,39 @@ export default function ClientHome() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Handle rotating search examples
+  useEffect(() => {
+    const typeWriter = () => {
+      const currentText = searchExamples[currentExample];
+      
+      if (isDeleting) {
+        // Deleting text
+        setPlaceholder(currentText.substring(0, placeholderIndex - 1));
+        setPlaceholderIndex(prev => prev - 1);
+        setTypingSpeed(50);
+        
+        if (placeholderIndex === 0) {
+          setIsDeleting(false);
+          setCurrentExample((currentExample + 1) % searchExamples.length);
+        }
+      } else {
+        // Typing text
+        setPlaceholder(currentText.substring(0, placeholderIndex + 1));
+        setPlaceholderIndex(prev => prev + 1);
+        setTypingSpeed(100);
+        
+        if (placeholderIndex === currentText.length) {
+          // Pause at the end of typing before starting to delete
+          setTypingSpeed(2000);
+          setIsDeleting(true);
+        }
+      }
+    };
+    
+    const timer = setTimeout(typeWriter, typingSpeed);
+    return () => clearTimeout(timer);
+  }, [currentExample, isDeleting, placeholderIndex, typingSpeed]);
 
   // Handle ESC key press
   useEffect(() => {
@@ -299,10 +350,10 @@ export default function ClientHome() {
 
       {/* Main Content with top padding for fixed header */}
       <div> 
-        {/* Hero Banner + Why SkillBridge unified background */}
-        <div className="relative pb-16 min-h-[600px] md:h-auto overflow-hidden">
+        {/* Hero Banner */}
+        <div className="relative pb-4 h-auto overflow-hidden rounded-b-[2.5rem] shadow-xl" style={{ minHeight: 'auto' }}>
           {/* Background Elements */}
-          <div className="absolute inset-0 bg-gradient-to-br from-[#6B46C1] via-[#4C1D95] to-[#2D1B69] overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-[#6B46C1] via-[#4C1D95] to-[#2D1B69] rounded-b-[2.5rem] overflow-hidden">
             {/* Cover Image */}
             <div className="absolute inset-0 w-full h-full">
               <img
@@ -311,31 +362,17 @@ export default function ClientHome() {
                 className="w-full h-full object-cover opacity-20"
               />
             </div>
-            <div className="absolute bottom-0 w-full">
-              <svg
-                className="w-full h-32"
-                viewBox="0 0 1440 120"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                preserveAspectRatio="none"
-              >
-                <path
-                  d="M0 120L60 110C120 100 240 80 360 70C480 60 600 60 720 65C840 70 960 80 1080 85C1200 90 1320 90 1380 90L1440 90V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0V120Z"
-                  fill="#111111"
-                />
-              </svg>
-            </div>
           </div>
 
           {/* Hero Content */}
           <div className="relative container mx-auto px-4">
             {/* Adjusted space for optimal position */}
-            <div className="pt-28 md:pt-32">
+            <div className="pt-24 md:pt-28">
               <div className="max-w-2xl mx-auto text-center">
-                <h1 className="text-3xl md:text-5xl font-bold text-white mb-4 tracking-tight leading-tight">
-                  Your Neighborhood's Got Talent.
+                <h1 className="text-xl md:text-3xl font-bold text-white mb-3 whitespace-nowrap overflow-hidden text-ellipsis">
+                  Your Neighborhood's Got Talent
                 </h1>
-                <p className="text-lg md:text-xl text-white/80 mb-8">
+                <p className="text-base md:text-lg text-white/80 mb-6">
                   Hire anyone for anything<br />right from your neighborhood.
                 </p>
               </div>
@@ -347,7 +384,7 @@ export default function ClientHome() {
                     <div className="relative w-full">
                       <Input
                         type="text"
-                        placeholder={`Find services in ${currentLocation.city}...`}
+                        placeholder={searchQuery ? `Find services in ${currentLocation.city}...` : placeholder || `Find services in ${currentLocation.city}...`}
                         value={searchQuery}
                         onChange={(e) => handleSearch(e.target.value)}
                         className="w-full bg-white/10 border border-white/20 text-white placeholder-white/60 rounded py-3 pl-10 pr-4 focus:outline-none focus:border-purple-500 transition-all"
@@ -396,10 +433,10 @@ export default function ClientHome() {
                 </div>
               </div>
 
-              {/* Why SkillBridge Section */}
-              <div className="mt-10 max-w-4xl mx-auto">
+              {/* Why DoodLance Section */}
+              <div className="mt-6 max-w-4xl mx-auto">
                 <div className="mb-2">
-                  <h2 className="text-base font-semibold text-white tracking-wide text-left">WHY SKILLBRIDGE?</h2>
+                  <h2 className="text-base font-semibold text-white tracking-wide text-left" data-component-name="ClientHome">WHY DOODLANCE?</h2>
                 </div>
                 <div className="flex flex-row justify-center gap-3 md:gap-6">
                   {/* Local Delivery */}
@@ -441,10 +478,10 @@ export default function ClientHome() {
 
         <div className="container mx-auto px-4 py-4 bg-[#111111] mb-20 relative z-0">
           {/* Service Categories */}
-          <section className="mb-12 relative z-0">
+          <section className="mb-8 relative z-0">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-semibold text-white">Popular Services in your area</h2>
-              <Link href="/client/services" className="text-purple-500 hover:text-purple-600 text-sm font-medium flex items-center">
+              <Link href="/client/services" className="text-white/80 hover:text-white text-sm font-medium flex items-center transition-colors">
                 View All
                 <ChevronRight className="w-4 h-4 ml-1" />
               </Link>
@@ -487,7 +524,7 @@ export default function ClientHome() {
                 <span className="bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 text-transparent bg-clip-text">Top Rated</span>
                 {" "}Experts
               </h2>
-              <Link href="/client/nearby" className="text-purple-500 hover:text-purple-600 text-sm font-medium flex items-center">
+              <Link href="/client/nearby" className="text-white/80 hover:text-white text-sm font-medium flex items-center transition-colors">
                 View All
                 <ChevronRight className="w-4 h-4 ml-1" />
               </Link>
@@ -506,9 +543,8 @@ export default function ClientHome() {
                     })
                     .slice(0, 5) // Only take top 5
                     .map((expert) => (
-                    <motion.div
+                    <div
                       key={expert.id}
-                      whileHover={{ scale: 1.05 }}
                       className="flex-shrink-0 w-[160px]"
                     >
                       <div className="relative group">
@@ -543,7 +579,7 @@ export default function ClientHome() {
                           <p className="text-white/50 text-[10px] font-medium mt-1">{expert.location}</p>
                         </div>
                       </div>
-                    </motion.div>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -555,10 +591,10 @@ export default function ClientHome() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
-            className="mt-8 mb-8 relative z-0"
+            className="mt-8 mb-2 relative z-0"
           >
             <div className="overflow-x-auto scrollbar-hide">
-              <div className="flex gap-4 pb-4">
+              <div className="flex gap-4">
                 {/* First Coupon */}
                 <div className="flex-shrink-0 w-[300px] bg-gradient-to-r from-purple-600 via-purple-500 to-purple-400 rounded-xl p-4 shadow-lg">
                   <div className="flex items-center justify-between">
@@ -578,7 +614,7 @@ export default function ClientHome() {
                       <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
                         <Calendar className="w-8 h-8 text-white" />
                       </div>
-                      <div className="absolute -top-2 -right-2 bg-white text-purple-600 rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">
+                      <div className="absolute -top-3 -right-3 bg-white text-purple-600 rounded-full w-10 h-10 flex items-center justify-center text-base font-bold shadow-md border-2 border-white">
                         20%
                       </div>
                     </div>
@@ -604,7 +640,7 @@ export default function ClientHome() {
                       <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
                         <Star className="w-8 h-8 text-white" />
                       </div>
-                      <div className="absolute -top-2 -right-2 bg-white text-blue-600 rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">
+                      <div className="absolute -top-3 -right-3 bg-white text-blue-600 rounded-full w-10 h-10 flex items-center justify-center text-base font-bold shadow-md border-2 border-white">
                         15%
                       </div>
                     </div>
@@ -630,7 +666,7 @@ export default function ClientHome() {
                       <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
                         <Wallet className="w-8 h-8 text-white" />
                       </div>
-                      <div className="absolute -top-2 -right-2 bg-white text-emerald-600 rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">
+                      <div className="absolute -top-3 -right-3 bg-white text-emerald-600 rounded-full w-10 h-10 flex items-center justify-center text-base font-bold shadow-md border-2 border-white">
                         25%
                       </div>
                     </div>

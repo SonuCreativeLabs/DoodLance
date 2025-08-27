@@ -44,8 +44,16 @@ function FreelancerLayoutInner({
   fullChatView = false,
   pathname 
 }: FreelancerLayoutProps & { fullChatView?: boolean; pathname: string }) {
-  const { isHeaderVisible, isNavbarVisible } = useLayout();
+  const { isHeaderVisible: contextHeaderVisible, isNavbarVisible: contextNavbarVisible } = useLayout();
   const { isModalOpen } = useModal();
+  
+  // Check if current path is a preview page
+  const isPreviewPage = pathname?.startsWith('/freelancer/profile/preview');
+  
+  // Hide header and navbar for preview pages
+  const isHeaderVisible = isPreviewPage ? false : contextHeaderVisible;
+  const isNavbarVisible = isPreviewPage ? false : contextNavbarVisible;
+  
   // Rest of the component logic remains the same
 
   const isActive = (path: string) => {

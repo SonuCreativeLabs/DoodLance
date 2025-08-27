@@ -63,31 +63,35 @@ export default function PerformancePage() {
   const summaryData = getSummaryData();
 
   return (
-    <div className="min-h-screen bg-[#111111] text-white pb-20 md:pb-24">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex flex-col space-y-4 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between mb-6">
-            <div className="flex items-center space-x-4">
-              <Link 
-                href="/freelancer/profile" 
-                className="inline-flex items-center text-sm text-purple-400 hover:text-purple-300 transition-colors duration-200 group"
-              >
-                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/10 group-hover:bg-white/10 transition-colors duration-200">
-                  <ArrowLeft className="h-4 w-4" />
-                </div>
-              </Link>
-              <div>
-                <h1 className="text-xl font-bold">Performance Analytics</h1>
-                <p className="text-white/60 text-sm mt-0.5">Track your performance metrics and analytics</p>
+    <div className="min-h-screen bg-[#0F0F0F] text-white flex flex-col">
+      {/* Sticky Header */}
+      <div className="sticky top-0 z-10 bg-[#0F0F0F] border-b border-white/5">
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex items-center">
+            <Link 
+              href="/freelancer/profile" 
+              className="inline-flex items-center text-sm text-purple-400 hover:text-purple-300 transition-colors duration-200"
+            >
+              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors duration-200">
+                <ArrowLeft className="h-4 w-4" />
               </div>
+            </Link>
+            <div className="ml-3">
+              <h1 className="text-lg font-semibold text-white">Performance Analytics</h1>
+              <p className="text-white/50 text-xs">Track your performance metrics and analytics</p>
             </div>
           </div>
         </div>
-        {/* Main Content with Stats */}
-        <div className="grid grid-cols-1">
-          {/* MonthlyActivities (bars) first */}
-          <MonthlyActivities isLoading={isLoading} />
+      </div>
+      
+      {/* Scrollable Content */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="container mx-auto px-4 py-6">
+          {/* Main Content with Stats */}
+          <div className="grid grid-cols-1">
+            {/* MonthlyActivities (bars) first */}
+            <MonthlyActivities isLoading={isLoading} />
+          </div>
         </div>
       </div>
     </div>
