@@ -78,3 +78,14 @@ src/
 3. Follow consistent naming conventions
 4. Maintain proper type safety
 5. Document complex business logic 
+
+# DoodLance UI Theme
+
+## Primary Colors
+- **Light Theme**: `#6B46C1`
+- **Dark Theme**: `#8B66D1`
+
+## Gradients
+- **Primary Gradient**: `#6B46C1` (Light) / `#8B66D1` (Dark)
+- **Secondary Gradient**: `from-purple-900` → `via-purple-800` → `to-purple-600`
+  - `#4c1d95` → `#6b21a8` → `#9333ea`
