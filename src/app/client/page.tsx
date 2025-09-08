@@ -369,8 +369,8 @@ export default function ClientHome() {
             {/* Adjusted space for optimal position */}
             <div className="pt-24 md:pt-28">
               <div className="max-w-2xl mx-auto text-center">
-                <h1 className="text-xl md:text-3xl font-bold text-white mb-3 whitespace-nowrap overflow-hidden text-ellipsis">
-                  Your Neighborhood's Got Talent
+                <h1 className="text-xl md:text-3xl font-bold text-white mb-3 text-center">
+                  Your Hyperlocal Freelancer Marketplace
                 </h1>
                 <p className="text-base md:text-lg text-white/80 mb-6">
                   Hire anyone for anything<br />right from your neighborhood.
