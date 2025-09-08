@@ -50,16 +50,20 @@ const mockSearches = [
 ];
 
 const searchExamples = [
-  "Need a plumber in Velachery",
-  "Looking for a pet walker in ECR",
-  "Video grapher for wedding",
-  "Electrician near me",
-  "Carpenter for furniture repair",
-  "Personal trainer at home",
-  "Beautician for bridal makeup",
-  "Car wash service",
-  "Interior designer consultation",
-  "Yoga instructor at home"
+  "Reels editor in Velachery",
+  "AI video creation near me",
+  "Professional photographer for wedding in Chennai",
+  "Event production team for corporate event",
+  "Net bowler for cricket practice in Adyar",
+  "Personal fitness coach at home",
+  "Digital marketing expert near me",
+  "3D printing service in OMR",
+  "Smart home setup specialist",
+  "Mystery spinner for cricket nets in Velachery",
+  "Video editor for YouTube channel",
+  "Drone photography for real estate in ECR",
+  "Esports coach for Valorant",
+  "Sidearm thrower specialist for cricket practice"
 ];
 
 const mockLocations = [
@@ -478,9 +482,9 @@ export default function ClientHome() {
 
         <div className="container mx-auto px-4 py-4 bg-[#111111] mb-20 relative z-0">
           {/* Service Categories */}
-          <section className="mb-8 relative z-0">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-semibold text-white">Popular Services in your area</h2>
+          <section className="mb-4 relative z-0">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-base font-medium text-white/90">Popular Services in your area</h2>
               <Link href="/client/services" className="text-white/80 hover:text-white text-sm font-medium flex items-center transition-colors">
                 View All
                 <ChevronRight className="w-4 h-4 ml-1" />
@@ -498,7 +502,7 @@ export default function ClientHome() {
                       icon={service.icon}
                       providerCount={service.providerCount}
                       discount={service.discount}
-                      className="w-[180px] flex-shrink-0"
+                      className="w-[150px] flex-shrink-0"
                     />
                   ))}
                 </div>

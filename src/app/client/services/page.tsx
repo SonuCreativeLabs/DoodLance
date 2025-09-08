@@ -2,14 +2,14 @@
 
 import { motion } from 'framer-motion'
 import ClientLayout from '@/components/layouts/client-layout'
-import { Search, ArrowLeft, Clock, Video, Dumbbell, Cpu, Package, Camera, Clapperboard, Brain, Briefcase, Grid } from 'lucide-react'
+import { Search, ArrowLeft, Clock, Video, Dumbbell, Cpu, Package, Camera, Clapperboard, Brain, Briefcase, Sparkles } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 
 // Sidebar categories using Lucide icons
 const sidebarCategories = [
-  { id: 'all', name: ['All', ''], icon: <Grid className="w-6 h-6" /> },
+  { id: 'for-you', name: ['For', 'You'], icon: <Sparkles className="w-6 h-6" /> },
   { id: 'content-creation', name: ['Content', 'Creation'], icon: <Clapperboard className="w-6 h-6" /> },
   { id: 'ai-services', name: ['AI', 'Services'], icon: <Brain className="w-6 h-6" /> },
   { id: 'professional-services', name: ['Professional', 'Services'], icon: <Briefcase className="w-6 h-6" /> },
@@ -20,50 +20,43 @@ const sidebarCategories = [
 // Service items (comprehensive, grouped by category)
 const serviceItems = [
   // Content Creation
-  { id: 'influencer-content-creator', name: 'Influencer / Creator', category: 'content-creation', providerCount: 32, mostBooked: true, image: 'https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?auto=format&fit=crop&w=800&q=80', fallbackEmoji: '🌟' },
-  { id: 'reels-shorts-video-editor', name: 'Reels Editor', category: 'content-creation', providerCount: 38, mostBooked: true, image: 'https://images.unsplash.com/photo-1512428559087-560fa5ceab42?auto=format&fit=crop&w=800&q=80', fallbackEmoji: '🎬' },
-  { id: 'podcast-editor', name: 'Podcast Editor', category: 'content-creation', providerCount: 29, image: 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?auto=format&fit=crop&w=800&q=80', fallbackEmoji: '🎧' },
-  { id: 'documentary-series-videographer', name: 'Documentary Shoot', category: 'content-creation', providerCount: 16, image: 'https://images.unsplash.com/photo-1517816428104-797678c7cf0d?auto=format&fit=crop&w=800&q=80', fallbackEmoji: '🎥' },
-  { id: 'product-photography-videography', name: 'Product Shoot', category: 'content-creation', providerCount: 35, discount: '10% Off', image: 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=800&q=80', fallbackEmoji: '📷' },
-  { id: 'sports-photography-videography', name: 'Sports Shoot', category: 'content-creation', providerCount: 22, image: 'https://images.unsplash.com/photo-1502877338535-766e1452684a?auto=format&fit=crop&w=800&q=80', fallbackEmoji: '🏏' },
-  { id: 'drone-services', name: 'Drone', category: 'content-creation', providerCount: 22, image: 'https://images.unsplash.com/photo-1504196606672-aef5c9cefc92?auto=format&fit=crop&w=800&q=80', fallbackEmoji: '🚁' },
-  { id: 'event-videography', name: 'Event Videography', category: 'content-creation', providerCount: 26, image: 'https://images.unsplash.com/photo-1556157382-5bc2f3a580d3?auto=format&fit=crop&w=800&q=80', fallbackEmoji: '🎥' },
-  { id: 'streaming-setup', name: 'Streaming Setup', category: 'content-creation', providerCount: 15, image: 'https://images.unsplash.com/photo-1601144807931-eb8bdb7abfaf?auto=format&fit=crop&w=800&q=80', fallbackEmoji: '📡' },
-  { id: 'creative-arts', name: 'Creative Arts', category: 'content-creation', providerCount: 18, image: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=800&q=80', fallbackEmoji: '🎨' },
-  { id: 'vj-dj-live-performances', name: 'VJ / DJ / Live Events', category: 'content-creation', providerCount: 21, image: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=800&q=80', fallbackEmoji: '🎵' },
-  { id: 'modeling', name: 'Modeling', category: 'content-creation', providerCount: 14, image: 'https://images.unsplash.com/photo-1503342394121-4804ba5f7f34?auto=format&fit=crop&w=800&q=80', fallbackEmoji: '👗' },
+  { id: 'influencer-content-creator', name: 'Influencer / Creator', category: 'content-creation', providerCount: 32, mostBooked: true, image: '/images/Influencer:creator.jpeg', fallbackEmoji: '🌟' },
+  { id: 'reels-podcast-editor', name: 'Reels & Podcast Editor', category: 'content-creation', providerCount: 67, mostBooked: true, image: '/images/reels & podcast editor.jpeg', fallbackEmoji: '🎙️' },
+  { id: 'professional-shoots', name: 'Professional Shoots', category: 'content-creation', providerCount: 73, mostBooked: true, image: '/images/professional shoots.jpeg', fallbackEmoji: '📸' },
+  { id: 'drone-services', name: 'Drone', category: 'content-creation', providerCount: 22, image: '/images/drone.jpeg', fallbackEmoji: '🚁' },
+  { id: 'creative-arts', name: 'Creative Arts', category: 'content-creation', providerCount: 18, image: '/images/creative arts.jpeg', fallbackEmoji: '🎨' },
+  { id: 'event-production', name: 'Event Production', category: 'content-creation', providerCount: 47, mostBooked: true, image: '/images/Event production.jpeg', fallbackEmoji: '🎪' },
+  { id: 'modeling', name: 'Modeling', category: 'content-creation', providerCount: 14, image: '/images/modeling.jpeg', fallbackEmoji: '👗' },
 
   // Sports & Fitness
-  { id: 'cricket-net-bowler-sidearmer', name: 'Cricket Net Bowler', category: 'sports-fitness', providerCount: 15, image: 'https://images.unsplash.com/photo-1592840806123-c9f3b17fe3d1?auto=format&fit=crop&w=800&q=80', fallbackEmoji: '🏏' },
-  { id: 'throwdown-specialist', name: 'Throwdown Specialist', category: 'sports-fitness', providerCount: 12, image: 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?auto=format&fit=crop&w=800&q=80', fallbackEmoji: '🎯' },
-  { id: 'personal-sports-videographer', name: 'Sports Videographer', category: 'sports-fitness', providerCount: 17, image: 'https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?auto=format&fit=crop&w=800&q=80', fallbackEmoji: '🎥' },
-  { id: 'esports-coach', name: 'Esports Coach', category: 'sports-fitness', providerCount: 19, image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=800&q=80', fallbackEmoji: '🎮' },
+  { id: 'net-bowler-batsman', name: 'Net Bowler/Batsman', category: 'sports-fitness', providerCount: 18, image: '/images/Bowler & batsman.png', fallbackEmoji: '🏏' },
+  { id: 'sidearm-thrower-specialist', name: 'Sidearm Thrower Specialist', category: 'sports-fitness', providerCount: 12, image: '/images/sidearm thrower specialist.jpeg', fallbackEmoji: '🎯' },
+  { id: 'esports-coach', name: 'Esports', category: 'sports-fitness', providerCount: 19, image: '/images/esport.jpeg', fallbackEmoji: '🎮' },
   { id: 'fitness-trainer', name: 'Fitness Trainer', category: 'sports-fitness', providerCount: 23, image: 'https://images.unsplash.com/photo-1554344728-77cf90d9ed26?auto=format&fit=crop&w=800&q=80', fallbackEmoji: '🏋️' },
+  { id: 'personal-coaching', name: 'Personal Coaching', category: 'sports-fitness', providerCount: 20, image: '/images/personal coaching.png', fallbackEmoji: '🎯' },
 
   // AI Services
-  { id: 'ai-prompt-engineer', name: 'AI Prompt Engineer', category: 'ai-services', providerCount: 18, image: 'https://images.unsplash.com/photo-1515879218367-8466d910aaa4?auto=format&fit=crop&w=800&q=80', fallbackEmoji: '✍️' },
-  { id: 'nft-creator', name: 'NFT Creator', category: 'ai-services', providerCount: 10, image: 'https://images.unsplash.com/photo-1620321052592-2fe4cfba3c51?auto=format&fit=crop&w=800&q=80', fallbackEmoji: '🖼️' },
-  { id: 'ar-vr-services', name: 'AR & VR', category: 'ai-services', providerCount: 15, image: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=800&q=80', fallbackEmoji: '🕶️' },
-  { id: 'ai-ad-campaign-creator', name: 'AI Ad Campaigns', category: 'ai-services', providerCount: 25, image: 'https://images.unsplash.com/photo-1483478550801-ceba5fe50e8e?auto=format&fit=crop&w=800&q=80', fallbackEmoji: '📣' },
-  { id: 'ai-avatar-creator', name: 'AI Avatars', category: 'ai-services', providerCount: 14, image: 'https://images.unsplash.com/photo-1544006659-f0b21884ce1d?auto=format&fit=crop&w=800&q=80', fallbackEmoji: '👤' },
-  { id: 'web3-services', name: 'Web3 Services', category: 'ai-services', providerCount: 15, image: 'https://images.unsplash.com/photo-1643101809365-9b4b76df3a1d?auto=format&fit=crop&w=800&q=80', fallbackEmoji: '🌐' },
+  { id: 'ai-prompt-engineer', name: 'AI Prompt Engineer', category: 'ai-services', providerCount: 18, image: '/images/ai prompt engineer.jpeg', fallbackEmoji: '✍️' },
+  { id: 'ar-vr-services', name: 'AR & VR', category: 'ai-services', providerCount: 15, image: '/images/AR & VR.png', fallbackEmoji: '🕶️' },
+  { id: 'ai-ad-campaign-creator', name: 'AI Ad Campaigns', category: 'ai-services', providerCount: 25, image: '/images/AI Ad campaigns.jpeg', fallbackEmoji: '📣' },
+  { id: 'web3-digital-assets', name: 'Web3 & Digital Assets', category: 'ai-services', providerCount: 25, image: '/images/web3.png', fallbackEmoji: '🌐', mostBooked: true },
+  { id: 'ai-video-avatars', name: 'AI Video & Avatars', category: 'ai-services', providerCount: 30, mostBooked: true, image: '/images/ai video & Avatars.png', fallbackEmoji: '🤖' },
 
   // Professional Services
   { id: 'legal-tax-consulting', name: 'Legal/Tax Consulting', category: 'professional-services', providerCount: 11, image: 'https://images.unsplash.com/photo-1521791136064-7986c2920216?auto=format&fit=crop&w=800&q=80', fallbackEmoji: '⚖️' },
-  { id: 'dev-seo-graphic-design', name: 'Dev / SEO / Design', category: 'professional-services', providerCount: 24, image: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=800&q=80', fallbackEmoji: '🧩' },
-  { id: 'digital-marketing', name: 'Digital Marketing', category: 'professional-services', providerCount: 21, image: 'https://images.unsplash.com/photo-1454165205744-3b78555e5572?auto=format&fit=crop&w=800&q=80', fallbackEmoji: '💡' },
-  { id: 'personal-branding', name: 'Personal Branding', category: 'professional-services', providerCount: 13, image: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=800&q=80', fallbackEmoji: '🧑‍💼' },
+  { id: 'digital-solutions', name: 'Digital Solutions', category: 'professional-services', providerCount: 45, mostBooked: true, image: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=800&q=80', fallbackEmoji: '💻' },
+  { id: 'personal-branding', name: 'Personal Branding', category: 'professional-services', providerCount: 13, image: '/images/personal branding.png', fallbackEmoji: '🧑‍💼' },
   { id: 'interior-design-wall-art', name: 'Interior & Wall Art', category: 'hyperlocal', providerCount: 17, image: 'https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&w=800&q=80', fallbackEmoji: '🖌️' },
 
   // Hyperlocal Future Gigs
-  { id: 'quick-cash-gigs', name: 'Quick Cash Gigs', category: 'hyperlocal', providerCount: 42, mostBooked: true, image: 'https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?auto=format&fit=crop&w=800&q=80', fallbackEmoji: '💰' },
-  { id: '3d-printing', name: '3D Print', category: 'hyperlocal', providerCount: 10, image: 'https://images.unsplash.com/photo-1581091870622-7c81f3d97c7b?auto=format&fit=crop&w=800&q=80', fallbackEmoji: '🧱' },
-  { id: 'smart-home-setup-specialist', name: 'Smart Home Setup', category: 'hyperlocal', providerCount: 19, image: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=800&q=80', fallbackEmoji: '🏠' },
-  { id: 'event-management-coordination', name: 'Event Management', category: 'hyperlocal', providerCount: 20, image: 'https://images.unsplash.com/photo-1556157382-9449ecf1f308?auto=format&fit=crop&w=800&q=80', fallbackEmoji: '📅' },
+  { id: 'quick-cash-gigs', name: 'Quick Cash Gigs', category: 'hyperlocal', providerCount: 42, mostBooked: true, image: '/images/quick cash gigs.png', fallbackEmoji: '💰' },
+  { id: '3d-printing', name: '3D Print', category: 'hyperlocal', providerCount: 10, image: '/images/3d print.png', fallbackEmoji: '🧱' },
+  { id: 'smart-home-setup-specialist', name: 'Smart Home Setup', category: 'hyperlocal', providerCount: 19, image: '/images/smart home setup.png', fallbackEmoji: '🏠' },
+  { id: 'event-management-coordination', name: 'Event Management', category: 'hyperlocal', providerCount: 20, image: '/images/Event management.png', fallbackEmoji: '📅' },
 ]
 
 export default function ServicesPage() {
-  const [selectedCategory, setSelectedCategory] = useState('all')
+  const [selectedCategory, setSelectedCategory] = useState('for-you')
   const sidebarRef = useRef<HTMLDivElement>(null)
   const selectedButtonRef = useRef<HTMLButtonElement>(null)
 
@@ -158,7 +151,9 @@ export default function ServicesPage() {
                   <div className="py-6">
                     <div className="grid grid-cols-2 gap-5 pb-24">
                       {serviceItems
-                        .filter(service => selectedCategory === 'all' || service.category === selectedCategory)
+                        // TODO: Replace this heuristic with a real user-behavior-based ranking.
+                        // Example future signal sources: recently viewed, clicks, bookings, category affinity.
+                        .filter(service => selectedCategory === 'for-you' ? !!service.mostBooked : service.category === selectedCategory)
                         .map((service) => (
                         <Link 
                           href={`/client/services/${service.id}`}
@@ -215,11 +210,6 @@ export default function ServicesPage() {
 
                               {/* Badges - Even smaller size */}
                               <div className="absolute top-2 left-2 flex flex-wrap items-start gap-1 z-[3]">
-                                {service.discount && (
-                                  <div className="bg-purple-500/80 backdrop-blur-[2px] text-white text-[9px] font-medium px-1.5 py-0.5 rounded-full">
-                                    {service.discount}
-                                  </div>
-                                )}
                                 {service.mostBooked && (
                                   <div className="bg-amber-500/80 backdrop-blur-[2px] text-white text-[9px] font-medium px-1.5 py-0.5 rounded-full">
                                     Most Booked
