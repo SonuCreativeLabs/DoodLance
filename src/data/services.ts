@@ -15,9 +15,19 @@ export const sidebarCategories = [
     icon: '📷'
   },
   {
-    id: 'sports-media',
-    name: ['Sports', 'Media'],
-    icon: '🏏'
+    id: 'sports-fitness',
+    name: ['Sports &', 'Fitness'],
+    icon: '🏋️'
+  },
+  {
+    id: 'ai-services',
+    name: ['AI', 'Services'],
+    icon: '🤖'
+  },
+  {
+    id: 'professional-services',
+    name: ['Professional', 'Services'],
+    icon: '💼'
   },
   {
     id: 'podcasting',
@@ -28,11 +38,6 @@ export const sidebarCategories = [
     id: 'streaming',
     name: ['Streaming', 'Setup'],
     icon: '📡'
-  },
-  {
-    id: 'ai-services',
-    name: ['AI', 'Services'],
-    icon: '🤖'
   }
 ]
 
@@ -44,7 +49,7 @@ export const serviceItems = [
     category: 'content',
     providerCount: 40,
     mostBooked: true,
-    image: 'https://images.unsplash.com/photo-1512428559087-560fa5ceab42?auto=format&fit=crop&w=800&q=80',
+    image: '/images/professional shoots.jpeg',
     icon: '🎬'
   },
   {
@@ -52,7 +57,7 @@ export const serviceItems = [
     name: 'Event Content Creator',
     category: 'content',
     providerCount: 26,
-    image: 'https://images.unsplash.com/photo-1517816428104-797678c7cf0d?auto=format&fit=crop&w=800&q=80',
+    image: '/images/Event production.jpeg',
     icon: '📹'
   },
 
@@ -63,16 +68,35 @@ export const serviceItems = [
     category: 'photography',
     providerCount: 35,
     discount: '10% Off',
-    image: 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=800&q=80',
-    icon: '📷'
+    image: '/images/professional shoots.jpeg',
+    icon: '📦'
+  },
+  {
+    id: 'drone-photography',
+    name: 'Drone Photography',
+    category: 'photography',
+    providerCount: 18,
+    image: '/images/drone.jpeg',
+    icon: '🚁',
+    mostBooked: true
+  },
+  {
+    id: 'fashion-photography',
+    name: 'Fashion Photography',
+    category: 'photography',
+    providerCount: 29,
+    image: '/images/modeling.jpeg',
+    icon: '👗',
+    mostBooked: true
   },
   {
     id: 'sports-photo-videography',
     name: 'Sports Photo & Videography',
     category: 'sports-media',
     providerCount: 22,
-    image: 'https://images.unsplash.com/photo-1502877338535-766e1452684a?auto=format&fit=crop&w=800&q=80',
-    icon: '🏏'
+    image: '/images/Bowler & batsman.png',
+    icon: '🏏',
+    mostBooked: true
   },
 
   // Podcasting
@@ -141,28 +165,30 @@ export const serviceItems = [
 
 // Popular services for home page
 export const popularServices = [
-  // Requested top 3
+  // Top services with updated local images
   {
     id: 'cricket-net-bowler-sidearmer',
     title: 'Cricket Net Bowler / Sidearmer',
     icon: '🏏',
     providerCount: 15,
-    image: 'https://images.unsplash.com/photo-1592840806123-c9f3b17fe3d1?auto=format&fit=crop&w=800&q=80'
+    image: '/images/Bowler & batsman.png',
+    mostBooked: true
   },
   {
     id: 'reels-shorts-video-editor',
     title: 'Reels / Shorts Video Editor',
     icon: '🎬',
     providerCount: 38,
-    image: 'https://images.unsplash.com/photo-1512428559087-560fa5ceab42?auto=format&fit=crop&w=800&q=80',
-    discount: '10% Off'
+    image: '/images/reels & podcast editor.jpeg',
+    mostBooked: true
   },
   {
     id: 'ai-reels-shorts-creator',
     title: 'AI Reels / Shorts Creator',
     icon: '🎞️',
     providerCount: 22,
-    image: 'https://images.unsplash.com/photo-1556157382-97eda2d62296?auto=format&fit=crop&w=800&q=80'
+    image: '/images/AI Ad campaigns.jpeg',
+    mostBooked: true
   },
   // Additional popular picks
   {
@@ -170,15 +196,16 @@ export const popularServices = [
     title: 'Product Photography',
     icon: '📷',
     providerCount: 35,
-    image: 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=800&q=80',
-    discount: '10% Off'
+    image: '/images/professional shoots.jpeg',
+    discount: '10% Off',
+    mostBooked: true
   },
   {
-    id: 'sports-photo-videography',
-    title: 'Sports Media',
-    icon: '🏏',
-    providerCount: 22,
-    image: 'https://images.unsplash.com/photo-1502877338535-766e1452684a?auto=format&fit=crop&w=800&q=80',
-    discount: '12% Off'
+    id: 'quick-cash-gigs',
+    title: 'Quick Cash Gigs',
+    icon: '💰',
+    providerCount: 42,
+    image: '/images/quick cash gigs.png',
+    mostBooked: true
   }
 ]

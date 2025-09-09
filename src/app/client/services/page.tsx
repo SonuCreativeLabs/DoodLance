@@ -11,9 +11,9 @@ import Image from 'next/image'
 const sidebarCategories = [
   { id: 'for-you', name: ['For', 'You'], icon: <Sparkles className="w-6 h-6" /> },
   { id: 'content-creation', name: ['Content', 'Creation'], icon: <Clapperboard className="w-6 h-6" /> },
+  { id: 'sports-fitness', name: ['Sports &', 'Fitness'], icon: <Dumbbell className="w-6 h-6" /> },
   { id: 'ai-services', name: ['AI', 'Services'], icon: <Brain className="w-6 h-6" /> },
   { id: 'professional-services', name: ['Professional', 'Services'], icon: <Briefcase className="w-6 h-6" /> },
-  { id: 'sports-fitness', name: ['Sports &', 'Fitness'], icon: <Dumbbell className="w-6 h-6" /> },
   { id: 'hyperlocal', name: ['Hyperlocal', 'Gigs'], icon: <Package className="w-6 h-6" /> },
 ]
 
@@ -53,6 +53,7 @@ const serviceItems = [
   { id: '3d-printing', name: '3D Print', category: 'hyperlocal', providerCount: 10, image: '/images/3d print.png', fallbackEmoji: '🧱' },
   { id: 'smart-home-setup-specialist', name: 'Smart Home Setup', category: 'hyperlocal', providerCount: 19, image: '/images/smart home setup.png', fallbackEmoji: '🏠' },
   { id: 'event-management-coordination', name: 'Event Management', category: 'hyperlocal', providerCount: 20, image: '/images/Event management.png', fallbackEmoji: '📅' },
+  { id: 'other-services', name: 'Other Services', category: 'hyperlocal', providerCount: 35, image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=800&q=80', fallbackEmoji: '🔧' },
 ]
 
 export default function ServicesPage() {
@@ -211,8 +212,8 @@ export default function ServicesPage() {
                               {/* Badges - Even smaller size */}
                               <div className="absolute top-2 left-2 flex flex-wrap items-start gap-1 z-[3]">
                                 {service.mostBooked && (
-                                  <div className="bg-amber-500/80 backdrop-blur-[2px] text-white text-[9px] font-medium px-1.5 py-0.5 rounded-full">
-                                    Most Booked
+                                  <div className="bg-[#8B5CF6] text-white text-[9px] font-medium px-2 py-0.5 rounded-full shadow-sm">
+                                    Popular
                                   </div>
                                 )}
                               </div>
