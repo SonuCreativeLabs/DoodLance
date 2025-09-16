@@ -99,12 +99,13 @@ export default function ClientLayout({ children, className }: ClientLayoutProps)
               {/* Work & Earn Button */}
               <button 
                 onClick={handleSwitchToFreelancer}
-                className="flex items-center justify-center group relative h-10 px-4 bg-gradient-to-r from-purple-600 to-purple-500 rounded-l-full rounded-r-none shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 active:scale-95 ml-auto"
+                className="flex items-center justify-center group relative h-10 px-3 xs:px-4 sm:px-5 min-w-[90px] xs:min-w-[100px] sm:min-w-[120px] md:min-w-[130px] bg-gradient-to-r from-yellow-500 via-amber-400 to-yellow-300 rounded-l-full rounded-r-none shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 active:scale-95 ml-auto overflow-visible"
               >
-                <div className="flex items-center gap-1">
-                  <span className="text-[13px] font-bold text-white">EARN</span>
-                  <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                <div className="flex items-center gap-1 xs:gap-1.5">
+                  <span className="text-[12px] xs:text-[13px] font-bold text-black whitespace-nowrap">Earn</span>
+                  <span className="text-[12px] xs:text-[13px]">💰</span>
+                  <svg className="h-3.5 w-3.5 xs:h-4 xs:w-4 text-black flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                   </svg>
                 </div>
               </button>
