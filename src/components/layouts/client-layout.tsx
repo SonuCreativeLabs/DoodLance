@@ -99,21 +99,13 @@ export default function ClientLayout({ children, className }: ClientLayoutProps)
               {/* Work & Earn Button */}
               <button 
                 onClick={handleSwitchToFreelancer}
-                className="flex flex-col items-center justify-center group relative"
+                className="flex items-center justify-center group relative h-10 px-4 bg-gradient-to-r from-purple-600 to-purple-500 rounded-l-full rounded-r-none shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 active:scale-95 ml-auto"
               >
-                <div className="relative flex flex-col items-center">
-                  <div className="relative h-6 w-6 flex items-center justify-center">
-                    <span className="text-xl group-hover:scale-110 transition-transform">💰</span>
-                  </div>
-                  <div className="relative mt-1.5">
-                    <span className="text-[13px] font-bold bg-gradient-to-br from-amber-500 via-yellow-400 to-amber-300 bg-clip-text text-transparent">EARN</span>
-                  </div>
-                </div>
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <div className="px-2 py-1 bg-gradient-to-r from-amber-500 to-yellow-400 text-white text-[11px] rounded-md whitespace-nowrap font-bold">
-                    Switch to freelancer
-                  </div>
-                  <div className="w-2 h-2 bg-amber-500 rotate-45 absolute -bottom-1 left-1/2 -translate-x-1/2"></div>
+                <div className="flex items-center gap-1">
+                  <span className="text-[13px] font-bold text-white">EARN</span>
+                  <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                  </svg>
                 </div>
               </button>
             </div>
