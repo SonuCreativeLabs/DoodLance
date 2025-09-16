@@ -175,7 +175,7 @@ export const popularServices = [
     title: 'Sidearm Specialist',
     icon: '🎯',
     providerCount: 22,
-    image: '/images/sidearm thrower specialist.jpeg',
+    image: '/images/women sidearm.png',
     mostBooked: true
   },
   {
