@@ -477,7 +477,6 @@ export default function ClientHome() {
                       image={service.image}
                       icon={service.icon}
                       providerCount={service.providerCount}
-                      discount={service.discount}
                       className="w-[150px] flex-shrink-0"
                     />
                   ))}
