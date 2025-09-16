@@ -100,7 +100,6 @@ export default function Header() {
               </div>
             </div>
           )}
-        </div>
 
         {/* Menu Sidebar */}
         {isMenuOpen && (

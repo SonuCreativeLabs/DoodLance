@@ -356,10 +356,10 @@ export default function ClientHome() {
             {/* Adjusted space for optimal position */}
             <div className="pt-24 md:pt-28">
               <div className="max-w-2xl mx-auto text-center">
-                <h1 className="text-xl md:text-3xl font-bold text-white mb-3 text-center">
+                <h1 className="text-xl md:text-3xl font-bold text-white mb-2 text-center">
                   Practice like a pro, with a pro
                 </h1>
-                <p className="text-base md:text-lg text-white/80 mb-6">
+                <p className="text-base md:text-lg text-white/80 mb-4">
                   Your shortcut to better cricket starts here
                 </p>
               </div>
