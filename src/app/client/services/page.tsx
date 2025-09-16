@@ -10,50 +10,38 @@ import Image from 'next/image'
 // Sidebar categories using Lucide icons
 const sidebarCategories = [
   { id: 'for-you', name: ['For', 'You'], icon: <Sparkles className="w-6 h-6" /> },
-  { id: 'content-creation', name: ['Content', 'Creation'], icon: <Clapperboard className="w-6 h-6" /> },
-  { id: 'sports-fitness', name: ['Sports &', 'Fitness'], icon: <Dumbbell className="w-6 h-6" /> },
-  { id: 'ai-services', name: ['AI', 'Services'], icon: <Brain className="w-6 h-6" /> },
-  { id: 'professional-services', name: ['Professional', 'Services'], icon: <Briefcase className="w-6 h-6" /> },
-  { id: 'hyperlocal', name: ['Hyperlocal', 'Gigs'], icon: <Package className="w-6 h-6" /> },
+  { id: 'playing', name: ['Playing', 'Services'], icon: <Video className="w-6 h-6" /> },
+  { id: 'coaching', name: ['Coaching &', 'Training'], icon: <Dumbbell className="w-6 h-6" /> },
+  { id: 'support', name: ['Support', 'Staff'], icon: <Brain className="w-6 h-6" /> },
+  { id: 'media', name: ['Media &', 'Content'], icon: <Camera className="w-6 h-6" /> },
+  { id: 'ground', name: ['Ground', 'Services'], icon: <Package className="w-6 h-6" /> },
 ]
 
 // Service items (comprehensive, grouped by category)
 const serviceItems = [
-  // Content Creation
-  { id: 'influencer-content-creator', name: 'Influencer / Creator', category: 'content-creation', providerCount: 32, mostBooked: true, image: '/images/Influencer:creator.jpeg', fallbackEmoji: '🌟' },
-  { id: 'reels-podcast-editor', name: 'Reels & Podcast Editor', category: 'content-creation', providerCount: 67, mostBooked: true, image: '/images/reels & podcast editor.jpeg', fallbackEmoji: '🎙️' },
-  { id: 'professional-shoots', name: 'Professional Shoots', category: 'content-creation', providerCount: 73, mostBooked: true, image: '/images/professional shoots.jpeg', fallbackEmoji: '📸' },
-  { id: 'drone-services', name: 'Drone', category: 'content-creation', providerCount: 22, image: '/images/drone.jpeg', fallbackEmoji: '🚁' },
-  { id: 'creative-arts', name: 'Creative Arts', category: 'content-creation', providerCount: 18, image: '/images/creative arts.jpeg', fallbackEmoji: '🎨' },
-  { id: 'event-production', name: 'Event Production', category: 'content-creation', providerCount: 47, mostBooked: true, image: '/images/Event production.jpeg', fallbackEmoji: '🎪' },
-  { id: 'modeling', name: 'Modeling', category: 'content-creation', providerCount: 14, image: '/images/modeling.jpeg', fallbackEmoji: '👗' },
+  // Cricket Playing Services
+  { id: 'bowler', name: 'Bowler', category: 'playing', providerCount: 45, mostBooked: true, image: '/images/Bowler & batsman.png', fallbackEmoji: '🏏' },
+  { id: 'batsman', name: 'Batsman', category: 'playing', providerCount: 38, mostBooked: true, image: '/images/Bowler & batsman.png', fallbackEmoji: '🏏' },
+  { id: 'sidearm-specialist', name: 'Sidearm Specialist', category: 'playing', providerCount: 22, image: '/images/Bowler & batsman.png', fallbackEmoji: '🎯' },
 
-  // Sports & Fitness
-  { id: 'net-bowler-batsman', name: 'Net Bowler/Batsman', category: 'sports-fitness', providerCount: 18, image: '/images/Bowler & batsman.png', fallbackEmoji: '🏏' },
-  { id: 'sidearm-thrower-specialist', name: 'Sidearm Thrower Specialist', category: 'sports-fitness', providerCount: 12, image: '/images/sidearm thrower specialist.jpeg', fallbackEmoji: '🎯' },
-  { id: 'esports-coach', name: 'Esports', category: 'sports-fitness', providerCount: 19, image: '/images/esport.jpeg', fallbackEmoji: '🎮' },
-  { id: 'fitness-trainer', name: 'Fitness Trainer', category: 'sports-fitness', providerCount: 23, image: 'https://images.unsplash.com/photo-1554344728-77cf90d9ed26?auto=format&fit=crop&w=800&q=80', fallbackEmoji: '🏋️' },
-  { id: 'personal-coaching', name: 'Personal Coaching', category: 'sports-fitness', providerCount: 20, image: '/images/personal coaching.png', fallbackEmoji: '🎯' },
+  // Cricket Coaching & Training
+  { id: 'coach', name: 'Coach', category: 'coaching', providerCount: 35, mostBooked: true, image: '/images/Bowler & batsman.png', fallbackEmoji: '👨‍🏫' },
+  { id: 'sports-conditioning-trainer', name: 'Sports Conditioning Trainer', category: 'coaching', providerCount: 28, image: '/images/Bowler & batsman.png', fallbackEmoji: '💪' },
+  { id: 'fitness-trainer', name: 'Fitness Trainer', category: 'coaching', providerCount: 32, image: '/images/Bowler & batsman.png', fallbackEmoji: '🏃‍♂️' },
 
-  // AI Services
-  { id: 'ai-prompt-engineer', name: 'AI Prompt Engineer', category: 'ai-services', providerCount: 18, image: '/images/ai prompt engineer.jpeg', fallbackEmoji: '✍️' },
-  { id: 'ar-vr-services', name: 'AR & VR', category: 'ai-services', providerCount: 15, image: '/images/AR & VR.png', fallbackEmoji: '🕶️' },
-  { id: 'ai-ad-campaign-creator', name: 'AI Ad Campaigns', category: 'ai-services', providerCount: 25, image: '/images/AI Ad campaigns.jpeg', fallbackEmoji: '📣' },
-  { id: 'web3-digital-assets', name: 'Web3 & Digital Assets', category: 'ai-services', providerCount: 25, image: '/images/web3.png', fallbackEmoji: '🌐', mostBooked: true },
-  { id: 'ai-video-avatars', name: 'AI Video & Avatars', category: 'ai-services', providerCount: 30, mostBooked: true, image: '/images/ai video & Avatars.png', fallbackEmoji: '🤖' },
+  // Cricket Support Services
+  { id: 'analyst', name: 'Analyst', category: 'support', providerCount: 18, image: '/images/Bowler & batsman.png', fallbackEmoji: '📊' },
+  { id: 'physio', name: 'Physio', category: 'support', providerCount: 25, image: '/images/Bowler & batsman.png', fallbackEmoji: '🏥' },
+  { id: 'scorer', name: 'Scorer', category: 'support', providerCount: 15, image: '/images/Bowler & batsman.png', fallbackEmoji: '📝' },
+  { id: 'umpire', name: 'Umpire', category: 'support', providerCount: 20, image: '/images/Bowler & batsman.png', fallbackEmoji: '⚖️' },
 
-  // Professional Services
-  { id: 'legal-tax-consulting', name: 'Legal/Tax Consulting', category: 'professional-services', providerCount: 11, image: 'https://images.unsplash.com/photo-1521791136064-7986c2920216?auto=format&fit=crop&w=800&q=80', fallbackEmoji: '⚖️' },
-  { id: 'digital-solutions', name: 'Digital Solutions', category: 'professional-services', providerCount: 45, mostBooked: true, image: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=800&q=80', fallbackEmoji: '💻' },
-  { id: 'personal-branding', name: 'Personal Branding', category: 'professional-services', providerCount: 13, image: '/images/personal branding.png', fallbackEmoji: '🧑‍💼' },
-  { id: 'interior-design-wall-art', name: 'Interior & Wall Art', category: 'hyperlocal', providerCount: 17, image: 'https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&w=800&q=80', fallbackEmoji: '🖌️' },
+  // Cricket Media & Content
+  { id: 'cricket-photo-videography', name: 'Cricket Photo / Videography', category: 'media', providerCount: 30, mostBooked: true, image: '/images/Bowler & batsman.png', fallbackEmoji: '📷' },
+  { id: 'cricket-content-creator', name: 'Cricket Content Creator', category: 'media', providerCount: 24, image: '/images/Bowler & batsman.png', fallbackEmoji: '🎬' },
+  { id: 'commentator', name: 'Commentator', category: 'media', providerCount: 16, image: '/images/Bowler & batsman.png', fallbackEmoji: '🎤' },
 
-  // Hyperlocal Future Gigs
-  { id: 'quick-cash-gigs', name: 'Quick Cash Gigs', category: 'hyperlocal', providerCount: 42, mostBooked: true, image: '/images/quick cash gigs.png', fallbackEmoji: '💰' },
-  { id: '3d-printing', name: '3D Print', category: 'hyperlocal', providerCount: 10, image: '/images/3d print.png', fallbackEmoji: '🧱' },
-  { id: 'smart-home-setup-specialist', name: 'Smart Home Setup', category: 'hyperlocal', providerCount: 19, image: '/images/smart home setup.png', fallbackEmoji: '🏠' },
-  { id: 'event-management-coordination', name: 'Event Management', category: 'hyperlocal', providerCount: 20, image: '/images/Event management.png', fallbackEmoji: '📅' },
-  { id: 'other-services', name: 'Other Services', category: 'hyperlocal', providerCount: 35, image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=800&q=80', fallbackEmoji: '🔧' },
+  // Cricket Ground Services
+  { id: 'groundsman', name: 'Groundsman', category: 'ground', providerCount: 12, image: '/images/Bowler & batsman.png', fallbackEmoji: '🌱' },
 ]
 
 export default function ServicesPage() {
@@ -166,13 +154,13 @@ export default function ServicesPage() {
                             <div className="aspect-[3/4] relative">
                               {/* Fallback/Loading State - Lucide icon, low opacity */}
                               <div className="absolute inset-0 flex items-center justify-center z-0 bg-[#161616] text-white/30">
-                                {service.category === 'content-creation' && <Clapperboard className="w-12 h-12" />}
-                                {service.category === 'ai-services' && <Brain className="w-12 h-12" />}
-                                {service.category === 'professional-services' && <Briefcase className="w-12 h-12" />}
-                                {service.category === 'sports-fitness' && <Dumbbell className="w-12 h-12" />}
-                                {service.category === 'hyperlocal' && <Package className="w-12 h-12" />}
-                                {service.category !== 'content-creation' && service.category !== 'ai-services' && service.category !== 'professional-services' && service.category !== 'sports-fitness' && service.category !== 'hyperlocal' && (
-                                  <Camera className="w-12 h-12" />
+                                {service.category === 'playing' && <Video className="w-12 h-12" />}
+                                {service.category === 'coaching' && <Dumbbell className="w-12 h-12" />}
+                                {service.category === 'support' && <Brain className="w-12 h-12" />}
+                                {service.category === 'media' && <Camera className="w-12 h-12" />}
+                                {service.category === 'ground' && <Package className="w-12 h-12" />}
+                                {service.category !== 'playing' && service.category !== 'coaching' && service.category !== 'support' && service.category !== 'media' && service.category !== 'ground' && (
+                                  <Video className="w-12 h-12" />
                                 )}
                               </div>
                               

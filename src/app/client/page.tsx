@@ -1,6 +1,6 @@
 "use client"
 
-import { Search, MapPin, Star, Clock, Calendar, User, Briefcase, GraduationCap, ChevronRight, Bell, Wallet, X, Brain, Cpu, Sparkles } from 'lucide-react'
+import { Search, MapPin, Star, Clock, Calendar, User, Briefcase, GraduationCap, ChevronRight, Bell, X, Brain, Cpu, Sparkles } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import ClientLayout from '@/components/layouts/client-layout'
 import { FreelancerCard } from '@/components/client/freelancer-card'
@@ -50,19 +50,19 @@ const mockSearches = [
 ];
 
 const searchExamples = [
-  "Reels editor in Velachery",
-  "AI video creation near me",
-  "Professional photographer for wedding in Chennai",
-  "Event production team for corporate event",
-  "Net bowler for cricket practice in Adyar",
-  "Personal fitness coach at home",
-  "Digital marketing expert near me",
-  "3D printing service in OMR",
-  "Smart home setup specialist",
-  "Mystery spinner for cricket nets in Velachery",
-  "Video editor for YouTube channel",
-  "Drone photography for real estate in ECR",
-  "Esports coach for Valorant",
+  "Bowler for cricket practice in Chepauk",
+  "Sidearm specialist for batting practice in T Nagar",
+  "Cricket coach for beginners in Mylapore",
+  "Batsman training sessions in Adyar",
+  "Personal cricket coach in Royapettah",
+  "Cricket physio for injury recovery in Nungambakkam",
+  "Sidearm thrower for net practice in Kodambakkam",
+  "Cricket analyst for match analysis in West Mambalam",
+  "Sports conditioning trainer in Alwarpet",
+  "Cricket umpire for local matches in Besant Nagar",
+  "Cricket content creator in Velachery",
+  "Cricket scorer for tournaments in Chennai",
+  "Cricket photo videography for matches in ECR",
   "Sidearm thrower specialist for cricket practice"
 ];
 
@@ -225,15 +225,6 @@ export default function ClientHome() {
                       <svg className="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a8.38 8.38 0 0 1 13 0"/></svg>
                       My Profile
                     </button>
-                    {/* Wallet */}
-                    <button
-                      className="flex items-center gap-3 px-6 py-3 text-left text-neutral-800 hover:bg-neutral-100 transition-colors"
-                      onClick={() => router.push('/client/wallet')}
-                    >
-                      <svg className="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="10" rx="2"/><path d="M16 3v4"/><path d="M8 3v4"/><path d="M2 13h20"/></svg>
-                      Wallet
-                      <span className="ml-auto text-xs text-neutral-500">₹1,300</span>
-                    </button>
                     {/* Skill Coins */}
                     <div className="flex items-center gap-3 px-6 py-2 text-left">
                       <svg className="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 2"/></svg>
@@ -325,7 +316,7 @@ export default function ClientHome() {
               </div>
             </div>
           </div>
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2">
             <div className="relative">
               <Link href="/client/notifications" className="relative group" aria-label="Notifications">
                 <span className="flex items-center justify-center w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 transition-colors">
@@ -339,14 +330,6 @@ export default function ClientHome() {
               </Link>
             </div>
             <div className="relative">
-              <Link href="/client/wallet" aria-label="Wallet">
-                <button className="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-r from-purple-600 to-purple-400 hover:from-purple-700 hover:to-purple-500 transition-colors relative">
-                  <Wallet className="w-5 h-5 text-white" />
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-white rounded-full flex items-center justify-center">
-                    <span className="text-[10px] font-medium text-purple-600">$0</span>
-                  </span>
-                </button>
-              </Link>
             </div>
           </div>
         </div>
@@ -374,30 +357,28 @@ export default function ClientHome() {
             <div className="pt-24 md:pt-28">
               <div className="max-w-2xl mx-auto text-center">
                 <h1 className="text-xl md:text-3xl font-bold text-white mb-3 text-center">
-                  Your Hyperlocal Freelancer Marketplace
+                  Practice like a pro, with a pro
                 </h1>
                 <p className="text-base md:text-lg text-white/80 mb-6">
-                  Hire anyone for anything<br />right from your neighborhood.
+                  Your shortcut to better cricket starts here
                 </p>
               </div>
 
               {/* Modern Search Bar */}
-              <div className="bg-white/10 rounded-2xl shadow-lg p-4 max-w-3xl mx-auto border border-white/20">
-                <div className="grid grid-cols-1 md:grid-cols-[1fr,auto] gap-4">
-                  <div className="w-full">
-                    <div className="relative w-full">
-                      <Input
-                        type="text"
-                        placeholder={searchQuery ? `Find services in ${currentLocation.city}...` : placeholder || `Find services in ${currentLocation.city}...`}
-                        value={searchQuery}
-                        onChange={(e) => handleSearch(e.target.value)}
-                        className="w-full bg-white/10 border border-white/20 text-white placeholder-white/60 rounded py-3 pl-10 pr-4 focus:outline-none focus:border-purple-500 transition-all"
-                        onFocus={() => setShowSuggestions(true)}
-                        onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                      />
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/70">
-                        <Sparkles className="w-5 h-5" />
-                      </span>
+              <div className="max-w-3xl mx-auto">
+                <div className="relative w-full">
+                  <Input
+                    type="text"
+                    placeholder={searchQuery ? `Find services in ${currentLocation.city}...` : placeholder || `Find services in ${currentLocation.city}...`}
+                    value={searchQuery}
+                    onChange={(e) => handleSearch(e.target.value)}
+                    className="w-full bg-white/10 border border-white/20 text-white placeholder-white/60 rounded-2xl py-4 pl-12 pr-4 focus:outline-none focus:border-purple-500 transition-all"
+                    onFocus={() => setShowSuggestions(true)}
+                    onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                  />
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/70">
+                    <Sparkles className="w-5 h-5" />
+                  </span>
                       {showSuggestions && (
                         <div className="absolute left-0 top-full mt-1 w-full bg-[#18181b]/95 rounded-lg border border-white/10 shadow-xl z-20">
                           <div className="p-2">
@@ -429,49 +410,44 @@ export default function ClientHome() {
                           </div>
                         </div>
                       )}
-                    </div>
-                  </div>
-                  <button className="h-[50px] px-8 bg-gradient-to-r from-purple-600 via-purple-500 to-purple-400 hover:from-purple-700 hover:via-purple-600 hover:to-purple-500 text-white py-3 text-base rounded transition-all duration-300 font-medium whitespace-nowrap">
-                    Search
-                  </button>
                 </div>
               </div>
 
               {/* Why DoodLance Section */}
-              <div className="mt-6 max-w-4xl mx-auto">
-                <div className="mb-2">
-                  <h2 className="text-base font-semibold text-white tracking-wide text-left" data-component-name="ClientHome">WHY DOODLANCE?</h2>
+              <div className="mt-4 max-w-3xl mx-auto">
+                <div className="mb-1">
+                  <h2 className="text-sm font-semibold text-white tracking-wide text-left" data-component-name="ClientHome">WHY DOODLANCE?</h2>
                 </div>
-                <div className="flex flex-row justify-center gap-3 md:gap-6">
+                <div className="flex flex-row justify-center gap-2 md:gap-4">
                   {/* Local Delivery */}
-                  <div className="flex flex-col items-center w-32 md:w-40 py-4">
-                    <div className="w-14 h-14 rounded-full bg-purple-100 flex items-center justify-center mb-3">
-                      <MapPin className="w-7 h-7 text-purple-500" />
+                  <div className="flex flex-col items-center w-24 md:w-28 py-2">
+                    <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center mb-2">
+                      <MapPin className="w-5 h-5 text-purple-500" />
                     </div>
                     <div className="text-center">
-                      <div className="font-bold text-base md:text-lg text-white">Fast Service</div>
-                      <div className="text-[12px] md:text-sm text-white/80 leading-tight">In Your<br />Neighborhood</div>
+                      <div className="font-bold text-sm md:text-base text-white">Fast Service</div>
+                      <div className="text-[10px] md:text-xs text-white/80 leading-tight">In Your<br />Neighborhood</div>
                     </div>
                   </div>
                   {/* Smart Matching */}
-                  <div className="flex flex-col items-center w-32 md:w-40 py-4">
-                    <div className="w-14 h-14 rounded-full bg-purple-100 flex items-center justify-center mb-3">
+                  <div className="flex flex-col items-center w-24 md:w-28 py-2">
+                    <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center mb-2">
                       {/* AI-related icon - Sparkles */}
-                      <Sparkles className="w-7 h-7 text-purple-500" />
+                      <Sparkles className="w-5 h-5 text-purple-500" />
                     </div>
                     <div className="text-center">
-                      <div className="font-bold text-base md:text-lg text-white">AI-Powered</div>
-                      <div className="text-[12px] md:text-sm text-white/80 leading-tight">Find the<br />Right Expert</div>
+                      <div className="font-bold text-sm md:text-base text-white">AI-Powered</div>
+                      <div className="text-[10px] md:text-xs text-white/80 leading-tight">Find the<br />Right Expert</div>
                     </div>
                   </div>
                   {/* Instant Booking */}
-                  <div className="flex flex-col items-center w-32 md:w-40 py-4">
-                    <div className="w-14 h-14 rounded-full bg-purple-100 flex items-center justify-center mb-3">
-                      <Clock className="w-7 h-7 text-purple-500" />
+                  <div className="flex flex-col items-center w-24 md:w-28 py-2">
+                    <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center mb-2">
+                      <Clock className="w-5 h-5 text-purple-500" />
                     </div>
                     <div className="text-center">
-                      <div className="font-bold text-base md:text-lg text-white whitespace-nowrap">Book Instantly</div>
-                      <div className="text-[12px] md:text-sm text-white/80 leading-tight whitespace-nowrap">Real-Time<br />Availability</div>
+                      <div className="font-bold text-sm md:text-base text-white whitespace-nowrap">Book Instantly</div>
+                      <div className="text-[10px] md:text-xs text-white/80 leading-tight whitespace-nowrap">Real-Time<br />Availability</div>
                     </div>
                   </div>
                 </div>
@@ -665,14 +641,6 @@ export default function ClientHome() {
                       <button className="bg-white text-emerald-600 hover:bg-white/90 px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-300">
                         Book Now
                       </button>
-                    </div>
-                    <div className="relative ml-4">
-                      <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
-                        <Wallet className="w-8 h-8 text-white" />
-                      </div>
-                      <div className="absolute -top-3 -right-3 bg-white text-emerald-600 rounded-full w-10 h-10 flex items-center justify-center text-base font-bold shadow-md border-2 border-white">
-                        25%
-                      </div>
                     </div>
                   </div>
                 </div>

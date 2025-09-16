@@ -1,211 +1,205 @@
 export const sidebarCategories = [
   {
     id: 'all',
-    name: ['All', ''],
+    name: ['All', 'Services'],
     icon: '✨'
   },
   {
-    id: 'content',
-    name: ['Content', 'Creation'],
-    icon: '🎬'
+    id: 'playing',
+    name: ['Playing', 'Services'],
+    icon: '🏏'
   },
   {
-    id: 'photography',
-    name: ['Photo &', 'Product'],
+    id: 'coaching',
+    name: ['Coaching &', 'Training'],
+    icon: '👨‍🏫'
+  },
+  {
+    id: 'support',
+    name: ['Support', 'Staff'],
+    icon: '📊'
+  },
+  {
+    id: 'media',
+    name: ['Media &', 'Content'],
     icon: '📷'
   },
   {
-    id: 'sports-fitness',
-    name: ['Sports &', 'Fitness'],
-    icon: '🏋️'
-  },
-  {
-    id: 'ai-services',
-    name: ['AI', 'Services'],
-    icon: '🤖'
-  },
-  {
-    id: 'professional-services',
-    name: ['Professional', 'Services'],
-    icon: '💼'
-  },
-  {
-    id: 'podcasting',
-    name: ['Podcast', 'Studio'],
-    icon: '🎙️'
-  },
-  {
-    id: 'streaming',
-    name: ['Streaming', 'Setup'],
-    icon: '📡'
+    id: 'ground',
+    name: ['Ground', 'Services'],
+    icon: '🌱'
   }
 ]
 
 export const serviceItems = [
-  // Content Creation
+  // Cricket Playing Services
   {
-    id: 'content-shoots',
-    name: 'Content Shoots',
-    category: 'content',
-    providerCount: 40,
+    id: 'bowler',
+    name: 'Bowler',
+    category: 'playing',
+    providerCount: 45,
     mostBooked: true,
-    image: '/images/professional shoots.jpeg',
+    image: '/images/Bowler & batsman.png',
+    icon: '🏏'
+  },
+  {
+    id: 'batsman',
+    name: 'Batsman',
+    category: 'playing',
+    providerCount: 38,
+    mostBooked: true,
+    image: '/images/Bowler & batsman.png',
+    icon: '🏏'
+  },
+  {
+    id: 'sidearm-specialist',
+    name: 'Sidearm Specialist',
+    category: 'playing',
+    providerCount: 22,
+    image: '/images/Bowler & batsman.png',
+    icon: '🎯'
+  },
+
+  // Cricket Coaching & Training
+  {
+    id: 'coach',
+    name: 'Coach',
+    category: 'coaching',
+    providerCount: 35,
+    mostBooked: true,
+    image: '/images/Bowler & batsman.png',
+    icon: '👨‍🏫'
+  },
+  {
+    id: 'sports-conditioning-trainer',
+    name: 'Sports Conditioning Trainer',
+    category: 'coaching',
+    providerCount: 28,
+    image: '/images/Bowler & batsman.png',
+    icon: '💪'
+  },
+  {
+    id: 'fitness-trainer',
+    name: 'Fitness Trainer',
+    category: 'coaching',
+    providerCount: 32,
+    image: '/images/Bowler & batsman.png',
+    icon: '🏃‍♂️'
+  },
+
+  // Cricket Support Services
+  {
+    id: 'analyst',
+    name: 'Analyst',
+    category: 'support',
+    providerCount: 18,
+    image: '/images/Bowler & batsman.png',
+    icon: '📊'
+  },
+  {
+    id: 'physio',
+    name: 'Physio',
+    category: 'support',
+    providerCount: 25,
+    image: '/images/Bowler & batsman.png',
+    icon: '🏥'
+  },
+  {
+    id: 'scorer',
+    name: 'Scorer',
+    category: 'support',
+    providerCount: 15,
+    image: '/images/Bowler & batsman.png',
+    icon: '📝'
+  },
+  {
+    id: 'umpire',
+    name: 'Umpire',
+    category: 'support',
+    providerCount: 20,
+    image: '/images/Bowler & batsman.png',
+    icon: '⚖️'
+  },
+
+  // Cricket Media & Content
+  {
+    id: 'cricket-photo-videography',
+    name: 'Cricket Photo / Videography',
+    category: 'media',
+    providerCount: 30,
+    mostBooked: true,
+    image: '/images/Bowler & batsman.png',
+    icon: '📷'
+  },
+  {
+    id: 'cricket-content-creator',
+    name: 'Cricket Content Creator',
+    category: 'media',
+    providerCount: 24,
+    image: '/images/Bowler & batsman.png',
     icon: '🎬'
   },
   {
-    id: 'event-content-creator',
-    name: 'Event Content Creator',
-    category: 'content',
-    providerCount: 26,
-    image: '/images/Event production.jpeg',
-    icon: '📹'
-  },
-
-  // Photography / Product
-  {
-    id: 'product-photography',
-    name: 'Product Photography',
-    category: 'photography',
-    providerCount: 35,
-    discount: '10% Off',
-    image: '/images/professional shoots.jpeg',
-    icon: '📦'
-  },
-  {
-    id: 'drone-photography',
-    name: 'Drone Photography',
-    category: 'photography',
-    providerCount: 18,
-    image: '/images/drone.jpeg',
-    icon: '🚁',
-    mostBooked: true
-  },
-  {
-    id: 'fashion-photography',
-    name: 'Fashion Photography',
-    category: 'photography',
-    providerCount: 29,
-    image: '/images/modeling.jpeg',
-    icon: '👗',
-    mostBooked: true
-  },
-  {
-    id: 'sports-photo-videography',
-    name: 'Sports Photo & Videography',
-    category: 'sports-media',
-    providerCount: 22,
-    image: '/images/Bowler & batsman.png',
-    icon: '🏏',
-    mostBooked: true
-  },
-
-  // Podcasting
-  {
-    id: 'podcast-editing',
-    name: 'Podcast Editing',
-    category: 'podcasting',
-    providerCount: 29,
-    image: 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?auto=format&fit=crop&w=800&q=80',
-    icon: '🎧'
-  },
-  {
-    id: 'podcast-shooting',
-    name: 'Podcast Shooting',
-    category: 'podcasting',
-    providerCount: 18,
-    image: 'https://images.unsplash.com/photo-1589985270826-4b76a6363a4b?auto=format&fit=crop&w=800&q=80',
-    icon: '🎙️'
-  },
-
-  // Streaming & Setup
-  {
-    id: 'streaming-setup-consultant',
-    name: 'Streaming Setup Consultant',
-    category: 'streaming',
-    providerCount: 21,
-    image: 'https://images.unsplash.com/photo-1585580490138-c1844a2b8d5c?auto=format&fit=crop&w=800&q=80',
-    icon: '📡'
-  },
-
-  // AI Services
-  {
-    id: 'ai-agent-builders',
-    name: 'AI Agent Builders',
-    category: 'ai-services',
+    id: 'commentator',
+    name: 'Commentator',
+    category: 'media',
     providerCount: 16,
-    image: 'https://images.unsplash.com/photo-1503023345310-bd7c1de61c7d?auto=format&fit=crop&w=800&q=80',
-    icon: '🤖'
+    image: '/images/Bowler & batsman.png',
+    icon: '🎤'
   },
+
+  // Cricket Ground Services
   {
-    id: 'ai-video-generator',
-    name: 'AI Video Generator',
-    category: 'ai-services',
-    providerCount: 24,
-    mostBooked: true,
-    image: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=800&q=80',
-    icon: '🎞️'
-  },
-  {
-    id: 'ai-ad-campaigns',
-    name: 'AI Ad Campaigns',
-    category: 'ai-services',
-    providerCount: 20,
-    image: 'https://images.unsplash.com/photo-1483478550801-ceba5fe50e8e?auto=format&fit=crop&w=800&q=80',
-    icon: '📣'
-  },
-  {
-    id: 'product-mockups',
-    name: 'Product Mockups',
-    category: 'ai-services',
-    providerCount: 27,
-    image: 'https://images.unsplash.com/photo-1475965894430-b05c9d142f9d?auto=format&fit=crop&w=800&q=80',
-    icon: '🧪'
+    id: 'groundsman',
+    name: 'Groundsman',
+    category: 'ground',
+    providerCount: 12,
+    image: '/images/Bowler & batsman.png',
+    icon: '🌱'
   }
 ]
 
 // Popular services for home page
 export const popularServices = [
-  // Top services with updated local images
+  // Top cricket services
   {
-    id: 'cricket-net-bowler-sidearmer',
-    title: 'Cricket Net Bowler / Sidearmer',
+    id: 'bowler',
+    title: 'Bowler',
     icon: '🏏',
-    providerCount: 15,
+    providerCount: 45,
     image: '/images/Bowler & batsman.png',
     mostBooked: true
   },
   {
-    id: 'reels-shorts-video-editor',
-    title: 'Reels / Shorts Video Editor',
-    icon: '🎬',
-    providerCount: 38,
-    image: '/images/reels & podcast editor.jpeg',
-    mostBooked: true
-  },
-  {
-    id: 'ai-reels-shorts-creator',
-    title: 'AI Reels / Shorts Creator',
-    icon: '🎞️',
+    id: 'sidearm-specialist',
+    title: 'Sidearm Specialist',
+    icon: '🎯',
     providerCount: 22,
-    image: '/images/AI Ad campaigns.jpeg',
+    image: '/images/sidearm thrower specialist.jpeg',
     mostBooked: true
   },
-  // Additional popular picks
   {
-    id: 'product-photography',
-    title: 'Product Photography',
-    icon: '📷',
+    id: 'coach',
+    title: 'Coach',
+    icon: '👨‍🏫',
     providerCount: 35,
-    image: '/images/professional shoots.jpeg',
-    discount: '10% Off',
+    image: '/images/personal coaching.png',
     mostBooked: true
   },
   {
-    id: 'quick-cash-gigs',
-    title: 'Quick Cash Gigs',
-    icon: '💰',
-    providerCount: 42,
-    image: '/images/quick cash gigs.png',
+    id: 'batsman',
+    title: 'Batsman',
+    icon: '🏏',
+    providerCount: 38,
+    image: '/images/Bowler & batsman.png',
+    mostBooked: true
+  },
+  {
+    id: 'cricket-photo-videography',
+    title: 'Cricket Photo / Videography',
+    icon: '📷',
+    providerCount: 30,
+    image: '/images/Bowler & batsman.png',
     mostBooked: true
   }
 ]
