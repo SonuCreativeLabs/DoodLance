@@ -45,7 +45,7 @@ export function ProfileHeader({
   reviewCount = 42,
   location = "Chennai, India",
   online = true,
-  skills = ["Cricket", "Cycling", "Off Spin", "Batting", "Vibe Coder", "Prompt Engg", "AI Agent Builder"],
+  skills = ["Top Order Batsman", "Sidearm Specialist", "Off Spin", "Analyst"],
   avatarUrl = "/images/profile-sonu.jpg",
   coverImageUrl = "/images/cover-pic.JPG",
   isPreview = false
