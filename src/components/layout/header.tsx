@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from 'react'
-import { Menu, Bell, X } from 'lucide-react'
+import { Menu, Bell, X, Wallet } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 
@@ -50,18 +50,28 @@ export default function Header() {
 
         <div className="flex-1"></div>
 
-        <div className="relative">
-          <button
-            className="p-2 hover:bg-gray-100 rounded-lg relative"
-            onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-          >
-            <Bell className="w-6 h-6" />
-            {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-medium min-w-[20px]">
-                {unreadCount}
-              </span>
-            )}
-          </button>
+        <div className="flex items-center gap-2">
+          <div className="relative">
+            <Link href="/client/wallet">
+              <button className="p-2 hover:bg-gray-100 rounded-lg relative">
+                <Wallet className="w-6 h-6" />
+              </button>
+            </Link>
+          </div>
+          
+          <div className="relative">
+            <button
+              className="p-2 hover:bg-gray-100 rounded-lg relative"
+              onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+            >
+              <Bell className="w-6 h-6" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-medium min-w-[20px]">
+                  {unreadCount}
+                </span>
+              )}
+            </button>
+          </div>
         </div>
 
         {/* Notifications Dropdown */}

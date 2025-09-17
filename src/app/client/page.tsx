@@ -1,6 +1,6 @@
 "use client"
 
-import { Search, MapPin, Star, Clock, Calendar, User, Briefcase, GraduationCap, ChevronRight, Bell, X, Brain, Cpu, Sparkles } from 'lucide-react'
+import { Search, MapPin, Star, Clock, Calendar, User, Briefcase, GraduationCap, ChevronRight, Bell, X, Brain, Cpu, Sparkles, Wallet } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import ClientLayout from '@/components/layouts/client-layout'
 import { FreelancerCard } from '@/components/client/freelancer-card'
@@ -316,7 +316,7 @@ export default function ClientHome() {
               </div>
             </div>
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-3">
             <div className="relative">
               <Link href="/client/notifications" className="relative group" aria-label="Notifications">
                 <span className="flex items-center justify-center w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 transition-colors">
@@ -330,6 +330,11 @@ export default function ClientHome() {
               </Link>
             </div>
             <div className="relative">
+              <Link href="/client/wallet" className="relative group" aria-label="Wallet">
+                <span className="flex items-center justify-center w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 transition-colors">
+                  <Wallet className="w-5 h-5 text-white" />
+                </span>
+              </Link>
             </div>
           </div>
         </div>
