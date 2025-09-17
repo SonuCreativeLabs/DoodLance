@@ -344,9 +344,9 @@ export default function ClientHome() {
             {/* Cover Image */}
             <div className="absolute inset-0 w-full h-full">
               <img
-                src="/images/cover.jpg"
+                src="/images/Purple ground.png"
                 alt="Cover"
-                className="w-full h-full object-cover opacity-20"
+                className="w-full h-full object-cover opacity-[12%] transform translate-y-[10%]"
               />
             </div>
           </div>
@@ -356,10 +356,10 @@ export default function ClientHome() {
             {/* Adjusted space for optimal position */}
             <div className="pt-24 md:pt-28">
               <div className="max-w-2xl mx-auto text-center">
-                <h1 className="text-xl md:text-3xl font-bold text-white mb-2 text-center">
+                <h1 className="text-xl md:text-3xl font-bold text-white mb-2 text-center drop-shadow-lg">
                   Practice like a pro, with a pro
                 </h1>
-                <p className="text-base md:text-lg text-white/80 mb-4">
+                <p className="text-base md:text-lg text-white/90 mb-4 drop-shadow-md">
                   Your shortcut to better cricket starts here
                 </p>
               </div>
@@ -372,7 +372,7 @@ export default function ClientHome() {
                     placeholder={searchQuery ? `Find services in ${currentLocation.city}...` : placeholder || `Find services in ${currentLocation.city}...`}
                     value={searchQuery}
                     onChange={(e) => handleSearch(e.target.value)}
-                    className="w-full bg-white/10 border border-white/20 text-white placeholder-white/60 rounded-2xl py-4 pl-12 pr-4 focus:outline-none focus:border-purple-500 transition-all"
+                    className="w-full bg-white/20 border border-white/40 text-white placeholder-white/80 rounded-2xl py-4 pl-12 pr-4 focus:outline-none focus:border-purple-400 transition-all shadow-lg"
                     onFocus={() => setShowSuggestions(true)}
                     onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                   />
@@ -466,8 +466,8 @@ export default function ClientHome() {
                 <ChevronRight className="w-4 h-4 ml-1" />
               </Link>
             </div>
-            <div className="relative">
-              <div className="overflow-x-auto scrollbar-hide">
+            <div className="relative -mx-4">
+              <div className="overflow-x-auto scrollbar-hide px-4">
                 <div className="flex space-x-4 pb-4">
                   {popularServices.map((service) => (
                     <ServiceCard
@@ -509,7 +509,7 @@ export default function ClientHome() {
               </Link>
             </div>
             <div className="relative">
-              <div className="overflow-x-auto scrollbar-hide max-w-[353px] sm:max-w-none mx-auto">
+              <div className="overflow-x-auto scrollbar-hide -mx-4 px-4">
                 <div className="flex gap-[1px] pb-4">
                   {professionals
                     .sort((a, b) => {
@@ -546,16 +546,16 @@ export default function ClientHome() {
                           />
                         </div>
                         
-                        {/* Expert Info with Instagram-style Spacing */}
-                        <div className="mt-3 text-center">
+                        {/* Expert Info with Reduced Spacing */}
+                        <div className="mt-2 text-center">
                           <h3 className="font-semibold text-white text-sm leading-tight truncate">{expert.name}</h3>
                           <p className="text-purple-400 text-xs font-medium truncate mt-0.5">{expert.service}</p>
-                          <div className="flex items-center justify-center gap-1.5 mt-1.5">
+                          <div className="flex items-center justify-center gap-1 mt-1">
                             <p className="text-white/70 text-[10px]">{expert.reviews} reviews</p>
                             <span className="text-white/30">•</span>
                             <p className="text-white/70 text-[10px]">{expert.completedJobs} jobs</p>
                           </div>
-                          <p className="text-white/50 text-[10px] font-medium mt-1">{expert.location}</p>
+                          <p className="text-white/50 text-[10px] font-medium mt-0.5">{expert.location}</p>
                         </div>
                       </div>
                     </div>
@@ -572,74 +572,76 @@ export default function ClientHome() {
             transition={{ duration: 0.5, delay: 0.3 }}
             className="mt-8 mb-2 relative z-0"
           >
-            <div className="overflow-x-auto scrollbar-hide">
-              <div className="flex gap-4">
-                {/* First Coupon */}
-                <div className="flex-shrink-0 w-[300px] bg-gradient-to-r from-purple-600 via-purple-500 to-purple-400 rounded-xl p-4 shadow-lg">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="inline-block bg-white/20 text-white/90 text-xs px-2 py-0.5 rounded-full mb-2">
-                        Limited Time
+            <div className="relative -mx-4">
+              <div className="overflow-x-auto scrollbar-hide px-4">
+                <div className="flex gap-4">
+                  {/* First Coupon */}
+                  <div className="flex-shrink-0 w-[300px] bg-gradient-to-r from-purple-600 via-purple-500 to-purple-400 rounded-xl p-4 shadow-lg">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="inline-block bg-white/20 text-white/90 text-xs px-2 py-0.5 rounded-full mb-2">
+                          Limited Time
+                        </div>
+                        <h3 className="text-lg font-bold text-white mb-1">20% Off First Booking</h3>
+                        <p className="text-white/90 text-sm mb-2">
+                          Use code: <span className="font-mono bg-white/20 px-1.5 py-0.5 rounded text-xs">WELCOME20</span>
+                        </p>
+                        <button className="bg-white text-purple-600 hover:bg-white/90 px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-300">
+                          Book Now
+                        </button>
                       </div>
-                      <h3 className="text-lg font-bold text-white mb-1">20% Off First Booking</h3>
-                      <p className="text-white/90 text-sm mb-2">
-                        Use code: <span className="font-mono bg-white/20 px-1.5 py-0.5 rounded text-xs">WELCOME20</span>
-                      </p>
-                      <button className="bg-white text-purple-600 hover:bg-white/90 px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-300">
-                        Book Now
-                      </button>
-                    </div>
-                    <div className="relative ml-4">
-                      <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
-                        <Calendar className="w-8 h-8 text-white" />
-                      </div>
-                      <div className="absolute -top-3 -right-3 bg-white text-purple-600 rounded-full w-10 h-10 flex items-center justify-center text-base font-bold shadow-md border-2 border-white">
-                        20%
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Second Coupon */}
-                <div className="flex-shrink-0 w-[300px] bg-gradient-to-r from-blue-600 via-blue-500 to-blue-400 rounded-xl p-4 shadow-lg">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="inline-block bg-white/20 text-white/90 text-xs px-2 py-0.5 rounded-full mb-2">
-                        Weekend Special
-                      </div>
-                      <h3 className="text-lg font-bold text-white mb-1">15% Off Weekend</h3>
-                      <p className="text-white/90 text-sm mb-2">
-                        Use code: <span className="font-mono bg-white/20 px-1.5 py-0.5 rounded text-xs">WEEKEND15</span>
-                      </p>
-                      <button className="bg-white text-blue-600 hover:bg-white/90 px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-300">
-                        Book Now
-                      </button>
-                    </div>
-                    <div className="relative ml-4">
-                      <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
-                        <Star className="w-8 h-8 text-white" />
-                      </div>
-                      <div className="absolute -top-3 -right-3 bg-white text-blue-600 rounded-full w-10 h-10 flex items-center justify-center text-base font-bold shadow-md border-2 border-white">
-                        15%
+                      <div className="relative ml-4">
+                        <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
+                          <Calendar className="w-8 h-8 text-white" />
+                        </div>
+                        <div className="absolute -top-3 -right-3 bg-white text-purple-600 rounded-full w-10 h-10 flex items-center justify-center text-base font-bold shadow-md border-2 border-white">
+                          20%
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Third Coupon */}
-                <div className="flex-shrink-0 w-[300px] bg-gradient-to-r from-emerald-600 via-emerald-500 to-emerald-400 rounded-xl p-4 shadow-lg">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="inline-block bg-white/20 text-white/90 text-xs px-2 py-0.5 rounded-full mb-2">
-                        Bulk Booking
+                  {/* Second Coupon */}
+                  <div className="flex-shrink-0 w-[300px] bg-gradient-to-r from-blue-600 via-blue-500 to-blue-400 rounded-xl p-4 shadow-lg">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="inline-block bg-white/20 text-white/90 text-xs px-2 py-0.5 rounded-full mb-2">
+                          Weekend Special
+                        </div>
+                        <h3 className="text-lg font-bold text-white mb-1">15% Off Weekend</h3>
+                        <p className="text-white/90 text-sm mb-2">
+                          Use code: <span className="font-mono bg-white/20 px-1.5 py-0.5 rounded text-xs">WEEKEND15</span>
+                        </p>
+                        <button className="bg-white text-blue-600 hover:bg-white/90 px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-300">
+                          Book Now
+                        </button>
                       </div>
-                      <h3 className="text-lg font-bold text-white mb-1">25% Off 3+ Services</h3>
-                      <p className="text-white/90 text-sm mb-2">
-                        Use code: <span className="font-mono bg-white/20 px-1.5 py-0.5 rounded text-xs">BULK25</span>
-                      </p>
-                      <button className="bg-white text-emerald-600 hover:bg-white/90 px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-300">
-                        Book Now
-                      </button>
+                      <div className="relative ml-4">
+                        <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
+                          <Star className="w-8 h-8 text-white" />
+                        </div>
+                        <div className="absolute -top-3 -right-3 bg-white text-blue-600 rounded-full w-10 h-10 flex items-center justify-center text-base font-bold shadow-md border-2 border-white">
+                          15%
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Third Coupon */}
+                  <div className="flex-shrink-0 w-[300px] bg-gradient-to-r from-emerald-600 via-emerald-500 to-emerald-400 rounded-xl p-4 shadow-lg">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="inline-block bg-white/20 text-white/90 text-xs px-2 py-0.5 rounded-full mb-2">
+                          Bulk Booking
+                        </div>
+                        <h3 className="text-lg font-bold text-white mb-1">25% Off 3+ Services</h3>
+                        <p className="text-white/90 text-sm mb-2">
+                          Use code: <span className="font-mono bg-white/20 px-1.5 py-0.5 rounded text-xs">BULK25</span>
+                        </p>
+                        <button className="bg-white text-emerald-600 hover:bg-white/90 px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-300">
+                          Book Now
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>

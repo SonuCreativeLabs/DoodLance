@@ -406,3 +406,20 @@ body {
 .animate-popup .mapboxgl-popup-content {
   animation: popup-enter 0.3s ease-out forwards;
 }
+
+/* Ensure all buttons have consistent rounded corners except rounded-full */
+button:not(.rounded-full) {
+  border-radius: 0.375rem !important;
+}
+
+/* Override any conflicting rounded classes */
+.rounded-md {
+  border-radius: 0.375rem !important;
+}
+
+/* Ensure buttons maintain rounded corners in all states except rounded-full */
+button:hover:not(.rounded-full),
+button:focus:not(.rounded-full),
+button:active:not(.rounded-full) {
+  border-radius: 0.375rem !important;
+}

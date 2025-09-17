@@ -87,7 +87,7 @@ export interface Proposal {
 }
 
 export interface Application {
-  id: string;
+  "#": string;
   jobTitle: string;
   appliedDate: string;
   status: 'pending' | 'accepted' | 'rejected' | 'withdrawn' | 'interview' | 'hired' | 'completed' | 'cancelled' | 'expired' | 'archived';
