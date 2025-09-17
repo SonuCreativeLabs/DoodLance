@@ -510,7 +510,7 @@ export default function ClientHome() {
             </div>
             <div className="relative">
               <div className="overflow-x-auto scrollbar-hide -mx-4 px-4">
-                <div className="flex gap-[1px] pb-4">
+                <div className="flex gap-3 pb-4">
                   {professionals
                     .sort((a, b) => {
                       // First sort by rating
@@ -526,36 +526,41 @@ export default function ClientHome() {
                       key={expert.id}
                       className="flex-shrink-0 w-[160px]"
                     >
+                      {/* Outer Layer Card */}
                       <div className="relative group">
-                        {/* Rating Badge */}
-                        <div className="absolute top-2 left-2 z-20 bg-gradient-to-r from-yellow-400 to-yellow-600 px-2 py-0.5 rounded-full flex items-center gap-1 shadow-lg">
-                          <Star className="w-2.5 h-2.5 text-black fill-current" />
-                          <span className="text-black text-[10px] font-bold">{expert.rating}</span>
-                        </div>
+                        {/* Card Background */}
+                        <div className="absolute inset-0 rounded-2xl border border-purple-400/10 transition-all duration-300 group-hover:border-purple-400/20"></div>
                         
-                        {/* Profile Picture with Gradient Shadow */}
-                        <div className="relative w-[100px] h-[100px] mx-auto">
-                          {/* Main Glow */}
-                          <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full opacity-20 blur-[10px]"></div>
-                          {/* Bottom Shadow */}
-                          <div className="absolute -bottom-1 -inset-x-1 h-4 bg-gradient-to-b from-purple-500/20 to-transparent blur-sm"></div>
-                          <img
-                            src={expert.image}
-                            alt={expert.name}
-                            className="w-full h-full rounded-full border-2 border-purple-200/50 relative z-10 object-cover"
-                          />
-                        </div>
-                        
-                        {/* Expert Info with Reduced Spacing */}
-                        <div className="mt-2 text-center">
-                          <h3 className="font-semibold text-white text-sm leading-tight truncate">{expert.name}</h3>
-                          <p className="text-purple-400 text-xs font-medium truncate mt-0.5">{expert.service}</p>
-                          <div className="flex items-center justify-center gap-1 mt-1">
-                            <p className="text-white/70 text-[10px]">{expert.reviews} reviews</p>
-                            <span className="text-white/30">•</span>
-                            <p className="text-white/70 text-[10px]">{expert.completedJobs} jobs</p>
+                        {/* Card Content */}
+                        <div className="relative p-3">
+                          <div className="relative group">
+                            {/* Rating Badge */}
+                            <div className="absolute top-2 left-2 z-20 bg-gradient-to-r from-yellow-400 to-yellow-600 px-2 py-0.5 rounded-full flex items-center gap-1 shadow-lg">
+                              <Star className="w-2.5 h-2.5 text-black fill-current" />
+                              <span className="text-black text-[10px] font-bold">{expert.rating}</span>
+                            </div>
+                            
+                            {/* Profile Picture */}
+                            <div className="relative w-[100px] h-[100px] mx-auto">
+                              <img
+                                src={expert.image}
+                                alt={expert.name}
+                                className="w-full h-full rounded-full border-2 border-purple-200/50 relative z-10 object-cover"
+                              />
+                            </div>
+                            
+                            {/* Expert Info with Reduced Spacing */}
+                            <div className="mt-2 text-center">
+                              <h3 className="font-semibold text-white text-sm leading-tight truncate">{expert.name}</h3>
+                              <p className="text-purple-400 text-xs font-medium truncate mt-0.5">{expert.service}</p>
+                              <div className="flex items-center justify-center gap-1 mt-1">
+                                <p className="text-white/70 text-[10px]">{expert.reviews} reviews</p>
+                                <span className="text-white/30">•</span>
+                                <p className="text-white/70 text-[10px]">{expert.completedJobs} jobs</p>
+                              </div>
+                              <p className="text-white/50 text-[10px] font-medium mt-0.5">{expert.location}</p>
+                            </div>
                           </div>
-                          <p className="text-white/50 text-[10px] font-medium mt-0.5">{expert.location}</p>
                         </div>
                       </div>
                     </div>
