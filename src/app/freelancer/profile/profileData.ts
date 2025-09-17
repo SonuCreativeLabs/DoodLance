@@ -30,7 +30,7 @@ export interface ExtendedFreelancerData {
 
 export const freelancerData: ExtendedFreelancerData = {
   name: "Sathish Sonu",
-  title: "Cricketer & AI Engineer",
+  title: "All Rounder",
   about: "I'm a passionate AI engineer and full-stack developer with expertise in building intelligent applications. I specialize in AI agents, prompt engineering, and modern web development.",
   rating: 4.9,
   reviewCount: 42,
@@ -39,7 +39,7 @@ export const freelancerData: ExtendedFreelancerData = {
   completionRate: 100,
   online: true,
   location: "Chennai, India",
-  skills: ["Top Order Batsman", "Sidearm Specialist", "Off Spin", "Mystery Spinner", "Analyst"],
+  skills: ["Top Order Batsman", "Sidearm Specialist", "Off Spin", "Coach", "Analyst", "Mystery Spinner"],
   services: [
     {
       id: "1",

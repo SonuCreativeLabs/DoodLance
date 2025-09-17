@@ -1,6 +1,6 @@
 "use client"
 
-import { Search, MapPin, Star, Clock, Calendar, User, Briefcase, GraduationCap, ChevronRight, Bell, X, Brain, Cpu, Sparkles, Wallet } from 'lucide-react'
+import { Search, MapPin, Star, Clock, Calendar, User, Briefcase, GraduationCap, ChevronRight, Bell, X, Brain, Cpu, Sparkles, Wallet, Copy, Check } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import ClientLayout from '@/components/layouts/client-layout'
 import { FreelancerCard } from '@/components/client/freelancer-card'
@@ -25,7 +25,7 @@ const AnimatedCard = ({ icon, delay }: { icon: React.ReactNode; delay: number })
       repeatType: "reverse",
       repeatDelay: 2
     }}
-    className="bg-white rounded-xl p-4 shadow-lg"
+    className="bg-white rounded-xl p-3 shadow-lg"
   >
     <div className="flex items-center gap-3">
       <div className="w-10 h-10 bg-sky-100 rounded-full flex items-center justify-center text-sky-600">
@@ -95,6 +95,17 @@ export default function ClientHome() {
   const [isSticky, setIsSticky] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
   const headerRef = useRef<HTMLDivElement>(null);
+  const [copiedCode, setCopiedCode] = useState<string | null>(null);
+
+  const handleCopyCode = async (code: string) => {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopiedCode(code);
+      setTimeout(() => setCopiedCode(null), 2000);
+    } catch (e) {
+      console.error('Failed to copy coupon code', e);
+    }
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -423,7 +434,7 @@ export default function ClientHome() {
                 <div className="mb-1">
                   <h2 className="text-sm font-semibold text-white tracking-wide text-left" data-component-name="ClientHome">WHY DOODLANCE?</h2>
                 </div>
-                <div className="flex flex-row justify-center gap-2 md:gap-4">
+                <div className="flex flex-row justify-center gap-2 md:gap-3">
                   {/* Local Delivery */}
                   <div className="flex flex-col items-center w-24 md:w-28 py-2">
                     <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center mb-2">
@@ -461,7 +472,7 @@ export default function ClientHome() {
           </div>
         </div>
 
-        <div className="container mx-auto px-4 py-4 bg-[#111111] mb-20 relative z-0">
+        <div className="container mx-auto px-4 py-4 bg-[#111111] mb-8 relative z-0">
           {/* Service Categories */}
           <section className="mb-4 relative z-0">
             <div className="flex items-center justify-between mb-3">
@@ -580,78 +591,163 @@ export default function ClientHome() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
-            className="mt-8 mb-2 relative z-0"
+            className="mt-4 mb-2 relative z-0"
           >
+            <div className="mb-4">
+              <h2 className="text-sm font-semibold text-white tracking-wide text-left" data-component-name="ClientHome">EXCLUSIVE OFFERS</h2>
+            </div>
             <div className="relative -mx-4">
               <div className="overflow-x-auto scrollbar-hide px-4">
-                <div className="flex gap-4">
+                <div className="flex gap-3">
                   {/* First Coupon */}
-                  <div className="flex-shrink-0 w-[300px] bg-gradient-to-r from-purple-600 via-purple-500 to-purple-400 rounded-xl p-4 shadow-lg">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="inline-block bg-white/20 text-white/90 text-xs px-2 py-0.5 rounded-full mb-2">
-                          Limited Time
+                  <div className="flex-shrink-0 w-[300px] min-h-[140px] rounded-2xl p-3 border border-dashed border-white/15 bg-white/5 backdrop-blur-sm relative overflow-hidden flex flex-col justify-between">
+                    {/* Accent stripe */}
+                    <div className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-purple-400/80 to-purple-600/80" />
+                    <div className="flex items-start gap-3">
+                      {/* Icon circle (subtle) */}
+                      <div className="hidden sm:flex items-center justify-center w-12 h-12 rounded-xl bg-white/5 border border-white/10">
+                        <Calendar className="w-6 h-6 text-purple-300" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="inline-flex items-center text-[11px] px-2 py-0.5 rounded-full border border-white/15 text-white/80">Limited time</span>
                         </div>
-                        <h3 className="text-lg font-bold text-white mb-1">20% Off First Booking</h3>
-                        <p className="text-white/90 text-sm mb-2">
-                          Use code: <span className="font-mono bg-white/20 px-1.5 py-0.5 rounded text-xs">WELCOME20</span>
-                        </p>
-                        <button className="bg-white text-purple-600 hover:bg-white/90 px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-300">
-                          Book Now
+                        <h3 className="text-white text-base font-semibold leading-snug">20% off first booking</h3>
+                      </div>
+                      {/* Discount badge */}
+                      <div className="ml-2">
+                        <div className="rounded-xl px-2.5 py-1 bg-purple-500/20 text-purple-200 border border-purple-300/30 text-sm font-bold">20%</div>
+                      </div>
+                    </div>
+                    {/* Code and button section at bottom */}
+                    <div className="mt-3 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-[11px] px-2 py-1 rounded-md border border-white/15 bg-white/5 text-white/90">WELCOME20</span>
+                        <button
+                          onClick={() => handleCopyCode('WELCOME20')}
+                          className="inline-flex items-center gap-1 px-2 py-1.5 rounded-full border border-white/20 text-white/90 hover:bg-white/10 text-xs sm:text-sm transition-colors whitespace-nowrap shrink-0"
+                          aria-label="Copy coupon code WELCOME20"
+                        >
+                          {copiedCode === 'WELCOME20' ? (
+                            <>
+                              <Check className="w-4 h-4" />
+                              Copied
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="w-4 h-4" />
+                              Copy
+                            </>
+                          )}
                         </button>
                       </div>
-                      <div className="relative ml-4">
-                        <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
-                          <Calendar className="w-8 h-8 text-white" />
-                        </div>
-                        <div className="absolute -top-3 -right-3 bg-white text-purple-600 rounded-full w-10 h-10 flex items-center justify-center text-base font-bold shadow-md border-2 border-white">
-                          20%
-                        </div>
-                      </div>
+                      <span className="text-[11px] text-white/50 whitespace-nowrap">Ends soon</span>
+                    </div>
+                    {/* Perforated divider at bottom */}
+                    <div className="mt-3 flex items-center gap-2">
+                      <div className="h-[10px] w-[10px] rounded-full bg-[#111111] border border-white/10 -ml-5" />
+                      <div className="flex-1 border-t border-dashed border-white/15" />
+                      <div className="h-[10px] w-[10px] rounded-full bg-[#111111] border border-white/10 -mr-5" />
                     </div>
                   </div>
 
                   {/* Second Coupon */}
-                  <div className="flex-shrink-0 w-[300px] bg-gradient-to-r from-blue-600 via-blue-500 to-blue-400 rounded-xl p-4 shadow-lg">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="inline-block bg-white/20 text-white/90 text-xs px-2 py-0.5 rounded-full mb-2">
-                          Weekend Special
+                  <div className="flex-shrink-0 w-[300px] min-h-[140px] rounded-2xl p-3 border border-dashed border-white/15 bg-white/5 backdrop-blur-sm relative overflow-hidden flex flex-col justify-between">
+                    <div className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-blue-400/80 to-blue-600/80" />
+                    <div className="flex items-start gap-3">
+                      <div className="hidden sm:flex items-center justify-center w-12 h-12 rounded-xl bg-white/5 border border-white/10">
+                        <Star className="w-6 h-6 text-blue-300" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="inline-flex items-center text-[11px] px-2 py-0.5 rounded-full border border-white/15 text-white/80">Weekend special</span>
+                          <span className="text-[11px] text-white/50">• All services</span>
                         </div>
-                        <h3 className="text-lg font-bold text-white mb-1">15% Off Weekend</h3>
-                        <p className="text-white/90 text-sm mb-2">
-                          Use code: <span className="font-mono bg-white/20 px-1.5 py-0.5 rounded text-xs">WEEKEND15</span>
-                        </p>
-                        <button className="bg-white text-blue-600 hover:bg-white/90 px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-300">
-                          Book Now
+                        <h3 className="text-white text-base font-semibold leading-snug">15% off weekend bookings</h3>
+                      </div>
+                      <div className="ml-2">
+                        <div className="rounded-xl px-2.5 py-1 bg-blue-500/20 text-blue-200 border border-blue-300/30 text-sm font-bold">15%</div>
+                      </div>
+                    </div>
+                    {/* Code and button section at bottom */}
+                    <div className="mt-3 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-[11px] px-2 py-1 rounded-md border border-white/15 bg-white/5 text-white/90">WEEKEND15</span>
+                        <button
+                          onClick={() => handleCopyCode('WEEKEND15')}
+                          className="inline-flex items-center gap-1 px-2 py-1.5 rounded-full border border-white/20 text-white/90 hover:bg-white/10 text-xs sm:text-sm transition-colors whitespace-nowrap shrink-0"
+                          aria-label="Copy coupon code WEEKEND15"
+                        >
+                          {copiedCode === 'WEEKEND15' ? (
+                            <>
+                              <Check className="w-4 h-4" />
+                              Copied
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="w-4 h-4" />
+                              Copy
+                            </>
+                          )}
                         </button>
                       </div>
-                      <div className="relative ml-4">
-                        <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
-                          <Star className="w-8 h-8 text-white" />
-                        </div>
-                        <div className="absolute -top-3 -right-3 bg-white text-blue-600 rounded-full w-10 h-10 flex items-center justify-center text-base font-bold shadow-md border-2 border-white">
-                          15%
-                        </div>
-                      </div>
+                      <span className="text-[11px] text-white/50 whitespace-nowrap">Valid Sat-Sun</span>
+                    </div>
+                    {/* Perforated divider at bottom */}
+                    <div className="mt-3 flex items-center gap-2">
+                      <div className="h-[10px] w-[10px] rounded-full bg-[#111111] border border-white/10 -ml-5" />
+                      <div className="flex-1 border-t border-dashed border-white/15" />
+                      <div className="h-[10px] w-[10px] rounded-full bg-[#111111] border border-white/10 -mr-5" />
                     </div>
                   </div>
 
                   {/* Third Coupon */}
-                  <div className="flex-shrink-0 w-[300px] bg-gradient-to-r from-emerald-600 via-emerald-500 to-emerald-400 rounded-xl p-4 shadow-lg">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="inline-block bg-white/20 text-white/90 text-xs px-2 py-0.5 rounded-full mb-2">
-                          Bulk Booking
+                  <div className="flex-shrink-0 w-[300px] min-h-[140px] rounded-2xl p-3 border border-dashed border-white/15 bg-white/5 backdrop-blur-sm relative overflow-hidden flex flex-col justify-between">
+                    <div className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-emerald-400/80 to-emerald-600/80" />
+                    <div className="flex items-start gap-3">
+                      <div className="hidden sm:flex items-center justify-center w-12 h-12 rounded-xl bg-white/5 border border-white/10">
+                        <svg className="w-6 h-6 text-emerald-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 7h18M3 12h18M3 17h18"/></svg>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="inline-flex items-center text-[11px] px-2 py-0.5 rounded-full border border-white/15 text-white/80">Bulk booking</span>
+                          <span className="text-[11px] text-white/50">• 3+ services</span>
                         </div>
-                        <h3 className="text-lg font-bold text-white mb-1">25% Off 3+ Services</h3>
-                        <p className="text-white/90 text-sm mb-2">
-                          Use code: <span className="font-mono bg-white/20 px-1.5 py-0.5 rounded text-xs">BULK25</span>
-                        </p>
-                        <button className="bg-white text-emerald-600 hover:bg-white/90 px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-300">
-                          Book Now
+                        <h3 className="text-white text-base font-semibold leading-snug">25% off bulk orders</h3>
+                      </div>
+                      <div className="ml-2">
+                        <div className="rounded-xl px-2.5 py-1 bg-emerald-500/20 text-emerald-200 border border-emerald-300/30 text-sm font-bold">25%</div>
+                      </div>
+                    </div>
+                    {/* Code and button section at bottom */}
+                    <div className="mt-3 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-[11px] px-2 py-1 rounded-md border border-white/15 bg-white/5 text-white/90">BULK25</span>
+                        <button
+                          onClick={() => handleCopyCode('BULK25')}
+                          className="inline-flex items-center gap-1 px-2 py-1.5 rounded-full border border-white/20 text-white/90 hover:bg-white/10 text-xs sm:text-sm transition-colors whitespace-nowrap shrink-0"
+                          aria-label="Copy coupon code BULK25"
+                        >
+                          {copiedCode === 'BULK25' ? (
+                            <>
+                              <Check className="w-4 h-4" />
+                              Copied
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="w-4 h-4" />
+                              Copy
+                            </>
+                          )}
                         </button>
                       </div>
+                      <span className="text-[11px] text-white/50 whitespace-nowrap">Limited time</span>
+                    </div>
+                    {/* Perforated divider at bottom */}
+                    <div className="mt-3 flex items-center gap-2">
+                      <div className="h-[10px] w-[10px] rounded-full bg-[#111111] border border-white/10 -ml-5" />
+                      <div className="flex-1 border-t border-dashed border-white/15" />
+                      <div className="h-[10px] w-[10px] rounded-full bg-[#111111] border border-white/10 -mr-5" />
                     </div>
                   </div>
                 </div>
