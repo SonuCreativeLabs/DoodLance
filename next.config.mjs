@@ -15,7 +15,6 @@ const nextConfig = {
       },
     ],
     domains: ['localhost', '127.0.0.1', 'atmxiuindyakhqmdqzal.supabase.co', 'umeqaqwidjdgnwkxedaw.supabase.co'],
-    unoptimized: true,
   },
 
   // React and build settings
