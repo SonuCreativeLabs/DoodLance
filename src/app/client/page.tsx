@@ -362,7 +362,7 @@ export default function ClientHome() {
               <img
                 src="/images/Purple ground.png"
                 alt="Cover"
-                className="w-full h-full object-cover opacity-[12%] transform translate-y-[10%]"
+                className="w-full h-full object-cover opacity-[35%] transform translate-y-[10%]"
               />
             </div>
           </div>

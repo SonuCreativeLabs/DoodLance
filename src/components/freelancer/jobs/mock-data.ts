@@ -349,7 +349,7 @@ export const mockUpcomingJobs: Job[] = [
 
 export const mockApplications: Application[] = [
   {
-    id: 'DLCP1234',
+    "#": 'DLCP1234',
     jobTitle: 'Cricket Coach for School Team',
     appliedDate: '2024-06-28',
     status: 'pending',
@@ -377,7 +377,7 @@ export const mockApplications: Application[] = [
     }
   },
   {
-    id: 'DLFD5678',
+    "#": 'DLFD5678',
     jobTitle: 'Frontend Developer for E-commerce Site',
     appliedDate: '2024-06-29',
     status: 'pending',
@@ -407,7 +407,7 @@ export const mockApplications: Application[] = [
     }
   },
   {
-    id: 'DLOC9012',
+    "#": 'DLOC9012',
     jobTitle: 'Office Cleaning',
     appliedDate: '2024-06-20',
     status: 'pending',
@@ -438,7 +438,7 @@ export const mockApplications: Application[] = [
     },
   },
   {
-    id: 'DLGM5678',
+    "#": 'DLGM5678',
     jobTitle: 'Home Gardening',
     appliedDate: '2024-06-19',
     status: 'accepted',
@@ -462,7 +462,7 @@ export const mockApplications: Application[] = [
     }
   },
   {
-    id: 'DLPR3456',
+    "#": 'DLPR3456',
     jobTitle: 'Plumbing Repair',
     appliedDate: '2024-06-21',
     status: 'rejected',
