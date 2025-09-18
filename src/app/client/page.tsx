@@ -172,7 +172,7 @@ export default function ClientHome() {
     <ClientLayout>
       {/* Fixed Header */}
       <div className="fixed top-0 left-0 w-full z-30 bg-gradient-to-br from-[#6B46C1] via-[#4C1D95] to-[#2D1B69]">
-        <div className="container mx-auto px-4 flex items-center justify-between pt-4 pb-2">
+        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <div className="relative group">
               <div className="relative flex items-center justify-center">
@@ -316,6 +316,13 @@ export default function ClientHome() {
           </div>
           <div className="flex items-center space-x-3">
             <div className="relative">
+              <Link href="/client/wallet" className="relative group" aria-label="Wallet">
+                <span className="flex items-center justify-center w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 transition-colors">
+                  <Wallet className="w-5 h-5 text-white" />
+                </span>
+              </Link>
+            </div>
+            <div className="relative">
               <Link href="/client/notifications" className="relative group" aria-label="Notifications">
                 <span className="flex items-center justify-center w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 transition-colors">
                   <Bell className="w-5 h-5 text-white" />
@@ -324,13 +331,6 @@ export default function ClientHome() {
                       <span className="text-[10px] font-medium text-white">{mockNotifications.length}</span>
                     </span>
                   )}
-                </span>
-              </Link>
-            </div>
-            <div className="relative">
-              <Link href="/client/wallet" className="relative group" aria-label="Wallet">
-                <span className="flex items-center justify-center w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 transition-colors">
-                  <Wallet className="w-5 h-5 text-white" />
                 </span>
               </Link>
             </div>
