@@ -56,7 +56,7 @@ export default function RootLayout({
                 {showSplash ? (
                   <SplashScreen onComplete={() => setShowSplash(false)} />
                 ) : (
-                  <main className="flex flex-col h-screen">
+                  <main className="flex flex-col min-h-screen">
                     <NavbarProvider>
                       {children}
                     </NavbarProvider>

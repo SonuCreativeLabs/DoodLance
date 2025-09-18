@@ -91,7 +91,6 @@ export default function ClientHome() {
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
   const [typingSpeed, setTypingSpeed] = useState(100);
-  const [showSuggestions, setShowSuggestions] = useState(false);
   const [isSticky, setIsSticky] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
   const headerRef = useRef<HTMLDivElement>(null);
@@ -152,7 +151,6 @@ export default function ClientHome() {
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        setShowSuggestions(false);
         setShowLocationPicker(false);
       }
     };
@@ -160,17 +158,6 @@ export default function ClientHome() {
     return () => window.removeEventListener('keydown', handleEsc);
   }, []);
 
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-    setShowSuggestions(true);
-  };
-
-  const handleSearchSelect = (text: string) => {
-    setSearchQuery(text);
-    setShowSuggestions(false);
-    // TODO: Implement actual search
-    console.log('Searching for:', text);
-  };
   const handleHire = (id: number) => {
     // TODO: Implement hire functionality
     console.log('Hiring freelancer:', id)
@@ -372,10 +359,10 @@ export default function ClientHome() {
             {/* Adjusted space for optimal position */}
             <div className="pt-24 md:pt-28">
               <div className="max-w-2xl mx-auto text-center">
-                <h1 className="text-xl md:text-3xl font-bold text-white mb-2 text-center drop-shadow-lg">
+                <h1 className="text-2xl md:text-4xl font-bold text-white mb-2 text-center drop-shadow-[0_4px_8px_rgba(0,0,0,0.3)]">
                   Practice like a pro, with a pro
                 </h1>
-                <p className="text-base md:text-lg text-white/90 mb-4 drop-shadow-md">
+                <p className="text-base md:text-lg text-white/90 mb-4 drop-shadow-[0_2px_4px_rgba(0,0,0,0.2)]">
                   Your shortcut to better cricket starts here
                 </p>
               </div>
@@ -387,52 +374,19 @@ export default function ClientHome() {
                     type="text"
                     placeholder={searchQuery ? `Find services in ${currentLocation.city}...` : placeholder || `Find services in ${currentLocation.city}...`}
                     value={searchQuery}
-                    onChange={(e) => handleSearch(e.target.value)}
-                    className="w-full bg-white/20 border border-white/40 text-white placeholder-white/80 rounded-2xl py-4 pl-12 pr-4 focus:outline-none focus:border-purple-400 transition-all shadow-lg"
-                    onFocus={() => setShowSuggestions(true)}
-                    onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full bg-white/20 border border-white/40 text-white placeholder-white/80 rounded-2xl py-4 pl-12 pr-4 focus:outline-none focus:border-purple-400 transition-all shadow-lg drop-shadow-[0_4px_12px_rgba(0,0,0,0.15)]"
                   />
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/70">
                     <Sparkles className="w-5 h-5" />
                   </span>
-                      {showSuggestions && (
-                        <div className="absolute left-0 top-full mt-1 w-full bg-[#18181b]/95 rounded-lg border border-white/10 shadow-xl z-20">
-                          <div className="p-2">
-                            <div className="text-xs font-medium text-white/80 px-2 py-1 flex justify-between items-center">
-                              <span>Popular Searches</span>
-                              <button 
-                                onClick={() => setShowSuggestions(false)}
-                                className="p-1 hover:bg-white/10 rounded-full transition-colors"
-                                aria-label="Close suggestions"
-                              >
-                                <X className="w-4 h-4 text-white/50" />
-                              </button>
-                            </div>
-                            <div className="space-y-1">
-                              {mockSearches.map((search) => (
-                                <button 
-                                  key={search.id}
-                                  onClick={() => handleSearchSelect(search.text)}
-                                  className="w-full px-3 py-2 text-sm text-white hover:bg-white/10 rounded-lg flex items-center justify-between group/item"
-                                >
-                                  <div className="flex items-center">
-                                    <Search className="w-4 h-4 mr-2 text-purple-400" />
-                                    <span className="text-white">{search.text}</span>
-                                  </div>
-                                  <span className="text-xs text-white/50 group-hover/item:text-white/80">{search.count.toLocaleString()}+ searches</span>
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                      )}
                 </div>
               </div>
 
               {/* Why DoodLance Section */}
               <div className="mt-4 max-w-3xl mx-auto">
                 <div className="mb-1">
-                  <h2 className="text-sm font-semibold text-white tracking-wide text-left" data-component-name="ClientHome">WHY DOODLANCE?</h2>
+                  <h2 className="text-sm font-semibold text-white tracking-wide text-left drop-shadow-[0_2px_4px_rgba(0,0,0,0.25)]" data-component-name="ClientHome">WHY DOODLANCE?</h2>
                 </div>
                 <div className="flex flex-row justify-center gap-2 md:gap-3">
                   {/* Local Delivery */}
@@ -441,8 +395,8 @@ export default function ClientHome() {
                       <MapPin className="w-5 h-5 text-purple-500" />
                     </div>
                     <div className="text-center">
-                      <div className="font-bold text-sm md:text-base text-white">Fast Service</div>
-                      <div className="text-[10px] md:text-xs text-white/80 leading-tight">In Your<br />Neighborhood</div>
+                      <div className="font-bold text-sm md:text-base text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)]">Fast Service</div>
+                      <div className="text-[10px] md:text-xs text-white/80 leading-tight drop-shadow-[0_1px_2px_rgba(0,0,0,0.2)]">In Your<br />Neighborhood</div>
                     </div>
                   </div>
                   {/* Smart Matching */}
@@ -452,8 +406,8 @@ export default function ClientHome() {
                       <Sparkles className="w-5 h-5 text-purple-500" />
                     </div>
                     <div className="text-center">
-                      <div className="font-bold text-sm md:text-base text-white">AI-Powered</div>
-                      <div className="text-[10px] md:text-xs text-white/80 leading-tight">Find the<br />Right Expert</div>
+                      <div className="font-bold text-sm md:text-base text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)]">AI-Powered</div>
+                      <div className="text-[10px] md:text-xs text-white/80 leading-tight drop-shadow-[0_1px_2px_rgba(0,0,0,0.2)]">Find the<br />Right Expert</div>
                     </div>
                   </div>
                   {/* Instant Booking */}
@@ -462,8 +416,8 @@ export default function ClientHome() {
                       <Clock className="w-5 h-5 text-purple-500" />
                     </div>
                     <div className="text-center">
-                      <div className="font-bold text-sm md:text-base text-white whitespace-nowrap">Book Instantly</div>
-                      <div className="text-[10px] md:text-xs text-white/80 leading-tight whitespace-nowrap">Real-Time<br />Availability</div>
+                      <div className="font-bold text-sm md:text-base text-white whitespace-nowrap drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)]">Book Instantly</div>
+                      <div className="text-[10px] md:text-xs text-white/80 leading-tight whitespace-nowrap drop-shadow-[0_1px_2px_rgba(0,0,0,0.2)]">Real-Time<br />Availability</div>
                     </div>
                   </div>
                 </div>
@@ -540,7 +494,7 @@ export default function ClientHome() {
                     .map((expert) => (
                     <div
                       key={expert.id}
-                      className="flex-shrink-0 w-[160px]"
+                      className="flex-shrink-0 w-[130px]"
                     >
                       {/* Outer Layer Card */}
                       <div className="relative group">
@@ -548,7 +502,7 @@ export default function ClientHome() {
                         <div className="absolute inset-0 rounded-2xl border border-purple-400/10 transition-all duration-300 group-hover:border-purple-400/20"></div>
                         
                         {/* Card Content */}
-                        <div className="relative p-3">
+                        <div className="relative p-2.5">
                           <div className="relative group">
                             {/* Rating Badge */}
                             <div className="absolute top-2 left-2 z-20 bg-gradient-to-r from-yellow-400 to-yellow-600 px-2 py-0.5 rounded-full flex items-center gap-1 shadow-lg">
@@ -557,7 +511,7 @@ export default function ClientHome() {
                             </div>
                             
                             {/* Profile Picture */}
-                            <div className="relative w-[100px] h-[100px] mx-auto">
+                            <div className="relative w-[80px] h-[80px] mx-auto">
                               <img
                                 src={expert.image}
                                 alt={expert.name}
@@ -566,15 +520,15 @@ export default function ClientHome() {
                             </div>
                             
                             {/* Expert Info with Reduced Spacing */}
-                            <div className="mt-2 text-center">
-                              <h3 className="font-semibold text-white text-sm leading-tight truncate">{expert.name}</h3>
-                              <p className="text-purple-400 text-xs font-medium truncate mt-0.5">{expert.service}</p>
-                              <div className="flex items-center justify-center gap-1 mt-1">
-                                <p className="text-white/70 text-[10px]">{expert.reviews} reviews</p>
+                            <div className="mt-1.5 text-center">
+                              <h3 className="font-semibold text-white text-xs leading-tight truncate">{expert.name}</h3>
+                              <p className="text-purple-400 text-[10px] font-medium truncate mt-0.5">{expert.service}</p>
+                              <div className="flex items-center justify-center gap-1 mt-0.5">
+                                <p className="text-white/70 text-[9px]">{expert.reviews} reviews</p>
                                 <span className="text-white/30">•</span>
-                                <p className="text-white/70 text-[10px]">{expert.completedJobs} jobs</p>
+                                <p className="text-white/70 text-[9px]">{expert.completedJobs} jobs</p>
                               </div>
-                              <p className="text-white/50 text-[10px] font-medium mt-0.5">{expert.location}</p>
+                              <p className="text-white/50 text-[9px] font-medium mt-0.5">{expert.location}</p>
                             </div>
                           </div>
                         </div>

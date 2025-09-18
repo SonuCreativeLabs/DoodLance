@@ -99,7 +99,7 @@ export default function ClientLayout({ children, className }: ClientLayoutProps)
               {/* Work & Earn Button */}
               <button 
                 onClick={handleSwitchToFreelancer}
-                className="flex items-center justify-center group relative h-10 px-3 xs:px-4 sm:px-5 min-w-[90px] xs:min-w-[100px] sm:min-w-[120px] md:min-w-[130px] bg-gradient-to-r from-yellow-500 via-amber-400 to-yellow-300 rounded-l-full rounded-r-none shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 active:scale-95 ml-auto overflow-visible"
+                className="flex items-center justify-center group relative h-10 px-3 xs:px-4 sm:px-5 min-w-[90px] xs:min-w-[100px] sm:min-w-[120px] md:min-w-[130px] bg-gradient-to-r from-yellow-500 via-amber-400 to-yellow-300 rounded-none shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 active:scale-95 ml-auto mr-[5%] overflow-visible"
               >
                 <div className="flex items-center gap-1 xs:gap-1.5">
                   <span className="text-[12px] xs:text-[13px] font-bold text-black whitespace-nowrap">Earn</span>
