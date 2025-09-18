@@ -68,9 +68,6 @@ const searchExamples = [
 
 const mockLocations = [
   { city: "Chennai", state: "TN" },
-  { city: "Bangalore", state: "KA" },
-  { city: "Mumbai", state: "MH" },
-  { city: "Delhi", state: "DL" },
 ];
 
 const mockNotifications = [
@@ -152,6 +149,7 @@ export default function ClientHome() {
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         setShowLocationPicker(false);
+        setShowSidebar(false);
       }
     };
     window.addEventListener('keydown', handleEsc);
@@ -286,27 +284,27 @@ export default function ClientHome() {
             <div className="flex flex-col gap-0.5">
               <span className="text-lg font-medium text-white">Welcome back, Sonu!</span>
               <div className="relative group">
-                <button 
+                <button
                   className="flex items-center text-white/70 hover:text-white/90 transition-colors"
                   onClick={() => setShowLocationPicker(prev => !prev)}
                 >
-                  <MapPin className="w-3 h-3 mr-1" />
-                  <span className="text-xs">{currentLocation.city}, {currentLocation.state}</span>
-                  <ChevronRight className="w-3 h-3 ml-0.5 group-hover:rotate-90 transition-transform duration-200" />
+                  <MapPin className="w-3 h-3 mr-1.5" />
+                  <span className="text-xs">Chennai, TN</span>
+                  <ChevronRight className="w-3 h-3 ml-1.5 group-hover:rotate-90 transition-transform duration-200" />
                 </button>
                 {showLocationPicker && (
-                  <div className="absolute top-6 left-0 bg-white/10 rounded-lg py-2 w-36 border border-white/20">
+                  <div className="absolute top-6 left-0 bg-[#1a1a1a]/95 backdrop-blur-xl rounded-xl py-2 w-40 shadow-xl border border-white/10 z-50">
                     {mockLocations.map((loc) => (
                       <button
                         key={`${loc.city}-${loc.state}`}
-                        className="w-full px-3 py-1.5 text-xs text-white/80 hover:bg-white/10 text-left flex items-center gap-2"
+                        className="w-full px-4 py-2.5 text-xs text-white/90 hover:bg-white/10 hover:text-white text-left flex items-center gap-2.5 transition-colors duration-200 first:rounded-t-xl last:rounded-b-xl"
                         onClick={() => {
                           setCurrentLocation(loc);
                           setShowLocationPicker(false);
                         }}
                       >
-                        <MapPin className="w-3 h-3" />
-                        {loc.city}, {loc.state}
+                        <MapPin className="w-3.5 h-3.5 text-purple-400" />
+                        <span className="font-medium">{loc.city}, {loc.state}</span>
                       </button>
                     ))}
                   </div>
@@ -314,7 +312,7 @@ export default function ClientHome() {
               </div>
             </div>
           </div>
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-4">
             <div className="relative">
               <Link href="/client/wallet" className="relative group" aria-label="Wallet">
                 <span className="flex items-center justify-center w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 transition-colors">
@@ -327,8 +325,8 @@ export default function ClientHome() {
                 <span className="flex items-center justify-center w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 transition-colors">
                   <Bell className="w-5 h-5 text-white" />
                   {mockNotifications.length > 0 && (
-                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center">
-                      <span className="text-[10px] font-medium text-white">{mockNotifications.length}</span>
+                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-r from-purple-600 to-purple-400 rounded-full flex items-center justify-center shadow-lg shadow-purple-600/20 z-10">
+                      <span className="text-[10px] font-medium text-white leading-none">{mockNotifications.length}</span>
                     </span>
                   )}
                 </span>
@@ -359,7 +357,7 @@ export default function ClientHome() {
             {/* Adjusted space for optimal position */}
             <div className="pt-24 md:pt-28">
               <div className="max-w-2xl mx-auto text-center">
-                <h1 className="text-2xl md:text-4xl font-bold text-white mb-2 text-center drop-shadow-[0_4px_8px_rgba(0,0,0,0.3)]">
+                <h1 className="text-[22px] md:text-4xl font-bold font-serif text-white mb-2 text-center drop-shadow-[0_4px_8px_rgba(0,0,0,0.3)]">
                   Practice like a pro, with a pro
                 </h1>
                 <p className="text-base md:text-lg text-white/90 mb-4 drop-shadow-[0_2px_4px_rgba(0,0,0,0.2)]">
@@ -372,7 +370,7 @@ export default function ClientHome() {
                 <div className="relative w-full">
                   <Input
                     type="text"
-                    placeholder={searchQuery ? `Find services in ${currentLocation.city}...` : placeholder || `Find services in ${currentLocation.city}...`}
+                    placeholder={searchQuery ? `Find services in Chennai...` : placeholder || `Find services in Chennai...`}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full bg-white/20 border border-white/40 text-white placeholder-white/80 rounded-2xl py-4 pl-12 pr-4 focus:outline-none focus:border-purple-400 transition-all shadow-lg drop-shadow-[0_4px_12px_rgba(0,0,0,0.15)]"

@@ -75,7 +75,7 @@ export default function ServiceCard({
           </div>
           
           {/* Title and Provider Count */}
-          <div className="space-y-3">
+          <div className="space-y-1">
             <h3 className="font-semibold text-white leading-tight break-words" 
                 style={{
                   fontSize: 'clamp(13px, 3vw, 16px)',
