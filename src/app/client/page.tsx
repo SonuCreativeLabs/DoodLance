@@ -322,10 +322,10 @@ export default function ClientHome() {
             </div>
             <div className="relative">
               <Link href="/client/notifications" className="relative group" aria-label="Notifications">
-                <span className="flex items-center justify-center w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 transition-colors">
+                <span className="relative inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 transition-colors">
                   <Bell className="w-5 h-5 text-white" />
                   {mockNotifications.length > 0 && (
-                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-r from-purple-600 to-purple-400 rounded-full flex items-center justify-center shadow-lg shadow-purple-600/20 z-10">
+                    <span className="pointer-events-none absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-r from-purple-600 to-purple-400 rounded-full flex items-center justify-center shadow-lg shadow-purple-600/20 z-10">
                       <span className="text-[10px] font-medium text-white leading-none">{mockNotifications.length}</span>
                     </span>
                   )}
