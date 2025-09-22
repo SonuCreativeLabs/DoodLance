@@ -28,7 +28,7 @@ export const mockChats = [
     lastMessage: 'We need you for 3 sessions this week - Mon, Wed, Fri from 7-9 AM. Focus on yorkers and bouncers.',
     time: '3h ago',
     budget: '₹3,500',
-    status: 'Ongoing',
+    status: 'Cancelled',
     unread: false,
     rating: 4.9
   },
@@ -54,7 +54,7 @@ export const mockChats = [
     lastMessage: 'We are in T Nagar. What kit should we get for the first batting session?',
     time: '7h ago',
     budget: '₹3,000',
-    status: 'Ongoing',
+    status: 'Cancelled',
     unread: false,
     rating: 4.9
   },
