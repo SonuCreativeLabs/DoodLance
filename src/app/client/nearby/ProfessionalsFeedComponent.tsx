@@ -88,7 +88,7 @@ export default function ProfessionalsFeed({ filteredProfessionals }: Professiona
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-[12px] font-medium text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded-full whitespace-nowrap">{freelancer.service || 'Service'}</span>
+                    <span className="text-[12px] font-medium text-white/80 bg-white/10 px-2 py-0.5 rounded-full whitespace-nowrap">{freelancer.service || 'Service'}</span>
                   </div>
                 </div>
               </div>
@@ -98,9 +98,9 @@ export default function ProfessionalsFeed({ filteredProfessionals }: Professiona
                   <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
                   <span className="truncate max-w-[120px]" title={freelancer.location}>{freelancer.location}</span>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5 flex-shrink-0" />
-                  <span>{freelancer.responseTime}</span>
+                <div className="flex items-center gap-1.5 bg-green-500/10 px-2 py-0.5 rounded-full">
+                  <Clock className="w-3.5 h-3.5 flex-shrink-0 text-green-400" />
+                  <span className="text-green-400 font-medium">{freelancer.responseTime}</span>
                 </div>
               </div>
               <div className="flex gap-2 items-center">

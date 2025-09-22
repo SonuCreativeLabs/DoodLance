@@ -186,10 +186,18 @@ export default function IntegratedExplorePage() {
       <MapView professionals={filteredProfessionals} />
 
       {/* Fixed Header - Always at top */}
-      <div className="fixed top-0 left-0 right-0 z-[3] px-0 pt-3 flex flex-col items-center bg-transparent">
+      <div className={`fixed top-0 left-0 right-0 z-[3] px-0 pt-3 flex flex-col items-center transition-all duration-200 ${
+        isSheetCollapsed 
+          ? 'bg-transparent' 
+          : 'bg-[#111111] border-b border-white/10'
+      }`}>
         <div className="w-full max-w-md mb-2 px-3">
           <button
-            className="w-full flex items-center gap-2 px-4 py-2 rounded-full bg-black/60 backdrop-blur-sm border border-white/20 shadow hover:bg-black/70 focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className={`w-full flex items-center gap-2 px-4 py-2 rounded-full border shadow focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-200 ${
+              isSheetCollapsed 
+                ? 'bg-black/60 backdrop-blur-sm border-white/20 hover:bg-black/70' 
+                : 'bg-black/90 border-white/30 hover:bg-black'
+            }`}
             onClick={() => setShowFilterModal(true)}
           >
             <Search className="w-5 h-5 text-purple-400" />
@@ -205,7 +213,9 @@ export default function IntegratedExplorePage() {
                   className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm whitespace-nowrap border transition-all duration-200 font-medium ${
                     selectedCategory === cat.name 
                       ? 'bg-purple-600 text-white border-purple-600' 
-                      : 'bg-black/60 text-white border-white/20 hover:bg-black/70 backdrop-blur-sm'
+                      : isSheetCollapsed 
+                        ? 'bg-black/60 text-white border-white/20 hover:bg-black/70 backdrop-blur-sm' 
+                        : 'bg-black/90 text-white border-white/30 hover:bg-black'
                   }`}
                   onClick={() => setSelectedCategory(cat.name)}
                 >

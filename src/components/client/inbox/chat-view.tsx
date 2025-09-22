@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ArrowLeft, Paperclip, Send, Phone } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { useNavbar } from '@/contexts/NavbarContext';
 
 interface Message {
   id: string;
@@ -38,6 +39,17 @@ export function ChatView({
   messages = [],
 }: ChatViewProps) {
   const [newMessage, setNewMessage] = useState('');
+  const { setNavbarVisibility } = useNavbar();
+
+  // Hide navbar when chat view is mounted
+  useEffect(() => {
+    setNavbarVisibility(false);
+    
+    // Show navbar when component unmounts (when leaving chat view)
+    return () => {
+      setNavbarVisibility(true);
+    };
+  }, [setNavbarVisibility]);
 
   const handleSend = () => {
     if (!newMessage.trim()) return;

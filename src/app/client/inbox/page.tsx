@@ -286,7 +286,6 @@ function InboxPage() {
   const handleSelectChat = (chatId: string) => {
     setSelectedChatId(chatId);
     setFullChatView(true);
-    setNavbarVisibility(false);
   };
   
   // Show loading state on server
@@ -327,7 +326,6 @@ function InboxPage() {
   const handleBackClick = () => {
     setSelectedChatId(null);
     setFullChatView(false);
-    setNavbarVisibility(true);
   };
 
   return (

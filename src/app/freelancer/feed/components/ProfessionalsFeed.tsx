@@ -167,7 +167,7 @@ export default function ProfessionalsFeed({
                         )}
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-[12px] font-medium text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded-full whitespace-nowrap">
+                        <span className="text-[12px] font-medium text-white/80 bg-white/10 px-2 py-0.5 rounded-full whitespace-nowrap">
                           {item.category || item.service}
                         </span>
                         {item.workMode && (
@@ -188,7 +188,7 @@ export default function ProfessionalsFeed({
                   {item.title || item.name}
                 </h3>
                 <div className="flex items-center gap-2">
-                  <span className="text-[12px] font-medium text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded-full whitespace-nowrap">
+                  <span className="text-[12px] font-medium text-white/80 bg-white/10 px-2 py-0.5 rounded-full whitespace-nowrap">
                     {item.category || item.service}
                   </span>
                   {item.workMode && (
@@ -206,18 +206,19 @@ export default function ProfessionalsFeed({
             </p>
 
             {/* Location and Date */}
-            <div className="flex items-center gap-4 text-[12px] text-white/60 pt-1">
-              <div className="flex items-center gap-1.5">
-                <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
-                <span className="truncate max-w-[120px]" title={item.location}>{item.location}</span>
+            <div className="flex items-center gap-3 text-[12px] text-white/60 pt-1">
+              <div className="flex items-center gap-1 min-w-0 flex-1">
+                <MapPin className="w-3 h-3 flex-shrink-0" />
+                <span className="truncate" title={item.location}>{item.location}</span>
               </div>
-              <div className="flex items-center gap-1.5">
-                <Clock className="w-3.5 h-3.5 flex-shrink-0" />
-                <span>{
-                  item.postedAt 
+              <div className="flex items-center gap-1 flex-shrink-0">
+                <Clock className="w-3 h-3 flex-shrink-0 text-white/50" />
+                <span className="text-white/60 text-[11px] whitespace-nowrap">
+                  {item.responseTime || 
+                   (item.postedAt 
                     ? new Date(item.postedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-                    : item.availability?.[0] || 'Available now'
-                }</span>
+                    : item.availability?.[0] || 'Available now')}
+                </span>
               </div>
             </div>
 
