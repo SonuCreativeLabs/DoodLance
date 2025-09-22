@@ -11,6 +11,9 @@ export interface Freelancer {
   distance: number;
   price: number;
   priceUnit: string;
+  expertise: string[];
+  experience: string;
+  description?: string;
 }
 
 export interface Category {

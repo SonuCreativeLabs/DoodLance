@@ -33,6 +33,8 @@ export type BaseProfessional = {
   type?: string;
   postedAt?: string;
   description?: string;
+  expertise?: string[];
+  experience?: string;
 };
 
 interface ProfessionalsFeedProps {
@@ -136,21 +138,67 @@ export default function ProfessionalsFeed({
           onClick={() => filteredProfessionals ? handleProfessionalClick(item) : handleJobClick(item as Job)}
         >
           <div className="space-y-3">
-            <div className="flex flex-col gap-2">
-              <h3 className="text-[15px] font-semibold text-white leading-tight line-clamp-2 break-words">
-                {item.title || item.name}
-              </h3>
-              <div className="flex items-center gap-2">
-                <span className="text-[12px] font-medium text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded-full whitespace-nowrap">
-                  {item.category || item.service}
-                </span>
-                {item.workMode && (
-                  <span className="px-2 py-0.5 text-[11px] rounded-full bg-white/5 text-white/70">
-                    {item.workMode}
-                  </span>
-                )}
+            {/* Avatar + Rating (for professionals) */}
+            {filteredProfessionals && (
+              <div className="flex items-start gap-4">
+                <div className="relative flex-shrink-0">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full opacity-20 blur-md"></div>
+                    <img
+                      src={item.avatar || item.image}
+                      alt={item.name}
+                      className="relative w-14 h-14 rounded-full border-2 border-purple-200/50 object-cover"
+                    />
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-start justify-between">
+                    <div className="flex flex-col gap-2 flex-1">
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-[15px] font-semibold text-white leading-tight line-clamp-2 break-words">
+                          {item.title || item.name}
+                        </h3>
+                        {(item.rating || item.reviews) && (
+                          <div className="flex items-center gap-1 bg-yellow-400/10 rounded-full px-2 py-0.5 flex-shrink-0">
+                            <Star className="w-3.5 h-3.5 text-yellow-400 fill-current" />
+                            <span className="text-xs font-bold text-yellow-400">{item.rating ?? '-'}</span>
+                            {item.reviews && <span className="text-[10px] text-yellow-300/80">({item.reviews})</span>}
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[12px] font-medium text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded-full whitespace-nowrap">
+                          {item.category || item.service}
+                        </span>
+                        {item.workMode && (
+                          <span className="px-2 py-0.5 text-[11px] rounded-full bg-white/5 text-white/70">
+                            {item.workMode}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
+            )}
+            {/* Fallback for jobs (no avatar) */}
+            {!filteredProfessionals && (
+              <div className="flex flex-col gap-2">
+                <h3 className="text-[15px] font-semibold text-white leading-tight line-clamp-2 break-words">
+                  {item.title || item.name}
+                </h3>
+                <div className="flex items-center gap-2">
+                  <span className="text-[12px] font-medium text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded-full whitespace-nowrap">
+                    {item.category || item.service}
+                  </span>
+                  {item.workMode && (
+                    <span className="px-2 py-0.5 text-[11px] rounded-full bg-white/5 text-white/70">
+                      {item.workMode}
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Description */}
             <p className="text-[13px] text-white/80 line-clamp-2 leading-relaxed">
@@ -197,7 +245,8 @@ export default function ProfessionalsFeed({
                   ₹{item.budget?.toLocaleString()}
                 </span>
                 <span className="text-[13px] text-white/60">
-                  {item.category === 'Sports' ? ' / session' :
+                  {item.priceUnit ? ` / ${item.priceUnit}` : 
+                   item.category === 'Sports' ? ' / session' :
                    item.category?.toLowerCase().includes('tutoring') ? ' / session' :
                    item.category?.toLowerCase().includes('coach') ? ' / session' :
                    item.category?.toLowerCase().includes('fitness') ? ' / session' :

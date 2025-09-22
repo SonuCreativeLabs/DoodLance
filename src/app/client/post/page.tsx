@@ -1,21 +1,37 @@
 "use client";
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useRouter } from 'next/navigation';
+import Image from 'next/image';
+import { ArrowLeft } from 'lucide-react';
 import PostJobForm from "@/components/job/post-job-form";
 
 export default function PostPage() {
+  const router = useRouter();
+
   return (
-    <div className="container mx-auto py-6 px-4">
-      <h1 className="text-3xl font-bold mb-6 bg-gradient-to-r from-purple-600 to-purple-400 bg-clip-text text-transparent">Post a Job</h1>
-      
-      <div className="bg-gradient-to-r from-purple-50 to-purple-100/50 p-6 rounded-xl border border-purple-100 shadow-lg mb-6">
-        <h2 className="text-lg font-semibold text-purple-900 mb-2">Post a Job</h2>
-        <p className="text-purple-700">
-          Describe your task and let skilled professionals apply to help you. Our AI will help categorize your job and suggest fair rates.
-        </p>
+    <div className="min-h-screen bg-[#111111] text-white">
+      {/* Simple Header */}
+      <div className="bg-[#111111] border-b border-white/10">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center h-14">
+            <button
+              onClick={() => router.back()}
+              aria-label="Go back"
+              className="flex items-center gap-2 text-white/70 hover:text-white transition-colors duration-200 group"
+            >
+              <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform duration-200" />
+              <span className="text-sm font-medium">Back</span>
+            </button>
+          </div>
+        </div>
       </div>
-      
-      <PostJobForm />
+
+      {/* Main Content */}
+      <div className="container mx-auto py-8 px-4 pb-24">
+        <div className="max-w-4xl mx-auto">
+          <PostJobForm />
+        </div>
+      </div>
     </div>
   );
 } 

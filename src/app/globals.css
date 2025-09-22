@@ -95,6 +95,62 @@ body {
   display: none !important;
 }
 
+/* Fix datetime-local calendar popup positioning */
+input[type="datetime-local"] {
+  position: relative;
+}
+
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  cursor: pointer;
+  filter: invert(1);
+  z-index: 10;
+}
+
+/* Ensure calendar popup stays within viewport */
+input[type="datetime-local"]:focus {
+  position: relative;
+  z-index: 1000;
+}
+
+/* Reduce calendar popup size and ensure it fits screen */
+input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover + * {
+  transform: scale(0.85) !important;
+  max-width: 280px !important;
+  max-height: 300px !important;
+}
+
+/* Target the calendar popup directly */
+@supports (-webkit-appearance: none) {
+  input[type="datetime-local"]::after {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 999;
+  }
+}
+
+/* Force calendar to open above when near bottom of screen */
+@media (max-height: 600px) {
+  input[type="datetime-local"] {
+    transform: translateY(-100px);
+  }
+}
+
+/* Additional calendar size constraints */
+@media (max-width: 768px) {
+  input[type="datetime-local"] {
+    font-size: 14px;
+  }
+}
+
 /* Mapbox Controls - Tiny Buttons */
 .mapboxgl-ctrl {
   margin: 0 3px 3px 0 !important;

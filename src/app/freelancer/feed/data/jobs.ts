@@ -583,13 +583,71 @@ const generateJobs = (): Job[] => {
     }));
   });
 
-  // Shuffle the jobs array to mix online and offline jobs
-  for (let i = jobs.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [jobs[i], jobs[j]] = [jobs[j], jobs[i]];
-  }
+  // Curated cricket-only jobs with realistic titles/descriptions
+  const curated = [
+    createJobWithClient({
+      id: 'crk-sidearm-1',
+      title: 'Sidearm for extended net — yorker/bouncer mix',
+      description: 'Simulate powerplay and death overs. Consistent yorkers and short balls for top-order prep. 2-hour session with interval blocks.',
+      category: 'Sports',
+      skills: ['Sidearm', 'Batting Practice', 'Death Overs', 'Yorker Control', 'Sidearm Specialist'],
+      workMode: 'onsite',
+      minRate: 800,
+      maxRate: 3000
+    }),
+    createJobWithClient({
+      id: 'crk-netbowler-1',
+      title: 'Net bowler — left-arm angle for right-handers',
+      description: 'Left-arm seam focusing on hard length and wobble seam to RH batters. Red-ball preparation. 90-minute session.',
+      category: 'Sports',
+      skills: ['Left-arm Seam', 'Hard Length', 'Swing Bowling', 'bowling'],
+      workMode: 'onsite',
+      minRate: 700,
+      maxRate: 2500
+    }),
+    createJobWithClient({
+      id: 'crk-batting-1',
+      title: 'One-on-one batting — front-foot play vs hard length',
+      description: 'Contact point and weight transfer drills. Strike-rotation focus with throwdowns and sidearm. Includes short video feedback.',
+      category: 'Sports',
+      skills: ['Batting Technique', 'Front-foot Play', 'Strike Rotation', 'Video Analysis', 'batting', 'coaching', 'Coach'],
+      workMode: 'onsite',
+      minRate: 1200,
+      maxRate: 4000
+    }),
+    createJobWithClient({
+      id: 'crk-mystery-1',
+      title: 'Mystery spin workshop — doosra & carrom ball reading',
+      description: 'Picking cues out of the hand and off the pitch. Tempo, trigger movement, and sweep options. Group session welcome.',
+      category: 'Sports',
+      skills: ['Mystery Spin', 'Carrom Ball', 'Doosra', 'Reading Cues', 'mystery spin', 'bowling', 'Mystery Spin'],
+      workMode: 'onsite',
+      minRate: 1500,
+      maxRate: 4500
+    }),
+    createJobWithClient({
+      id: 'crk-keeping-1',
+      title: 'Wicketkeeping — glove work and standing-up skills',
+      description: 'Glove technique and quick glove skills. Standing-up to pace and spin. Basic stumping practice. 60-minute session.',
+      category: 'Sports',
+      skills: ['Wicket Keeping', 'Glove Work', 'Standing Up', 'Stumping'],
+      workMode: 'onsite',
+      minRate: 600,
+      maxRate: 2000
+    }),
+    createJobWithClient({
+      id: 'crk-analyst-1',
+      title: 'Match video breakdown — shot selection heatmaps',
+      description: 'Analyze match footage and create heatmaps. Focus on shot selection, footwork, and decision-making. Post-session report.',
+      category: 'Sports',
+      skills: ['Video Analysis', 'Performance Analysis', 'Heatmaps', 'Decision Making', 'analysis', 'Analyst'],
+      workMode: 'hybrid',
+      minRate: 2500,
+      maxRate: 6000
+    })
+  ];
 
-  return jobs;
+  return curated;
 };
 
 export const jobs = generateJobs();

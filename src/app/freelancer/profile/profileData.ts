@@ -30,8 +30,8 @@ export interface ExtendedFreelancerData {
 
 export const freelancerData: ExtendedFreelancerData = {
   name: "Sathish Sonu",
-  title: "All Rounder",
-  about: "I'm a passionate AI engineer and full-stack developer with expertise in building intelligent applications. I specialize in AI agents, prompt engineering, and modern web development.",
+  title: "Cricket All-Rounder",
+  about: "I'm a dedicated cricket professional with expertise in batting, bowling, coaching, and match analysis. As a right-handed batsman and off-spin bowler, I bring championship-level experience to every training session and analytical project.",
   rating: 4.9,
   reviewCount: 42,
   responseTime: "1h",
@@ -43,17 +43,17 @@ export const freelancerData: ExtendedFreelancerData = {
   services: [
     {
       id: "1",
-      title: "UI/UX Design",
-      description: "Custom UI/UX design for your web or mobile application.",
-      price: "$500",
-      deliveryTime: "7 days"
+      title: "Batting Coaching",
+      description: "Personalized batting technique training focusing on footwork, shot selection, and match situations.",
+      price: "₹2,500",
+      deliveryTime: "1 session"
     },
     {
       id: "2",
-      title: "Frontend Development",
-      description: "Frontend development with React and TypeScript.",
-      price: "$800",
-      deliveryTime: "14 days"
+      title: "Spin Bowling Workshop",
+      description: "Off-spin and mystery spin techniques including doosra, carrom ball, and flight variations.",
+      price: "₹3,000",
+      deliveryTime: "2 hours"
     }
   ],
   portfolio: [
@@ -91,11 +91,11 @@ export const freelancerData: ExtendedFreelancerData = {
     },
     {
       id: '5',
-      title: 'Vibe Code Framework',
-      category: 'Open Source AI',
-      image: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
-      description: 'An open-source framework for building AI agents with personality and contextual awareness. The framework enables developers to create more human-like AI interactions with built-in emotional intelligence and contextual understanding.',
-      skills: ['Open Source', 'AI', 'Framework', 'TypeScript']
+      title: 'Cricket Analytics Dashboard',
+      category: 'Cricket Technology',
+      image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+      description: 'Built a comprehensive cricket analytics platform that tracks player performance, match statistics, and provides predictive insights for coaches and teams. Features real-time data visualization and performance metrics.',
+      skills: ['Cricket Analytics', 'Data Visualization', 'Performance Metrics', 'Cricket Tech']
     }
   ],
   clientReviews: [
