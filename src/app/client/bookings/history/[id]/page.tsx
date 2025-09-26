@@ -1,0 +1,247 @@
+"use client";
+
+import { useEffect, useMemo } from "react";
+import { useParams, useRouter } from "next/navigation";
+import {
+  ArrowLeft,
+  MessageSquare,
+  Calendar,
+  Star,
+  Award,
+  Clock,
+  ThumbsUp,
+  ThumbsDown,
+  MapPin,
+  Camera,
+} from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { historyJobs } from "@/lib/mock/bookings";
+import { useNavbar } from "@/contexts/NavbarContext";
+
+export default function BookingHistoryDetailPage() {
+  const params = useParams();
+  const router = useRouter();
+  const { setNavbarVisibility } = useNavbar();
+
+  useEffect(() => {
+    setNavbarVisibility(false);
+    return () => setNavbarVisibility(true);
+  }, [setNavbarVisibility]);
+
+  const rawId = useMemo(() => {
+    if (!params || typeof params.id === "undefined") return "";
+    const value = Array.isArray(params.id) ? params.id[0] : params.id;
+    return decodeURIComponent(value);
+  }, [params]);
+
+  const historyItem = useMemo(
+    () => historyJobs.find((entry) => entry["#"] === rawId),
+    [rawId]
+  );
+
+  if (!historyItem) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-[#111111] to-[#050505] text-white/70">
+        <div className="text-lg">History entry not found.</div>
+        <Button
+          className="mt-4 bg-purple-600 hover:bg-purple-700"
+          onClick={() => router.back()}
+        >
+          Go Back
+        </Button>
+      </div>
+    );
+  }
+
+  const ratingArray = Array.from({ length: historyItem.yourRating });
+
+  return (
+    <div className="flex flex-col min-h-screen bg-gradient-to-b from-[#111111] via-[#0b0b0b] to-[#050505] text-white">
+      {/* Header */}
+      <div className="sticky top-0 z-30 border-b border-white/5 bg-gradient-to-b from-[#1a1a1a] to-[#111111] backdrop-blur-xl">
+        <div className="flex items-center gap-3 px-4 py-3">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => router.back()}
+            className="h-11 w-11 rounded-xl hover:bg-purple-500/10 transition-all duration-200"
+            aria-label="Back"
+          >
+            <ArrowLeft className="h-5 w-5 text-white/70" />
+          </Button>
+
+          <div className="flex-1 min-w-0">
+            <p className="text-xs uppercase tracking-wide text-white/40">{historyItem.status.toUpperCase()}</p>
+            <h1 className="text-base font-semibold text-white truncate">{historyItem["#"]}</h1>
+            <p className="text-xs text-white/60 truncate">{historyItem.title}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="relative bg-gradient-to-br from-purple-500/10 via-purple-500/5 to-transparent">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(168,85,247,0.25),transparent_60%)]" />
+          <div className="relative px-4 py-10">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+              <div className="flex items-center gap-4">
+                <Avatar className="h-16 w-16 ring-4 ring-purple-500/20 backdrop-blur-xl">
+                  <AvatarImage
+                    src={historyItem.freelancer.image}
+                    alt={historyItem.freelancer.name}
+                  />
+                  <AvatarFallback className="bg-gradient-to-br from-purple-500 to-purple-700 text-white font-semibold text-lg">
+                    {historyItem.freelancer.name.charAt(0)}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="text-sm text-white/60">Coach</p>
+                  <h2 className="text-2xl font-semibold text-white">
+                    {historyItem.freelancer.name}
+                  </h2>
+                  <div className="mt-2 flex flex-wrap items-center gap-4 text-xs text-white/60">
+                    <span className="flex items-center gap-1">
+                      <Star className="w-3.5 h-3.5 text-yellow-400" />
+                      <span className="font-medium text-white/80">
+                        {historyItem.freelancer.rating}
+                      </span>
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Award className="w-3.5 h-3.5 text-purple-400" />
+                      <span>Performance review available</span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="text-right">
+                <p className="text-xs text-white/50 mb-1">You earned</p>
+                <p className="text-3xl font-semibold text-white">{historyItem.earnedMoney}</p>
+                <p className="text-xs text-white/50 mt-2">Completed on {historyItem.completedDate}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="px-4 pb-24">
+          <div className="grid gap-4 md:grid-cols-3 mt-8">
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
+              <div className="flex items-center gap-2 text-white/70 text-sm mb-3">
+                <Calendar className="w-4 h-4 text-purple-300" />
+                <span>Session date</span>
+              </div>
+              <p className="text-lg font-semibold text-white">{historyItem.completedDate}</p>
+              <p className="text-sm text-white/60 mt-1">Concluded successfully</p>
+            </div>
+
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
+              <div className="flex items-center gap-2 text-white/70 text-sm mb-3">
+                <Star className="w-4 h-4 text-purple-300" />
+                <span>Your rating</span>
+              </div>
+              <div className="flex items-center gap-1">
+                {ratingArray.map((_, idx) => (
+                  <Star
+                    key={idx}
+                    className="w-4 h-4 text-yellow-400 fill-yellow-400"
+                  />
+                ))}
+              </div>
+              <p className="text-sm text-white/60 mt-1">
+                Reflects your experience with {historyItem.freelancer.name}
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
+              <div className="flex items-center gap-2 text-white/70 text-sm mb-3">
+                <Clock className="w-4 h-4 text-purple-300" />
+                <span>Session recap</span>
+              </div>
+              <p className="text-sm text-white/70">
+                Review the highlights, drills covered, and areas for improvement to
+                prepare for future sessions.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl">
+            <h3 className="text-lg font-semibold text-white mb-3">Session summary</h3>
+            <div className="space-y-3 text-sm text-white/70">
+              <p>
+                • {historyItem.title} focused on skill enhancement tailored to your
+                current playing level.
+              </p>
+              <p>
+                • Personalized feedback was shared to help you maintain consistency and
+                track progress.
+              </p>
+              <p>
+                • Follow-up resources and drills have been added to your training plan.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl">
+            <h3 className="text-lg psych font-semibold text-white mb-3">Highlights</h3>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="rounded-xl border border-white/10 bg-gradient-to-br from-purple-500/10 to-transparent p-4">
+                <p className="text-sm font-semibold text-white mb-2">Performance notes</p>
+                <ul className="space-y-2 text-sm text-white/70">
+                  <li className="flex items-center gap-2">
+                    <ThumbsUp className="w-4 h-4 text-green-400" />
+                    Improved consistency with yorker length deliveries
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <ThumbsUp className="w-4 h-4 text-green-400" />
+                    Enhanced agility and footwork under pressure
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <ThumbsDown className="w-4 h-4 text-red-400" />
+                    Requires focus on recovery between overs
+                  </li>
+                </ul>
+              </div>
+
+              <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                <p className="text-sm font-semibold text-white mb-2">Media & follow-up</p>
+                <ul className="space-y-2 text-sm text-white/70">
+                  <li className="flex items-center gap-2">
+                    <Camera className="w-4 h-4 text-purple-300" />
+                    Session recordings available in your media library
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <MapPin className="w-4 h-4 text-purple-300" />
+                    Venue: Chepauk Stadium, Chennai
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <MessageSquare className="w-4 h-4 text-purple-300" />
+                    Coach will follow up in 48 hours with next steps
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Action Bar */}
+      <div className="sticky bottom-0 z-20 border-t border-white/10 bg-gradient-to-t from-[#111111] via-[#0b0b0b] to-transparent px-4 py-4 backdrop-blur-xl">
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <Button
+            variant="outline"
+            className="flex-1 border-white/20 bg-white/5 text-white hover:bg-white/10"
+            onClick={() => router.push(`/client/inbox?history=${encodeURIComponent(historyItem["#"])}`)}
+          >
+            <MessageSquare className="mr-2 h-4 w-4" />
+            Message coach
+          </Button>
+          <Button className="flex-1 bg-purple-600 hover:bg-purple-700">
+            Book again with {historyItem.freelancer.name}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}

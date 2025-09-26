@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Star, MapPin, Clock, Briefcase } from 'lucide-react';
 import { professionals } from './mockData';
 import type { Freelancer } from './types';
@@ -31,6 +32,7 @@ interface ProfessionalsFeedProps {
 }
 
 export default function ProfessionalsFeed({ filteredProfessionals }: ProfessionalsFeedProps) {
+  const router = useRouter();
   const [favoriteIds, setFavoriteIds] = useState<number[]>([]);
   const displayProfessionals = filteredProfessionals || professionals;
 
@@ -45,17 +47,25 @@ export default function ProfessionalsFeed({ filteredProfessionals }: Professiona
     );
   };
 
+  const handleProfessionalClick = (freelancer: BaseProfessional) => {
+    router.push(`/client/freelancer/${freelancer.id}`);
+  };
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       {displayProfessionals.map(freelancer => (
         <div
           key={freelancer.id}
-          className="group bg-gradient-to-br from-[#1E1E1E] to-[#1A1A1A] rounded-2xl p-6 shadow-xl hover:shadow-purple-500/20 transition-all duration-300 w-full border border-white/5 hover:border-white/10 min-h-[220px] h-full relative"
+          className="group bg-gradient-to-br from-[#1E1E1E] to-[#1A1A1A] rounded-2xl p-6 shadow-xl hover:shadow-purple-500/20 transition-all duration-300 w-full border border-white/5 hover:border-white/10 min-h-[220px] h-full relative cursor-pointer"
+          onClick={() => handleProfessionalClick(freelancer)}
         >
           <button
             className={`absolute top-3 right-3 z-20 p-1 transition-colors ${favoriteIds.includes(getNumericId(freelancer.id)) ? 'text-red-500' : 'text-white/60 hover:text-red-400'}`}
             style={{ background: 'transparent', border: 'none' }}
-            onClick={() => handleToggleFavorite(freelancer.id)}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleToggleFavorite(freelancer.id);
+            }}
             aria-label="Add to favorites"
           >
             <svg xmlns="http://www.w3.org/2000/svg" fill={favoriteIds.includes(getNumericId(freelancer.id)) ? 'currentColor' : 'none'} viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">

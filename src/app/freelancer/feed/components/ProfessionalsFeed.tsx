@@ -90,7 +90,7 @@ export default function ProfessionalsFeed({
       onProfessionalSelect(professional);
     } else {
       // Default behavior if no onProfessionalSelect handler is provided
-      console.log('Professional selected:', professional);
+      router.push(`/client/freelancer/${professional.id}`);
     }
   };
 

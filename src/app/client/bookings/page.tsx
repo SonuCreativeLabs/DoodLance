@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Progress } from "@/components/ui/progress"
@@ -16,8 +17,25 @@ interface BookingCardProps {
 }
 
 const BookingCard = ({ booking, showActions = true }: BookingCardProps) => {
+  const router = useRouter()
+
+  const handleOpenDetails = () => {
+    router.push(`/client/bookings/${encodeURIComponent(booking["#"])}`)
+  }
+
   return (
-    <div className="p-5 rounded-xl bg-[#1E1E1E] border border-white/5 w-full shadow-lg">
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={handleOpenDetails}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault()
+          handleOpenDetails()
+        }
+      }}
+      className="p-5 rounded-xl bg-[#1E1E1E] border border-white/5 w-full shadow-lg cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-500/40 focus:ring-offset-2 focus:ring-offset-[#111111]"
+    >
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -85,12 +103,20 @@ const BookingCard = ({ booking, showActions = true }: BookingCardProps) => {
               size="sm" 
               variant="outline" 
               className="flex-1 border-white/20 text-white/70 hover:bg-white/10 hover:border-white/30 transition-all duration-300 !rounded-lg"
+              onClick={(event) => {
+                event.stopPropagation()
+                router.push(`/client/inbox?booking=${encodeURIComponent(booking["#"])}`)
+              }}
             >
               Message
             </Button>
             <Button 
               size="sm" 
               className="flex-1 bg-gradient-to-r from-purple-600 via-purple-500 to-purple-400 text-white border-0 hover:shadow-lg hover:from-purple-700 hover:to-purple-500 transition-all duration-300 !rounded-lg"
+              onClick={(event) => {
+                event.stopPropagation()
+                router.push(`/client/bookings/${encodeURIComponent(booking["#"])}`)
+              }}
             >
               Reschedule
             </Button>
@@ -102,12 +128,27 @@ const BookingCard = ({ booking, showActions = true }: BookingCardProps) => {
 };
 
 const ApplicationCard = ({ application }: { application: Application }) => {
+  const router = useRouter()
+
+  const handleOpenDetails = () => {
+    router.push(`/client/bookings/applications/${encodeURIComponent(application["#"])}`)
+  }
+
   return (
     <motion.div
       initial={{ scale: 0.95, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       exit={{ scale: 0.95, opacity: 0 }}
-      className="p-5 rounded-xl bg-[#1E1E1E] border border-white/5 w-full shadow-lg"
+      role="button"
+      tabIndex={0}
+      onClick={handleOpenDetails}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault()
+          handleOpenDetails()
+        }
+      }}
+      className="p-5 rounded-xl bg-[#1E1E1E] border border-white/5 w-full shadow-lg cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-500/40 focus:ring-offset-2 focus:ring-offset-[#111111]"
     >
       <div className="space-y-4">
         <div className="flex items-center justify-between">
@@ -214,12 +255,20 @@ const ApplicationCard = ({ application }: { application: Application }) => {
                 size="sm" 
                 variant="outline" 
                 className="flex-1 border-white/20 text-white/70 hover:bg-red-500/20 hover:border-red-500/50 hover:text-red-100 transition-all duration-300 !rounded-lg"
+                onClick={(event) => {
+                  event.stopPropagation()
+                  // TODO: hook up decline flow
+                }}
               >
                 Decline
               </Button>
               <Button 
                 size="sm" 
                 className="flex-1 bg-gradient-to-r from-purple-600 via-purple-500 to-purple-400 text-white border-0 hover:shadow-lg hover:from-purple-700 hover:to-purple-500 transition-all duration-300 !rounded-lg"
+                onClick={(event) => {
+                  event.stopPropagation()
+                  handleOpenDetails()
+                }}
               >
                 Accept
               </Button>
@@ -232,12 +281,20 @@ const ApplicationCard = ({ application }: { application: Application }) => {
                 size="sm" 
                 variant="outline" 
                 className="flex-1 border-white/20 text-white/70 hover:bg-white/10 hover:border-white/30 hover:text-white transition-all duration-300 !rounded-lg"
+                onClick={(event) => {
+                  event.stopPropagation()
+                  router.push(`/client/inbox?application=${encodeURIComponent(application["#"])}`)
+                }}
               >
                 Message
               </Button>
               <Button 
                 size="sm" 
                 className="flex-1 bg-gradient-to-r from-green-600 to-green-400 text-white border-0 hover:shadow-lg hover:from-green-700 hover:to-green-500 transition-all duration-300 !rounded-lg"
+                onClick={(event) => {
+                  event.stopPropagation()
+                  handleOpenDetails()
+                }}
               >
                 View Details
               </Button>
@@ -250,12 +307,20 @@ const ApplicationCard = ({ application }: { application: Application }) => {
                 size="sm" 
                 variant="outline" 
                 className="flex-1 border-white/20 text-white/70 hover:bg-white/10 hover:border-white/30 hover:text-white transition-all duration-300 !rounded-lg"
+                onClick={(event) => {
+                  event.stopPropagation()
+                  handleOpenDetails()
+                }}
               >
                 View Profile
               </Button>
               <Button 
                 size="sm" 
                 className="flex-1 bg-gradient-to-r from-blue-600 to-blue-400 text-white border-0 hover:shadow-lg hover:from-blue-700 hover:to-blue-500 transition-all duration-300 !rounded-lg"
+                onClick={(event) => {
+                  event.stopPropagation()
+                  router.push(`/client/bookings/${encodeURIComponent(application["#"])}`)
+                }}
               >
                 Reconsider
               </Button>
@@ -264,6 +329,123 @@ const ApplicationCard = ({ application }: { application: Application }) => {
         </div>
       </div>
     </motion.div>
+  )
+}
+
+const HistoryCard = ({ job }: { job: HistoryJob }) => {
+  const router = useRouter()
+
+  const handleOpenDetails = () => {
+    router.push(`/client/bookings/history/${encodeURIComponent(job["#"])}`)
+  }
+
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={handleOpenDetails}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault()
+          handleOpenDetails()
+        }
+      }}
+      className="p-5 rounded-xl bg-[#1E1E1E] border border-white/5 w-full shadow-lg cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-500/40 focus:ring-offset-2 focus:ring-offset-[#111111]"
+    >
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            {job.status === 'Completed' && (
+              <div className="bg-green-500/10 text-green-400 text-xs font-medium px-3 py-1 rounded-full border border-green-500/20 w-fit">
+                Completed
+              </div>
+            )}
+            {job.status === 'Cancelled' && (
+              <div className="bg-red-500/10 text-red-400 text-xs font-medium px-3 py-1 rounded-full border border-red-500/20 w-fit">
+                Cancelled
+              </div>
+            )}
+          </div>
+          <div className="flex items-center gap-1.5 text-sm text-white/60">
+            <span className="font-mono text-xs">{job["#"]}</span>
+          </div>
+        </div>
+
+        <div>
+          <h3 className="text-base font-medium text-white line-clamp-2 mb-1">{job.title}</h3>
+          <div className="flex items-center gap-2 text-sm text-white/60">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-user w-3.5 h-3.5 text-purple-400">
+              <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+            <span>{job.freelancer.name}</span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 text-sm">
+          <div className="flex items-start gap-2 text-white/60">
+            <div className="flex-shrink-0 mt-0.5 flex flex-col items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-calendar w-4 h-4 text-purple-400">
+                <rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect>
+                <line x1="16" x2="16" y1="2" y2="6"></line>
+                <line x1="8" x2="8" y1="2" y2="6"></line>
+                <line x1="3" x2="21" y1="10" y2="10"></line>
+              </svg>
+            </div>
+            <div className="min-w-0">
+              <div className="text-xs text-white/40 mb-0.5">Completed</div>
+              <div className="text-sm text-white/90">{job.completedDate}</div>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-2 text-white/60">
+            <div className="flex-shrink-0 mt-0.5 flex flex-col items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-star w-4 h-4 text-purple-400">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+              </svg>
+            </div>
+            <div className="min-w-0">
+              <div className="text-xs text-white/40 mb-0.5">Your Rating</div>
+              <div className="flex items-center gap-1">
+                {[...Array(job.yourRating)].map((_, i) => (
+                  <svg key={i} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" className="w-3 h-3 text-yellow-400">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                  </svg>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="font-bold text-white">
+          Earned: {job.earnedMoney}
+        </div>
+
+        <div className="flex gap-2">
+          <Button 
+            size="sm" 
+            variant="outline" 
+            className="flex-1 border-white/20 text-white/70 whitespace-nowrap min-w-[100px] hover:bg-white/10 hover:border-white/30 hover:text-white transition-all duration-300 !rounded-lg"
+            onClick={(event) => {
+              event.stopPropagation()
+              handleOpenDetails()
+            }}
+          >
+            View Details
+          </Button>
+          <Button 
+            size="sm" 
+            className="flex-1 bg-gradient-to-r from-purple-600 to-purple-400 text-white whitespace-nowrap min-w-[100px] hover:from-purple-700 hover:to-purple-500 hover:shadow-lg transition-all duration-300 !rounded-lg"
+            onClick={(event) => {
+              event.stopPropagation()
+              router.push(`/client/bookings/new?freelancer=${encodeURIComponent(job.freelancer.name)}`)
+            }}
+          >
+            Book Again
+          </Button>
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -604,96 +786,7 @@ export default function BookingsPage() {
                       </div>
                     ) : (
                       filteredHistory.map((job) => (
-                        <div
-                          key={job["#"]}
-                          className="p-5 rounded-xl bg-[#1E1E1E] border border-white/5 w-full shadow-lg"
-                        >
-                          <div className="space-y-4">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                {job.status === 'Completed' && (
-                                  <div className="bg-green-500/10 text-green-400 text-xs font-medium px-3 py-1 rounded-full border border-green-500/20 w-fit">
-                                    Completed
-                                  </div>
-                                )}
-                                {job.status === 'Cancelled' && (
-                                  <div className="bg-red-500/10 text-red-400 text-xs font-medium px-3 py-1 rounded-full border border-red-500/20 w-fit">
-                                    Cancelled
-                                  </div>
-                                )}
-                              </div>
-                              <div className="flex items-center gap-1.5 text-sm text-white/60">
-                                <span className="font-mono text-xs">{job["#"]}</span>
-                              </div>
-                            </div>
-                            
-                            <div>
-                              <h3 className="text-base font-medium text-white line-clamp-2 mb-1">{job.title}</h3>
-                              <div className="flex items-center gap-2 text-sm text-white/60">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-user w-3.5 h-3.5 text-purple-400">
-                                  <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
-                                  <circle cx="12" cy="7" r="4"></circle>
-                                </svg>
-                                <span>{job.freelancer.name}</span>
-                              </div>
-                            </div>
-                            
-                            <div className="grid grid-cols-2 gap-3 text-sm">
-                              <div className="flex items-start gap-2 text-white/60">
-                                <div className="flex-shrink-0 mt-0.5 flex flex-col items-center">
-                                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-calendar w-4 h-4 text-purple-400">
-                                    <rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect>
-                                    <line x1="16" x2="16" y1="2" y2="6"></line>
-                                    <line x1="8" x2="8" y1="2" y2="6"></line>
-                                    <line x1="3" x2="21" y1="10" y2="10"></line>
-                                  </svg>
-                                </div>
-                                <div className="min-w-0">
-                                  <div className="text-xs text-white/40 mb-0.5">Completed</div>
-                                  <div className="text-sm text-white/90">{job.completedDate}</div>
-                                </div>
-                              </div>
-                              
-                              <div className="flex items-start gap-2 text-white/60">
-                                <div className="flex-shrink-0 mt-0.5 flex flex-col items-center">
-                                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-star w-4 h-4 text-purple-400">
-                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-                                  </svg>
-                                </div>
-                                <div className="min-w-0">
-                                  <div className="text-xs text-white/40 mb-0.5">Your Rating</div>
-                                  <div className="flex items-center gap-1">
-                                    {[...Array(job.yourRating)].map((_, i) => (
-                                      <svg key={i} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" className="w-3 h-3 text-yellow-400">
-                                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-                                      </svg>
-                                    ))}
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                            
-                            <div className="font-bold text-white">
-                              Earned: {job.earnedMoney}
-                            </div>
-                            
-                            <div className="flex gap-2">
-                              <Button 
-                                size="sm" 
-                                variant="outline" 
-                                className="flex-1 border-white/20 text-white/70 whitespace-nowrap min-w-[100px] hover:bg-white/10 hover:border-white/30 hover:text-white transition-all duration-300 !rounded-lg"
-                              >
-                                View Details
-                              </Button>
-                              <Button 
-                                size="sm" 
-                                className="flex-1 bg-gradient-to-r from-purple-600 to-purple-400 text-white whitespace-nowrap min-w-[100px] hover:from-purple-700 hover:to-purple-500 hover:shadow-lg transition-all duration-300 !rounded-lg"
-                              >
-                                Book Again
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
+                        <HistoryCard key={job["#"]} job={job} />
                       ))
                     )}
                   </div>
@@ -705,4 +798,4 @@ export default function BookingsPage() {
       </div>
     </ClientLayout>
   )
-} 
+}
