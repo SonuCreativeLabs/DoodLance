@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { Camera } from 'lucide-react';
 
 interface ServiceCardProps {
   id: string;
@@ -36,9 +37,9 @@ export default function ServiceCard({
           className
         )}
       >
-        {/* Fallback/Loading State */}
+        {/* Fallback/Loading State - brand icon instead of emoji */}
         <div className="absolute inset-0 flex items-center justify-center z-0 bg-[#161616]">
-          {icon && <span className="text-[48px] opacity-40">{icon}</span>}
+          <Camera className="w-12 h-12 text-white/30" />
         </div>
         
         {/* Background Image */}
@@ -46,6 +47,12 @@ export default function ServiceCard({
           src={image}
           alt={title}
           className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out z-[1]"
+          onError={(e) => {
+            const target = e.currentTarget as HTMLImageElement;
+            if (target.src !== '/images/cover-placeholder.svg') {
+              target.src = '/images/cover-placeholder.svg';
+            }
+          }}
         />
         
         {/* Gradient Overlay */}
@@ -68,10 +75,22 @@ export default function ServiceCard({
           </div>
           
           {/* Title and Provider Count */}
-          <div className="space-y-3">
-            <h3 className="font-semibold text-[15px] text-white leading-snug line-clamp-2">
-              {title}
-            </h3>
+          <div className="space-y-1">
+            <h3 className="font-semibold text-white leading-tight break-words" 
+                style={{
+                  fontSize: 'clamp(13px, 3vw, 16px)',
+                  display: '-webkit-box',
+                  WebkitLineClamp: 3,
+                  WebkitBoxOrient: 'vertical',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  minHeight: '2.4em',
+                  maxHeight: '4.5em',
+                  lineHeight: '1.2'
+                }}
+              >
+                {title}
+              </h3>
             {providerCount && (
               <div className="flex items-center gap-2">
                 <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse"></div>

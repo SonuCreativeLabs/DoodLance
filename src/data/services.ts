@@ -1,140 +1,205 @@
 export const sidebarCategories = [
   {
     id: 'all',
-    name: ['All', ''],
-    icon: '🏛️'
+    name: ['All', 'Services'],
+    icon: '✨'
   },
   {
-    id: 'home-repair',
-    name: ['Home &', 'Repair'],
-    icon: '🛠️'
-  },
-  {
-    id: 'beauty',
-    name: ['Beauty &', 'Spa'],
-    icon: '💆‍♀️'
-  },
-  {
-    id: 'education',
-    name: ['Education', 'Services'],
-    icon: '👨‍🏫'
-  },
-  {
-    id: 'sports',
-    name: ['Sports &', 'Fitness'],
+    id: 'playing',
+    name: ['Playing', 'Services'],
     icon: '🏏'
   },
   {
-    id: 'pet-care',
-    name: ['Pet', 'Care'],
-    icon: '🐕'
+    id: 'coaching',
+    name: ['Coaching &', 'Training'],
+    icon: '👨‍🏫'
   },
   {
-    id: 'cleaning',
-    name: ['Home', 'Cleaning'],
-    icon: '🧽'
+    id: 'support',
+    name: ['Support', 'Staff'],
+    icon: '📊'
   },
   {
-    id: 'electrical',
-    name: ['Electrical', 'Services'],
-    icon: '👨‍🔧'
+    id: 'media',
+    name: ['Media &', 'Content'],
+    icon: '📷'
   },
   {
-    id: 'plumbing',
-    name: ['Plumbing', 'Services'],
-    icon: '🚿'
-  },
-  {
-    id: 'painting',
-    name: ['Painting', 'Services'],
-    icon: '🖌️'
-  },
-  {
-    id: 'gardening',
-    name: ['Garden', 'Services'],
-    icon: '🌺'
-  },
-  {
-    id: 'moving',
-    name: ['Moving', 'Services'],
-    icon: '🚛'
-  },
-  {
-    id: 'tech-support',
-    name: ['Tech', 'Support'],
-    icon: '👨‍💻'
+    id: 'ground',
+    name: ['Ground', 'Services'],
+    icon: '🌱'
   }
 ]
 
 export const serviceItems = [
-  // Sports & Fitness Services
+  // Cricket Playing Services
   {
-    id: 'cricket-coaching',
-    name: 'Cricket Coaching',
-    category: 'sports',
-    providerCount: 28,
-    mostBooked: true,
-    image: 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?auto=format&fit=crop&w=800&q=80',
-    icon: '🏏',
-    rating: 4.8,
-    reviews: 124,
-    price: '₹500/hr',
-    description: 'Professional cricket coaching for all skill levels. Learn batting, bowling, and fielding techniques from experienced coaches.'
-  },
-  
-  // Home & Repair Services
-  {
-    id: 'general-repair',
-    name: 'General Home Repair',
-    category: 'home-repair',
-    providerCount: 62,
-    mostBooked: true,
-    image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=800&q=80',
-    icon: '🔧'
-  },
-  {
-    id: 'furniture-repair',
-    name: 'Furniture Assembly & Repair',
-    category: 'home-repair',
+    id: 'bowler',
+    name: 'Bowler',
+    category: 'playing',
     providerCount: 45,
-    discount: '15% Off',
-    image: 'https://images.unsplash.com/photo-1588854337236-6889d631faa8?auto=format&fit=crop&w=800&q=80',
-    icon: '🪑'
+    mostBooked: true,
+    image: '/images/Bowler & batsman.png',
+    icon: '🏏'
   },
-  // ... rest of the service items
+  {
+    id: 'batsman',
+    name: 'Batsman',
+    category: 'playing',
+    providerCount: 38,
+    mostBooked: true,
+    image: '/images/Bowler & batsman.png',
+    icon: '🏏'
+  },
+  {
+    id: 'sidearm-specialist',
+    name: 'Sidearm Specialist',
+    category: 'playing',
+    providerCount: 22,
+    image: '/images/Bowler & batsman.png',
+    icon: '🎯'
+  },
+
+  // Cricket Coaching & Training
+  {
+    id: 'coach',
+    name: 'Coach',
+    category: 'coaching',
+    providerCount: 35,
+    mostBooked: true,
+    image: '/images/Bowler & batsman.png',
+    icon: '👨‍🏫'
+  },
+  {
+    id: 'sports-conditioning-trainer',
+    name: 'Sports Conditioning Trainer',
+    category: 'coaching',
+    providerCount: 28,
+    image: '/images/Bowler & batsman.png',
+    icon: '💪'
+  },
+  {
+    id: 'fitness-trainer',
+    name: 'Fitness Trainer',
+    category: 'coaching',
+    providerCount: 32,
+    image: '/images/Bowler & batsman.png',
+    icon: '🏃‍♂️'
+  },
+
+  // Cricket Support Services
+  {
+    id: 'analyst',
+    name: 'Analyst',
+    category: 'support',
+    providerCount: 18,
+    image: '/images/Bowler & batsman.png',
+    icon: '📊'
+  },
+  {
+    id: 'physio',
+    name: 'Physio',
+    category: 'support',
+    providerCount: 25,
+    image: '/images/Bowler & batsman.png',
+    icon: '🏥'
+  },
+  {
+    id: 'scorer',
+    name: 'Scorer',
+    category: 'support',
+    providerCount: 15,
+    image: '/images/Bowler & batsman.png',
+    icon: '📝'
+  },
+  {
+    id: 'umpire',
+    name: 'Umpire',
+    category: 'support',
+    providerCount: 20,
+    image: '/images/Bowler & batsman.png',
+    icon: '⚖️'
+  },
+
+  // Cricket Media & Content
+  {
+    id: 'cricket-photo-videography',
+    name: 'Cricket Photo / Videography',
+    category: 'media',
+    providerCount: 30,
+    mostBooked: true,
+    image: '/images/Bowler & batsman.png',
+    icon: '📷'
+  },
+  {
+    id: 'cricket-content-creator',
+    name: 'Cricket Content Creator',
+    category: 'media',
+    providerCount: 24,
+    image: '/images/Bowler & batsman.png',
+    icon: '🎬'
+  },
+  {
+    id: 'commentator',
+    name: 'Commentator',
+    category: 'media',
+    providerCount: 16,
+    image: '/images/Bowler & batsman.png',
+    icon: '🎤'
+  },
+
+  // Cricket Ground Services
+  {
+    id: 'groundsman',
+    name: 'Groundsman',
+    category: 'ground',
+    providerCount: 12,
+    image: '/images/Bowler & batsman.png',
+    icon: '🌱'
+  }
 ]
 
 // Popular services for home page
 export const popularServices = [
+  // Top cricket services
   {
-    id: 'cricket-coaching',
-    title: 'Cricket',
+    id: 'bowler',
+    title: 'Bowler',
     icon: '🏏',
-    providerCount: 28,
-    image: 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?auto=format&fit=crop&w=800&q=80',
-    discount: '10% Off'
-  },
-  {
-    id: 'education',
-    title: 'Tutoring',
-    icon: '📚',
     providerCount: 45,
-    image: 'https://images.unsplash.com/photo-1560785496-3c9d27877182?auto=format&fit=crop&w=800&q=80',
-    discount: '10% Off'
+    image: '/images/Bowler & batsman.png',
+    mostBooked: true
   },
   {
-    id: 'pet-care',
-    title: 'Pet Care',
-    icon: '🐾',
-    providerCount: 28,
-    image: 'https://images.unsplash.com/photo-1587764379873-97837921fd44?auto=format&fit=crop&w=800&q=80'
+    id: 'sidearm-specialist',
+    title: 'Sidearm Specialist',
+    icon: '🎯',
+    providerCount: 22,
+    image: '/images/women sidearm.png',
+    mostBooked: true
   },
   {
-    id: 'cleaning',
-    title: 'Cleaning',
-    icon: '🧹',
-    providerCount: 48,
-    image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=800&q=80',
-    discount: '15% Off'
+    id: 'coach',
+    title: 'Coach',
+    icon: '👨‍🏫',
+    providerCount: 35,
+    image: '/images/personal coaching.png',
+    mostBooked: true
+  },
+  {
+    id: 'batsman',
+    title: 'Batsman',
+    icon: '🏏',
+    providerCount: 38,
+    image: '/images/Bowler & batsman.png',
+    mostBooked: true
+  },
+  {
+    id: 'cricket-photo-videography',
+    title: 'Cricket Photo / Videography',
+    icon: '📷',
+    providerCount: 30,
+    image: '/images/Bowler & batsman.png',
+    mostBooked: true
   }
-] 
+]

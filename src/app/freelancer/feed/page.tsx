@@ -188,8 +188,8 @@ export default function FeedPage() {
     setFiltersApplied(false);
   };
 
-  // User's skills for personalized job matching
-  const userSkills = ['cricket', 'developer'];
+  // User's skills for personalized job matching - from profile data
+  const userSkills = ['RH Batsman', 'Sidearm Specialist', 'Off Spin', 'Coach', 'Analyst', 'Mystery Spin'];
 
   // Filter jobs based on selected tab and filters
   const filterJobs = (): JobWithCoordinates[] => {
@@ -257,7 +257,10 @@ export default function FeedPage() {
     
     // For "For You" tab - filter jobs based on user's skills
     if (selectedCategory === 'For You') {
+      console.log('SELECTED CATEGORY:', selectedCategory);
       console.log('Filtering jobs for user skills:', userSkills);
+    console.log('Total jobs before filtering:', filtered.length);
+    console.log('First job skills:', filtered[0]?.skills);
       
       filtered = filtered.filter(job => {
         // Combine job title, description, category, and skills into a single searchable string
@@ -286,7 +289,7 @@ export default function FeedPage() {
         return false;
       });
       
-      console.log(`For You tab: Found ${filtered.length} jobs matching your skills (cricket/developer)`);
+      console.log(`For You tab: Found ${filtered.length} jobs matching your skills (${userSkills.join(', ')})`);
       
       // Apply search query if one exists
       if (searchQuery) {
@@ -310,6 +313,7 @@ export default function FeedPage() {
     
     // For Explore tab - show all jobs by default, apply filters only if explicitly set
     if (selectedCategory === 'Explore') {
+      console.log('SELECTED CATEGORY: Explore - showing all jobs');
       let filtersApplied = false;
       const appliedFilters: Record<string, string> = {};
 

@@ -27,7 +27,7 @@ export default function FreelancerHome() {
       import('@/app/freelancer/feed/types')
     ]).then(([jobsModule, typesModule]) => {
       // User's skills for personalized job matching (should match the ones in feed/page.tsx)
-      const userSkills = ['cricket', 'developer'];
+      const userSkills = ['RH Batsman', 'Sidearm Specialist', 'Off Spin', 'Coach', 'Analyst', 'Mystery Spin'];
       
       // Filter jobs to match the "For You" tab logic
       const forYouJobs = jobsModule.jobs.filter(job => {
@@ -555,11 +555,11 @@ export default function FreelancerHome() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gray-600/20 to-gray-700/20 flex-shrink-0 flex items-center justify-center">
-                    <Code className="w-5 h-5 text-gray-400" />
+                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
                   </div>
                   <div className="min-w-0">
-                    <h3 className="text-sm font-medium text-white truncate">Full-Stack Developer</h3>
-                    <p className="text-xs text-gray-400/80 font-medium mt-0.5">1.5 years experience</p>
+                    <h3 className="text-sm font-medium text-white truncate">Cricket Analyst</h3>
+                    <p className="text-xs text-gray-400/80 font-medium mt-0.5">3 years experience</p>
                   </div>
                 </div>
                 <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-400 ml-2 whitespace-nowrap">Intermediate</span>

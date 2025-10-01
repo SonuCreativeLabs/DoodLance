@@ -109,7 +109,7 @@ const SkillItem = memo(function SkillItem({ id, skill, description = '', experie
                     onChange={(e) => setEditedExperience(e.target.value)}
                     onBlur={(e) => setEditedExperience(e.target.value ? formatExperience(e.target.value) : '')}
                     placeholder="e.g., 5"
-                    className="h-10 bg-[#2A2A2A] border border-gray-700 text-white placeholder-gray-400 pr-12 appearance-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    className="h-10 bg-[#2A2A2A] border border-gray-700 text-white placeholder-gray-400 pr-12 appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground pointer-events-none">
                     {editedExperience === '1' ? 'year' : 'years'}
@@ -484,7 +484,7 @@ export function SkillsSection({
                       onChange={(e) => setNewExperience(e.target.value)}
                       onBlur={(e) => setNewExperience(e.target.value ? formatExperience(e.target.value) : '')}
                       placeholder="e.g., 3"
-                      className="h-10 bg-[#2A2A2A] border border-gray-700 text-white placeholder-gray-400 pr-12 appearance-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      className="h-10 bg-[#2A2A2A] border border-gray-700 text-white placeholder-gray-400 pr-12 appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground pointer-events-none">
                       {newExperience === '1' ? 'year' : 'years'}

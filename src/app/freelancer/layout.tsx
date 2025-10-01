@@ -88,10 +88,14 @@ function FreelancerLayoutInner({
           <div className="container mx-auto px-4 h-16 flex items-center justify-between">
             <div className="flex items-center space-x-8">
               <Link 
-                href="/freelancer" 
-                className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-purple-600 font-bold text-lg hover:from-purple-500 hover:to-purple-700 transition-all duration-300"
+                href="/freelancer"
+                className="flex items-center -ml-6"
               >
-                DoodLance
+                <img
+                  src="/images/LOGOS/ts wordmark LOGO.svg"
+                  alt="DoodLance"
+                  className="h-30 w-auto hover:opacity-80 transition-opacity duration-300"
+                />
               </Link>
               <div className="hidden md:flex items-center space-x-1">
                 {navItems.map((item) => {
@@ -116,6 +120,12 @@ function FreelancerLayoutInner({
             </div>
             <div className="flex items-center space-x-4">
               <div className="relative">
+                <a href="/freelancer/wallet" className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-l from-purple-600 to-purple-400 hover:from-purple-500 hover:to-purple-300 transition-all duration-300 shadow-lg shadow-purple-600/20 hover:shadow-purple-600/30 group">
+                  <Wallet className="w-4 h-4 text-white transition-colors duration-300" />
+                  <span className="text-sm font-medium text-white transition-colors duration-300">₹24,500</span>
+                </a>
+              </div>
+              <div className="relative">
                 <a href="/freelancer/notifications" className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 backdrop-blur-lg transition-all duration-300 border border-white/5 hover:border-purple-500/30 group relative">
                   <Bell className="w-5 h-5 text-white/80 group-hover:text-purple-400 transition-colors duration-300" />
                   <span className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-r from-purple-600 to-purple-400 rounded-full flex items-center justify-center shadow-lg shadow-purple-600/20">
@@ -123,20 +133,6 @@ function FreelancerLayoutInner({
                   </span>
                 </a>
               </div>
-              <div className="relative">
-                <a href="/freelancer/wallet" className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-l from-purple-600 to-purple-400 hover:from-purple-500 hover:to-purple-300 transition-all duration-300 shadow-lg shadow-purple-600/20 hover:shadow-purple-600/30 group">
-                  <Wallet className="w-4 h-4 text-white transition-colors duration-300" />
-                  <span className="text-sm font-medium text-white transition-colors duration-300">₹24,500</span>
-                </a>
-              </div>
-              <button className="relative w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 backdrop-blur-lg transition-all duration-300 border border-white/5 hover:border-purple-500/30 p-0.5 group overflow-hidden">
-                <img
-                  src="/images/profile-sonu.jpg"
-                  alt="Profile"
-                  className="w-full h-full rounded-lg object-cover transition-all duration-300"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-lg" />
-              </button>
             </div>
           </div>
         </nav>
@@ -145,7 +141,7 @@ function FreelancerLayoutInner({
       {isNavbarVisible && !fullChatView && !isModalOpen && (
         <div className="md:hidden fixed bottom-0 left-0 right-0 border-t border-white/10 bg-[#111111]/95 backdrop-blur-lg z-50">
           <div className="container mx-auto px-4">
-            <div className="flex items-center justify-between py-3">
+            <div className="grid grid-cols-5 items-center h-16">
               {navItems.map((item) => {
                 const Icon = item.icon
                 const active = isActive(item.href)
@@ -153,14 +149,14 @@ function FreelancerLayoutInner({
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={`flex flex-col items-center space-y-1.5 px-3 py-1.5 rounded-xl transition-all duration-300 ${
+                    className={`flex flex-col items-center space-y-1 px-2 py-1 rounded-xl transition-all duration-300 ${
                       active 
-                        ? 'text-purple-400 bg-purple-400/10 border border-purple-500/30' 
-                        : 'text-white/60 border border-transparent'
+                        ? 'text-purple-400' 
+                        : 'text-white/60'
                     }`}
                   >
-                    <Icon className="w-5 h-5" />
-                    <span className="text-xs font-medium">{item.label}</span>
+                    <Icon className={`w-5 h-5 transition-colors duration-300 ${active ? 'text-purple-400' : ''}`} />
+                    <span className="text-[12px] mt-1 font-medium">{item.label}</span>
                   </Link>
                 )
               })}

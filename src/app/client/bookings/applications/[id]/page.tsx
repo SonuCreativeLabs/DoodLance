@@ -1,0 +1,286 @@
+"use client";
+
+import { useEffect, useMemo } from "react";
+import { useParams, useRouter } from "next/navigation";
+import {
+  ArrowLeft,
+  Phone,
+  MessageSquare,
+  MapPin,
+  Clock,
+  Star,
+  FileText,
+  Shield,
+  Briefcase,
+  CheckCircle2,
+} from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { applications } from "@/lib/mock/bookings";
+import { useNavbar } from "@/contexts/NavbarContext";
+
+const statusCopy: Record<string, string> = {
+  new: "New Application",
+  accepted: "Accepted",
+  rejected: "Rejected",
+};
+
+export default function ApplicationDetailPage() {
+  const params = useParams();
+  const router = useRouter();
+  const { setNavbarVisibility } = useNavbar();
+
+  useEffect(() => {
+    setNavbarVisibility(false);
+    return () => setNavbarVisibility(true);
+  }, [setNavbarVisibility]);
+
+  const rawId = useMemo(() => {
+    if (!params || typeof params.id === "undefined") return "";
+    const value = Array.isArray(params.id) ? params.id[0] : params.id;
+    return decodeURIComponent(value);
+  }, [params]);
+
+  const application = useMemo(
+    () => applications.find((entry) => entry["#"] === rawId),
+    [rawId]
+  );
+
+  if (!application) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-[#111111] to-[#050505] text-white/70">
+        <div className="text-lg">Application not found.</div>
+        <Button
+          className="mt-4 bg-purple-600 hover:bg-purple-700"
+          onClick={() => router.back()}
+        >
+          Go Back
+        </Button>
+      </div>
+    );
+  }
+
+  const statusLabel = statusCopy[application.status] ?? application.status;
+
+  return (
+    <div className="flex flex-col min-h-screen bg-gradient-to-b from-[#111111] via-[#0b0b0b] to-[#050505] text-white">
+      {/* Header */}
+      <div className="sticky top-0 z-30 border-b border-white/5 bg-gradient-to-b from-[#1a1a1a] to-[#111111] backdrop-blur-xl">
+        <div className="flex items-center gap-3 px-4 py-3">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => router.back()}
+            className="h-11 w-11 rounded-xl hover:bg-purple-500/10 transition-all duration-200"
+            aria-label="Back"
+          >
+            <ArrowLeft className="h-5 w-5 text-white/70" />
+          </Button>
+
+          <div className="flex-1 min-w-0">
+            <p className="text-xs uppercase tracking-wide text-white/40">{statusLabel.toUpperCase()}</p>
+            <h1 className="text-base font-semibold text-white truncate">{application["#"]}</h1>
+            <p className="text-xs text-white/60 truncate">{application.jobTitle}</p>
+          </div>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-11 w-11 rounded-xl hover:bg-purple-500/10 transition-all duration-200"
+            aria-label="Call"
+          >
+            <Phone className="h-5 w-5 text-purple-400" />
+          </Button>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="relative bg-gradient-to-br from-purple-500/10 via-purple-500/5 to-transparent">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(168,85,247,0.25),transparent_60%)]" />
+          <div className="relative px-4 py-10">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+              <div className="flex items-center gap-4">
+                <Avatar className="h-16 w-16 ring-4 ring-purple-500/20 backdrop-blur-xl">
+                  <AvatarImage src={application.freelancer.image} alt={application.freelancer.name} />
+                  <AvatarFallback className="bg-gradient-to-br from-purple-500 to-purple-700 text-white font-semibold text-lg">
+                    {application.freelancer.name.charAt(0)}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="text-sm text-white/60">Freelancer</p>
+                  <h2 className="text-2xl font-semibold text-white">
+                    {application.freelancer.name}
+                  </h2>
+                  <div className="mt-2 flex flex-wrap items-center gap-4 text-xs text-white/60">
+                    <span className="flex items-center gap-1">
+                      <Star className="w-3.5 h-3.5 text-yellow-400" />
+                      <span className="font-medium text-white/80">
+                        {application.freelancer.rating}
+                      </span>
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Briefcase className="w-3.5 h-3.5 text-purple-400" />
+                      <span>
+                        {application.freelancer.completedJobs}+ jobs completed
+                      </span>
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Clock className="w-3.5 h-3.5 text-purple-300" />
+                      <span>{application.freelancer.responseTime}</span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="text-right">
+                <p className="text-xs text-white/50 mb-1">Proposed Rate</p>
+                <p className="text-3xl font-semibold text-white">{application.price}</p>
+                <p className="text-xs text-white/50 mt-2">Availability: {application.availability}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="px-4 pb-24">
+          <div className="grid gap-4 md:grid-cols-2 mt-8">
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
+              <div className="flex items-center gap-2 text-white/70 text-sm mb-3">
+                <MapPin className="w-4 h-4 text-purple-300" />
+                <span>Preferred Location</span>
+              </div>
+              <p className="text-lg font-semibold text-white">
+                {application.freelancer.location}
+              </p>
+              <p className="text-sm text-white/60 mt-1">
+                Coach is open to nearby venues within 5 km radius.
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
+              <div className="flex items-center gap-2 text-white/70 text-sm mb-3">
+                <FileText className="w-4 h-4 text-purple-300" />
+                <span>Application Summary</span>
+              </div>
+              <p className="text-sm leading-relaxed text-white/70">
+                {application.proposal}
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl">
+            <h3 className="text-lg font-semibold text-white mb-4">Why this coach stands out</h3>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="rounded-xl border border-white/10 bg-gradient-to-br from-purple-500/10 to-transparent p-4">
+                <p className="text-sm font-semibold text-white mb-2">Expertise</p>
+                <ul className="space-y-2 text-sm text-white/70">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-purple-300" />
+                    High-performance training for advanced players
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-purple-300" />
+                    Personalized feedback with video analysis
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-purple-300" />
+                    Proven record of 150+ satisfied trainees
+                  </li>
+                </ul>
+              </div>
+
+              <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                <p className="text-sm font-semibold text-white mb-2">Assurances</p>
+                <ul className="space-y-2 text-sm text-white/70">
+                  <li className="flex items-center gap-2">
+                    <Shield className="w-4 h-4 text-purple-300" />
+                    Verified background and certifications
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Shield className="w-4 h-4 text-purple-300" />
+                    Commitment to safety and injury prevention
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Shield className="w-4 h-4 text-purple-300" />
+                    Flexible scheduling with 24-hour notice
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl">
+            <h3 className="text-lg font-semibold text-white mb-3">Next steps</h3>
+            <div className="space-y-4">
+              <div className="flex gap-3">
+                <div className="mt-1">
+                  <CheckCircle2 className="w-4 h-4 text-green-400" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-white">Review & decide</p>
+                  <p className="text-sm text-white/60">
+                    Go through the proposal details and accept or decline the application.
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <div className="mt-1">
+                  <MessageSquare className="w-4 h-4 text-purple-300" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-white">Start a conversation</p>
+                  <p className="text-sm text-white/60">
+                    Send a message to clarify expectations or request more information.
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <div className="mt-1">
+                  <Clock className="w-4 h-4 text-purple-300" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-white">Schedule a trial session</p>
+                  <p className="text-sm text-white/60">
+                    Coordinate on a time and venue that suits both parties.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Action Bar */}
+      <div className="sticky bottom-0 z-20 border-t border-white/10 bg-gradient-to-t from-[#111111] via-[#0b0b0b] to-transparent px-4 py-4 backdrop-blur-xl">
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <Button
+            variant="outline"
+            className="flex-1 border-white/20 bg-white/5 text-white hover:bg-white/10"
+            onClick={() => router.push(`/client/inbox?application=${encodeURIComponent(application["#"])}`)}
+          >
+            <MessageSquare className="mr-2 h-4 w-4" />
+            Message applicant
+          </Button>
+          {application.status === "new" ? (
+            <div className="flex flex-1 gap-3">
+              <Button
+                variant="outline"
+                className="flex-1 border-white/20 bg-white/5 text-white hover:bg-red-500/20 hover:text-red-100"
+              >
+                Decline
+              </Button>
+              <Button className="flex-1 bg-purple-600 hover:bg-purple-700">
+                Accept
+              </Button>
+            </div>
+          ) : (
+            <Button className="flex-1 bg-purple-600 hover:bg-purple-700">
+              View booking history
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

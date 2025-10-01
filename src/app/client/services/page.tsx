@@ -2,288 +2,64 @@
 
 import { motion } from 'framer-motion'
 import ClientLayout from '@/components/layouts/client-layout'
-import { Search, ArrowLeft, Clock } from 'lucide-react'
+import { Search, ArrowLeft, Clock, Video, Dumbbell, Cpu, Package, Camera, Clapperboard, Brain, Briefcase, Sparkles } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 
-// Sidebar categories
+// Sidebar categories using Lucide icons
 const sidebarCategories = [
-  {
-    id: 'all',
-    name: ['All', ''],
-    icon: '🏛️'
-  },
-  {
-    id: 'home-repair',
-    name: ['Home &', 'Repair'],
-    icon: '🛠️'
-  },
-  {
-    id: 'beauty',
-    name: ['Beauty &', 'Spa'],
-    icon: '💆‍♀️'
-  },
-  {
-    id: 'education',
-    name: ['Education', 'Services'],
-    icon: '👨‍🏫'
-  },
-  {
-    id: 'sports',
-    name: ['Sports &', 'Fitness'],
-    icon: '🏏'
-  },
-  {
-    id: 'pet-care',
-    name: ['Pet', 'Care'],
-    icon: '🐕'
-  },
-  {
-    id: 'cleaning',
-    name: ['Home', 'Cleaning'],
-    icon: '🧽'
-  },
-  {
-    id: 'electrical',
-    name: ['Electrical', 'Services'],
-    icon: '👨‍🔧'
-  },
-  {
-    id: 'plumbing',
-    name: ['Plumbing', 'Services'],
-    icon: '🚿'
-  },
-  {
-    id: 'painting',
-    name: ['Painting', 'Services'],
-    icon: '🖌️'
-  },
-  {
-    id: 'gardening',
-    name: ['Garden', 'Services'],
-    icon: '🌺'
-  },
-  {
-    id: 'moving',
-    name: ['Moving', 'Services'],
-    icon: '🚛'
-  },
-  {
-    id: 'tech-support',
-    name: ['Tech', 'Support'],
-    icon: '👨‍💻'
-  }
+  { id: 'for-you', name: ['For', 'You'], icon: <Sparkles className="w-6 h-6" /> },
+  { id: 'playing', name: ['Playing', 'Services'], icon: <Video className="w-6 h-6" /> },
+  { id: 'coaching', name: ['Coaching &', 'Training'], icon: <Dumbbell className="w-6 h-6" /> },
+  { id: 'support', name: ['Support', 'Staff'], icon: <Brain className="w-6 h-6" /> },
+  { id: 'media', name: ['Media &', 'Content'], icon: <Camera className="w-6 h-6" /> },
+  { id: 'ground', name: ['Ground', 'Services'], icon: <Package className="w-6 h-6" /> },
 ]
 
-// Service items
+// Service items (comprehensive, grouped by category)
 const serviceItems = [
-  // Sports & Fitness Services
-  {
-    id: 'cricket',
-    name: 'Cricket',
-    category: 'sports',
-    providerCount: 28,
-    mostBooked: true,
-    image: 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?auto=format&fit=crop&w=800&q=80',
-    fallbackEmoji: '🏏',
-    rating: 4.8,
-    reviews: 124,
-    price: '₹500/hr',
-    description: 'Professional cricket services including coaching, practice sessions, and match arrangements.'
-  },
-  
-  // Home & Repair Services
-  {
-    id: 'general-repair',
-    name: 'General Home Repair',
-    category: 'home-repair',
-    providerCount: 62,
-    mostBooked: true,
-    image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=800&q=80',
-    fallbackEmoji: '🔧'
-  },
-  {
-    id: 'furniture-repair',
-    name: 'Furniture Assembly & Repair',
-    category: 'home-repair',
-    providerCount: 45,
-    discount: '15% Off',
-    image: 'https://images.unsplash.com/photo-1588854337236-6889d631faa8?auto=format&fit=crop&w=800&q=80',
-    fallbackEmoji: '🪑'
-  },
-  {
-    id: 'home-maintenance',
-    name: 'Home Maintenance',
-    category: 'home-repair',
-    providerCount: 38,
-    discount: '10% Off',
-    image: 'https://images.unsplash.com/photo-1591129841117-3adfd313e34f?auto=format&fit=crop&w=800&q=80',
-    fallbackEmoji: '🏠'
-  },
-  {
-    id: 'home-cleaning',
-    name: 'Home Deep Cleaning',
-    category: 'cleaning',
-    providerCount: 48,
-    discount: '15% Off',
-    image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=800&q=80',
-    fallbackEmoji: '🧹'
-  },
-  {
-    id: 'plumbing',
-    name: 'Plumbing Service',
-    category: 'plumbing',
-    providerCount: 32,
-    discount: '10% Off',
-    image: 'https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?auto=format&fit=crop&w=800&q=80',
-    fallbackEmoji: '🚰'
-  },
-  {
-    id: 'electrical',
-    name: 'Electrical Work',
-    category: 'electrical',
-    providerCount: 56,
-    mostBooked: true,
-    image: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=800&q=80',
-    fallbackEmoji: '⚡'
-  },
-  {
-    id: 'painting-service',
-    name: 'House Painting',
-    category: 'painting',
-    providerCount: 41,
-    discount: '12% Off',
-    image: 'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?auto=format&fit=crop&w=800&q=80',
-    fallbackEmoji: '🖌️'
-  },
-  {
-    id: 'garden-maintenance',
-    name: 'Garden Maintenance',
-    category: 'gardening',
-    providerCount: 35,
-    mostBooked: true,
-    image: 'https://images.unsplash.com/photo-1557429287-b2e26467fc2b?auto=format&fit=crop&w=800&q=80',
-    fallbackEmoji: '🌺'
-  },
-  {
-    id: 'moving-service',
-    name: 'Home Moving Service',
-    category: 'moving',
-    providerCount: 29,
-    discount: '18% Off',
-    image: 'https://images.unsplash.com/photo-1603796846097-bee99e4a601f?auto=format&fit=crop&w=800&q=80',
-    fallbackEmoji: '🚛'
-  },
-  // Beauty & Spa Services
-  {
-    id: 'spa-massage',
-    name: 'Spa & Massage',
-    category: 'beauty',
-    providerCount: 42,
-    discount: '20% Off',
-    image: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&w=800&q=80',
-    fallbackEmoji: '💆‍♀️'
-  },
-  {
-    id: 'hair-styling',
-    name: 'Hair Styling',
-    category: 'beauty',
-    providerCount: 38,
-    mostBooked: true,
-    image: 'https://images.unsplash.com/photo-1562322140-8baeececf3df?auto=format&fit=crop&w=800&q=80',
-    fallbackEmoji: '💇‍♀️'
-  },
-  // Education Services
-  {
-    id: 'math-tutoring',
-    name: 'Mathematics Tutoring',
-    category: 'education',
-    providerCount: 45,
-    discount: '10% Off',
-    image: 'https://images.unsplash.com/photo-1560785496-3c9d27877182?auto=format&fit=crop&w=800&q=80',
-    fallbackEmoji: '📐'
-  },
-  {
-    id: 'language-classes',
-    name: 'Language Classes',
-    category: 'education',
-    providerCount: 36,
-    mostBooked: true,
-    image: 'https://images.unsplash.com/photo-1571260899304-425eee4c7efc?auto=format&fit=crop&w=800&q=80',
-    fallbackEmoji: '🗣️'
-  },
-  // Sports & Fitness
-  {
-    id: 'personal-training',
-    name: 'Personal Training',
-    category: 'sports',
-    providerCount: 52,
-    discount: '25% Off',
-    image: 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?auto=format&fit=crop&w=800&q=80',
-    fallbackEmoji: '🏋️‍♂️'
-  },
-  {
-    id: 'yoga-classes',
-    name: 'Yoga Classes',
-    category: 'sports',
-    providerCount: 44,
-    mostBooked: true,
-    image: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=800&q=80',
-    fallbackEmoji: '🧘‍♀️'
-  },
-  // Pet Care
-  {
-    id: 'pet-grooming',
-    name: 'Pet Grooming',
-    category: 'pet-care',
-    providerCount: 34,
-    discount: '15% Off',
-    image: 'https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?auto=format&fit=crop&w=800&q=80',
-    fallbackEmoji: '🐕'
-  },
-  {
-    id: 'pet-training',
-    name: 'Pet Training',
-    category: 'pet-care',
-    providerCount: 28,
-    mostBooked: true,
-    image: 'https://images.unsplash.com/photo-1587300003388-59208cc962cb?auto=format&fit=crop&w=800&q=80',
-    fallbackEmoji: '🦮'
-  },
-  // Tech Support
-  {
-    id: 'computer-repair',
-    name: 'Computer Repair',
-    category: 'tech-support',
-    providerCount: 39,
-    discount: '20% Off',
-    image: 'https://images.unsplash.com/photo-1597872200969-2b65d56bd16b?auto=format&fit=crop&w=800&q=80',
-    fallbackEmoji: '💻'
-  },
-  {
-    id: 'network-setup',
-    name: 'Network Setup',
-    category: 'tech-support',
-    providerCount: 31,
-    mostBooked: true,
-    image: 'https://images.unsplash.com/photo-1544197150-b99a580bb7a8?auto=format&fit=crop&w=800&q=80',
-    fallbackEmoji: '🌐'
-  }
+  // Cricket Playing Services
+  { id: 'bowler', name: 'Bowler', category: 'playing', providerCount: 45, mostBooked: true, image: '/images/Bowler & batsman.png', fallbackEmoji: '🏏' },
+  { id: 'batsman', name: 'Batsman', category: 'playing', providerCount: 38, mostBooked: true, image: '/images/Bowler & batsman.png', fallbackEmoji: '🏏' },
+  { id: 'sidearm-specialist', name: 'Sidearm Specialist', category: 'playing', providerCount: 22, image: '/images/Bowler & batsman.png', fallbackEmoji: '🎯' },
+
+  // Cricket Coaching & Training
+  { id: 'coach', name: 'Coach', category: 'coaching', providerCount: 35, mostBooked: true, image: '/images/Bowler & batsman.png', fallbackEmoji: '👨‍🏫' },
+  { id: 'sports-conditioning-trainer', name: 'Sports Conditioning Trainer', category: 'coaching', providerCount: 28, image: '/images/Bowler & batsman.png', fallbackEmoji: '💪' },
+  { id: 'fitness-trainer', name: 'Fitness Trainer', category: 'coaching', providerCount: 32, image: '/images/Bowler & batsman.png', fallbackEmoji: '🏃‍♂️' },
+
+  // Cricket Support Services
+  { id: 'analyst', name: 'Analyst', category: 'support', providerCount: 18, image: '/images/Bowler & batsman.png', fallbackEmoji: '📊' },
+  { id: 'physio', name: 'Physio', category: 'support', providerCount: 25, image: '/images/Bowler & batsman.png', fallbackEmoji: '🏥' },
+  { id: 'scorer', name: 'Scorer', category: 'support', providerCount: 15, image: '/images/Bowler & batsman.png', fallbackEmoji: '📝' },
+  { id: 'umpire', name: 'Umpire', category: 'support', providerCount: 20, image: '/images/Bowler & batsman.png', fallbackEmoji: '⚖️' },
+
+  // Cricket Media & Content
+  { id: 'cricket-photo-videography', name: 'Cricket Photo / Videography', category: 'media', providerCount: 30, mostBooked: true, image: '/images/Bowler & batsman.png', fallbackEmoji: '📷' },
+  { id: 'cricket-content-creator', name: 'Cricket Content Creator', category: 'media', providerCount: 24, image: '/images/Bowler & batsman.png', fallbackEmoji: '🎬' },
+  { id: 'commentator', name: 'Commentator', category: 'media', providerCount: 16, image: '/images/Bowler & batsman.png', fallbackEmoji: '🎤' },
+
+  // Cricket Ground Services
+  { id: 'groundsman', name: 'Groundsman', category: 'ground', providerCount: 12, image: '/images/Bowler & batsman.png', fallbackEmoji: '🌱' },
 ]
 
 export default function ServicesPage() {
-  const [selectedCategory, setSelectedCategory] = useState('all')
+  const [selectedCategory, setSelectedCategory] = useState('for-you')
   const sidebarRef = useRef<HTMLDivElement>(null)
   const selectedButtonRef = useRef<HTMLButtonElement>(null)
 
   // Function to scroll selected category into view
   useEffect(() => {
-    if (selectedButtonRef.current) {
-      selectedButtonRef.current.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center'
-      })
+    // Smoothly center the selected button within the sidebar ONLY,
+    // without causing the main content to scroll.
+    const el = selectedButtonRef.current
+    const container = sidebarRef.current
+    if (el && container) {
+      const containerRect = container.getBoundingClientRect()
+      const elRect = el.getBoundingClientRect()
+      const offset = (elRect.top - containerRect.top) - (container.clientHeight / 2 - el.clientHeight / 2)
+      container.scrollBy({ top: offset, behavior: 'smooth' })
     }
   }, [selectedCategory])
 
@@ -330,11 +106,13 @@ export default function ServicesPage() {
                         }`}
                       >
                         <div className="w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-200">
-                          <span className={`text-[24px] transition-transform ${
+                          <div className={`${
                             selectedCategory === category.id
-                            ? 'text-white scale-110 font-bold'
+                            ? 'text-white scale-110'
                             : 'text-white/60 group-hover:text-white/80 group-hover:scale-105'
-                          }`}>{category.icon}</span>
+                          }`}>
+                            {category.icon}
+                          </div>
                         </div>
                         <div className="flex flex-col items-center leading-none">
                           {category.name.map((line, index) => (
@@ -362,7 +140,9 @@ export default function ServicesPage() {
                   <div className="py-6">
                     <div className="grid grid-cols-2 gap-5 pb-24">
                       {serviceItems
-                        .filter(service => selectedCategory === 'all' || service.category === selectedCategory)
+                        // TODO: Replace this heuristic with a real user-behavior-based ranking.
+                        // Example future signal sources: recently viewed, clicks, bookings, category affinity.
+                        .filter(service => selectedCategory === 'for-you' ? !!service.mostBooked : service.category === selectedCategory)
                         .map((service) => (
                         <Link 
                           href={`/client/services/${service.id}`}
@@ -372,15 +152,28 @@ export default function ServicesPage() {
                           <div className="relative bg-[#161616] rounded-2xl overflow-hidden">
                             {/* Full Image Container */}
                             <div className="aspect-[3/4] relative">
-                              {/* Fallback/Loading State */}
-                              <div className="absolute inset-0 flex items-center justify-center z-0 bg-[#161616]">
-                                <span className="text-[48px] opacity-40">{service.fallbackEmoji}</span>
+                              {/* Fallback/Loading State - Lucide icon, low opacity */}
+                              <div className="absolute inset-0 flex items-center justify-center z-0 bg-[#161616] text-white/30">
+                                {service.category === 'playing' && <Video className="w-12 h-12" />}
+                                {service.category === 'coaching' && <Dumbbell className="w-12 h-12" />}
+                                {service.category === 'support' && <Brain className="w-12 h-12" />}
+                                {service.category === 'media' && <Camera className="w-12 h-12" />}
+                                {service.category === 'ground' && <Package className="w-12 h-12" />}
+                                {service.category !== 'playing' && service.category !== 'coaching' && service.category !== 'support' && service.category !== 'media' && service.category !== 'ground' && (
+                                  <Video className="w-12 h-12" />
+                                )}
                               </div>
                               
                               <img
                                 src={service.image}
                                 alt={service.name}
                                 className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out z-[1]"
+                                onError={(e) => {
+                                  const target = e.currentTarget as HTMLImageElement;
+                                  if (target.src !== '/images/cover-placeholder.svg') {
+                                    target.src = '/images/cover-placeholder.svg';
+                                  }
+                                }}
                               />
 
                               {/* Gradient Overlay - Balanced for text visibility */}
@@ -391,7 +184,7 @@ export default function ServicesPage() {
                                 {/* Title and Provider Count */}
                                 <div className="space-y-2">
                                   <div className="space-y-1.5">
-                                    <h3 className="font-medium text-[13px] text-white leading-tight line-clamp-2 min-h-[32px] drop-shadow-sm">
+                                    <h3 className="font-medium text-[14px] text-white leading-snug break-words drop-shadow-sm">
                                       {service.name}
                                     </h3>
                                     <div className="flex items-center gap-2">
@@ -406,14 +199,9 @@ export default function ServicesPage() {
 
                               {/* Badges - Even smaller size */}
                               <div className="absolute top-2 left-2 flex flex-wrap items-start gap-1 z-[3]">
-                                {service.discount && (
-                                  <div className="bg-purple-500/80 backdrop-blur-[2px] text-white text-[9px] font-medium px-1.5 py-0.5 rounded-full">
-                                    {service.discount}
-                                  </div>
-                                )}
                                 {service.mostBooked && (
-                                  <div className="bg-amber-500/80 backdrop-blur-[2px] text-white text-[9px] font-medium px-1.5 py-0.5 rounded-full">
-                                    Most Booked
+                                  <div className="bg-[#8B5CF6] text-white text-[9px] font-medium px-2 py-0.5 rounded-full shadow-sm">
+                                    Popular
                                   </div>
                                 )}
                               </div>

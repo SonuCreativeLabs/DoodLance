@@ -1,17 +1,12 @@
 import { Category } from '../types';
 
 export const categories: Category[] = [
-  { id: 1, name: 'All', icon: '🌟' },
-  { id: 10, name: 'Sports', icon: '🏏' },
-  { id: 11, name: 'Influencer', icon: '📱' },
-  { id: 2, name: 'Home Services', icon: '🏠' },
-  { id: 3, name: 'Education', icon: '📚' },
-  { id: 4, name: 'Health', icon: '💪' },
-  { id: 5, name: 'Pet Care', icon: '🐾' },
-  { id: 6, name: 'Professional', icon: '💼' },
-  { id: 7, name: 'Tech', icon: '💻' },
-  { id: 8, name: 'Personal Care', icon: '💅' },
-  { id: 9, name: 'Events', icon: '🎉' },
+  { id: 1, name: 'All', icon: '' },
+  { id: 10, name: 'Playing', icon: '' },
+  { id: 11, name: 'Coaching', icon: '' },
+  { id: 12, name: 'Support', icon: '' },
+  { id: 13, name: 'Media', icon: '' },
+  { id: 14, name: 'Grounds', icon: '' },
 ];
 
 export const areas = [
@@ -20,10 +15,10 @@ export const areas = [
 ];
 
 export const serviceTypes = [
-  "Plumbing", "Electrical", "Cleaning", "Gardening", 
-  "Pet Care", "Tutoring", "Cooking", "Moving", 
-  "Painting", "Carpentry", "HVAC", "Photography", 
-  "Videography", "Graphic Design", "Content Writing"
+  "Bowler", "Batsman", "Sidearm Specialist", "Coach",
+  "Sports Conditioning Trainer", "Fitness Trainer", "Analyst",
+  "Physio", "Scorer", "Umpire", "Cricket Photo/Videography",
+  "Cricket Content Creator", "Commentator", "Groundsman"
 ];
 
 export const availabilityOptions = [

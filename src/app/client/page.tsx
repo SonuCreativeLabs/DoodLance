@@ -1,6 +1,6 @@
 "use client"
 
-import { Search, MapPin, Star, Clock, Calendar, User, Briefcase, GraduationCap, ChevronRight, Bell, Wallet, X, Brain, Cpu, Sparkles } from 'lucide-react'
+import { Search, MapPin, Star, Clock, Calendar, User, Briefcase, GraduationCap, ChevronRight, Bell, X, Brain, Cpu, Sparkles, Wallet, Copy, Check } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import ClientLayout from '@/components/layouts/client-layout'
 import { FreelancerCard } from '@/components/client/freelancer-card'
@@ -25,7 +25,7 @@ const AnimatedCard = ({ icon, delay }: { icon: React.ReactNode; delay: number })
       repeatType: "reverse",
       repeatDelay: 2
     }}
-    className="bg-white rounded-xl p-4 shadow-lg"
+    className="bg-white rounded-xl p-3 shadow-lg"
   >
     <div className="flex items-center gap-3">
       <div className="w-10 h-10 bg-sky-100 rounded-full flex items-center justify-center text-sky-600">
@@ -50,23 +50,24 @@ const mockSearches = [
 ];
 
 const searchExamples = [
-  "Need a plumber in Velachery",
-  "Looking for a pet walker in ECR",
-  "Video grapher for wedding",
-  "Electrician near me",
-  "Carpenter for furniture repair",
-  "Personal trainer at home",
-  "Beautician for bridal makeup",
-  "Car wash service",
-  "Interior designer consultation",
-  "Yoga instructor at home"
+  "Bowler for cricket practice in Chepauk",
+  "Sidearm specialist for batting practice in T Nagar",
+  "Cricket coach for beginners in Mylapore",
+  "Batsman training sessions in Adyar",
+  "Personal cricket coach in Royapettah",
+  "Cricket physio for injury recovery in Nungambakkam",
+  "Sidearm thrower for net practice in Kodambakkam",
+  "Cricket analyst for match analysis in West Mambalam",
+  "Sports conditioning trainer in Alwarpet",
+  "Cricket umpire for local matches in Besant Nagar",
+  "Cricket content creator in Velachery",
+  "Cricket scorer for tournaments in Chennai",
+  "Cricket photo videography for matches in ECR",
+  "Sidearm thrower specialist for cricket practice"
 ];
 
 const mockLocations = [
   { city: "Chennai", state: "TN" },
-  { city: "Bangalore", state: "KA" },
-  { city: "Mumbai", state: "MH" },
-  { city: "Delhi", state: "DL" },
 ];
 
 const mockNotifications = [
@@ -87,10 +88,20 @@ export default function ClientHome() {
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
   const [typingSpeed, setTypingSpeed] = useState(100);
-  const [showSuggestions, setShowSuggestions] = useState(false);
   const [isSticky, setIsSticky] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
   const headerRef = useRef<HTMLDivElement>(null);
+  const [copiedCode, setCopiedCode] = useState<string | null>(null);
+
+  const handleCopyCode = async (code: string) => {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopiedCode(code);
+      setTimeout(() => setCopiedCode(null), 2000);
+    } catch (e) {
+      console.error('Failed to copy coupon code', e);
+    }
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -137,25 +148,14 @@ export default function ClientHome() {
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        setShowSuggestions(false);
         setShowLocationPicker(false);
+        setShowSidebar(false);
       }
     };
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
   }, []);
 
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-    setShowSuggestions(true);
-  };
-
-  const handleSearchSelect = (text: string) => {
-    setSearchQuery(text);
-    setShowSuggestions(false);
-    // TODO: Implement actual search
-    console.log('Searching for:', text);
-  };
   const handleHire = (id: number) => {
     // TODO: Implement hire functionality
     console.log('Hiring freelancer:', id)
@@ -170,7 +170,7 @@ export default function ClientHome() {
     <ClientLayout>
       {/* Fixed Header */}
       <div className="fixed top-0 left-0 w-full z-30 bg-gradient-to-br from-[#6B46C1] via-[#4C1D95] to-[#2D1B69]">
-        <div className="container mx-auto px-4 flex items-center justify-between pt-4 pb-2">
+        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <div className="relative group">
               <div className="relative flex items-center justify-center">
@@ -220,15 +220,6 @@ export default function ClientHome() {
                     >
                       <svg className="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a8.38 8.38 0 0 1 13 0"/></svg>
                       My Profile
-                    </button>
-                    {/* Wallet */}
-                    <button
-                      className="flex items-center gap-3 px-6 py-3 text-left text-neutral-800 hover:bg-neutral-100 transition-colors"
-                      onClick={() => router.push('/client/wallet')}
-                    >
-                      <svg className="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="10" rx="2"/><path d="M16 3v4"/><path d="M8 3v4"/><path d="M2 13h20"/></svg>
-                      Wallet
-                      <span className="ml-auto text-xs text-neutral-500">₹1,300</span>
                     </button>
                     {/* Skill Coins */}
                     <div className="flex items-center gap-3 px-6 py-2 text-left">
@@ -293,27 +284,27 @@ export default function ClientHome() {
             <div className="flex flex-col gap-0.5">
               <span className="text-lg font-medium text-white">Welcome back, Sonu!</span>
               <div className="relative group">
-                <button 
+                <button
                   className="flex items-center text-white/70 hover:text-white/90 transition-colors"
                   onClick={() => setShowLocationPicker(prev => !prev)}
                 >
-                  <MapPin className="w-3 h-3 mr-1" />
-                  <span className="text-xs">{currentLocation.city}, {currentLocation.state}</span>
-                  <ChevronRight className="w-3 h-3 ml-0.5 group-hover:rotate-90 transition-transform duration-200" />
+                  <MapPin className="w-3 h-3 mr-1.5" />
+                  <span className="text-xs">Chennai, TN</span>
+                  <ChevronRight className="w-3 h-3 ml-1.5 group-hover:rotate-90 transition-transform duration-200" />
                 </button>
                 {showLocationPicker && (
-                  <div className="absolute top-6 left-0 bg-white/10 rounded-lg py-2 w-36 border border-white/20">
+                  <div className="absolute top-6 left-0 bg-[#1a1a1a]/95 backdrop-blur-xl rounded-xl py-2 w-40 shadow-xl border border-white/10 z-50">
                     {mockLocations.map((loc) => (
                       <button
                         key={`${loc.city}-${loc.state}`}
-                        className="w-full px-3 py-1.5 text-xs text-white/80 hover:bg-white/10 text-left flex items-center gap-2"
+                        className="w-full px-4 py-2.5 text-xs text-white/90 hover:bg-white/10 hover:text-white text-left flex items-center gap-2.5 transition-colors duration-200 first:rounded-t-xl last:rounded-b-xl"
                         onClick={() => {
                           setCurrentLocation(loc);
                           setShowLocationPicker(false);
                         }}
                       >
-                        <MapPin className="w-3 h-3" />
-                        {loc.city}, {loc.state}
+                        <MapPin className="w-3.5 h-3.5 text-purple-400" />
+                        <span className="font-medium">{loc.city}, {loc.state}</span>
                       </button>
                     ))}
                   </div>
@@ -323,25 +314,22 @@ export default function ClientHome() {
           </div>
           <div className="flex items-center space-x-4">
             <div className="relative">
-              <Link href="/client/notifications" className="relative group" aria-label="Notifications">
+              <Link href="/client/wallet" className="relative group" aria-label="Wallet">
                 <span className="flex items-center justify-center w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 transition-colors">
-                  <Bell className="w-5 h-5 text-white" />
-                  {mockNotifications.length > 0 && (
-                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center">
-                      <span className="text-[10px] font-medium text-white">{mockNotifications.length}</span>
-                    </span>
-                  )}
+                  <Wallet className="w-5 h-5 text-white" />
                 </span>
               </Link>
             </div>
             <div className="relative">
-              <Link href="/client/wallet" aria-label="Wallet">
-                <button className="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-r from-purple-600 to-purple-400 hover:from-purple-700 hover:to-purple-500 transition-colors relative">
-                  <Wallet className="w-5 h-5 text-white" />
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-white rounded-full flex items-center justify-center">
-                    <span className="text-[10px] font-medium text-purple-600">$0</span>
-                  </span>
-                </button>
+              <Link href="/client/notifications" className="relative group" aria-label="Notifications">
+                <span className="relative inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 transition-colors">
+                  <Bell className="w-5 h-5 text-white" />
+                  {mockNotifications.length > 0 && (
+                    <span className="pointer-events-none absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-r from-purple-600 to-purple-400 rounded-full flex items-center justify-center shadow-lg shadow-purple-600/20 z-10">
+                      <span className="text-[10px] font-medium text-white leading-none">{mockNotifications.length}</span>
+                    </span>
+                  )}
+                </span>
               </Link>
             </div>
           </div>
@@ -357,9 +345,9 @@ export default function ClientHome() {
             {/* Cover Image */}
             <div className="absolute inset-0 w-full h-full">
               <img
-                src="/images/cover.jpg"
+                src="/images/Purple ground.png"
                 alt="Cover"
-                className="w-full h-full object-cover opacity-20"
+                className="w-full h-full object-cover opacity-[35%] transform translate-y-[10%]"
               />
             </div>
           </div>
@@ -369,105 +357,65 @@ export default function ClientHome() {
             {/* Adjusted space for optimal position */}
             <div className="pt-24 md:pt-28">
               <div className="max-w-2xl mx-auto text-center">
-                <h1 className="text-xl md:text-3xl font-bold text-white mb-3 whitespace-nowrap overflow-hidden text-ellipsis">
-                  Your Neighborhood's Got Talent
+                <h1 className="text-[22px] md:text-4xl font-bold font-serif text-white mb-2 text-center drop-shadow-[0_4px_8px_rgba(0,0,0,0.3)]">
+                  Practice like a pro, with a pro
                 </h1>
-                <p className="text-base md:text-lg text-white/80 mb-6">
-                  Hire anyone for anything<br />right from your neighborhood.
+                <p className="text-base md:text-lg text-white/90 mb-4 drop-shadow-[0_2px_4px_rgba(0,0,0,0.2)]">
+                  Your shortcut to better cricket starts here
                 </p>
               </div>
 
               {/* Modern Search Bar */}
-              <div className="bg-white/10 rounded-2xl shadow-lg p-4 max-w-3xl mx-auto border border-white/20">
-                <div className="grid grid-cols-1 md:grid-cols-[1fr,auto] gap-4">
-                  <div className="w-full">
-                    <div className="relative w-full">
-                      <Input
-                        type="text"
-                        placeholder={searchQuery ? `Find services in ${currentLocation.city}...` : placeholder || `Find services in ${currentLocation.city}...`}
-                        value={searchQuery}
-                        onChange={(e) => handleSearch(e.target.value)}
-                        className="w-full bg-white/10 border border-white/20 text-white placeholder-white/60 rounded py-3 pl-10 pr-4 focus:outline-none focus:border-purple-500 transition-all"
-                        onFocus={() => setShowSuggestions(true)}
-                        onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                      />
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/70">
-                        <Sparkles className="w-5 h-5" />
-                      </span>
-                      {showSuggestions && (
-                        <div className="absolute left-0 top-full mt-1 w-full bg-[#18181b]/95 rounded-lg border border-white/10 shadow-xl z-20">
-                          <div className="p-2">
-                            <div className="text-xs font-medium text-white/80 px-2 py-1 flex justify-between items-center">
-                              <span>Popular Searches</span>
-                              <button 
-                                onClick={() => setShowSuggestions(false)}
-                                className="p-1 hover:bg-white/10 rounded-full transition-colors"
-                                aria-label="Close suggestions"
-                              >
-                                <X className="w-4 h-4 text-white/50" />
-                              </button>
-                            </div>
-                            <div className="space-y-1">
-                              {mockSearches.map((search) => (
-                                <button 
-                                  key={search.id}
-                                  onClick={() => handleSearchSelect(search.text)}
-                                  className="w-full px-3 py-2 text-sm text-white hover:bg-white/10 rounded-lg flex items-center justify-between group/item"
-                                >
-                                  <div className="flex items-center">
-                                    <Search className="w-4 h-4 mr-2 text-purple-400" />
-                                    <span className="text-white">{search.text}</span>
-                                  </div>
-                                  <span className="text-xs text-white/50 group-hover/item:text-white/80">{search.count.toLocaleString()}+ searches</span>
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <button className="h-[50px] px-8 bg-gradient-to-r from-purple-600 via-purple-500 to-purple-400 hover:from-purple-700 hover:via-purple-600 hover:to-purple-500 text-white py-3 text-base rounded transition-all duration-300 font-medium whitespace-nowrap">
-                    Search
-                  </button>
+              <div className="max-w-3xl mx-auto">
+                <div className="relative w-full">
+                  <Input
+                    type="text"
+                    placeholder={searchQuery ? `Find services in Chennai...` : placeholder || `Find services in Chennai...`}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full bg-white/20 border border-white/40 text-white placeholder-white/80 rounded-2xl py-4 pl-12 pr-4 focus:outline-none focus:border-purple-400 transition-all shadow-lg drop-shadow-[0_4px_12px_rgba(0,0,0,0.15)]"
+                  />
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/70">
+                    <Sparkles className="w-5 h-5" />
+                  </span>
                 </div>
               </div>
 
               {/* Why DoodLance Section */}
-              <div className="mt-6 max-w-4xl mx-auto">
-                <div className="mb-2">
-                  <h2 className="text-base font-semibold text-white tracking-wide text-left" data-component-name="ClientHome">WHY DOODLANCE?</h2>
+              <div className="mt-4 max-w-3xl mx-auto">
+                <div className="mb-1">
+                  <h2 className="text-sm font-semibold text-white tracking-wide text-left drop-shadow-[0_2px_4px_rgba(0,0,0,0.25)]" data-component-name="ClientHome">WHY DOODLANCE?</h2>
                 </div>
-                <div className="flex flex-row justify-center gap-3 md:gap-6">
+                <div className="flex flex-row justify-center gap-2 md:gap-3">
                   {/* Local Delivery */}
-                  <div className="flex flex-col items-center w-32 md:w-40 py-4">
-                    <div className="w-14 h-14 rounded-full bg-purple-100 flex items-center justify-center mb-3">
-                      <MapPin className="w-7 h-7 text-purple-500" />
+                  <div className="flex flex-col items-center w-24 md:w-28 py-2">
+                    <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center mb-2">
+                      <MapPin className="w-5 h-5 text-purple-500" />
                     </div>
                     <div className="text-center">
-                      <div className="font-bold text-base md:text-lg text-white">Fast Service</div>
-                      <div className="text-[12px] md:text-sm text-white/80 leading-tight">In Your<br />Neighborhood</div>
+                      <div className="font-bold text-sm md:text-base text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)]">Fast Service</div>
+                      <div className="text-[10px] md:text-xs text-white/80 leading-tight drop-shadow-[0_1px_2px_rgba(0,0,0,0.2)]">In Your<br />Neighborhood</div>
                     </div>
                   </div>
                   {/* Smart Matching */}
-                  <div className="flex flex-col items-center w-32 md:w-40 py-4">
-                    <div className="w-14 h-14 rounded-full bg-purple-100 flex items-center justify-center mb-3">
+                  <div className="flex flex-col items-center w-24 md:w-28 py-2">
+                    <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center mb-2">
                       {/* AI-related icon - Sparkles */}
-                      <Sparkles className="w-7 h-7 text-purple-500" />
+                      <Sparkles className="w-5 h-5 text-purple-500" />
                     </div>
                     <div className="text-center">
-                      <div className="font-bold text-base md:text-lg text-white">AI-Powered</div>
-                      <div className="text-[12px] md:text-sm text-white/80 leading-tight">Find the<br />Right Expert</div>
+                      <div className="font-bold text-sm md:text-base text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)]">AI-Powered</div>
+                      <div className="text-[10px] md:text-xs text-white/80 leading-tight drop-shadow-[0_1px_2px_rgba(0,0,0,0.2)]">Find the<br />Right Expert</div>
                     </div>
                   </div>
                   {/* Instant Booking */}
-                  <div className="flex flex-col items-center w-32 md:w-40 py-4">
-                    <div className="w-14 h-14 rounded-full bg-purple-100 flex items-center justify-center mb-3">
-                      <Clock className="w-7 h-7 text-purple-500" />
+                  <div className="flex flex-col items-center w-24 md:w-28 py-2">
+                    <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center mb-2">
+                      <Clock className="w-5 h-5 text-purple-500" />
                     </div>
                     <div className="text-center">
-                      <div className="font-bold text-base md:text-lg text-white whitespace-nowrap">Book Instantly</div>
-                      <div className="text-[12px] md:text-sm text-white/80 leading-tight whitespace-nowrap">Real-Time<br />Availability</div>
+                      <div className="font-bold text-sm md:text-base text-white whitespace-nowrap drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)]">Book Instantly</div>
+                      <div className="text-[10px] md:text-xs text-white/80 leading-tight whitespace-nowrap drop-shadow-[0_1px_2px_rgba(0,0,0,0.2)]">Real-Time<br />Availability</div>
                     </div>
                   </div>
                 </div>
@@ -476,18 +424,18 @@ export default function ClientHome() {
           </div>
         </div>
 
-        <div className="container mx-auto px-4 py-4 bg-[#111111] mb-20 relative z-0">
+        <div className="container mx-auto px-4 py-4 bg-[#111111] mb-8 relative z-0">
           {/* Service Categories */}
-          <section className="mb-8 relative z-0">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-semibold text-white">Popular Services in your area</h2>
+          <section className="mb-4 relative z-0">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-base font-medium text-white/90">Popular Services in your area</h2>
               <Link href="/client/services" className="text-white/80 hover:text-white text-sm font-medium flex items-center transition-colors">
                 View All
                 <ChevronRight className="w-4 h-4 ml-1" />
               </Link>
             </div>
-            <div className="relative">
-              <div className="overflow-x-auto scrollbar-hide">
+            <div className="relative -mx-4">
+              <div className="overflow-x-auto scrollbar-hide px-4">
                 <div className="flex space-x-4 pb-4">
                   {popularServices.map((service) => (
                     <ServiceCard
@@ -497,8 +445,7 @@ export default function ClientHome() {
                       image={service.image}
                       icon={service.icon}
                       providerCount={service.providerCount}
-                      discount={service.discount}
-                      className="w-[180px] flex-shrink-0"
+                      className="w-[150px] flex-shrink-0"
                     />
                   ))}
                 </div>
@@ -530,8 +477,8 @@ export default function ClientHome() {
               </Link>
             </div>
             <div className="relative">
-              <div className="overflow-x-auto scrollbar-hide max-w-[353px] sm:max-w-none mx-auto">
-                <div className="flex gap-[1px] pb-4">
+              <div className="overflow-x-auto scrollbar-hide -mx-4 px-4">
+                <div className="flex gap-3 pb-4">
                   {professionals
                     .sort((a, b) => {
                       // First sort by rating
@@ -545,38 +492,43 @@ export default function ClientHome() {
                     .map((expert) => (
                     <div
                       key={expert.id}
-                      className="flex-shrink-0 w-[160px]"
+                      className="flex-shrink-0 w-[130px]"
                     >
+                      {/* Outer Layer Card */}
                       <div className="relative group">
-                        {/* Rating Badge */}
-                        <div className="absolute top-2 left-2 z-20 bg-gradient-to-r from-yellow-400 to-yellow-600 px-2 py-0.5 rounded-full flex items-center gap-1 shadow-lg">
-                          <Star className="w-2.5 h-2.5 text-black fill-current" />
-                          <span className="text-black text-[10px] font-bold">{expert.rating}</span>
-                        </div>
+                        {/* Card Background */}
+                        <div className="absolute inset-0 rounded-2xl border border-purple-400/10 transition-all duration-300 group-hover:border-purple-400/20"></div>
                         
-                        {/* Profile Picture with Gradient Shadow */}
-                        <div className="relative w-[100px] h-[100px] mx-auto">
-                          {/* Main Glow */}
-                          <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full opacity-20 blur-[10px]"></div>
-                          {/* Bottom Shadow */}
-                          <div className="absolute -bottom-1 -inset-x-1 h-4 bg-gradient-to-b from-purple-500/20 to-transparent blur-sm"></div>
-                          <img
-                            src={expert.image}
-                            alt={expert.name}
-                            className="w-full h-full rounded-full border-2 border-purple-200/50 relative z-10 object-cover"
-                          />
-                        </div>
-                        
-                        {/* Expert Info with Instagram-style Spacing */}
-                        <div className="mt-3 text-center">
-                          <h3 className="font-semibold text-white text-sm leading-tight truncate">{expert.name}</h3>
-                          <p className="text-purple-400 text-xs font-medium truncate mt-0.5">{expert.service}</p>
-                          <div className="flex items-center justify-center gap-1.5 mt-1.5">
-                            <p className="text-white/70 text-[10px]">{expert.reviews} reviews</p>
-                            <span className="text-white/30">•</span>
-                            <p className="text-white/70 text-[10px]">{expert.completedJobs} jobs</p>
+                        {/* Card Content */}
+                        <div className="relative p-2.5">
+                          <div className="relative group">
+                            {/* Rating Badge */}
+                            <div className="absolute top-2 left-2 z-20 bg-gradient-to-r from-yellow-400 to-yellow-600 px-2 py-0.5 rounded-full flex items-center gap-1 shadow-lg">
+                              <Star className="w-2.5 h-2.5 text-black fill-current" />
+                              <span className="text-black text-[10px] font-bold">{expert.rating}</span>
+                            </div>
+                            
+                            {/* Profile Picture */}
+                            <div className="relative w-[80px] h-[80px] mx-auto">
+                              <img
+                                src={expert.image}
+                                alt={expert.name}
+                                className="w-full h-full rounded-full border-2 border-purple-200/50 relative z-10 object-cover"
+                              />
+                            </div>
+                            
+                            {/* Expert Info with Reduced Spacing */}
+                            <div className="mt-1.5 text-center">
+                              <h3 className="font-semibold text-white text-xs leading-tight truncate">{expert.name}</h3>
+                              <p className="text-purple-400 text-[10px] font-medium truncate mt-0.5">{expert.service}</p>
+                              <div className="flex items-center justify-center gap-1 mt-0.5">
+                                <p className="text-white/70 text-[9px]">{expert.reviews} reviews</p>
+                                <span className="text-white/30">•</span>
+                                <p className="text-white/70 text-[9px]">{expert.completedJobs} jobs</p>
+                              </div>
+                              <p className="text-white/50 text-[9px] font-medium mt-0.5">{expert.location}</p>
+                            </div>
                           </div>
-                          <p className="text-white/50 text-[10px] font-medium mt-1">{expert.location}</p>
                         </div>
                       </div>
                     </div>
@@ -591,84 +543,163 @@ export default function ClientHome() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
-            className="mt-8 mb-2 relative z-0"
+            className="mt-4 mb-2 relative z-0"
           >
-            <div className="overflow-x-auto scrollbar-hide">
-              <div className="flex gap-4">
-                {/* First Coupon */}
-                <div className="flex-shrink-0 w-[300px] bg-gradient-to-r from-purple-600 via-purple-500 to-purple-400 rounded-xl p-4 shadow-lg">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="inline-block bg-white/20 text-white/90 text-xs px-2 py-0.5 rounded-full mb-2">
-                        Limited Time
+            <div className="mb-4">
+              <h2 className="text-sm font-semibold text-white tracking-wide text-left" data-component-name="ClientHome">EXCLUSIVE OFFERS</h2>
+            </div>
+            <div className="relative -mx-4">
+              <div className="overflow-x-auto scrollbar-hide px-4">
+                <div className="flex gap-3">
+                  {/* First Coupon */}
+                  <div className="flex-shrink-0 w-[300px] min-h-[140px] rounded-2xl p-3 border border-dashed border-white/15 bg-white/5 backdrop-blur-sm relative overflow-hidden flex flex-col justify-between">
+                    {/* Accent stripe */}
+                    <div className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-purple-400/80 to-purple-600/80" />
+                    <div className="flex items-start gap-3">
+                      {/* Icon circle (subtle) */}
+                      <div className="hidden sm:flex items-center justify-center w-12 h-12 rounded-xl bg-white/5 border border-white/10">
+                        <Calendar className="w-6 h-6 text-purple-300" />
                       </div>
-                      <h3 className="text-lg font-bold text-white mb-1">20% Off First Booking</h3>
-                      <p className="text-white/90 text-sm mb-2">
-                        Use code: <span className="font-mono bg-white/20 px-1.5 py-0.5 rounded text-xs">WELCOME20</span>
-                      </p>
-                      <button className="bg-white text-purple-600 hover:bg-white/90 px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-300">
-                        Book Now
-                      </button>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="inline-flex items-center text-[11px] px-2 py-0.5 rounded-full border border-white/15 text-white/80">Limited time</span>
+                        </div>
+                        <h3 className="text-white text-base font-semibold leading-snug">20% off first booking</h3>
+                      </div>
+                      {/* Discount badge */}
+                      <div className="ml-2">
+                        <div className="rounded-xl px-2.5 py-1 bg-purple-500/20 text-purple-200 border border-purple-300/30 text-sm font-bold">20%</div>
+                      </div>
                     </div>
-                    <div className="relative ml-4">
-                      <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
-                        <Calendar className="w-8 h-8 text-white" />
+                    {/* Code and button section at bottom */}
+                    <div className="mt-3 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-[11px] px-2 py-1 rounded-md border border-white/15 bg-white/5 text-white/90">WELCOME20</span>
+                        <button
+                          onClick={() => handleCopyCode('WELCOME20')}
+                          className="inline-flex items-center gap-1 px-2 py-1.5 rounded-full border border-white/20 text-white/90 hover:bg-white/10 text-xs sm:text-sm transition-colors whitespace-nowrap shrink-0"
+                          aria-label="Copy coupon code WELCOME20"
+                        >
+                          {copiedCode === 'WELCOME20' ? (
+                            <>
+                              <Check className="w-4 h-4" />
+                              Copied
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="w-4 h-4" />
+                              Copy
+                            </>
+                          )}
+                        </button>
                       </div>
-                      <div className="absolute -top-3 -right-3 bg-white text-purple-600 rounded-full w-10 h-10 flex items-center justify-center text-base font-bold shadow-md border-2 border-white">
-                        20%
-                      </div>
+                      <span className="text-[11px] text-white/50 whitespace-nowrap">Ends soon</span>
+                    </div>
+                    {/* Perforated divider at bottom */}
+                    <div className="mt-3 flex items-center gap-2">
+                      <div className="h-[10px] w-[10px] rounded-full bg-[#111111] border border-white/10 -ml-5" />
+                      <div className="flex-1 border-t border-dashed border-white/15" />
+                      <div className="h-[10px] w-[10px] rounded-full bg-[#111111] border border-white/10 -mr-5" />
                     </div>
                   </div>
-                </div>
 
-                {/* Second Coupon */}
-                <div className="flex-shrink-0 w-[300px] bg-gradient-to-r from-blue-600 via-blue-500 to-blue-400 rounded-xl p-4 shadow-lg">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="inline-block bg-white/20 text-white/90 text-xs px-2 py-0.5 rounded-full mb-2">
-                        Weekend Special
+                  {/* Second Coupon */}
+                  <div className="flex-shrink-0 w-[300px] min-h-[140px] rounded-2xl p-3 border border-dashed border-white/15 bg-white/5 backdrop-blur-sm relative overflow-hidden flex flex-col justify-between">
+                    <div className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-blue-400/80 to-blue-600/80" />
+                    <div className="flex items-start gap-3">
+                      <div className="hidden sm:flex items-center justify-center w-12 h-12 rounded-xl bg-white/5 border border-white/10">
+                        <Star className="w-6 h-6 text-blue-300" />
                       </div>
-                      <h3 className="text-lg font-bold text-white mb-1">15% Off Weekend</h3>
-                      <p className="text-white/90 text-sm mb-2">
-                        Use code: <span className="font-mono bg-white/20 px-1.5 py-0.5 rounded text-xs">WEEKEND15</span>
-                      </p>
-                      <button className="bg-white text-blue-600 hover:bg-white/90 px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-300">
-                        Book Now
-                      </button>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="inline-flex items-center text-[11px] px-2 py-0.5 rounded-full border border-white/15 text-white/80">Weekend special</span>
+                          <span className="text-[11px] text-white/50">• All services</span>
+                        </div>
+                        <h3 className="text-white text-base font-semibold leading-snug">15% off weekend bookings</h3>
+                      </div>
+                      <div className="ml-2">
+                        <div className="rounded-xl px-2.5 py-1 bg-blue-500/20 text-blue-200 border border-blue-300/30 text-sm font-bold">15%</div>
+                      </div>
                     </div>
-                    <div className="relative ml-4">
-                      <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
-                        <Star className="w-8 h-8 text-white" />
+                    {/* Code and button section at bottom */}
+                    <div className="mt-3 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-[11px] px-2 py-1 rounded-md border border-white/15 bg-white/5 text-white/90">WEEKEND15</span>
+                        <button
+                          onClick={() => handleCopyCode('WEEKEND15')}
+                          className="inline-flex items-center gap-1 px-2 py-1.5 rounded-full border border-white/20 text-white/90 hover:bg-white/10 text-xs sm:text-sm transition-colors whitespace-nowrap shrink-0"
+                          aria-label="Copy coupon code WEEKEND15"
+                        >
+                          {copiedCode === 'WEEKEND15' ? (
+                            <>
+                              <Check className="w-4 h-4" />
+                              Copied
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="w-4 h-4" />
+                              Copy
+                            </>
+                          )}
+                        </button>
                       </div>
-                      <div className="absolute -top-3 -right-3 bg-white text-blue-600 rounded-full w-10 h-10 flex items-center justify-center text-base font-bold shadow-md border-2 border-white">
-                        15%
-                      </div>
+                      <span className="text-[11px] text-white/50 whitespace-nowrap">Valid Sat-Sun</span>
+                    </div>
+                    {/* Perforated divider at bottom */}
+                    <div className="mt-3 flex items-center gap-2">
+                      <div className="h-[10px] w-[10px] rounded-full bg-[#111111] border border-white/10 -ml-5" />
+                      <div className="flex-1 border-t border-dashed border-white/15" />
+                      <div className="h-[10px] w-[10px] rounded-full bg-[#111111] border border-white/10 -mr-5" />
                     </div>
                   </div>
-                </div>
 
-                {/* Third Coupon */}
-                <div className="flex-shrink-0 w-[300px] bg-gradient-to-r from-emerald-600 via-emerald-500 to-emerald-400 rounded-xl p-4 shadow-lg">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="inline-block bg-white/20 text-white/90 text-xs px-2 py-0.5 rounded-full mb-2">
-                        Bulk Booking
+                  {/* Third Coupon */}
+                  <div className="flex-shrink-0 w-[300px] min-h-[140px] rounded-2xl p-3 border border-dashed border-white/15 bg-white/5 backdrop-blur-sm relative overflow-hidden flex flex-col justify-between">
+                    <div className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-emerald-400/80 to-emerald-600/80" />
+                    <div className="flex items-start gap-3">
+                      <div className="hidden sm:flex items-center justify-center w-12 h-12 rounded-xl bg-white/5 border border-white/10">
+                        <svg className="w-6 h-6 text-emerald-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 7h18M3 12h18M3 17h18"/></svg>
                       </div>
-                      <h3 className="text-lg font-bold text-white mb-1">25% Off 3+ Services</h3>
-                      <p className="text-white/90 text-sm mb-2">
-                        Use code: <span className="font-mono bg-white/20 px-1.5 py-0.5 rounded text-xs">BULK25</span>
-                      </p>
-                      <button className="bg-white text-emerald-600 hover:bg-white/90 px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-300">
-                        Book Now
-                      </button>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="inline-flex items-center text-[11px] px-2 py-0.5 rounded-full border border-white/15 text-white/80">Bulk booking</span>
+                          <span className="text-[11px] text-white/50">• 3+ services</span>
+                        </div>
+                        <h3 className="text-white text-base font-semibold leading-snug">25% off bulk orders</h3>
+                      </div>
+                      <div className="ml-2">
+                        <div className="rounded-xl px-2.5 py-1 bg-emerald-500/20 text-emerald-200 border border-emerald-300/30 text-sm font-bold">25%</div>
+                      </div>
                     </div>
-                    <div className="relative ml-4">
-                      <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
-                        <Wallet className="w-8 h-8 text-white" />
+                    {/* Code and button section at bottom */}
+                    <div className="mt-3 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-[11px] px-2 py-1 rounded-md border border-white/15 bg-white/5 text-white/90">BULK25</span>
+                        <button
+                          onClick={() => handleCopyCode('BULK25')}
+                          className="inline-flex items-center gap-1 px-2 py-1.5 rounded-full border border-white/20 text-white/90 hover:bg-white/10 text-xs sm:text-sm transition-colors whitespace-nowrap shrink-0"
+                          aria-label="Copy coupon code BULK25"
+                        >
+                          {copiedCode === 'BULK25' ? (
+                            <>
+                              <Check className="w-4 h-4" />
+                              Copied
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="w-4 h-4" />
+                              Copy
+                            </>
+                          )}
+                        </button>
                       </div>
-                      <div className="absolute -top-3 -right-3 bg-white text-emerald-600 rounded-full w-10 h-10 flex items-center justify-center text-base font-bold shadow-md border-2 border-white">
-                        25%
-                      </div>
+                      <span className="text-[11px] text-white/50 whitespace-nowrap">Limited time</span>
+                    </div>
+                    {/* Perforated divider at bottom */}
+                    <div className="mt-3 flex items-center gap-2">
+                      <div className="h-[10px] w-[10px] rounded-full bg-[#111111] border border-white/10 -ml-5" />
+                      <div className="flex-1 border-t border-dashed border-white/15" />
+                      <div className="h-[10px] w-[10px] rounded-full bg-[#111111] border border-white/10 -mr-5" />
                     </div>
                   </div>
                 </div>

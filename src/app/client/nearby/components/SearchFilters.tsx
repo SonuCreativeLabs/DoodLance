@@ -92,7 +92,7 @@ export default function SearchFilters({
       <div className="flex-1 p-4 max-w-2xl w-full mx-auto">
         {/* Search input */}
         <div className="mb-6">
-          <div className="flex items-center gap-2 bg-[#111111] rounded-xl px-4 py-3 border border-white/10">
+          <div className="flex items-center gap-2 bg-transparent rounded-xl px-4 py-3 border border-white/10">
             <SearchIcon className="w-5 h-5 text-purple-400" />
             <input
               type="text"
@@ -190,7 +190,7 @@ export default function SearchFilters({
                 className={`py-2 rounded-xl text-sm font-medium ${
                   minRating === rating
                     ? 'bg-purple-600 text-white'
-                    : 'bg-[#111111] text-white/70 border border-white/10'
+                    : 'bg-transparent text-white/70 border border-white/10 hover:bg-white/5'
                 }`}
               >
                 {rating === 0 ? 'Any' : `${rating}+`}
@@ -210,7 +210,7 @@ export default function SearchFilters({
                 className={`py-2 rounded-xl text-sm font-medium ${
                   availability === option
                     ? 'bg-purple-600 text-white'
-                    : 'bg-[#111111] text-white/70 border border-white/10'
+                    : 'bg-transparent text-white/70 border border-white/10 hover:bg-white/5'
                 }`}
               >
                 {option}
@@ -221,7 +221,7 @@ export default function SearchFilters({
               className={`py-2 rounded-xl text-sm font-medium flex items-center justify-center gap-2 ${
                 availability === 'Pick Date'
                   ? 'bg-purple-600 text-white'
-                  : 'bg-[#111111] text-white/70 border border-white/10'
+                  : 'bg-transparent text-white/70 border border-white/10 hover:bg-white/5'
               }`}
             >
               <Calendar className="w-4 h-4" />
@@ -253,7 +253,7 @@ export default function SearchFilters({
                   className={`py-2 rounded-xl text-sm font-medium ${
                     selectedTimeOptions.includes(option)
                       ? 'bg-purple-600 text-white'
-                      : 'bg-[#111111] text-white/70 border border-white/10 hover:bg-[#222] transition-colors'
+                      : 'bg-transparent text-white/70 border border-white/10 hover:bg-white/5 transition-colors'
                   }`}
                 >
                   {option}

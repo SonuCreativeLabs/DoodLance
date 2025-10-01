@@ -40,12 +40,12 @@ interface ProfileHeaderProps {
 
 export function ProfileHeader({
   name = "Sathish Sonu",
-  title = "Cricketer & AI Engineer",
+  title = "All Rounder",
   rating = 4.8,
   reviewCount = 42,
   location = "Chennai, India",
   online = true,
-  skills = ["Cricket", "Cycling", "Off Spin", "Batting", "Vibe Coder", "Prompt Engg", "AI Agent Builder"],
+  skills = ["Top Order Batsman", "Sidearm Specialist", "Off Spin", "Coach", "Analyst", "Mystery Spinner"],
   avatarUrl = "/images/profile-sonu.jpg",
   coverImageUrl = "/images/cover-pic.JPG",
   isPreview = false

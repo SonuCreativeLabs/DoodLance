@@ -35,18 +35,18 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, i
 
   const handleCardClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    router.push(`/freelancer/proposals/${application.id}`);
+    router.push(`/freelancer/proposals/${application["#"]}`);
   };
 
   const handleMessageClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     // Handle message button click
-    console.log('Message button clicked for application:', application.id);
+    console.log('Message button clicked for application:', application["#"]);
   };
 
   return (
     <motion.div
-      key={application.id}
+      key={application["#"]}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: index * 0.1 }}
@@ -70,9 +70,8 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, i
               </div>
             </div>
             <div className="flex items-center gap-1.5 text-sm text-white/60">
-              <span className="text-xs text-gray-400">ID:</span>
               <span className="font-mono text-xs">
-                {application.id}
+                {application["#"]}
               </span>
             </div>
           </div>

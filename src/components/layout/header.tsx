@@ -37,7 +37,6 @@ export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
   const [unreadCount, setUnreadCount] = useState(3)
-  const [walletBalance, setWalletBalance] = useState(24500) // In the future, this should come from an API
 
   return (
     <header className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
@@ -49,16 +48,17 @@ export default function Header() {
           <Menu className="w-6 h-6" />
         </button>
 
-        <Link href="/" className="text-xl font-bold">
-          LocalSkills
-        </Link>
+        <div className="flex-1"></div>
 
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1 px-3 py-1.5 bg-purple-100 rounded-lg">
-            <Wallet className="w-4 h-4 text-purple-600" />
-            <span className="text-sm font-medium text-purple-600">₹{walletBalance.toLocaleString()}</span>
+          <div className="relative">
+            <Link href="/client/wallet">
+              <button className="p-2 hover:bg-gray-100 rounded-lg relative">
+                <Wallet className="w-6 h-6" />
+              </button>
+            </Link>
           </div>
-
+          
           <div className="relative">
             <button
               className="p-2 hover:bg-gray-100 rounded-lg relative"
@@ -66,16 +66,17 @@ export default function Header() {
             >
               <Bell className="w-6 h-6" />
               {unreadCount > 0 && (
-                <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-medium min-w-[20px]">
                   {unreadCount}
                 </span>
               )}
             </button>
           </div>
+        </div>
 
-          {/* Notifications Dropdown */}
-          {isNotificationsOpen && (
-            <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200">
+        {/* Notifications Dropdown */}
+        {isNotificationsOpen && (
+          <div className="absolute right-0 mt-2 w-80 sm:w-96 max-w-[calc(100vw-2rem)] bg-white rounded-lg shadow-lg border border-gray-200">
               <div className="p-4 border-b">
                 <div className="flex items-center justify-between">
                   <h3 className="font-semibold">Notifications</h3>
@@ -109,7 +110,6 @@ export default function Header() {
               </div>
             </div>
           )}
-        </div>
 
         {/* Menu Sidebar */}
         {isMenuOpen && (

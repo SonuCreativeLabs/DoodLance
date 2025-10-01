@@ -3,29 +3,80 @@
 import React, { useRef, useEffect, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { professionals } from './mockData';
 
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN!;
 
-export default function MapView() {
+interface MapViewProps {
+  professionals?: any[];
+}
+
+export default function MapView({ professionals: propProfessionals }: MapViewProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
 
+  // Function to calculate center of professionals
+  const calculateCenter = (professionals: any[]) => {
+    if (!professionals || professionals.length === 0) {
+      return [80.2707, 13.0827]; // Default Chennai center
+    }
+
+    if (professionals.length === 1) {
+      return professionals[0].coords || [80.2707, 13.0827];
+    }
+
+    // Calculate average coordinates
+    const totalCoords = professionals.reduce(
+      (acc, pro) => {
+        const coords = pro.coords || [80.2707, 13.0827];
+        return [acc[0] + coords[0], acc[1] + coords[1]];
+      },
+      [0, 0]
+    );
+
+    return [
+      totalCoords[0] / professionals.length,
+      totalCoords[1] / professionals.length
+    ];
+  };
+
+  // Function to calculate appropriate zoom level
+  const calculateZoom = (professionals: any[]) => {
+    if (!professionals || professionals.length === 0) return 11;
+    if (professionals.length === 1) return 14; // Zoom in closer for single professional
+    if (professionals.length <= 3) return 12;
+    if (professionals.length <= 6) return 11;
+    return 10; // Zoom out for many professionals
+  };
+
+  // Re-render map when professionals change
   useEffect(() => {
     if (!mapContainer.current) return;
+
+    // Import default professionals as fallback
+    const { professionals: defaultProfessionals } = require('./mockData');
+    const professionals = propProfessionals || defaultProfessionals;
+
+    if (!professionals) return;
+
+    // Calculate center and zoom for filtered professionals
+    const center = calculateCenter(professionals);
+    const zoom = calculateZoom(professionals);
 
     // Initialize map
     const map = new mapboxgl.Map({
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/streets-v12',
-      center: [80.2707, 13.0827],
-      zoom: 11,
+      center: center as [number, number],
+      zoom: zoom,
       minZoom: 3,
       maxZoom: 18,
       dragRotate: true,
       pitchWithRotate: true,
       touchZoomRotate: true
     });
+
+    // Store map reference for cleanup
+    (mapContainer.current as any)._mapboxMap = map;
 
     // Add navigation controls with all features enabled
     const nav = new mapboxgl.NavigationControl({
@@ -68,7 +119,7 @@ export default function MapView() {
         type: 'geojson',
         data: {
           type: 'FeatureCollection',
-          features: professionals.map(pro => ({
+          features: professionals.map((pro: any) => ({
             type: 'Feature',
             geometry: {
               type: 'Point',
@@ -142,17 +193,26 @@ export default function MapView() {
     });
 
     // Add markers for each professional
-    professionals.forEach((pro) => {
+    professionals.forEach((pro: any) => {
       // Create a popup with more information
       const popup = new mapboxgl.Popup({
-        offset: [0, -8],
-        closeButton: true,
+        offset: [0, -2], // Moved 5% down (from -5 to -2)
+        closeButton: false, // Disable default close button
         closeOnClick: false,
         maxWidth: '340px',
         className: 'custom-popup animate-popup',
         anchor: 'bottom'
       }).setHTML(`
         <div class="bg-[#111111] shadow-lg rounded-xl p-4 border border-white/10 relative backdrop-blur-xl bg-black/80 before:absolute before:inset-0 before:bg-gradient-to-b before:from-purple-500/10 before:to-transparent before:rounded-xl before:pointer-events-none">
+          <!-- Custom Close Button -->
+          <button 
+            class="custom-close-btn absolute top-3 right-3 z-10 w-7 h-7 bg-black/30 hover:bg-white/20 border border-white/10 rounded-full flex items-center justify-center text-white/80 hover:text-white transition-all duration-200 hover:scale-110"
+            onclick="this.closest('.mapboxgl-popup').remove()"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
           <div class="flex items-start gap-4">
             <div class="relative flex flex-col items-center w-20">
               <div class="relative mt-2">
@@ -271,18 +331,65 @@ export default function MapView() {
       }
 
       .mapboxgl-ctrl-group {
-        background: white !important;
-        border: 1px solid rgba(0, 0, 0, 0.1) !important;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+        background: transparent !important; /* Remove background layer */
+        border: none !important; /* Remove border */
+        box-shadow: none !important; /* Remove shadow */
+        border-radius: 6px !important;
+        transform: scale(1.01) !important; /* Minimal 1% scaling */
+        transform-origin: center !important;
       }
 
       .mapboxgl-ctrl-group button {
-        background-color: white !important;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.1) !important;
+        background-color: white !important; /* White button background */
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important; /* Very subtle border */
+        width: 24px !important; /* Further reduced size */
+        height: 24px !important; /* Further reduced size */
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border-radius: 4px !important;
+      }
+
+      /* More aggressive icon sizing for all map controls */
+      .mapboxgl-ctrl button svg,
+      .mapboxgl-ctrl-group button svg,
+      .mapboxgl-ctrl-zoom-in .mapboxgl-ctrl-icon,
+      .mapboxgl-ctrl-zoom-out .mapboxgl-ctrl-icon,
+      .mapboxgl-ctrl-compass .mapboxgl-ctrl-icon,
+      .mapboxgl-ctrl-geolocate .mapboxgl-ctrl-icon {
+        width: 16px !important; /* Adjusted for smaller button size */
+        height: 16px !important; /* Adjusted for smaller button size */
+        font-size: 16px !important; /* For icon fonts */
+        fill: #374151 !important;
+        color: #374151 !important;
+        background-size: 16px 16px !important;
+      }
+
+      /* Specific targeting for different icon types */
+      .mapboxgl-ctrl-zoom-in svg path,
+      .mapboxgl-ctrl-zoom-out svg path,
+      .mapboxgl-ctrl-compass svg path,
+      .mapboxgl-ctrl-geolocate svg path {
+        fill: #374151 !important;
+        stroke: #374151 !important;
+        stroke-width: 2 !important;
+      }
+
+      /* Force size on the icon containers themselves */
+      .mapboxgl-ctrl-icon {
+        width: 16px !important;
+        height: 16px !important;
+        font-size: 16px !important;
+        line-height: 16px !important;
       }
 
       .mapboxgl-ctrl-group button:hover {
-        background-color: #f8f8f8 !important;
+        background-color: #f8f8f8 !important; /* Light gray hover */
+        transform: scale(1.02) !important; /* Slight hover effect */
+      }
+
+      .mapboxgl-ctrl-group button:last-child {
+        border-bottom: none !important;
       }
 
       .mapboxgl-ctrl-scale {
@@ -322,7 +429,7 @@ export default function MapView() {
         transform-origin: 50% calc(100% - 8px);
         filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.3));
       }
-      
+
       .custom-popup.animate-popup {
         animation: none;
         opacity: 0;
@@ -343,36 +450,13 @@ export default function MapView() {
         border: none;
         transform-origin: bottom center;
         transition: transform 0.3s ease-out;
+        margin-top: 5px; /* Spacing from marker */
       }
 
       .mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip {
         transition: transform 0.2s ease-out;
         border-top-color: rgba(0, 0, 0, 0.8);
         filter: drop-shadow(0 -1px 2px rgba(0, 0, 0, 0.1));
-      }
-      
-      .custom-popup .mapboxgl-popup-close-button {
-        padding: 8px;
-        right: 12px;
-        top: 12px;
-        color: rgba(255, 255, 255, 0.8);
-        font-size: 24px;
-        font-weight: 300;
-        border-radius: 50%;
-        width: 36px;
-        height: 36px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.2s;
-        z-index: 1;
-        line-height: 0;
-      }
-      
-      .custom-popup .mapboxgl-popup-close-button:hover {
-        background-color: rgba(255, 255, 255, 0.15);
-        color: rgba(255, 255, 255, 1);
-        transform: scale(1.1);
       }
     `;
     document.head.appendChild(style);
@@ -381,7 +465,7 @@ export default function MapView() {
     const moveToMarker = (coords: [number, number]) => {
       map.easeTo({
         center: coords,
-        offset: [0, -80],
+        offset: [0, -15], // Adjusted for new popup position (from -20 to -15)
         duration: 500,
         easing: (t) => {
           return t * (2 - t);
@@ -394,7 +478,7 @@ export default function MapView() {
       document.head.removeChild(style);
       document.head.removeChild(mapStyle);
     };
-  }, []);
+  }, [propProfessionals]); // Re-run when professionals prop changes
 
   return (
     <div

@@ -1,8 +1,8 @@
-# DoodLance - Hyper-local Service Marketplace
+# DoodLance - Cricket Services Marketplace
 
-DoodLance is a hybrid on-demand service marketplace that connects clients with local service providers across various niches. 
+DoodLance is a specialized on-demand marketplace that connects cricket enthusiasts, players, coaches, and teams with professional cricket service providers across Chennai.
 
-A Progressive Web App (PWA) that connects local service providers with clients, built with Next.js.
+A Progressive Web App (PWA) that connects cricket service providers with clients, built with Next.js.
 
 ## Features
 
@@ -13,89 +13,76 @@ A Progressive Web App (PWA) that connects local service providers with clients, 
 - Real-time notifications
 - Modern, mobile-first UI
 - Responsive layout
+- Cricket-specific job matching
 
-## Getting Started
+## Core Vision
 
-Core Vision
-A hyper-local platform connecting individuals and service providers for offline tasks (plumbing, tutoring, pet care, etc.) and skill monetization. Combines the flexibility of Upwork with the trust of Urban Company, focusing on neighborhood-based services.
+A hyper-local cricket services platform connecting cricket players, coaches, teams, and enthusiasts with specialized cricket service providers. Combines the flexibility of service marketplaces with cricket-specific expertise, focusing on Chennai's cricket ecosystem.
 
-Key Features
-1. Dual Hiring Models
-Post a Job: Clients describe tasks (e.g., "Need a dog walker in Velachery, ₹500/day").
+## Key Features
 
-Direct Hire: Browse freelancer profiles (skills, rates, reviews) and hire instantly.
+1. **Cricket-Focused Services**
+   - Playing Services: Bowlers, Batsmen, Sidearm Specialists
+   - Coaching & Training: Cricket Coaches, Conditioning Trainers
+   - Support Staff: Analysts, Physios, Scorers, Umpires
+   - Media & Content: Cricket Photography, Content Creation
+   - Ground Services: Groundsmen, Equipment Maintenance
 
-2. AI-Powered Matching
-Auto-Categorization: Instantly tags jobs into categories (e.g., "Need a diet cook" → Home Services).
+2. **Dual Hiring Models**
+   Post a Cricket Job: Clients describe cricket-specific needs (e.g., "Need a sidearm specialist for batting practice in Chepauk, ₹800/session").
+   
+   Direct Hire: Browse cricket freelancer profiles (skills, rates, reviews) and hire instantly.
 
-Rate Suggestions: Recommends fair pricing based on local demand (e.g., "Plumbers in your area charge ₹300–500/hr").
+3. **AI-Powered Cricket Matching**
+   Auto-Categorization: Instantly tags cricket jobs into categories (e.g., "Need batting coach" → Coaching & Training).
+   
+   Rate Suggestions: Recommends fair pricing based on local cricket market rates.
 
-3. Hyper-Local Discovery
-Map Integration: Shows jobs/freelancers within 5km.
+4. **Hyper-Local Cricket Discovery**
+   Map Integration: Shows cricket jobs/freelancers within Chennai.
+   
+   Cricket Venue Focus: Prioritizes jobs near cricket grounds and venues.
 
-Neighborhood Feed: Prioritizes local gigs over distant ones.
+5. **Cricket Professional Roles**
+   Freelancers: Create cricket-specific profiles with skills (batting, bowling, coaching), certifications, playing history, and cricket portfolios.
+   
+   Clients: Post cricket jobs, browse cricket professionals, and manage cricket services.
 
-4. User Roles
-Freelancers: Create profiles with skills, rates, availability, and portfolios (e.g., photos of past work).
+6. **Cricket Trust & Safety**
+   Verified Cricket Profiles: Cricket certifications, playing history, and cricket-specific reviews.
+   
+   Cricket-Focused Chat: Communicate about cricket-specific requirements before hiring.
 
-Clients: Post jobs, browse freelancers, and manage hires.
+## User Flow & UI Design
 
-5. Trust & Safety
-Verified Profiles: ID checks, skill certifications, and reviews.
+1. **Splash Screen**
+   Animated cricket-themed loading with app logo.
 
-In-App Chat: Communicate securely before hiring.
+2. **Auth Screen**
+   Phone/email login with OTP verification.
+   Social login (Google/Apple) for quick access.
 
-Real-Time Notifications: Alerts for new jobs, applications, and messages (via Supabase).
+3. **Cricket Home Screen**
+   Hero Card: Cricket-focused banner with app motto (e.g., "Practice like a pro, with a pro").
+   
+   Search Bar: Find cricket services with cricket-specific autocomplete suggestions.
+   
+   Dynamic Cricket Feed: Cricket job cards and cricket freelancer profiles.
 
-6. Responsive PWA Design
-Mobile-First UI: Works seamlessly on all devices.
+4. **Cricket Navigation**
+   Top Header: Cricket-focused menu with notifications.
+   
+   Bottom Bar: Home | Cricket Feed | Mode Switch | Cricket Profile
 
-Offline Mode: Access recent job listings without internet.
+5. **Cricket Freelancer Mode**
+   Dashboard: Manage cricket applications, earnings from cricket services, and cricket availability.
+   
+   Cricket Portfolio: Showcase cricket coaching sessions, playing highlights, cricket certifications.
 
-Add to Home Screen: Install as a native-like app (iOS/Android).
-
-User Flow & UI Design
-1. Splash Screen
-Animated loading bar with app logo.
-
-2. Auth Screen
-Phone/email login with OTP verification.
-
-Social login (Google/Apple) for quick access.
-
-3. Home Screen
-Hero Card: Stylish banner with app motto (e.g., "Turn Skills into Earnings").
-
-Search Bar: Find jobs/skills with autocomplete suggestions.
-
-Dynamic Feed:
-
-Jobs: Cards with title, budget, location, and "Apply" button.
-
-Freelancers: Profile cards with ratings, skills, and "Hire Now" button.
-
-4. Navigation
-Top Header:
-
-Hamburger Menu (Left): Access settings, help, and terms.
-
-Notifications Bell (Right): Real-time alerts (e.g., "3 new applications").
-
-Bottom Bar:
-
-Home | Search | Mode Switch | Profile
-
-Mode Switch Button: Toggle between client/freelancer views (inspired by Zoomcar’s host/user toggle).
-
-5. Freelancer Mode
-Dashboard: Manage applications, earnings, and availability.
-
-Portfolio Upload: Showcase work samples (e.g., before/after plumbing photos).
-
-6. Client Mode
-Job Posting: Simple form with AI-assisted suggestions.
-
-Hire History: Track ongoing/completed jobs.
+6. **Cricket Client Mode**
+   Cricket Job Posting: Specialized form for cricket services with cricket-specific suggestions.
+   
+   Cricket Service History: Track cricket coaching sessions, practice bookings, tournament services.
 
 
 ## Tech Stack

@@ -134,7 +134,7 @@ export default function ProposalDetailsPage() {
   useEffect(() => {
     const fetchProposal = () => {
       setTimeout(() => {
-        const foundProposal = mockApplications.find(app => app.id === id) || null;
+        const foundProposal = mockApplications.find(app => app["#"] === id) || null;
         setProposal(foundProposal);
         setIsLoading(false);
       }, 300);

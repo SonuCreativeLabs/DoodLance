@@ -357,7 +357,7 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
                       <div className="space-y-4 w-full">
                         {filteredApplications.map((application) => (
                           <ApplicationCard
-                            key={application.id}
+                            key={application["#"]}
                             application={application}
                             index={filteredApplications.indexOf(application)}
                             onViewDetails={() => onViewDetails(application)}
