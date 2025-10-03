@@ -1,8 +1,7 @@
 'use client';
 
-import { X, MessageCircle, Phone, MapPin, CalendarIcon, ClockIcon, IndianRupee, ArrowLeft, AlertCircle, User, UserCheck, Star, ChevronDown, ChevronUp, CheckCircle, ThumbsUp, Award, Heart, Zap, MessageSquare } from 'lucide-react';
+import { X, MessageCircle, Phone, MapPin, CalendarIcon, ClockIcon, IndianRupee, ArrowLeft, AlertCircle, User, UserCheck, Star, ChevronDown, ChevronUp, CheckCircle, MessageSquare } from 'lucide-react';
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 
@@ -64,49 +63,14 @@ interface CollapsibleSectionProps {
   className?: string;
 }
 
-const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({ 
-  title, 
-  children, 
-  defaultOpen = false,
-  className = ''
-}) => {
-  const [isOpen, setIsOpen] = useState(defaultOpen);
-  
-  return (
-    <div className={`bg-white/5 rounded-lg border border-white/10 overflow-hidden ${className}`}>
-      <button 
-        className="w-full p-4 text-left flex items-center justify-between hover:bg-white/5 transition-colors"
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        <span className="font-medium text-white">{title}</span>
-        {isOpen ? <ChevronUp className="w-5 h-5 text-white/60" /> : <ChevronDown className="w-5 h-5 text-white/60" />}
-      </button>
-      {isOpen && (
-        <div className="p-4 pt-0">
-          {children}
-        </div>
-      )}
-    </div>
-  );
-};
 
 export function JobDetailsModal({ job }: JobDetailsModalProps) {
   const router = useRouter();
   const [showRatingForm, setShowRatingForm] = useState(false);
-  const [rating, setRating] = useState(0);
-  const [feedback, setFeedback] = useState('');
-  const [hasRated, setHasRated] = useState(false);
   
   const handleBack = (e: React.MouseEvent) => {
     e.stopPropagation();
     router.back();
-  };
-  
-  const handleSubmitRating = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log('Rating submitted:', { rating, feedback });
-    setHasRated(true);
-    setShowRatingForm(false);
   };
 
   // Handle button actions
@@ -482,7 +446,7 @@ export function JobDetailsModal({ job }: JobDetailsModalProps) {
                           <span className="ml-2 text-sm text-white/70">{job.clientRating?.stars?.toFixed(1) || '0.0'}</span>
                         </div>
                         {job.clientRating.feedback && (
-                          <p className="mt-2 text-sm text-white/70">"{job.clientRating.feedback}"</p>
+                          <p className="mt-2 text-sm text-white/70">&quot;{job.clientRating.feedback}&quot;</p>
                         )}
                         <p className="mt-1 text-xs text-white/50">
                           Rated on {new Date(job.clientRating.date).toLocaleDateString('en-US', {
@@ -542,7 +506,7 @@ export function JobDetailsModal({ job }: JobDetailsModalProps) {
                     
                     {job.cancellationDetails.notes && (
                       <div className="p-3 -mx-1 bg-black/20 rounded-md border border-white/5">
-                        <p className="text-sm leading-relaxed text-white/80">{job.cancellationDetails.notes}</p>
+                        <p className="text-sm leading-relaxed text-white/80">&quot;{job.cancellationDetails.notes}&quot;</p>
                       </div>
                     )}
                     

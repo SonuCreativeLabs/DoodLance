@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Camera, RotateCw, CheckCircle, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 
 interface SelfieCaptureProps {
   onCapture: (imageData: string) => void;
@@ -51,7 +50,7 @@ export function SelfieCapture({
       let mediaStream;
       try {
         mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
-      } catch (exactError) {
+      } catch {
         console.log('Exact constraints failed, trying with more lenient constraints');
         // Try with more lenient constraints
         try {
@@ -183,12 +182,9 @@ export function SelfieCapture({
   if (cameraError) {
     // Check if we're in a browser environment
     const isInApp = typeof window !== 'undefined' && 
-                   (// @ts-ignore - iOS Safari
-                    (window.navigator as any).standalone || 
+                   ((window.navigator as { standalone?: boolean }).standalone || 
                     window.matchMedia('(display-mode: standalone)').matches ||
-                    document.referrer.includes('android-app://') ||
-                    // @ts-ignore - For newer Android Chrome
-                    (window.navigator as any).standalone);
+                    document.referrer.includes('android-app://'));
 
     // Determine the appropriate message based on context
     const getErrorMessage = () => {
@@ -332,7 +328,7 @@ export function SelfieCapture({
                   </div>
                   
                   <p className="text-sm text-white/70 mb-2">Center your face in the frame</p>
-                  <p className="text-xs text-white/40">We'll verify it matches your ID</p>
+                  <p className="text-xs text-white/40">We&apos;ll verify it matches your ID</p>
                 </div>
               </div>
             </>

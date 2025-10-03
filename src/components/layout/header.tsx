@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { Menu, Bell, X, Wallet } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 
 const notifications = [

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, Paperclip, Send, Phone } from 'lucide-react';
+import { ArrowLeft, Paperclip, Phone } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { useNavbar } from '@/contexts/NavbarContext';
 
@@ -30,7 +30,6 @@ interface ChatViewProps {
 
 
 export function ChatView({ 
-  chatId, 
   recipientName, 
   recipientAvatar, 
   recipientJobTitle, 

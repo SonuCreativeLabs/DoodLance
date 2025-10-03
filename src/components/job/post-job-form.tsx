@@ -1,12 +1,11 @@
 "use client"
 
-import { useState, ChangeEvent } from 'react'
+import { useState } from 'react'
 import { MapPin, DollarSign, Calendar, Clock, Tag, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
-import { motion } from 'framer-motion'
 import {
   Select,
   SelectContent,
@@ -53,9 +52,6 @@ export default function PostJobForm() {
     }
   }
 
-  const handleCategoryChange = (e: ChangeEvent<HTMLSelectElement>) => {
-    setSelectedCategory(e.target.value as ServiceCategory)
-  }
 
   return (
     <div className="space-y-8">

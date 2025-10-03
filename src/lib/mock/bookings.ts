@@ -1,5 +1,3 @@
-import { Star, Clock, MapPin, Calendar } from 'lucide-react'
-
 export interface Booking {
   "#": string
   service: string

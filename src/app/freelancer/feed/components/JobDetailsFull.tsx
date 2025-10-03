@@ -1,17 +1,14 @@
-'use client';
-
 import React, { useState } from 'react';
 import { 
   ArrowLeft, 
   Clock, 
-  Calendar, 
-  Star, 
-  MapPin, 
-  Briefcase, 
-  User, 
-  CheckCircle, 
-  Clock as ClockIcon, 
-  Check 
+  Calendar,
+  MapPin,
+  DollarSign,
+  User,
+  Star,
+  Briefcase,
+  CheckCircle
 } from 'lucide-react';
 import { Job } from '../types';
 

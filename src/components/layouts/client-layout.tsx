@@ -1,9 +1,9 @@
 "use client"
 
-import React, { ReactNode, useEffect } from "react"
+import React, { ReactNode } from "react"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
-import { Home, Briefcase, PlusCircle, MessageSquare } from "lucide-react"
+import { Home } from "lucide-react"
 import { useRouter, usePathname } from "next/navigation"
 import { ChatViewProvider } from "@/contexts/ChatViewContext"
 import { useNavbar } from "@/contexts/NavbarContext"

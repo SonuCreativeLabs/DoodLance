@@ -1,4 +1,4 @@
-import { Freelancer } from './types';
+// import { Freelancer } from './types'; // Commented out - unused
 
 interface Professional {
   id: number;

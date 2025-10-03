@@ -14,7 +14,7 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-[#0a0a0a] text-white p-4">
         <h1 className="text-2xl font-bold mb-4">Job Not Found</h1>
-        <p className="text-white/60 mb-6">The job you're looking for doesn't exist or has been removed.</p>
+        <p className="text-white/60 mb-6">The job you&apos;re looking for doesn&apos;t exist or has been removed.</p>
         <button
           onClick={() => router.back()}
           className="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors"
@@ -56,10 +56,6 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
         'https://randomuser.me/api/portraits/men/22.jpg'
       ].slice(0, Math.floor(Math.random() * 4) + 1), // 1-5 random avatars
     },
-  };
-
-  const handleClose = () => {
-    router.back();
   };
 
   return <JobDetailsModal job={jobWithDefaults} />;

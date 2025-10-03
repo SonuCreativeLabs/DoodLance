@@ -1,14 +1,13 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { format, parseISO } from 'date-fns';
+import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
-import { CalendarIcon, MapPin, ClockIcon, MessageCircle, User, Clock } from 'lucide-react';
+import { CalendarIcon, MapPin, ClockIcon, MessageCircle, User } from 'lucide-react';
 import { IndianRupee } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 import { Job } from './types';
-import { getStatusStyles, formatTimeRemaining, formatTime12Hour } from './utils';
-import { generateJobId } from '@/lib/job-utils';
+import { getStatusStyles, formatTime12Hour } from './utils';
 
 interface JobCardProps {
   job: Job;

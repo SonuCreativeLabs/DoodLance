@@ -3,16 +3,14 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useRouter } from 'next/navigation';
-import { Search, ChevronLeft, ChevronRight, X, IndianRupee } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 
 // Import components, types, utils, and mock data from our modular files
 import { JobCard, ApplicationCard } from './index';
-import { Job, Application } from './types';
-import { mockUpcomingJobs, mockApplications, mockEarnings } from './mock-data';
+import { Application } from './types';
+import { mockUpcomingJobs, mockApplications } from './mock-data';
 
 interface JobDashboardProps {
   searchParams?: {
@@ -178,41 +176,18 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
     const params = new URLSearchParams();
     params.set('tab', activeTab);
     params.set('status', newFilter);
-    router.push(`/freelancer/jobs?${params.toString()}`);
     
     // Update state
     setStatusFilter(newFilter);
-  };
-
-  const renderRating = (rating: number) => {
-    return (
-      <div className="inline-flex items-center">
-        {[1, 2, 3, 4, 5].map(star => (
-          <svg 
-            key={star}
-            className={`w-4 h-4 ${star <= Math.round(rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
-            viewBox="0 0 24 24"
-            fill="currentColor"
-          >
-            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-          </svg>
-        ))}
-        <span className="ml-1 text-sm text-gray-400">{rating.toFixed(1)}</span>
-      </div>
-    );
   };
 
   const onViewDetails = (application: Application) => {
     console.log('View details of application:', application);
   };
 
-  const onMessageClient = (clientId: string) => {
-    console.log('Message client with ID:', clientId);
-  };
-
   // Prevent wheel events on header from scrolling the page
   useEffect(() => {
-    const handleWheel = (e: Event) => {
+    const handleWheel = (e: WheelEvent) => {
       const target = e.target as HTMLElement;
       if (!target.closest('.scrollable-content')) {
         e.preventDefault();

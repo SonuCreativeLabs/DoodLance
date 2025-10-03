@@ -8,6 +8,7 @@ import { LayoutProvider } from "@/contexts/LayoutContext";
 import { DateRangeProvider } from "@/contexts/DateRangeContext";
 import { useEffect } from "react";
 import { NavbarProvider } from "@/contexts/NavbarContext";
+import { AuthKitProvider } from "@workos-inc/authkit-nextjs/components";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -37,19 +38,21 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </head>
       <body className={`${inter.className} antialiased`} suppressHydrationWarning>
+        <AuthKitProvider>
           <RoleProvider>
             <ModalProvider>
               <LayoutProvider>
                 <DateRangeProvider>
-                <main className="flex flex-col min-h-screen">
-                  <NavbarProvider>
-                    {children}
-                  </NavbarProvider>
-                </main>
+                  <main className="flex flex-col min-h-screen">
+                    <NavbarProvider>
+                      {children}
+                    </NavbarProvider>
+                  </main>
                 </DateRangeProvider>
               </LayoutProvider>
             </ModalProvider>
           </RoleProvider>
+        </AuthKitProvider>
       </body>
     </html>
   );

@@ -2,9 +2,8 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { format, addMonths, isSameDay, isWithinInterval, isToday } from 'date-fns';
-import { ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 
 type ModalMode = 'select' | 'pause';
 
@@ -20,11 +19,6 @@ interface DateRangeModalProps {
   mode?: ModalMode;
 }
 
-interface DayInfo {
-  date: Date;
-  day: number;
-  isCurrentMonth: boolean;
-}
 
 export function DateRangeModal({ 
   isOpen, 

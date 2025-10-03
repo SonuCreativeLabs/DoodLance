@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Paperclip, ArrowLeft, MoreVertical, Phone, Video } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Send, Paperclip, ArrowLeft, Phone, Video } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface Message {

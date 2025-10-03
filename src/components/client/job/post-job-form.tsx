@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Wand2, Tag, IndianRupee, MapPin, Clock, Calendar } from "lucide-react";
+import { Wand2, Tag, IndianRupee, MapPin, Clock } from "lucide-react";
 
 interface JobFormData {
   title: string;

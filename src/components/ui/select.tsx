@@ -15,7 +15,8 @@ const SelectValue = SelectPrimitive.Value
 const SelectTrigger = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Trigger>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger>
->(({ className, children, ...props }, ref) => (
+>(function SelectTrigger({ className, children, ...props }, ref) {
+  return (
   <SelectPrimitive.Trigger
     ref={ref}
     className={cn(
@@ -29,7 +30,8 @@ const SelectTrigger = React.forwardRef<
       <ChevronDown className="h-4 w-4 opacity-50" />
     </SelectPrimitive.Icon>
   </SelectPrimitive.Trigger>
-))
+  );
+});
 Object.defineProperty(SelectTrigger, "displayName", {
   value: "SelectTrigger",
   configurable: true,
@@ -38,7 +40,8 @@ Object.defineProperty(SelectTrigger, "displayName", {
 const SelectScrollUpButton = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.ScrollUpButton>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.ScrollUpButton>
->(({ className, ...props }, ref) => (
+>(function SelectScrollUpButton({ className, ...props }, ref) {
+  return (
   <SelectPrimitive.ScrollUpButton
     ref={ref}
     className={cn(
@@ -49,7 +52,8 @@ const SelectScrollUpButton = React.forwardRef<
   >
     <ChevronUp className="h-4 w-4" />
   </SelectPrimitive.ScrollUpButton>
-))
+  );
+});
 Object.defineProperty(SelectScrollUpButton, "displayName", {
   value: "SelectScrollUpButton",
   configurable: true,
@@ -58,7 +62,8 @@ Object.defineProperty(SelectScrollUpButton, "displayName", {
 const SelectScrollDownButton = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.ScrollDownButton>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.ScrollDownButton>
->(({ className, ...props }, ref) => (
+>(function SelectScrollDownButton({ className, ...props }, ref) {
+  return (
   <SelectPrimitive.ScrollDownButton
     ref={ref}
     className={cn(
@@ -69,7 +74,8 @@ const SelectScrollDownButton = React.forwardRef<
   >
     <ChevronDown className="h-4 w-4" />
   </SelectPrimitive.ScrollDownButton>
-))
+  );
+});
 Object.defineProperty(SelectScrollDownButton, "displayName", {
   value: "SelectScrollDownButton",
   configurable: true,

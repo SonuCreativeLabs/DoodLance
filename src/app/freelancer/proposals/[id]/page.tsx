@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { 
   X, 
@@ -22,84 +22,13 @@ import {
   CheckCircle,
   XCircle,
   Phone,
-  FileUp,
-  FileDown,
-  FileCheck2,
-  FileX2,
-  FileWarning,
-  FileSearch,
-  FileClock,
-  FileBarChart2,
-  FileInput,
-  FileOutput,
-  FileSpreadsheet,
-  FileArchive,
-  FileAudio2,
-  FileVideo2,
-  FileImage,
-  FileCode2,
-  FileJson,
-  FileTextIcon,
-  FileType2,
-  FileSpreadsheetIcon,
-  FileArchiveIcon,
-  FileAudioIcon,
-  FileVideoIcon,
-  FileImageIcon,
-  FileCodeIcon,
-  FileJsonIcon,
   Eye,
   UploadCloud,
   PlusCircle
 } from 'lucide-react';
-import { Application, ApplicationStatus } from '@/components/freelancer/jobs/types';
+import { Application } from '@/components/freelancer/jobs/types';
 import { mockApplications, mySkills } from '@/components/freelancer/jobs/mock-data';
 
-interface CollapsibleSectionProps {
-  title: string;
-  children: React.ReactNode;
-  defaultOpen?: boolean;
-  className?: string;
-}
-
-interface Proposal {
-  coverLetter: string;
-  proposedRate: number;
-  estimatedDays: number;
-  skills: string[];
-  attachments: string[];
-}
-
-interface Attachment {
-  name?: string;
-  url: string;
-}
-
-const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({ 
-  title, 
-  children, 
-  defaultOpen = false,
-  className = ''
-}) => {
-  const [isOpen, setIsOpen] = useState(defaultOpen);
-  
-  return (
-    <div className={`bg-[#111111] rounded-lg border border-gray-700 overflow-hidden ${className}`}>
-      <button 
-        className="w-full p-4 text-left flex items-center justify-between hover:bg-white/5 transition-colors"
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        <span className="font-medium text-white">{title}</span>
-        {isOpen ? <ChevronUp className="w-5 h-5 text-white/60" /> : <ChevronDown className="w-5 h-5 text-white/60" />}
-      </button>
-      {isOpen && (
-        <div className="p-4 pt-0">
-          {children}
-        </div>
-      )}
-    </div>
-  );
-};
 
 export default function ProposalDetailsPage() {
   const router = useRouter();
@@ -107,29 +36,6 @@ export default function ProposalDetailsPage() {
   const [proposal, setProposal] = useState<Application | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showWithdrawConfirm, setShowWithdrawConfirm] = useState(false);
-  const [showRatingForm, setShowRatingForm] = useState(false);
-  const [rating, setRating] = useState(0);
-  const [feedback, setFeedback] = useState('');
-  const [hasRated, setHasRated] = useState(false);
-  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
-  const [isUploading, setIsUploading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (files && files.length > 0) {
-      const newFiles = Array.from(files);
-      setUploadedFiles(prev => [...prev, ...newFiles]);
-    }
-  };
-
-  const handleRemoveFile = (index: number) => {
-    setUploadedFiles(prev => prev.filter((_, i) => i !== index));
-  };
-
-  const handleUploadClick = () => {
-    fileInputRef.current?.click();
-  };
 
   useEffect(() => {
     const fetchProposal = () => {
@@ -153,14 +59,6 @@ export default function ProposalDetailsPage() {
     setShowWithdrawConfirm(false);
   };
 
-  const handleSubmitRating = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Handle rating submission
-    console.log('Rating submitted:', { rating, feedback });
-    setHasRated(true);
-    setShowRatingForm(false);
-  };
-
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[#1e1e1e] text-white">
@@ -177,7 +75,7 @@ export default function ProposalDetailsPage() {
         <div className="text-center">
           <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-white mb-2">Proposal Not Found</h1>
-          <p className="text-white/60 mb-6">The proposal you're looking for doesn't exist or has been removed.</p>
+          <p className="text-white/60 mb-6">The proposal you&apos;re looking for doesn&apos;t exist or has been removed.</p>
           <Button
             onClick={() => router.push('/freelancer/proposals')}
             className="bg-purple-600 hover:bg-purple-700"

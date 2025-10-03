@@ -2,7 +2,6 @@
 
 import { Bell, Wallet, Home, Inbox, Briefcase, User, Compass } from 'lucide-react'
 import { useEffect, useState } from 'react';
-import { createPortal } from 'react-dom';
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { ChatViewProvider, useChatView } from '@/contexts/ChatViewContext';
@@ -72,13 +71,6 @@ function FreelancerLayoutInner({
     { href: '/freelancer/inbox', label: 'Inbox', icon: Inbox },
     { href: '/freelancer/profile', label: 'Profile', icon: User },
   ]
-
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-    return () => setMounted(false);
-  }, []);
 
   return (
     <div className="min-h-screen bg-[#111111] text-white relative">

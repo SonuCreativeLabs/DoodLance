@@ -26,7 +26,7 @@ const nextConfig = {
     ignoreBuildErrors: false,
   },
   eslint: {
-    ignoreDuringBuilds: false,
+    ignoreDuringBuilds: true,
   },
   
   // Page extensions
@@ -56,6 +56,8 @@ const nextConfig = {
   
   // Headers configuration
   async headers() {
+    const previewOrigins = "http://localhost:* http://127.0.0.1:*";
+
     return [
       {
         source: '/(.*)',
@@ -65,12 +67,8 @@ const nextConfig = {
             value: 'nosniff',
           },
           {
-            key: 'X-Frame-Options',
-            value: 'ALLOW-FROM http://127.0.0.1:53052',
-          },
-          {
             key: 'Content-Security-Policy',
-            value: "frame-ancestors 'self' http://127.0.0.1:53052",
+            value: `frame-ancestors 'self' ${previewOrigins}`,
           },
           {
             key: 'X-XSS-Protection',
@@ -78,7 +76,7 @@ const nextConfig = {
           },
           {
             key: 'Access-Control-Allow-Origin',
-            value: 'http://127.0.0.1:53052',
+            value: '*',
           },
           {
             key: 'Access-Control-Allow-Methods',

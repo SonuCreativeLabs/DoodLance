@@ -1,6 +1,6 @@
 "use client"
 
-import { motion } from 'framer-motion'
+// import { motion } from 'framer-motion' // Unused
 import ClientLayout from '@/components/layouts/client-layout'
 import { Search, ArrowLeft, Clock, Video, Dumbbell, Cpu, Package, Camera, Clapperboard, Brain, Briefcase, Sparkles } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'

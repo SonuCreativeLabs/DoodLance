@@ -3,12 +3,6 @@ import { ZeroShotClassificationOutput } from '@/types';
 
 const hf = new HfInference(process.env.NEXT_PUBLIC_HUGGINGFACE_API_KEY);
 
-interface ZeroShotResult {
-  labels: string[];
-  scores: number[];
-  sequence: string;
-}
-
 export async function categorizeJob(description: string): Promise<string> {
   try {
     const response = await hf.zeroShotClassification({

@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { format, formatDistanceToNow } from 'date-fns';
 import { Button } from '@/components/ui/button';
-import { MapPin, FileText, MessageCircle, Clock, CheckCircle, XCircle, ChevronDown, ChevronUp, User, Clock as ClockIcon, Phone } from 'lucide-react';
+import { MapPin, FileText, MessageCircle, Clock, CheckCircle, XCircle, User, Phone } from 'lucide-react';
 import { IndianRupee } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 import { Application, ApplicationStatus } from './types';
-import { getStatusStyles, formatTime12Hour } from './utils';
+import { getStatusStyles } from './utils';
 import { cn } from '@/lib/utils';
 
 interface ApplicationCardProps {
@@ -18,8 +17,8 @@ interface ApplicationCardProps {
 
 export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, index, onViewDetails }) => {
   const router = useRouter();
+  const [isExpanded] = useState(false);
   
-  const [isExpanded, setIsExpanded] = useState(false);
   const statusStyles = getStatusStyles(application.status as ApplicationStatus);
   const isPending = application.status === 'pending';
   const isAccepted = application.status === 'accepted';

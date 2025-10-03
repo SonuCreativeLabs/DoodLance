@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from 'react';
-import { ProfileStatsCard } from '@/components/freelancer/profile/ProfileStatsCard';
+// import { ProfileStatsCard } from '@/components/freelancer/profile/ProfileStatsCard' // Unused;
 import { MonthlyActivities } from '@/components/freelancer/profile/MonthlyActivities';
 import { TimeRangeSelector } from '@/components/freelancer/profile/TimeRangeSelector';
 import { ArrowLeft, Download } from 'lucide-react';
@@ -9,17 +9,17 @@ import Link from 'next/link';
 import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns';
 
 // StatCard component for the quick stats section
-function StatCard({ label, value, change, isPositive }: { label: string; value: string; change: string; isPositive: boolean }) {
-  return (
-    <div className="bg-[#111111] p-4 rounded-xl shadow-[0_4px_24px_0_rgba(60,60,60,0.30)]">
-      <p className="text-sm text-white/60 mb-1">{label}</p>
-      <div className="flex items-baseline justify-between">
-        <p className="text-lg font-semibold">{value}</p>
-        <span className={`text-xs font-medium ${isPositive ? 'text-green-400' : 'text-red-400'}`}>{change}</span>
-      </div>
-    </div>
-  );
-}
+// function StatCard({ label, value, change, isPositive }: { label: string; value: string; change: string; isPositive: boolean }) {
+//   return (
+//     <div className="bg-[#111111] p-4 rounded-xl shadow-[0_4px_24px_0_rgba(60,60,60,0.30)]">
+//       <p className="text-sm text-white/60 mb-1">{label}</p>
+//       <div className="flex items-baseline justify-between">
+//         <p className="text-lg font-semibold">{value}</p>
+//         <span className={`text-xs font-medium ${isPositive ? 'text-green-400' : 'text-red-400'}`}>{change}</span>
+//       </div>
+//     </div>
+//   );
+// }
 
 export default function PerformancePage() {
   const [dateRange, setDateRange] = useState({
@@ -60,7 +60,7 @@ export default function PerformancePage() {
     };
   };
 
-  const summaryData = getSummaryData();
+  // const summaryData = getSummaryData(); // Unused
 
   return (
     <div className="min-h-screen bg-[#0F0F0F] text-white flex flex-col">

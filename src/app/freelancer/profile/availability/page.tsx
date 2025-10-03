@@ -1,15 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useDateRange } from '@/contexts/DateRangeContext';
+import { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Clock, Calendar, Plus, X, Pencil, Check, ChevronLeft, ChevronRight, List, Info, Zap, MapPin, Navigation, Bell, Minus } from "lucide-react";
+import { ArrowLeft, Clock, Calendar, Plus, X, Pencil, Check, List, Zap, Navigation, Bell, Minus } from "lucide-react";
 import Link from "next/link";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { format, addDays, startOfWeek, isSameDay } from 'date-fns';
-import { DateRangeModal } from "@/components/calendar/DateRangeModal";
+import { format, addDays, startOfWeek } from 'date-fns';
 
 interface TimeSlot {
   id: string;
@@ -36,19 +33,10 @@ const initialDays: DayAvailability[] = [
   { id: 'sunday', name: 'Sunday', available: false, timeSlots: [] },
 ];
 
-const timezones = [
-  { value: 'ist', label: 'Indian Standard Time (IST) - GMT+5:30' },
-  { value: 'est', label: 'Eastern Time (ET) - GMT-5:00' },
-  { value: 'pst', label: 'Pacific Time (PT) - GMT-8:00' },
-  { value: 'gmt', label: 'Greenwich Mean Time (GMT) - GMT+0:00' },
-];
 
 export default function AvailabilityPage() {
   const [days, setDays] = useState<DayAvailability[]>(initialDays);
   const [currentWeekStart, setCurrentWeekStart] = useState(startOfWeek(new Date()));
-  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
-  const [isDateRangeModalOpen, setIsDateRangeModalOpen] = useState(false);
-  const { dateRange, updateDateRange } = useDateRange();
   
   // Booking notice state
   const [enableAdvanceNotice, setEnableAdvanceNotice] = useState(false);
@@ -58,24 +46,12 @@ export default function AvailabilityPage() {
   // Service radius state (in kilometers)
   const [serviceRadius, setServiceRadius] = useState(10);
   
-  const handleDateRangeSelect = (start: Date, end: Date) => {
-    updateDateRange(start, end);
+  // Date range for display
+  const dateRange = {
+    start: new Date(),
+    end: addDays(new Date(), 30)
   };
   
-  // Generate dates for the current week
-  const weekDays = Array.from({ length: 7 }).map((_, index) => ({
-    date: addDays(currentWeekStart, index),
-    dayName: format(addDays(currentWeekStart, index), 'EEE'),
-    dayNumber: format(addDays(currentWeekStart, index), 'd'),
-  }));
-  
-  const navigateWeek = (direction: 'prev' | 'next') => {
-    setCurrentWeekStart(prev => 
-      direction === 'prev' 
-        ? addDays(prev, -7) 
-        : addDays(prev, 7)
-    );
-  };
   
   const toggleDayAvailability = (dayId: string) => {
     setDays(days.map(day => 
@@ -185,7 +161,7 @@ export default function AvailabilityPage() {
           <Calendar className="h-5 w-5 text-purple-400 mr-2" />
           <h2 className="text-lg font-medium">Select Your Availability Window</h2>
         </div>
-        <p className="text-sm text-white/60 mb-4">Choose the dates you'll be available for bookings</p>
+        <p className="text-sm text-white/60 mb-4">Choose the dates you&apos;ll be available for bookings</p>
       </div>
       
       {/* Date Range Card */}
