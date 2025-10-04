@@ -4,6 +4,7 @@ import type { NextFetchEvent, NextRequest } from 'next/server';
 
 const authkit = authkitMiddleware({
   redirectUri: process.env.WORKOS_REDIRECT_URI,
+  cookiePassword: process.env.WORKOS_COOKIE_PASSWORD,
 });
 
 export function middleware(request: NextRequest, event: NextFetchEvent) {

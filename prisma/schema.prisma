@@ -1,15 +1,159 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
+  output   = "../node_modules/.prisma/client"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mongodb"
   url      = env("DATABASE_URL")
+}
+
+// User model for authentication
+model User {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  email     String   @unique
+  name      String?
+  avatar    String?
+  role      String   @default("client") // client, freelancer, admin
+  
+  // AuthKit integration
+  workosId  String?  @unique // WorkOS user ID
+  
+  // Profile information
+  phone     String?
+  location  String?
+  bio       String?
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  sessions  Session[]
+  bookings  Booking[] @relation("UserBookings")
+  services  Service[] @relation("UserServices")
+  
+  @@map("users")
+}
+
+// Session model for AuthKit sessions
+model Session {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  sessionToken  String   @unique
+  userId        String   @db.ObjectId
+  expires       DateTime
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("sessions")
+}
+
+// Service categories
+model Category {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String   @unique
+  description String?
+  icon        String?
+  isActive    Boolean  @default(true)
+  
+  services    Service[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("categories")
+}
+
+// Services offered by freelancers
+model Service {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  description String
+  price       Float
+  duration    Int      // in minutes
+  categoryId  String   @db.ObjectId
+  
+  // Provider information
+  providerId  String   @db.ObjectId
+  provider    User     @relation("UserServices", fields: [providerId], references: [id])
+  
+  // Service details
+  images      String[] // array of image URLs
+  tags        String[]
+  location    String?
+  
+  // Status
+  isActive    Boolean  @default(true)
+  rating      Float    @default(0)
+  reviewCount Int      @default(0)
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  category    Category @relation(fields: [categoryId], references: [id])
+  bookings    Booking[]
+  
+  @@map("services")
+}
+
+// Bookings/Orders
+model Booking {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  
+  // Client information
+  clientId    String   @db.ObjectId
+  client      User     @relation("UserBookings", fields: [clientId], references: [id])
+  
+  // Service information
+  serviceId   String   @db.ObjectId
+  service     Service  @relation(fields: [serviceId], references: [id])
+  
+  // Booking details
+  scheduledAt DateTime
+  duration    Int      // in minutes
+  totalPrice  Float
+  status      BookingStatus @default(PENDING)
+  
+  // Notes and special requests
+  notes       String?
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("bookings")
+}
+
+// Enums
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  REFUNDED
+}
+
+// Wallet/Transactions
+model Transaction {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @db.ObjectId
+  amount      Float
+  type        TransactionType
+  description String
+  reference   String?  // booking ID, etc.
+  
+  createdAt   DateTime @default(now())
+  
+  @@map("transactions")
+}
+
+enum TransactionType {
+  CREDIT    // money added to wallet
+  DEBIT     // money deducted from wallet
+  REFUND    // refund to wallet
 }

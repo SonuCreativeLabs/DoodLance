@@ -7,6 +7,9 @@ async function redirectToSignIn(request: NextRequest) {
   const promptParam = request.nextUrl.searchParams.get('prompt');
   const prompt = promptParam === 'consent' ? 'consent' : undefined;
 
+  // Default to client home page if no returnTo specified
+  const defaultReturnTo = '/client';
+
   const url = await getSignInUrl({
     redirectUri: process.env.WORKOS_REDIRECT_URI,
     prompt,
@@ -20,7 +23,10 @@ async function redirectToSignIn(request: NextRequest) {
     return NextResponse.redirect(parsed);
   }
 
-  return NextResponse.redirect(url);
+  // If no returnTo specified, redirect to client home after auth
+  const parsed = new URL(destination.toString());
+  parsed.searchParams.set('return_to', defaultReturnTo);
+  return NextResponse.redirect(parsed);
 }
 
 export async function GET(request: NextRequest) {
