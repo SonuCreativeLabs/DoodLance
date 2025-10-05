@@ -11,13 +11,8 @@ async function main() {
     console.log('✅ Connected to MongoDB')
     
     // Create initial categories
-    const categories = [
-      { name: 'Cricket Coaching', description: 'Professional cricket training and coaching', icon: 'cricket' },
-      { name: 'Home Cleaning', description: 'Professional home cleaning services', icon: 'cleaning' },
-      { name: 'AC Repair', description: 'Air conditioning repair and maintenance', icon: 'ac' },
-      { name: 'Plumbing', description: 'Professional plumbing services', icon: 'plumbing' },
-      { name: 'Electrical', description: 'Electrical repair and installation', icon: 'electrical' },
-      { name: 'Beauty & Wellness', description: 'Beauty treatments and wellness services', icon: 'beauty' },
+    const categories: Array<{ name: string; description: string; icon: string }> = [
+      // Categories removed as per requirements
     ]
     
     for (const category of categories) {

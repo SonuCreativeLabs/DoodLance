@@ -14,7 +14,6 @@ const sidebarCategories = [
   { id: 'coaching', name: ['Coaching &', 'Training'], icon: <Dumbbell className="w-6 h-6" /> },
   { id: 'support', name: ['Support', 'Staff'], icon: <Brain className="w-6 h-6" /> },
   { id: 'media', name: ['Media &', 'Content'], icon: <Camera className="w-6 h-6" /> },
-  { id: 'ground', name: ['Ground', 'Services'], icon: <Package className="w-6 h-6" /> },
 ]
 
 // Service items (comprehensive, grouped by category)
@@ -41,7 +40,6 @@ const serviceItems = [
   { id: 'commentator', name: 'Commentator', category: 'media', providerCount: 16, image: '/images/Bowler & batsman.png', fallbackEmoji: '🎤' },
 
   // Cricket Ground Services
-  { id: 'groundsman', name: 'Groundsman', category: 'ground', providerCount: 12, image: '/images/Bowler & batsman.png', fallbackEmoji: '🌱' },
 ]
 
 export default function ServicesPage() {
