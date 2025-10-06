@@ -25,16 +25,32 @@ model User {
   // Profile information
   phone     String?
   location  String?
+  coords    Float[]  // [longitude, latitude] for location
   bio       String?
+  
+  // User preferences
+  currentRole String @default("client") // current active role
+  isVerified Boolean @default(false) // KYC verification status
+  
+  // Referral system
+  referralCode String? @unique
+  referredBy   String? // referral code of referrer
   
   // Timestamps
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   
   // Relations
-  sessions  Session[]
-  bookings  Booking[] @relation("UserBookings")
-  services  Service[] @relation("UserServices")
+  sessions              Session[]
+  bookings              Booking[] @relation("UserBookings")
+  services              Service[] @relation("UserServices")
+  clientJobs            Job[] @relation("ClientJobs")
+  freelancerApplications Application[] @relation("FreelancerApplications")
+  freelancerProfile     FreelancerProfile?
+  clientProfile         ClientProfile?
+  wallet                Wallet?
+  sentMessages          Message[] @relation("MessageSender")
+  notifications         Notification[]
   
   @@map("users")
 }
@@ -55,11 +71,18 @@ model Session {
 model Category {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   name        String   @unique
+  slug        String   @unique // URL-friendly identifier
   description String?
   icon        String?
+  parentId    String?  @db.ObjectId // for subcategories
   isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
   
+  // Relations
   services    Service[]
+  subcategories Category[] @relation("CategoryHierarchy")
+  parent      Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   
@@ -83,11 +106,24 @@ model Service {
   images      String[] // array of image URLs
   tags        String[]
   location    String?
+  coords      Float[]  // [longitude, latitude]
+  
+  // Service type and delivery
+  serviceType String   // "online", "in-person", "hybrid"
+  deliveryTime String? // "1 week", "2 hours", etc.
+  revisions   Int      @default(0) // number of revisions included
+  
+  // Pricing tiers (for service packages)
+  packages    Json?    // Different pricing tiers with features
+  
+  // Requirements
+  requirements String[] // what client needs to provide
   
   // Status
   isActive    Boolean  @default(true)
   rating      Float    @default(0)
   reviewCount Int      @default(0)
+  totalOrders Int      @default(0)
   
   // Timestamps
   createdAt   DateTime @default(now())
@@ -113,13 +149,30 @@ model Booking {
   service     Service  @relation(fields: [serviceId], references: [id])
   
   // Booking details
-  scheduledAt DateTime
+  scheduledAt DateTime?
   duration    Int      // in minutes
   totalPrice  Float
+  packageType String?  // which package was selected
   status      BookingStatus @default(PENDING)
+  
+  // Location details
+  location    String?
+  coords      Float[]  // [longitude, latitude]
+  
+  // Progress tracking
+  progress    Int      @default(0) // 0-100
+  milestones  Json?    // progress milestones
+  
+  // Communication
+  conversationId String? @db.ObjectId
   
   // Notes and special requests
   notes       String?
+  requirements Json?   // client requirements
+  
+  // Delivery
+  deliveredAt DateTime?
+  deliverables String[] // files, links, etc.
   
   // Timestamps
   createdAt   DateTime @default(now())
@@ -136,16 +189,49 @@ enum BookingStatus {
   COMPLETED
   CANCELLED
   REFUNDED
+  DISPUTED
+  REVISION_REQUESTED
+}
+
+// Wallet system
+model Wallet {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @unique @db.ObjectId
+  user        User     @relation(fields: [userId], references: [id])
+  
+  // Balances
+  balance     Float    @default(0) // main wallet balance
+  coins       Int      @default(0) // app coins
+  frozenAmount Float   @default(0) // amount on hold
+  
+  // Settings
+  isActive    Boolean  @default(true)
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  transactions Transaction[]
+  
+  @@map("wallets")
 }
 
 // Wallet/Transactions
 model Transaction {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId      String   @db.ObjectId
+  walletId    String   @db.ObjectId
+  wallet      Wallet   @relation(fields: [walletId], references: [id])
+  
   amount      Float
   type        TransactionType
   description String
-  reference   String?  // booking ID, etc.
+  reference   String?  // booking ID, job ID, etc.
+  status      TransactionStatus @default(COMPLETED)
+  
+  // Payment details
+  paymentMethod String? // "card", "upi", "bank_transfer", etc.
+  paymentId   String?  // external payment gateway ID
   
   createdAt   DateTime @default(now())
   
@@ -156,4 +242,386 @@ enum TransactionType {
   CREDIT    // money added to wallet
   DEBIT     // money deducted from wallet
   REFUND    // refund to wallet
+  EARNING   // earning from completed job
+  WITHDRAWAL // withdrawal to bank
+  COIN_PURCHASE // buying app coins
+  COIN_REDEMPTION // using app coins
+  REFERRAL_BONUS // referral rewards
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+// Job Postings
+model Job {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  title           String
+  description     String
+  category        String
+  budget          Float
+  budgetMin       Float?
+  budgetMax       Float?
+  location        String
+  coords          Float[]  // [longitude, latitude]
+  skills          String[]
+  workMode        String   // remote, onsite, hybrid
+  type            String   // freelance, part-time, full-time, contract
+  duration        String?
+  experience      String   // Entry Level, Intermediate, Expert
+  
+  // Client info
+  clientId        String   @db.ObjectId
+  client          User     @relation("ClientJobs", fields: [clientId], references: [id])
+  
+  // Status
+  isActive        Boolean  @default(true)
+  proposals       Int      @default(0)
+  
+  // Timestamps
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  applications    Application[]
+  
+  @@map("jobs")
+}
+
+// Job Applications
+model Application {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  
+  // Job and Freelancer
+  jobId           String   @db.ObjectId
+  job             Job      @relation(fields: [jobId], references: [id])
+  freelancerId    String   @db.ObjectId
+  freelancer      User     @relation("FreelancerApplications", fields: [freelancerId], references: [id])
+  
+  // Proposal details
+  coverLetter     String
+  proposedRate    Float
+  estimatedDays   Int
+  skills          String[]
+  attachments     String[]
+  
+  // Status
+  status          ApplicationStatus @default(PENDING)
+  progress        Int      @default(0)
+  
+  // Timestamps
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@map("applications")
+}
+
+enum ApplicationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  WITHDRAWN
+  INTERVIEW
+  HIRED
+  COMPLETED
+  CANCELLED
+  EXPIRED
+  ARCHIVED
+}
+
+// Chat/Messages
+model Conversation {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  
+  // Participants
+  clientId        String   @db.ObjectId
+  freelancerId    String   @db.ObjectId
+  
+  // Related job/booking
+  jobId           String?  @db.ObjectId
+  bookingId       String?  @db.ObjectId
+  
+  // Last message info
+  lastMessage     String?
+  lastMessageAt   DateTime?
+  lastMessageType MessageType @default(TEXT)
+  
+  // Status
+  clientUnreadCount    Int      @default(0)
+  freelancerUnreadCount Int     @default(0)
+  
+  // Conversation settings
+  isActive        Boolean  @default(true)
+  isArchived      Boolean  @default(false)
+  
+  // Call/Video features
+  lastCallAt      DateTime?
+  totalCallDuration Int    @default(0) // in minutes
+  
+  // Timestamps
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  messages        Message[]
+  
+  @@map("conversations")
+}
+
+model Message {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  conversationId  String   @db.ObjectId
+  conversation    Conversation @relation(fields: [conversationId], references: [id])
+  
+  senderId        String   @db.ObjectId
+  sender          User     @relation("MessageSender", fields: [senderId], references: [id])
+  content         String
+  
+  // Message type
+  messageType     MessageType @default(TEXT)
+  
+  // Attachments
+  attachments     String[]
+  
+  // Status
+  isRead          Boolean  @default(false)
+  readAt          DateTime?
+  isDelivered     Boolean  @default(false)
+  deliveredAt     DateTime?
+  
+  // Editing
+  isEdited        Boolean  @default(false)
+  editedAt        DateTime?
+  
+  // Reply/Thread
+  replyToId       String?  @db.ObjectId
+  
+  // Timestamps
+  createdAt       DateTime @default(now())
+  
+  @@map("messages")
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  FILE
+  VOICE
+  VIDEO
+  LOCATION
+  BOOKING_OFFER
+  SYSTEM
+}
+
+// Freelancer Profile Extensions
+model FreelancerProfile {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId          String   @unique @db.ObjectId
+  user            User     @relation(fields: [userId], references: [id])
+  
+  // Professional info
+  title           String?
+  about           String?
+  hourlyRate      Float?
+  
+  // Skills and specializations
+  skills          String[] // cricket skills
+  specializations String[] // specific areas of expertise
+  languages       String[] @default(["English"])
+  
+  // Stats
+  rating          Float    @default(0)
+  reviewCount     Int      @default(0)
+  completedJobs   Int      @default(0)
+  responseTime    String?
+  deliveryTime    String?
+  completionRate  Float    @default(0)
+  repeatClientRate Float   @default(0)
+  
+  // Location
+  coords          Float[]  // [longitude, latitude]
+  serviceRadius   Float?   // service area radius in km
+  
+  // Availability
+  isOnline        Boolean  @default(false)
+  availability    Json?    // Store availability schedule
+  timeZone        String   @default("Asia/Kolkata")
+  
+  // Identity verification
+  isVerified      Boolean  @default(false)
+  verificationDocs Json?   // KYC documents
+  verifiedAt      DateTime?
+  
+  // Performance metrics
+  totalEarnings   Float    @default(0)
+  thisMonthEarnings Float  @default(0)
+  avgProjectValue Float    @default(0)
+  
+  // Profile settings
+  isProfilePublic Boolean  @default(true)
+  acceptsMessages Boolean  @default(true)
+  
+  // Timestamps
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  experiences     Experience[]
+  portfolios      Portfolio[]
+  reviews         Review[]
+  
+  @@map("freelancer_profiles")
+}
+
+model Experience {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  profileId       String   @db.ObjectId
+  profile         FreelancerProfile @relation(fields: [profileId], references: [id])
+  
+  role            String
+  company         String
+  location        String
+  startDate       String
+  endDate         String?
+  isCurrent       Boolean  @default(false)
+  description     String
+  
+  createdAt       DateTime @default(now())
+  
+  @@map("experiences")
+}
+
+model Portfolio {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  profileId       String   @db.ObjectId
+  profile         FreelancerProfile @relation(fields: [profileId], references: [id])
+  
+  title           String
+  category        String
+  description     String?
+  images          String[]
+  skills          String[]
+  clientName      String?
+  completedAt     DateTime?
+  
+  createdAt       DateTime @default(now())
+  
+  @@map("portfolios")
+}
+
+model Review {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  profileId       String   @db.ObjectId
+  profile         FreelancerProfile @relation(fields: [profileId], references: [id])
+  
+  // Reviewer (client)
+  clientId        String   @db.ObjectId
+  clientName      String
+  clientRole      String?
+  clientAvatar    String?
+  
+  // Review content
+  rating          Int      // 1-5
+  comment         String
+  isVerified      Boolean  @default(false)
+  
+  // Detailed ratings
+  communicationRating Int? // 1-5
+  qualityRating   Int?     // 1-5
+  timelinessRating Int?    // 1-5
+  
+  // Related booking/job
+  bookingId       String?  @db.ObjectId
+  jobId           String?  @db.ObjectId
+  
+  // Response from freelancer
+  response        String?
+  respondedAt     DateTime?
+  
+  createdAt       DateTime @default(now())
+  
+  @@map("reviews")
+}
+
+// Client Profile (minimal)
+model ClientProfile {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId          String   @unique @db.ObjectId
+  user            User     @relation(fields: [userId], references: [id])
+  
+  // Basic info
+  company         String?
+  website         String?
+  industry        String?
+  
+  // Stats
+  totalSpent      Float    @default(0)
+  projectsPosted  Int      @default(0)
+  hireRate        Float    @default(0) // percentage of jobs that get filled
+  avgRating       Float    @default(0)
+  
+  // Preferences
+  preferredBudget Json?    // budget ranges for different services
+  preferredSkills String[] // skills they frequently hire for
+  
+  // Verification
+  isVerified      Boolean  @default(false)
+  verificationDocs Json?   // business verification docs
+  verifiedAt      DateTime?
+  
+  // Timestamps
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@map("client_profiles")
+}
+
+// Notifications
+model Notification {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @db.ObjectId
+  user        User     @relation(fields: [userId], references: [id])
+  
+  // Notification content
+  title       String
+  message     String
+  type        NotificationType
+  
+  // Related entities
+  entityId    String?  // ID of related booking, job, etc.
+  entityType  String?  // "booking", "job", "message", etc.
+  
+  // Action data
+  actionUrl   String?  // deep link or URL to navigate to
+  actionData  Json?    // additional data for the action
+  
+  // Status
+  isRead      Boolean  @default(false)
+  readAt      DateTime?
+  
+  createdAt   DateTime @default(now())
+  
+  @@map("notifications")
+}
+
+enum NotificationType {
+  BOOKING_REQUEST
+  BOOKING_ACCEPTED
+  BOOKING_REJECTED
+  BOOKING_COMPLETED
+  BOOKING_CANCELLED
+  JOB_APPLICATION
+  JOB_ACCEPTED
+  JOB_REJECTED
+  MESSAGE_RECEIVED
+  PAYMENT_RECEIVED
+  PAYMENT_FAILED
+  REVIEW_RECEIVED
+  PROFILE_VERIFIED
+  REFERRAL_BONUS
+  SYSTEM_UPDATE
+  PROMOTIONAL
 }

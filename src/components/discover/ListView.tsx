@@ -29,30 +29,8 @@ export function ListView({ filters }: ListViewProps) {
 
   useEffect(() => {
     // TODO: Fetch jobs from API based on filters
-    // This is a mock implementation
-    const mockJobs: Job[] = [
-      {
-        id: '1',
-        title: 'Plumbing Repair',
-        description: 'Need help with a leaking faucet in the kitchen',
-        price: 150,
-        location: 'San Francisco, CA',
-        category: 'plumbing',
-        rating: 4.5,
-        distance: 2.5,
-      },
-      {
-        id: '2',
-        title: 'Math Tutoring',
-        description: 'Looking for a math tutor for high school algebra',
-        price: 50,
-        location: 'Oakland, CA',
-        category: 'tutoring',
-        rating: 4.8,
-        distance: 5.2,
-      },
-      // Add more mock jobs here
-    ];
+    // Mock data will be replaced with actual database queries
+    const mockJobs: Job[] = [];
 
     setJobs(mockJobs);
   }, [filters]);

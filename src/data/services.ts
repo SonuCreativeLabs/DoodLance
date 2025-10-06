@@ -23,52 +23,60 @@ export const sidebarCategories = [
     id: 'media',
     name: ['Media &', 'Content'],
     icon: '📷'
-  },
-  {
-    id: 'ground',
-    name: ['Ground', 'Services'],
-    icon: '🌱'
   }
 ]
 
 export const serviceItems = [
-  // Cricket Playing Services
+  // Playing Services (4)
   {
-    id: 'bowler',
-    name: 'Bowler',
+    id: 'match-player',
+    name: 'Match Player',
     category: 'playing',
     providerCount: 45,
     mostBooked: true,
     image: '/images/Bowler & batsman.png',
-    icon: '🏏'
+    icon: '🏏',
+    description: 'Professional cricket players available for matches and tournaments'
   },
   {
-    id: 'batsman',
-    name: 'Batsman',
+    id: 'net-bowler',
+    name: 'Net Bowler',
     category: 'playing',
     providerCount: 38,
     mostBooked: true,
     image: '/images/Bowler & batsman.png',
-    icon: '🏏'
+    icon: '🎯',
+    description: 'Skilled bowlers for net practice sessions and training'
+  },
+  {
+    id: 'net-batsman',
+    name: 'Net Batsman',
+    category: 'playing',
+    providerCount: 32,
+    image: '/images/Bowler & batsman.png',
+    icon: '🏏',
+    description: 'Experienced batsmen for practice sessions and training'
   },
   {
     id: 'sidearm-specialist',
-    name: 'Sidearm Specialist',
+    name: 'Sidearm',
     category: 'playing',
     providerCount: 22,
-    image: '/images/Bowler & batsman.png',
-    icon: '🎯'
+    image: '/images/women sidearm.png',
+    icon: '🎯',
+    description: 'Sidearm specialists for realistic bowling simulation'
   },
 
-  // Cricket Coaching & Training
+  // Coaching & Training (3)
   {
     id: 'coach',
     name: 'Coach',
     category: 'coaching',
     providerCount: 35,
     mostBooked: true,
-    image: '/images/Bowler & batsman.png',
-    icon: '👨‍🏫'
+    image: '/images/personal coaching.png',
+    icon: '👨‍🏫',
+    description: 'Professional cricket coaches for all skill levels'
   },
   {
     id: 'sports-conditioning-trainer',
@@ -76,7 +84,8 @@ export const serviceItems = [
     category: 'coaching',
     providerCount: 28,
     image: '/images/Bowler & batsman.png',
-    icon: '💪'
+    icon: '💪',
+    description: 'Specialized trainers for cricket-specific conditioning'
   },
   {
     id: 'fitness-trainer',
@@ -84,17 +93,19 @@ export const serviceItems = [
     category: 'coaching',
     providerCount: 32,
     image: '/images/Bowler & batsman.png',
-    icon: '🏃‍♂️'
+    icon: '🏃‍♂️',
+    description: 'General fitness trainers with cricket expertise'
   },
 
-  // Cricket Support Services
+  // Support Staff (4)
   {
     id: 'analyst',
     name: 'Analyst',
     category: 'support',
     providerCount: 18,
     image: '/images/Bowler & batsman.png',
-    icon: '📊'
+    icon: '📊',
+    description: 'Cricket analysts for performance and match analysis'
   },
   {
     id: 'physio',
@@ -102,7 +113,8 @@ export const serviceItems = [
     category: 'support',
     providerCount: 25,
     image: '/images/Bowler & batsman.png',
-    icon: '🏥'
+    icon: '🏥',
+    description: 'Sports physiotherapists specializing in cricket injuries'
   },
   {
     id: 'scorer',
@@ -110,7 +122,8 @@ export const serviceItems = [
     category: 'support',
     providerCount: 15,
     image: '/images/Bowler & batsman.png',
-    icon: '📝'
+    icon: '📝',
+    description: 'Professional cricket scorers for matches and tournaments'
   },
   {
     id: 'umpire',
@@ -118,10 +131,11 @@ export const serviceItems = [
     category: 'support',
     providerCount: 20,
     image: '/images/Bowler & batsman.png',
-    icon: '⚖️'
+    icon: '⚖️',
+    description: 'Certified cricket umpires for matches and tournaments'
   },
 
-  // Cricket Media & Content
+  // Media & Content (3)
   {
     id: 'cricket-photo-videography',
     name: 'Cricket Photo / Videography',
@@ -129,7 +143,8 @@ export const serviceItems = [
     providerCount: 30,
     mostBooked: true,
     image: '/images/Bowler & batsman.png',
-    icon: '📷'
+    icon: '📷',
+    description: 'Professional cricket photography and videography services'
   },
   {
     id: 'cricket-content-creator',
@@ -137,7 +152,8 @@ export const serviceItems = [
     category: 'media',
     providerCount: 24,
     image: '/images/Bowler & batsman.png',
-    icon: '🎬'
+    icon: '🎬',
+    description: 'Content creators specializing in cricket media and social content'
   },
   {
     id: 'commentator',
@@ -145,17 +161,8 @@ export const serviceItems = [
     category: 'media',
     providerCount: 16,
     image: '/images/Bowler & batsman.png',
-    icon: '🎤'
-  },
-
-  // Cricket Ground Services
-  {
-    id: 'groundsman',
-    name: 'Groundsman',
-    category: 'ground',
-    providerCount: 12,
-    image: '/images/Bowler & batsman.png',
-    icon: '🌱'
+    icon: '🎤',
+    description: 'Professional cricket commentators for matches and events'
   }
 ]
 
@@ -163,16 +170,16 @@ export const serviceItems = [
 export const popularServices = [
   // Top cricket services
   {
-    id: 'bowler',
-    title: 'Bowler',
-    icon: '🏏',
-    providerCount: 45,
+    id: 'net-bowler',
+    title: 'Net Bowler',
+    icon: '🎯',
+    providerCount: 38,
     image: '/images/Bowler & batsman.png',
     mostBooked: true
   },
   {
     id: 'sidearm-specialist',
-    title: 'Sidearm Specialist',
+    title: 'Sidearm',
     icon: '🎯',
     providerCount: 22,
     image: '/images/women sidearm.png',
@@ -187,10 +194,10 @@ export const popularServices = [
     mostBooked: true
   },
   {
-    id: 'batsman',
-    title: 'Batsman',
+    id: 'match-player',
+    title: 'Match Player',
     icon: '🏏',
-    providerCount: 38,
+    providerCount: 45,
     image: '/images/Bowler & batsman.png',
     mostBooked: true
   },
