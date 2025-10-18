@@ -75,6 +75,12 @@ export const statusColors = {
     border: 'border-rose-500/20',
     shadow: 'shadow-rose-500/10'
   },
+  upcoming: { 
+    bg: 'bg-amber-500/10', 
+    text: 'text-amber-400', 
+    border: 'border-amber-500/20',
+    shadow: 'shadow-amber-500/10'
+  },
   // Application status colors
   accepted: { 
     bg: 'bg-emerald-500/10', 
@@ -87,6 +93,12 @@ export const statusColors = {
     text: 'text-rose-400', 
     border: 'border-rose-500/20',
     shadow: 'shadow-rose-500/10'
+  },
+  withdrawn: { 
+    bg: 'bg-gray-500/10', 
+    text: 'text-gray-400', 
+    border: 'border-gray-500/20',
+    shadow: 'shadow-gray-500/10'
   },
   // Transaction status colors
   paid: { 

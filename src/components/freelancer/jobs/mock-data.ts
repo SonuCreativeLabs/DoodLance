@@ -354,6 +354,293 @@ export const mockUpcomingJobs: Job[] = [
         'https://randomuser.me/api/portraits/men/51.jpg'
       ]
     }
+  },
+  {
+    id: 'DLNT1111',
+    title: 'Net Practice Session — Opening Batsmen',
+    category: 'OTHER',
+    date: '2024-07-30',
+    time: '07:00',
+    status: 'pending',
+    payment: 3000,
+    location: 'Adyar Cricket Ground, Chennai',
+    description: 'Need opening batsmen for net practice sessions with our academy team. Focus on building partnerships and powerplay batting techniques.',
+    skills: ['Opening Batsman', 'Powerplay Batting', 'Partnership Building', 'Net Practice'],
+    duration: '3 hours',
+    experienceLevel: 'Expert',
+    client: {
+      name: 'Adyar Cricket Academy',
+      rating: 4.6,
+      jobsCompleted: 18,
+      moneySpent: 125000,
+      memberSince: '2021-03-10',
+      phoneNumber: '+91 9876543213',
+      image: '/avatars/adyar.jpg',
+      freelancersWorked: 15,
+      freelancerAvatars: [
+        'https://randomuser.me/api/portraits/women/34.jpg',
+        'https://randomuser.me/api/portraits/men/26.jpg',
+        'https://randomuser.me/api/portraits/women/41.jpg'
+      ]
+    }
+  },
+  {
+    id: 'DLWK2222',
+    title: 'Wicket Keeping Drills — Advanced Techniques',
+    category: 'OTHER',
+    date: '2024-08-02',
+    time: '09:00',
+    status: 'pending',
+    payment: 2500,
+    location: 'Velachery Cricket Club, Chennai',
+    description: 'Looking for a specialist wicket keeper to conduct advanced training sessions. Focus on stumpings, diving catches, and reflex drills.',
+    skills: ['Wicket Keeping', 'Diving Catches', 'Reflex Training', 'Stumpings'],
+    duration: '2.5 hours',
+    experienceLevel: 'Expert',
+    client: {
+      name: 'Velachery Cricket Club',
+      rating: 4.7,
+      jobsCompleted: 22,
+      moneySpent: 95000,
+      memberSince: '2020-11-15',
+      phoneNumber: '+91 8765432112',
+      image: '/avatars/velachery.jpg',
+      freelancersWorked: 12,
+      freelancerAvatars: [
+        'https://randomuser.me/api/portraits/men/33.jpg',
+        'https://randomuser.me/api/portraits/women/29.jpg',
+        'https://randomuser.me/api/portraits/men/48.jpg'
+      ]
+    }
+  },
+  {
+    id: 'DLFB3333',
+    title: 'Fielding Specialist — Boundary Catching',
+    category: 'OTHER',
+    date: '2024-08-05',
+    time: '10:00',
+    status: 'confirmed',
+    payment: 2000,
+    location: 'T Nagar Cricket Ground, Chennai',
+    description: 'Need a fielding specialist for boundary catching and ground fielding drills. Focus on athletic fielding and preventing boundaries.',
+    skills: ['Fielding Specialist', 'Boundary Catching', 'Ground Fielding', 'Athletic Training'],
+    duration: '2 hours',
+    experienceLevel: 'Expert',
+    client: {
+      name: 'T Nagar Cricket Academy',
+      rating: 4.8,
+      jobsCompleted: 16,
+      moneySpent: 85000,
+      memberSince: '2021-06-20',
+      phoneNumber: '+91 7654321099',
+      image: '/avatars/tnagar.jpg',
+      freelancersWorked: 14,
+      freelancerAvatars: [
+        'https://randomuser.me/api/portraits/women/36.jpg',
+        'https://randomuser.me/api/portraits/men/41.jpg'
+      ]
+    }
+  },
+  {
+    id: 'DLSP4444',
+    title: 'Sports Psychology — Mental Preparation',
+    category: 'OTHER',
+    date: '2024-08-08',
+    time: '14:00',
+    status: 'pending',
+    payment: 4000,
+    location: 'Anna Nagar Sports Center, Chennai',
+    description: 'Seeking a sports psychologist for mental preparation and performance enhancement sessions with our competitive cricket team.',
+    skills: ['Sports Psychology', 'Mental Training', 'Performance Enhancement', 'Team Building'],
+    duration: '4 hours (group session)',
+    experienceLevel: 'Expert',
+    client: {
+      name: 'Chennai Elite Cricket Club',
+      rating: 4.9,
+      jobsCompleted: 25,
+      moneySpent: 200000,
+      memberSince: '2020-05-01',
+      phoneNumber: '+91 6543210988',
+      image: '/avatars/elite.jpg',
+      freelancersWorked: 18,
+      freelancerAvatars: [
+        'https://randomuser.me/api/portraits/men/27.jpg',
+        'https://randomuser.me/api/portraits/women/43.jpg',
+        'https://randomuser.me/api/portraits/men/52.jpg'
+      ]
+    }
+  },
+  {
+    id: 'DLNV5555',
+    title: 'Nutrition Consultation — Cricket-Specific Diet',
+    category: 'OTHER',
+    date: '2024-08-10',
+    time: '11:00',
+    status: 'confirmed',
+    payment: 3500,
+    location: 'Nungambakkam Health Center, Chennai',
+    description: 'Need a sports nutritionist to design cricket-specific diet plans for our academy players. Focus on energy management and recovery nutrition.',
+    skills: ['Sports Nutrition', 'Diet Planning', 'Energy Management', 'Recovery Nutrition'],
+    duration: '3 hours (consultation + planning)',
+    experienceLevel: 'Expert',
+    client: {
+      name: 'Chennai Sports Nutrition Center',
+      rating: 4.7,
+      jobsCompleted: 20,
+      moneySpent: 150000,
+      memberSince: '2021-01-15',
+      phoneNumber: '+91 5432109877',
+      image: '/avatars/nutrition.jpg',
+      freelancersWorked: 16,
+      freelancerAvatars: [
+        'https://randomuser.me/api/portraits/women/32.jpg',
+        'https://randomuser.me/api/portraits/men/39.jpg',
+        'https://randomuser.me/api/portraits/women/47.jpg'
+      ]
+    }
+  },
+  {
+    id: 'DLTE6666',
+    title: 'Technical Equipment Setup — Bowling Machines',
+    category: 'OTHER',
+    date: '2024-08-12',
+    time: '08:00',
+    status: 'pending',
+    payment: 2500,
+    location: 'Chepauk Cricket Academy, Chennai',
+    description: 'Looking for a technician to set up and calibrate bowling machines for our training sessions. Must have experience with cricket technology.',
+    skills: ['Technical Setup', 'Bowling Machines', 'Equipment Calibration', 'Cricket Technology'],
+    duration: '4 hours',
+    experienceLevel: 'Intermediate',
+    client: {
+      name: 'Chennai Cricket Technology',
+      rating: 4.5,
+      jobsCompleted: 14,
+      moneySpent: 75000,
+      memberSince: '2022-02-20',
+      phoneNumber: '+91 4321098766',
+      image: '/avatars/tech.jpg',
+      freelancersWorked: 10,
+      freelancerAvatars: [
+        'https://randomuser.me/api/portraits/men/31.jpg',
+        'https://randomuser.me/api/portraits/women/38.jpg'
+      ]
+    }
+  },
+  {
+    id: 'DLMC7777',
+    title: 'Match Commentary — Live Streaming',
+    category: 'OTHER',
+    date: '2024-08-15',
+    time: '14:00',
+    status: 'confirmed',
+    payment: 6000,
+    location: 'Mylapore Cricket Ground, Chennai',
+    description: 'Need an experienced cricket commentator for live streaming of our local tournament matches. Must have good voice and cricket knowledge.',
+    skills: ['Match Commentary', 'Live Streaming', 'Cricket Knowledge', 'Public Speaking'],
+    duration: '6 hours per match (2 matches)',
+    experienceLevel: 'Expert',
+    client: {
+      name: 'Chennai Sports Broadcasting',
+      rating: 4.8,
+      jobsCompleted: 28,
+      moneySpent: 180000,
+      memberSince: '2020-08-10',
+      phoneNumber: '+91 3210987655',
+      image: '/avatars/broadcast.jpg',
+      freelancersWorked: 20,
+      freelancerAvatars: [
+        'https://randomuser.me/api/portraits/women/25.jpg',
+        'https://randomuser.me/api/portraits/men/44.jpg',
+        'https://randomuser.me/api/portraits/women/49.jpg'
+      ]
+    }
+  },
+  {
+    id: 'DLFT8888',
+    title: 'Fitness Training — Cricket-Specific Conditioning',
+    category: 'OTHER',
+    date: '2024-08-18',
+    time: '06:00',
+    status: 'pending',
+    payment: 4500,
+    location: 'Anna Nagar Fitness Center, Chennai',
+    description: 'Seeking a fitness trainer specialized in cricket conditioning. Focus on agility, speed, endurance, and cricket-specific strength training.',
+    skills: ['Fitness Training', 'Cricket Conditioning', 'Agility Training', 'Strength Training'],
+    duration: '1.5 hours per session (weekly)',
+    experienceLevel: 'Expert',
+    client: {
+      name: 'Elite Cricket Fitness',
+      rating: 4.9,
+      jobsCompleted: 32,
+      moneySpent: 250000,
+      memberSince: '2019-12-01',
+      phoneNumber: '+91 2109876544',
+      image: '/avatars/fitness.jpg',
+      freelancersWorked: 22,
+      freelancerAvatars: [
+        'https://randomuser.me/api/portraits/men/28.jpg',
+        'https://randomuser.me/api/portraits/women/35.jpg',
+        'https://randomuser.me/api/portraits/men/46.jpg'
+      ]
+    }
+  },
+  {
+    id: 'DLSS9999',
+    title: 'Skill Assessment — Junior Player Evaluation',
+    category: 'OTHER',
+    date: '2024-08-20',
+    time: '09:00',
+    status: 'confirmed',
+    payment: 3000,
+    location: 'Teynampet Cricket Academy, Chennai',
+    description: 'Need experienced coaches to assess junior players for team selection. Focus on batting, bowling, fielding, and overall potential evaluation.',
+    skills: ['Player Assessment', 'Team Selection', 'Technical Evaluation', 'Player Development'],
+    duration: '6 hours (full day assessment)',
+    experienceLevel: 'Expert',
+    client: {
+      name: 'Teynampet Cricket Academy',
+      rating: 4.6,
+      jobsCompleted: 19,
+      moneySpent: 110000,
+      memberSince: '2021-09-05',
+      phoneNumber: '+91 1098765433',
+      image: '/avatars/teynampet.jpg',
+      freelancersWorked: 16,
+      freelancerAvatars: [
+        'https://randomuser.me/api/portraits/women/30.jpg',
+        'https://randomuser.me/api/portraits/men/37.jpg',
+        'https://randomuser.me/api/portraits/women/42.jpg'
+      ]
+    }
+  },
+  {
+    id: 'DLRC0000',
+    title: 'Recovery Coaching — Post-Match Recovery',
+    category: 'OTHER',
+    date: '2024-08-22',
+    time: '18:00',
+    status: 'pending',
+    payment: 2800,
+    location: 'Velachery Sports Complex, Chennai',
+    description: 'Looking for recovery specialists for post-match recovery sessions. Focus on muscle recovery, flexibility, and mental relaxation techniques.',
+    skills: ['Recovery Coaching', 'Muscle Recovery', 'Flexibility Training', 'Mental Relaxation'],
+    duration: '2 hours per session',
+    experienceLevel: 'Expert',
+    client: {
+      name: 'Chennai Recovery Specialists',
+      rating: 4.7,
+      jobsCompleted: 21,
+      moneySpent: 130000,
+      memberSince: '2021-04-20',
+      phoneNumber: '+91 0987654322',
+      image: '/avatars/recovery.jpg',
+      freelancersWorked: 14,
+      freelancerAvatars: [
+        'https://randomuser.me/api/portraits/men/34.jpg',
+        'https://randomuser.me/api/portraits/women/39.jpg'
+      ]
+    }
   }
 ];
 
@@ -502,10 +789,77 @@ export const mockApplications: Application[] = [
       attachments: ['analysis_portfolio.pdf', 'cricket_certifications.pdf']
     },
     // Removed rejectionDetails - not part of Application type
+  },
+  {
+    "#": 'DLWB7890',
+    jobTitle: 'Cricket Equipment Manager',
+    appliedDate: '2024-06-10',
+    status: 'withdrawn',
+    clientName: 'Chennai Sports Club',
+    budget: { min: 1500, max: 2500 },
+    progress: 0,
+    clientImage: '/avatars/sportsclub.jpg',
+    location: 'Nungambakkam, Chennai',
+    postedDate: '2024-06-08',
+    description: 'Looking for someone to manage cricket equipment and maintain our sports facilities.',
+    clientId: 'csc123',
+    moneySpent: 25000,
+    freelancersWorked: 5,
+    freelancerAvatars: [
+      'https://randomuser.me/api/portraits/men/55.jpg',
+      'https://randomuser.me/api/portraits/women/29.jpg'
+    ],
+    proposal: {
+      coverLetter: 'I have experience managing sports equipment for local cricket clubs and can ensure all gear is properly maintained and organized.',
+      proposedRate: 2000,
+      estimatedDays: 10,
+      skills: ['Equipment Management', 'Sports Facilities', 'Organization', 'Maintenance'],
+      attachments: ['equipment_resume.pdf', 'references.pdf']
+    }
   }
 ];
 
-export const mockEarnings: EarningsData = {
+// Function to update application status in mock data (for demo purposes)
+export const updateApplicationStatus = (applicationId: string, newStatus: Application['status'], proposalUpdates?: Partial<Application['proposal']>) => {
+  const applicationIndex = mockApplications.findIndex(app => app["#"] === applicationId);
+  if (applicationIndex !== -1) {
+    mockApplications[applicationIndex].status = newStatus;
+    if (proposalUpdates && mockApplications[applicationIndex].proposal) {
+      Object.assign(mockApplications[applicationIndex].proposal, proposalUpdates);
+    }
+    console.log(`Updated application ${applicationId} status to ${newStatus}`, proposalUpdates ? 'with proposal updates' : '');
+  }
+};
+
+export const mockFreelancerProfile = {
+  name: 'Suresh Kumar',
+  profilePicture: '/avatars/suresh.jpg',
+  headline: 'Cricket Coach & Analyst',
+  location: 'Chennai, India',
+  skills: ['Cricket Coaching', 'Video Analysis', 'Batting Technique', 'Bowling Technique', 'Fielding Drills'],
+  experience: [
+    {
+      company: 'Tamil Nadu Cricket Academy',
+      role: 'Cricket Coach',
+      duration: '1 month (thrice weekly)',
+      experienceLevel: 'Expert',
+      client: {
+        name: 'Nungambakkam Cricket Club',
+        rating: 4.8,
+        jobsCompleted: 22,
+        moneySpent: 180000,
+        memberSince: '2020-07-15',
+        phoneNumber: '+91 8765432111',
+        image: '/avatars/ncc.jpg',
+        freelancersWorked: 15,
+        freelancerAvatars: [
+          'https://randomuser.me/api/portraits/men/38.jpg',
+          'https://randomuser.me/api/portraits/women/27.jpg',
+          'https://randomuser.me/api/portraits/men/51.jpg'
+        ]
+      }
+    }
+  ],
   totalEarnings: 45600,
   pendingPayouts: 7800,
   completedJobs: 24,

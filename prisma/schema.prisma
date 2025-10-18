@@ -293,7 +293,7 @@ model Job {
 
 // Job Applications
 model Application {
-  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  id              String   @id @default(cuid())
   
   // Job and Freelancer
   jobId           String   @db.ObjectId

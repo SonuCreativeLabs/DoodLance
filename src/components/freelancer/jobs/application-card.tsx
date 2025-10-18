@@ -8,33 +8,101 @@ import { useRouter } from 'next/navigation';
 import { Application, ApplicationStatus } from './types';
 import { getStatusStyles } from './utils';
 import { cn } from '@/lib/utils';
+import { updateApplicationStatus } from './mock-data';
 
 interface ApplicationCardProps {
   application: Application;
   index: number;
   onViewDetails?: () => void;
+  onStatusChange?: (applicationId: string, newStatus: string) => void;
 }
 
-export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, index, onViewDetails }) => {
+export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, index, onViewDetails, onStatusChange }) => {
   const router = useRouter();
   const [isExpanded] = useState(false);
+  const [showWithdrawDialog, setShowWithdrawDialog] = useState(false);
+  const [isWithdrawing, setIsWithdrawing] = useState(false);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+
+  const handleWithdraw = async () => {
+    setIsWithdrawing(true);
+    try {
+      const response = await fetch(`/api/applications/${application["#"]}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+
+        console.log('Withdrawal API response:', result);
+
+        // Update the application status locally using the returned data
+        if (result.application) {
+          Object.assign(application, result.application);
+        } else {
+          // Fallback to local status update if no application data returned
+          application.status = 'withdrawn';
+        }
+
+        // Update the shared mock data so other components see the change
+        updateApplicationStatus(application["#"], 'withdrawn');
+
+        // Notify parent component about status change
+        if (onStatusChange) {
+          onStatusChange(application["#"], 'withdrawn');
+        }
+
+        setShowWithdrawDialog(false);
+        setShowSuccessMessage(true);
+
+        // Hide success message after 3 seconds
+        setTimeout(() => setShowSuccessMessage(false), 3000);
+      } else {
+        console.error('Failed to withdraw application - Status:', response.status);
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
+
+        // Show error message
+        alert('Failed to withdraw application. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error withdrawing application:', error);
+      // Show error message
+      alert('Error withdrawing application. Please check your connection and try again.');
+    } finally {
+      setIsWithdrawing(false);
+    }
+  };
   
   const statusStyles = getStatusStyles(application.status as ApplicationStatus);
   const isPending = application.status === 'pending';
   const isAccepted = application.status === 'accepted';
   const isRejected = application.status === 'rejected';
-
-  const statusIcons: Record<ApplicationStatus, React.ReactNode> = {
-    pending: <Clock className="w-3.5 h-3.5 mr-1.5" />,
-    accepted: <CheckCircle className="w-3.5 h-3.5 mr-1.5" />,
-    rejected: <XCircle className="w-3.5 h-3.5 mr-1.5" />,
-    completed: <CheckCircle className="w-3.5 h-3.5 mr-1.5" />,
-    cancelled: <XCircle className="w-3.5 h-3.5 mr-1.5" />
-  };
+  const isWithdrawn = application.status === 'withdrawn';
 
   const handleCardClick = (e: React.MouseEvent) => {
+    // Prevent card click when dialog is open or withdrawing
+    if (showWithdrawDialog || isWithdrawing) {
+      e.stopPropagation();
+      return;
+    }
+
     e.stopPropagation();
-    router.push(`/freelancer/proposals/${application["#"]}`);
+
+    // Use the onViewDetails prop if provided, otherwise fallback to applications tab
+    if (onViewDetails) {
+      onViewDetails();
+    } else {
+      router.push('/freelancer/jobs?tab=applications');
+    }
+  };
+
+  const handleEdit = () => {
+    // Navigate to the specific application page for editing
+    router.push(`/freelancer/proposals/${application["#"]}?edit=true`);
   };
 
   const handleMessageClick = (e: React.MouseEvent) => {
@@ -177,7 +245,7 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, i
                     className="h-8 text-xs border-white/10 hover:bg-white/5 hover:border-white/20"
                     onClick={(e) => {
                       e.stopPropagation();
-                      // Handle edit
+                      handleEdit();
                     }}
                   >
                     Edit
@@ -188,10 +256,11 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, i
                     className="h-8 text-xs text-red-400 border-red-400/20 hover:bg-red-400/10 hover:border-red-400/30"
                     onClick={(e) => {
                       e.stopPropagation();
-                      // Handle withdraw
+                      setShowWithdrawDialog(true);
                     }}
+                    disabled={isWithdrawing}
                   >
-                    Withdraw
+                    {isWithdrawing ? 'Withdrawing...' : 'Withdraw'}
                   </Button>
                 </>
               )}
@@ -222,15 +291,62 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, i
                 </div>
               )}
               
-              {isRejected && (
+              {isWithdrawn && (
                 <div className="text-xs text-gray-400 italic">
-                  Not selected
+                  Withdrawn by you
                 </div>
               )}
             </div>
           </div>
         </div>
       </motion.div>
+
+      {/* Withdraw Confirmation Dialog */}
+      {showWithdrawDialog && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-[#1E1E1E] p-6 rounded-xl border border-white/10 max-w-md w-full mx-4"
+          >
+            <h3 className="text-lg font-semibold text-white mb-4">Withdraw Application?</h3>
+            <p className="text-gray-300 mb-2">
+              Are you sure you want to withdraw your application for:
+            </p>
+            <p className="text-white font-medium mb-4">
+              "{application.jobTitle}"
+            </p>
+            <p className="text-gray-400 text-sm mb-6">
+              This action will move your application to the "Withdrawn" section and cannot be undone. The client will be notified of your withdrawal.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowWithdrawDialog(false)}
+                disabled={isWithdrawing}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={handleWithdraw}
+                disabled={isWithdrawing}
+              >
+                {isWithdrawing ? 'Withdrawing...' : 'Withdraw'}
+              </Button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Success Message */}
+      {showSuccessMessage && (
+        <div className="fixed top-4 right-4 bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg z-50">
+          Application withdrawn successfully!
+        </div>
+      )}
     </motion.div>
   );
 };

@@ -38,23 +38,70 @@ export default function PostJobForm() {
   const [location, setLocation] = useState('')
   const [startDate, setStartDate] = useState('')
   const [duration, setDuration] = useState('')
+  const [title, setTitle] = useState('')
 
-  const handleGenerateDescription = () => {
-    // TODO: Implement AI description generation
-    const cricketDescription = `Looking for a skilled cricket professional for ${selectedCategory?.toLowerCase() || 'cricket'} services. The job requires expertise, dedication, and a passion for cricket. Please provide your experience, availability, and approach to training/coaching. We expect high-quality service and excellent results.`
-    setDescription(cricketDescription)
-  }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-  const handleBudgetSuggestion = () => {
-    if (selectedCategory && budgetSuggestions[selectedCategory]) {
-      const suggestion = budgetSuggestions[selectedCategory]
-      setBudget(suggestion.avg.toString())
+    try {
+      // Get current user session
+      const sessionResponse = await fetch('/api/auth/session');
+      if (!sessionResponse.ok) {
+        throw new Error('Please log in to post a job');
+      }
+      const user = await sessionResponse.json();
+
+      // Prepare job data
+      const jobData = {
+        title,
+        description,
+        category: selectedCategory,
+        budget,
+        location,
+        coords: [], // You can add geolocation later
+        skills: [], // Extract from description or add form field
+        workMode: 'remote', // Default, can be enhanced
+        type: 'freelance', // Default, can be enhanced
+        duration,
+        experience: 'Intermediate', // Default, can be enhanced
+      };
+
+      // Submit job
+      const response = await fetch('/api/jobs', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(jobData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to post job');
+      }
+
+      const job = await response.json();
+      console.log('Job posted successfully:', job);
+
+      // Reset form
+      setSelectedCategory('');
+      setDescription('');
+      setBudget('');
+      setLocation('');
+      setStartDate('');
+      setDuration('');
+      setTitle('');
+
+      alert('Job posted successfully!');
+    } catch (error) {
+      console.error('Error posting job:', error);
+      alert(error instanceof Error ? error.message : 'An error occurred while posting the job');
     }
-  }
+  };
 
 
   return (
-    <div className="space-y-8">
+    <form onSubmit={handleSubmit} className="space-y-8">
         {/* Form header */}
         <div className="border-b border-white/10 pb-6">
           <h2 className="text-2xl font-bold bg-gradient-to-r from-white to-purple-200 bg-clip-text text-transparent">Create a New Job Posting</h2>
@@ -88,6 +135,8 @@ export default function PostJobForm() {
           <Label htmlFor="title" className="text-white font-medium">Job Title</Label>
           <Input
             id="title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
             placeholder="e.g., Need a batting coach for weekend sessions"
             className="mt-2 border-white/20 focus:border-purple-300 focus:ring-1 focus:ring-purple-400 bg-black/50 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-200 text-white placeholder:text-white/50"
           />
@@ -97,15 +146,6 @@ export default function PostJobForm() {
         <div>
           <div className="flex items-center justify-between mb-2">
             <Label htmlFor="description" className="text-white font-medium">Job Description</Label>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleGenerateDescription}
-              className="flex items-center gap-2 border-white/20 hover:bg-white/5 text-purple-300 hover:text-purple-200 shadow-sm hover:shadow-md transition-all duration-200 bg-black/50 backdrop-blur-sm"
-            >
-              <Sparkles className="w-4 h-4" />
-              Generate with AI
-            </Button>
           </div>
           <Textarea
             id="description"
@@ -123,15 +163,6 @@ export default function PostJobForm() {
               <DollarSign className="h-4 w-4 text-purple-400" />
               Budget
             </Label>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleBudgetSuggestion}
-              className="flex items-center gap-2 border-white/20 hover:bg-white/5 text-purple-300 hover:text-purple-200 shadow-sm hover:shadow-md transition-all duration-200 bg-black/50 backdrop-blur-sm"
-            >
-              <Sparkles className="w-4 h-4" />
-              Suggest Budget
-            </Button>
           </div>
           <div>
             <Input
@@ -212,10 +243,10 @@ export default function PostJobForm() {
 
         {/* Submit Button */}
         <div className="pt-4">
-          <Button className="w-full bg-gradient-to-r from-purple-600 via-purple-500 to-purple-400 hover:from-purple-700 hover:via-purple-600 hover:to-purple-500 text-white shadow-lg hover:shadow-xl transition-all duration-300 py-6 text-lg font-medium">
+          <Button type="submit" className="w-full bg-gradient-to-r from-purple-600 via-purple-500 to-purple-400 hover:from-purple-700 hover:via-purple-600 hover:to-purple-500 text-white shadow-lg hover:shadow-xl transition-all duration-300 py-6 text-lg font-medium">
             Post Job
           </Button>
         </div>
-    </div>
+    </form>
   )
 } 

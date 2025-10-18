@@ -1,9 +1,10 @@
 'use client';
 
-import { X, MessageCircle, Phone, MapPin, CalendarIcon, ClockIcon, IndianRupee, ArrowLeft, AlertCircle, User, UserCheck, Star, ChevronDown, ChevronUp, CheckCircle, MessageSquare } from 'lucide-react';
-import { useState } from 'react';
+import { X, MessageCircle, Phone, MapPin, CalendarIcon, ClockIcon, IndianRupee, ArrowLeft, AlertCircle, User, UserCheck, Star, ChevronDown, ChevronUp, CheckCircle, MessageSquare, AlertTriangle } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 interface CancellationDetails {
   cancelledBy: 'client' | 'freelancer';
@@ -54,6 +55,8 @@ interface JobDetailsModalProps {
       date: string;
     };
   };
+  onClose?: () => void; // Add optional onClose prop
+  onJobUpdate?: (jobId: string, newStatus: 'completed' | 'cancelled') => void; // Add job update callback
 }
 
 interface CollapsibleSectionProps {
@@ -64,48 +67,103 @@ interface CollapsibleSectionProps {
 }
 
 
-export function JobDetailsModal({ job }: JobDetailsModalProps) {
+export function JobDetailsModal({ job, onClose, onJobUpdate }: JobDetailsModalProps) {
   const router = useRouter();
   const [showRatingForm, setShowRatingForm] = useState(false);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [showCompleteDialog, setShowCompleteDialog] = useState(false);
+  const [renderTrigger, setRenderTrigger] = useState(0);
+
+  // Force re-render when job status changes
+  useEffect(() => {
+    setRenderTrigger(prev => prev + 1);
+  }, [job.status]);
   
   const handleBack = (e: React.MouseEvent) => {
     e.stopPropagation();
-    router.back();
+    if (onClose) {
+      onClose();
+    } else {
+      router.back();
+    }
   };
 
   // Handle button actions
   const handleChat = (e: React.MouseEvent) => {
     e.stopPropagation();
-    console.log('Initiate chat with client');
-    // Implement chat functionality here
+    // Navigate to inbox with specific job chat selection
+    router.push(`/freelancer/inbox?jobId=${job.id}`);
   };
 
   const handleCall = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (job.client?.phoneNumber) {
-      console.log('Calling client at', job.client.phoneNumber);
-      // Implement call functionality here
+      // Show phone number and allow user to call
+      const phoneNumber = job.client.phoneNumber;
+      if (confirm(`Call client at ${phoneNumber}?`)) {
+        // In a real app, this would initiate a call
+        // For demo purposes, we'll show the number
+        alert(`Calling ${phoneNumber}\n\nIn a real application, this would initiate a phone call.`);
+      }
+    } else {
+      alert('Phone number not available for this client.');
     }
   };
 
-  const handleCancelJob = (e: React.MouseEvent) => {
+  const handleCancelJob = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (confirm('Are you sure you want to cancel this job?')) {
-      console.log('Job cancelled');
-      // Implement job cancellation logic here
+    console.log('Cancel button clicked'); // Debug log
+    setShowCancelDialog(true);
+  };
+
+  const confirmCancelJob = async () => {
+    try {
+      console.log('Cancelling job:', job.id);
+      // Update job status to cancelled
+      if (onJobUpdate) {
+        onJobUpdate(job.id, 'cancelled');
+      }
+      alert('Job cancelled successfully!');
+      setShowCancelDialog(false);
+      if (onClose) onClose();
+    } catch (error) {
+      console.error('Error cancelling job:', error);
+      alert('Failed to cancel job. Please try again.');
     }
   };
 
-  const handleMarkComplete = (e: React.MouseEvent) => {
+  const handleMarkComplete = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (confirm('Mark this job as complete?')) {
-      console.log('Job marked as complete');
-      // Implement job completion logic here
+    console.log('Mark complete button clicked'); // Debug log
+    setShowCompleteDialog(true);
+  };
+
+  const confirmMarkComplete = async () => {
+    try {
+      console.log('Marking job as complete:', job.id);
+      // Update job status to completed
+      if (onJobUpdate) {
+        onJobUpdate(job.id, 'completed');
+      }
+      alert('Job marked as complete! Payment will be processed shortly.');
+      setShowCompleteDialog(false);
+      if (onClose) onClose();
+    } catch (error) {
+      console.error('Error completing job:', error);
+      alert('Failed to complete job. Please try again.');
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#0a0a0a] overflow-y-auto">
+    <div 
+      className="fixed inset-0 z-50 bg-[#0a0a0a] overflow-y-auto"
+      onClick={(e) => {
+        // Close modal when clicking outside content
+        if (e.target === e.currentTarget && onClose) {
+          onClose();
+        }
+      }}
+    >
       {/* Header */}
       <div className="fixed top-0 left-0 right-0 z-50 bg-[#0a0a0a]/95 backdrop-blur-sm border-b border-white/10 p-4 flex items-center">
         <button 
@@ -128,7 +186,7 @@ export function JobDetailsModal({ job }: JobDetailsModalProps) {
       </div>
       
       {/* Main Content */}
-      <div className="min-h-[100dvh] w-full pt-20 pb-24">
+      <div className="min-h-[100dvh] w-full pt-20 pb-24" onClick={(e) => e.stopPropagation()}>
         <div className="max-w-6xl mx-auto p-4 md:p-6">
           <div className="space-y-8">
             <div className="relative">
@@ -390,6 +448,21 @@ export function JobDetailsModal({ job }: JobDetailsModalProps) {
               </div>
             )}
 
+            {/* Only show Chat button for cancelled jobs */}
+            {job.status === 'cancelled' && (
+              <div className="mt-6 p-4 bg-[#111111] rounded-xl border border-gray-800/80">
+                <div className="flex">
+                  <button 
+                    onClick={handleChat}
+                    className="w-full px-4 py-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/90 hover:text-white transition-colors text-sm font-medium flex items-center justify-center gap-2"
+                  >
+                    <MessageSquare className="w-4 h-4" />
+                    Chat with Client
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Job Status Specific Sections */}
             {job.status === 'completed' && (
               <div className="space-y-4">
@@ -531,8 +604,75 @@ export function JobDetailsModal({ job }: JobDetailsModalProps) {
           </div>
         </div>
       </div>
-      
 
+      {/* Cancel Job Confirmation Dialog */}
+      <Dialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+        <DialogContent className="w-[320px] max-w-[320px] bg-[#111111] border-gray-800">
+          <DialogHeader>
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-full bg-red-500/20">
+                <AlertTriangle className="w-6 h-6 text-red-500" />
+              </div>
+              <DialogTitle className="text-white">Cancel Job</DialogTitle>
+            </div>
+            <DialogDescription className="pt-2 text-gray-400">
+              Are you sure you want to cancel this job? This action cannot be undone and may affect your rating.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full sm:w-auto border-gray-700 text-white hover:bg-gray-800"
+              onClick={() => setShowCancelDialog(false)}
+            >
+              Go Back
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              className="w-full sm:w-auto bg-red-600 hover:bg-red-700"
+              onClick={confirmCancelJob}
+            >
+              Yes, Cancel Job
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Mark Complete Confirmation Dialog */}
+      <Dialog open={showCompleteDialog} onOpenChange={setShowCompleteDialog}>
+        <DialogContent className="w-[320px] max-w-[320px] bg-[#111111] border-gray-800">
+          <DialogHeader>
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-full bg-green-500/20">
+                <CheckCircle className="w-6 h-6 text-green-500" />
+              </div>
+              <DialogTitle className="text-white">Mark Job as Complete</DialogTitle>
+            </div>
+            <DialogDescription className="pt-2 text-gray-400">
+              Are you sure you want to mark this job as complete? This will notify the client and process your payment.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full sm:w-auto border-gray-700 text-white hover:bg-gray-800"
+              onClick={() => setShowCompleteDialog(false)}
+            >
+              Not Yet
+            </Button>
+            <Button
+              type="button"
+              className="w-full sm:w-auto bg-green-600 hover:bg-green-700"
+              onClick={confirmMarkComplete}
+            >
+              Yes, Mark Complete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

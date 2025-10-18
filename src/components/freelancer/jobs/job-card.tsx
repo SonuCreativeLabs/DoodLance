@@ -12,9 +12,10 @@ import { getStatusStyles, formatTime12Hour } from './utils';
 interface JobCardProps {
   job: Job;
   index: number;
+  onStatusChange?: (jobId: string, newStatus: 'completed' | 'cancelled') => void;
 }
 
-export const JobCard: React.FC<JobCardProps> = ({ job, index }) => {
+export const JobCard: React.FC<JobCardProps> = ({ job, index, onStatusChange }) => {
   const router = useRouter();
   
   const handleCardClick = (e: React.MouseEvent) => {
@@ -44,8 +45,8 @@ export const JobCard: React.FC<JobCardProps> = ({ job, index }) => {
           {/* Status and Time */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className={`${getStatusStyles(job.status === 'confirmed' ? 'pending' : job.status).bg} ${getStatusStyles(job.status === 'confirmed' ? 'pending' : job.status).text} text-xs font-medium px-3 py-1 rounded-full border ${getStatusStyles(job.status === 'confirmed' ? 'pending' : job.status).border} w-fit`}>
-                {job.status === 'pending' || job.status === 'confirmed' ? 'Upcoming' : job.status.charAt(0).toUpperCase() + job.status.slice(1)}
+              <div className={`${getStatusStyles(job.status).bg} ${getStatusStyles(job.status).text} text-xs font-medium px-3 py-1 rounded-full border ${getStatusStyles(job.status).border} w-fit`}>
+                {job.status.charAt(0).toUpperCase() + job.status.slice(1)}
               </div>
             </div>
             <div className="flex items-center gap-1.5 text-sm text-white/60">

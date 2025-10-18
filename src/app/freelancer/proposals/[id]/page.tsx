@@ -27,7 +27,8 @@ import {
   PlusCircle
 } from 'lucide-react';
 import { Application } from '@/components/freelancer/jobs/types';
-import { mockApplications, mySkills } from '@/components/freelancer/jobs/mock-data';
+import { mySkills } from '@/components/freelancer/jobs/mock-data';
+import { updateApplicationStatus } from '@/components/freelancer/jobs/mock-data';
 
 
 export default function ProposalDetailsPage() {
@@ -36,27 +37,156 @@ export default function ProposalDetailsPage() {
   const [proposal, setProposal] = useState<Application | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showWithdrawConfirm, setShowWithdrawConfirm] = useState(false);
+  const [isWithdrawing, setIsWithdrawing] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
-    const fetchProposal = () => {
-      setTimeout(() => {
-        const foundProposal = mockApplications.find(app => app["#"] === id) || null;
-        setProposal(foundProposal);
+    const loadApplication = async () => {
+      setIsLoading(true);
+      try {
+        const response = await fetch(`/api/applications/${id}`);
+        if (response.ok) {
+          const applicationData = await response.json();
+          setProposal(applicationData);
+
+          // Check if we should auto-enable edit mode (from card edit button)
+          const urlParams = new URLSearchParams(window.location.search);
+          if (urlParams.get('edit') === 'true') {
+            setIsEditing(true);
+            setEditedProposal(applicationData);
+
+            // Auto-scroll to edit section after a short delay
+            setTimeout(() => {
+              const editSection = document.getElementById('edit-section');
+              if (editSection) {
+                editSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }
+            }, 500);
+          }
+        } else {
+          console.error('Failed to load application');
+          setProposal(null);
+        }
+      } catch (error) {
+        console.error('Error loading application:', error);
+        setProposal(null);
+      } finally {
         setIsLoading(false);
-      }, 300);
+      }
     };
-    
-    fetchProposal();
+
+    if (id) {
+      loadApplication();
+    }
   }, [id]);
 
   const handleBack = () => {
     router.back();
   };
 
-  const handleWithdraw = () => {
-    // Handle withdraw logic here
-    console.log('Withdrawing proposal...');
-    setShowWithdrawConfirm(false);
+  const [editedProposal, setEditedProposal] = useState<Application | null>(null);
+
+  const handleEdit = () => {
+    setIsEditing(true);
+    setEditedProposal(proposal);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editedProposal) return;
+
+    setIsWithdrawing(true);
+    try {
+      const response = await fetch(`/api/applications/${proposal?.["#"]}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          status: editedProposal.status,
+          progress: editedProposal.progress,
+          proposal: {
+            coverLetter: editedProposal.proposal.coverLetter,
+            proposedRate: editedProposal.proposal.proposedRate,
+            // Add other proposal fields as needed
+          },
+        }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('Proposal updated successfully:', result);
+
+        // Update local state
+        setProposal(editedProposal);
+        setIsEditing(false);
+
+        // Update the shared mock data so the job dashboard shows the change
+        updateApplicationStatus(proposal?.["#"] || '', editedProposal.status, {
+          coverLetter: editedProposal.proposal.coverLetter,
+          proposedRate: editedProposal.proposal.proposedRate,
+        });
+
+        alert('Proposal updated successfully!');
+      } else {
+        console.error('Failed to update proposal');
+        alert('Failed to update proposal. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error updating proposal:', error);
+      alert('Error updating proposal. Please check your connection and try again.');
+    } finally {
+      setIsWithdrawing(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    setEditedProposal(null);
+  };
+
+  const handleWithdraw = async () => {
+    setIsWithdrawing(true);
+    try {
+      console.log('Withdrawing proposal:', proposal?.["#"]);
+
+      const response = await fetch(`/api/applications/${proposal?.["#"]}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('Withdrawal successful:', result);
+
+        // Update local state
+        setProposal(prev => prev ? { ...prev, status: 'withdrawn' } : null);
+
+        // Update the shared mock data so the job dashboard shows the change
+        updateApplicationStatus(proposal?.["#"] || '', 'withdrawn');
+
+        // Close modal
+        setShowWithdrawConfirm(false);
+
+        // Show success message
+        alert('Proposal withdrawn successfully!');
+
+        // Navigate back to proposals page after a short delay
+        setTimeout(() => {
+          router.push('/freelancer/jobs?tab=applications&status=withdrawn');
+        }, 1000);
+
+      } else {
+        console.error('Failed to withdraw proposal');
+        alert('Failed to withdraw proposal. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error withdrawing proposal:', error);
+      alert('Error withdrawing proposal. Please check your connection and try again.');
+    } finally {
+      setIsWithdrawing(false);
+    }
   };
 
   if (isLoading) {
@@ -77,7 +207,7 @@ export default function ProposalDetailsPage() {
           <h1 className="text-2xl font-bold text-white mb-2">Proposal Not Found</h1>
           <p className="text-white/60 mb-6">The proposal you&apos;re looking for doesn&apos;t exist or has been removed.</p>
           <Button
-            onClick={() => router.push('/freelancer/proposals')}
+            onClick={() => router.push('/freelancer/jobs?tab=applications')}
             className="bg-purple-600 hover:bg-purple-700"
           >
             Back to Proposals
@@ -321,14 +451,40 @@ export default function ProposalDetailsPage() {
                   <div className="space-y-6">
                     <div>
                       <h3 className="text-sm font-medium text-gray-400 mb-2">Cover Letter</h3>
-                      <p className="text-gray-300">{proposal.proposal.coverLetter}</p>
+                      {isEditing ? (
+                        <textarea
+                          value={editedProposal?.proposal.coverLetter || ''}
+                          onChange={(e) => setEditedProposal(prev => prev ? {
+                            ...prev,
+                            proposal: { ...prev.proposal, coverLetter: e.target.value }
+                          } : null)}
+                          className="w-full p-3 bg-gray-800 border border-gray-600 rounded-lg text-white resize-none"
+                          rows={4}
+                          placeholder="Write your cover letter..."
+                        />
+                      ) : (
+                        <p className="text-gray-300">{proposal.proposal.coverLetter}</p>
+                      )}
                     </div>
                     
                     <div>
                       <h3 className="text-sm font-medium text-gray-400 mb-2">Your Rate</h3>
                       <div className="flex items-center space-x-2">
                         <IndianRupee className="w-4 h-4 text-purple-400" />
-                        <span className="text-lg font-medium">{proposal.proposal.proposedRate}</span>
+                        {isEditing ? (
+                          <input
+                            type="number"
+                            value={editedProposal?.proposal.proposedRate || ''}
+                            onChange={(e) => setEditedProposal(prev => prev ? {
+                              ...prev,
+                              proposal: { ...prev.proposal, proposedRate: parseInt(e.target.value) || 0 }
+                            } : null)}
+                            className="bg-gray-800 border border-gray-600 rounded px-2 py-1 text-white w-20"
+                            placeholder="Rate"
+                          />
+                        ) : (
+                          <span className="text-lg font-medium">{proposal.proposal.proposedRate}</span>
+                        )}
                         <span className="text-sm text-gray-400">/ project</span>
                       </div>
                     </div>
@@ -339,9 +495,9 @@ export default function ProposalDetailsPage() {
                         {proposal.status === 'pending' && (
                           <label className="p-1.5 text-gray-400 hover:text-purple-400 rounded-full hover:bg-purple-500/10 transition-colors cursor-pointer" title="Upload attachment">
                             <PlusCircle className="w-4 h-4" />
-                            <input 
-                              type="file" 
-                              className="hidden" 
+                            <input
+                              type="file"
+                              className="hidden"
                               onChange={(e) => console.log('File selected', e.target.files)}
                               multiple
                             />
@@ -393,23 +549,47 @@ export default function ProposalDetailsPage() {
                     </div>
                     
                     {proposal.status === 'pending' && (
-                      <div className="grid grid-cols-2 gap-3">
-                        <Button 
-                          variant="outline" 
-                          className="border-purple-500/30 text-purple-400 hover:bg-purple-500/10 hover:border-purple-400/50 transition-all hover:shadow-lg hover:shadow-purple-500/10" 
-                          onClick={() => console.log('Edit proposal')}
-                        >
-                          <Edit2 className="w-4 h-4 mr-2" />
-                          Edit
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          className="border-red-500/30 text-red-400 hover:bg-red-500/10 hover:border-red-400/50 transition-all hover:shadow-lg hover:shadow-red-500/10" 
-                          onClick={() => setShowWithdrawConfirm(true)}
-                        >
-                          <Trash2 className="w-4 h-4 mr-2" />
-                          Withdraw
-                        </Button>
+                      <div className="grid grid-cols-2 gap-3" id="edit-section">
+                        {isEditing ? (
+                          <>
+                            <Button
+                              variant="outline"
+                              className="border-green-500/30 text-green-400 hover:bg-green-500/10 hover:border-green-400/50"
+                              onClick={handleSaveEdit}
+                              disabled={isWithdrawing}
+                            >
+                              Save Changes
+                            </Button>
+                            <Button
+                              variant="outline"
+                              className="border-gray-600 text-gray-300 hover:bg-gray-700"
+                              onClick={handleCancelEdit}
+                              disabled={isWithdrawing}
+                            >
+                              Cancel
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <Button
+                              variant="outline"
+                              className="border-purple-500/30 text-purple-400 hover:bg-purple-500/10 hover:border-purple-400/50 transition-all hover:shadow-lg hover:shadow-purple-500/10"
+                              onClick={handleEdit}
+                            >
+                              <Edit2 className="w-4 h-4 mr-2" />
+                              Edit
+                            </Button>
+                            <Button
+                              variant="outline"
+                              className="border-red-500/30 text-red-400 hover:bg-red-500/10 hover:border-red-400/50 transition-all hover:shadow-lg hover:shadow-red-500/10"
+                              onClick={() => setShowWithdrawConfirm(true)}
+                              disabled={isWithdrawing || proposal?.status !== 'pending'}
+                            >
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              {isWithdrawing ? 'Withdrawing...' : 'Withdraw'}
+                            </Button>
+                          </>
+                        )}
                       </div>
                     )}
                     
@@ -597,8 +777,9 @@ export default function ProposalDetailsPage() {
                   variant="outline"
                   className="text-red-500 border-red-500 hover:bg-red-500/10 hover:text-red-400"
                   onClick={handleWithdraw}
+                  disabled={isWithdrawing}
                 >
-                  Withdraw
+                  {isWithdrawing ? 'Withdrawing...' : 'Withdraw'}
                 </Button>
               </div>
             </div>

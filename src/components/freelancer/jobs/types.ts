@@ -1,6 +1,6 @@
 // Status Types
 export type JobStatus = 'confirmed' | 'pending' | 'completed' | 'cancelled' | 'upcoming';
-export type ApplicationStatus = 'pending' | 'accepted' | 'rejected' | 'completed' | 'cancelled';
+export type ApplicationStatus = 'pending' | 'accepted' | 'rejected' | 'withdrawn' | 'interview' | 'hired' | 'completed' | 'cancelled' | 'expired' | 'archived';
 export type TransactionStatus = 'pending' | 'failed' | 'completed';
 
 export type StatusType = JobStatus | ApplicationStatus | TransactionStatus;
