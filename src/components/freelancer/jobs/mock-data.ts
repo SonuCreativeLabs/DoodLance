@@ -91,10 +91,25 @@ export const mockUpcomingJobs: Job[] = [
       ]
     },
     earnings: {
-      amount: 15000,
-      platformFee: 1500, // 10%
-      total: 13500
+      baseAmount: 15000,
+      tips: 500, // Client gave a tip
+      addOnServices: 2000, // Extra video analysis service
+      platformCommission: 1500, // 10% commission on base + add-ons
+      totalEarnings: 15700, // 15000 + 500 + 2000 - 1500
+      commissionRate: 0.10,
+      breakdown: {
+        baseAmount: 15000,
+        tips: 500,
+        addOnServices: [
+          { name: 'Video Analysis', amount: 2000 }
+        ],
+        platformCommission: 1500,
+        totalEarnings: 15700
+      }
     },
+    addOnServices: [
+      { name: 'Video Analysis', price: 2000, description: 'Detailed technical breakdown of performance' }
+    ],
     clientRating: {
       stars: 5,
       feedback: 'Excellent work! The specialist accurately simulated professional conditions and helped our batsmen adapt to T20 demands. Would definitely hire again.',
@@ -114,6 +129,22 @@ export const mockUpcomingJobs: Job[] = [
     skills: ['Mystery Spinner', 'Bowling Techniques', 'Carrom Ball', 'Doosra'],
     duration: '2 hours per session',
     experienceLevel: 'Expert',
+    completedAt: '2024-06-20T16:00:00',
+    earnings: {
+      baseAmount: 2000,
+      tips: 0,
+      addOnServices: 0,
+      platformCommission: 200,
+      totalEarnings: 1800,
+      commissionRate: 0.10,
+      breakdown: {
+        baseAmount: 2000,
+        tips: 0,
+        addOnServices: [],
+        platformCommission: 200,
+        totalEarnings: 1800
+      }
+    },
     client: {
       name: 'Anna Nagar Cricket Club',
       rating: 4.7,
@@ -207,7 +238,23 @@ export const mockUpcomingJobs: Job[] = [
     description: 'Need a cricket analyst to review and analyze match footage for our academy team. Focus on identifying technical flaws in batting and bowling techniques.',
     skills: ['Cricket Analyst', 'Video Analysis', 'Performance Analysis', 'Cricket Techniques'],
     duration: '4 hours',
-    experienceLevel: 'Expert'
+    experienceLevel: 'Expert',
+    completedAt: '2024-06-28T13:00:00',
+    earnings: {
+      baseAmount: 3500,
+      tips: 0,
+      addOnServices: 0,
+      platformCommission: 350,
+      totalEarnings: 3150,
+      commissionRate: 0.10,
+      breakdown: {
+        baseAmount: 3500,
+        tips: 0,
+        addOnServices: [],
+        platformCommission: 350,
+        totalEarnings: 3150
+      }
+    }
   },
   
   // Cricket-focused jobs continued
@@ -447,13 +494,29 @@ export const mockUpcomingJobs: Job[] = [
     category: 'OTHER',
     date: '2024-08-08',
     time: '14:00',
-    status: 'pending',
+    status: 'completed',
     payment: 4000,
     location: 'Anna Nagar Sports Center, Chennai',
     description: 'Seeking a sports psychologist for mental preparation and performance enhancement sessions with our competitive cricket team.',
     skills: ['Sports Psychology', 'Mental Training', 'Performance Enhancement', 'Team Building'],
     duration: '4 hours (group session)',
     experienceLevel: 'Expert',
+    completedAt: '2024-08-08T18:00:00',
+    earnings: {
+      baseAmount: 4000,
+      tips: 0,
+      addOnServices: 0,
+      platformCommission: 400,
+      totalEarnings: 3600,
+      commissionRate: 0.10,
+      breakdown: {
+        baseAmount: 4000,
+        tips: 0,
+        addOnServices: [],
+        platformCommission: 400,
+        totalEarnings: 3600
+      }
+    },
     client: {
       name: 'Chennai Elite Cricket Club',
       rating: 4.9,
@@ -476,13 +539,29 @@ export const mockUpcomingJobs: Job[] = [
     category: 'OTHER',
     date: '2024-08-10',
     time: '11:00',
-    status: 'confirmed',
+    status: 'completed',
     payment: 3500,
     location: 'Nungambakkam Health Center, Chennai',
     description: 'Need a sports nutritionist to design cricket-specific diet plans for our academy players. Focus on energy management and recovery nutrition.',
     skills: ['Sports Nutrition', 'Diet Planning', 'Energy Management', 'Recovery Nutrition'],
     duration: '3 hours (consultation + planning)',
     experienceLevel: 'Expert',
+    completedAt: '2024-08-10T14:00:00',
+    earnings: {
+      baseAmount: 3500,
+      tips: 0,
+      addOnServices: 0,
+      platformCommission: 350,
+      totalEarnings: 3150,
+      commissionRate: 0.10,
+      breakdown: {
+        baseAmount: 3500,
+        tips: 0,
+        addOnServices: [],
+        platformCommission: 350,
+        totalEarnings: 3150
+      }
+    },
     client: {
       name: 'Chennai Sports Nutrition Center',
       rating: 4.7,
@@ -505,13 +584,29 @@ export const mockUpcomingJobs: Job[] = [
     category: 'OTHER',
     date: '2024-08-12',
     time: '08:00',
-    status: 'pending',
+    status: 'completed',
     payment: 2500,
     location: 'Chepauk Cricket Academy, Chennai',
     description: 'Looking for a technician to set up and calibrate bowling machines for our training sessions. Must have experience with cricket technology.',
     skills: ['Technical Setup', 'Bowling Machines', 'Equipment Calibration', 'Cricket Technology'],
     duration: '4 hours',
     experienceLevel: 'Intermediate',
+    completedAt: '2024-08-12T12:00:00',
+    earnings: {
+      baseAmount: 2500,
+      tips: 0,
+      addOnServices: 0,
+      platformCommission: 250,
+      totalEarnings: 2250,
+      commissionRate: 0.10,
+      breakdown: {
+        baseAmount: 2500,
+        tips: 0,
+        addOnServices: [],
+        platformCommission: 250,
+        totalEarnings: 2250
+      }
+    },
     client: {
       name: 'Chennai Cricket Technology',
       rating: 4.5,

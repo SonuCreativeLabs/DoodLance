@@ -1,5 +1,5 @@
 import { format } from 'date-fns';
-import { StatusType } from './types';
+import { StatusType, Job } from './types';
 
 // Function to format time in 12-hour format with AM/PM
 export const formatTime12Hour = (timeString: string): string => {
@@ -46,6 +46,44 @@ export const formatTimeRemaining = (dateTimeString: string) => {
 // Format date
 export const formatDate = (dateString: string) => {
   return format(new Date(dateString), 'MMM d, yyyy');
+};
+
+export const calculateJobEarnings = (job: Job) => {
+  const baseAmount = typeof job.payment === 'string' ? parseFloat(job.payment) : job.payment;
+
+  // Default platform commission rate (10%)
+  const commissionRate = 0.10;
+
+  // Calculate tips (could be from job data or default to 0)
+  const tips = job.earnings?.tips || 0;
+
+  // Calculate add-on services total
+  const addOnServicesTotal = job.addOnServices?.reduce((total, service) => total + service.price, 0) || 0;
+
+  // Calculate platform commission
+  const platformCommission = Math.round((baseAmount + addOnServicesTotal) * commissionRate);
+
+  // Calculate total earnings (base + tips + add-ons - commission)
+  const totalEarnings = baseAmount + tips + addOnServicesTotal - platformCommission;
+
+  return {
+    baseAmount,
+    tips,
+    addOnServices: addOnServicesTotal,
+    platformCommission,
+    totalEarnings,
+    commissionRate,
+    breakdown: {
+      baseAmount,
+      tips,
+      addOnServices: job.addOnServices?.map(service => ({
+        name: service.name,
+        amount: service.price
+      })) || [],
+      platformCommission,
+      totalEarnings
+    }
+  };
 };
 
 // Status colors mapping with modern design

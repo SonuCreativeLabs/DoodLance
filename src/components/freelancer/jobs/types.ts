@@ -81,10 +81,28 @@ export interface Job {
   review?: string; // Direct review property for backward compatibility
   feedbackChips?: string[]; // Direct feedback chips property for backward compatibility
   earnings?: {
-    amount: number;
-    platformFee: number;
-    total: number;
+    baseAmount: number;
+    tips: number;
+    addOnServices: number;
+    platformCommission: number;
+    totalEarnings: number;
+    commissionRate?: number; // percentage
+    breakdown?: {
+      baseAmount: number;
+      tips: number;
+      addOnServices: {
+        name: string;
+        amount: number;
+      }[];
+      platformCommission: number;
+      totalEarnings: number;
+    };
   };
+  addOnServices?: {
+    name: string;
+    price: number;
+    description?: string;
+  }[];
   completedAt?: string;
 }
 

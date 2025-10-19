@@ -1,5 +1,6 @@
 'use client';
 
+import { calculateJobEarnings } from '@/components/freelancer/jobs/utils';
 import { mockUpcomingJobs } from '@/components/freelancer/jobs/mock-data';
 import { useState, useMemo } from 'react';
 import React from 'react';
@@ -14,26 +15,56 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
     if (typeof window !== 'undefined') {
       try {
         const storedUpdates = JSON.parse(localStorage.getItem('jobStatusUpdates') || '{}');
+        console.log('🔍 localStorage data loaded:', storedUpdates);
         // If we have stored job data, use it directly
         if (storedUpdates && Object.keys(storedUpdates).length > 0) {
           return storedUpdates;
         }
         return {};
       } catch (error) {
-        console.error('Error loading job updates from localStorage:', error);
+        console.error('❌ Error loading job updates from localStorage:', error);
         return {};
       }
     }
     return {};
   });
   
-  const [showCompleteDialog, setShowCompleteDialog] = useState(false);
-
-  // Check if action=complete is in URL params
+  // Add effect to force re-sync localStorage data on mount and when modal key changes
   React.useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('action') === 'complete') {
-      setShowCompleteDialog(true);
+    const handleStorageChange = () => {
+      console.log('🔄 Storage change detected, re-syncing...');
+      try {
+        const storedUpdates = JSON.parse(localStorage.getItem('jobStatusUpdates') || '{}');
+        console.log('🔄 Re-synced localStorage data:', storedUpdates);
+        setUpdatedJobs(storedUpdates);
+      } catch (error) {
+        console.error('❌ Error re-syncing localStorage:', error);
+      }
+    };
+
+    // Listen for storage changes
+    window.addEventListener('storage', handleStorageChange);
+
+    // Also listen for our custom event
+    window.addEventListener('jobStatusUpdated', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('jobStatusUpdated', handleStorageChange);
+    };
+  }, []);
+
+  // Force refresh localStorage data when component mounts
+  React.useEffect(() => {
+    console.log('🔄 Force refreshing localStorage data on mount...');
+    try {
+      const storedUpdates = JSON.parse(localStorage.getItem('jobStatusUpdates') || '{}');
+      if (storedUpdates && Object.keys(storedUpdates).length > 0) {
+        console.log('🔄 Force refresh found data:', storedUpdates);
+        setUpdatedJobs(storedUpdates);
+      }
+    } catch (error) {
+      console.error('❌ Error during force refresh:', error);
     }
   }, []);
 
@@ -54,6 +85,16 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
       </div>
     );
   }
+
+  const [showCompleteDialog, setShowCompleteDialog] = useState(false);
+
+  // Check if action=complete is in URL params
+  React.useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('action') === 'complete') {
+      setShowCompleteDialog(true);
+    }
+  }, []);
 
   // Check if job has been updated, otherwise use original job (prioritize original data)
   const currentJob = useMemo(() => {
@@ -124,7 +165,7 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
   const [modalKey, setModalKey] = useState(0);
 
   const handleJobUpdate = async (jobId: string, newStatus: 'completed' | 'cancelled', notes?: string, completionData?: {rating: number, review: string, feedbackChips: string[]}) => {
-    console.log(`Updating job ${jobId} status to ${newStatus}`, completionData);
+    console.log(`🔄 Updating job ${jobId} status to ${newStatus}`, completionData);
 
     try {
       // For completed jobs, fetch the updated job data from API to get rating and review
@@ -146,12 +187,20 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
 
         if (response.ok) {
           const updatedJobData = await response.json();
-          console.log('Fetched updated job data:', updatedJobData);
+          console.log('✅ Fetched updated job data from API:', updatedJobData);
+
+          // Calculate earnings for the completed job
+          const earningsData = calculateJobEarnings(job);
+          console.log('💰 Calculated earnings for completed job:', earningsData);
 
           // Update local state with complete job data
           setUpdatedJobs(prev => ({
             ...prev,
-            [jobId]: updatedJobData
+            [jobId]: {
+              ...updatedJobData,
+              earnings: earningsData,
+              completedAt: new Date().toISOString()
+            }
           }));
 
           // Update localStorage with complete job data from API (API now returns correct titles)
@@ -166,6 +215,9 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
               id: jobId,
               // Update timestamp
               updatedAt: new Date().toISOString(),
+              // Include calculated earnings
+              earnings: earningsData,
+              completedAt: new Date().toISOString(),
               // Include rating/review data from completion in freelancerRating format
               ...(completionData && {
                 freelancerRating: {
@@ -179,8 +231,8 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
           };
           localStorage.setItem('jobStatusUpdates', JSON.stringify(updatedData));
 
-          console.log('✅ Job completion data saved to localStorage:', updatedJobData);
-          console.log('✅ localStorage updated with:', updatedData[jobId]);
+          console.log('💾 Job completion data saved to localStorage:', updatedData[jobId]);
+          console.log('💾 localStorage updated with:', updatedData[jobId]);
 
           // Force dashboard refresh by dispatching a custom event
           window.dispatchEvent(new CustomEvent('jobStatusUpdated', {
@@ -210,11 +262,7 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
           // Add timestamp for completed jobs
           ...(newStatus === 'completed' && {
             completedAt: new Date().toISOString(),
-            earnings: {
-              amount: Number((prev[jobId] || job).payment) || 0,
-              platformFee: Math.round((Number((prev[jobId] || job).payment) || 0) * 0.1),
-              total: Math.round((Number((prev[jobId] || job).payment) || 0) * 0.9)
-            }
+            ...calculateJobEarnings(prev[jobId] || job)
           }),
           // Add cancellation details for cancelled jobs
           ...(newStatus === 'cancelled' && {
@@ -237,6 +285,9 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
       // Get the original job data from mock data to preserve all fields
       const originalJobData = mockUpcomingJobs.find(j => j.id === jobId);
 
+      // Calculate earnings for completed jobs
+      const earningsData = newStatus === 'completed' ? calculateJobEarnings(originalJobData || currentJobData) : null;
+
       const updatedData = {
         ...existingUpdates,
         [jobId]: {
@@ -256,13 +307,10 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
               date: new Date().toISOString()
             }
           }),
-          ...(newStatus === 'completed' && {
-            completedAt: new Date().toISOString(),
-            earnings: {
-              amount: Number((originalJobData || currentJobData).payment || 0),
-              platformFee: Math.round((Number((originalJobData || currentJobData).payment || 0)) * 0.1),
-              total: Math.round((Number((originalJobData || currentJobData).payment || 0)) * 0.9)
-            }
+          // Include calculated earnings for completed jobs
+          ...(earningsData && {
+            earnings: earningsData,
+            completedAt: new Date().toISOString()
           }),
           ...(newStatus === 'cancelled' && {
             cancellationDetails: {
@@ -274,6 +322,9 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
         }
       };
       localStorage.setItem('jobStatusUpdates', JSON.stringify(updatedData));
+
+      console.log('💾 Fallback: Job data saved to localStorage:', updatedData[jobId]);
+      console.log('💰 Earnings data included:', earningsData);
 
       // Force dashboard refresh by dispatching a custom event
       window.dispatchEvent(new CustomEvent('jobStatusUpdated', {
@@ -285,42 +336,49 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
         (window as any).dashboardHandleJobStatusChange(jobId, newStatus);
       }
     } catch (error) {
-      console.error('Error updating job status:', error);
+      console.error('❌ Error updating job status:', error);
       // Fallback to local state update if API fails
-      setUpdatedJobs(prev => ({
-        ...prev,
-        [jobId]: {
-          // Use original job data as base to ensure correct title and core info
-          ...(mockUpcomingJobs.find(j => j.id === jobId) || prev[jobId] || job),
-          status: newStatus,
-          // Add timestamp for completed jobs
-          ...(newStatus === 'completed' && {
-            completedAt: new Date().toISOString(),
-            earnings: {
-              amount: Number((prev[jobId] || job).payment) || 0,
-              platformFee: Math.round((Number((prev[jobId] || job).payment) || 0) * 0.1),
-              total: Math.round((Number((prev[jobId] || job).payment) || 0) * 0.9)
-            }
-          }),
-          // Include rating/review data from completion
-          ...(completionData && newStatus === 'completed' && {
-            freelancerRating: {
-              stars: completionData.rating,
-              review: completionData.review,
-              feedbackChips: completionData.feedbackChips,
-              date: new Date().toISOString()
-            }
-          }),
-          // Add cancellation details for cancelled jobs
-          ...(newStatus === 'cancelled' && {
-            cancellationDetails: {
-              cancelledBy: 'freelancer',
-              cancelledAt: new Date().toISOString(),
-              notes: notes || 'Cancelled by freelancer'
-            }
-          })
-        }
-      }));
+      setUpdatedJobs(prev => {
+        const currentJobData = prev[jobId] || job;
+        const originalJobData = mockUpcomingJobs.find(j => j.id === jobId);
+
+        // Calculate earnings for completed jobs
+        const earningsData = newStatus === 'completed' ? calculateJobEarnings(originalJobData || currentJobData) : null;
+
+        return {
+          ...prev,
+          [jobId]: {
+            // Use original job data as base to ensure correct title and core info
+            ...(originalJobData || {}),
+            // Override with current job data
+            ...currentJobData,
+            status: newStatus,
+            updatedAt: new Date().toISOString(),
+            // Add timestamp for completed jobs
+            ...(newStatus === 'completed' && {
+              completedAt: new Date().toISOString(),
+              earnings: earningsData
+            }),
+            // Include rating/review data from completion
+            ...(completionData && newStatus === 'completed' && {
+              freelancerRating: {
+                stars: completionData.rating,
+                review: completionData.review,
+                feedbackChips: completionData.feedbackChips,
+                date: new Date().toISOString()
+              }
+            }),
+            // Add cancellation details for cancelled jobs
+            ...(newStatus === 'cancelled' && {
+              cancellationDetails: {
+                cancelledBy: 'freelancer',
+                cancelledAt: new Date().toISOString(),
+                notes: notes || 'Cancelled by freelancer'
+              }
+            })
+          }
+        };
+      });
 
       // Force modal re-render by updating the key
       setModalKey(prev => prev + 1);
@@ -332,6 +390,9 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
       // Get the original job data from mock data to ensure correct info
       const originalJobData = mockUpcomingJobs.find(j => j.id === jobId);
 
+      // Calculate earnings for completed jobs
+      const earningsData = newStatus === 'completed' ? calculateJobEarnings(originalJobData || currentJobData || job) : null;
+
       const updatedData = {
         ...existingUpdates,
         [jobId]: {
@@ -342,13 +403,10 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
           // Update status and timestamp
           status: newStatus,
           updatedAt: new Date().toISOString(),
-          ...(newStatus === 'completed' && {
-            completedAt: new Date().toISOString(),
-            earnings: {
-              amount: Number((originalJobData || currentJobData || {}).payment || 0),
-              platformFee: Math.round((Number((originalJobData || currentJobData || {}).payment || 0)) * 0.1),
-              total: Math.round((Number((originalJobData || currentJobData || {}).payment || 0)) * 0.9)
-            }
+          // Include calculated earnings for completed jobs
+          ...(earningsData && {
+            earnings: earningsData,
+            completedAt: new Date().toISOString()
           }),
           ...(newStatus === 'cancelled' && {
             cancellationDetails: {
@@ -360,6 +418,9 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
         }
       };
       localStorage.setItem('jobStatusUpdates', JSON.stringify(updatedData));
+
+      console.log('💾 Final fallback: Job data saved to localStorage:', updatedData[jobId]);
+      console.log('💰 Final fallback earnings included:', earningsData);
 
       // Force dashboard refresh by dispatching a custom event
       window.dispatchEvent(new CustomEvent('jobStatusUpdated', {
@@ -398,6 +459,14 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
         earnings: updatedJobData.earnings
       })
     };
+
+    console.log('Modal job construction:', {
+      baseJobId: baseJob.id,
+      updatedJobData: updatedJobData,
+      updatedJobDataEarnings: updatedJobData?.earnings,
+      finalEarnings: jobWithCompletionData.earnings,
+      baseJobEarnings: baseJob.earnings
+    });
 
     console.log('Modal job data:', {
       id: jobWithCompletionData.id,

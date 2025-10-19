@@ -1,6 +1,6 @@
 'use client';
 
-import { X, MessageCircle, Phone, MapPin, CalendarIcon, ClockIcon, IndianRupee, ArrowLeft, AlertCircle, User, UserCheck, Star, ChevronDown, ChevronUp, CheckCircle, MessageSquare, AlertTriangle } from 'lucide-react';
+import { X, MessageCircle, Phone, MapPin, CalendarIcon, ClockIcon, IndianRupee, ArrowLeft, AlertCircle, User, UserCheck, Star, ChevronDown, ChevronUp, CheckCircle, MessageSquare, AlertTriangle, TrendingUp } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
@@ -8,6 +8,9 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+import { calculateJobEarnings } from './utils';
+import { Job } from './types';
 
 interface CancellationDetails {
   cancelledBy: 'client' | 'freelancer';
@@ -29,48 +32,7 @@ interface ClientInfo {
 }
 
 interface JobDetailsModalProps {
-  job: {
-    id: string;
-    title: string;
-    description: string;
-    date: string;
-    time: string;
-    location: string;
-    payment: string | number;
-    duration: string;
-    category: string;
-    experienceLevel: string;
-    skills: string[];
-    status?: 'upcoming' | 'completed' | 'cancelled' | 'confirmed' | 'pending';
-    client?: ClientInfo;
-    jobDate?: string;
-    jobTime?: string;
-    cancellationDetails?: CancellationDetails;
-    completedAt?: string;
-    earnings?: {
-      amount: number;
-      platformFee: number;
-      total: number;
-    };
-    clientRating?: {
-      stars: 1 | 2 | 3 | 4 | 5;
-      feedback: string;
-      date: string;
-    };
-    freelancerRating?: {
-      stars: 1 | 2 | 3 | 4 | 5;
-      review: string;
-      feedbackChips: string[];
-      date: string;
-    };
-    rating?: {
-      stars: 1 | 2 | 3 | 4 | 5;
-      feedback: string;
-      date: string;
-    };
-    review?: string;
-    feedbackChips?: string[];
-  };
+  job: Job;
   onClose?: () => void;
   onJobUpdate?: (jobId: string, newStatus: 'completed' | 'cancelled', notes?: string, completionData?: {rating: number, review: string, feedbackChips: string[]}) => void;
   initialShowComplete?: boolean;
@@ -100,6 +62,9 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
   const [review, setReview] = useState('');
   const [selectedChips, setSelectedChips] = useState<string[]>([]);
   const [renderTrigger, setRenderTrigger] = useState(0);
+
+  // Calculate earnings preview for the job
+  const earningsPreview = calculateJobEarnings(job);
 
   // Force re-render when job data changes
   useEffect(() => {
@@ -613,23 +578,70 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
 
                 {job.earnings && (
                   <div className="p-4 bg-[#111111] rounded-lg border border-white/5">
-                    <h3 className="text-sm font-medium text-white/80 mb-3">Earnings</h3>
-                    <div className="space-y-3">
-                      <div className="flex justify-between">
-                        <span className="text-sm text-white/60">Amount</span>
-                        <span className="text-sm font-medium">₹{job.earnings.amount.toLocaleString('en-IN')}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-white/60">Platform Fee</span>
-                        <span className="text-sm">-₹{job.earnings.platformFee.toLocaleString('en-IN')}</span>
-                      </div>
-                      <div className="pt-2 border-t border-white/5">
-                        <div className="flex justify-between">
-                          <span className="text-sm font-medium text-white/90">Total Earned</span>
-                          <span className="text-sm font-medium text-green-400">₹{job.earnings.total.toLocaleString('en-IN')}</span>
+                    <div className="flex items-center gap-2 mb-3">
+                      <TrendingUp className="w-5 h-5 text-emerald-400" />
+                      <h3 className="text-sm font-medium text-white/80">Earnings</h3>
+                    </div>
+
+                    {/* Total Earnings Summary - Always Visible */}
+                    <div className="text-center mb-3 p-3 bg-emerald-900/10 rounded-lg border border-emerald-900/20">
+                      <p className="text-xs text-emerald-300 mb-1">Total Earned</p>
+                      <p className="text-2xl font-bold text-emerald-400">₹{job.earnings.totalEarnings.toLocaleString()}</p>
+                    </div>
+
+                    {/* Collapsible Breakdown */}
+                    <details className="group">
+                      <summary className="flex items-center justify-between cursor-pointer text-sm text-white/70 hover:text-white/90 transition-colors list-none">
+                        <span className="flex items-center gap-2">
+                          <ChevronDown className="w-4 h-4 transition-transform group-open:rotate-180" />
+                          View Breakdown
+                        </span>
+                      </summary>
+
+                      <div className="mt-3 space-y-2 pl-6">
+                        {/* Base Amount */}
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-white/70">Base Amount</span>
+                          <span className="text-white font-medium">₹{job.earnings.baseAmount.toLocaleString()}</span>
+                        </div>
+
+                        {/* Tips */}
+                        {job.earnings.tips > 0 && (
+                          <div className="flex justify-between items-center text-sm">
+                            <span className="text-white/70">Tips</span>
+                            <span className="text-emerald-400 font-medium">+₹{job.earnings.tips.toLocaleString()}</span>
+                          </div>
+                        )}
+
+                        {/* Add-on Services */}
+                        {job.earnings.breakdown?.addOnServices && job.earnings.breakdown.addOnServices.length > 0 && (
+                          <div className="space-y-1">
+                            <div className="flex justify-between items-center text-sm">
+                              <span className="text-white/70">Add-on Services</span>
+                              <span className="text-blue-400 font-medium">+₹{job.earnings.addOnServices.toLocaleString()}</span>
+                            </div>
+                            {job.earnings.breakdown.addOnServices.map((service, index) => (
+                              <div key={index} className="flex justify-between items-center text-xs ml-4">
+                                <span className="text-white/50">{service.name}</span>
+                                <span className="text-blue-300">₹{service.amount.toLocaleString()}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Platform Commission */}
+                        <div className="flex justify-between items-center text-sm border-t border-white/10 pt-2">
+                          <span className="text-white/70">Platform Fee ({(job.earnings.commissionRate || 0.1) * 100}%)</span>
+                          <span className="text-red-400 font-medium">-₹{job.earnings.platformCommission.toLocaleString()}</span>
+                        </div>
+
+                        {/* Total Earnings (Repeated for clarity) */}
+                        <div className="flex justify-between items-center text-sm font-semibold border-t border-white/20 pt-2">
+                          <span className="text-white">Total Earned</span>
+                          <span className="text-emerald-400 text-base">₹{job.earnings.totalEarnings.toLocaleString()}</span>
                         </div>
                       </div>
-                    </div>
+                    </details>
                   </div>
                 )}
 

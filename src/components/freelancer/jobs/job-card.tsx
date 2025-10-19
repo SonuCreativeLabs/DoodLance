@@ -2,8 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
-import { CalendarIcon, MapPin, ClockIcon, MessageCircle, User, Star } from 'lucide-react';
-import { IndianRupee } from 'lucide-react';
+import { CalendarIcon, MapPin, ClockIcon, MessageCircle, User, Star, IndianRupee } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 import { Job } from './types';
@@ -17,12 +16,12 @@ interface JobCardProps {
 
 export const JobCard: React.FC<JobCardProps> = ({ job, index, onStatusChange }) => {
   const router = useRouter();
-  
+
   const handleCardClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     router.push(`/freelancer/jobs/${job.id}`);
   };
-  
+
   const handleMessageClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     // Handle message button click
