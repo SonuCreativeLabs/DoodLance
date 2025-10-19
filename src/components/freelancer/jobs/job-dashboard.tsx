@@ -606,13 +606,13 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
               <TabsList className="grid w-full sm:w-auto grid-cols-2 h-12 bg-transparent p-1 gap-1">
                 <TabsTrigger
                   value="upcoming"
-                  className="relative px-4 py-2 text-sm font-medium transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#8B66D1] data-[state=active]:to-[#9B76E1] data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-[#8B66D1]/25 data-[state=active]:rounded-lg data-[state=inactive]:text-gray-300 data-[state=inactive]:hover:text-white data-[state=inactive]:hover:bg-white/5 data-[state=inactive]:bg-transparent data-[state=inactive]:rounded-lg data-[state=inactive]:border data-[state=inactive]:border-white/10"
+                  className="relative px-4 py-2 text-sm font-medium transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#8B66D1] data-[state=active]:to-[#9B76E1] data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-[#8B66D1]/25 data-[state=active]:rounded-lg data-[state=inactive]:text-gray-300 data-[state=inactive]:bg-transparent data-[state=inactive]:rounded-lg data-[state=inactive]:border data-[state=inactive]:border-gray-600/50"
                 >
                   My Jobs
                 </TabsTrigger>
                 <TabsTrigger
                   value="applications"
-                  className="relative px-4 py-2 text-sm font-medium transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#8B66D1] data-[state=active]:to-[#9B76E1] data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-[#8B66D1]/25 data-[state=active]:rounded-lg data-[state=inactive]:text-gray-300 data-[state=inactive]:hover:text-white data-[state=inactive]:hover:bg-white/5 data-[state=inactive]:bg-transparent data-[state=inactive]:rounded-lg data-[state=inactive]:border data-[state=inactive]:border-white/10"
+                  className="relative px-4 py-2 text-sm font-medium transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#8B66D1] data-[state=active]:to-[#9B76E1] data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-[#8B66D1]/25 data-[state=active]:rounded-lg data-[state=inactive]:text-gray-300 data-[state=inactive]:bg-transparent data-[state=inactive]:rounded-lg data-[state=inactive]:border data-[state=inactive]:border-gray-600/50"
                 >
                   My Proposals
                 </TabsTrigger>

@@ -473,6 +473,26 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                         </div>
                       </div>
                     </div>
+
+                    {/* Chat and Call buttons in client profile */}
+                    <div className="pt-4 border-t border-gray-800">
+                      <div className="flex gap-2">
+                        <button
+                          onClick={handleChat}
+                          className="flex-1 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/90 hover:text-white transition-colors text-sm font-medium flex items-center justify-center gap-2"
+                        >
+                          <MessageSquare className="w-4 h-4" />
+                          Chat
+                        </button>
+                        <button
+                          onClick={handleCall}
+                          className="flex-1 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/90 hover:text-white transition-colors text-sm font-medium flex items-center justify-center gap-2"
+                        >
+                          <Phone className="w-4 h-4" />
+                          Call
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -480,78 +500,21 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
 
             {/* Action Buttons - Only show for upcoming/pending jobs */}
             {(job.status === 'upcoming' || job.status === 'pending' || job.status === 'confirmed') && (
-              <div className="mt-6 p-4 bg-[#111111] rounded-xl border border-gray-800/80">
-                <div className="grid grid-cols-2 md:grid-cols-2 gap-3">
-                  <button 
-                    onClick={handleChat}
-                    className="px-4 py-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/90 hover:text-white transition-colors text-sm font-medium flex items-center justify-center gap-2"
-                  >
-                    <MessageSquare className="w-4 h-4" />
-                    Chat
-                  </button>
-                  <button 
-                    onClick={handleCall}
-                    className="px-4 py-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/90 hover:text-white transition-colors text-sm font-medium flex items-center justify-center gap-2"
-                  >
-                    <Phone className="w-4 h-4" />
-                    Call
-                  </button>
-                  <button 
-                    onClick={handleCancelJob}
-                    className="px-4 py-3 rounded-lg bg-transparent hover:bg-red-900/20 text-red-400 border border-red-900/50 hover:border-red-800/70 transition-colors text-sm font-medium flex items-center justify-center gap-2 col-span-2"
-                  >
-                    <X className="w-4 h-4" />
-                    Cancel Job
-                  </button>
-                  <button 
-                    onClick={handleMarkComplete}
-                    className="px-4 py-3 rounded-lg bg-green-600 hover:bg-green-700 text-white border border-green-700 transition-colors text-sm font-medium flex items-center justify-center gap-2 col-span-2"
-                  >
-                    <CheckCircle className="w-4 h-4" />
-                    Mark Complete
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Chat and Call buttons for completed jobs (within 8 hours) */}
-            {job.status === 'completed' && isWithin8Hours(job.completedAt) && (
-              <div className="mt-6 p-4 bg-[#111111] rounded-xl border border-gray-800/80">
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    onClick={handleChat}
-                    className="px-4 py-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/90 hover:text-white transition-colors text-sm font-medium flex items-center justify-center gap-2"
-                  >
-                    <MessageSquare className="w-4 h-4" />
-                    Chat
-                  </button>
-                  <button
-                    onClick={handleCall}
-                    className="px-4 py-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/90 hover:text-white transition-colors text-sm font-medium flex items-center justify-center gap-2"
-                  >
-                    <Phone className="w-4 h-4" />
-                    Call
-                  </button>
-                </div>
-                <p className="text-xs text-gray-400 text-center mt-2">
-                  Available for 8 hours after completion
-                </p>
-              </div>
-            )}
-
-            {/* Only Chat for completed jobs (after 8 hours) */}
-            {job.status === 'completed' && !isWithin8Hours(job.completedAt) && (
-              <div className="mt-6 p-4 bg-[#111111] rounded-xl border border-gray-800/80">
+              <div className="mt-6 space-y-3">
                 <button
-                  onClick={handleChat}
-                  className="w-full px-4 py-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/90 hover:text-white transition-colors text-sm font-medium flex items-center justify-center gap-2"
+                  onClick={handleMarkComplete}
+                  className="w-full px-4 py-3 rounded-lg bg-green-600 hover:bg-green-700 text-white border border-green-700 transition-colors text-sm font-medium flex items-center justify-center gap-2"
                 >
-                  <MessageSquare className="w-4 h-4" />
-                  Chat with Client
+                  <CheckCircle className="w-4 h-4" />
+                  Mark Complete
                 </button>
-                <p className="text-xs text-gray-500 text-center mt-2">
-                  Communication limited after 8 hours
-                </p>
+                <button
+                  onClick={handleCancelJob}
+                  className="w-full px-4 py-3 rounded-lg bg-transparent hover:bg-red-900/20 text-red-400 border border-red-900/50 hover:border-red-800/70 transition-colors text-sm font-medium flex items-center justify-center gap-2"
+                >
+                  <X className="w-4 h-4" />
+                  Cancel Job
+                </button>
               </div>
             )}
 
@@ -688,60 +651,6 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                     </div>
                   </div>
                 ) : null}
-              </div>
-            )}
-
-            {job.status === 'cancelled' && job.cancellationDetails && (
-              <div className="p-4 bg-[#1a0a0a] rounded-lg border border-red-900/50">
-                <div className="flex items-start space-x-3">
-                  <div className="mt-0.5">
-                    <AlertCircle className="w-5 h-5 text-red-400" />
-                  </div>
-                  <div className="flex-1 min-w-0 space-y-3">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                      <div className="flex items-center gap-2">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-900/20 text-red-400 border border-red-800/30 whitespace-nowrap">
-                          {job.cancellationDetails.cancelledBy === 'client' ? (
-                            <User className="w-3 h-3 mr-1.5 flex-shrink-0" />
-                          ) : (
-                            <UserCheck className="w-3 h-3 mr-1.5 flex-shrink-0" />
-                          )}
-                          {job.cancellationDetails.cancelledBy === 'client' ? 'Cancelled by Client' : 'Cancelled by You'}
-                        </span>
-                      </div>
-                      <span className="text-xs text-white/60 whitespace-nowrap">
-                        {new Date(job.cancellationDetails.cancelledAt).toLocaleDateString('en-US', { 
-                          year: 'numeric', 
-                          month: 'short', 
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
-                      </span>
-                    </div>
-                    
-                    {job.cancellationDetails.notes && (
-                      <div className="p-3 -mx-1 bg-black/20 rounded-md border border-white/5">
-                        <p className="text-sm leading-relaxed text-white/80">&quot;{job.cancellationDetails.notes}&quot;</p>
-                      </div>
-                    )}
-                    
-                    <div className="pt-1">
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        className="h-8 px-3 text-xs text-white/60 hover:text-white/80 hover:bg-white/5"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          // Handle message click
-                        }}
-                      >
-                        <MessageCircle className="w-3.5 h-3.5 mr-1.5" />
-                        Message Client
-                      </Button>
-                    </div>
-                  </div>
-                </div>
               </div>
             )}
           </div>
