@@ -1,14 +1,41 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
-import React from 'react';
-import { JobDetailsModal } from '@/components/freelancer/jobs/JobDetailsModal';
 import { mockUpcomingJobs } from '@/components/freelancer/jobs/mock-data';
+import { useState, useMemo } from 'react';
+import React from 'react';
+import { useRouter } from 'next/navigation';
+import { JobDetailsModal } from '@/components/freelancer/jobs/JobDetailsModal';
 
 export default function JobDetailsPage({ params }: { params: { id: string } }) {
   const router = useRouter();
-  const [updatedJobs, setUpdatedJobs] = useState<{[key: string]: any}>({});
+  
+  // Initialize updatedJobs with data from localStorage
+  const [updatedJobs, setUpdatedJobs] = useState<{[key: string]: any}>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const storedUpdates = JSON.parse(localStorage.getItem('jobStatusUpdates') || '{}');
+        // If we have stored job data, use it directly
+        if (storedUpdates && Object.keys(storedUpdates).length > 0) {
+          return storedUpdates;
+        }
+        return {};
+      } catch (error) {
+        console.error('Error loading job updates from localStorage:', error);
+        return {};
+      }
+    }
+    return {};
+  });
+  
+  const [showCompleteDialog, setShowCompleteDialog] = useState(false);
+
+  // Check if action=complete is in URL params
+  React.useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('action') === 'complete') {
+      setShowCompleteDialog(true);
+    }
+  }, []);
 
   // Find the job with the matching ID from mock data
   const job = mockUpcomingJobs.find(job => job.id === params.id);
@@ -28,11 +55,41 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
     );
   }
 
-  // Check if job has been updated, otherwise use original job
-  const currentJob = updatedJobs[job.id] || job;
+  // Check if job has been updated, otherwise use original job (prioritize original data)
+  const currentJob = useMemo(() => {
+    // First, try to get original job data from mock data
+    const originalJobData = mockUpcomingJobs.find(j => j.id === job.id);
+
+    // If we have stored updates, merge them with original data but prioritize original
+    if (updatedJobs[job.id]) {
+      const mergedJob = {
+        // Start with original job data to ensure correct title and core info
+        ...(originalJobData || {}),
+        // Override with stored status updates only
+        ...updatedJobs[job.id],
+        // Ensure ID is preserved
+        id: job.id,
+      };
+
+      console.log('🔄 Using merged job data:', {
+        originalTitle: originalJobData?.title,
+        storedTitle: updatedJobs[job.id]?.title,
+        finalTitle: mergedJob.title,
+        rating: mergedJob.freelancerRating,
+        review: mergedJob.review,
+        feedbackChips: mergedJob.feedbackChips
+      });
+
+      return mergedJob;
+    }
+
+    // If no stored updates, use original job data
+    console.log('📋 Using original job data:', originalJobData?.title);
+    return originalJobData || job;
+  }, [updatedJobs, job.id, job]);
 
   // Ensure job has all required properties with default values
-  const jobWithDefaults = {
+  const jobWithDefaults = useMemo(() => ({
     ...currentJob,
     title: currentJob.title || 'Untitled Job',
     description: currentJob.description || 'No description provided',
@@ -62,67 +119,258 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
         'https://randomuser.me/api/portraits/men/22.jpg'
       ].slice(0, Math.floor(Math.random() * 4) + 1), // 1-5 random avatars
     },
-  };
+  }), [currentJob]);
 
   const [modalKey, setModalKey] = useState(0);
 
-  const handleJobUpdate = (jobId: string, newStatus: 'completed' | 'cancelled') => {
-    console.log(`Updating job ${jobId} status to ${newStatus}`);
+  const handleJobUpdate = async (jobId: string, newStatus: 'completed' | 'cancelled', notes?: string, completionData?: {rating: number, review: string, feedbackChips: string[]}) => {
+    console.log(`Updating job ${jobId} status to ${newStatus}`, completionData);
 
-    // Update local state
-    setUpdatedJobs(prev => ({
-      ...prev,
-      [jobId]: {
-        ...prev[jobId] || job,
-        status: newStatus,
-        // Add timestamp for completed jobs
-        ...(newStatus === 'completed' && {
-          completedAt: new Date().toISOString(),
-          earnings: {
-            amount: jobWithDefaults.payment,
-            platformFee: Math.round(jobWithDefaults.payment * 0.1),
-            total: Math.round(jobWithDefaults.payment * 0.9)
+    try {
+      // For completed jobs, fetch the updated job data from API to get rating and review
+      if (newStatus === 'completed') {
+        const response = await fetch(`http://localhost:3000/api/jobs/${jobId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            status: 'completed',
+            rating: completionData?.rating || 0,
+            review: completionData?.review || '',
+            feedbackChips: completionData?.feedbackChips || [],
+            // Pass the original job data so API can use it
+            originalJobData: job
+          }),
+        });
+
+        if (response.ok) {
+          const updatedJobData = await response.json();
+          console.log('Fetched updated job data:', updatedJobData);
+
+          // Update local state with complete job data
+          setUpdatedJobs(prev => ({
+            ...prev,
+            [jobId]: updatedJobData
+          }));
+
+          // Update localStorage with complete job data from API (API now returns correct titles)
+          const existingUpdates = JSON.parse(localStorage.getItem('jobStatusUpdates') || '{}');
+
+          const updatedData = {
+            ...existingUpdates,
+            [jobId]: {
+              // Use API response data as primary source (API now returns correct titles)
+              ...updatedJobData,
+              // Ensure we have the correct ID
+              id: jobId,
+              // Update timestamp
+              updatedAt: new Date().toISOString(),
+              // Include rating/review data from completion in freelancerRating format
+              ...(completionData && {
+                freelancerRating: {
+                  stars: completionData.rating,
+                  review: completionData.review,
+                  feedbackChips: completionData.feedbackChips,
+                  date: new Date().toISOString()
+                }
+              })
+            }
+          };
+          localStorage.setItem('jobStatusUpdates', JSON.stringify(updatedData));
+
+          console.log('✅ Job completion data saved to localStorage:', updatedJobData);
+          console.log('✅ localStorage updated with:', updatedData[jobId]);
+
+          // Force dashboard refresh by dispatching a custom event
+          window.dispatchEvent(new CustomEvent('jobStatusUpdated', {
+            detail: { jobId, newStatus }
+          }));
+
+          // Also call dashboard's handleJobStatusChange if available
+          if ((window as any).dashboardHandleJobStatusChange) {
+            (window as any).dashboardHandleJobStatusChange(jobId, newStatus);
           }
-        }),
-        // Add cancellation details for cancelled jobs
-        ...(newStatus === 'cancelled' && {
-          cancellationDetails: {
-            cancelledBy: 'freelancer',
-            cancelledAt: new Date().toISOString(),
-            notes: 'Cancelled by freelancer'
-          }
-        })
+
+          // Force modal re-render with updated data
+          setTimeout(() => {
+            setModalKey(prev => prev + 1);
+          }, 50);
+          return;
+        }
       }
-    }));
 
-    // Force modal re-render by updating the key
-    setModalKey(prev => prev + 1);
+      // For cancelled jobs or if API fetch fails, use local state update
+      setUpdatedJobs(prev => ({
+        ...prev,
+        [jobId]: {
+          // Use the updated job data if available from API, otherwise use original job data
+          ...(prev[jobId] || job),
+          status: newStatus,
+          // Add timestamp for completed jobs
+          ...(newStatus === 'completed' && {
+            completedAt: new Date().toISOString(),
+            earnings: {
+              amount: Number((prev[jobId] || job).payment) || 0,
+              platformFee: Math.round((Number((prev[jobId] || job).payment) || 0) * 0.1),
+              total: Math.round((Number((prev[jobId] || job).payment) || 0) * 0.9)
+            }
+          }),
+          // Add cancellation details for cancelled jobs
+          ...(newStatus === 'cancelled' && {
+            cancellationDetails: {
+              cancelledBy: 'freelancer',
+              cancelledAt: new Date().toISOString(),
+              notes: notes || 'Cancelled by freelancer'
+            }
+          })
+        }
+      }));
 
-    // Persist to localStorage so JobDashboard can pick up the changes
-    const existingUpdates = JSON.parse(localStorage.getItem('jobStatusUpdates') || '{}');
-    const updatedData = {
-      ...existingUpdates,
-      [jobId]: {
-        status: newStatus,
-        updatedAt: new Date().toISOString(),
-        ...(newStatus === 'completed' && {
-          completedAt: new Date().toISOString(),
-          earnings: {
-            amount: jobWithDefaults.payment,
-            platformFee: Math.round(jobWithDefaults.payment * 0.1),
-            total: Math.round(jobWithDefaults.payment * 0.9)
-          }
-        }),
-        ...(newStatus === 'cancelled' && {
-          cancellationDetails: {
-            cancelledBy: 'freelancer',
-            cancelledAt: new Date().toISOString(),
-            notes: 'Cancelled by freelancer'
-          }
-        })
+      // Force modal re-render by updating the key
+      setModalKey(prev => prev + 1);
+
+      // Persist to localStorage so JobDashboard can pick up the changes
+      const existingUpdates = JSON.parse(localStorage.getItem('jobStatusUpdates') || '{}');
+      const currentJobData = existingUpdates[jobId] || job;
+
+      // Get the original job data from mock data to preserve all fields
+      const originalJobData = mockUpcomingJobs.find(j => j.id === jobId);
+
+      const updatedData = {
+        ...existingUpdates,
+        [jobId]: {
+          // Always preserve the complete original job data
+          ...(originalJobData || {}),
+          // Override with current job data
+          ...currentJobData,
+          // Update status and timestamp
+          status: newStatus,
+          updatedAt: new Date().toISOString(),
+          // Include rating/review data from completion
+          ...(completionData && newStatus === 'completed' && {
+            freelancerRating: {
+              stars: completionData.rating,
+              review: completionData.review,
+              feedbackChips: completionData.feedbackChips,
+              date: new Date().toISOString()
+            }
+          }),
+          ...(newStatus === 'completed' && {
+            completedAt: new Date().toISOString(),
+            earnings: {
+              amount: Number((originalJobData || currentJobData).payment || 0),
+              platformFee: Math.round((Number((originalJobData || currentJobData).payment || 0)) * 0.1),
+              total: Math.round((Number((originalJobData || currentJobData).payment || 0)) * 0.9)
+            }
+          }),
+          ...(newStatus === 'cancelled' && {
+            cancellationDetails: {
+              cancelledBy: 'freelancer',
+              cancelledAt: new Date().toISOString(),
+              notes: notes || 'Cancelled by freelancer'
+            }
+          })
+        }
+      };
+      localStorage.setItem('jobStatusUpdates', JSON.stringify(updatedData));
+
+      // Force dashboard refresh by dispatching a custom event
+      window.dispatchEvent(new CustomEvent('jobStatusUpdated', {
+        detail: { jobId, newStatus }
+      }));
+
+      // Also call dashboard's handleJobStatusChange if available
+      if ((window as any).dashboardHandleJobStatusChange) {
+        (window as any).dashboardHandleJobStatusChange(jobId, newStatus);
       }
-    };
-    localStorage.setItem('jobStatusUpdates', JSON.stringify(updatedData));
+    } catch (error) {
+      console.error('Error updating job status:', error);
+      // Fallback to local state update if API fails
+      setUpdatedJobs(prev => ({
+        ...prev,
+        [jobId]: {
+          // Use original job data as base to ensure correct title and core info
+          ...(mockUpcomingJobs.find(j => j.id === jobId) || prev[jobId] || job),
+          status: newStatus,
+          // Add timestamp for completed jobs
+          ...(newStatus === 'completed' && {
+            completedAt: new Date().toISOString(),
+            earnings: {
+              amount: Number((prev[jobId] || job).payment) || 0,
+              platformFee: Math.round((Number((prev[jobId] || job).payment) || 0) * 0.1),
+              total: Math.round((Number((prev[jobId] || job).payment) || 0) * 0.9)
+            }
+          }),
+          // Include rating/review data from completion
+          ...(completionData && newStatus === 'completed' && {
+            freelancerRating: {
+              stars: completionData.rating,
+              review: completionData.review,
+              feedbackChips: completionData.feedbackChips,
+              date: new Date().toISOString()
+            }
+          }),
+          // Add cancellation details for cancelled jobs
+          ...(newStatus === 'cancelled' && {
+            cancellationDetails: {
+              cancelledBy: 'freelancer',
+              cancelledAt: new Date().toISOString(),
+              notes: notes || 'Cancelled by freelancer'
+            }
+          })
+        }
+      }));
+
+      // Force modal re-render by updating the key
+      setModalKey(prev => prev + 1);
+
+      // Update localStorage for fallback case
+      const existingUpdates = JSON.parse(localStorage.getItem('jobStatusUpdates') || '{}');
+      const currentJobData = existingUpdates[jobId];
+
+      // Get the original job data from mock data to ensure correct info
+      const originalJobData = mockUpcomingJobs.find(j => j.id === jobId);
+
+      const updatedData = {
+        ...existingUpdates,
+        [jobId]: {
+          // Use original job data as base to ensure correct title and core info
+          ...(originalJobData || {}),
+          // Override with current job data (which should have status updates)
+          ...currentJobData,
+          // Update status and timestamp
+          status: newStatus,
+          updatedAt: new Date().toISOString(),
+          ...(newStatus === 'completed' && {
+            completedAt: new Date().toISOString(),
+            earnings: {
+              amount: Number((originalJobData || currentJobData || {}).payment || 0),
+              platformFee: Math.round((Number((originalJobData || currentJobData || {}).payment || 0)) * 0.1),
+              total: Math.round((Number((originalJobData || currentJobData || {}).payment || 0)) * 0.9)
+            }
+          }),
+          ...(newStatus === 'cancelled' && {
+            cancellationDetails: {
+              cancelledBy: 'freelancer',
+              cancelledAt: new Date().toISOString(),
+              notes: notes || 'Cancelled by freelancer'
+            }
+          })
+        }
+      };
+      localStorage.setItem('jobStatusUpdates', JSON.stringify(updatedData));
+
+      // Force dashboard refresh by dispatching a custom event
+      window.dispatchEvent(new CustomEvent('jobStatusUpdated', {
+        detail: { jobId, newStatus }
+      }));
+
+      // Also call dashboard's handleJobStatusChange if available
+      if ((window as any).dashboardHandleJobStatusChange) {
+        (window as any).dashboardHandleJobStatusChange(jobId, newStatus);
+      }
+    }
   };
 
   const handleCloseModal = () => {
@@ -130,7 +378,38 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
   };
 
   // Create a fresh job object reference to force modal re-render when status changes
-  const modalJob = { ...jobWithDefaults };
+  // Use updated job data if available, otherwise use original job data
+  const modalJob = useMemo(() => {
+    // Get the updated job data if it exists
+    const updatedJobData = updatedJobs[currentJob.id];
 
-  return <JobDetailsModal key={`${currentJob.status}-${currentJob.id}-${modalKey}`} job={modalJob} onClose={handleCloseModal} onJobUpdate={handleJobUpdate} />;
+    // Use updated data if available, otherwise fall back to original job data
+    const baseJob = updatedJobData || jobWithDefaults;
+
+    // Ensure we have the latest completion data
+    const jobWithCompletionData = {
+      ...baseJob,
+      ...(updatedJobData && {
+        freelancerRating: updatedJobData.freelancerRating,
+        rating: updatedJobData.rating,
+        review: updatedJobData.review,
+        feedbackChips: updatedJobData.feedbackChips,
+        completedAt: updatedJobData.completedAt,
+        earnings: updatedJobData.earnings
+      })
+    };
+
+    console.log('Modal job data:', {
+      id: jobWithCompletionData.id,
+      status: jobWithCompletionData.status,
+      hasFreelancerRating: !!jobWithCompletionData.freelancerRating,
+      freelancerRating: jobWithCompletionData.freelancerRating,
+      hasRating: !!jobWithCompletionData.rating,
+      rating: jobWithCompletionData.rating
+    });
+
+    return jobWithCompletionData;
+  }, [jobWithDefaults, updatedJobs, currentJob.id, currentJob.status]);
+
+  return <JobDetailsModal key={`${currentJob.status}-${currentJob.id}-${modalKey}`} job={modalJob} onClose={handleCloseModal} onJobUpdate={handleJobUpdate} initialShowComplete={showCompleteDialog} />;
 }

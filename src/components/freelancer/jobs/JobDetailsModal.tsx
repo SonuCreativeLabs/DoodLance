@@ -5,6 +5,9 @@ import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface CancellationDetails {
   cancelledBy: 'client' | 'freelancer';
@@ -54,9 +57,23 @@ interface JobDetailsModalProps {
       feedback: string;
       date: string;
     };
+    freelancerRating?: {
+      stars: 1 | 2 | 3 | 4 | 5;
+      review: string;
+      feedbackChips: string[];
+      date: string;
+    };
+    rating?: {
+      stars: 1 | 2 | 3 | 4 | 5;
+      feedback: string;
+      date: string;
+    };
+    review?: string;
+    feedbackChips?: string[];
   };
-  onClose?: () => void; // Add optional onClose prop
-  onJobUpdate?: (jobId: string, newStatus: 'completed' | 'cancelled') => void; // Add job update callback
+  onClose?: () => void;
+  onJobUpdate?: (jobId: string, newStatus: 'completed' | 'cancelled', notes?: string, completionData?: {rating: number, review: string, feedbackChips: string[]}) => void;
+  initialShowComplete?: boolean;
 }
 
 interface CollapsibleSectionProps {
@@ -66,19 +83,38 @@ interface CollapsibleSectionProps {
   className?: string;
 }
 
-
-export function JobDetailsModal({ job, onClose, onJobUpdate }: JobDetailsModalProps) {
+export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete = false }: JobDetailsModalProps) {
+  console.log('JobDetailsModal received job data:', {
+    id: job.id,
+    status: job.status,
+    hasFreelancerRating: !!job.freelancerRating,
+    freelancerRating: job.freelancerRating,
+    completedAt: job.completedAt
+  });
   const router = useRouter();
   const [showRatingForm, setShowRatingForm] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
-  const [showCompleteDialog, setShowCompleteDialog] = useState(false);
+  const [showCompleteDialog, setShowCompleteDialog] = useState(initialShowComplete);
+  const [cancelNotes, setCancelNotes] = useState('');
+  const [rating, setRating] = useState(0);
+  const [review, setReview] = useState('');
+  const [selectedChips, setSelectedChips] = useState<string[]>([]);
   const [renderTrigger, setRenderTrigger] = useState(0);
 
-  // Force re-render when job status changes
+  // Force re-render when job data changes
   useEffect(() => {
     setRenderTrigger(prev => prev + 1);
-  }, [job.status]);
-  
+  }, [job.status, job.freelancerRating]);
+
+  // Helper function to check if 8 hours have passed since completion
+  const isWithin8Hours = (completedAt?: string) => {
+    if (!completedAt) return true;
+    const completionTime = new Date(completedAt).getTime();
+    const now = new Date().getTime();
+    const eightHoursInMs = 8 * 60 * 60 * 1000;
+    return (now - completionTime) < eightHoursInMs;
+  };
+
   const handleBack = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (onClose) {
@@ -117,18 +153,47 @@ export function JobDetailsModal({ job, onClose, onJobUpdate }: JobDetailsModalPr
   };
 
   const confirmCancelJob = async () => {
+    if (!cancelNotes.trim()) {
+      alert('Please provide a reason for cancellation.');
+      return;
+    }
+
     try {
-      console.log('Cancelling job:', job.id);
-      // Update job status to cancelled
-      if (onJobUpdate) {
-        onJobUpdate(job.id, 'cancelled');
+      console.log('Attempting to cancel job:', job.id);
+      console.log('API URL:', `http://localhost:3000/api/jobs/${job.id}`);
+
+      const response = await fetch(`http://localhost:3000/api/jobs/${job.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          status: 'cancelled',
+          notes: cancelNotes,
+          cancelledBy: 'freelancer',
+          cancelledAt: new Date().toISOString()
+        }),
+      });
+
+      console.log('Cancel API response status:', response.status);
+
+      if (response.ok) {
+        const responseData = await response.json();
+        console.log('Cancel API success:', responseData);
+        alert('Job cancelled successfully!');
+        setShowCancelDialog(false);
+        setCancelNotes('');
+        if (onClose) onClose();
+        if (onJobUpdate) onJobUpdate(job.id, 'cancelled', cancelNotes);
+      } else {
+        const errorData = await response.json();
+        console.error('Cancel API error response:', errorData);
+        alert(`Failed to cancel job: ${errorData.error}`);
       }
-      alert('Job cancelled successfully!');
-      setShowCancelDialog(false);
-      if (onClose) onClose();
     } catch (error) {
       console.error('Error cancelling job:', error);
-      alert('Failed to cancel job. Please try again.');
+      const errorMessage = error instanceof Error ? error.message : 'Network error occurred';
+      alert(`Failed to cancel job: ${errorMessage}`);
     }
   };
 
@@ -139,18 +204,69 @@ export function JobDetailsModal({ job, onClose, onJobUpdate }: JobDetailsModalPr
   };
 
   const confirmMarkComplete = async () => {
+    if (rating === 0) {
+      alert('Please select a rating before marking as complete.');
+      return;
+    }
+
+    if (!review.trim()) {
+      alert('Please provide additional feedback before marking as complete.');
+      return;
+    }
+
     try {
-      console.log('Marking job as complete:', job.id);
-      // Update job status to completed
-      if (onJobUpdate) {
-        onJobUpdate(job.id, 'completed');
+      console.log('Attempting to complete job:', job.id);
+      console.log('API URL:', `http://localhost:3000/api/jobs/${job.id}`);
+
+      const response = await fetch(`http://localhost:3000/api/jobs/${job.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          status: 'completed',
+          freelancerRating: {
+            stars: rating,
+            review: review.trim(), // Keep only the review text, not the chips
+            feedbackChips: selectedChips,
+            date: new Date().toISOString()
+          }
+        }),
+      });
+
+      console.log('Complete API response status:', response.status);
+
+      if (response.ok) {
+        const responseData = await response.json();
+        console.log('Complete API success:', responseData);
+
+        // Clear form data first
+        setReview('');
+        setRating(0);
+        setSelectedChips([]);
+
+        // Close modal AFTER data processing is complete
+        setShowCompleteDialog(false);
+
+        // Call the parent handler to update the job status
+        if (onJobUpdate) {
+          onJobUpdate(job.id, 'completed', undefined, {
+            rating: rating,
+            review: review.trim(), // Keep only the review text, not the chips
+            feedbackChips: selectedChips
+          });
+        }
+
+        alert('Job marked as complete! Payment will be processed shortly.');
+      } else {
+        const errorData = await response.json();
+        console.error('Complete API error response:', errorData);
+        alert(`Failed to complete job: ${errorData.error}`);
       }
-      alert('Job marked as complete! Payment will be processed shortly.');
-      setShowCompleteDialog(false);
-      if (onClose) onClose();
     } catch (error) {
       console.error('Error completing job:', error);
-      alert('Failed to complete job. Please try again.');
+      const errorMessage = error instanceof Error ? error.message : 'Network error occurred';
+      alert(`Failed to complete job: ${errorMessage}`);
     }
   };
 
@@ -433,33 +549,44 @@ export function JobDetailsModal({ job, onClose, onJobUpdate }: JobDetailsModalPr
               </div>
             )}
 
-            {/* Only show Chat button for completed jobs */}
-            {job.status === 'completed' && (
+            {/* Chat and Call buttons for completed jobs (within 8 hours) */}
+            {job.status === 'completed' && isWithin8Hours(job.completedAt) && (
               <div className="mt-6 p-4 bg-[#111111] rounded-xl border border-gray-800/80">
-                <div className="flex">
-                  <button 
+                <div className="grid grid-cols-2 gap-3">
+                  <button
                     onClick={handleChat}
-                    className="w-full px-4 py-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/90 hover:text-white transition-colors text-sm font-medium flex items-center justify-center gap-2"
+                    className="px-4 py-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/90 hover:text-white transition-colors text-sm font-medium flex items-center justify-center gap-2"
                   >
                     <MessageSquare className="w-4 h-4" />
-                    Chat with Client
+                    Chat
+                  </button>
+                  <button
+                    onClick={handleCall}
+                    className="px-4 py-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/90 hover:text-white transition-colors text-sm font-medium flex items-center justify-center gap-2"
+                  >
+                    <Phone className="w-4 h-4" />
+                    Call
                   </button>
                 </div>
+                <p className="text-xs text-gray-400 text-center mt-2">
+                  Available for 8 hours after completion
+                </p>
               </div>
             )}
 
-            {/* Only show Chat button for cancelled jobs */}
-            {job.status === 'cancelled' && (
+            {/* Only Chat for completed jobs (after 8 hours) */}
+            {job.status === 'completed' && !isWithin8Hours(job.completedAt) && (
               <div className="mt-6 p-4 bg-[#111111] rounded-xl border border-gray-800/80">
-                <div className="flex">
-                  <button 
-                    onClick={handleChat}
-                    className="w-full px-4 py-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/90 hover:text-white transition-colors text-sm font-medium flex items-center justify-center gap-2"
-                  >
-                    <MessageSquare className="w-4 h-4" />
-                    Chat with Client
-                  </button>
-                </div>
+                <button
+                  onClick={handleChat}
+                  className="w-full px-4 py-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/90 hover:text-white transition-colors text-sm font-medium flex items-center justify-center gap-2"
+                >
+                  <MessageSquare className="w-4 h-4" />
+                  Chat with Client
+                </button>
+                <p className="text-xs text-gray-500 text-center mt-2">
+                  Communication limited after 8 hours
+                </p>
               </div>
             )}
 
@@ -470,11 +597,13 @@ export function JobDetailsModal({ job, onClose, onJobUpdate }: JobDetailsModalPr
                   <p className="text-green-400 mb-2">
                     <span className="inline-flex items-center px-3 py-1.5 rounded-full text-sm bg-green-900/20 text-green-400 border border-green-800/50">
                       <CheckCircle className="w-4 h-4 mr-1.5" />
-                      Job Completed on {new Date(job.completedAt || job.date).toLocaleDateString('en-US', { 
+                      Job Completed on {job.completedAt ? new Date(job.completedAt).toLocaleDateString('en-US', { 
                         month: 'short', 
                         day: 'numeric',
-                        year: 'numeric'
-                      })}
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      }) : 'Date not available'}
                     </span>
                   </p>
                   <p className="text-sm text-green-300">
@@ -504,47 +633,49 @@ export function JobDetailsModal({ job, onClose, onJobUpdate }: JobDetailsModalPr
                   </div>
                 )}
 
-                {job.clientRating ? (
+                {job.freelancerRating ? (
                   <div className="p-4 bg-[#111111] rounded-lg border border-white/5">
                     <div className="flex items-start justify-between">
                       <div>
-                        <h3 className="text-sm font-medium text-white/80 mb-1">Your Rating</h3>
-                        <div className="flex items-center">
+                        <h3 className="text-sm font-medium text-white/80 mb-1">Your Rating & Review</h3>
+                        <div className="flex items-center mb-2">
                           {[...Array(5)].map((_, i) => (
-                            <Star 
-                              key={i} 
-                              className={`w-4 h-4 ${i < (job.clientRating?.stars || 0) ? 'text-yellow-400 fill-current' : 'text-gray-600'}`} 
+                            <Star
+                              key={i}
+                              className={`w-4 h-4 ${i < (job.freelancerRating?.stars || 0) ? 'text-yellow-400 fill-current' : 'text-gray-600'}`}
                             />
                           ))}
-                          <span className="ml-2 text-sm text-white/70">{job.clientRating?.stars?.toFixed(1) || '0.0'}</span>
+                          <span className="ml-2 text-sm text-white/70">
+                            {job.freelancerRating?.stars % 1 === 0
+                              ? `${Math.floor(job.freelancerRating.stars)}/5`
+                              : `${job.freelancerRating.stars.toFixed(2)}/5`}
+                          </span>
                         </div>
-                        {job.clientRating.feedback && (
-                          <p className="mt-2 text-sm text-white/70">&quot;{job.clientRating.feedback}&quot;</p>
+                        {job.freelancerRating.feedbackChips && job.freelancerRating.feedbackChips.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mb-2">
+                            {job.freelancerRating.feedbackChips.map((chip: string, index: number) => (
+                              <span key={index} className="px-2 py-0.5 text-xs rounded-full bg-purple-500/10 text-purple-300 border border-purple-500/20">
+                                {chip}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                        {job.freelancerRating.review && (
+                          <p className="text-sm text-white/70">&quot;{job.freelancerRating.review}&quot;</p>
                         )}
                         <p className="mt-1 text-xs text-white/50">
-                          Rated on {new Date(job.clientRating.date).toLocaleDateString('en-US', {
+                          Submitted on {job.freelancerRating?.date ? new Date(job.freelancerRating.date).toLocaleDateString('en-US', {
                             year: 'numeric',
                             month: 'short',
-                            day: 'numeric'
-                          })}
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          }) : 'Date not available'}
                         </p>
                       </div>
-                      <button 
-                        onClick={() => setShowRatingForm(true)}
-                        className="text-xs text-purple-400 hover:text-purple-300"
-                      >
-                        Edit Rating
-                      </button>
                     </div>
                   </div>
-                ) : (
-                  <button 
-                    onClick={() => setShowRatingForm(true)}
-                    className="w-full py-3 px-4 text-sm font-medium text-center text-white bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors"
-                  >
-                    Rate This Client
-                  </button>
-                )}
+                ) : null}
               </div>
             )}
 
@@ -605,74 +736,306 @@ export function JobDetailsModal({ job, onClose, onJobUpdate }: JobDetailsModalPr
         </div>
       </div>
 
-      {/* Cancel Job Confirmation Dialog */}
-      <Dialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
-        <DialogContent className="w-[320px] max-w-[320px] bg-[#111111] border-gray-800">
-          <DialogHeader>
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-full bg-red-500/20">
-                <AlertTriangle className="w-6 h-6 text-red-500" />
-              </div>
-              <DialogTitle className="text-white">Cancel Job</DialogTitle>
+      {/* Cancel Job Full Page */}
+      {showCancelDialog && (
+        <div className="fixed inset-0 z-50 bg-gradient-to-br from-[#111111] to-[#0a0a0a] overflow-y-auto">
+          {/* Header */}
+          <div className="fixed top-0 left-0 right-0 z-50 bg-[#111111]/95 backdrop-blur-sm border-b border-gray-800/80 p-4 flex items-center">
+            <button
+              onClick={() => {
+                setShowCancelDialog(false);
+                setCancelNotes('');
+              }}
+              className="p-2 rounded-full hover:bg-white/10 transition-colors"
+              aria-label="Go back"
+            >
+              <ArrowLeft className="w-5 h-5 text-white/80" />
+            </button>
+            <div className="ml-4">
+              <div className="text-sm font-medium text-white">Cancel Job</div>
+              <div className="text-xs font-mono text-white/60">ID: {job.id}</div>
             </div>
-            <DialogDescription className="pt-2 text-gray-400">
-              Are you sure you want to cancel this job? This action cannot be undone and may affect your rating.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full sm:w-auto border-gray-700 text-white hover:bg-gray-800"
-              onClick={() => setShowCancelDialog(false)}
-            >
-              Go Back
-            </Button>
-            <Button
-              type="button"
-              variant="destructive"
-              className="w-full sm:w-auto bg-red-600 hover:bg-red-700"
-              onClick={confirmCancelJob}
-            >
-              Yes, Cancel Job
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </div>
 
-      {/* Mark Complete Confirmation Dialog */}
-      <Dialog open={showCompleteDialog} onOpenChange={setShowCompleteDialog}>
-        <DialogContent className="w-[320px] max-w-[320px] bg-[#111111] border-gray-800">
-          <DialogHeader>
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-full bg-green-500/20">
-                <CheckCircle className="w-6 h-6 text-green-500" />
+          {/* Main Content */}
+          <div className="min-h-[100dvh] w-full pt-20 pb-24">
+            <div className="max-w-3xl mx-auto p-4 md:p-6">
+              <div className="space-y-6">
+                {/* Header Section */}
+                <div className="text-center space-y-3">
+                  <div className="flex items-center justify-center">
+                    <div className="relative">
+                      <div className="absolute inset-0 bg-red-500/20 rounded-full blur-lg"></div>
+                      <div className="relative p-4 rounded-full bg-gradient-to-br from-red-500/10 to-red-600/20 border border-red-500/30">
+                        <AlertTriangle className="w-8 h-8 text-red-400" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <h1 className="text-xl font-bold text-white">Cancel Job</h1>
+                    <p className="text-gray-400 text-sm leading-relaxed max-w-sm mx-auto">
+                      Are you sure you want to cancel this job? This action cannot be undone and may affect your rating.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Job Summary */}
+                <div className="p-3 bg-gray-900/30 rounded-lg border border-gray-800/30">
+                  <div className="flex items-center justify-between mb-2">
+                    <h2 className="text-sm font-medium text-white/80">Job Details</h2>
+                    <span className="px-2 py-0.5 text-xs rounded-full bg-red-500/10 text-red-400 border border-red-500/20">
+                      {job.status}
+                    </span>
+                  </div>
+                  <div className="space-y-1 text-xs">
+                    <div className="flex justify-between items-start">
+                      <span className="text-gray-400 flex-shrink-0">Project:</span>
+                      <span className="text-white font-medium text-right break-words max-w-[calc(100%-60px)]">{job.title}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Payment:</span>
+                      <span className="text-white font-medium">₹{job.payment}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Cancellation Reason */}
+                <div className="space-y-3">
+                  <Label htmlFor="cancel-notes" className="text-base font-medium text-white">
+                    Reason for cancellation <span className="text-red-400">*</span>
+                  </Label>
+                  <div className="relative">
+                    <Textarea
+                      id="cancel-notes"
+                      value={cancelNotes}
+                      onChange={(e) => setCancelNotes(e.target.value)}
+                      placeholder="Please provide a detailed reason for cancelling this job..."
+                      className="min-h-[120px] bg-[#111111] border-gray-600/50 text-white placeholder:text-gray-500 focus:border-red-500/50 focus:ring-red-500/20 resize-none"
+                      maxLength={500}
+                      required
+                    />
+                    <div className="absolute bottom-3 right-3 text-xs text-gray-500">
+                      {cancelNotes.length}/500
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-3 pt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="flex-1 h-10 border-gray-600/50 text-white/90 hover:bg-gray-800/50 hover:text-white hover:border-gray-500/50 transition-all duration-200"
+                    onClick={() => {
+                      setShowCancelDialog(false);
+                      setCancelNotes('');
+                    }}
+                  >
+                    Keep Job Active
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    className="flex-1 h-10 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-medium shadow-lg shadow-red-600/25 hover:shadow-red-600/40 transition-all duration-200"
+                    onClick={confirmCancelJob}
+                    disabled={!cancelNotes.trim()}
+                  >
+                    Yes, Cancel Job
+                  </Button>
+                </div>
               </div>
-              <DialogTitle className="text-white">Mark Job as Complete</DialogTitle>
             </div>
-            <DialogDescription className="pt-2 text-gray-400">
-              Are you sure you want to mark this job as complete? This will notify the client and process your payment.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full sm:w-auto border-gray-700 text-white hover:bg-gray-800"
-              onClick={() => setShowCompleteDialog(false)}
+          </div>
+        </div>
+      )}
+
+      {/* Mark Complete Full Page */}
+      {showCompleteDialog && (
+        <div className="fixed inset-0 z-50 bg-gradient-to-br from-[#111111] to-[#0a0a0a] overflow-y-auto">
+          {/* Header */}
+          <div className="fixed top-0 left-0 right-0 z-50 bg-[#111111]/95 backdrop-blur-sm border-b border-gray-800/80 p-4 flex items-center">
+            <button
+              onClick={() => {
+                setShowCompleteDialog(false);
+                setReview('');
+                setRating(0);
+                setSelectedChips([]);
+              }}
+              className="p-2 rounded-full hover:bg-white/10 transition-colors"
+              aria-label="Go back"
             >
-              Not Yet
-            </Button>
-            <Button
-              type="button"
-              className="w-full sm:w-auto bg-green-600 hover:bg-green-700"
-              onClick={confirmMarkComplete}
-            >
-              Yes, Mark Complete
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+              <ArrowLeft className="w-5 h-5 text-white/80" />
+            </button>
+            <div className="ml-4">
+              <div className="text-sm font-medium text-white">Mark Job Complete</div>
+              <div className="text-xs font-mono text-white/60">ID: {job.id}</div>
+            </div>
+          </div>
+
+          {/* Main Content */}
+          <div className="min-h-[100dvh] w-full pt-20 pb-24">
+            <div className="max-w-3xl mx-auto p-4 md:p-6">
+              <div className="space-y-6">
+                {/* Header Section */}
+                <div className="text-center space-y-3">
+                  <div className="flex items-center justify-center">
+                    <div className="relative">
+                      <div className="absolute inset-0 bg-green-500/20 rounded-full blur-lg"></div>
+                      <div className="relative p-4 rounded-full bg-gradient-to-br from-green-500/10 to-green-600/20 border border-green-500/30">
+                        <CheckCircle className="w-8 h-8 text-green-400" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <h1 className="text-xl font-bold text-white">Mark Job as Complete</h1>
+                    <p className="text-gray-400 text-sm leading-relaxed max-w-sm mx-auto">
+                      Please rate your experience and provide feedback before marking the job as complete.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Job Summary */}
+                <div className="p-3 bg-gray-900/30 rounded-lg border border-gray-800/30">
+                  <div className="flex items-center justify-between mb-2">
+                    <h2 className="text-sm font-medium text-white/80">Job Details</h2>
+                    <span className="px-2 py-0.5 text-xs rounded-full bg-green-500/10 text-green-400 border border-green-500/20">
+                      {job.status}
+                    </span>
+                  </div>
+                  <div className="space-y-1 text-xs">
+                    <div className="flex justify-between items-start">
+                      <span className="text-gray-400 flex-shrink-0">Project:</span>
+                      <span className="text-white font-medium text-right break-words max-w-[calc(100%-60px)]">{job.title}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Payment:</span>
+                      <span className="text-white font-medium">₹{job.payment}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Rating Section */}
+                <div className="space-y-4">
+                  <Label className="text-lg font-semibold text-white">
+                    How would you rate this experience? <span className="text-red-400">*</span>
+                  </Label>
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="flex items-center gap-3">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          key={star}
+                          onClick={() => setRating(star)}
+                          className={`p-2 rounded-lg transition-all duration-200 ${
+                            star <= rating
+                              ? 'text-yellow-400 bg-yellow-400/10 scale-110'
+                              : 'text-gray-600 hover:text-gray-400 hover:scale-105'
+                          }`}
+                        >
+                          <Star className="w-8 h-8 fill-current" />
+                        </button>
+                      ))}
+                    </div>
+                    <div className="text-center">
+                      <span className="text-sm font-medium text-white/90">
+                        {rating === 0 ? 'Select a rating' :
+                         rating === 1 ? 'Poor' :
+                         rating === 2 ? 'Fair' :
+                         rating === 3 ? 'Good' :
+                         rating === 4 ? 'Very Good' : 'Excellent'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Feedback Chips - Now Optional */}
+                <div className="space-y-3">
+                  <Label className="text-base font-medium text-white">
+                    What did you love about this experience? <span className="text-gray-400">(Optional)</span>
+                  </Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      'Professional coaching',
+                      'Clear communication',
+                      'Punctual sessions',
+                      'Expert knowledge',
+                      'Friendly approach',
+                      'Good facilities',
+                      'Value for money',
+                      'Skill improvement'
+                    ].map((chip) => (
+                      <button
+                        key={chip}
+                        onClick={() => {
+                          setSelectedChips(prev =>
+                            prev.includes(chip)
+                              ? prev.filter(c => c !== chip)
+                              : [...prev, chip]
+                          );
+                        }}
+                        className={`px-3 py-2 text-sm rounded-lg border transition-colors ${
+                          selectedChips.includes(chip)
+                            ? 'bg-purple-600/20 border-purple-600/30 text-purple-300'
+                            : 'bg-[#111111] border-gray-600 text-gray-300 hover:bg-gray-800/50'
+                        }`}
+                      >
+                        {chip}
+                      </button>
+                    ))}
+                  </div>
+
+                </div>
+
+                {/* Additional Feedback - Now Mandatory */}
+                <div className="space-y-3">
+                  <Label htmlFor="review" className="text-base font-medium text-white">
+                    Share your experience <span className="text-red-400">*</span>
+                  </Label>
+                  <Textarea
+                    id="review"
+                    value={review}
+                    onChange={(e) => setReview(e.target.value)}
+                    placeholder="Write a brief title for your review..."
+                    className="min-h-[100px] bg-[#111111] border-gray-600/50 text-white placeholder:text-gray-500 focus:border-green-500/50 focus:ring-green-500/20 resize-none"
+                    rows={3}
+                    required
+                  />
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-3 pt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="flex-1 h-10 border-gray-600/50 text-white/90 hover:bg-gray-800/50 hover:text-white hover:border-gray-500/50 transition-all duration-200"
+                    onClick={() => {
+                      setShowCompleteDialog(false);
+                      setReview('');
+                      setRating(0);
+                      setSelectedChips([]);
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    className={`flex-1 h-10 font-medium shadow-lg transition-all duration-200 ${
+                      rating > 0 && review.trim()
+                        ? 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white shadow-green-600/25 hover:shadow-green-600/40'
+                        : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                    }`}
+                    onClick={confirmMarkComplete}
+                    disabled={!(rating > 0 && review.trim())}
+                  >
+                    Mark Complete
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

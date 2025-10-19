@@ -45,6 +45,7 @@ model User {
   bookings              Booking[] @relation("UserBookings")
   services              Service[] @relation("UserServices")
   clientJobs            Job[] @relation("ClientJobs")
+  freelancerJobs        Job[] @relation("FreelancerJobs")
   freelancerApplications Application[] @relation("FreelancerApplications")
   freelancerProfile     FreelancerProfile?
   clientProfile         ClientProfile?
@@ -82,9 +83,6 @@ model Category {
   services    Service[]
   subcategories Category[] @relation("CategoryHierarchy")
   parent      Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
   
   @@map("categories")
 }
@@ -277,6 +275,19 @@ model Job {
   clientId        String   @db.ObjectId
   client          User     @relation("ClientJobs", fields: [clientId], references: [id])
   
+  // Freelancer info (once accepted)
+  freelancerId    String?  @db.ObjectId
+  freelancer      User?    @relation("FreelancerJobs", fields: [freelancerId], references: [id])
+  
+  // Status and progress
+  status          JobStatus @default(OPEN)
+  progress        Int      @default(0)
+  notes           String?  // cancellation notes or other notes
+  
+  // Completion tracking
+  completedAt     DateTime?
+  completedBy     String?  @db.ObjectId // user who marked as complete
+  
   // Status
   isActive        Boolean  @default(true)
   proposals       Int      @default(0)
@@ -289,6 +300,14 @@ model Job {
   applications    Application[]
   
   @@map("jobs")
+}
+
+enum JobStatus {
+  OPEN
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  ON_HOLD
 }
 
 // Job Applications

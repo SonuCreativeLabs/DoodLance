@@ -51,6 +51,13 @@ export interface Rating {
   date: string;
 }
 
+export interface FreelancerRating {
+  stars: 1 | 2 | 3 | 4 | 5;
+  review: string;
+  feedbackChips: string[];
+  date: string;
+}
+
 export interface Job {
   id: string;
   title: string;
@@ -70,6 +77,9 @@ export interface Job {
   cancellationDetails?: CancellationDetails;
   rating?: Rating;
   clientRating?: Rating;
+  freelancerRating?: FreelancerRating;
+  review?: string; // Direct review property for backward compatibility
+  feedbackChips?: string[]; // Direct feedback chips property for backward compatibility
   earnings?: {
     amount: number;
     platformFee: number;

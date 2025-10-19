@@ -45,63 +45,228 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
     // 'confirmed' and 'pending' default to 'upcoming'
 
     return {
-      id: dbJob.id,
-      title: dbJob.title,
-      category: dbJob.category,
-      date: new Date().toISOString().split('T')[0], // Use current date as fallback
-      time: '09:00', // Default time
-      jobDate: new Date().toISOString(),
-      jobTime: '09:00',
-      status: displayStatus, // Use the mapped status
-      payment: dbJob.payment || 0,
-      location: dbJob.location,
-      description: dbJob.description,
-      skills: dbJob.skills || [],
-      duration: dbJob.duration || 'Flexible',
-      experienceLevel: dbJob.experience || 'Intermediate',
-      client: dbJob.client ? {
-        name: dbJob.client.name,
-        rating: 4.5, // Default rating
-        jobsCompleted: 10, // Default value
-        memberSince: '2023-01-01',
+      id: dbJob.id || `job_${Date.now()}_${Math.random()}`,
+      title: dbJob.title || 'Untitled Job',
+      category: dbJob.category || 'Other',
+      date: dbJob.date || new Date().toISOString().split('T')[0],
+      time: dbJob.time || '09:00',
+      jobDate: dbJob.date || new Date().toISOString(),
+      jobTime: dbJob.time || '09:00',
+      status: displayStatus,
+      payment: Number(dbJob.payment) || 0,
+      location: dbJob.location || 'Location not specified',
+      description: dbJob.description || 'No description available',
+      skills: Array.isArray(dbJob.skills) ? dbJob.skills : [],
+      duration: dbJob.duration || 'Not specified',
+      experienceLevel: dbJob.experienceLevel || 'Any',
+      client: dbJob.client || {
+        name: 'Unknown Client',
+        rating: 4.5,
+        jobsCompleted: 10,
+        memberSince: new Date().toISOString().split('T')[0],
         phoneNumber: '+91 9876543210',
-        image: dbJob.client.avatar,
+        image: '',
         moneySpent: 50000,
-        location: dbJob.client.location,
-        joinedDate: '2023-01-01',
+        location: 'Location not specified',
+        joinedDate: new Date().toISOString().split('T')[0],
         freelancersWorked: 15,
         freelancerAvatars: []
-      } : undefined,
-      cancellationDetails: undefined,
-      rating: undefined,
-      clientRating: undefined,
-      earnings: undefined,
-      completedAt: undefined
+      },
+      cancellationDetails: dbJob.cancellationDetails,
+      rating: dbJob.rating,
+      clientRating: dbJob.clientRating,
+      earnings: dbJob.earnings,
+      completedAt: dbJob.completedAt,
+      freelancerRating: dbJob.freelancerRating
     };
+  };
+
+  // Function to apply stored job updates from localStorage
+  const applyStoredJobUpdates = () => {
+    try {
+      const storedUpdates = JSON.parse(localStorage.getItem('jobStatusUpdates') || '{}');
+
+      // If localStorage is empty or corrupted, use only mock data
+      if (!storedUpdates || Object.keys(storedUpdates).length === 0) {
+        console.log('No stored updates found, using mock data only');
+        return mockUpcomingJobs;
+      }
+
+      // Start with mock data as base
+      let updatedJobs = [...mockUpcomingJobs];
+
+      // If we have stored job data, merge it properly with mock data
+      if (Object.keys(storedUpdates).length > 0) {
+        // Update jobs with stored data
+        updatedJobs = updatedJobs.map(originalJob => {
+          const storedUpdate = storedUpdates[originalJob.id];
+          if (storedUpdate) {
+            // Merge stored updates with original job data, but prioritize original data
+            return {
+              ...originalJob,  // Start with complete original job data
+              ...storedUpdate,  // Override with stored updates (status, timestamps, etc.)
+              id: originalJob.id,  // Preserve original ID
+              // Ensure title and other core data comes from original
+              title: originalJob.title,
+              category: originalJob.category,
+              description: originalJob.description,
+              client: originalJob.client,
+              payment: originalJob.payment,
+              location: originalJob.location,
+              skills: originalJob.skills,
+              duration: originalJob.duration,
+              experienceLevel: originalJob.experienceLevel,
+            };
+          }
+          return originalJob;
+        });
+
+        // Add any jobs that exist only in stored data (jobs that were completed/cancelled)
+        Object.values(storedUpdates).forEach((storedJob: any) => {
+          const existingIndex = updatedJobs.findIndex(job => job.id === storedJob.id);
+          if (existingIndex === -1) {
+            // This job only exists in stored data, add it with original data if available
+            const originalJobData = mockUpcomingJobs.find(j => j.id === storedJob.id);
+            if (originalJobData) {
+              updatedJobs.push({
+                ...originalJobData,  // Use original data as base
+                ...storedJob,        // Override with stored status data
+                id: storedJob.id,
+              });
+            }
+          }
+        });
+      }
+
+      // Filter out any potential duplicates and ensure unique IDs
+      const uniqueJobs = updatedJobs.filter((job, index, self) =>
+        index === self.findIndex(j => j.id === job.id)
+      );
+
+      // Add default freelancerRating to legacy completed jobs that don't have it
+      const jobsWithRatings = uniqueJobs.map(job => {
+        if (job.status === 'completed' && !job.freelancerRating) {
+          // This is a legacy completed job without freelancerRating data
+          return {
+            ...job,
+            freelancerRating: {
+              stars: 0,
+              review: '',
+              feedbackChips: [],
+              date: job.completedAt || new Date().toISOString()
+            }
+          };
+        }
+        return job;
+      });
+
+      console.log(`Loaded jobs: ${jobsWithRatings.length} total (${Object.keys(storedUpdates).length} stored, ${mockUpcomingJobs.length} mock)`);
+
+      // Debug: Check if any completed jobs have rating/review data
+      const completedJobsWithData = jobsWithRatings.filter(job => job.status === 'completed');
+      completedJobsWithData.forEach(job => {
+        const jobData = job as any; // Type assertion for dynamic properties
+        if (jobData.freelancerRating) {
+          console.log(`✅ Completed job ${job.id} has rating/review data:`, {
+            freelancerRating: jobData.freelancerRating
+          });
+        } else {
+          console.log(`❌ Completed job ${job.id} missing rating/review data:`, {
+            freelancerRating: jobData.freelancerRating
+          });
+        }
+      });
+
+      return jobsWithRatings;
+    } catch (error) {
+      console.error('Error loading job updates from localStorage:', error);
+      // If there's any error, fall back to mock data only
+      return mockUpcomingJobs;
+    }
   };
 
   // Initialize with mock data instead of API calls
   useEffect(() => {
+    // Clean up any duplicate entries in localStorage first
+    cleanupDuplicateJobs();
+
     const jobsWithUpdates = applyStoredJobUpdates();
     setJobs(jobsWithUpdates);
     setApplications(mockApplications);
     setLoading(false);
   }, []);
 
-  // Function to apply stored job updates from localStorage
-  const applyStoredJobUpdates = () => {
+  // Listen for localStorage changes to refresh jobs
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'jobStatusUpdates' && e.newValue) {
+        console.log('localStorage updated, refreshing jobs...');
+
+        // Clean up duplicates first
+        cleanupDuplicateJobs();
+
+        const jobsWithUpdates = applyStoredJobUpdates();
+        setJobs(jobsWithUpdates);
+      }
+    };
+
+    const handleCustomEvent = (e: CustomEvent) => {
+      console.log('Custom job status update event received:', e.detail);
+
+      // Clean up duplicates first
+      cleanupDuplicateJobs();
+
+      const jobsWithUpdates = applyStoredJobUpdates();
+      setJobs(jobsWithUpdates);
+
+      // Auto-switch to appropriate tab if job was completed/cancelled, but delay to avoid race conditions
+      setTimeout(() => {
+        if (e.detail.newStatus === 'completed') {
+          setStatusFilter('completed');
+          setActiveTab('upcoming');
+        } else if (e.detail.newStatus === 'cancelled') {
+          setStatusFilter('cancelled');
+          setActiveTab('upcoming');
+        }
+      }, 50);
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('jobStatusUpdated', handleCustomEvent as EventListener);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('jobStatusUpdated', handleCustomEvent as EventListener);
+    };
+  }, []);
+
+  // Function to clean up duplicate entries in localStorage
+  const cleanupDuplicateJobs = () => {
     try {
       const storedUpdates = JSON.parse(localStorage.getItem('jobStatusUpdates') || '{}');
-      const updatedJobs = mockUpcomingJobs.map(job => {
-        if (storedUpdates[job.id]) {
-          return { ...job, ...storedUpdates[job.id] };
+
+      // Find and remove duplicate entries for the same job ID
+      const jobIds = Object.keys(storedUpdates);
+      const seenIds = new Set();
+      const cleanedUpdates: {[key: string]: any} = {};
+
+      jobIds.forEach(jobId => {
+        if (!seenIds.has(jobId)) {
+          seenIds.add(jobId);
+          cleanedUpdates[jobId] = storedUpdates[jobId];
+        } else {
+          console.log(`Removing duplicate entry for job ${jobId}`);
         }
-        return job;
       });
-      return updatedJobs;
+
+      if (Object.keys(cleanedUpdates).length !== Object.keys(storedUpdates).length) {
+        localStorage.setItem('jobStatusUpdates', JSON.stringify(cleanedUpdates));
+        console.log(`Cleaned up localStorage: ${Object.keys(storedUpdates).length} → ${Object.keys(cleanedUpdates).length} unique jobs`);
+      }
+
+      return cleanedUpdates;
     } catch (error) {
-      console.error('Error loading job updates from localStorage:', error);
-      return mockUpcomingJobs;
+      console.error('Error cleaning up duplicate jobs:', error);
+      return {};
     }
   };
 
@@ -293,37 +458,95 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
     }
   };
 
-  const handleJobStatusChange = (jobId: string, newStatus: 'completed' | 'cancelled') => {
+  const handleJobStatusChange = (jobId: string, newStatus: 'completed' | 'cancelled', notes?: string) => {
     console.log(`Updating job ${jobId} status to ${newStatus}`);
 
-    // Update the jobs array to reflect the status change
-    setJobs(prevJobs =>
-      prevJobs.map(job =>
-        job.id === jobId ? { ...job, status: newStatus } : job
-      )
-    );
+    // Update the jobs array with complete data from localStorage
+    const jobsWithUpdates = applyStoredJobUpdates();
+    setJobs(jobsWithUpdates);
+
+    // Save the status update to localStorage (in case it wasn't saved properly)
+    try {
+      // Clean up duplicates first
+      cleanupDuplicateJobs();
+
+      const storedUpdates = JSON.parse(localStorage.getItem('jobStatusUpdates') || '{}');
+
+      // Check if this job already exists in stored updates
+      const existingJobData = storedUpdates[jobId];
+      if (!existingJobData || existingJobData.status !== newStatus) {
+        // Get the original job data from mock data as fallback
+        const originalJobData = mockUpcomingJobs.find(j => j.id === jobId) || jobs.find(j => j.id === jobId);
+
+        if (originalJobData) {
+          storedUpdates[jobId] = {
+            ...originalJobData,  // Use original data as base
+            status: newStatus,
+            updatedAt: new Date().toISOString(),
+            ...(newStatus === 'cancelled' && {
+              cancellationDetails: {
+                cancelledAt: new Date().toISOString(),
+                cancelledBy: 'freelancer',
+                notes: notes || 'Cancelled by freelancer'
+              }
+            }),
+            ...(newStatus === 'completed' && {
+              completedAt: new Date().toISOString(),
+              // Don't override freelancerRating if it already exists
+              ...(originalJobData.freelancerRating === undefined && {
+                freelancerRating: {
+                  stars: 0,
+                  review: '',
+                  feedbackChips: [],
+                  date: new Date().toISOString()
+                }
+              })
+            })
+          };
+        }
+
+        localStorage.setItem('jobStatusUpdates', JSON.stringify(storedUpdates));
+        console.log(`Updated job ${jobId} status to ${newStatus} in localStorage`);
+      }
+    } catch (error) {
+      console.error('Error saving job status update to localStorage:', error);
+    }
 
     // Automatically switch to the appropriate tab when job status changes
     if (newStatus === 'completed') {
+      // Update filter but don't immediately change URL to avoid navigation issues
       setStatusFilter('completed');
-      setActiveTab('upcoming'); // Stay in upcoming tab but filter for completed
+      setActiveTab('upcoming');
 
-      // Update URL to reflect the change
-      const params = new URLSearchParams();
-      params.set('tab', 'upcoming');
-      params.set('status', 'completed');
-      router.push(`/freelancer/jobs?${params.toString()}`);
+      // Delay URL update to avoid race conditions
+      setTimeout(() => {
+        const params = new URLSearchParams();
+        params.set('tab', 'upcoming');
+        params.set('status', 'completed');
+        router.push(`/freelancer/jobs?${params.toString()}`);
+      }, 100);
     } else if (newStatus === 'cancelled') {
+      // Update filter but don't immediately change URL to avoid navigation issues
       setStatusFilter('cancelled');
-      setActiveTab('upcoming'); // Stay in upcoming tab but filter for cancelled
+      setActiveTab('upcoming');
 
-      // Update URL to reflect the change
-      const params = new URLSearchParams();
-      params.set('tab', 'upcoming');
-      params.set('status', 'cancelled');
-      router.push(`/freelancer/jobs?${params.toString()}`);
+      // Delay URL update to avoid race conditions
+      setTimeout(() => {
+        const params = new URLSearchParams();
+        params.set('tab', 'upcoming');
+        params.set('status', 'cancelled');
+        router.push(`/freelancer/jobs?${params.toString()}`);
+      }, 100);
     }
   };
+
+  // Make handleJobStatusChange globally accessible for the job details page
+  React.useEffect(() => {
+    (window as any).dashboardHandleJobStatusChange = handleJobStatusChange;
+    return () => {
+      delete (window as any).dashboardHandleJobStatusChange;
+    };
+  }, []);
 
   // Handler for viewing application details (placeholder for now)
   const onViewDetails = (application: any) => {
@@ -379,41 +602,37 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
             onValueChange={handleTabChange} 
             className="w-full pt-2"
           >
-            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 py-4">
-              <TabsList className="grid w-full sm:w-auto grid-cols-2 h-10">
-                <TabsTrigger value="upcoming">
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-2 py-2">
+              <TabsList className="grid w-full sm:w-auto grid-cols-2 h-12 bg-transparent p-1 gap-1">
+                <TabsTrigger
+                  value="upcoming"
+                  className="relative px-4 py-2 text-sm font-medium transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#8B66D1] data-[state=active]:to-[#9B76E1] data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-[#8B66D1]/25 data-[state=active]:rounded-lg data-[state=inactive]:text-gray-300 data-[state=inactive]:hover:text-white data-[state=inactive]:hover:bg-white/5 data-[state=inactive]:bg-transparent data-[state=inactive]:rounded-lg data-[state=inactive]:border data-[state=inactive]:border-white/10"
+                >
                   My Jobs
-                  {tabCounts.upcoming + tabCounts.completed + tabCounts.cancelled > 0 && (
-                    <span className="ml-2 bg-gray-700 text-gray-300 text-xs px-2 py-0.5 rounded-full">
-                      {tabCounts.upcoming + tabCounts.completed + tabCounts.cancelled}
-                    </span>
-                  )}
                 </TabsTrigger>
-                <TabsTrigger value="applications">
+                <TabsTrigger
+                  value="applications"
+                  className="relative px-4 py-2 text-sm font-medium transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#8B66D1] data-[state=active]:to-[#9B76E1] data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-[#8B66D1]/25 data-[state=active]:rounded-lg data-[state=inactive]:text-gray-300 data-[state=inactive]:hover:text-white data-[state=inactive]:hover:bg-white/5 data-[state=inactive]:bg-transparent data-[state=inactive]:rounded-lg data-[state=inactive]:border data-[state=inactive]:border-white/10"
+                >
                   My Proposals
-                  {tabCounts.applications > 0 && (
-                    <span className="ml-2 bg-gray-700 text-gray-300 text-xs px-2 py-0.5 rounded-full">
-                      {tabCounts.applications}
-                    </span>
-                  )}
                 </TabsTrigger>
               </TabsList>
               
-              <div className="flex items-center gap-3 min-w-0">
-                <div className={`transition-all duration-300 ease-in-out ${showSearch ? 'flex-1 min-w-0' : 'w-10'}`}>
+              <div className={`flex items-center gap-3 ${showSearch ? 'w-full' : 'min-w-0'}`}>
+                <div className={`transition-all duration-300 ${showSearch ? 'ease-out' : 'ease-in'} ${showSearch ? 'flex-1' : 'w-10'}`}>
                   {showSearch ? (
-                    <div className="relative w-full flex items-center">
+                    <div className={`relative w-full flex items-center transition-all duration-300 ease-out ${showSearch ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
                       <Search className="absolute left-3 h-4 w-4 text-gray-400" />
                       <Input
                         type="search"
                         placeholder="Search..."
-                        className="pl-10 pr-10 w-full bg-gray-900 text-white h-10"
+                        className="pl-10 pr-10 w-full bg-[#111111] text-white h-10 border border-gray-600 focus:border-gray-500 transition-all duration-200"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         autoFocus
                       />
                       <button
-                        className="absolute right-2 h-6 w-6 p-0 text-gray-400 hover:text-white flex items-center justify-center"
+                        className="absolute right-2 h-6 w-6 p-0 text-gray-400 hover:text-white flex items-center justify-center transition-colors duration-200"
                         onClick={() => {
                           setSearchQuery('');
                           setShowSearch(false);
@@ -425,7 +644,7 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
                     </div>
                   ) : (
                     <button
-                      className="h-10 w-10 p-0 text-gray-400 hover:text-white flex items-center justify-center"
+                      className={`h-10 w-10 p-0 text-gray-400 hover:text-white flex items-center justify-center transition-all duration-300 ease-in ${!showSearch ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}
                       onClick={() => setShowSearch(true)}
                     >
                       <Search className="h-5 w-5" />
@@ -445,22 +664,20 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
                           key={option.value}
                           data-value={option.value}
                           onClick={() => handleFilterChange(option.value)}
-                          className={`px-2 py-1 text-xs rounded-full border transition-colors flex items-center gap-1 flex-shrink-0 ${
+                          className={`px-1.5 py-0.5 text-xs rounded-full border transition-colors flex items-center gap-1 flex-shrink-0 ${
                             statusFilter === option.value
-                              ? 'bg-purple-600 border-purple-600 text-white'
-                              : 'bg-gray-900/50 border-gray-700 text-gray-300 hover:bg-gray-800/50'
+                              ? 'bg-[#8B66D1]/20 border-[#8B66D1]/40 text-white'
+                              : 'bg-transparent border-[var(--border)] text-[var(--foreground)]/70 hover:bg-[var(--card-background)]/50'
                           }`}
                         >
                           {option.label}
-                          {option.count > 0 && (
-                            <span className={`text-xs px-1 py-0.5 rounded-full ${
-                              statusFilter === option.value
-                                ? 'bg-white/20 text-white'
-                                : 'bg-gray-700 text-gray-400'
-                            }`}>
-                              {option.count}
-                            </span>
-                          )}
+                          <span className={`text-xs px-0.5 py-0.5 rounded-full ${
+                            statusFilter === option.value
+                              ? 'text-gray-300'
+                              : 'text-gray-500'
+                          }`}>
+                            {option.count}
+                          </span>
                         </button>
                       ))}
                     </div>
@@ -469,7 +686,7 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
               </div>
             </div>
 
-            <div className="scrollable-content h-[calc(100vh-180px)] overflow-y-auto pt-4 pb-32 w-full scrollbar-hide">
+            <div className="scrollable-content h-[calc(100vh-180px)] overflow-y-auto pt-2 pb-32 w-full scrollbar-hide">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={activeTab}
@@ -493,30 +710,34 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
                         ))}
                       </div>
                     ) : (
-                      <div className="flex flex-col items-center justify-center py-12 text-center">
-                        <div className="bg-gray-800 p-4 rounded-full mb-4">
-                          <svg
-                            className="h-12 w-12 text-gray-500"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
+                      <div className="flex flex-col items-center justify-center py-16 text-center">
+                        <div className="relative mb-6">
+                          <div className="w-20 h-20 bg-gradient-to-br from-gray-800/50 to-gray-900/50 rounded-2xl flex items-center justify-center backdrop-blur-sm border border-gray-700/30">
+                            <svg
+                              className="h-10 w-10 text-gray-400"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
                               strokeWidth={1.5}
-                              d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                            />
-                          </svg>
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                              />
+                            </svg>
+                          </div>
                         </div>
-                        <h3 className="text-lg font-medium text-gray-300 mb-1">
-                          No {statusFilter === 'upcoming' ? 'upcoming' : statusFilter} jobs found
-                        </h3>
-                        <p className="text-gray-500 max-w-md">
-                          {searchQuery
-                            ? 'Try adjusting your search or filter to find what you\'re looking for.'
-                            : 'Jobs will appear here once they are posted.'}
-                        </p>
+                        <div className="space-y-3 max-w-sm">
+                          <h3 className="text-xl font-semibold text-white">
+                            No {statusFilter === 'upcoming' ? 'upcoming' : statusFilter} jobs found
+                          </h3>
+                          <p className="text-gray-400 text-sm leading-relaxed">
+                            {searchQuery
+                              ? 'Try adjusting your search or filter to find what you\'re looking for.'
+                              : 'Jobs will appear here once they are posted and available for you.'}
+                          </p>
+                        </div>
                       </div>
                     )}
                   </TabsContent>
@@ -536,30 +757,34 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
                         ))}
                       </div>
                     ) : (
-                      <div className="flex flex-col items-center justify-center py-12 text-center">
-                        <div className="bg-gray-800 p-4 rounded-full mb-4">
-                          <svg
-                            className="h-12 w-12 text-gray-500"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
+                      <div className="flex flex-col items-center justify-center py-16 text-center">
+                        <div className="relative mb-6">
+                          <div className="w-20 h-20 bg-gradient-to-br from-gray-800/50 to-gray-900/50 rounded-2xl flex items-center justify-center backdrop-blur-sm border border-gray-700/30">
+                            <svg
+                              className="h-10 w-10 text-gray-400"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
                               strokeWidth={1.5}
-                              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                            />
-                          </svg>
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                              />
+                            </svg>
+                          </div>
                         </div>
-                        <h3 className="text-lg font-medium text-gray-300 mb-1">
-                          No {statusFilter} applications found
-                        </h3>
-                        <p className="text-gray-500 max-w-md">
-                          {searchQuery
-                            ? 'Try adjusting your search or filter to find what you\'re looking for.'
-                            : 'When you submit proposals, they will appear here.'}
-                        </p>
+                        <div className="space-y-3 max-w-sm">
+                          <h3 className="text-xl font-semibold text-white">
+                            No {statusFilter} applications found
+                          </h3>
+                          <p className="text-gray-400 text-sm leading-relaxed">
+                            {searchQuery
+                              ? 'Try adjusting your search or filter to find what you\'re looking for.'
+                              : 'When you submit proposals, they will appear here.'}
+                          </p>
+                        </div>
                       </div>
                     )}
                   </TabsContent>
