@@ -267,101 +267,115 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
       </div>
       
       {/* Main Content */}
-      <div className="min-h-[100dvh] w-full pt-20 pb-24" onClick={(e) => e.stopPropagation()}>
-        <div className="max-w-6xl mx-auto p-4 md:p-6">
-          <div className="space-y-8">
-            <div className="relative">
-              <div className="flex flex-col space-y-2 mb-6">
-                <h2 className="text-2xl font-bold text-white">{job.title}</h2>
+      <div className="min-h-[100dvh] w-full pt-16 pb-20" onClick={(e) => e.stopPropagation()}>
+        <div className="max-w-4xl mx-auto p-3 md:p-4">
+          <div className="space-y-4">
+            {/* Main Job Details Card */}
+            <div className="p-6 bg-[#111111] rounded-xl border border-gray-800/80">
+              {/* Job Title & Basic Info */}
+              <div className="mb-6">
+                <h2 className="text-xl font-bold text-white mb-2">{job.title}</h2>
                 <p className="text-white/70 text-sm">{job.category} • {job.experienceLevel}</p>
               </div>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Job Details */}
-              <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <CalendarIcon className="w-5 h-5 text-purple-400 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <h3 className="text-sm font-medium text-white/60 mb-0.5">
-                      Scheduled Date & Time
-                    </h3>
-                    <p className="text-white/90">
-                      {new Date(job.jobDate || job.date).toLocaleDateString('en-US', { 
-                        weekday: 'long', 
-                        year: 'numeric', 
-                        month: 'long', 
-                        day: 'numeric' 
-                      })}
-                    </p>
-                    <p className="text-white/70">{job.jobTime || job.time}</p>
-                  </div>
-                </div>
-
-                {job.location && (
+              {/* Job Details Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                {/* Left Column */}
+                <div className="space-y-4">
+                  {/* Schedule */}
                   <div className="flex items-start gap-3">
-                    <MapPin className="w-5 h-5 text-purple-400 mt-0.5 flex-shrink-0" />
+                    <CalendarIcon className="w-4 h-4 text-purple-400 mt-0.5 flex-shrink-0" />
                     <div>
-                      <h3 className="text-sm font-medium text-white/60 mb-0.5">Location</h3>
-                      <p className="text-white/90">{job.location}</p>
-                      <button className="mt-1 text-sm text-purple-400 hover:underline flex items-center gap-1">
-                        <MapPin className="w-3.5 h-3.5" />
-                        View on map
-                      </button>
+                      <h3 className="text-sm font-medium text-white/60 mb-0.5">
+                        Scheduled Date & Time
+                      </h3>
+                      <p className="text-white/90">
+                        {new Date(job.jobDate || job.date).toLocaleDateString('en-US', {
+                          weekday: 'long',
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
+                        })}
+                      </p>
+                      <p className="text-white/70">{job.jobTime || job.time}</p>
                     </div>
                   </div>
-                )}
-              </div>
 
-              <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <IndianRupee className="w-5 h-5 text-purple-400 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <h3 className="text-sm font-medium text-white/60 mb-0.5">Payment</h3>
-                    <p className="text-white/90">₹{job.payment} <span className="text-sm text-white/60">/ job</span></p>
-                    <p className="text-xs text-white/60 mt-1">Payment will be released upon job completion</p>
-                  </div>
+                  {/* Location */}
+                  {job.location && (
+                    <div className="flex items-start gap-3">
+                      <MapPin className="w-4 h-4 text-purple-400 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <h3 className="text-sm font-medium text-white/60 mb-0.5">Location</h3>
+                        <p className="text-white/90">{job.location}</p>
+                        <button className="mt-1 text-sm text-purple-400 hover:underline flex items-center gap-1">
+                          <MapPin className="w-3 h-3" />
+                          View on map
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
-                <div className="flex items-start gap-3">
-                  <ClockIcon className="w-5 h-5 text-purple-400 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <h3 className="text-sm font-medium text-white/60 mb-0.5">Estimated Duration</h3>
-                    <p className="text-white/90">{job.duration || 'Not specified'}</p>
+                {/* Right Column */}
+                <div className="space-y-4">
+                  {/* Payment */}
+                  <div className="flex items-start gap-3">
+                    <IndianRupee className="w-4 h-4 text-purple-400 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <h3 className="text-sm font-medium text-white/60 mb-0.5">Payment</h3>
+                      <p className="text-white/90">₹{job.payment} <span className="text-sm text-white/60">/ job</span></p>
+                      <p className="text-xs text-white/60 mt-1">Payment will be released upon job completion</p>
+                    </div>
+                  </div>
+
+                  {/* Duration */}
+                  <div className="flex items-start gap-3">
+                    <ClockIcon className="w-4 h-4 text-purple-400 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <h3 className="text-sm font-medium text-white/60 mb-0.5">Estimated Duration</h3>
+                      <p className="text-white/90">{job.duration || 'Not specified'}</p>
+                    </div>
                   </div>
                 </div>
               </div>
+
+              {/* Description */}
+              {job.description && (
+                <div className="mb-6 pt-6 border-t border-gray-800/50">
+                  <h2 className="text-lg font-semibold text-white mb-3">Job Description</h2>
+                  <div className="prose prose-invert max-w-none">
+                    <p className="text-white/80 text-sm leading-relaxed">{job.description}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Skills */}
+              {job.skills && job.skills.length > 0 && (
+                <div className="pt-6 border-t border-gray-800/50">
+                  <h2 className="text-lg font-semibold text-white mb-3">Required Skills</h2>
+                  <div className="flex flex-wrap gap-2">
+                    {job.skills.map((skill, index) => (
+                      <span key={index} className="px-2 py-1 text-xs rounded-full bg-purple-500/10 text-purple-300 border border-purple-500/20">
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
-
-            {job.description && (
-              <div>
-                <h2 className="text-lg font-semibold text-white mb-3">Job Description</h2>
-                <div className="prose prose-invert max-w-none">
-                  <p className="text-white/80">{job.description}</p>
-                </div>
-              </div>
-            )}
-
-            {job.skills && job.skills.length > 0 && (
-              <div>
-                <h2 className="text-lg font-semibold text-white mb-3">Required Skills</h2>
-                <div className="flex flex-wrap gap-2">
-                  {job.skills.map((skill, index) => (
-                    <span key={index} className="px-3 py-1 text-sm rounded-full bg-purple-500/10 text-purple-300 border border-purple-500/20">
-                      {skill}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
 
             {/* Client Info Section */}
             {job.client && (
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-white">Client Profile</h3>
-                <div className="p-6 bg-[#111111] rounded-xl border border-gray-800/80">
-                  <div className="flex items-center space-x-3 mb-4">
-                    <div className="w-12 h-12 rounded-full bg-purple-500/10 flex items-center justify-center">
+              <div className="space-y-3">
+                <div className="p-4 bg-[#111111] rounded-xl border border-gray-800/80">
+                  {/* Client Profile Title */}
+                  <div className="mb-4">
+                    <h3 className="text-lg font-semibold text-white">Client Profile</h3>
+                  </div>
+
+                  <div className="flex items-center space-x-3 mb-3">
+                    <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center">
                       {job.client?.image ? (
                         <img 
                           src={job.client.image} 
@@ -369,17 +383,17 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                           className="w-full h-full rounded-full object-cover"
                         />
                       ) : (
-                        <User className="w-6 h-6 text-purple-400" />
+                        <User className="w-5 h-5 text-purple-400" />
                       )}
                     </div>
                     <div>
-                      <h2 className="font-medium">{job.client?.name || 'Unknown Client'}</h2>
+                      <h2 className="font-medium text-sm">{job.client?.name || 'Unknown Client'}</h2>
                       <p className="text-sm text-gray-400">{job.client?.location || 'Location not specified'}</p>
                     </div>
                   </div>
-                  
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
+
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
                       <div>
                         <h3 className="text-xs font-medium text-gray-400 mb-1">Job Posted</h3>
                         <p className="text-sm">
@@ -401,28 +415,28 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                     </div>
                     
                     <div className="pt-2 border-t border-gray-800">
-                      <div className="space-y-3">
+                      <div className="space-y-2">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-2">
-                            <div className="flex -space-x-2">
+                            <div className="flex -space-x-1">
                               {job.client?.freelancerAvatars?.length ? (
                                 job.client.freelancerAvatars.map((avatar: string, i: number) => (
                                   <img 
                                     key={i}
                                     src={avatar}
                                     alt={`Freelancer ${i + 1}`}
-                                    className="w-7 h-7 rounded-full border-2 border-[#111111] object-cover"
+                                    className="w-6 h-6 rounded-full border-2 border-[#111111] object-cover"
                                   />
                                 ))
                               ) : (
                                 Array.from({ length: Math.min(3, job.client?.freelancersWorked || 1) }).map((_, i) => (
-                                  <div key={i} className="w-7 h-7 rounded-full bg-purple-500/20 border-2 border-[#111111] flex items-center justify-center">
-                                    <User className="w-3.5 h-3.5 text-purple-300" />
+                                  <div key={i} className="w-6 h-6 rounded-full bg-purple-500/20 border-2 border-[#111111] flex items-center justify-center">
+                                    <User className="w-3 h-3 text-purple-300" />
                                   </div>
                                 ))
                               )}
                               {job.client?.freelancersWorked && job.client.freelancersWorked > 3 && (
-                                <div className="w-7 h-7 rounded-full bg-purple-500/20 border-2 border-[#111111] flex items-center justify-center">
+                                <div className="w-6 h-6 rounded-full bg-purple-500/20 border-2 border-[#111111] flex items-center justify-center">
                                   <span className="text-xs font-medium text-purple-300">
                                     +{job.client.freelancersWorked - 3}
                                   </span>
@@ -443,7 +457,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                                 {[...Array(5)].map((_, i) => (
                                   <Star 
                                     key={i} 
-                                    className={`w-3.5 h-3.5 ${i < Math.floor(job.client?.rating || 5) ? 'text-yellow-400 fill-current' : 'text-gray-600'}`} 
+                                    className={`w-3 h-3 ${i < Math.floor(job.client?.rating || 5) ? 'text-yellow-400 fill-current' : 'text-gray-600'}`} 
                                   />
                                 ))}
                               </div>
@@ -475,7 +489,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                     </div>
 
                     {/* Chat and Call buttons in client profile */}
-                    <div className="pt-4 border-t border-gray-800">
+                    <div className="pt-3 border-t border-gray-800">
                       <div className="flex gap-2">
                         <button
                           onClick={handleChat}
@@ -500,17 +514,17 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
 
             {/* Action Buttons - Only show for upcoming/pending jobs */}
             {(job.status === 'upcoming' || job.status === 'pending' || job.status === 'confirmed') && (
-              <div className="mt-6 space-y-3">
+              <div className="mt-4 space-y-2">
                 <button
                   onClick={handleMarkComplete}
-                  className="w-full px-4 py-3 rounded-lg bg-green-600 hover:bg-green-700 text-white border border-green-700 transition-colors text-sm font-medium flex items-center justify-center gap-2"
+                  className="w-full px-4 py-2.5 rounded-lg bg-green-600 hover:bg-green-700 text-white border border-green-700 transition-colors text-sm font-medium flex items-center justify-center gap-2"
                 >
                   <CheckCircle className="w-4 h-4" />
                   Mark Complete
                 </button>
                 <button
                   onClick={handleCancelJob}
-                  className="w-full px-4 py-3 rounded-lg bg-transparent hover:bg-red-900/20 text-red-400 border border-red-900/50 hover:border-red-800/70 transition-colors text-sm font-medium flex items-center justify-center gap-2"
+                  className="w-full px-4 py-2.5 rounded-lg bg-transparent hover:bg-red-900/20 text-red-400 border border-red-900/50 hover:border-red-800/70 transition-colors text-sm font-medium flex items-center justify-center gap-2"
                 >
                   <X className="w-4 h-4" />
                   Cancel Job
@@ -520,11 +534,11 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
 
             {/* Job Status Specific Sections */}
             {job.status === 'completed' && (
-              <div className="space-y-4">
-                <div className="w-full text-center py-3 bg-green-900/10 rounded-lg border border-green-900/20">
-                  <p className="text-green-400 mb-2">
-                    <span className="inline-flex items-center px-3 py-1.5 rounded-full text-sm bg-green-900/20 text-green-400 border border-green-800/50">
-                      <CheckCircle className="w-4 h-4 mr-1.5" />
+              <div className="space-y-3">
+                <div className="w-full text-center p-4 bg-green-900/10 rounded-xl border border-green-900/20">
+                  <p className="text-green-400 mb-1">
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-sm bg-green-900/20 text-green-400 border border-green-800/50">
+                      <CheckCircle className="w-3.5 h-3.5 mr-1" />
                       Job Completed on {job.completedAt ? new Date(job.completedAt).toLocaleDateString('en-US', { 
                         month: 'short', 
                         day: 'numeric',
@@ -540,16 +554,16 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                 </div>
 
                 {job.earnings && (
-                  <div className="p-4 bg-[#111111] rounded-lg border border-white/5">
+                  <div className="p-4 bg-[#111111] rounded-xl border border-gray-800/80">
                     <div className="flex items-center gap-2 mb-3">
-                      <TrendingUp className="w-5 h-5 text-emerald-400" />
+                      <TrendingUp className="w-4 h-4 text-emerald-400" />
                       <h3 className="text-sm font-medium text-white/80">Earnings</h3>
                     </div>
 
                     {/* Total Earnings Summary - Always Visible */}
                     <div className="text-center mb-3 p-3 bg-emerald-900/10 rounded-lg border border-emerald-900/20">
                       <p className="text-xs text-emerald-300 mb-1">Total Earned</p>
-                      <p className="text-2xl font-bold text-emerald-400">₹{job.earnings.totalEarnings.toLocaleString()}</p>
+                      <p className="text-xl font-bold text-emerald-400">₹{job.earnings.totalEarnings.toLocaleString()}</p>
                     </div>
 
                     {/* Collapsible Breakdown */}
@@ -561,7 +575,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                         </span>
                       </summary>
 
-                      <div className="mt-3 space-y-2 pl-6">
+                      <div className="mt-3 space-y-2 pl-4">
                         {/* Base Amount */}
                         <div className="flex justify-between items-center text-sm">
                           <span className="text-white/70">Base Amount</span>
@@ -609,39 +623,39 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                 )}
 
                 {job.freelancerRating ? (
-                  <div className="p-4 bg-[#111111] rounded-lg border border-white/5">
+                  <div className="p-6 bg-[#111111] rounded-xl border border-gray-800/80">
                     <div className="flex items-start justify-between">
                       <div>
-                        <h3 className="text-sm font-medium text-white/80 mb-1">Your Rating & Review</h3>
-                        <div className="flex items-center mb-2">
+                        <h3 className="text-lg font-medium text-white/90 mb-3">Your Rating & Review</h3>
+                        <div className="flex items-center mb-3">
                           {[...Array(5)].map((_, i) => (
                             <Star
                               key={i}
-                              className={`w-4 h-4 ${i < (job.freelancerRating?.stars || 0) ? 'text-yellow-400 fill-current' : 'text-gray-600'}`}
+                              className={`w-5 h-5 ${i < (job.freelancerRating?.stars || 0) ? 'text-yellow-400 fill-current' : 'text-gray-600'}`}
                             />
                           ))}
-                          <span className="ml-2 text-sm text-white/70">
+                          <span className="ml-3 text-lg text-white/80">
                             {job.freelancerRating?.stars % 1 === 0
                               ? `${Math.floor(job.freelancerRating.stars)}/5`
                               : `${job.freelancerRating.stars.toFixed(2)}/5`}
                           </span>
                         </div>
                         {job.freelancerRating.feedbackChips && job.freelancerRating.feedbackChips.length > 0 && (
-                          <div className="flex flex-wrap gap-1 mb-2">
+                          <div className="flex flex-wrap gap-2 mb-3">
                             {job.freelancerRating.feedbackChips.map((chip: string, index: number) => (
-                              <span key={index} className="px-2 py-0.5 text-xs rounded-full bg-purple-500/10 text-purple-300 border border-purple-500/20">
+                              <span key={index} className="px-3 py-1.5 text-sm rounded-full bg-purple-500/10 text-purple-300 border border-purple-500/20">
                                 {chip}
                               </span>
                             ))}
                           </div>
                         )}
                         {job.freelancerRating.review && (
-                          <p className="text-sm text-white/70">&quot;{job.freelancerRating.review}&quot;</p>
+                          <p className="text-base text-white/80 mb-3">&quot;{job.freelancerRating.review}&quot;</p>
                         )}
-                        <p className="mt-1 text-xs text-white/50">
+                        <p className="text-sm text-white/60">
                           Submitted on {job.freelancerRating?.date ? new Date(job.freelancerRating.date).toLocaleDateString('en-US', {
                             year: 'numeric',
-                            month: 'short',
+                            month: 'long',
                             day: 'numeric',
                             hour: '2-digit',
                             minute: '2-digit'
