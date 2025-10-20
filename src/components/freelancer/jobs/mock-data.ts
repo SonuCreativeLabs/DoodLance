@@ -35,7 +35,7 @@ export const mockUpcomingJobs: Job[] = [
   {
     id: 'DLSP1234',
     title: 'U-16 Academy Coach',
-    category: 'OTHER',
+    category: 'Coach',
     date: '2024-07-10',
     time: '16:00',
     status: 'confirmed',
@@ -64,7 +64,7 @@ export const mockUpcomingJobs: Job[] = [
   {
     id: 'DLST5678',
     title: 'Sidearm Specialist — Powerplay & Death Overs',
-    category: 'OTHER',
+    category: 'Sidearm',
     date: '2024-06-25',
     time: '10:00',
     status: 'completed',
@@ -119,7 +119,7 @@ export const mockUpcomingJobs: Job[] = [
   {
     id: 'DLMS9012',
     title: 'Mystery Spin Training — Carrom Ball & Doosra',
-    category: 'OTHER',
+    category: 'Net Bowler',
     date: '2024-06-20',
     time: '14:00',
     status: 'completed',
@@ -128,7 +128,7 @@ export const mockUpcomingJobs: Job[] = [
     description: 'Need a mystery spinner for training sessions with our top-order batsmen. Looking for someone who can bowl carrom balls, doosra, and other variations consistently.',
     skills: ['Mystery Spinner', 'Bowling Techniques', 'Carrom Ball', 'Doosra'],
     duration: '2 hours per session',
-    experienceLevel: 'Expert',
+    experienceLevel: 'Intermediate',
     completedAt: '2024-06-20T16:00:00',
     earnings: {
       baseAmount: 2000,
@@ -163,7 +163,7 @@ export const mockUpcomingJobs: Job[] = [
   {
     id: 'DLOC1234',
     title: 'Personal Batting Coach — Front-Foot Technique',
-    category: 'OTHER',
+    category: 'Coach',
     date: '2024-06-18',
     time: '10:00',
     status: 'cancelled',
@@ -195,7 +195,7 @@ export const mockUpcomingJobs: Job[] = [
   {
     id: 'DLNB3456',
     title: 'Fast Bowling Practice — 140+ kph Nets',
-    category: 'OTHER',
+    category: 'Net Bowler',
     date: '2024-06-15',
     client: {
       name: 'Tamil Nadu Cricket Academy',
@@ -219,7 +219,7 @@ export const mockUpcomingJobs: Job[] = [
     description: 'Need a fast bowler (140+ kph) for our batsmen\'s net practice. Preparing for upcoming state-level tournament. 2-hour session with breaks.',
     skills: ['Fast Bowler', 'Net Bowler', 'Cricket Training', 'Pace Bowling'],
     duration: '2 hours',
-    experienceLevel: 'Expert',
+    experienceLevel: 'Beginner',
     cancellationDetails: {
       cancelledBy: 'freelancer',
       cancelledAt: '2024-06-14T16:45:00',
@@ -229,7 +229,7 @@ export const mockUpcomingJobs: Job[] = [
   {
     id: 'DLCA7890',
     title: 'Match Footage Analysis — Technical Breakdown',
-    category: 'OTHER',
+    category: 'Analyst',
     date: '2024-06-28',
     time: '09:00',
     status: 'completed',
@@ -256,12 +256,12 @@ export const mockUpcomingJobs: Job[] = [
       }
     }
   },
-  
+
   // Cricket-focused jobs continued
   {
     id: 'DLCP1234',
     title: 'Tournament Photography — Action Shots & Highlights',
-    category: 'OTHER',
+    category: 'Cricket Photo / Videography',
     date: '2024-07-12',
     time: '09:00',
     status: 'pending',
@@ -290,7 +290,7 @@ export const mockUpcomingJobs: Job[] = [
   {
     id: 'DLCC3456',
     title: 'Social Media Content — Highlights & Player Profiles',
-    category: 'OTHER',
+    category: 'Cricket Content Creator',
     date: '2024-07-08',
     time: '08:00',
     status: 'confirmed',
@@ -299,7 +299,7 @@ export const mockUpcomingJobs: Job[] = [
     description: 'Looking for a cricket content creator to produce engaging videos for our social media channels. Need highlights packages, player profiles, and technique analysis videos.',
     skills: ['Cricket Content Creation', 'Video Editing', 'Social Media', 'Cricket Knowledge'],
     duration: 'Project based (15 videos)',
-    experienceLevel: 'Expert',
+    experienceLevel: 'Intermediate',
     client: {
       name: 'Chennai Super Kings Academy',
       rating: 4.9,
@@ -319,7 +319,7 @@ export const mockUpcomingJobs: Job[] = [
   {
     id: 'DLCU7890',
     title: 'Tournament Officiating — T20 Weekend Panel',
-    category: 'OTHER',
+    category: 'Umpire',
     date: '2024-07-15',
     time: '08:00',
     status: 'pending',
@@ -347,7 +347,7 @@ export const mockUpcomingJobs: Job[] = [
   {
     id: 'DLCS2468',
     title: 'Digital Scoring — Weekend T20 Tournament',
-    category: 'OTHER',
+    category: 'Scorer',
     date: '2024-07-20',
     time: '08:00',
     status: 'confirmed',
@@ -356,7 +356,7 @@ export const mockUpcomingJobs: Job[] = [
     description: 'Looking for experienced cricket scorers for our upcoming weekend tournament. Must be familiar with digital scoring systems and cricket statistics.',
     skills: ['Cricket Scorer', 'Digital Scoring', 'Cricket Statistics', 'Match Analysis'],
     duration: '2 days (weekend)',
-    experienceLevel: 'Intermediate',
+    experienceLevel: 'Beginner',
     client: {
       name: 'Chennai Cricket Association',
       rating: 4.9,
@@ -376,7 +376,7 @@ export const mockUpcomingJobs: Job[] = [
   {
     id: 'DLCP1357',
     title: 'Sports Physiotherapy — Injury Prevention Program',
-    category: 'OTHER',
+    category: 'Physio',
     date: '2024-07-25',
     time: '10:00',
     status: 'pending',
@@ -405,7 +405,7 @@ export const mockUpcomingJobs: Job[] = [
   {
     id: 'DLNT1111',
     title: 'Net Practice Session — Opening Batsmen',
-    category: 'OTHER',
+    category: 'Net Batsman',
     date: '2024-07-30',
     time: '07:00',
     status: 'pending',
@@ -414,7 +414,7 @@ export const mockUpcomingJobs: Job[] = [
     description: 'Need opening batsmen for net practice sessions with our academy team. Focus on building partnerships and powerplay batting techniques.',
     skills: ['Opening Batsman', 'Powerplay Batting', 'Partnership Building', 'Net Practice'],
     duration: '3 hours',
-    experienceLevel: 'Expert',
+    experienceLevel: 'Intermediate',
     client: {
       name: 'Adyar Cricket Academy',
       rating: 4.6,
@@ -434,7 +434,7 @@ export const mockUpcomingJobs: Job[] = [
   {
     id: 'DLWK2222',
     title: 'Wicket Keeping Drills — Advanced Techniques',
-    category: 'OTHER',
+    category: 'Match Player',
     date: '2024-08-02',
     time: '09:00',
     status: 'pending',
@@ -463,7 +463,7 @@ export const mockUpcomingJobs: Job[] = [
   {
     id: 'DLFB3333',
     title: 'Fielding Specialist — Boundary Catching',
-    category: 'OTHER',
+    category: 'Match Player',
     date: '2024-08-05',
     time: '10:00',
     status: 'confirmed',
@@ -472,7 +472,7 @@ export const mockUpcomingJobs: Job[] = [
     description: 'Need a fielding specialist for boundary catching and ground fielding drills. Focus on athletic fielding and preventing boundaries.',
     skills: ['Fielding Specialist', 'Boundary Catching', 'Ground Fielding', 'Athletic Training'],
     duration: '2 hours',
-    experienceLevel: 'Expert',
+    experienceLevel: 'Beginner',
     client: {
       name: 'T Nagar Cricket Academy',
       rating: 4.8,
@@ -491,7 +491,7 @@ export const mockUpcomingJobs: Job[] = [
   {
     id: 'DLSP4444',
     title: 'Sports Psychology — Mental Preparation',
-    category: 'OTHER',
+    category: 'Coach',
     date: '2024-08-08',
     time: '14:00',
     status: 'completed',
@@ -536,7 +536,7 @@ export const mockUpcomingJobs: Job[] = [
   {
     id: 'DLNV5555',
     title: 'Nutrition Consultation — Cricket-Specific Diet',
-    category: 'OTHER',
+    category: 'Sports Conditioning Trainer',
     date: '2024-08-10',
     time: '11:00',
     status: 'completed',
@@ -545,7 +545,7 @@ export const mockUpcomingJobs: Job[] = [
     description: 'Need a sports nutritionist to design cricket-specific diet plans for our academy players. Focus on energy management and recovery nutrition.',
     skills: ['Sports Nutrition', 'Diet Planning', 'Energy Management', 'Recovery Nutrition'],
     duration: '3 hours (consultation + planning)',
-    experienceLevel: 'Expert',
+    experienceLevel: 'Intermediate',
     completedAt: '2024-08-10T14:00:00',
     earnings: {
       baseAmount: 3500,
@@ -581,7 +581,7 @@ export const mockUpcomingJobs: Job[] = [
   {
     id: 'DLTE6666',
     title: 'Technical Equipment Setup — Bowling Machines',
-    category: 'OTHER',
+    category: 'Coach',
     date: '2024-08-12',
     time: '08:00',
     status: 'completed',
@@ -590,7 +590,7 @@ export const mockUpcomingJobs: Job[] = [
     description: 'Looking for a technician to set up and calibrate bowling machines for our training sessions. Must have experience with cricket technology.',
     skills: ['Technical Setup', 'Bowling Machines', 'Equipment Calibration', 'Cricket Technology'],
     duration: '4 hours',
-    experienceLevel: 'Intermediate',
+    experienceLevel: 'Beginner',
     completedAt: '2024-08-12T12:00:00',
     earnings: {
       baseAmount: 2500,
@@ -625,7 +625,7 @@ export const mockUpcomingJobs: Job[] = [
   {
     id: 'DLMC7777',
     title: 'Match Commentary — Live Streaming',
-    category: 'OTHER',
+    category: 'Commentator',
     date: '2024-08-15',
     time: '14:00',
     status: 'confirmed',
@@ -654,7 +654,7 @@ export const mockUpcomingJobs: Job[] = [
   {
     id: 'DLFT8888',
     title: 'Fitness Training — Cricket-Specific Conditioning',
-    category: 'OTHER',
+    category: 'Fitness Trainer',
     date: '2024-08-18',
     time: '06:00',
     status: 'pending',
@@ -683,7 +683,7 @@ export const mockUpcomingJobs: Job[] = [
   {
     id: 'DLSS9999',
     title: 'Skill Assessment — Junior Player Evaluation',
-    category: 'OTHER',
+    category: 'Coach',
     date: '2024-08-20',
     time: '09:00',
     status: 'confirmed',
@@ -692,7 +692,7 @@ export const mockUpcomingJobs: Job[] = [
     description: 'Need experienced coaches to assess junior players for team selection. Focus on batting, bowling, fielding, and overall potential evaluation.',
     skills: ['Player Assessment', 'Team Selection', 'Technical Evaluation', 'Player Development'],
     duration: '6 hours (full day assessment)',
-    experienceLevel: 'Expert',
+    experienceLevel: 'Intermediate',
     client: {
       name: 'Teynampet Cricket Academy',
       rating: 4.6,
@@ -712,7 +712,7 @@ export const mockUpcomingJobs: Job[] = [
   {
     id: 'DLRC0000',
     title: 'Recovery Coaching — Post-Match Recovery',
-    category: 'OTHER',
+    category: 'Physio',
     date: '2024-08-22',
     time: '18:00',
     status: 'pending',
@@ -721,7 +721,7 @@ export const mockUpcomingJobs: Job[] = [
     description: 'Looking for recovery specialists for post-match recovery sessions. Focus on muscle recovery, flexibility, and mental relaxation techniques.',
     skills: ['Recovery Coaching', 'Muscle Recovery', 'Flexibility Training', 'Mental Relaxation'],
     duration: '2 hours per session',
-    experienceLevel: 'Expert',
+    experienceLevel: 'Beginner',
     client: {
       name: 'Chennai Recovery Specialists',
       rating: 4.7,

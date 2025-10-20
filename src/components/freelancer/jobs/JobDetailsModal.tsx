@@ -12,6 +12,39 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { calculateJobEarnings } from './utils';
 import { Job } from './types';
 
+// Category mapping for display
+const getCategoryDisplayName = (category: string) => {
+  const categoryMap: Record<string, string> = {
+    'Match Player': 'Match Player',
+    'Net Bowler': 'Net Bowler',
+    'Net Batsman': 'Net Batsman',
+    'Sidearm': 'Sidearm',
+    'Coach': 'Coach',
+    'Sports Conditioning Trainer': 'Sports Conditioning Trainer',
+    'Fitness Trainer': 'Fitness Trainer',
+    'Analyst': 'Analyst',
+    'Physio': 'Physio',
+    'Scorer': 'Scorer',
+    'Umpire': 'Umpire',
+    'Cricket Photo / Videography': 'Cricket Photo / Videography',
+    'Cricket Content Creator': 'Cricket Content Creator',
+    'Commentator': 'Commentator',
+    'OTHER': 'Other Services'
+  };
+  return categoryMap[category] || category;
+};
+
+// Experience level mapping for display
+const getExperienceLevelDisplayName = (level: string) => {
+  const levelMap: Record<string, string> = {
+    'Beginner': 'Beginner',
+    'Intermediate': 'Intermediate',
+    'Expert': 'Expert',
+    'Professional': 'Professional'
+  };
+  return levelMap[level] || level;
+};
+
 interface CancellationDetails {
   cancelledBy: 'client' | 'freelancer';
   cancelledAt: string;
@@ -275,7 +308,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
               {/* Job Title & Basic Info */}
               <div className="mb-6">
                 <h2 className="text-xl font-bold text-white mb-2">{job.title}</h2>
-                <p className="text-white/70 text-sm">{job.category} • {job.experienceLevel}</p>
+                <p className="text-white/70 text-sm">{getCategoryDisplayName(job.category)} • {getExperienceLevelDisplayName(job.experienceLevel || 'Expert')}</p>
               </div>
 
               {/* Job Details Grid */}

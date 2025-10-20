@@ -6,22 +6,38 @@ export type TransactionStatus = 'pending' | 'failed' | 'completed';
 export type StatusType = JobStatus | ApplicationStatus | TransactionStatus;
 
 // Job Categories
-export type JobCategory = 
-  | 'PHOTO' 
-  | 'VIDEO' 
-  | 'DESIGN' 
-  | 'MUSIC' 
-  | 'DANCE' 
-  | 'EVENT' 
+export type JobCategory =
+  | 'Match Player'
+  | 'Net Bowler'
+  | 'Net Batsman'
+  | 'Sidearm'
+  | 'Coach'
+  | 'Sports Conditioning Trainer'
+  | 'Fitness Trainer'
+  | 'Analyst'
+  | 'Physio'
+  | 'Scorer'
+  | 'Umpire'
+  | 'Cricket Photo / Videography'
+  | 'Cricket Content Creator'
+  | 'Commentator'
   | 'OTHER';
 
 export const JOB_CATEGORIES = [
-  'PHOTO',
-  'VIDEO',
-  'DESIGN',
-  'MUSIC',
-  'DANCE',
-  'EVENT',
+  'Match Player',
+  'Net Bowler',
+  'Net Batsman',
+  'Sidearm',
+  'Coach',
+  'Sports Conditioning Trainer',
+  'Fitness Trainer',
+  'Analyst',
+  'Physio',
+  'Scorer',
+  'Umpire',
+  'Cricket Photo / Videography',
+  'Cricket Content Creator',
+  'Commentator',
   'OTHER'
 ] as const;
 
