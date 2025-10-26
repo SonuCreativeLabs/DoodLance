@@ -455,6 +455,40 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
       params.set('tab', 'applications');
       params.set('status', 'withdrawn');
       router.push(`/freelancer/jobs?${params.toString()}`);
+    } else if (newStatus === 'accepted') {
+      // Handle acceptance: move to accepted status and create job
+      setApplications(prevApplications =>
+        prevApplications.map(app =>
+          app["#"] === applicationId ? { ...app, status: newStatus } : app
+        )
+      );
+
+      // Import and use acceptProposalAndCreateJob function
+      import('./mock-data').then(({ acceptProposalAndCreateJob }) => {
+        const newJob = acceptProposalAndCreateJob(applicationId);
+
+        if (newJob) {
+          // Add the new job to the jobs state
+          setJobs(prevJobs => [...prevJobs, newJob]);
+
+          // Switch to My Jobs tab and upcoming status
+          setActiveTab('upcoming');
+          setStatusFilter('upcoming');
+
+          // Update URL
+          const params = new URLSearchParams();
+          params.set('tab', 'upcoming');
+          params.set('status', 'upcoming');
+          router.push(`/freelancer/jobs?${params.toString()}`);
+
+          alert('Proposal accepted! Job has been added to My Jobs.');
+        } else {
+          alert('Failed to accept proposal. Please try again.');
+        }
+      }).catch(error => {
+        console.error('Error accepting proposal:', error);
+        alert('Error accepting proposal. Please try again.');
+      });
     }
   };
 

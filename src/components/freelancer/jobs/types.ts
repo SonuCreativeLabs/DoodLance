@@ -53,6 +53,7 @@ export interface ClientInfo {
   joinedDate?: string;
   freelancersWorked?: number;
   freelancerAvatars?: string[];
+  experienceLevel?: string;
 }
 
 export interface CancellationDetails {
@@ -101,8 +102,10 @@ export interface Job {
     tips: number;
     addOnServices: number;
     platformCommission: number;
+    gst: number; // GST amount
     totalEarnings: number;
     commissionRate?: number; // percentage
+    gstRate?: number; // GST percentage
     breakdown?: {
       baseAmount: number;
       tips: number;
@@ -111,6 +114,7 @@ export interface Job {
         amount: number;
       }[];
       platformCommission: number;
+      gst: number;
       totalEarnings: number;
     };
   };
@@ -120,6 +124,9 @@ export interface Job {
     description?: string;
   }[];
   completedAt?: string;
+  cancelledBy?: 'client' | 'freelancer';
+  cancelledAt?: string;
+  notes?: string;
 }
 
 export interface Proposal {

@@ -1,4 +1,4 @@
-import { Job, Application, EarningsData } from './types';
+import { Job, Application, EarningsData, JobCategory } from './types';
 
 // Your skills that will be matched with jobs
 export const mySkills = [
@@ -48,11 +48,7 @@ export const mockUpcomingJobs: Job[] = [
     client: {
       name: 'Rajesh Kumar',
       rating: 4.8,
-      jobsCompleted: 8,
-      moneySpent: 85000,
-      memberSince: '2022-03-15',
-      phoneNumber: '+91 9876543210',
-      image: '/avatars/rajesh.jpg',
+      image: 'https://randomuser.me/api/portraits/men/32.jpg',
       freelancersWorked: 8,
       freelancerAvatars: [
         'https://randomuser.me/api/portraits/men/32.jpg',
@@ -94,17 +90,20 @@ export const mockUpcomingJobs: Job[] = [
       baseAmount: 15000,
       tips: 500, // Client gave a tip
       addOnServices: 2000, // Extra video analysis service
-      platformCommission: 1500, // 10% commission on base + add-ons
-      totalEarnings: 15700, // 15000 + 500 + 2000 - 1500
+      platformCommission: 1750, // 10% commission on subtotal (15000 + 500 + 2000)
+      gst: 3150, // 18% GST on subtotal (15000 + 500 + 2000)
+      totalEarnings: 13600, // 17500 - 1750 - 3150
       commissionRate: 0.10,
+      gstRate: 0.18,
       breakdown: {
         baseAmount: 15000,
         tips: 500,
         addOnServices: [
           { name: 'Video Analysis', amount: 2000 }
         ],
-        platformCommission: 1500,
-        totalEarnings: 15700
+        platformCommission: 1750,
+        gst: 3150,
+        totalEarnings: 13600
       }
     },
     addOnServices: [
@@ -132,19 +131,27 @@ export const mockUpcomingJobs: Job[] = [
     completedAt: '2024-06-20T16:00:00',
     earnings: {
       baseAmount: 2000,
-      tips: 0,
-      addOnServices: 0,
-      platformCommission: 200,
-      totalEarnings: 1800,
+      tips: 200, // Client gave a tip for good performance
+      addOnServices: 500, // Extra session added
+      platformCommission: 270, // 10% commission on subtotal (2000 + 200 + 500)
+      gst: 486, // 18% GST on subtotal (2000 + 200 + 500)
+      totalEarnings: 1944, // 2700 - 270 - 486
       commissionRate: 0.10,
+      gstRate: 0.18,
       breakdown: {
         baseAmount: 2000,
-        tips: 0,
-        addOnServices: [],
-        platformCommission: 200,
-        totalEarnings: 1800
+        tips: 200,
+        addOnServices: [
+          { name: 'Extra Training Session', amount: 500 }
+        ],
+        platformCommission: 270,
+        gst: 486,
+        totalEarnings: 1944
       }
     },
+    addOnServices: [
+      { name: 'Extra Training Session', price: 500, description: 'Additional practice session requested by client' }
+    ],
     client: {
       name: 'Anna Nagar Cricket Club',
       rating: 4.7,
@@ -242,19 +249,27 @@ export const mockUpcomingJobs: Job[] = [
     completedAt: '2024-06-28T13:00:00',
     earnings: {
       baseAmount: 3500,
-      tips: 0,
-      addOnServices: 0,
-      platformCommission: 350,
-      totalEarnings: 3150,
+      tips: 300, // Client gave a tip for excellent analysis
+      addOnServices: 800, // Additional report requested
+      platformCommission: 460, // 10% commission on subtotal (3500 + 300 + 800)
+      gst: 828, // 18% GST on subtotal (3500 + 300 + 800)
+      totalEarnings: 4312, // 4600 - 460 - 828
       commissionRate: 0.10,
+      gstRate: 0.18,
       breakdown: {
         baseAmount: 3500,
-        tips: 0,
-        addOnServices: [],
-        platformCommission: 350,
-        totalEarnings: 3150
+        tips: 300,
+        addOnServices: [
+          { name: 'Detailed Performance Report', amount: 800 }
+        ],
+        platformCommission: 460,
+        gst: 828,
+        totalEarnings: 4312
       }
-    }
+    },
+    addOnServices: [
+      { name: 'Detailed Performance Report', price: 800, description: 'Comprehensive analysis report with recommendations' }
+    ],
   },
 
   // Cricket-focused jobs continued
@@ -278,14 +293,19 @@ export const mockUpcomingJobs: Job[] = [
       moneySpent: 85000,
       memberSince: '2021-05-15',
       phoneNumber: '+91 8765432101',
-      image: '/avatars/cca.jpg',
+      image: '/images/LOGOS/cca.jpg',
       freelancersWorked: 8,
       freelancerAvatars: [
         'https://randomuser.me/api/portraits/women/31.jpg',
         'https://randomuser.me/api/portraits/men/42.jpg',
         'https://randomuser.me/api/portraits/women/25.jpg'
       ]
-    }
+    },
+    // Mock add-on services and tips for demonstration (would be 0 for pending jobs in real app)
+    addOnServices: [
+      { name: 'Professional Photo Editing', price: 1200, description: 'Advanced editing and retouching of tournament photos' },
+      { name: 'Social Media Package', price: 800, description: 'Ready-to-post content for social media platforms' }
+    ]
   },
   {
     id: 'DLCC3456',
@@ -342,7 +362,12 @@ export const mockUpcomingJobs: Job[] = [
         'https://randomuser.me/api/portraits/women/28.jpg',
         'https://randomuser.me/api/portraits/men/35.jpg'
       ]
-    }
+    },
+    // Mock add-on services for demonstration
+    addOnServices: [
+      { name: 'Match Report Documentation', price: 600, description: 'Detailed match reports and scorecards' },
+      { name: 'Player Conduct Monitoring', price: 400, description: 'Monitoring and reporting on-field behavior' }
+    ]
   },
   {
     id: 'DLCS2468',
@@ -364,7 +389,7 @@ export const mockUpcomingJobs: Job[] = [
       moneySpent: 95000,
       memberSince: '2021-02-10',
       phoneNumber: '+91 9876543212',
-      image: '/avatars/cca.jpg',
+      image: '/images/LOGOS/cca.jpg',
       freelancersWorked: 18,
       freelancerAvatars: [
         'https://randomuser.me/api/portraits/women/36.jpg',
@@ -504,19 +529,27 @@ export const mockUpcomingJobs: Job[] = [
     completedAt: '2024-08-08T18:00:00',
     earnings: {
       baseAmount: 4000,
-      tips: 0,
-      addOnServices: 0,
-      platformCommission: 400,
-      totalEarnings: 3600,
+      tips: 400, // Client gave a tip for excellent session
+      addOnServices: 1000, // Follow-up consultation added
+      platformCommission: 540, // 10% commission on subtotal (4000 + 400 + 1000)
+      gst: 972, // 18% GST on subtotal (4000 + 400 + 1000)
+      totalEarnings: 5288, // 5400 - 540 - 972
       commissionRate: 0.10,
+      gstRate: 0.18,
       breakdown: {
         baseAmount: 4000,
-        tips: 0,
-        addOnServices: [],
-        platformCommission: 400,
-        totalEarnings: 3600
+        tips: 400,
+        addOnServices: [
+          { name: 'Follow-up Consultation', amount: 1000 }
+        ],
+        platformCommission: 540,
+        gst: 972,
+        totalEarnings: 5288
       }
     },
+    addOnServices: [
+      { name: 'Follow-up Consultation', price: 1000, description: 'Additional one-on-one session for individual players' }
+    ],
     client: {
       name: 'Chennai Elite Cricket Club',
       rating: 4.9,
@@ -549,19 +582,27 @@ export const mockUpcomingJobs: Job[] = [
     completedAt: '2024-08-10T14:00:00',
     earnings: {
       baseAmount: 3500,
-      tips: 0,
-      addOnServices: 0,
-      platformCommission: 350,
-      totalEarnings: 3150,
+      tips: 250, // Client gave a tip for detailed consultation
+      addOnServices: 600, // Meal planning service added
+      platformCommission: 435, // 10% commission on subtotal (3500 + 250 + 600)
+      gst: 783, // 18% GST on subtotal (3500 + 250 + 600)
+      totalEarnings: 4132, // 4350 - 435 - 783
       commissionRate: 0.10,
+      gstRate: 0.18,
       breakdown: {
         baseAmount: 3500,
-        tips: 0,
-        addOnServices: [],
-        platformCommission: 350,
-        totalEarnings: 3150
+        tips: 250,
+        addOnServices: [
+          { name: 'Personalized Meal Planning', amount: 600 }
+        ],
+        platformCommission: 435,
+        gst: 783,
+        totalEarnings: 4132
       }
     },
+    addOnServices: [
+      { name: 'Personalized Meal Planning', price: 600, description: 'Custom nutrition plan based on individual requirements' }
+    ],
     client: {
       name: 'Chennai Sports Nutrition Center',
       rating: 4.7,
@@ -594,19 +635,27 @@ export const mockUpcomingJobs: Job[] = [
     completedAt: '2024-08-12T12:00:00',
     earnings: {
       baseAmount: 2500,
-      tips: 0,
-      addOnServices: 0,
-      platformCommission: 250,
-      totalEarnings: 2250,
+      tips: 150, // Client gave a tip for quick setup
+      addOnServices: 400, // Equipment maintenance training added
+      platformCommission: 305, // 10% commission on subtotal (2500 + 150 + 400)
+      gst: 549, // 18% GST on subtotal (2500 + 150 + 400)
+      totalEarnings: 3296, // 3050 - 305 - 549
       commissionRate: 0.10,
+      gstRate: 0.18,
       breakdown: {
         baseAmount: 2500,
-        tips: 0,
-        addOnServices: [],
-        platformCommission: 250,
-        totalEarnings: 2250
+        tips: 150,
+        addOnServices: [
+          { name: 'Equipment Maintenance Training', amount: 400 }
+        ],
+        platformCommission: 305,
+        gst: 549,
+        totalEarnings: 3296
       }
     },
+    addOnServices: [
+      { name: 'Equipment Maintenance Training', price: 400, description: 'Training on how to maintain and calibrate equipment' }
+    ],
     client: {
       name: 'Chennai Cricket Technology',
       rating: 4.5,
@@ -924,6 +973,114 @@ export const updateApplicationStatus = (applicationId: string, newStatus: Applic
     }
     console.log(`Updated application ${applicationId} status to ${newStatus}`, proposalUpdates ? 'with proposal updates' : '');
   }
+};
+
+// Function to create a new application
+export const createApplication = (jobId: string, proposalData: Partial<Application['proposal']>) => {
+  // Import the Feed's jobs data
+  const { jobs: feedJobs } = require('@/app/freelancer/feed/data/jobs');
+
+  // Find the job data from Feed's jobs
+  const job = feedJobs.find((j: any) => j.id === jobId);
+  if (!job) {
+    console.error('Job not found for application creation');
+    return null;
+  }
+
+  // Generate a unique ID for the application
+  const applicationId = `DLA${Date.now()}`;
+
+  const newApplication: Application = {
+    "#": applicationId,
+    jobTitle: job.title,
+    appliedDate: new Date().toISOString(),
+    status: 'pending',
+    clientName: job.clientName || 'Unknown Client',
+    budget: { min: Number(job.budget || job.rate), max: Number(job.budget || job.rate) },
+    progress: 0,
+    clientImage: job.clientImage || '',
+    location: job.location,
+    postedDate: job.postedAt || new Date().toISOString(),
+    description: job.description,
+    clientId: 'client123', // Mock client ID
+    moneySpent: Number(job.client?.moneySpent) || 0,
+    freelancersWorked: Number(job.client?.freelancersWorked) || 0,
+    freelancerAvatars: job.client?.freelancerAvatars || [],
+    proposal: {
+      coverLetter: proposalData.coverLetter || 'I am interested in this job and believe I can deliver quality work.',
+      proposedRate: Number(proposalData.proposedRate) || Number(job.budget || job.rate),
+      estimatedDays: Number(proposalData.estimatedDays) || 1,
+      skills: proposalData.skills || job.skills || [],
+      attachments: proposalData.attachments || []
+    }
+  };
+
+  // Add to mock applications
+  mockApplications.push(newApplication);
+
+  console.log(`Created new application ${applicationId} for job ${jobId}`);
+
+  return newApplication;
+};
+
+// Function to accept a proposal and create a job
+export const acceptProposalAndCreateJob = (applicationId: string) => {
+  // Update proposal status to accepted
+  updateApplicationStatus(applicationId, 'accepted');
+
+  // Find the application
+  const application = mockApplications.find(app => app["#"] === applicationId);
+  if (!application) {
+    console.error('Application not found for acceptance');
+    return null;
+  }
+
+  // Import the Feed's jobs data
+  const { jobs: feedJobs } = require('@/app/freelancer/feed/data/jobs');
+
+  // Find the original job from Feed's jobs to get complete data
+  const originalJob = feedJobs.find((j: any) => j.title === application.jobTitle && j.location === application.location);
+  if (!originalJob) {
+    console.error('Original job not found for job creation');
+    return null;
+  }
+
+  // Create a job from the accepted proposal
+  const newJobId = `DLJ${Date.now()}`;
+  const newJob: Job = {
+    id: newJobId,
+    title: application.jobTitle,
+    category: 'Coach' as JobCategory, // Default category - could be mapped from job title or proposal
+    date: new Date().toISOString().split('T')[0],
+    time: '09:00',
+    status: 'confirmed',
+    payment: Number(application.proposal.proposedRate),
+    location: application.location,
+    description: application.description,
+    skills: application.proposal.skills,
+    duration: `${application.proposal.estimatedDays} days`,
+    experienceLevel: 'Expert',
+    client: {
+      name: application.clientName,
+      rating: 4.5,
+      jobsCompleted: 10,
+      memberSince: '2023-01-01',
+      phoneNumber: '+91 9876543210',
+      image: application.clientImage,
+      moneySpent: Number(application.moneySpent),
+      location: application.location,
+      joinedDate: '2023-01-01',
+      freelancersWorked: Number(application.freelancersWorked),
+      freelancerAvatars: application.freelancerAvatars
+    }
+  };
+
+  // Add to mock jobs
+  mockUpcomingJobs.push(newJob);
+
+  console.log(`Accepted proposal ${applicationId} and created job ${newJobId}`);
+
+  return newJob;
 };
 
 export const mockFreelancerProfile = {

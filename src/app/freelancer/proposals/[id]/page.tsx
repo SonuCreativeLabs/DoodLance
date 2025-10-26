@@ -44,27 +44,31 @@ export default function ProposalDetailsPage() {
     const loadApplication = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch(`/api/applications/${id}`);
-        if (response.ok) {
-          const applicationData = await response.json();
+        // Use mock data instead of API calls
+        const { mockApplications } = await import('@/components/freelancer/jobs/mock-data');
+        const applicationData = mockApplications.find(app => app["#"] === id);
+
+        if (applicationData) {
           setProposal(applicationData);
 
           // Check if we should auto-enable edit mode (from card edit button)
-          const urlParams = new URLSearchParams(window.location.search);
-          if (urlParams.get('edit') === 'true') {
-            setIsEditing(true);
-            setEditedProposal(applicationData);
+          if (typeof window !== 'undefined') {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('edit') === 'true') {
+              setIsEditing(true);
+              setEditedProposal(applicationData);
 
-            // Auto-scroll to edit section after a short delay
-            setTimeout(() => {
-              const editSection = document.getElementById('edit-section');
-              if (editSection) {
-                editSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-              }
-            }, 500);
+              // Auto-scroll to edit section after a short delay
+              setTimeout(() => {
+                const editSection = document.getElementById('edit-section');
+                if (editSection) {
+                  editSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+              }, 500);
+            }
           }
         } else {
-          console.error('Failed to load application');
+          console.error('Proposal not found in mock data');
           setProposal(null);
         }
       } catch (error) {
@@ -96,41 +100,19 @@ export default function ProposalDetailsPage() {
 
     setIsWithdrawing(true);
     try {
-      const response = await fetch(`/api/applications/${proposal?.["#"]}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          status: editedProposal.status,
-          progress: editedProposal.progress,
-          proposal: {
-            coverLetter: editedProposal.proposal.coverLetter,
-            proposedRate: editedProposal.proposal.proposedRate,
-            // Add other proposal fields as needed
-          },
-        }),
+      // Use mock data update instead of API call
+      updateApplicationStatus(proposal?.["#"] || '', editedProposal.status, {
+        coverLetter: editedProposal.proposal.coverLetter,
+        proposedRate: editedProposal.proposal.proposedRate,
       });
 
-      if (response.ok) {
-        const result = await response.json();
-        console.log('Proposal updated successfully:', result);
+      console.log('Proposal updated successfully');
 
-        // Update local state
-        setProposal(editedProposal);
-        setIsEditing(false);
+      // Update local state
+      setProposal(editedProposal);
+      setIsEditing(false);
 
-        // Update the shared mock data so the job dashboard shows the change
-        updateApplicationStatus(proposal?.["#"] || '', editedProposal.status, {
-          coverLetter: editedProposal.proposal.coverLetter,
-          proposedRate: editedProposal.proposal.proposedRate,
-        });
-
-        alert('Proposal updated successfully!');
-      } else {
-        console.error('Failed to update proposal');
-        alert('Failed to update proposal. Please try again.');
-      }
+      alert('Proposal updated successfully!');
     } catch (error) {
       console.error('Error updating proposal:', error);
       alert('Error updating proposal. Please check your connection and try again.');
@@ -149,38 +131,23 @@ export default function ProposalDetailsPage() {
     try {
       console.log('Withdrawing proposal:', proposal?.["#"]);
 
-      const response = await fetch(`/api/applications/${proposal?.["#"]}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      // Use mock data update instead of API call
+      updateApplicationStatus(proposal?.["#"] || '', 'withdrawn');
 
-      if (response.ok) {
-        const result = await response.json();
-        console.log('Withdrawal successful:', result);
+      // Update local state
+      setProposal(prev => prev ? { ...prev, status: 'withdrawn' } : null);
 
-        // Update local state
-        setProposal(prev => prev ? { ...prev, status: 'withdrawn' } : null);
+      // Close modal
+      setShowWithdrawConfirm(false);
 
-        // Update the shared mock data so the job dashboard shows the change
-        updateApplicationStatus(proposal?.["#"] || '', 'withdrawn');
+      // Show success message
+      alert('Proposal withdrawn successfully!');
 
-        // Close modal
-        setShowWithdrawConfirm(false);
+      // Navigate back to proposals page after a short delay
+      setTimeout(() => {
+        router.push('/freelancer/jobs?tab=applications&status=withdrawn');
+      }, 1000);
 
-        // Show success message
-        alert('Proposal withdrawn successfully!');
-
-        // Navigate back to proposals page after a short delay
-        setTimeout(() => {
-          router.push('/freelancer/jobs?tab=applications&status=withdrawn');
-        }, 1000);
-
-      } else {
-        console.error('Failed to withdraw proposal');
-        alert('Failed to withdraw proposal. Please try again.');
-      }
     } catch (error) {
       console.error('Error withdrawing proposal:', error);
       alert('Error withdrawing proposal. Please check your connection and try again.');
@@ -549,47 +516,16 @@ export default function ProposalDetailsPage() {
                     </div>
                     
                     {proposal.status === 'pending' && (
-                      <div className="grid grid-cols-2 gap-3" id="edit-section">
-                        {isEditing ? (
-                          <>
-                            <Button
-                              variant="outline"
-                              className="border-green-500/30 text-green-400 hover:bg-green-500/10 hover:border-green-400/50"
-                              onClick={handleSaveEdit}
-                              disabled={isWithdrawing}
-                            >
-                              Save Changes
-                            </Button>
-                            <Button
-                              variant="outline"
-                              className="border-gray-600 text-gray-300 hover:bg-gray-700"
-                              onClick={handleCancelEdit}
-                              disabled={isWithdrawing}
-                            >
-                              Cancel
-                            </Button>
-                          </>
-                        ) : (
-                          <>
-                            <Button
-                              variant="outline"
-                              className="border-purple-500/30 text-purple-400 hover:bg-purple-500/10 hover:border-purple-400/50 transition-all hover:shadow-lg hover:shadow-purple-500/10"
-                              onClick={handleEdit}
-                            >
-                              <Edit2 className="w-4 h-4 mr-2" />
-                              Edit
-                            </Button>
-                            <Button
-                              variant="outline"
-                              className="border-red-500/30 text-red-400 hover:bg-red-500/10 hover:border-red-400/50 transition-all hover:shadow-lg hover:shadow-red-500/10"
-                              onClick={() => setShowWithdrawConfirm(true)}
-                              disabled={isWithdrawing || proposal?.status !== 'pending'}
-                            >
-                              <Trash2 className="w-4 h-4 mr-2" />
-                              {isWithdrawing ? 'Withdrawing...' : 'Withdraw'}
-                            </Button>
-                          </>
-                        )}
+                      <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4" id="edit-section">
+                        <div className="flex items-start space-x-2">
+                          <ClockIcon className="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0" />
+                          <div>
+                            <h3 className="font-medium text-blue-300">Waiting for Client Review</h3>
+                            <p className="text-sm text-blue-400 mt-1">
+                              Your proposal has been submitted and is pending review by the client. You'll be notified once they make a decision.
+                            </p>
+                          </div>
+                        </div>
                       </div>
                     )}
                     

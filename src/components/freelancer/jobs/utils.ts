@@ -54,25 +54,48 @@ export const calculateJobEarnings = (job: Job) => {
   // Default platform commission rate (10%)
   const commissionRate = 0.10;
 
+  // GST rate (18% standard Indian rate)
+  const gstRate = 0.18;
+
   // Calculate tips (could be from job data or default to 0)
   const tips = job.earnings?.tips || 0;
 
   // Calculate add-on services total
   const addOnServicesTotal = job.addOnServices?.reduce((total, service) => total + service.price, 0) || 0;
 
-  // Calculate platform commission
-  const platformCommission = Math.round((baseAmount + addOnServicesTotal) * commissionRate);
+  // Calculate subtotal (base + tips + add-ons)
+  const subtotal = baseAmount + tips + addOnServicesTotal;
 
-  // Calculate total earnings (base + tips + add-ons - commission)
-  const totalEarnings = baseAmount + tips + addOnServicesTotal - platformCommission;
+  // Calculate platform commission (10% of subtotal including tips)
+  const platformCommission = Math.round(subtotal * commissionRate);
+
+  // Calculate GST on the subtotal (18% GST on total earnings)
+  const gst = Math.round(subtotal * gstRate);
+
+  // Calculate total earnings (subtotal - platform fee - GST)
+  const totalEarnings = subtotal - platformCommission - gst;
+
+  // Alternative GST calculation methods (commented out)
+  // Method 1: GST on full amount before platform fee
+  // const fullAmount = baseAmount + tips + addOnServicesTotal;
+  // const altGST1 = Math.round(fullAmount * gstRate);
+  // const altTotal1 = fullAmount - platformCommission + altGST1;
+
+  // Method 2: GST calculated but shown as deduction (if user wants net after GST)
+  // const gstDeduction = Math.round(subtotal * gstRate);
+  // const altTotal2 = subtotal - gstDeduction;
 
   return {
     baseAmount,
     tips,
     addOnServices: addOnServicesTotal,
     platformCommission,
+    gst,
     totalEarnings,
     commissionRate,
+    gstRate,
+    // Alternative calculations available:
+    // altGST1, altTotal1, altTotal2,
     breakdown: {
       baseAmount,
       tips,
@@ -81,6 +104,7 @@ export const calculateJobEarnings = (job: Job) => {
         amount: service.price
       })) || [],
       platformCommission,
+      gst,
       totalEarnings
     }
   };

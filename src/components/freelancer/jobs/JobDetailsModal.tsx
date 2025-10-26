@@ -1,6 +1,6 @@
 'use client';
 
-import { X, MessageCircle, Phone, MapPin, CalendarIcon, ClockIcon, IndianRupee, ArrowLeft, AlertCircle, User, UserCheck, Star, ChevronDown, ChevronUp, CheckCircle, MessageSquare, AlertTriangle, TrendingUp } from 'lucide-react';
+import { X, MessageCircle, Phone, MapPin, CalendarIcon, ClockIcon, IndianRupee, ArrowLeft, AlertCircle, User, UserCheck, Star, ChevronDown, ChevronUp, CheckCircle, MessageSquare, AlertTriangle, TrendingUp, Info } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
@@ -56,6 +56,7 @@ interface ClientInfo {
   phoneNumber?: string;
   rating?: number;
   jobsCompleted?: number;
+  experienceLevel?: string;
   image?: string;
   memberSince?: string;
   freelancerAvatars?: string[];
@@ -94,14 +95,12 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
   const [rating, setRating] = useState(0);
   const [review, setReview] = useState('');
   const [selectedChips, setSelectedChips] = useState<string[]>([]);
-  const [renderTrigger, setRenderTrigger] = useState(0);
-
-  // Calculate earnings preview for the job
-  const earningsPreview = calculateJobEarnings(job);
+  const [isClientProfileExpanded, setIsClientProfileExpanded] = useState(false);
+  const [isEarningsExpanded, setIsEarningsExpanded] = useState(false);
 
   // Force re-render when job data changes
   useEffect(() => {
-    setRenderTrigger(prev => prev + 1);
+    // Removed setRenderTrigger as it's not used
   }, [job.status, job.freelancerRating]);
 
   // Helper function to check if 8 hours have passed since completion
@@ -269,15 +268,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
   };
 
   return (
-    <div 
-      className="fixed inset-0 z-50 bg-[#0a0a0a] overflow-y-auto"
-      onClick={(e) => {
-        // Close modal when clicking outside content
-        if (e.target === e.currentTarget && onClose) {
-          onClose();
-        }
-      }}
-    >
+    <div className="fixed inset-0 bg-[#0A0A0A] z-[9999] w-screen h-screen overflow-y-auto">
       {/* Header */}
       <div className="fixed top-0 left-0 right-0 z-50 bg-[#0a0a0a]/95 backdrop-blur-sm border-b border-white/10 p-4 flex items-center">
         <button 
@@ -298,178 +289,523 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
           <div className="text-xs font-mono text-white/60">ID: {job.id}</div>
         </div>
       </div>
-      
+
       {/* Main Content */}
-      <div className="min-h-[100dvh] w-full pt-16 pb-20" onClick={(e) => e.stopPropagation()}>
-        <div className="max-w-4xl mx-auto p-3 md:p-4">
-          <div className="space-y-4">
-            {/* Main Job Details Card */}
-            <div className="p-6 bg-[#111111] rounded-xl border border-gray-800/80">
-              {/* Job Title & Basic Info */}
-              <div className="mb-6">
-                <h2 className="text-xl font-bold text-white mb-2">{job.title}</h2>
-                <p className="text-white/70 text-sm">{getCategoryDisplayName(job.category)} • {getExperienceLevelDisplayName(job.experienceLevel || 'Expert')}</p>
+      <main className="pt-20 pb-32 px-4 w-full max-w-4xl mx-auto">
+        {/* Job Rating and Review - Moved above job header */}
+        {job.status === 'completed' && job.freelancerRating && (
+          <div className="mb-6">
+            {/* Stars in full width */}
+            <div className="flex justify-center mb-2">
+              <div className="flex items-center gap-2">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <svg
+                    key={star}
+                    className={`w-12 h-12 ${star <= (job.freelancerRating?.stars || 0) ? 'text-yellow-400 fill-current' : 'text-gray-600'}`}
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                ))}
               </div>
-
-              {/* Job Details Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                {/* Left Column */}
-                <div className="space-y-4">
-                  {/* Schedule */}
-                  <div className="flex items-start gap-3">
-                    <CalendarIcon className="w-4 h-4 text-purple-400 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <h3 className="text-sm font-medium text-white/60 mb-0.5">
-                        Scheduled Date & Time
-                      </h3>
-                      <p className="text-white/90">
-                        {new Date(job.jobDate || job.date).toLocaleDateString('en-US', {
-                          weekday: 'long',
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric'
-                        })}
-                      </p>
-                      <p className="text-white/70">{job.jobTime || job.time}</p>
-                    </div>
-                  </div>
-
-                  {/* Location */}
-                  {job.location && (
-                    <div className="flex items-start gap-3">
-                      <MapPin className="w-4 h-4 text-purple-400 mt-0.5 flex-shrink-0" />
-                      <div>
-                        <h3 className="text-sm font-medium text-white/60 mb-0.5">Location</h3>
-                        <p className="text-white/90">{job.location}</p>
-                        <button className="mt-1 text-sm text-purple-400 hover:underline flex items-center gap-1">
-                          <MapPin className="w-3 h-3" />
-                          View on map
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Right Column */}
-                <div className="space-y-4">
-                  {/* Payment */}
-                  <div className="flex items-start gap-3">
-                    <IndianRupee className="w-4 h-4 text-purple-400 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <h3 className="text-sm font-medium text-white/60 mb-0.5">Payment</h3>
-                      <p className="text-white/90">₹{job.payment} <span className="text-sm text-white/60">/ job</span></p>
-                      <p className="text-xs text-white/60 mt-1">Payment will be released upon job completion</p>
-                    </div>
-                  </div>
-
-                  {/* Duration */}
-                  <div className="flex items-start gap-3">
-                    <ClockIcon className="w-4 h-4 text-purple-400 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <h3 className="text-sm font-medium text-white/60 mb-0.5">Estimated Duration</h3>
-                      <p className="text-white/90">{job.duration || 'Not specified'}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Description */}
-              {job.description && (
-                <div className="mb-6 pt-6 border-t border-gray-800/50">
-                  <h2 className="text-lg font-semibold text-white mb-3">Job Description</h2>
-                  <div className="prose prose-invert max-w-none">
-                    <p className="text-white/80 text-sm leading-relaxed">{job.description}</p>
-                  </div>
-                </div>
-              )}
-
-              {/* Skills */}
-              {job.skills && job.skills.length > 0 && (
-                <div className="pt-6 border-t border-gray-800/50">
-                  <h2 className="text-lg font-semibold text-white mb-3">Required Skills</h2>
-                  <div className="flex flex-wrap gap-2">
-                    {job.skills.map((skill, index) => (
-                      <span key={index} className="px-2 py-1 text-xs rounded-full bg-purple-500/10 text-purple-300 border border-purple-500/20">
-                        {skill}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
 
-            {/* Client Info Section */}
-            {job.client && (
-              <div className="space-y-3">
-                <div className="p-4 bg-[#111111] rounded-xl border border-gray-800/80">
-                  {/* Client Profile Title */}
-                  <div className="mb-4">
-                    <h3 className="text-lg font-semibold text-white">Client Profile</h3>
-                  </div>
+            {/* Star count below */}
+            <p className="text-center text-lg font-bold text-white mb-4">
+              {job.freelancerRating?.stars} stars
+            </p>
 
-                  <div className="flex items-center space-x-3 mb-3">
-                    <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center">
+            {/* Review in small font */}
+            {job.freelancerRating?.review && (
+              <p className="text-center text-sm text-gray-300 mb-6 leading-relaxed max-w-2xl mx-auto">
+                "{job.freelancerRating.review}"
+              </p>
+            )}
+
+            {/* Feedback Chips with title */}
+            {job.freelancerRating?.feedbackChips && job.freelancerRating.feedbackChips.length > 0 && (
+              <div className="text-center">
+                <h3 className="text-sm font-medium text-gray-500 mb-3">What the client appreciated most</h3>
+                <div className="flex flex-wrap justify-center gap-2">
+                  {job.freelancerRating.feedbackChips.map((chip: string, index: number) => (
+                    <span
+                      key={index}
+                      className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-purple-900/30 text-purple-300 border border-purple-500/30"
+                    >
+                      {chip}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Separator Line - Below rating section, only for completed jobs */}
+        {job.status === 'completed' && job.freelancerRating && (
+          <div className="w-full border-b-4 border-gray-700/30 mb-6"></div>
+        )}
+
+        {/* Job Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl md:text-4xl font-bold text-white mb-3">{job.title}</h1>
+          <div className="flex items-center gap-3 flex-wrap">
+            <span className="text-purple-400 text-sm font-medium">
+              {getCategoryDisplayName(job.category)}
+            </span>
+            <span className="text-gray-400">•</span>
+            <div className="flex items-center text-gray-400 text-sm">
+              <MapPin className="w-4 h-4 mr-1.5" />
+              {job.location}
+            </div>
+          </div>
+        </div>
+
+        {/* Job Highlights */}
+        <div className="mb-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="flex items-start gap-3">
+              <div className="w-5 h-5 flex items-center justify-center mt-0.5 flex-shrink-0">
+                <span className="text-gray-400 text-lg leading-none">₹</span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm text-gray-400 mb-0.5">Payment</div>
+                <div className="text-white font-medium leading-tight">
+                  <span className="whitespace-nowrap">
+                    ₹{job.payment.toLocaleString('en-IN')}
+                    <span className="text-gray-400 text-sm font-normal ml-1">/ job</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <ClockIcon className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
+              <div>
+                <div className="text-sm text-gray-400">Duration</div>
+                <div className="text-white font-medium capitalize">{job.duration || 'Not specified'}</div>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <CalendarIcon className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
+              <div>
+                <div className="text-sm text-gray-400">Scheduled</div>
+                <div className="text-white font-medium">
+                  {new Date(job.jobDate || job.date).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                  })}
+                </div>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <User className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
+              <div>
+                <div className="text-sm text-gray-400">Experience</div>
+                <div className="text-white font-medium">{getExperienceLevelDisplayName(job.experienceLevel || 'Expert')}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Job Details */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Main Content */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* About the Job with Skills */}
+            <div className="bg-[#1E1E1E] rounded-2xl p-6 border border-white/5">
+              <h2 className="text-lg font-semibold text-white mb-4">About the Job</h2>
+              <div className="prose prose-invert max-w-none">
+                {job.description && (
+                  <p className="text-white/80 leading-relaxed mb-6">
+                    {job.description}
+                  </p>
+                )}
+                
+                {job.skills && job.skills.length > 0 && (
+                  <div className="mt-6 pt-6 border-t border-white/5">
+                    <h3 className="text-md font-semibold text-white mb-3">Required Skills</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {job.skills.map((skill, index) => (
+                        <span 
+                          key={index}
+                          className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-[#2D2D2D] text-white/90 border border-white/5 hover:bg-[#3D3D3D] transition-colors"
+                        >
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {job.status === 'completed' && (
+              <div className="space-y-6">
+                {/* Calculate earnings preview for the job */}
+                {(() => {
+                  const earningsPreview = calculateJobEarnings(job);
+
+                  return (
+                    <>
+                      {/* Total Earnings */}
+                      <div className="rounded-xl border border-white/10 overflow-hidden">
+                        {/* Title Section - Black Background */}
+                        <div className="bg-[#111111] p-6 border-b border-white/10 group">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <h2 className="text-lg font-semibold text-white" aria-label="Click the toggle button to see detailed earnings breakdown">Total Earnings</h2>
+                            </div>
+                            <button
+                              onClick={() => setIsEarningsExpanded(!isEarningsExpanded)}
+                              className="text-white/60 hover:text-white transition-colors"
+                              aria-label={isEarningsExpanded ? "Collapse earnings breakdown" : "Expand to see detailed earnings breakdown"}
+                            >
+                              {isEarningsExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Content Section - Green Background */}
+                        <div className="bg-gradient-to-br from-green-900/20 via-green-800/10 to-emerald-900/20 p-6 relative">
+                          <div className="absolute top-0 right-0 w-16 h-16 bg-green-500/10 rounded-full blur-xl"></div>
+                          <div className="absolute bottom-0 left-0 w-12 h-12 bg-emerald-500/10 rounded-full blur-lg"></div>
+
+                          <div className="relative">
+                            {!isEarningsExpanded ? (
+                              /* Collapsed Mode - Only Total */
+                              <div className="text-center py-4">
+                                <div className="text-4xl font-bold text-green-400 mb-2">
+                                  ₹{earningsPreview.totalEarnings.toLocaleString('en-IN')}
+                                </div>
+                                <p className="text-green-300 text-sm font-medium mb-1">💰 Money in the Bank!</p>
+                                <p className="text-gray-400 text-xs">Click to see breakdown</p>
+                              </div>
+                            ) : (
+                              /* Expanded Mode - Simple List with Descriptions */
+                              <div className="space-y-3">
+                                {/* Base Payment */}
+                                <div className="flex items-center justify-between py-2 border-b border-gray-800 group">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-gray-300 font-medium">Base Payment</span>
+                                      <div className="relative inline-block">
+                                        <Info
+                                          className="w-3 h-3 text-gray-400 hover:text-white transition-colors"
+                                          onMouseEnter={(e) => {
+                                            const tooltip = e.currentTarget.nextElementSibling as HTMLElement;
+                                            if (tooltip) tooltip.style.display = 'block';
+                                          }}
+                                          onMouseLeave={(e) => {
+                                            const tooltip = e.currentTarget.nextElementSibling as HTMLElement;
+                                            if (tooltip) tooltip.style.display = 'none';
+                                          }}
+                                          aria-label="Information about base payment"
+                                          role="button"
+                                          tabIndex={0}
+                                        />
+                                        <div className="absolute z-50 bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-[#111111] border border-gray-600 rounded-lg shadow-xl hidden tooltip-container"
+                                             style={{ left: '50%', transform: 'translateX(-50%)' }}>
+                                          <div className="text-xs text-gray-300 leading-relaxed text-center whitespace-nowrap">
+                                            The agreed payment amount<br />for this job
+                                          </div>
+                                          <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-2 h-2 bg-[#111111] border-r border-b border-gray-600 rotate-45 tooltip-arrow"></div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <span className="text-white font-semibold">₹{job.payment?.toLocaleString('en-IN') || '0'}</span>
+                                  </div>
+
+                                {/* Add-on Services */}
+                                {earningsPreview.breakdown.addOnServices.length > 0 ? (
+                                  <div className="py-2 border-b border-gray-800">
+                                      <div className="mb-2 flex items-center gap-2">
+                                        <span className="text-gray-300 font-medium">Add-on Services</span>
+                                        <div className="relative inline-block">
+                                          <Info
+                                            className="w-3 h-3 text-gray-400 hover:text-white transition-colors"
+                                            onMouseEnter={(e) => {
+                                              const tooltip = e.currentTarget.nextElementSibling as HTMLElement;
+                                              if (tooltip) tooltip.style.display = 'block';
+                                            }}
+                                            onMouseLeave={(e) => {
+                                              const tooltip = e.currentTarget.nextElementSibling as HTMLElement;
+                                              if (tooltip) tooltip.style.display = 'none';
+                                            }}
+                                            aria-label="Information about add-on services"
+                                            role="button"
+                                            tabIndex={0}
+                                          />
+                                          <div className="absolute z-50 bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-[#111111] border border-gray-600 rounded-lg shadow-xl hidden tooltip-container"
+                                               style={{ left: '50%', transform: 'translateX(-50%)' }}>
+                                            <div className="text-xs text-gray-300 leading-relaxed text-center whitespace-nowrap">
+                                              Additional services requested<br />by the client beyond the original scope
+                                            </div>
+                                            <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-2 h-2 bg-[#111111] border-r border-b border-gray-600 rotate-45 tooltip-arrow"></div>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    <div className="space-y-1 ml-4">
+                                      {earningsPreview.breakdown.addOnServices.map((addon: any, index: number) => (
+                                        <div key={index} className="flex items-center justify-between py-1">
+                                          <span className="text-gray-300 text-sm">{addon.name}</span>
+                                          <span className="text-white font-medium">+₹{addon.amount.toLocaleString('en-IN')}</span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="flex items-center justify-between py-2 border-b border-gray-800 group">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-gray-300 font-medium">Add-on Services</span>
+                                      <div className="relative inline-block">
+                                        <Info
+                                          className="w-3 h-3 text-gray-400 hover:text-white transition-colors"
+                                          onMouseEnter={(e) => {
+                                            const tooltip = e.currentTarget.nextElementSibling as HTMLElement;
+                                            if (tooltip) tooltip.style.display = 'block';
+                                          }}
+                                          onMouseLeave={(e) => {
+                                            const tooltip = e.currentTarget.nextElementSibling as HTMLElement;
+                                            if (tooltip) tooltip.style.display = 'none';
+                                          }}
+                                          aria-label="Information about add-on services"
+                                          role="button"
+                                          tabIndex={0}
+                                        />
+                                        <div className="absolute z-50 bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-[#111111] border border-gray-600 rounded-lg shadow-xl hidden tooltip-container"
+                                             style={{ left: '50%', transform: 'translateX(-50%)' }}>
+                                          <div className="text-xs text-gray-300 leading-relaxed text-center whitespace-nowrap">
+                                            Additional services requested<br />by the client beyond the original scope
+                                          </div>
+                                          <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-2 h-2 bg-[#111111] border-r border-b border-gray-600 rotate-45 tooltip-arrow"></div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <span className="text-white font-medium">₹{earningsPreview.addOnServices.toLocaleString('en-IN')}</span>
+                                  </div>
+                                )}
+
+                                {/* Tips */}
+                                <div className="flex items-center justify-between py-2 border-b border-gray-800 group">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-gray-300 font-medium">Client Tips</span>
+                                    <div className="relative inline-block">
+                                      <Info
+                                        className="w-3 h-3 text-gray-400 hover:text-white transition-colors cursor-help"
+                                        onMouseEnter={(e) => {
+                                          const tooltip = e.currentTarget.nextElementSibling as HTMLElement;
+                                          if (tooltip) tooltip.style.display = 'block';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                          const tooltip = e.currentTarget.nextElementSibling as HTMLElement;
+                                          if (tooltip) tooltip.style.display = 'none';
+                                        }}
+                                        aria-label="Information about client tips"
+                                        role="button"
+                                        tabIndex={0}
+                                      />
+                                      <div className="absolute z-50 bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-[#111111] border border-gray-600 rounded-lg shadow-xl hidden tooltip-container"
+                                           style={{ left: '50%', transform: 'translateX(-50%)' }}>
+                                        <div className="text-xs text-gray-300 leading-relaxed text-center whitespace-nowrap">
+                                          Bonus payment for excellent<br />service beyond the agreed amount
+                                        </div>
+                                        <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-2 h-2 bg-[#111111] border-r border-b border-gray-600 rotate-45 tooltip-arrow"></div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <span className="text-white font-medium">
+                                    {earningsPreview.tips > 0 ? '+' : ''}₹{earningsPreview.tips.toLocaleString('en-IN')}
+                                  </span>
+                                </div>
+
+                                {/* Platform Fee */}
+                                <div className="flex items-center justify-between py-2 border-b border-gray-800 group">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-gray-300 font-medium">Platform Fee</span>
+                                    <div className="relative inline-block">
+                                      <Info
+                                        className="w-3 h-3 text-gray-400 hover:text-white transition-colors cursor-help"
+                                        onMouseEnter={(e) => {
+                                          const tooltip = e.currentTarget.nextElementSibling as HTMLElement;
+                                          if (tooltip) tooltip.style.display = 'block';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                          const tooltip = e.currentTarget.nextElementSibling as HTMLElement;
+                                          if (tooltip) tooltip.style.display = 'none';
+                                        }}
+                                        aria-label="Information about platform fee"
+                                        role="button"
+                                        tabIndex={0}
+                                      />
+                                      <div className="absolute z-50 bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-[#111111] border border-gray-600 rounded-lg shadow-xl hidden tooltip-container"
+                                           style={{ left: '50%', transform: 'translateX(-50%)' }}>
+                                        <div className="text-xs text-gray-300 leading-relaxed text-center whitespace-nowrap">
+                                          Service charge deducted by<br />DoodLance platform (10% of earnings)
+                                        </div>
+                                        <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-2 h-2 bg-[#111111] border-r border-b border-gray-600 rotate-45 tooltip-arrow"></div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <span className="text-white font-medium">-₹{earningsPreview.platformCommission.toLocaleString('en-IN')}</span>
+                                </div>
+
+                                {/* GST */}
+                                <div className="flex items-center justify-between py-2 group">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-gray-300 font-medium">GST</span>
+                                    <div className="relative inline-block">
+                                      <Info
+                                        className="w-3 h-3 text-gray-400 hover:text-white transition-colors cursor-help"
+                                        onMouseEnter={(e) => {
+                                          const tooltip = e.currentTarget.nextElementSibling as HTMLElement;
+                                          if (tooltip) tooltip.style.display = 'block';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                          const tooltip = e.currentTarget.nextElementSibling as HTMLElement;
+                                          if (tooltip) tooltip.style.display = 'none';
+                                        }}
+                                        aria-label="Information about GST"
+                                        role="button"
+                                        tabIndex={0}
+                                      />
+                                      <div className="absolute z-50 bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-[#111111] border border-gray-600 rounded-lg shadow-xl hidden tooltip-container"
+                                           style={{ left: '50%', transform: 'translateX(-50%)' }}>
+                                        <div className="text-xs text-gray-300 leading-relaxed text-center whitespace-nowrap">
+                                          Government service tax<br />(18% on earnings)
+                                        </div>
+                                        <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-2 h-2 bg-[#111111] border-r border-b border-gray-600 rotate-45 tooltip-arrow"></div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <span className="text-white font-medium">-₹{earningsPreview.gst.toLocaleString('en-IN')}</span>
+                                </div>
+
+                                {/* Total Earnings */}
+                                <div className="flex items-center justify-between py-3 border-t-2 border-gray-700 mt-4 group">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-white font-semibold">Total Earnings</span>
+                                    <div className="relative inline-block">
+                                      <Info
+                                        className="w-3 h-3 text-gray-400 hover:text-white transition-colors cursor-help"
+                                        onMouseEnter={(e) => {
+                                          const tooltip = e.currentTarget.nextElementSibling as HTMLElement;
+                                          if (tooltip) tooltip.style.display = 'block';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                          const tooltip = e.currentTarget.nextElementSibling as HTMLElement;
+                                          if (tooltip) tooltip.style.display = 'none';
+                                        }}
+                                        aria-label="Information about total earnings"
+                                        role="button"
+                                        tabIndex={0}
+                                      />
+                                      <div className="absolute z-50 bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-[#111111] border border-gray-600 rounded-lg shadow-xl hidden tooltip-container"
+                                           style={{ left: '50%', transform: 'translateX(-50%)' }}>
+                                        <div className="text-xs text-gray-300 leading-relaxed text-center whitespace-nowrap">
+                                          Final amount after all fees<br />and taxes have been deducted
+                                        </div>
+                                        <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-2 h-2 bg-[#111111] border-r border-b border-gray-600 rotate-45 tooltip-arrow"></div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <span className="text-xl font-bold text-green-400">₹{earningsPreview.totalEarnings.toLocaleString('en-IN')}</span>
+                                </div>
+
+                                {/* Processing Info */}
+                                <div className="mt-4 p-3 rounded-xl bg-[#111111] border border-white/10">
+                                  <div className="text-xs text-gray-300">
+                                    <p className="font-medium text-gray-200">💳 Payment Processing</p>
+                                    <p>Earnings will be available in your wallet within 24 hours after job completion.</p>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
+            )}
+          </div>
+
+          {/* Sidebar */}
+          <div className="space-y-6">
+            {/* About the Client */}
+            <div className="bg-[#111111] rounded-xl border border-white/10 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-white">Client Profile</h2>
+                <button
+                  onClick={() => setIsClientProfileExpanded(!isClientProfileExpanded)}
+                  className="text-white/60 hover:text-white transition-colors"
+                >
+                  {isClientProfileExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                </button>
+              </div>
+
+              {isClientProfileExpanded ? (
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <div className="w-12 h-12 rounded-full bg-purple-500/10 flex items-center justify-center">
                       {job.client?.image ? (
-                        <img 
-                          src={job.client.image} 
+                        <img
+                          src={job.client.image}
                           alt={job.client.name}
                           className="w-full h-full rounded-full object-cover"
                         />
                       ) : (
-                        <User className="w-5 h-5 text-purple-400" />
+                        <User className="w-6 h-6 text-purple-400" />
                       )}
                     </div>
                     <div>
-                      <h2 className="font-medium text-sm">{job.client?.name || 'Unknown Client'}</h2>
-                      <p className="text-sm text-gray-400">{job.client?.location || 'Location not specified'}</p>
+                      <h3 className="font-medium text-white">{job.client?.name || 'Unknown Client'}</h3>
+                      <p className="text-sm text-white/60">{job.location || 'Location not specified'}</p>
                     </div>
                   </div>
 
-                  <div className="space-y-3">
-                    <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <h3 className="text-xs font-medium text-gray-400 mb-1">Job Posted</h3>
-                        <p className="text-sm">
-                          {new Date(job.date).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'short',
-                            day: 'numeric'
-                          })}
+                        <h4 className="text-xs font-medium text-white/60 mb-1">Experience Level</h4>
+                        <p className="text-sm text-white">
+                          {getExperienceLevelDisplayName(job.client?.experienceLevel || 'Expert')}
                         </p>
                       </div>
                       <div>
-                        <h3 className="text-xs font-medium text-gray-400 mb-1">Member Since</h3>
-                        <p className="text-sm">
-                          {job.client?.memberSince ? 
-                            new Date(job.client.memberSince).getFullYear() : 
-                            new Date().getFullYear() - 1}
+                        <h4 className="text-xs font-medium text-white/60 mb-1">Member Since</h4>
+                        <p className="text-sm text-white">
+                          {job.client?.memberSince ?
+                            new Date(job.client.memberSince).getFullYear() :
+                            '2023'}
                         </p>
                       </div>
                     </div>
-                    
-                    <div className="pt-2 border-t border-gray-800">
-                      <div className="space-y-2">
+
+                    <div className="pt-2 border-t border-white/10">
+                      <div className="space-y-3">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-2">
-                            <div className="flex -space-x-1">
+                            <div className="flex -space-x-2">
                               {job.client?.freelancerAvatars?.length ? (
-                                job.client.freelancerAvatars.map((avatar: string, i: number) => (
-                                  <img 
+                                job.client.freelancerAvatars.map((avatar, i) => (
+                                  <img
                                     key={i}
                                     src={avatar}
                                     alt={`Freelancer ${i + 1}`}
-                                    className="w-6 h-6 rounded-full border-2 border-[#111111] object-cover"
+                                    className="w-7 h-7 rounded-full border-2 border-[#111111] object-cover"
                                   />
                                 ))
                               ) : (
                                 Array.from({ length: Math.min(3, job.client?.freelancersWorked || 1) }).map((_, i) => (
-                                  <div key={i} className="w-6 h-6 rounded-full bg-purple-500/20 border-2 border-[#111111] flex items-center justify-center">
-                                    <User className="w-3 h-3 text-purple-300" />
+                                  <div key={i} className="w-7 h-7 rounded-full bg-purple-500/20 border-2 border-[#111111] flex items-center justify-center">
+                                    <User className="w-3.5 h-3.5 text-purple-300" />
                                   </div>
                                 ))
                               )}
                               {job.client?.freelancersWorked && job.client.freelancersWorked > 3 && (
-                                <div className="w-6 h-6 rounded-full bg-purple-500/20 border-2 border-[#111111] flex items-center justify-center">
+                                <div className="w-7 h-7 rounded-full bg-purple-500/20 border-2 border-[#111111] flex items-center justify-center">
                                   <span className="text-xs font-medium text-purple-300">
                                     +{job.client.freelancersWorked - 3}
                                   </span>
@@ -477,20 +813,20 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                               )}
                             </div>
                             <div>
-                              <p className="text-xs text-gray-300 font-medium">
-                                {job.client?.freelancersWorked || 0} Freelancers
+                              <p className="text-xs text-white/80 font-medium">
+                                {job.client?.freelancersWorked || 1} Freelancers
                               </p>
-                              <p className="text-xs text-gray-500">Worked with this client</p>
+                              <p className="text-xs text-white/50">Worked with this client</p>
                             </div>
                           </div>
-                          
+
                           <div className="flex flex-col items-end">
                             <div className="flex items-center space-x-1">
                               <div className="flex items-center">
                                 {[...Array(5)].map((_, i) => (
-                                  <Star 
-                                    key={i} 
-                                    className={`w-3 h-3 ${i < Math.floor(job.client?.rating || 5) ? 'text-yellow-400 fill-current' : 'text-gray-600'}`} 
+                                  <Star
+                                    key={i}
+                                    className={`w-3.5 h-3.5 ${i < Math.floor(job.client?.rating || 5) ? 'text-yellow-400 fill-current' : 'text-gray-600'}`}
                                   />
                                 ))}
                               </div>
@@ -498,211 +834,147 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                                 {job.client?.rating?.toFixed(1) || '5.0'}
                               </span>
                             </div>
-                            <p className="text-xs text-gray-500">Client Rating</p>
+                            <p className="text-xs text-white/50">Client Rating</p>
                           </div>
                         </div>
                       </div>
                     </div>
-                    
-                    <div className="pt-2 border-t border-gray-800">
-                      <div className="flex items-center justify-between">
+
+                    <div className="pt-2 border-t border-white/10">
+                      <div className="flex items-center justify-between mb-3">
                         <div>
-                          <h3 className="text-xs font-medium text-gray-400 mb-1">Money Spent</h3>
-                          <p className="text-sm font-medium">
+                          <h4 className="text-xs font-medium text-white/60 mb-1">Money Spent</h4>
+                          <p className="text-sm font-medium text-white">
                             ₹{(job.client?.moneySpent || 0).toLocaleString('en-IN')}+
                           </p>
+                          <p className="text-xs text-white/50">On DoodLance</p>
                         </div>
                         <div className="text-right">
-                          <p className="text-xs text-gray-400">On DoodLance</p>
-                          <p className="text-xs text-green-400">
-                            {job.client?.jobsCompleted || 0} {job.client?.jobsCompleted === 1 ? 'Project' : 'Projects'}
+                          <h4 className="text-xs font-medium text-white/60 mb-1">Bookings</h4>
+                          <p className="text-sm font-medium text-white">
+                            {job.client?.jobsCompleted || 0}
                           </p>
+                          <p className="text-xs text-white/50">Completed</p>
                         </div>
                       </div>
                     </div>
+                  </div>
 
-                    {/* Chat and Call buttons in client profile */}
-                    <div className="pt-3 border-t border-gray-800">
-                      <div className="flex gap-2">
-                        <button
-                          onClick={handleChat}
-                          className="flex-1 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/90 hover:text-white transition-colors text-sm font-medium flex items-center justify-center gap-2"
-                        >
-                          <MessageSquare className="w-4 h-4" />
-                          Chat
-                        </button>
-                        <button
-                          onClick={handleCall}
-                          className="flex-1 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/90 hover:text-white transition-colors text-sm font-medium flex items-center justify-center gap-2"
-                        >
-                          <Phone className="w-4 h-4" />
-                          Call
-                        </button>
-                      </div>
-                    </div>
+                  <div className="flex space-x-2 mt-4">
+                    <button
+                      onClick={handleChat}
+                      className="flex-1 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/90 hover:text-white transition-colors text-sm font-medium flex items-center justify-center gap-2"
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                      Chat
+                    </button>
+                    <button
+                      onClick={handleCall}
+                      className="flex-1 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/90 hover:text-white transition-colors text-sm font-medium flex items-center justify-center gap-2"
+                    >
+                      <Phone className="w-4 h-4" />
+                      Call
+                    </button>
                   </div>
                 </div>
-              </div>
-            )}
+              ) : (
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center">
+                      {job.client?.image ? (
+                        <img
+                          src={job.client.image}
+                          alt={job.client.name}
+                          className="w-full h-full rounded-full object-cover"
+                        />
+                      ) : (
+                        <User className="w-5 h-5 text-purple-400" />
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-medium text-white text-sm">{job.client?.name || 'Unknown Client'}</h3>
+                      <p className="text-xs text-white/60">{job.location || 'Location not specified'}</p>
+                    </div>
+                  </div>
 
-            {/* Action Buttons - Only show for upcoming/pending jobs */}
+                  <div className="flex space-x-2">
+                    <button
+                      className="flex-1 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/90 hover:text-white transition-colors text-sm font-medium flex items-center justify-center gap-2"
+                      onClick={handleChat}
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                      Chat
+                    </button>
+                    <button
+                      className="flex-1 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/90 hover:text-white transition-colors text-sm font-medium flex items-center justify-center gap-2"
+                      onClick={handleCall}
+                    >
+                      <Phone className="w-4 h-4" />
+                      Call
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Action Buttons - Moved below client profile */}
             {(job.status === 'upcoming' || job.status === 'pending' || job.status === 'confirmed') && (
-              <div className="mt-4 space-y-2">
-                <button
-                  onClick={handleMarkComplete}
-                  className="w-full px-4 py-2.5 rounded-lg bg-green-600 hover:bg-green-700 text-white border border-green-700 transition-colors text-sm font-medium flex items-center justify-center gap-2"
-                >
-                  <CheckCircle className="w-4 h-4" />
-                  Mark Complete
-                </button>
-                <button
-                  onClick={handleCancelJob}
-                  className="w-full px-4 py-2.5 rounded-lg bg-transparent hover:bg-red-900/20 text-red-400 border border-red-900/50 hover:border-red-800/70 transition-colors text-sm font-medium flex items-center justify-center gap-2"
-                >
-                  <X className="w-4 h-4" />
-                  Cancel Job
-                </button>
-              </div>
-            )}
-
-            {/* Job Status Specific Sections */}
-            {job.status === 'completed' && (
-              <div className="space-y-3">
-                <div className="w-full text-center p-4 bg-green-900/10 rounded-xl border border-green-900/20">
-                  <p className="text-green-400 mb-1">
-                    <span className="inline-flex items-center px-2 py-1 rounded-full text-sm bg-green-900/20 text-green-400 border border-green-800/50">
-                      <CheckCircle className="w-3.5 h-3.5 mr-1" />
-                      Job Completed on {job.completedAt ? new Date(job.completedAt).toLocaleDateString('en-US', { 
-                        month: 'short', 
-                        day: 'numeric',
-                        year: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      }) : 'Date not available'}
-                    </span>
-                  </p>
-                  <p className="text-sm text-green-300">
-                    {job.client?.name || 'The client'} has marked this job as completed.
-                  </p>
+              <>
+                <div className="text-xs text-white/50 text-center mb-3">
+                  Mark as complete to receive payment and update your profile
                 </div>
-
-                {job.earnings && (
-                  <div className="p-4 bg-[#111111] rounded-xl border border-gray-800/80">
-                    <div className="flex items-center gap-2 mb-3">
-                      <TrendingUp className="w-4 h-4 text-emerald-400" />
-                      <h3 className="text-sm font-medium text-white/80">Earnings</h3>
-                    </div>
-
-                    {/* Total Earnings Summary - Always Visible */}
-                    <div className="text-center mb-3 p-3 bg-emerald-900/10 rounded-lg border border-emerald-900/20">
-                      <p className="text-xs text-emerald-300 mb-1">Total Earned</p>
-                      <p className="text-xl font-bold text-emerald-400">₹{job.earnings.totalEarnings.toLocaleString()}</p>
-                    </div>
-
-                    {/* Collapsible Breakdown */}
-                    <details className="group">
-                      <summary className="flex items-center justify-between cursor-pointer text-sm text-white/70 hover:text-white/90 transition-colors list-none">
-                        <span className="flex items-center gap-2">
-                          <ChevronDown className="w-4 h-4 transition-transform group-open:rotate-180" />
-                          View Breakdown
-                        </span>
-                      </summary>
-
-                      <div className="mt-3 space-y-2 pl-4">
-                        {/* Base Amount */}
-                        <div className="flex justify-between items-center text-sm">
-                          <span className="text-white/70">Base Amount</span>
-                          <span className="text-white font-medium">₹{job.earnings.baseAmount.toLocaleString()}</span>
-                        </div>
-
-                        {/* Tips */}
-                        {job.earnings.tips > 0 && (
-                          <div className="flex justify-between items-center text-sm">
-                            <span className="text-white/70">Tips</span>
-                            <span className="text-emerald-400 font-medium">+₹{job.earnings.tips.toLocaleString()}</span>
-                          </div>
-                        )}
-
-                        {/* Add-on Services */}
-                        {job.earnings.breakdown?.addOnServices && job.earnings.breakdown.addOnServices.length > 0 && (
-                          <div className="space-y-1">
-                            <div className="flex justify-between items-center text-sm">
-                              <span className="text-white/70">Add-on Services</span>
-                              <span className="text-blue-400 font-medium">+₹{job.earnings.addOnServices.toLocaleString()}</span>
-                            </div>
-                            {job.earnings.breakdown.addOnServices.map((service, index) => (
-                              <div key={index} className="flex justify-between items-center text-xs ml-4">
-                                <span className="text-white/50">{service.name}</span>
-                                <span className="text-blue-300">₹{service.amount.toLocaleString()}</span>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-
-                        {/* Platform Commission */}
-                        <div className="flex justify-between items-center text-sm border-t border-white/10 pt-2">
-                          <span className="text-white/70">Platform Fee ({(job.earnings.commissionRate || 0.1) * 100}%)</span>
-                          <span className="text-red-400 font-medium">-₹{job.earnings.platformCommission.toLocaleString()}</span>
-                        </div>
-
-                        {/* Total Earnings (Repeated for clarity) */}
-                        <div className="flex justify-between items-center text-sm font-semibold border-t border-white/20 pt-2">
-                          <span className="text-white">Total Earned</span>
-                          <span className="text-emerald-400 text-base">₹{job.earnings.totalEarnings.toLocaleString()}</span>
-                        </div>
-                      </div>
-                    </details>
-                  </div>
-                )}
-
-                {job.freelancerRating ? (
-                  <div className="p-6 bg-[#111111] rounded-xl border border-gray-800/80">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h3 className="text-lg font-medium text-white/90 mb-3">Your Rating & Review</h3>
-                        <div className="flex items-center mb-3">
-                          {[...Array(5)].map((_, i) => (
-                            <Star
-                              key={i}
-                              className={`w-5 h-5 ${i < (job.freelancerRating?.stars || 0) ? 'text-yellow-400 fill-current' : 'text-gray-600'}`}
-                            />
-                          ))}
-                          <span className="ml-3 text-lg text-white/80">
-                            {job.freelancerRating?.stars % 1 === 0
-                              ? `${Math.floor(job.freelancerRating.stars)}/5`
-                              : `${job.freelancerRating.stars.toFixed(2)}/5`}
-                          </span>
-                        </div>
-                        {job.freelancerRating.feedbackChips && job.freelancerRating.feedbackChips.length > 0 && (
-                          <div className="flex flex-wrap gap-2 mb-3">
-                            {job.freelancerRating.feedbackChips.map((chip: string, index: number) => (
-                              <span key={index} className="px-3 py-1.5 text-sm rounded-full bg-purple-500/10 text-purple-300 border border-purple-500/20">
-                                {chip}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                        {job.freelancerRating.review && (
-                          <p className="text-base text-white/80 mb-3">&quot;{job.freelancerRating.review}&quot;</p>
-                        )}
-                        <p className="text-sm text-white/60">
-                          Submitted on {job.freelancerRating?.date ? new Date(job.freelancerRating.date).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          }) : 'Date not available'}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ) : null}
-              </div>
+                <div className="space-y-3">
+                  <button
+                    onClick={handleMarkComplete}
+                    className="w-full py-3 px-6 rounded-lg font-medium bg-green-600 text-white hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <CheckCircle className="w-4 h-4" />
+                    Mark as Complete
+                  </button>
+                  <button
+                    onClick={handleCancelJob}
+                    className="w-full py-3 px-6 rounded-lg font-medium bg-transparent text-red-400 border border-red-500/30 hover:bg-red-500/10 hover:border-red-400/50 transition-all duration-200 flex items-center justify-center gap-2"
+                  >
+                    <X className="w-4 h-4" />
+                    Cancel Job
+                  </button>
+                </div>
+              </>
             )}
+
+            {/* Safety Tips */}
+            <div className="bg-[#1E1E1E] rounded-2xl p-6 border border-white/5">
+              <h2 className="text-lg font-semibold text-white mb-4">Safety Tips</h2>
+              <ul className="space-y-3">
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
+                  <span className="text-sm text-white/80">Verify ground facilities and equipment before starting</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
+                  <span className="text-sm text-white/80">Discuss session duration and payment terms clearly</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
+                  <span className="text-sm text-white/80">Ensure weather conditions are suitable for outdoor activities</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
+                  <span className="text-sm text-white/80">Use proper protective gear during practice sessions</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
+                  <span className="text-sm text-white/80">Confirm participant fitness levels before intensive training</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
+                  <span className="text-sm text-white/80">Follow proper warm-up and cool-down procedures</span>
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
-      </div>
+      </main>
 
       {/* Cancel Job Full Page */}
       {showCancelDialog && (
@@ -926,11 +1198,9 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                     {[
                       'Professional coaching',
                       'Clear communication',
-                      'Punctual sessions',
-                      'Expert knowledge',
-                      'Friendly approach',
-                      'Good facilities',
-                      'Value for money',
+                      'Punctual arrival',
+                      'Great facilities',
+                      'Positive attitude',
                       'Skill improvement'
                     ].map((chip) => (
                       <button
@@ -942,33 +1212,37 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                               : [...prev, chip]
                           );
                         }}
-                        className={`px-3 py-2 text-sm rounded-lg border transition-colors ${
+                        className={`px-3 py-2 text-sm rounded-lg border transition-all duration-200 ${
                           selectedChips.includes(chip)
-                            ? 'bg-purple-600/20 border-purple-600/30 text-purple-300'
-                            : 'bg-[#111111] border-gray-600 text-gray-300 hover:bg-gray-800/50'
+                            ? 'bg-purple-500/10 border-purple-500/30 text-purple-300'
+                            : 'bg-gray-800/50 border-purple-500/30 text-gray-300 hover:bg-gray-700/50 hover:border-gray-500/50'
                         }`}
                       >
                         {chip}
                       </button>
                     ))}
                   </div>
-
                 </div>
 
-                {/* Additional Feedback - Now Mandatory */}
+                {/* Review Text */}
                 <div className="space-y-3">
-                  <Label htmlFor="review" className="text-base font-medium text-white">
-                    Share your experience <span className="text-red-400">*</span>
+                  <Label htmlFor="review-text" className="text-base font-medium text-white">
+                    Additional feedback <span className="text-red-400">*</span>
                   </Label>
-                  <Textarea
-                    id="review"
-                    value={review}
-                    onChange={(e) => setReview(e.target.value)}
-                    placeholder="Write a brief title for your review..."
-                    className="min-h-[100px] bg-[#111111] border-gray-600/50 text-white placeholder:text-gray-500 focus:border-green-500/50 focus:ring-green-500/20 resize-none"
-                    rows={3}
-                    required
-                  />
+                  <div className="relative">
+                    <Textarea
+                      id="review-text"
+                      value={review}
+                      onChange={(e) => setReview(e.target.value)}
+                      placeholder="Share your experience, what went well, and any suggestions for improvement..."
+                      className="min-h-[100px] bg-[#111111] border-gray-600/50 text-white placeholder:text-gray-500 focus:border-purple-500/50 focus:ring-purple-500/20 resize-none"
+                      maxLength={500}
+                      required
+                    />
+                    <div className="absolute bottom-3 right-3 text-xs text-gray-500">
+                      {review.length}/500
+                    </div>
+                  </div>
                 </div>
 
                 {/* Action Buttons */}
@@ -988,15 +1262,11 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                   </Button>
                   <Button
                     type="button"
-                    className={`flex-1 h-10 font-medium shadow-lg transition-all duration-200 ${
-                      rating > 0 && review.trim()
-                        ? 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white shadow-green-600/25 hover:shadow-green-600/40'
-                        : 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                    }`}
+                    className="flex-1 h-10 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-medium shadow-lg shadow-purple-600/25 hover:shadow-purple-600/40 transition-all duration-200"
                     onClick={confirmMarkComplete}
-                    disabled={!(rating > 0 && review.trim())}
+                    disabled={rating === 0 || !review.trim()}
                   >
-                    Mark Complete
+                    Mark as Complete
                   </Button>
                 </div>
               </div>

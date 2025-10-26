@@ -165,7 +165,15 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
   const [modalKey, setModalKey] = useState(0);
 
   const handleJobUpdate = async (jobId: string, newStatus: 'completed' | 'cancelled', notes?: string, completionData?: {rating: number, review: string, feedbackChips: string[]}) => {
-    console.log(`🔄 Updating job ${jobId} status to ${newStatus}`, completionData);
+    console.log(`🔄 Updating job ${jobId} status to ${newStatus}`, { completionData, notes });
+
+    if (completionData) {
+      console.log('📝 Completion data received:', {
+        rating: completionData.rating,
+        review: completionData.review,
+        feedbackChips: completionData.feedbackChips
+      });
+    }
 
     try {
       // For completed jobs, fetch the updated job data from API to get rating and review
@@ -199,7 +207,15 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
             [jobId]: {
               ...updatedJobData,
               earnings: earningsData,
-              completedAt: new Date().toISOString()
+              completedAt: new Date().toISOString(),
+              ...(completionData && {
+                freelancerRating: {
+                  stars: completionData.rating,
+                  review: completionData.review,
+                  feedbackChips: completionData.feedbackChips,
+                  date: new Date().toISOString()
+                }
+              })
             }
           }));
 
@@ -271,6 +287,15 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
               cancelledAt: new Date().toISOString(),
               notes: notes || 'Cancelled by freelancer'
             }
+          }),
+          // Include rating/review data from completion in freelancerRating format
+          ...(completionData && newStatus === 'completed' && {
+            freelancerRating: {
+              stars: completionData.rating,
+              review: completionData.review,
+              feedbackChips: completionData.feedbackChips,
+              date: new Date().toISOString()
+            }
           })
         }
       }));
@@ -318,6 +343,15 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
               cancelledAt: new Date().toISOString(),
               notes: notes || 'Cancelled by freelancer'
             }
+          }),
+          // Include rating/review data from completion in freelancerRating format
+          ...(completionData && newStatus === 'completed' && {
+            freelancerRating: {
+              stars: completionData.rating,
+              review: completionData.review,
+              feedbackChips: completionData.feedbackChips,
+              date: new Date().toISOString()
+            }
           })
         }
       };
@@ -325,6 +359,7 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
 
       console.log('💾 Fallback: Job data saved to localStorage:', updatedData[jobId]);
       console.log('💰 Earnings data included:', earningsData);
+      console.log('⭐ FreelancerRating data included:', updatedData[jobId]?.freelancerRating);
 
       // Force dashboard refresh by dispatching a custom event
       window.dispatchEvent(new CustomEvent('jobStatusUpdated', {
@@ -414,6 +449,15 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
               cancelledAt: new Date().toISOString(),
               notes: notes || 'Cancelled by freelancer'
             }
+          }),
+          // Include rating/review data from completion in freelancerRating format
+          ...(completionData && newStatus === 'completed' && {
+            freelancerRating: {
+              stars: completionData.rating,
+              review: completionData.review,
+              feedbackChips: completionData.feedbackChips,
+              date: new Date().toISOString()
+            }
           })
         }
       };
@@ -456,7 +500,11 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
         review: updatedJobData.review,
         feedbackChips: updatedJobData.feedbackChips,
         completedAt: updatedJobData.completedAt,
-        earnings: updatedJobData.earnings
+        earnings: updatedJobData.earnings,
+        cancellationDetails: updatedJobData.cancellationDetails,
+        status: updatedJobData?.status || (updatedJobData?.freelancerRating ? 'completed' : baseJob.status),
+        // Ensure payment is included for earnings calculation
+        payment: updatedJobData?.payment || baseJob.payment
       })
     };
 
@@ -465,7 +513,9 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
       updatedJobData: updatedJobData,
       updatedJobDataEarnings: updatedJobData?.earnings,
       finalEarnings: jobWithCompletionData.earnings,
-      baseJobEarnings: baseJob.earnings
+      baseJobEarnings: baseJob.earnings,
+      hasFreelancerRating: !!updatedJobData?.freelancerRating,
+      freelancerRating: updatedJobData?.freelancerRating
     });
 
     console.log('Modal job data:', {

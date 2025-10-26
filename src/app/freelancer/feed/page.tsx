@@ -455,18 +455,38 @@ export default function FeedPage() {
     setFilteredJobs(jobsWithCoords);
   }, [jobs]);
 
-  // Filter jobs when any filter changes
-  useEffect(() => {
-    // Only filter if the component is mounted and jobs are loaded
-    if (jobs.length > 0) {
-      const timer = setTimeout(() => {
-        const results = filterJobs();
-        setFilteredJobs(results);
-      }, 100);
-      
-      return () => clearTimeout(timer);
+  const handleApply = async (jobId: string) => {
+    try {
+      // Import the createApplication function
+      const { createApplication } = await import('@/components/freelancer/jobs/mock-data');
+
+      // Create a basic proposal for demo purposes
+      const proposalData = {
+        coverLetter: 'I am interested in this job and believe I can deliver quality work.',
+        proposedRate: 2500, // Default rate
+        estimatedDays: 1,
+        skills: ['Cricket Coaching', 'Batting Techniques'],
+        attachments: []
+      };
+
+      const newApplication = createApplication(jobId, proposalData);
+
+      if (newApplication) {
+        console.log('Application submitted successfully:', newApplication["#"]);
+
+        // Optionally navigate to proposals page or show success message
+        alert('Application submitted successfully!');
+
+        // Navigate to My Proposals page
+        router.push('/freelancer/jobs?tab=applications&status=pending');
+      } else {
+        alert('Failed to submit application. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error submitting application:', error);
+      alert('Error submitting application. Please try again.');
     }
-  }, [selectedCategory, searchQuery, location, serviceCategory, workMode, priceRange, selectedSkills, jobs.length]);
+  };
 
   return (
     <div className="relative h-screen w-full bg-black overflow-hidden">
@@ -675,7 +695,7 @@ export default function FeedPage() {
           <div className="container max-w-2xl mx-auto px-0 pb-6">
             {/* Jobs list */}
             <div className="space-y-2 px-4">
-              <ProfessionalsFeed jobs={filteredJobs} />
+              <ProfessionalsFeed jobs={filteredJobs} onApply={handleApply} />
             </div>
           </div>
         </div>
