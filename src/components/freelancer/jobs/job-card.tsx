@@ -11,7 +11,7 @@ import { getStatusStyles, formatTime12Hour } from './utils';
 interface JobCardProps {
   job: Job;
   index: number;
-  onStatusChange?: (jobId: string, newStatus: 'completed' | 'cancelled') => void;
+  onStatusChange?: (jobId: string, newStatus: 'completed' | 'cancelled' | 'started') => void;
 }
 
 export const JobCard: React.FC<JobCardProps> = ({ job, index, onStatusChange }) => {
@@ -45,7 +45,7 @@ export const JobCard: React.FC<JobCardProps> = ({ job, index, onStatusChange }) 
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className={`${getStatusStyles(job.status).bg} ${getStatusStyles(job.status).text} text-xs font-medium px-3 py-1 rounded-full border ${getStatusStyles(job.status).border} w-fit`}>
-                {job.status.charAt(0).toUpperCase() + job.status.slice(1)}
+                {job.status === 'ongoing' ? 'Ongoing' : job.status.charAt(0).toUpperCase() + job.status.slice(1)}
               </div>
             </div>
             <div className="flex items-center gap-1.5 text-sm text-white/60">

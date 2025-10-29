@@ -283,7 +283,10 @@ export async function GET(
       return NextResponse.json(mockJob);
     }
 
-    return NextResponse.json(job)
+    return NextResponse.json({
+      ...job,
+      payment: job.budget
+    })
   } catch (error) {
     console.error('Database error, falling back to mock data:', error)
 
@@ -426,8 +429,11 @@ export async function PUT(
       status,
       notes,
       freelancerRating,
+      ...(status === 'started' && { startedAt: new Date().toISOString() }),
       completedAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      // Ensure payment field is preserved (API uses budget but frontend uses payment)
+      payment: originalJobData.payment || originalJobData.budget || 0,
       message: `Job ${status} successfully`
     })
 
@@ -489,6 +495,9 @@ export async function PUT(
           feedbackChips: feedbackChips || [],
           date: new Date().toISOString()
         },
+        ...(status === 'started' && { startedAt: new Date().toISOString() }),
+        // Ensure payment field is preserved
+        payment: originalJobData.payment || originalJobData.budget || 0,
         updatedAt: new Date().toISOString()
       })
     }
@@ -546,6 +555,9 @@ export async function PUT(
         feedbackChips: feedbackChips || [],
         date: new Date().toISOString()
       },
+      ...(status === 'started' && { startedAt: new Date().toISOString() }),
+      // Ensure payment field is preserved
+      payment: originalJobData.payment || originalJobData.budget || 0,
       updatedAt: new Date().toISOString()
     })
   }

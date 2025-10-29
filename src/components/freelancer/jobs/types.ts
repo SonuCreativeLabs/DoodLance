@@ -1,5 +1,5 @@
 // Status Types
-export type JobStatus = 'confirmed' | 'pending' | 'completed' | 'cancelled' | 'upcoming';
+export type JobStatus = 'confirmed' | 'pending' | 'completed' | 'cancelled' | 'upcoming' | 'started' | 'ongoing';
 export type ApplicationStatus = 'pending' | 'accepted' | 'rejected' | 'withdrawn' | 'interview' | 'hired' | 'completed' | 'cancelled' | 'expired' | 'archived';
 export type TransactionStatus = 'pending' | 'failed' | 'completed';
 
@@ -97,6 +97,8 @@ export interface Job {
   freelancerRating?: FreelancerRating;
   review?: string; // Direct review property for backward compatibility
   feedbackChips?: string[]; // Direct feedback chips property for backward compatibility
+  otp?: string; // 4-digit verification code for starting job
+  startedAt?: string; // Timestamp when job was started
   earnings?: {
     baseAmount: number;
     tips: number;
@@ -166,6 +168,7 @@ export interface Application {
   moneySpent?: number;
   freelancersWorked?: number;
   freelancerAvatars?: string[];
+  experienceLevel?: string;
 }
 
 export interface Transaction {

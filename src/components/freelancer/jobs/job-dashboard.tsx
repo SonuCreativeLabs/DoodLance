@@ -36,11 +36,13 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
   // Transform database job to JobCard expected format
   const transformJobForCard = (dbJob: any) => {
     // Map original job status to our 3-status system
-    let displayStatus: 'upcoming' | 'completed' | 'cancelled' = 'upcoming';
+    let displayStatus: 'upcoming' | 'completed' | 'cancelled' | 'ongoing' = 'upcoming';
     if (dbJob.status === 'completed') {
       displayStatus = 'completed';
     } else if (dbJob.status === 'cancelled') {
       displayStatus = 'cancelled';
+    } else if (dbJob.status === 'started') {
+      displayStatus = 'ongoing';
     }
     // 'confirmed' and 'pending' default to 'upcoming'
 
@@ -284,7 +286,7 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
     let statusFromUrl = searchParams?.status || (tabFromUrl === 'upcoming' ? 'upcoming' : 'pending');
 
     // Validate status based on current tab
-    if (tabFromUrl === 'upcoming' && !['upcoming', 'completed', 'cancelled'].includes(statusFromUrl)) {
+    if (tabFromUrl === 'upcoming' && !['upcoming', 'ongoing', 'completed', 'cancelled'].includes(statusFromUrl)) {
       statusFromUrl = 'upcoming';
     } else if (tabFromUrl === 'applications' && !['pending', 'accepted', 'rejected', 'withdrawn'].includes(statusFromUrl)) {
       statusFromUrl = 'pending';
@@ -304,6 +306,8 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
         return jobs.filter(job => job.status === 'completed').map(transformJobForCard);
       } else if (statusFilter === 'cancelled') {
         return jobs.filter(job => job.status === 'cancelled').map(transformJobForCard);
+      } else if (statusFilter === 'ongoing') {
+        return jobs.filter(job => job.status === 'started').map(transformJobForCard);
       }
       // Default to upcoming (includes confirmed and pending)
       return jobs.filter(job => job.status === 'confirmed' || job.status === 'pending').map(transformJobForCard);
@@ -322,7 +326,8 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
       // Apply status filter if specified
       const matchesStatus = statusFilter === 'upcoming' ||
         (statusFilter === 'completed' && job.status === 'completed') ||
-        (statusFilter === 'cancelled' && job.status === 'cancelled');
+        (statusFilter === 'cancelled' && job.status === 'cancelled') ||
+        (statusFilter === 'ongoing' && job.status === 'started');
 
       return matchesSearch && matchesStatus;
     });
@@ -369,6 +374,7 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
   // Calculate counts for each tab and status
   const tabCounts = useMemo(() => {
     const upcomingJobs = jobs.filter(job => job.status === 'confirmed' || job.status === 'pending');
+    const ongoingJobs = jobs.filter(job => job.status === 'started');
     const completedJobs = jobs.filter(job => job.status === 'completed');
     const cancelledJobs = jobs.filter(job => job.status === 'cancelled');
 
@@ -379,6 +385,7 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
 
     return {
       upcoming: upcomingJobs.length,
+      ongoing: ongoingJobs.length,
       completed: completedJobs.length,
       cancelled: cancelledJobs.length,
       applications: applications.length,
@@ -394,6 +401,7 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
     if (activeTab === 'upcoming') {
       return [
         { value: 'upcoming', label: 'Upcoming', count: tabCounts.upcoming },
+        { value: 'ongoing', label: 'Ongoing', count: tabCounts.ongoing },
         { value: 'completed', label: 'Completed', count: tabCounts.completed },
         { value: 'cancelled', label: 'Cancelled', count: tabCounts.cancelled }
       ] as const;
@@ -492,7 +500,7 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
     }
   };
 
-  const handleJobStatusChange = (jobId: string, newStatus: 'completed' | 'cancelled', notes?: string) => {
+  const handleJobStatusChange = (jobId: string, newStatus: 'completed' | 'cancelled' | 'started', notes?: string) => {
     console.log(`Updating job ${jobId} status to ${newStatus}`);
 
     // Update the jobs array with complete data from localStorage
@@ -517,6 +525,7 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
             ...originalJobData,  // Use original data as base
             status: newStatus,
             updatedAt: new Date().toISOString(),
+            startedAt: newStatus === 'started' ? new Date().toISOString() : originalJobData.startedAt,
             ...(newStatus === 'cancelled' && {
               cancellationDetails: {
                 cancelledAt: new Date().toISOString(),
@@ -569,6 +578,18 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
         const params = new URLSearchParams();
         params.set('tab', 'upcoming');
         params.set('status', 'cancelled');
+        router.push(`/freelancer/jobs?${params.toString()}`);
+      }, 100);
+    } else if (newStatus === 'started') {
+      // Update filter to ongoing and switch to My Jobs tab
+      setStatusFilter('ongoing');
+      setActiveTab('upcoming');
+
+      // Delay URL update to avoid race conditions
+      setTimeout(() => {
+        const params = new URLSearchParams();
+        params.set('tab', 'upcoming');
+        params.set('status', 'ongoing');
         router.push(`/freelancer/jobs?${params.toString()}`);
       }, 100);
     }
@@ -764,7 +785,7 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
                         </div>
                         <div className="space-y-3 max-w-sm">
                           <h3 className="text-xl font-semibold text-white">
-                            No {statusFilter === 'upcoming' ? 'upcoming' : statusFilter} jobs found
+                            No {statusFilter === 'upcoming' ? 'upcoming' : statusFilter === 'ongoing' ? 'ongoing' : statusFilter} jobs found
                           </h3>
                           <p className="text-gray-400 text-sm leading-relaxed">
                             {searchQuery

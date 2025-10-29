@@ -164,7 +164,7 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
 
   const [modalKey, setModalKey] = useState(0);
 
-  const handleJobUpdate = async (jobId: string, newStatus: 'completed' | 'cancelled', notes?: string, completionData?: {rating: number, review: string, feedbackChips: string[]}) => {
+  const handleJobUpdate = async (jobId: string, newStatus: 'completed' | 'cancelled' | 'started', notes?: string, completionData?: {rating: number, review: string, feedbackChips: string[]}) => {
     console.log(`🔄 Updating job ${jobId} status to ${newStatus}`, { completionData, notes });
 
     if (completionData) {
@@ -176,6 +176,103 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
     }
 
     try {
+      // For started jobs, update the job status via API
+      if (newStatus === 'started') {
+        const response = await fetch(`http://localhost:3000/api/jobs/${jobId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            status: 'started',
+            startedAt: new Date().toISOString(),
+            otpVerified: true
+          }),
+        });
+
+        if (response.ok) {
+          const updatedJobData = await response.json();
+          console.log('✅ Job started successfully via API:', updatedJobData);
+
+          // Update local state with complete job data
+          setUpdatedJobs(prev => {
+            // Get the original job data to preserve all fields
+            const originalJobData = mockUpcomingJobs.find(j => j.id === jobId);
+
+            return {
+              ...prev,
+              [jobId]: {
+                ...updatedJobData,
+                startedAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                // Preserve original job data fields that might be missing from API response
+                ...(originalJobData && {
+                  title: originalJobData.title,
+                  payment: originalJobData.payment,
+                  category: originalJobData.category,
+                  description: originalJobData.description,
+                  location: originalJobData.location,
+                  duration: originalJobData.duration,
+                  experienceLevel: originalJobData.experienceLevel,
+                  skills: originalJobData.skills,
+                  client: originalJobData.client
+                })
+              }
+            };
+          });
+
+          // Update localStorage with complete job data from API
+          const existingUpdates = JSON.parse(localStorage.getItem('jobStatusUpdates') || '{}');
+
+          // Get the original job data to preserve all fields
+          const originalJobData = mockUpcomingJobs.find(j => j.id === jobId);
+
+          const updatedData = {
+            ...existingUpdates,
+            [jobId]: {
+              // Use API response data as primary source
+              ...updatedJobData,
+              // Preserve original job data fields that might be missing from API response
+              ...(originalJobData && {
+                title: originalJobData.title,
+                payment: originalJobData.payment,
+                category: originalJobData.category,
+                description: originalJobData.description,
+                location: originalJobData.location,
+                duration: originalJobData.duration,
+                experienceLevel: originalJobData.experienceLevel,
+                skills: originalJobData.skills,
+                client: originalJobData.client
+              }),
+              // Ensure we have the correct ID
+              id: jobId,
+              // Update timestamp
+              updatedAt: new Date().toISOString(),
+              startedAt: new Date().toISOString()
+            }
+          };
+          localStorage.setItem('jobStatusUpdates', JSON.stringify(updatedData));
+
+          console.log('💾 Job started data saved to localStorage:', updatedData[jobId]);
+
+          // Force dashboard refresh by dispatching a custom event
+          window.dispatchEvent(new CustomEvent('jobStatusUpdated', {
+            detail: { jobId, newStatus }
+          }));
+
+          // Also call dashboard's handleJobStatusChange if available
+          if ((window as any).dashboardHandleJobStatusChange) {
+            (window as any).dashboardHandleJobStatusChange(jobId, newStatus);
+          }
+
+          // Force modal re-render with updated data
+          setTimeout(() => {
+            setModalKey(prev => prev + 1);
+          }, 50);
+          return;
+        }
+      }
+
       // For completed jobs, fetch the updated job data from API to get rating and review
       if (newStatus === 'completed') {
         const response = await fetch(`http://localhost:3000/api/jobs/${jobId}`, {
@@ -502,9 +599,9 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
         completedAt: updatedJobData.completedAt,
         earnings: updatedJobData.earnings,
         cancellationDetails: updatedJobData.cancellationDetails,
-        status: updatedJobData?.status || (updatedJobData?.freelancerRating ? 'completed' : baseJob.status),
+        status: updatedJobData?.status || (updatedJobData?.freelancerRating ? 'completed' : updatedJobData?.startedAt ? 'started' : baseJob.status),
         // Ensure payment is included for earnings calculation
-        payment: updatedJobData?.payment || baseJob.payment
+        payment: updatedJobData?.payment || baseJob.payment || 0
       })
     };
 

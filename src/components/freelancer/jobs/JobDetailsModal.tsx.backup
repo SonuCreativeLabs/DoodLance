@@ -1,6 +1,6 @@
 'use client';
 
-import { X, MessageCircle, Phone, MapPin, CalendarIcon, ClockIcon, IndianRupee, ArrowLeft, AlertCircle, User, UserCheck, Star, ChevronDown, ChevronUp, CheckCircle, MessageSquare, AlertTriangle, TrendingUp } from 'lucide-react';
+import { X, MessageCircle, Phone, MapPin, CalendarIcon, ClockIcon, IndianRupee, ArrowLeft, AlertCircle, User, UserCheck, Star, ChevronDown, ChevronUp, CheckCircle, MessageSquare, AlertTriangle, TrendingUp, Info } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
@@ -56,6 +56,7 @@ interface ClientInfo {
   phoneNumber?: string;
   rating?: number;
   jobsCompleted?: number;
+  experienceLevel?: string;
   image?: string;
   memberSince?: string;
   freelancerAvatars?: string[];
@@ -79,6 +80,7 @@ interface CollapsibleSectionProps {
 }
 
 export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete = false }: JobDetailsModalProps) {
+{
   console.log('JobDetailsModal received job data:', {
     id: job.id,
     status: job.status,
@@ -90,6 +92,10 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
   const [showRatingForm, setShowRatingForm] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showCompleteDialog, setShowCompleteDialog] = useState(initialShowComplete);
+  const [showStartJobDialog, setShowStartJobDialog] = useState(false);
+  const [otpDigits, setOtpDigits] = useState(['', '', '', '']);
+  const [jobStarted, setJobStarted] = useState(false);
+  const [jobOtp, setJobOtp] = useState('');
   const [cancelNotes, setCancelNotes] = useState('');
   const [rating, setRating] = useState(0);
   const [review, setReview] = useState('');
@@ -97,13 +103,22 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
   const [isClientProfileExpanded, setIsClientProfileExpanded] = useState(false);
   const [isEarningsExpanded, setIsEarningsExpanded] = useState(false);
 
-  // Calculate earnings preview for the job
-  const earningsPreview = calculateJobEarnings(job);
-
-  // Force re-render when job data changes
+  // Generate OTP when component loads or check for existing OTP
   useEffect(() => {
-    // Removed setRenderTrigger as it's not used
-  }, [job.status, job.freelancerRating]);
+    // Check if job already has an OTP
+    if (job.otp) {
+      setJobOtp(job.otp);
+    } else {
+      // Generate new 4-digit OTP
+      const newOtp = Math.floor(1000 + Math.random() * 9000).toString();
+      setJobOtp(newOtp);
+    }
+
+    // Check if job is already started
+    if (job.status === 'started' || job.startedAt) {
+      setJobStarted(true);
+    }
+  }, [job]);
 
   // Helper function to check if 8 hours have passed since completion
   const isWithin8Hours = (completedAt?: string) => {
@@ -196,22 +211,71 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
     }
   };
 
+  const handleStartJob = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    console.log('Start job button clicked'); // Debug log
+    setShowStartJobDialog(true);
+  };
+
+  const confirmStartJob = async () => {
+    // Combine digits into single OTP string
+    const enteredOtp = otpDigits.join('');
+
+    if (enteredOtp !== jobOtp) {
+      alert(`Invalid OTP. Please enter the correct 4-digit code.\n\nExpected: ${jobOtp}\nEntered: ${enteredOtp}`);
+      setOtpDigits(['', '', '', '']);
+      return;
+    }
+
+    try {
+      console.log('Starting job:', job.id);
+
+      const response = await fetch(`http://localhost:3000/api/jobs/${job.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          status: 'started',
+          startedAt: new Date().toISOString(),
+          otpVerified: true,
+          otp: jobOtp // Save the OTP to the job for reference
+        }),
+      });
+
+      if (response.ok) {
+        console.log('Job started successfully');
+        setJobStarted(true);
+        setShowStartJobDialog(false);
+        setOtpDigits(['', '', '', '']);
+
+        // Show success message
+        alert('Job started successfully! You can now proceed with the work.');
+      } else {
+        const errorData = await response.json();
+        console.error('Start job error:', errorData);
+        alert(`Failed to start job: ${errorData.error}`);
+      }
+    } catch (error) {
+      console.error('Error starting job:', error);
+      alert('Failed to start job. Please try again.');
+    }
+  };
+
   const handleMarkComplete = async (e: React.MouseEvent) => {
     e.stopPropagation();
     console.log('Mark complete button clicked'); // Debug log
+
+    // Check if job is started
+    if (!jobStarted) {
+      alert('Please start the job first before marking it as complete.');
+      return;
+    }
+
     setShowCompleteDialog(true);
   };
 
   const confirmMarkComplete = async () => {
-    if (rating === 0) {
-      alert('Please select a rating before marking as complete.');
-      return;
-    }
-
-    if (!review.trim()) {
-      alert('Please provide additional feedback before marking as complete.');
-      return;
-    }
 
     try {
       console.log('Attempting to complete job:', job.id);
@@ -269,7 +333,34 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
     }
   };
 
+  // Handle individual OTP digit input
+  const handleOtpDigitChange = (index: number, value: string) => {
+    if (value.length > 1) return; // Prevent multiple characters
+
+    const newDigits = [...otpDigits];
+    newDigits[index] = value.replace(/[^0-9]/g, ''); // Only allow numbers
+    setOtpDigits(newDigits);
+
+    // Auto-focus next input
+    if (value && index < 3) {
+      const nextInput = document.getElementById(`otp-digit-${index + 1}`) as HTMLInputElement;
+      if (nextInput) nextInput.focus();
+    }
+  };
+
+  // Handle backspace to move to previous input
+  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent) => {
+    if (e.key === 'Backspace' && !otpDigits[index] && index > 0) {
+      const prevInput = document.getElementById(`otp-digit-${index - 1}`) as HTMLInputElement;
+      if (prevInput) {
+        prevInput.focus();
+        const newDigits = [...otpDigits];
+        newDigits[index - 1] = '';
+        setOtpDigits(newDigits);
+      }
+    }
   return (
+  };
     <div className="fixed inset-0 bg-[#0A0A0A] z-[9999] w-screen h-screen overflow-y-auto">
       {/* Header */}
       <div className="fixed top-0 left-0 right-0 z-50 bg-[#0a0a0a]/95 backdrop-blur-sm border-b border-white/10 p-4 flex items-center">
@@ -294,8 +385,72 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
 
       {/* Main Content */}
       <main className="pt-20 pb-32 px-4 w-full max-w-4xl mx-auto">
+        {/* Job Rating and Review - Moved above job header */}
+        {job.status === 'completed' && job.freelancerRating && (
+          <div className="mb-6">
+            {/* Stars in full width */}
+            <div className="flex justify-center mb-2">
+              <div className="flex items-center gap-2">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <svg
+                    key={star}
+                    className={`w-12 h-12 ${star <= (job.freelancerRating?.stars || 0) ? 'text-yellow-400 fill-current' : 'text-gray-600'}`}
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                ))}
+              </div>
+            </div>
+
+            {/* Star count below */}
+            <p className="text-center text-lg font-bold text-white mb-4">
+              {job.freelancerRating?.stars} stars
+            </p>
+
+            {/* Review in small font */}
+            {job.freelancerRating?.review && (
+              <p className="text-center text-sm text-gray-300 mb-6 leading-relaxed max-w-2xl mx-auto">
+                "{job.freelancerRating.review}"
+              </p>
+            )}
+
+            {/* Feedback Chips with title */}
+            {job.freelancerRating?.feedbackChips && job.freelancerRating.feedbackChips.length > 0 && (
+              <div className="text-center">
+                <h3 className="text-sm font-medium text-gray-500 mb-3">What the client appreciated most</h3>
+                <div className="flex flex-wrap justify-center gap-2">
+                  {job.freelancerRating.feedbackChips.map((chip: string, index: number) => (
+                    <span
+                      key={index}
+                      className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-purple-900/30 text-purple-300 border border-purple-500/30"
+                    >
+                      {chip}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Separator Line - Below rating section, only for completed jobs */}
+        {job.status === 'completed' && job.freelancerRating && (
+          <div className="w-full border-b-4 border-gray-700/30 mb-6"></div>
+        )}
+
         {/* Job Header */}
         <div className="mb-8">
+          {/* Job Status Message */}
+          {jobStarted && (
+            <div className="mb-4">
+              <div className="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-green-500/15 text-green-400 border border-green-500/30">
+                <CheckCircle className="w-4 h-4 mr-2" />
+                Job Started - Ready to Complete
+              </div>
+            </div>
+          )}
           <h1 className="text-3xl md:text-4xl font-bold text-white mb-3">{job.title}</h1>
           <div className="flex items-center gap-3 flex-wrap">
             <span className="text-purple-400 text-sm font-medium">
@@ -308,74 +463,6 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
             </div>
           </div>
         </div>
-
-        {/* Job Rating and Review - Moved right after job header */}
-        {job.status === 'completed' && job.freelancerRating && (
-          <div className="mb-8">
-            <div className="bg-[#111111] rounded-xl border border-white/10 p-6">
-              <div className="mb-6">
-                <h2 className="text-lg font-semibold text-white">Your Performance</h2>
-                <p className="text-sm text-gray-300">Client feedback and rating</p>
-              </div>
-
-              <div className="space-y-3">
-                {/* Rating Display */}
-                <div className="flex items-center justify-between py-2 border-b border-gray-800">
-                  <div>
-                    <span className="text-gray-300 font-medium">Client Rating</span>
-                    <p className="text-[10px] text-gray-400">Overall satisfaction score from the client</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="flex">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <svg
-                          key={star}
-                          className={`w-4 h-4 ${star <= (job.freelancerRating?.stars || 0) ? 'text-yellow-400 fill-current' : 'text-gray-600'}`}
-                          fill="currentColor"
-                          viewBox="0 0 20 20"
-                        >
-                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                      ))}
-                    </div>
-                    <span className="text-white font-semibold">{job.freelancerRating?.stars}/5</span>
-                  </div>
-                </div>
-
-                {/* Review */}
-                {job.freelancerRating?.review && (
-                  <div className="py-2 border-b border-gray-800">
-                    <div>
-                      <span className="text-gray-300 font-medium">Client Review</span>
-                      <p className="text-[10px] text-gray-400">Written feedback from the client</p>
-                    </div>
-                    <p className="text-white mt-1">{job.freelancerRating.review}</p>
-                  </div>
-                )}
-
-                {/* Feedback Chips */}
-                {job.freelancerRating?.feedbackChips && job.freelancerRating.feedbackChips.length > 0 && (
-                  <div className="py-2">
-                    <div>
-                      <span className="text-gray-300 font-medium">Performance Highlights</span>
-                      <p className="text-[10px] text-gray-400">What the client appreciated most</p>
-                    </div>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {job.freelancerRating.feedbackChips.map((chip: string, index: number) => (
-                        <span
-                          key={index}
-                          className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-purple-900/30 text-purple-300 border border-purple-500/30"
-                        >
-                          {chip}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Job Highlights */}
         <div className="mb-8">
@@ -426,143 +513,322 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
 
         {/* Job Details */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-          {/* About the Job with Skills */}
-          <div className="bg-[#1E1E1E] rounded-2xl p-6 border border-white/5">
-            <h2 className="text-lg font-semibold text-white mb-4">About the Job</h2>
-            <div className="prose prose-invert max-w-none">
-              {job.description && (
-                <p className="text-white/80 leading-relaxed mb-6">
-                  {job.description}
-                </p>
-              )}
-              
-              {job.skills && job.skills.length > 0 && (
-                <div className="mt-6 pt-6 border-t border-white/5">
-                  <h3 className="text-md font-semibold text-white mb-3">Required Skills</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {job.skills.map((skill, index) => (
-                      <span 
-                        key={index}
-                        className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-[#2D2D2D] text-white/90 border border-white/5 hover:bg-[#3D3D3D] transition-colors"
-                      >
-                        {skill}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {job.status === 'completed' && (
-            <div className="space-y-6">
-              {/* Total Earnings */}
-              <div className="bg-gradient-to-br from-green-900/20 via-green-800/10 to-emerald-900/20 border border-green-500/30 rounded-xl p-6 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-16 h-16 bg-green-500/10 rounded-full blur-xl"></div>
-                <div className="absolute bottom-0 left-0 w-12 h-12 bg-emerald-500/10 rounded-full blur-lg"></div>
-
-                <div className="relative flex items-center justify-between mb-4">
-                  <div>
-                    <h2 className="text-lg font-semibold text-white">Total Earnings</h2>
-                  </div>
-                  <button
-                    onClick={() => setIsEarningsExpanded(!isEarningsExpanded)}
-                    className="text-white/60 hover:text-white transition-colors"
-                  >
-                    {isEarningsExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-                  </button>
-                </div>
-
-                {!isEarningsExpanded ? (
-                  /* Collapsed Mode - Only Total */
-                  <div className="text-center py-4">
-                    <div className="text-4xl font-bold text-green-400 mb-2">
-                      ₹{earningsPreview.totalEarnings.toLocaleString('en-IN')}
-                    </div>
-                    <p className="text-green-300 text-sm font-medium mb-1">💰 Money in the Bank!</p>
-                    <p className="text-gray-400 text-xs">Click to see breakdown</p>
-                  </div>
-                ) : (
-                  /* Expanded Mode - Simple List with Descriptions */
-                  <div className="space-y-3">
-                    {/* Base Payment */}
-                    <div className="flex items-center justify-between py-2 border-b border-gray-800">
-                      <div>
-                        <span className="text-gray-300 font-medium" title="The agreed payment amount for this job">Base Payment</span>
-                      </div>
-                      <span className="text-white font-semibold">₹{job.payment?.toLocaleString('en-IN') || '0'}</span>
-                    </div>
-
-                    {/* Add-on Services */}
-                    {earningsPreview.breakdown.addOnServices.length > 0 ? (
-                      <div className="py-2 border-b border-gray-800">
-                        <div className="mb-2">
-                          <span className="text-gray-300 font-medium" title="Additional services requested by the client">Add-on Services</span>
-                        </div>
-                        <div className="space-y-1 ml-4">
-                          {earningsPreview.breakdown.addOnServices.map((addon, index) => (
-                            <div key={index} className="flex items-center justify-between py-1">
-                              <span className="text-gray-300 text-sm">{addon.name}</span>
-                              <span className="text-white font-medium">+₹{addon.amount.toLocaleString('en-IN')}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="flex items-center justify-between py-2 border-b border-gray-800">
-                        <div>
-                          <span className="text-gray-300 font-medium" title="Additional services requested by the client">Add-on Services</span>
-                        </div>
-                        <span className="text-white font-medium">₹{earningsPreview.addOnServices.toLocaleString('en-IN')}</span>
-                      </div>
-                    )}
-
-                    {/* Tips */}
-                    <div className="flex items-center justify-between py-2 border-b border-gray-800">
-                      <div>
-                        <span className="text-gray-300 font-medium" title="Bonus payment for excellent service">Client Tips</span>
-                      </div>
-                      <span className={`font-medium ${earningsPreview.tips > 0 ? 'text-white' : 'text-gray-500'}`}>
-                        {earningsPreview.tips > 0 ? '+' : ''}₹{earningsPreview.tips.toLocaleString('en-IN')}
-                      </span>
-                    </div>
-
-                    {/* Platform Fee */}
-                    <div className="flex items-center justify-between py-2 border-b border-gray-800">
-                      <div>
-                        <span className="text-gray-300 font-medium" title="Service charge (10% on earnings)">Platform Fee</span>
-                      </div>
-                      <span className="text-white font-medium">-₹{earningsPreview.platformCommission.toLocaleString('en-IN')}</span>
-                    </div>
-
-                    {/* GST */}
-                    <div className="flex items-center justify-between py-2">
-                      <div>
-                        <span className="text-gray-300 font-medium" title="Government tax (18% on earnings)">GST</span>
-                      </div>
-                      <span className="text-white font-medium">-₹{earningsPreview.gst.toLocaleString('en-IN')}</span>
-                    </div>
-
-                    {/* Total Earnings */}
-                    <div className="flex items-center justify-between py-3 border-t-2 border-gray-700 mt-4">
-                      <div>
-                        <span className="text-white font-semibold" title="After all fees & taxes">Total Earnings</span>
-                      </div>
-                      <span className="text-xl font-bold text-green-400">₹{earningsPreview.totalEarnings.toLocaleString('en-IN')}</span>
-                    </div>
-
-                    {/* Processing Info */}
-                    <div className="mt-4 p-3 rounded-xl bg-[#111111] border border-white/10">
-                      <div className="text-xs text-gray-300">
-                        <p className="font-medium text-gray-200">💳 Payment Processing</p>
-                        <p>Earnings will be available in your wallet within 24 hours after job completion.</p>
-                      </div>
+          {/* Main Content */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* About the Job with Skills */}
+            <div className="bg-[#1E1E1E] rounded-2xl p-6 border border-white/5">
+              <h2 className="text-lg font-semibold text-white mb-4">About the Job</h2>
+              <div className="prose prose-invert max-w-none">
+                {job.description && (
+                  <p className="text-white/80 leading-relaxed mb-6">
+                    {job.description}
+                  </p>
+                )}
+                
+                {job.skills && job.skills.length > 0 && (
+                  <div className="mt-6 pt-6 border-t border-white/5">
+                    <h3 className="text-md font-semibold text-white mb-3">Required Skills</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {job.skills.map((skill, index) => (
+                        <span 
+                          key={index}
+                          className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-[#2D2D2D] text-white/90 border border-white/5 hover:bg-[#3D3D3D] transition-colors"
+                        >
+                          {skill}
+                        </span>
+                      ))}
                     </div>
                   </div>
                 )}
               </div>
+            </div>
 
+            {job.status === 'completed' && (
+              <div className="space-y-6">
+                {/* Calculate earnings preview for the job */}
+                {(() => {
+                  const earningsPreview = calculateJobEarnings(job);
+
+                  return (
+                    <>
+                      {/* Total Earnings */}
+                      <div className="rounded-xl border border-white/10 overflow-hidden">
+                        {/* Title Section - Black Background */}
+                        <div className="bg-[#111111] p-6 border-b border-white/10 group">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <h2 className="text-lg font-semibold text-white" aria-label="Click the toggle button to see detailed earnings breakdown">Total Earnings</h2>
+                            </div>
+                            <button
+                              onClick={() => setIsEarningsExpanded(!isEarningsExpanded)}
+                              className="text-white/60 hover:text-white transition-colors"
+                              aria-label={isEarningsExpanded ? "Collapse earnings breakdown" : "Expand to see detailed earnings breakdown"}
+                            >
+                              {isEarningsExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Content Section - Green Background */}
+                        <div className="bg-gradient-to-br from-green-900/20 via-green-800/10 to-emerald-900/20 p-6 relative">
+                          <div className="absolute top-0 right-0 w-16 h-16 bg-green-500/10 rounded-full blur-xl"></div>
+                          <div className="absolute bottom-0 left-0 w-12 h-12 bg-emerald-500/10 rounded-full blur-lg"></div>
+
+                          <div className="relative">
+                            {!isEarningsExpanded ? (
+                              /* Collapsed Mode - Only Total */
+                              <div className="text-center py-4">
+                                <div className="text-4xl font-bold text-green-400 mb-2">
+                                  ₹{earningsPreview.totalEarnings.toLocaleString('en-IN')}
+                                </div>
+                                <p className="text-green-300 text-sm font-medium mb-1">💰 Money in the Bank!</p>
+                                <p className="text-gray-400 text-xs">Click to see breakdown</p>
+                              </div>
+                            ) : (
+                              /* Expanded Mode - Simple List with Descriptions */
+                              <div className="space-y-3">
+                                {/* Base Payment */}
+                                <div className="flex items-center justify-between py-2 border-b border-gray-800 group">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-gray-300 font-medium">Base Payment</span>
+                                      <div className="relative inline-block">
+                                        <Info
+                                          className="w-3 h-3 text-gray-400 hover:text-white transition-colors"
+                                          onMouseEnter={(e) => {
+                                            const tooltip = e.currentTarget.nextElementSibling as HTMLElement;
+                                            if (tooltip) tooltip.style.display = 'block';
+                                          }}
+                                          onMouseLeave={(e) => {
+                                            const tooltip = e.currentTarget.nextElementSibling as HTMLElement;
+                                            if (tooltip) tooltip.style.display = 'none';
+                                          }}
+                                          aria-label="Information about base payment"
+                                          role="button"
+                                          tabIndex={0}
+                                        />
+                                        <div className="absolute z-50 bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-[#111111] border border-gray-600 rounded-lg shadow-xl hidden tooltip-container"
+                                             style={{ left: '50%', transform: 'translateX(-50%)' }}>
+                                          <div className="text-xs text-gray-300 leading-relaxed text-center whitespace-nowrap">
+                                            The agreed payment amount<br />for this job
+                                          </div>
+                                          <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-2 h-2 bg-[#111111] border-r border-b border-gray-600 rotate-45 tooltip-arrow"></div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <span className="text-white font-semibold">₹{job.payment?.toLocaleString('en-IN') || '0'}</span>
+                                  </div>
+
+                                {/* Add-on Services */}
+                                {earningsPreview.breakdown.addOnServices.length > 0 ? (
+                                  <div className="py-2 border-b border-gray-800">
+                                      <div className="mb-2 flex items-center gap-2">
+                                        <span className="text-gray-300 font-medium">Add-on Services</span>
+                                        <div className="relative inline-block">
+                                          <Info
+                                            className="w-3 h-3 text-gray-400 hover:text-white transition-colors"
+                                            onMouseEnter={(e) => {
+                                              const tooltip = e.currentTarget.nextElementSibling as HTMLElement;
+                                              if (tooltip) tooltip.style.display = 'block';
+                                            }}
+                                            onMouseLeave={(e) => {
+                                              const tooltip = e.currentTarget.nextElementSibling as HTMLElement;
+                                              if (tooltip) tooltip.style.display = 'none';
+                                            }}
+                                            aria-label="Information about add-on services"
+                                            role="button"
+                                            tabIndex={0}
+                                          />
+                                          <div className="absolute z-50 bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-[#111111] border border-gray-600 rounded-lg shadow-xl hidden tooltip-container"
+                                               style={{ left: '50%', transform: 'translateX(-50%)' }}>
+                                            <div className="text-xs text-gray-300 leading-relaxed text-center whitespace-nowrap">
+                                              Additional services requested<br />by the client beyond the original scope
+                                            </div>
+                                            <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-2 h-2 bg-[#111111] border-r border-b border-gray-600 rotate-45 tooltip-arrow"></div>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    <div className="space-y-1 ml-4">
+                                      {earningsPreview.breakdown.addOnServices.map((addon: any, index: number) => (
+                                        <div key={index} className="flex items-center justify-between py-1">
+                                          <span className="text-gray-300 text-sm">{addon.name}</span>
+                                          <span className="text-white font-medium">+₹{addon.amount.toLocaleString('en-IN')}</span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="flex items-center justify-between py-2 border-b border-gray-800 group">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-gray-300 font-medium">Add-on Services</span>
+                                      <div className="relative inline-block">
+                                        <Info
+                                          className="w-3 h-3 text-gray-400 hover:text-white transition-colors"
+                                          onMouseEnter={(e) => {
+                                            const tooltip = e.currentTarget.nextElementSibling as HTMLElement;
+                                            if (tooltip) tooltip.style.display = 'block';
+                                          }}
+                                          onMouseLeave={(e) => {
+                                            const tooltip = e.currentTarget.nextElementSibling as HTMLElement;
+                                            if (tooltip) tooltip.style.display = 'none';
+                                          }}
+                                          aria-label="Information about add-on services"
+                                          role="button"
+                                          tabIndex={0}
+                                        />
+                                        <div className="absolute z-50 bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-[#111111] border border-gray-600 rounded-lg shadow-xl hidden tooltip-container"
+                                             style={{ left: '50%', transform: 'translateX(-50%)' }}>
+                                          <div className="text-xs text-gray-300 leading-relaxed text-center whitespace-nowrap">
+                                            Additional services requested<br />by the client beyond the original scope
+                                          </div>
+                                          <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-2 h-2 bg-[#111111] border-r border-b border-gray-600 rotate-45 tooltip-arrow"></div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <span className="text-white font-medium">₹{earningsPreview.addOnServices.toLocaleString('en-IN')}</span>
+                                  </div>
+                                )}
+
+                                {/* Tips */}
+                                <div className="flex items-center justify-between py-2 border-b border-gray-800 group">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-gray-300 font-medium">Client Tips</span>
+                                    <div className="relative inline-block">
+                                      <Info
+                                        className="w-3 h-3 text-gray-400 hover:text-white transition-colors cursor-help"
+                                        onMouseEnter={(e) => {
+                                          const tooltip = e.currentTarget.nextElementSibling as HTMLElement;
+                                          if (tooltip) tooltip.style.display = 'block';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                          const tooltip = e.currentTarget.nextElementSibling as HTMLElement;
+                                          if (tooltip) tooltip.style.display = 'none';
+                                        }}
+                                        aria-label="Information about client tips"
+                                        role="button"
+                                        tabIndex={0}
+                                      />
+                                      <div className="absolute z-50 bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-[#111111] border border-gray-600 rounded-lg shadow-xl hidden tooltip-container"
+                                           style={{ left: '50%', transform: 'translateX(-50%)' }}>
+                                        <div className="text-xs text-gray-300 leading-relaxed text-center whitespace-nowrap">
+                                          Bonus payment for excellent<br />service beyond the agreed amount
+                                        </div>
+                                        <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-2 h-2 bg-[#111111] border-r border-b border-gray-600 rotate-45 tooltip-arrow"></div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <span className="text-white font-medium">
+                                    {earningsPreview.tips > 0 ? '+' : ''}₹{earningsPreview.tips.toLocaleString('en-IN')}
+                                  </span>
+                                </div>
+
+                                {/* Platform Fee */}
+                                <div className="flex items-center justify-between py-2 border-b border-gray-800 group">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-gray-300 font-medium">Platform Fee</span>
+                                    <div className="relative inline-block">
+                                      <Info
+                                        className="w-3 h-3 text-gray-400 hover:text-white transition-colors cursor-help"
+                                        onMouseEnter={(e) => {
+                                          const tooltip = e.currentTarget.nextElementSibling as HTMLElement;
+                                          if (tooltip) tooltip.style.display = 'block';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                          const tooltip = e.currentTarget.nextElementSibling as HTMLElement;
+                                          if (tooltip) tooltip.style.display = 'none';
+                                        }}
+                                        aria-label="Information about platform fee"
+                                        role="button"
+                                        tabIndex={0}
+                                      />
+                                      <div className="absolute z-50 bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-[#111111] border border-gray-600 rounded-lg shadow-xl hidden tooltip-container"
+                                           style={{ left: '50%', transform: 'translateX(-50%)' }}>
+                                        <div className="text-xs text-gray-300 leading-relaxed text-center whitespace-nowrap">
+                                          Service charge deducted by<br />DoodLance platform (10% of earnings)
+                                        </div>
+                                        <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-2 h-2 bg-[#111111] border-r border-b border-gray-600 rotate-45 tooltip-arrow"></div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <span className="text-white font-medium">-₹{earningsPreview.platformCommission.toLocaleString('en-IN')}</span>
+                                </div>
+
+                                {/* GST */}
+                                <div className="flex items-center justify-between py-2 group">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-gray-300 font-medium">GST</span>
+                                    <div className="relative inline-block">
+                                      <Info
+                                        className="w-3 h-3 text-gray-400 hover:text-white transition-colors cursor-help"
+                                        onMouseEnter={(e) => {
+                                          const tooltip = e.currentTarget.nextElementSibling as HTMLElement;
+                                          if (tooltip) tooltip.style.display = 'block';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                          const tooltip = e.currentTarget.nextElementSibling as HTMLElement;
+                                          if (tooltip) tooltip.style.display = 'none';
+                                        }}
+                                        aria-label="Information about GST"
+                                        role="button"
+                                        tabIndex={0}
+                                      />
+                                      <div className="absolute z-50 bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-[#111111] border border-gray-600 rounded-lg shadow-xl hidden tooltip-container"
+                                           style={{ left: '50%', transform: 'translateX(-50%)' }}>
+                                        <div className="text-xs text-gray-300 leading-relaxed text-center whitespace-nowrap">
+                                          Government service tax<br />(18% on earnings)
+                                        </div>
+                                        <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-2 h-2 bg-[#111111] border-r border-b border-gray-600 rotate-45 tooltip-arrow"></div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <span className="text-white font-medium">-₹{earningsPreview.gst.toLocaleString('en-IN')}</span>
+                                </div>
+
+                                {/* Total Earnings */}
+                                <div className="flex items-center justify-between py-3 border-t-2 border-gray-700 mt-4 group">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-white font-semibold">Total Earnings</span>
+                                    <div className="relative inline-block">
+                                      <Info
+                                        className="w-3 h-3 text-gray-400 hover:text-white transition-colors cursor-help"
+                                        onMouseEnter={(e) => {
+                                          const tooltip = e.currentTarget.nextElementSibling as HTMLElement;
+                                          if (tooltip) tooltip.style.display = 'block';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                          const tooltip = e.currentTarget.nextElementSibling as HTMLElement;
+                                          if (tooltip) tooltip.style.display = 'none';
+                                        }}
+                                        aria-label="Information about total earnings"
+                                        role="button"
+                                        tabIndex={0}
+                                      />
+                                      <div className="absolute z-50 bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-[#111111] border border-gray-600 rounded-lg shadow-xl hidden tooltip-container"
+                                           style={{ left: '50%', transform: 'translateX(-50%)' }}>
+                                        <div className="text-xs text-gray-300 leading-relaxed text-center whitespace-nowrap">
+                                          Final amount after all fees<br />and taxes have been deducted
+                                        </div>
+                                        <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-2 h-2 bg-[#111111] border-r border-b border-gray-600 rotate-45 tooltip-arrow"></div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <span className="text-xl font-bold text-green-400">₹{earningsPreview.totalEarnings.toLocaleString('en-IN')}</span>
+                                </div>
+
+                                {/* Processing Info */}
+                                <div className="mt-4 p-3 rounded-xl bg-[#111111] border border-white/10">
+                                  <div className="text-xs text-gray-300">
+                                    <p className="font-medium text-gray-200">💳 Payment Processing</p>
+                                    <p>Earnings will be available in your wallet within 24 hours after job completion.</p>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
             )}
           </div>
@@ -604,13 +870,9 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                   <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <h4 className="text-xs font-medium text-white/60 mb-1">Job Posted</h4>
+                        <h4 className="text-xs font-medium text-white/60 mb-1">Experience Level</h4>
                         <p className="text-sm text-white">
-                          {job.date ? new Date(job.date).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'short',
-                            day: 'numeric'
-                          }) : 'Not specified'}
+                          {getExperienceLevelDisplayName(job.client?.experienceLevel || 'Expert')}
                         </p>
                       </div>
                       <div>
@@ -681,15 +943,20 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                     </div>
 
                     <div className="pt-2 border-t border-white/10">
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between mb-3">
                         <div>
                           <h4 className="text-xs font-medium text-white/60 mb-1">Money Spent</h4>
                           <p className="text-sm font-medium text-white">
                             ₹{(job.client?.moneySpent || 0).toLocaleString('en-IN')}+
                           </p>
+                          <p className="text-xs text-white/50">On DoodLance</p>
                         </div>
                         <div className="text-right">
-                          <p className="text-xs text-white/50">On DoodLance</p>
+                          <h4 className="text-xs font-medium text-white/60 mb-1">Bookings</h4>
+                          <p className="text-sm font-medium text-white">
+                            {job.client?.jobsCompleted || 0}
+                          </p>
+                          <p className="text-xs text-white/50">Completed</p>
                         </div>
                       </div>
                     </div>
@@ -753,10 +1020,37 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
             </div>
 
             {/* Action Buttons - Moved below client profile */}
-            {(job.status === 'upcoming' || job.status === 'pending' || job.status === 'confirmed') && (
+            {(job.status === 'upcoming' || job.status === 'pending' || job.status === 'confirmed') && !jobStarted && (
               <>
                 <div className="text-xs text-white/50 text-center mb-3">
-                  Mark as complete to receive payment and update your profile
+                  Get verification code from client via chat or call, then click "Start Job"
+                </div>
+                <div className="space-y-3">
+                  <button
+                    onClick={handleStartJob}
+                    className="w-full py-3 px-6 rounded-lg font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    Start Job
+                  </button>
+                  <button
+                    onClick={handleCancelJob}
+                    className="w-full py-3 px-6 rounded-lg font-medium bg-transparent text-red-400 border border-red-500/30 hover:bg-red-500/10 hover:border-red-400/50 transition-all duration-200 flex items-center justify-center gap-2"
+                  >
+                    <X className="w-4 h-4" />
+                    Cancel Job
+                  </button>
+                </div>
+              </>
+            )}
+
+            {/* Show Mark Complete button only after job is started */}
+            {jobStarted && (
+              <>
+                <div className="text-xs text-white/50 text-center mb-3">
+                  Job started! Complete it to receive payment and update your profile
                 </div>
                 <div className="space-y-3">
                   <button
@@ -783,15 +1077,27 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
               <ul className="space-y-3">
                 <li className="flex items-start gap-3">
                   <CheckCircle className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
-                  <span className="text-sm text-white/80">Avoid sharing personal information</span>
+                  <span className="text-sm text-white/80">Verify ground facilities and equipment before starting</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <CheckCircle className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
-                  <span className="text-sm text-white/80">Never pay to apply for a job</span>
+                  <span className="text-sm text-white/80">Discuss session duration and payment terms clearly</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <CheckCircle className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
-                  <span className="text-sm text-white/80">Meet in public spaces for interviews</span>
+                  <span className="text-sm text-white/80">Ensure weather conditions are suitable for outdoor activities</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
+                  <span className="text-sm text-white/80">Use proper protective gear during practice sessions</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
+                  <span className="text-sm text-white/80">Confirm participant fitness levels before intensive training</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
+                  <span className="text-sm text-white/80">Follow proper warm-up and cool-down procedures</span>
                 </li>
               </ul>
             </div>
@@ -844,21 +1150,40 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                 </div>
 
                 {/* Job Summary */}
-                <div className="p-3 bg-gray-900/30 rounded-lg border border-gray-800/30">
-                  <div className="flex items-center justify-between mb-2">
-                    <h2 className="text-sm font-medium text-white/80">Job Details</h2>
-                    <span className="px-2 py-0.5 text-xs rounded-full bg-red-500/10 text-red-400 border border-red-500/20">
-                      {job.status}
-                    </span>
-                  </div>
-                  <div className="space-y-1 text-xs">
-                    <div className="flex justify-between items-start">
-                      <span className="text-gray-400 flex-shrink-0">Project:</span>
-                      <span className="text-white font-medium text-right break-words max-w-[calc(100%-60px)]">{job.title}</span>
+                <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#111111] via-[#0f0f0f] to-[#111111] border border-gray-600/30 shadow-lg">
+                  {/* Background decoration */}
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/5 rounded-full blur-2xl"></div>
+                  <div className="absolute bottom-0 left-0 w-24 h-24 bg-green-400/5 rounded-full blur-xl"></div>
+
+                  {/* Card content */}
+                  <div className="relative p-5">
+                    {/* Header with status */}
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <h2 className="text-sm font-semibold text-white/90">Job Overview</h2>
+                      </div>
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-500/15 text-green-400 border border-green-500/30 backdrop-blur-sm">
+                        {job.status}
+                      </span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Payment:</span>
-                      <span className="text-white font-medium">₹{job.payment}</span>
+
+                    {/* Job details - Simplified */}
+                    <div className="space-y-3">
+                      <div className="text-center space-y-2">
+                        <p className="text-sm text-gray-400">Project</p>
+                        <p className="text-base font-medium text-white break-words">{job.title}</p>
+                      </div>
+
+                      <div className="border-t border-gray-600/30 pt-3">
+                        <div className="text-center space-y-1">
+                          <p className="text-sm text-gray-400">Payment</p>
+                          <p className="text-xl font-bold text-green-400">₹{(() => {
+                            const earningsPreview = calculateJobEarnings(job);
+                            return earningsPreview.totalEarnings.toLocaleString('en-IN');
+                          })()}</p>
+                          <p className="text-xs text-green-300/70">Payment if completed</p>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -889,7 +1214,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                   <Button
                     type="button"
                     variant="outline"
-                    className="flex-1 h-10 border-gray-600/50 text-white/90 hover:bg-gray-800/50 hover:text-white hover:border-gray-500/50 transition-all duration-200"
+                    className="flex-1 h-10 border-gray-600/50 text-white/90 hover:bg-[#111111] hover:text-white hover:border-gray-500/50 transition-all duration-200"
                     onClick={() => {
                       setShowCancelDialog(false);
                       setCancelNotes('');
@@ -913,7 +1238,144 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
         </div>
       )}
 
-      {/* Mark Complete Full Page */}
+      {/* Start Job OTP Dialog */}
+      {showStartJobDialog && (
+        <div className="fixed inset-0 z-50 bg-gradient-to-br from-[#111111] to-[#0a0a0a] overflow-y-auto">
+          {/* Header */}
+          <div className="fixed top-0 left-0 right-0 z-50 bg-[#111111]/95 backdrop-blur-sm border-b border-gray-800/80 p-4 flex items-center">
+            <button
+              onClick={() => {
+                setShowStartJobDialog(false);
+                setOtpDigits(['', '', '', '']);
+              }}
+              className="p-2 rounded-full hover:bg-white/10 transition-colors"
+              aria-label="Go back"
+            >
+              <ArrowLeft className="w-5 h-5 text-white/80" />
+            </button>
+            <div className="ml-4">
+              <div className="text-sm font-medium text-white">Job Verification</div>
+              <div className="text-xs font-mono text-white/60">ID: {job.id}</div>
+            </div>
+          </div>
+
+          {/* Main Content */}
+          <div className="min-h-[100dvh] w-full pt-20 pb-24">
+            <div className="max-w-3xl mx-auto p-4 md:p-6">
+              <div className="space-y-6">
+                {/* Header Section */}
+                <div className="text-center space-y-3">
+                  <div className="flex items-center justify-center">
+                    <div className="relative">
+                      <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-lg"></div>
+                      <div className="relative p-4 rounded-full bg-gradient-to-br from-blue-500/10 to-blue-600/20 border border-blue-500/30">
+                        <svg className="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <h1 className="text-xl font-bold text-white">Job Verification</h1>
+                    <p className="text-gray-400 text-sm leading-relaxed max-w-sm mx-auto">
+                      Contact the client to get the 4-digit verification code and enter it below to start the job.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Job Summary */}
+                <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#111111] via-[#0f0f0f] to-[#111111] border border-gray-600/30 shadow-lg">
+                  {/* Background decoration */}
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-2xl"></div>
+                  <div className="absolute bottom-0 left-0 w-24 h-24 bg-blue-400/5 rounded-full blur-xl"></div>
+
+                  {/* Card content */}
+                  <div className="relative p-5">
+                    {/* Header with status */}
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <h2 className="text-sm font-semibold text-white/90">Job Overview</h2>
+                      </div>
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-500/15 text-blue-400 border border-blue-500/30 backdrop-blur-sm">
+                        {job.status}
+                      </span>
+                    </div>
+
+                    {/* Job details - Simplified */}
+                    <div className="space-y-3">
+                      <div className="text-center space-y-2">
+                        <p className="text-sm text-gray-400">Project</p>
+                        <p className="text-base font-medium text-white break-words">{job.title}</p>
+                      </div>
+
+                      <div className="border-t border-gray-600/30 pt-3">
+                        <div className="text-center space-y-1">
+                          <p className="text-sm text-gray-400">Amount Booked</p>
+                          <p className="text-xl font-bold text-blue-400">₹{job.payment?.toLocaleString('en-IN') || '0'}</p>
+                          <p className="text-xs text-blue-300/70">Base payment amount</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* OTP Input - 4 Mini Cards */}
+                <div className="space-y-3">
+                  <Label className="text-base font-medium text-white">
+                    Enter Verification Code <span className="text-red-400">*</span>
+                  </Label>
+                  <div className="flex justify-center gap-3">
+                    {otpDigits.map((digit, index) => (
+                      <div key={index} className="relative">
+                        <input
+                          type="text"
+                          id={`otp-digit-${index}`}
+                          value={digit}
+                          onChange={(e) => handleOtpDigitChange(index, e.target.value)}
+                          onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                          className="w-14 h-14 text-center text-2xl font-mono font-bold bg-[#111111] border-2 border-gray-600/50 text-white rounded-lg focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all duration-200"
+                          maxLength={1}
+                          autoComplete="off"
+                          required
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <div className="text-center mt-2">
+                    <p className="text-xs text-gray-400">
+                      Contact the client via chat or call to get the verification code
+                    </p>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-3 pt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="flex-1 h-10 border-gray-600/50 text-white/90 hover:bg-[#111111] hover:text-white hover:border-gray-500/50 transition-all duration-200"
+                    onClick={() => {
+                      setShowStartJobDialog(false);
+                      setOtpDigits(['', '', '', '']);
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    className="flex-1 h-10 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40 transition-all duration-200"
+                    onClick={confirmStartJob}
+                    disabled={otpDigits.some(digit => digit === '')}
+                  >
+                    Start Job
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       {showCompleteDialog && (
         <div className="fixed inset-0 z-50 bg-gradient-to-br from-[#111111] to-[#0a0a0a] overflow-y-auto">
           {/* Header */}
@@ -960,21 +1422,40 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                 </div>
 
                 {/* Job Summary */}
-                <div className="p-3 bg-gray-900/30 rounded-lg border border-gray-800/30">
-                  <div className="flex items-center justify-between mb-2">
-                    <h2 className="text-sm font-medium text-white/80">Job Details</h2>
-                    <span className="px-2 py-0.5 text-xs rounded-full bg-green-500/10 text-green-400 border border-green-500/20">
-                      {job.status}
-                    </span>
-                  </div>
-                  <div className="space-y-1 text-xs">
-                    <div className="flex justify-between items-start">
-                      <span className="text-gray-400 flex-shrink-0">Project:</span>
-                      <span className="text-white font-medium text-right break-words max-w-[calc(100%-60px)]">{job.title}</span>
+                <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#111111] via-[#0f0f0f] to-[#111111] border border-gray-600/30 shadow-lg">
+                  {/* Background decoration */}
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/5 rounded-full blur-2xl"></div>
+                  <div className="absolute bottom-0 left-0 w-24 h-24 bg-green-400/5 rounded-full blur-xl"></div>
+
+                  {/* Card content */}
+                  <div className="relative p-5">
+                    {/* Header with status */}
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <h2 className="text-sm font-semibold text-white/90">Job Overview</h2>
+                      </div>
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-500/15 text-green-400 border border-green-500/30 backdrop-blur-sm">
+                        {job.status}
+                      </span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Payment:</span>
-                      <span className="text-white font-medium">₹{job.payment}</span>
+
+                    {/* Job details - Simplified */}
+                    <div className="space-y-3">
+                      <div className="text-center space-y-2">
+                        <p className="text-sm text-gray-400">Project</p>
+                        <p className="text-base font-medium text-white break-words">{job.title}</p>
+                      </div>
+
+                      <div className="border-t border-gray-600/30 pt-3">
+                        <div className="text-center space-y-1">
+                          <p className="text-sm text-gray-400">Payment</p>
+                          <p className="text-xl font-bold text-green-400">₹{(() => {
+                            const earningsPreview = calculateJobEarnings(job);
+                            return earningsPreview.totalEarnings.toLocaleString('en-IN');
+                          })()}</p>
+                          <p className="text-xs text-green-300/70">After all fees & taxes</p>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -984,15 +1465,15 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                   <Label className="text-lg font-semibold text-white">
                     How would you rate this experience? <span className="text-red-400">*</span>
                   </Label>
-                  <div className="flex flex-col items-center gap-3">
-                    <div className="flex items-center gap-3">
+                  <div className="flex flex-col items-center gap-4">
+                    <div className="flex items-center gap-2">
                       {[1, 2, 3, 4, 5].map((star) => (
                         <button
                           key={star}
                           onClick={() => setRating(star)}
-                          className={`p-2 rounded-lg transition-all duration-200 ${
+                          className={`transition-all duration-200 ${
                             star <= rating
-                              ? 'text-yellow-400 bg-yellow-400/10 scale-110'
+                              ? 'text-yellow-400 scale-110 drop-shadow-sm'
                               : 'text-gray-600 hover:text-gray-400 hover:scale-105'
                           }`}
                         >
@@ -1001,13 +1482,28 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                       ))}
                     </div>
                     <div className="text-center">
-                      <span className="text-sm font-medium text-white/90">
-                        {rating === 0 ? 'Select a rating' :
-                         rating === 1 ? 'Poor' :
-                         rating === 2 ? 'Fair' :
-                         rating === 3 ? 'Good' :
-                         rating === 4 ? 'Very Good' : 'Excellent'}
-                      </span>
+                      {rating > 0 ? (
+                        <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium ring-1 ring-gray-500/30 transition-all duration-200 text-gray-300">
+                          <span className="text-base">
+                            {rating === 1 ? '😞' : rating === 2 ? '😐' : rating === 3 ? '😊' : rating === 4 ? '😄' : '🤩'}
+                          </span>
+                          <span className={`font-medium text-xs ${
+                            rating === 1 ? 'text-red-400' :
+                            rating === 2 ? 'text-orange-400' :
+                            rating === 3 ? 'text-yellow-400' :
+                            rating === 4 ? 'text-blue-400' : 'text-green-400'
+                          }`}>
+                            {rating === 1 ? 'Poor' :
+                             rating === 2 ? 'Fair' :
+                             rating === 3 ? 'Good' :
+                             rating === 4 ? 'Very Good' : 'Excellent'}
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="text-white/60 text-xs italic ring-1 ring-gray-500/30 px-2 py-0.5 rounded-full transition-all duration-200">
+                          Rate your experience
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1015,16 +1511,16 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                 {/* Feedback Chips - Now Optional */}
                 <div className="space-y-3">
                   <Label className="text-base font-medium text-white">
-                    What did you love about this experience? <span className="text-gray-400">(Optional)</span>
+                    What did you appreciate about the client? <span className="text-gray-400">(Optional)</span>
                   </Label>
                   <div className="grid grid-cols-2 gap-2">
                     {[
-                      'Professional coaching',
+                      'Professional cricketer',
                       'Clear communication',
+                      'Good sportsmanship',
                       'Punctual arrival',
-                      'Great facilities',
                       'Positive attitude',
-                      'Skill improvement'
+                      'Skilled player'
                     ].map((chip) => (
                       <button
                         key={chip}
@@ -1037,8 +1533,8 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                         }}
                         className={`px-3 py-2 text-sm rounded-lg border transition-all duration-200 ${
                           selectedChips.includes(chip)
-                            ? 'bg-purple-500/10 border-purple-500/30 text-purple-300'
-                            : 'bg-gray-800/50 border-gray-600/30 text-gray-300 hover:bg-gray-700/50 hover:border-gray-500/50'
+                            ? 'bg-purple-500/10 border-gray-500/50 text-purple-300'
+                            : 'bg-[#111111] border-gray-500/50 text-gray-300 hover:bg-[#1E1E1E] hover:border-gray-400/50'
                         }`}
                       >
                         {chip}
@@ -1058,7 +1554,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                       value={review}
                       onChange={(e) => setReview(e.target.value)}
                       placeholder="Share your experience, what went well, and any suggestions for improvement..."
-                      className="min-h-[100px] bg-[#111111] border-gray-600/50 text-white placeholder:text-gray-500 focus:border-purple-500/50 focus:ring-purple-500/20 resize-none"
+                      className="min-h-[100px] bg-[#111111] border-gray-600/50 text-white placeholder:text-gray-500 resize-none"
                       maxLength={500}
                       required
                     />
@@ -1073,7 +1569,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                   <Button
                     type="button"
                     variant="outline"
-                    className="flex-1 h-10 border-gray-600/50 text-white/90 hover:bg-gray-800/50 hover:text-white hover:border-gray-500/50 transition-all duration-200"
+                    className="flex-1 h-10 border-gray-600/50 text-white/90 hover:bg-[#111111] hover:text-white hover:border-gray-500/50 transition-all duration-200"
                     onClick={() => {
                       setShowCompleteDialog(false);
                       setReview('');
@@ -1085,7 +1581,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                   </Button>
                   <Button
                     type="button"
-                    className="flex-1 h-10 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-medium shadow-lg shadow-purple-600/25 hover:shadow-purple-600/40 transition-all duration-200"
+                    className="flex-1 h-10 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-medium shadow-lg shadow-green-600/25 hover:shadow-green-600/40 transition-all duration-200"
                     onClick={confirmMarkComplete}
                     disabled={rating === 0 || !review.trim()}
                   >

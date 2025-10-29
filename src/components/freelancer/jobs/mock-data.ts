@@ -45,6 +45,7 @@ export const mockUpcomingJobs: Job[] = [
     skills: ['Cricket Coaching', 'Batting Techniques', 'Bowling Techniques', 'Fielding Drills', 'Team Management'],
     duration: '2 hours per session',
     experienceLevel: 'Expert',
+    otp: '1234', // Test OTP for easy testing
     client: {
       name: 'Rajesh Kumar',
       rating: 4.8,
@@ -64,7 +65,7 @@ export const mockUpcomingJobs: Job[] = [
     date: '2024-06-25',
     time: '10:00',
     status: 'completed',
-    completedAt: '2024-06-25T15:30:00',
+    otp: '1234', // Test OTP for easy testing
     payment: 15000,
     location: 'Chepauk Cricket Ground, Chennai',
     description: 'Need an experienced sidearm specialist to simulate tournament conditions for our batsmen. Focus on yorkers, bouncers, and variations for T20 prep.',
@@ -128,7 +129,7 @@ export const mockUpcomingJobs: Job[] = [
     skills: ['Mystery Spinner', 'Bowling Techniques', 'Carrom Ball', 'Doosra'],
     duration: '2 hours per session',
     experienceLevel: 'Intermediate',
-    completedAt: '2024-06-20T16:00:00',
+    otp: '1234', // Test OTP for easy testing
     earnings: {
       baseAmount: 2000,
       tips: 200, // Client gave a tip for good performance
@@ -180,6 +181,7 @@ export const mockUpcomingJobs: Job[] = [
     skills: ['One-on-One Coaching', 'Batting Techniques', 'Footwork', 'Cricket Training'],
     duration: '1.5 hours per session',
     experienceLevel: 'Expert',
+    otp: '1234', // Test OTP for easy testing
     client: {
       name: 'Arjun Mehta',
       rating: 4.2,
@@ -227,6 +229,7 @@ export const mockUpcomingJobs: Job[] = [
     skills: ['Fast Bowler', 'Net Bowler', 'Cricket Training', 'Pace Bowling'],
     duration: '2 hours',
     experienceLevel: 'Beginner',
+    otp: '1234', // Test OTP for easy testing
     cancellationDetails: {
       cancelledBy: 'freelancer',
       cancelledAt: '2024-06-14T16:45:00',
@@ -246,7 +249,7 @@ export const mockUpcomingJobs: Job[] = [
     skills: ['Cricket Analyst', 'Video Analysis', 'Performance Analysis', 'Cricket Techniques'],
     duration: '4 hours',
     experienceLevel: 'Expert',
-    completedAt: '2024-06-28T13:00:00',
+    otp: '1234', // Test OTP for easy testing
     earnings: {
       baseAmount: 3500,
       tips: 300, // Client gave a tip for excellent analysis
@@ -286,6 +289,7 @@ export const mockUpcomingJobs: Job[] = [
     skills: ['Cricket Photography', 'Sports Photography', 'Action Shots', 'Photo Editing'],
     duration: '8 hours (full match day)',
     experienceLevel: 'Expert',
+    otp: '1234', // Test OTP for easy testing
     client: {
       name: 'Chennai Cricket Association',
       rating: 4.8,
@@ -320,6 +324,7 @@ export const mockUpcomingJobs: Job[] = [
     skills: ['Cricket Content Creation', 'Video Editing', 'Social Media', 'Cricket Knowledge'],
     duration: 'Project based (15 videos)',
     experienceLevel: 'Intermediate',
+    otp: '1234', // Test OTP for easy testing
     client: {
       name: 'Chennai Super Kings Academy',
       rating: 4.9,
@@ -349,6 +354,7 @@ export const mockUpcomingJobs: Job[] = [
     skills: ['Cricket Umpire', 'Rules Knowledge', 'Decision Making', 'Communication'],
     duration: '3 days (weekend tournament)',
     experienceLevel: 'Expert',
+    otp: '1234', // Test OTP for easy testing
     client: {
       name: 'Chennai Cricket League',
       rating: 4.7,
@@ -382,6 +388,7 @@ export const mockUpcomingJobs: Job[] = [
     skills: ['Cricket Scorer', 'Digital Scoring', 'Cricket Statistics', 'Match Analysis'],
     duration: '2 days (weekend)',
     experienceLevel: 'Beginner',
+    otp: '1234', // Test OTP for easy testing
     client: {
       name: 'Chennai Cricket Association',
       rating: 4.9,
@@ -411,6 +418,7 @@ export const mockUpcomingJobs: Job[] = [
     skills: ['Cricket Physio', 'Sports Therapy', 'Injury Management', 'Recovery Techniques'],
     duration: '1 month (thrice weekly)',
     experienceLevel: 'Expert',
+    otp: '1234', // Test OTP for easy testing
     client: {
       name: 'Nungambakkam Cricket Club',
       rating: 4.8,
@@ -440,6 +448,7 @@ export const mockUpcomingJobs: Job[] = [
     skills: ['Opening Batsman', 'Powerplay Batting', 'Partnership Building', 'Net Practice'],
     duration: '3 hours',
     experienceLevel: 'Intermediate',
+    otp: '1234', // Test OTP for easy testing
     client: {
       name: 'Adyar Cricket Academy',
       rating: 4.6,
@@ -469,6 +478,7 @@ export const mockUpcomingJobs: Job[] = [
     skills: ['Wicket Keeping', 'Diving Catches', 'Reflex Training', 'Stumpings'],
     duration: '2.5 hours',
     experienceLevel: 'Expert',
+    otp: '1234', // Test OTP for easy testing
     client: {
       name: 'Velachery Cricket Club',
       rating: 4.7,
@@ -498,6 +508,7 @@ export const mockUpcomingJobs: Job[] = [
     skills: ['Fielding Specialist', 'Boundary Catching', 'Ground Fielding', 'Athletic Training'],
     duration: '2 hours',
     experienceLevel: 'Beginner',
+    otp: '1234', // Test OTP for easy testing
     client: {
       name: 'T Nagar Cricket Academy',
       rating: 4.8,
@@ -526,7 +537,7 @@ export const mockUpcomingJobs: Job[] = [
     skills: ['Sports Psychology', 'Mental Training', 'Performance Enhancement', 'Team Building'],
     duration: '4 hours (group session)',
     experienceLevel: 'Expert',
-    completedAt: '2024-08-08T18:00:00',
+    otp: '1234', // Test OTP for easy testing
     earnings: {
       baseAmount: 4000,
       tips: 400, // Client gave a tip for excellent session
@@ -579,7 +590,7 @@ export const mockUpcomingJobs: Job[] = [
     skills: ['Sports Nutrition', 'Diet Planning', 'Energy Management', 'Recovery Nutrition'],
     duration: '3 hours (consultation + planning)',
     experienceLevel: 'Intermediate',
-    completedAt: '2024-08-10T14:00:00',
+    otp: '1234', // Test OTP for easy testing
     earnings: {
       baseAmount: 3500,
       tips: 250, // Client gave a tip for detailed consultation
@@ -632,7 +643,7 @@ export const mockUpcomingJobs: Job[] = [
     skills: ['Technical Setup', 'Bowling Machines', 'Equipment Calibration', 'Cricket Technology'],
     duration: '4 hours',
     experienceLevel: 'Beginner',
-    completedAt: '2024-08-12T12:00:00',
+    otp: '1234', // Test OTP for easy testing
     earnings: {
       baseAmount: 2500,
       tips: 150, // Client gave a tip for quick setup
@@ -684,6 +695,7 @@ export const mockUpcomingJobs: Job[] = [
     skills: ['Match Commentary', 'Live Streaming', 'Cricket Knowledge', 'Public Speaking'],
     duration: '6 hours per match (2 matches)',
     experienceLevel: 'Expert',
+    otp: '1234', // Test OTP for easy testing
     client: {
       name: 'Chennai Sports Broadcasting',
       rating: 4.8,
@@ -713,6 +725,7 @@ export const mockUpcomingJobs: Job[] = [
     skills: ['Fitness Training', 'Cricket Conditioning', 'Agility Training', 'Strength Training'],
     duration: '1.5 hours per session (weekly)',
     experienceLevel: 'Expert',
+    otp: '1234', // Test OTP for easy testing
     client: {
       name: 'Elite Cricket Fitness',
       rating: 4.9,
@@ -742,6 +755,7 @@ export const mockUpcomingJobs: Job[] = [
     skills: ['Player Assessment', 'Team Selection', 'Technical Evaluation', 'Player Development'],
     duration: '6 hours (full day assessment)',
     experienceLevel: 'Intermediate',
+    otp: '1234', // Test OTP for easy testing
     client: {
       name: 'Teynampet Cricket Academy',
       rating: 4.6,
@@ -771,6 +785,7 @@ export const mockUpcomingJobs: Job[] = [
     skills: ['Recovery Coaching', 'Muscle Recovery', 'Flexibility Training', 'Mental Relaxation'],
     duration: '2 hours per session',
     experienceLevel: 'Beginner',
+    otp: '1234', // Test OTP for easy testing
     client: {
       name: 'Chennai Recovery Specialists',
       rating: 4.7,
@@ -809,6 +824,7 @@ export const mockApplications: Application[] = [
       'https://randomuser.me/api/portraits/women/45.jpg',
       'https://randomuser.me/api/portraits/men/67.jpg'
     ],
+    experienceLevel: 'Expert',
     proposal: {
       coverLetter: 'I have 3+ years of experience as a sidearm specialist working with state-level teams. I can accurately simulate pace, spin, and variations up to 140 kph.',
       proposedRate: 3000,
@@ -839,6 +855,7 @@ export const mockApplications: Application[] = [
       'https://randomuser.me/api/portraits/men/45.jpg',
       'https://randomuser.me/api/portraits/women/12.jpg'
     ],
+    experienceLevel: 'Expert',
     proposal: {
       coverLetter: 'I specialize in mystery spin bowling including carrom ball, doosra, and slider variations. I have played state-level cricket and can help batsmen develop techniques against various spin deliveries.',
       proposedRate: 4500,
@@ -870,6 +887,7 @@ export const mockApplications: Application[] = [
       'https://randomuser.me/api/portraits/women/37.jpg',
       'https://randomuser.me/api/portraits/men/23.jpg'
     ],
+    experienceLevel: 'Intermediate',
     proposal: {
       coverLetter: 'I am a cricket coach with over 7 years of experience specializing in youth development. I have worked with players at both school and academy levels, focusing on developing proper batting technique, footwork, and mental approach to the game.',
       proposedRate: 3000,
@@ -897,6 +915,7 @@ export const mockApplications: Application[] = [
       'https://randomuser.me/api/portraits/men/42.jpg',
       'https://randomuser.me/api/portraits/women/37.jpg'
     ],
+    experienceLevel: 'Expert',
     proposal: {
       coverLetter: 'I have 5+ years of experience as a cricket scorer for various tournaments across Chennai. I am proficient with digital scoring platforms like CricHQ and can provide detailed match statistics.',
       proposedRate: 2200,
@@ -925,6 +944,7 @@ export const mockApplications: Application[] = [
       'https://randomuser.me/api/portraits/men/24.jpg',
       'https://randomuser.me/api/portraits/women/17.jpg'
     ],
+    experienceLevel: 'Expert',
     proposal: {
       coverLetter: 'Experienced cricket analyst with expertise in technical analysis and performance metrics. I use advanced video analysis software to identify strengths and weaknesses in batting and bowling techniques.',
       proposedRate: 4000,
@@ -953,6 +973,7 @@ export const mockApplications: Application[] = [
       'https://randomuser.me/api/portraits/men/55.jpg',
       'https://randomuser.me/api/portraits/women/29.jpg'
     ],
+    experienceLevel: 'Beginner',
     proposal: {
       coverLetter: 'I have experience managing sports equipment for local cricket clubs and can ensure all gear is properly maintained and organized.',
       proposedRate: 2000,
@@ -1060,6 +1081,7 @@ export const acceptProposalAndCreateJob = (applicationId: string) => {
     skills: application.proposal.skills,
     duration: `${application.proposal.estimatedDays} days`,
     experienceLevel: 'Expert',
+    otp: '1234', // Test OTP for easy testing
     client: {
       name: application.clientName,
       rating: 4.5,

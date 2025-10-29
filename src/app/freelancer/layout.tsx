@@ -20,10 +20,12 @@ export default function FreelancerLayout({ children }: FreelancerLayoutProps) {
   
   // Check if current path is a preview page
   const isPreviewPage = pathname?.startsWith('/freelancer/profile/preview');
+  // Hide mobile bottom navbar on job details pages like /freelancer/jobs/[id]
+  const isJobDetailsPage = !!(pathname && /^\/freelancer\/jobs\/[^/]+/.test(pathname));
   
   // Hide header and navbar for preview pages
   const isHeaderVisible = isPreviewPage ? false : contextHeaderVisible;
-  const isNavbarVisible = isPreviewPage ? false : contextNavbarVisible;
+  const isNavbarVisible = (isPreviewPage || isJobDetailsPage) ? false : contextNavbarVisible;
   
   // Use a ref to track if we're in a browser environment
   const [isMounted, setIsMounted] = useState(false);
