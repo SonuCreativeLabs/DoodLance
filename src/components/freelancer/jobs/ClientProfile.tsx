@@ -45,10 +45,12 @@ export function ClientProfile({
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
   return (
-    <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#111111] via-[#0f0f0f] to-[#111111] border border-gray-600/30 shadow-lg">
-      {/* Background decoration */}
-      <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/5 rounded-full blur-2xl"></div>
-      <div className="absolute bottom-0 left-0 w-24 h-24 bg-orange-400/5 rounded-full blur-xl"></div>
+    <div className="relative overflow-hidden rounded-xl bg-gradient-to-tr from-black via-gray-900 to-black border border-gray-800/50 shadow-xl">
+      {/* Background decoration - layered gradients */}
+      <div className="absolute top-0 right-0 w-36 h-36 bg-gradient-to-br from-purple-600/6 via-purple-500/4 to-purple-400/2 rounded-full blur-2xl"></div>
+      <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-purple-700/5 to-purple-600/3 rounded-full blur-xl"></div>
+      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-gradient-to-r from-gray-800/8 to-black/6 rounded-full blur-2xl"></div>
+      <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-purple-900/3 to-transparent"></div>
 
       {/* Card content */}
       <div className="relative p-5">
@@ -218,6 +220,25 @@ export function ClientProfile({
                 <p className="text-sm text-gray-400">{location || client?.location || 'Location not specified'}</p>
               </div>
             </div>
+
+            {showCommunicationButtons && (
+              <div className="flex space-x-2">
+                <button
+                  onClick={onChat}
+                  className="flex-1 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/90 hover:text-white transition-colors text-sm font-medium flex items-center justify-center gap-2"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  Chat
+                </button>
+                <button
+                  onClick={onCall}
+                  className="flex-1 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/90 hover:text-white transition-colors text-sm font-medium flex items-center justify-center gap-2"
+                >
+                  <Phone className="w-4 h-4" />
+                  Call
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

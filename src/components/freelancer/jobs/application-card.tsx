@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { MapPin, FileText, MessageCircle, Clock, CheckCircle, XCircle, User, Phone } from 'lucide-react';
+import { MapPin, FileText, MessageCircle, Clock, CheckCircle, XCircle, User, Phone, X } from 'lucide-react';
 import { IndianRupee } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -9,6 +9,7 @@ import { Application, ApplicationStatus } from './types';
 import { getStatusStyles } from './utils';
 import { cn } from '@/lib/utils';
 import { updateApplicationStatus } from './mock-data';
+import { SuccessMessage } from '@/components/ui/success-message';
 
 interface ApplicationCardProps {
   application: Application;
@@ -22,7 +23,34 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, i
   const [isExpanded] = useState(false);
   const [showWithdrawDialog, setShowWithdrawDialog] = useState(false);
   const [isWithdrawing, setIsWithdrawing] = useState(false);
-  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+
+  // Success message state
+  const [successMessage, setSuccessMessage] = useState<{
+    message: string;
+    description?: string;
+    variant?: 'success' | 'warning' | 'info';
+    isVisible: boolean;
+  }>({
+    message: '',
+    description: '',
+    variant: 'success',
+    isVisible: false
+  });
+
+  // Helper function to show success messages
+  const showSuccessMessage = (message: string, description?: string, variant: 'success' | 'warning' | 'info' = 'success') => {
+    setSuccessMessage({
+      message,
+      description,
+      variant,
+      isVisible: true
+    });
+
+    // Auto-hide after 5 seconds
+    setTimeout(() => {
+      setSuccessMessage(prev => ({ ...prev, isVisible: false }));
+    }, 5000);
+  };
 
   const handleWithdraw = async () => {
     setIsWithdrawing(true);
@@ -56,10 +84,12 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, i
         }
 
         setShowWithdrawDialog(false);
-        setShowSuccessMessage(true);
-
-        // Hide success message after 3 seconds
-        setTimeout(() => setShowSuccessMessage(false), 3000);
+        // Show success message
+        showSuccessMessage(
+          'Application Withdrawn!',
+          'Your application has been successfully withdrawn.',
+          'warning'
+        );
       } else {
         console.error('Failed to withdraw application - Status:', response.status);
         const errorText = await response.text();
@@ -303,50 +333,57 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, i
 
       {/* Withdraw Confirmation Dialog */}
       {showWithdrawDialog && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
+            initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-[#1E1E1E] p-6 rounded-xl border border-white/10 max-w-md w-full mx-4"
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#111111] via-[#0f0f0f] to-[#111111] border border-gray-600/30 shadow-lg p-6 max-w-md w-full"
           >
-            <h3 className="text-lg font-semibold text-white mb-4">Withdraw Application?</h3>
-            <p className="text-gray-300 mb-2">
-              Are you sure you want to withdraw your application for:
-            </p>
-            <p className="text-white font-medium mb-4">
-              "{application.jobTitle}"
-            </p>
-            <p className="text-gray-400 text-sm mb-6">
-              This action will move your application to the "Withdrawn" section and cannot be undone. The client will be notified of your withdrawal.
-            </p>
-            <div className="flex gap-3 justify-end">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowWithdrawDialog(false)}
-                disabled={isWithdrawing}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={handleWithdraw}
-                disabled={isWithdrawing}
-              >
-                {isWithdrawing ? 'Withdrawing...' : 'Withdraw'}
-              </Button>
+            {/* Background decoration */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/5 rounded-full blur-2xl"></div>
+            <div className="absolute bottom-0 left-0 w-24 h-24 bg-red-400/5 rounded-full blur-xl"></div>
+
+            {/* Dialog content */}
+            <div className="relative text-center">
+              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-500/10 mb-4">
+                <XCircle className="h-6 w-6 text-red-500" />
+              </div>
+              <h3 className="text-lg font-medium text-white mb-2">Withdraw Application</h3>
+              <p className="text-sm text-gray-400 mb-6">
+                Are you sure you want to withdraw your application? This action cannot be undone.
+              </p>
+              <div className="flex justify-center space-x-3">
+                <Button
+                  variant="outline"
+                  className="border-gray-600 text-gray-300 hover:bg-[#1e1e1e] hover:text-gray-200"
+                  onClick={() => setShowWithdrawDialog(false)}
+                  disabled={isWithdrawing}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="outline"
+                  className="text-red-500 border-red-500 hover:bg-red-500/10 hover:text-red-400"
+                  onClick={handleWithdraw}
+                  disabled={isWithdrawing}
+                >
+                  {isWithdrawing ? 'Withdrawing...' : 'Withdraw'}
+                </Button>
+              </div>
             </div>
           </motion.div>
         </div>
       )}
 
       {/* Success Message */}
-      {showSuccessMessage && (
-        <div className="fixed top-4 right-4 bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg z-50">
-          Application withdrawn successfully!
-        </div>
-      )}
+      <SuccessMessage
+        message={successMessage.message}
+        description={successMessage.description}
+        isVisible={successMessage.isVisible}
+        variant={successMessage.variant}
+        onClose={() => setSuccessMessage(prev => ({ ...prev, isVisible: false }))}
+      />
     </motion.div>
   );
 };

@@ -22,10 +22,12 @@ export default function FreelancerLayout({ children }: FreelancerLayoutProps) {
   const isPreviewPage = pathname?.startsWith('/freelancer/profile/preview');
   // Hide mobile bottom navbar on job details pages like /freelancer/jobs/[id]
   const isJobDetailsPage = !!(pathname && /^\/freelancer\/jobs\/[^/]+/.test(pathname));
+  // Hide mobile bottom navbar on proposal details pages like /freelancer/proposals/[id]
+  const isProposalDetailsPage = !!(pathname && /^\/freelancer\/proposals\/[^/]+/.test(pathname));
   
   // Hide header and navbar for preview pages
   const isHeaderVisible = isPreviewPage ? false : contextHeaderVisible;
-  const isNavbarVisible = (isPreviewPage || isJobDetailsPage) ? false : contextNavbarVisible;
+  const isNavbarVisible = (isPreviewPage || isJobDetailsPage || isProposalDetailsPage) ? false : contextNavbarVisible;
   
   // Use a ref to track if we're in a browser environment
   const [isMounted, setIsMounted] = useState(false);

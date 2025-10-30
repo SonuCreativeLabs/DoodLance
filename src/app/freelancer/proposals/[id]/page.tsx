@@ -10,7 +10,6 @@ import {
   MapPin, 
   Calendar as CalendarIcon, 
   Clock as ClockIcon, 
-  IndianRupee, 
   FileText,
   Edit2,
   Trash2,
@@ -29,6 +28,29 @@ import { Application } from '@/components/freelancer/jobs/types';
 import { mySkills } from '@/components/freelancer/jobs/mock-data';
 import { updateApplicationStatus } from '@/components/freelancer/jobs/mock-data';
 import { ClientProfile } from '@/components/freelancer/jobs/ClientProfile';
+import { FullScreenMap } from '@/components/freelancer/jobs/FullScreenMap';
+import { SuccessMessage } from '@/components/ui/success-message';
+
+// Category mapping for display (same as JobDetailsModal)
+const getCategoryDisplayName = (category: string) => {
+  const categoryMap: Record<string, string> = {
+    'Match Player': 'Match Player',
+    'Net Bowler': 'Net Bowler',
+    'Net Batsman': 'Net Batsman',
+    'Sidearm': 'Sidearm',
+    'Coach': 'Coach',
+    'Sports Conditioning Trainer': 'Sports Conditioning Trainer',
+    'Fitness Trainer': 'Fitness Trainer',
+    'Analyst': 'Analyst',
+    'Physio': 'Physio',
+    'Scorer': 'Scorer',
+    'Cricket Photo / Videography': 'Cricket Photo / Videography',
+    'Cricket Content Creator': 'Cricket Content Creator',
+    'Commentator': 'Commentator',
+    'OTHER': 'Other Services'
+  };
+  return categoryMap[category] || category;
+};
 
 
 export default function ProposalDetailsPage() {
@@ -39,7 +61,37 @@ export default function ProposalDetailsPage() {
   const [showWithdrawConfirm, setShowWithdrawConfirm] = useState(false);
   const [isWithdrawing, setIsWithdrawing] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [showMapModal, setShowMapModal] = useState(false);
+  const [mapLocation, setMapLocation] = useState('');
   const yourProposalRef = useRef<HTMLDivElement>(null);
+
+  // Success message state
+  const [successMessage, setSuccessMessage] = useState<{
+    message: string;
+    description?: string;
+    variant?: 'success' | 'warning' | 'info';
+    isVisible: boolean;
+  }>({
+    message: '',
+    description: '',
+    variant: 'success',
+    isVisible: false
+  });
+
+  // Helper function to show success messages
+  const showSuccessMessage = (message: string, description?: string, variant: 'success' | 'warning' | 'info' = 'success') => {
+    setSuccessMessage({
+      message,
+      description,
+      variant,
+      isVisible: true
+    });
+
+    // Auto-hide after 5 seconds
+    setTimeout(() => {
+      setSuccessMessage(prev => ({ ...prev, isVisible: false }));
+    }, 5000);
+  };
 
   useEffect(() => {
     const loadApplication = async () => {
@@ -134,9 +186,86 @@ export default function ProposalDetailsPage() {
     }
   };
 
+  const handleChat = () => {
+    // TODO: Implement chat functionality - could open chat modal or navigate to messages
+    alert('Chat functionality will be implemented soon!');
+  };
+
+  const handleCall = () => {
+    // TODO: Implement call functionality - could initiate call or show contact options
+    alert('Call functionality will be implemented soon!');
+  };
+
+  const handleFileSelect = (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+
+    const maxFileSize = 10 * 1024 * 1024; // 10MB in bytes
+    const allowedTypes = ['application/pdf', 'image/jpeg'];
+    const currentAttachments = editedProposal?.proposal.attachments || [];
+
+    const newFiles: string[] = [];
+    const errors: string[] = [];
+
+    Array.from(files).forEach((file) => {
+      // Check file type
+      if (!allowedTypes.includes(file.type)) {
+        errors.push(`${file.name}: Only PDF and JPG files are allowed`);
+        return;
+      }
+
+      // Check file size
+      if (file.size > maxFileSize) {
+        errors.push(`${file.name}: File size must be less than 10MB`);
+        return;
+      }
+
+      // Check if file already exists
+      if (currentAttachments.includes(file.name)) {
+        errors.push(`${file.name}: File already exists`);
+        return;
+      }
+
+      newFiles.push(file.name);
+    });
+
+    if (errors.length > 0) {
+      alert(`Upload failed:\n${errors.join('\n')}`);
+      return;
+    }
+
+    if (newFiles.length > 0) {
+      setEditedProposal(prev => prev ? {
+        ...prev,
+        proposal: {
+          ...prev.proposal,
+          attachments: [...currentAttachments, ...newFiles]
+        }
+      } : null);
+
+      alert(`Successfully added ${newFiles.length} file(s)!`);
+    }
+  };
+
   const handleCancelEdit = () => {
     setIsEditing(false);
     setEditedProposal(null);
+  };
+
+  const handleRemoveFile = (fileName: string) => {
+    setEditedProposal(prev => prev ? {
+      ...prev,
+      proposal: {
+        ...prev.proposal,
+        attachments: prev.proposal.attachments.filter(file => file !== fileName)
+      }
+    } : null);
+
+    alert(`"${fileName}" has been removed from attachments.`);
+  };
+
+  const handleOpenMap = (location: string) => {
+    setMapLocation(location);
+    setShowMapModal(true);
   };
 
   const handleWithdraw = async () => {
@@ -201,24 +330,29 @@ export default function ProposalDetailsPage() {
     <>
       <div className="fixed inset-0 z-[9999] bg-gradient-to-br from-[#111111] to-[#0a0a0a] overflow-y-auto">
       {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-[#111111]/95 backdrop-blur-sm border-b border-gray-800/80 p-4 flex items-center">
-        <button 
-          onClick={handleBack}
-          className="p-2 rounded-full hover:bg-white/10 transition-colors"
-          aria-label="Go back"
-        >
-          <ArrowLeft className="w-5 h-5 text-white/80" />
-        </button>
-        <div className="ml-4">
-          <div className="text-sm font-medium text-white">
-            {proposal.status === 'accepted' ? 'Accepted Proposal' :
-             proposal.status === 'rejected' ? 'Rejected Proposal' :
-             proposal.status === 'completed' ? 'Completed Job' :
-             proposal.status === 'cancelled' ? 'Cancelled Job' :
-             'Pending Proposal'}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-[#111111]/95 backdrop-blur-sm border-b border-gray-800/80 p-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={handleBack}
+            className="p-2 rounded-full hover:bg-white/10 transition-colors"
+            aria-label="Go back"
+          >
+            <ArrowLeft className="w-5 h-5 text-white/80" />
+          </button>
+          <div className="flex flex-col gap-0.5">
+            <h2 className="text-base font-medium text-white">
+              {proposal.status === 'accepted' ? 'Accepted Proposal' :
+               proposal.status === 'rejected' ? 'Rejected Proposal' :
+               proposal.status === 'completed' ? 'Completed Job' :
+               proposal.status === 'cancelled' ? 'Cancelled Job' :
+               'Pending Proposal'}
+            </h2>
+            <span className="text-xs font-medium text-white/60">
+              {getCategoryDisplayName(proposal.category)}
+            </span>
           </div>
-          <div className="text-xs font-mono text-white/60">ID: {proposal["#"]}</div>
         </div>
+        <div className="text-xs font-mono text-white/60">{proposal["#"]}</div>
       </div>
 
       {/* Main Content */}
@@ -260,7 +394,6 @@ export default function ProposalDetailsPage() {
                 </div>
 
                 <div className="relative">
-                  <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-white/10"></div>
                   <div className="space-y-6">
                     {/* Timeline items */}
                     <div className="relative pl-10">
@@ -370,8 +503,8 @@ export default function ProposalDetailsPage() {
               }}
               location={proposal.location}
               showCommunicationButtons={proposal.status === 'accepted'}
-              onChat={() => console.log('Message client')}
-              onCall={() => console.log('Call client')}
+              onChat={handleChat}
+              onCall={handleCall}
             />
 
             {/* Job Details */}
@@ -397,7 +530,7 @@ export default function ProposalDetailsPage() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="text-center space-y-1">
-                      <p className="text-sm text-gray-400">Applied On</p>
+                      <p className="text-sm text-gray-400">Posted on</p>
                       <p className="text-sm font-medium">
                         {new Date(proposal.appliedDate).toLocaleDateString('en-US', {
                           month: 'short',
@@ -408,7 +541,13 @@ export default function ProposalDetailsPage() {
                     </div>
                     <div className="text-center space-y-1">
                       <p className="text-sm text-gray-400">Location</p>
-                      <p className="text-sm font-medium">{proposal.location}</p>
+                      <button
+                        onClick={() => handleOpenMap(proposal.location)}
+                        className="text-sm font-medium text-purple-400 hover:text-purple-300 transition-colors underline decoration-purple-400/50 hover:decoration-purple-300"
+                        title="View on map"
+                      >
+                        {proposal.location}
+                      </button>
                     </div>
                   </div>
 
@@ -515,7 +654,6 @@ export default function ProposalDetailsPage() {
                   <div>
                     <h3 className="text-sm font-medium text-gray-400 mb-2">Your Rate</h3>
                     <div className="flex items-center space-x-2">
-                      <IndianRupee className="w-4 h-4 text-purple-400" />
                       {isEditing ? (
                         <input
                           type="number"
@@ -537,57 +675,63 @@ export default function ProposalDetailsPage() {
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <h3 className="text-sm font-medium text-gray-400">Attachments</h3>
-                      {proposal.status === 'pending' && (
+                      {proposal.status === 'pending' && isEditing && (
                         <label className="p-1.5 text-gray-400 hover:text-purple-400 rounded-full hover:bg-purple-500/10 transition-colors cursor-pointer" title="Upload attachment">
                           <PlusCircle className="w-4 h-4" />
                           <input
                             type="file"
                             className="hidden"
-                            onChange={(e) => console.log('File selected', e.target.files)}
+                            onChange={(e) => handleFileSelect(e.target.files)}
                             multiple
+                            accept=".pdf,.jpg,.jpeg"
                           />
                         </label>
                       )}
                     </div>
                     <div className="space-y-2">
-                      {proposal.proposal.attachments && proposal.proposal.attachments.length > 0 ? (
-                        proposal.proposal.attachments.map((file, index) => (
-                          <div key={index} className="group flex items-center justify-between p-3 bg-[#1e1e1e] rounded-lg hover:bg-gray-500/30 transition-colors">
-                            <div className="flex items-center space-x-3">
-                              <div className="p-1.5 bg-purple-500/10 rounded-md">
-                                <FileText className="w-4 h-4 text-purple-400" />
+                      {(() => {
+                        const attachments = isEditing ? editedProposal?.proposal.attachments : proposal?.proposal.attachments;
+                        return attachments && attachments.length > 0 ? (
+                          attachments.map((file, index) => (
+                            <div key={index} className="group flex items-center justify-between p-3 bg-[#1e1e1e] rounded-lg hover:bg-gray-500/30 transition-colors">
+                              <div className="flex items-center space-x-3">
+                                <div className="p-1.5 bg-purple-500/10 rounded-md">
+                                  <FileText className="w-4 h-4 text-purple-400" />
+                                </div>
+                                <span className="text-sm text-gray-300 font-medium truncate max-w-[200px]">
+                                  {file || `Attachment ${index + 1}`}
+                                </span>
                               </div>
-                              <span className="text-sm text-gray-300 font-medium truncate max-w-[200px]">
-                                {file || `Attachment ${index + 1}`}
-                              </span>
+                              <div className="flex items-center space-x-2">
+                                <a
+                                  href={`/attachments/${file}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="p-1 text-gray-400 hover:text-purple-400 rounded-full hover:bg-gray-700 transition-colors"
+                                  title="View file"
+                                >
+                                  <Eye className="w-3.5 h-3.5" />
+                                </a>
+                                {isEditing && (
+                                  <button
+                                    className="p-1 text-gray-400 hover:text-red-400 rounded-full hover:bg-red-500/10 transition-colors"
+                                    onClick={() => handleRemoveFile(file)}
+                                    title="Remove file"
+                                  >
+                                    <X className="w-3.5 h-3.5" />
+                                  </button>
+                                )}
+                              </div>
                             </div>
-                            <div className="flex items-center space-x-2">
-                              <a
-                                href={`/attachments/${file}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="p-1.5 text-gray-400 hover:text-purple-400 rounded-full hover:bg-gray-700 transition-colors"
-                                title="View file"
-                              >
-                                <Eye className="w-4 h-4" />
-                              </a>
-                              <button
-                                className="p-1.5 text-gray-400 hover:text-red-400 rounded-full hover:bg-red-500/10 transition-colors"
-                                onClick={() => console.log('Remove file', file)}
-                                title="Remove file"
-                              >
-                                <X className="w-4 h-4" />
-                              </button>
-                            </div>
+                          ))
+                        ) : (
+                          <div className="flex flex-col items-center justify-center py-6 border-2 border-dashed border-gray-700 rounded-lg bg-gray-800/30">
+                            <UploadCloud className="w-8 h-8 text-gray-500 mb-2" />
+                            <p className="text-sm text-gray-400">No attachments yet</p>
+                            <p className="text-xs text-gray-500 mt-1">Upload files to support your proposal</p>
                           </div>
-                        ))
-                      ) : (
-                        <div className="flex flex-col items-center justify-center py-6 border-2 border-dashed border-gray-700 rounded-lg bg-gray-800/30">
-                          <UploadCloud className="w-8 h-8 text-gray-500 mb-2" />
-                          <p className="text-sm text-gray-400">No attachments yet</p>
-                          <p className="text-xs text-gray-500 mt-1">Upload files to support your proposal</p>
-                        </div>
-                      )}
+                        );
+                      })()}
                     </div>
                   </div>
 
@@ -596,14 +740,14 @@ export default function ProposalDetailsPage() {
                       <Button
                         variant="outline"
                         className="border-purple-500/30 text-purple-400 hover:bg-purple-500/10 hover:border-purple-400/50 transition-all hover:shadow-lg hover:shadow-purple-500/10"
-                        onClick={() => console.log('Message client')}
+                        onClick={handleChat}
                       >
                         <MessageCircle className="w-4 h-4 mr-2" />
                         Message
                       </Button>
                       <Button
                         className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 transition-all"
-                        onClick={() => console.log('Call client')}
+                        onClick={handleCall}
                       >
                         <Phone className="w-4 h-4 mr-2" />
                         Call
@@ -700,6 +844,22 @@ export default function ProposalDetailsPage() {
           </motion.div>
         </div>
       )}
+
+      {/* Full Screen Map */}
+      <FullScreenMap
+        isOpen={showMapModal}
+        onClose={() => setShowMapModal(false)}
+        location={mapLocation}
+      />
+
+      {/* Success Message */}
+      <SuccessMessage
+        message={successMessage.message}
+        description={successMessage.description}
+        isVisible={successMessage.isVisible}
+        variant={successMessage.variant}
+        onClose={() => setSuccessMessage(prev => ({ ...prev, isVisible: false }))}
+      />
     </div>
     </>
   );

@@ -817,6 +817,7 @@ export const mockApplications: Application[] = [
     postedDate: '2024-06-25',
     description: 'Looking for an experienced sidearm specialist who can simulate various bowling actions for our professional batsmen practice sessions.',
     clientId: 'csk123',
+    category: 'Sidearm',
     moneySpent: 45000,
     freelancersWorked: 8,
     freelancerAvatars: [
@@ -876,8 +877,9 @@ export const mockApplications: Application[] = [
     location: 'T Nagar, Chennai',
     postedDate: '2024-06-18',
     description: 'Looking for a personal cricket coach for my 16-year-old son who wants to improve his batting technique and footwork',
-    clientId: 'mehta789',
-    moneySpent: 35000,
+    clientId: 'mehta456',
+    category: 'Coach',
+    moneySpent: 28000,
     freelancersWorked: 6,
     freelancerAvatars: [
       'https://randomuser.me/api/portraits/women/28.jpg',
@@ -909,6 +911,7 @@ export const mockApplications: Application[] = [
     postedDate: '2024-06-15',
     description: 'Need an experienced cricket scorer for our weekend tournament. Must be familiar with digital scoring applications.',
     clientId: 'cca321',
+    category: 'Scorer',
     moneySpent: 45000,
     freelancersWorked: 12,
     freelancerAvatars: [

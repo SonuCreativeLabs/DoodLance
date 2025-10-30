@@ -152,6 +152,7 @@ export interface Application {
   postedDate: string;
   description: string;
   clientId: string;
+  category: string;
   rating?: number;
   projectsCompleted?: number;
   duration?: string;

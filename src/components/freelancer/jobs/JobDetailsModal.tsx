@@ -14,6 +14,7 @@ import { Job } from './types';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { ClientProfile } from './ClientProfile';
+import { SuccessMessage } from '@/components/ui/success-message';
 
 // Category mapping for display
 const getCategoryDisplayName = (category: string) => {
@@ -105,11 +106,44 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
   const [review, setReview] = useState('');
   const [selectedChips, setSelectedChips] = useState<string[]>([]);
   const [isEarningsExpanded, setIsEarningsExpanded] = useState(false);
+  const [isClientProfileExpanded, setIsClientProfileExpanded] = useState(false);
   const [showMap, setShowMap] = useState(false);
   const mapRef = useRef<HTMLDivElement | null>(null);
   const mapInstance = useRef<mapboxgl.Map | null>(null);
   const [mapError, setMapError] = useState<string | null>(null);
   const [mapLoading, setMapLoading] = useState(false);
+
+  // Success message states
+  const [successMessage, setSuccessMessage] = useState<{
+    message: string;
+    description?: string;
+    variant?: 'success' | 'warning' | 'info';
+    isVisible: boolean;
+  }>({
+    message: '',
+    description: '',
+    variant: 'success',
+    isVisible: false
+  });
+
+  // Helper function to show success messages
+  const showSuccessMessage = (
+    message: string,
+    description?: string,
+    variant: 'success' | 'warning' | 'info' = 'success'
+  ) => {
+    setSuccessMessage({
+      message,
+      description,
+      variant,
+      isVisible: true
+    });
+
+    // Auto-hide after 5 seconds
+    setTimeout(() => {
+      setSuccessMessage(prev => ({ ...prev, isVisible: false }));
+    }, 5000);
+  };
 
   // Generate OTP when component loads or check for existing OTP
   useEffect(() => {
@@ -321,7 +355,12 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
       if (response.ok) {
         const responseData = await response.json();
         console.log('Cancel API success:', responseData);
-        alert('Job cancelled successfully!');
+        // Show success message
+        showSuccessMessage(
+          'Job Cancelled!',
+          'The job has been cancelled successfully.',
+          'warning'
+        );
         setShowCancelDialog(false);
         setCancelNotes('');
         if (onClose) onClose();
@@ -382,7 +421,11 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
         }
 
         // Show success message
-        alert('Job started successfully! You can now proceed with the work.');
+        showSuccessMessage(
+          'Job Started!',
+          'You can now proceed with the work.',
+          'success'
+        );
       } else {
         const errorData = await response.json();
         console.error('Start job error:', errorData);
@@ -453,7 +496,12 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
           });
         }
 
-        alert('Job marked as complete! Payment will be processed shortly.');
+        // Show success message
+        showSuccessMessage(
+          'Job Completed!',
+          'Payment will be processed shortly.',
+          'success'
+        );
       } else {
         const errorData = await response.json();
         console.error('Complete API error response:', errorData);
@@ -693,32 +741,39 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
             {/* About the Job with Skills */}
-            <div className="bg-[#1E1E1E] rounded-2xl p-6 border border-white/5">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-white">About the Job</h2>
-              </div>
-              <div className="prose prose-invert max-w-none">
-                {job.description && (
-                  <p className="text-white/80 leading-relaxed mb-6">
-                    {job.description}
-                  </p>
-                )}
-                
-                {job.skills && job.skills.length > 0 && (
-                  <div className="mt-6 pt-6 border-t border-white/5">
-                    <h3 className="text-md font-semibold text-white mb-3">Required Skills</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {job.skills.map((skill, index) => (
-                        <span 
-                          key={index}
-                          className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-[#2D2D2D] text-white/90 border border-white/5 hover:bg-[#3D3D3D] transition-colors"
-                        >
-                          {skill}
-                        </span>
-                      ))}
+            <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#111111] via-[#0f0f0f] to-[#111111] border border-gray-600/30 shadow-lg">
+              {/* Background decoration */}
+              <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/5 rounded-full blur-2xl"></div>
+              <div className="absolute bottom-0 left-0 w-24 h-24 bg-purple-400/5 rounded-full blur-xl"></div>
+
+              {/* Card content */}
+              <div className="relative p-5">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-semibold text-white">About the Job</h2>
+                </div>
+                <div className="prose prose-invert max-w-none">
+                  {job.description && (
+                    <p className="text-white/80 leading-relaxed mb-6">
+                      {job.description}
+                    </p>
+                  )}
+
+                  {job.skills && job.skills.length > 0 && (
+                    <div className="mt-6 pt-6 border-t border-white/5">
+                      <h3 className="text-md font-semibold text-white mb-3">Required Skills</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {job.skills.map((skill, index) => (
+                          <span
+                            key={index}
+                            className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-[#2D2D2D] text-white/90 border border-white/5 hover:bg-[#3D3D3D] transition-colors"
+                          >
+                            {skill}
+                          </span>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             </div>
 
@@ -1016,43 +1071,58 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
           <div className="space-y-6">
             {/* About the Client */}
             <ClientProfile
-              client={job.client}
+              client={job.client ? {
+                name: job.client.name,
+                rating: job.client.rating,
+                moneySpent: undefined,
+                jobsCompleted: job.client.jobsCompleted,
+                freelancersWorked: undefined,
+                freelancerAvatars: undefined,
+                experienceLevel: undefined
+              } : null}
               location={job.location}
               showCommunicationButtons={true}
-              onChat={handleChat}
-              onCall={handleCall}
+              onChat={() => handleChat({} as React.MouseEvent)}
+              onCall={() => handleCall({} as React.MouseEvent)}
               defaultExpanded={isClientProfileExpanded}
             />
 
             {/* Safety Tips */}
-            <div className="bg-[#1E1E1E] rounded-2xl p-6 border border-white/5">
-              <h2 className="text-lg font-semibold text-white mb-4">Safety Tips</h2>
-              <ul className="space-y-3">
-                <li className="flex items-start gap-3">
-                  <CheckCircle className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
-                  <span className="text-sm text-white/80">Verify ground facilities and equipment before starting</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <CheckCircle className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
-                  <span className="text-sm text-white/80">Discuss session duration and payment terms clearly</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <CheckCircle className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
-                  <span className="text-sm text-white/80">Ensure weather conditions are suitable for outdoor activities</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <CheckCircle className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
-                  <span className="text-sm text-white/80">Use proper protective gear during practice sessions</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <CheckCircle className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
-                  <span className="text-sm text-white/80">Confirm participant fitness levels before intensive training</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <CheckCircle className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
-                  <span className="text-sm text-white/80">Follow proper warm-up and cool-down procedures</span>
-                </li>
-              </ul>
+            <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#111111] via-[#0f0f0f] to-[#111111] border border-gray-600/30 shadow-lg">
+              {/* Background decoration */}
+              <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/5 rounded-full blur-2xl"></div>
+              <div className="absolute bottom-0 left-0 w-24 h-24 bg-red-400/5 rounded-full blur-xl"></div>
+
+              {/* Card content */}
+              <div className="relative p-5">
+                <h2 className="text-lg font-semibold text-white mb-4">Safety Tips</h2>
+                <ul className="space-y-3">
+                  <li className="flex items-start gap-3">
+                    <CheckCircle className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
+                    <span className="text-sm text-white/80">Verify ground facilities and equipment before starting</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <CheckCircle className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
+                    <span className="text-sm text-white/80">Discuss session duration and payment terms clearly</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <CheckCircle className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
+                    <span className="text-sm text-white/80">Ensure weather conditions are suitable for outdoor activities</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <CheckCircle className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
+                    <span className="text-sm text-white/80">Use proper protective gear during practice sessions</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <CheckCircle className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
+                    <span className="text-sm text-white/80">Confirm participant fitness levels before intensive training</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <CheckCircle className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
+                    <span className="text-sm text-white/80">Follow proper warm-up and cool-down procedures</span>
+                  </li>
+                </ul>
+              </div>
             </div>
 
             {/* Action Buttons - Moved below safety tips */}
@@ -1710,6 +1780,15 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
           `}</style>
         </div>
       )}
+
+      {/* Success Message */}
+      <SuccessMessage
+        message={successMessage.message}
+        description={successMessage.description}
+        isVisible={successMessage.isVisible}
+        variant={successMessage.variant}
+        onClose={() => setSuccessMessage(prev => ({ ...prev, isVisible: false }))}
+      />
     </div>
   );
 }
