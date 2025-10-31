@@ -1,6 +1,6 @@
 'use client';
 
-import { X, MessageCircle, Phone, MapPin, CalendarIcon, ClockIcon, IndianRupee, ArrowLeft, AlertCircle, User, UserCheck, Star, ChevronDown, ChevronUp, CheckCircle, MessageSquare, AlertTriangle, TrendingUp, Info } from 'lucide-react';
+import { X, MessageCircle, Phone, MapPin, CalendarIcon, ClockIcon, IndianRupee, ArrowLeft, AlertCircle, User, UserCheck, Star, ChevronDown, ChevronUp, CheckCircle, MessageSquare, AlertTriangle, TrendingUp, Info, XCircle } from 'lucide-react';
 import { useEffect, useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
@@ -361,10 +361,9 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
           'The job has been cancelled successfully.',
           'warning'
         );
+        if (onJobUpdate) onJobUpdate(job.id, 'cancelled', cancelNotes);
         setShowCancelDialog(false);
         setCancelNotes('');
-        if (onClose) onClose();
-        if (onJobUpdate) onJobUpdate(job.id, 'cancelled', cancelNotes);
       } else {
         const errorData = await response.json();
         console.error('Cancel API error response:', errorData);
@@ -594,6 +593,36 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Cancellation Notes - Show for cancelled jobs */}
+        {job.status === 'cancelled' && job.cancellationDetails && (
+          <div className="mb-6">
+            <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4">
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-full bg-red-500/20 flex items-center justify-center flex-shrink-0">
+                  <XCircle className="w-4 h-4 text-red-400" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-sm font-medium text-red-400 mb-2">Job Cancelled</h3>
+                  <div className="space-y-2">
+                    <div className="text-sm text-white/80">
+                      <span className="font-medium">Reason:</span> {job.cancellationDetails.notes}
+                    </div>
+                    <div className="text-xs text-white/60">
+                      Cancelled on {new Date(job.cancellationDetails.cancelledAt).toLocaleDateString('en-IN', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
@@ -1781,7 +1810,6 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
         </div>
       )}
 
-      {/* Success Message */}
       <SuccessMessage
         message={successMessage.message}
         description={successMessage.description}

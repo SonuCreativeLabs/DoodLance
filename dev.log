@@ -1,0 +1,12 @@
+
+> doodlance@0.1.0 dev
+> next dev
+
+  ▲ Next.js 14.2.33
+  - Local:        http://localhost:3000
+  - Environments: .env.local, .env
+
+ ✓ Starting...
+ ✓ Ready in 3s
+ ⚠ Your project has `@next/font` installed as a dependency, please use the built-in `next/font` instead. The `@next/font` package will be removed in Next.js 14. You can migrate by running `npx @next/codemod@latest built-in-next-font .`. Read more: https://nextjs.org/docs/messages/built-in-next-font
+[?25h

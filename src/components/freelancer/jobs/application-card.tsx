@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { MapPin, FileText, MessageCircle, Clock, CheckCircle, XCircle, User, Phone, X } from 'lucide-react';
+import { MapPin, FileText, MessageCircle, Clock, CheckCircle, XCircle, User, Phone, X as XIcon, Trash2 } from 'lucide-react';
 import { IndianRupee } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -269,9 +269,9 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, i
             <div className="flex gap-2">
               {isPending && (
                 <>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
+                  <Button
+                    variant="outline"
+                    size="sm"
                     className="h-8 text-xs border-white/10 hover:bg-white/5 hover:border-white/20"
                     onClick={(e) => {
                       e.stopPropagation();
@@ -280,9 +280,9 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, i
                   >
                     Edit
                   </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
+                  <Button
+                    variant="outline"
+                    size="sm"
                     className="h-8 text-xs text-red-400 border-red-400/20 hover:bg-red-400/10 hover:border-red-400/30"
                     onClick={(e) => {
                       e.stopPropagation();
@@ -294,22 +294,21 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, i
                   </Button>
                 </>
               )}
-              
               {isAccepted && (
                 <div className="flex gap-2">
-                  <Button 
-                    variant="default" 
-                    size="sm" 
-                    className="h-8 text-xs bg-purple-600 hover:bg-purple-700 flex-1"
+                  <Button
+                    variant="default"
+                    size="sm"
+                    className="h-8 text-xs bg-gradient-to-r from-[#643cb5] to-[#4a1c91] hover:from-[#5a36a3] hover:to-[#3a1773] text-white shadow-md shadow-purple-900/20 transition-all duration-200 flex-1"
                     onClick={handleMessageClick}
                   >
                     <MessageCircle className="w-3.5 h-3.5 mr-1.5" />
-                    Message
+                    Chat
                   </Button>
-                  <Button 
+                  <Button
                     variant="default"
-                    size="sm" 
-                    className="h-8 text-xs bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white hover:shadow-lg hover:shadow-blue-500/20 transition-all flex-1"
+                    size="sm"
+                    className="h-8 text-xs bg-gradient-to-r from-blue-700 to-blue-600 hover:from-blue-800 hover:to-blue-700 text-white hover:shadow-lg hover:shadow-blue-500/20 transition-all flex-1"
                     onClick={(e) => {
                       e.stopPropagation();
                       // Handle call
@@ -347,11 +346,11 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, i
             {/* Dialog content */}
             <div className="relative text-center">
               <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-500/10 mb-4">
-                <XCircle className="h-6 w-6 text-red-500" />
+                <Trash2 className="h-6 w-6 text-red-500" />
               </div>
-              <h3 className="text-lg font-medium text-white mb-2">Withdraw Application</h3>
+              <h3 className="text-lg font-medium text-white mb-2">Withdraw Proposal</h3>
               <p className="text-sm text-gray-400 mb-6">
-                Are you sure you want to withdraw your application? This action cannot be undone.
+                Are you sure you want to withdraw your proposal? This action cannot be undone.
               </p>
               <div className="flex justify-center space-x-3">
                 <Button

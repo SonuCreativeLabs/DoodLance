@@ -276,8 +276,12 @@ export default function ProposalDetailsPage() {
       // Use mock data update instead of API call
       updateApplicationStatus(proposal?.["#"] || '', 'withdrawn');
 
-      // Update local state
-      setProposal(prev => prev ? { ...prev, status: 'withdrawn' } : null);
+      // Update local state by reloading from mock data to ensure all fields are preserved
+      const { mockApplications } = await import('@/components/freelancer/jobs/mock-data');
+      const updatedApplicationData = mockApplications.find(app => app["#"] === proposal?.["#"]);
+      if (updatedApplicationData) {
+        setProposal(updatedApplicationData);
+      }
 
       // Close modal
       setShowWithdrawConfirm(false);
@@ -345,10 +349,11 @@ export default function ProposalDetailsPage() {
                proposal.status === 'rejected' ? 'Rejected Proposal' :
                proposal.status === 'completed' ? 'Completed Job' :
                proposal.status === 'cancelled' ? 'Cancelled Job' :
+               proposal.status === 'withdrawn' ? 'Withdrawn Proposal' :
                'Pending Proposal'}
             </h2>
             <span className="text-xs font-medium text-white/60">
-              {getCategoryDisplayName(proposal.category)}
+              {proposal.category ? getCategoryDisplayName(proposal.category) : 'Category not specified'}
             </span>
           </div>
         </div>
@@ -359,6 +364,51 @@ export default function ProposalDetailsPage() {
       <div className="min-h-[100dvh] w-full pt-20 pb-24">
         <div className="max-w-3xl mx-auto p-4 md:p-6">
           <div className="space-y-6">
+
+            {/* Withdrawal Info - Show at very top of page for withdrawn proposals */}
+            {proposal.status === 'withdrawn' && (
+              <div className="rounded-xl bg-gray-500/10 border border-gray-500/20 p-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-full bg-gray-500/20 flex items-center justify-center flex-shrink-0">
+                    <XCircle className="w-4 h-4 text-gray-400" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-sm font-medium text-gray-400 mb-1">Proposal Withdrawn</h3>
+                    <p className="text-sm text-gray-300/80 mb-2">
+                      This proposal has been withdrawn and is no longer active. You can create a new proposal for this job if it's still available.
+                    </p>
+                    {proposal.category && (
+                      <p className="text-xs text-gray-200/60">
+                        Category: {getCategoryDisplayName(proposal.category)}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Rejection Info - Show at very top of page for rejected proposals */}
+            {proposal.status === 'rejected' && (
+              <div className="rounded-xl bg-red-500/10 border border-red-500/20 p-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-full bg-red-500/20 flex items-center justify-center flex-shrink-0">
+                    <XCircle className="w-4 h-4 text-red-400" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-sm font-medium text-red-400 mb-1">Proposal Rejected</h3>
+                    <p className="text-sm text-red-300/80 mb-2">
+                      Unfortunately, your proposal was not selected for this job. You can improve your proposal and try again for similar opportunities.
+                    </p>
+                    {proposal.category && (
+                      <p className="text-xs text-red-200/60">
+                        Category: {getCategoryDisplayName(proposal.category)}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Header Section */}
             <div className="text-center space-y-3">
               <div className="flex items-center justify-center">
@@ -597,10 +647,13 @@ export default function ProposalDetailsPage() {
 
               {/* Card content */}
               <div className="relative p-5">
+
                 {/* Header with status */}
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
-                    <h2 className="text-sm font-semibold text-white/90">Your Proposal</h2>
+                    <h2 className="text-sm font-semibold text-white/90">
+                      {proposal.status === 'withdrawn' ? 'Withdrawn Proposal' : 'Your Proposal'}
+                    </h2>
                   </div>
                   <div className="flex items-center gap-2">
                     {proposal.rating && (
@@ -754,20 +807,6 @@ export default function ProposalDetailsPage() {
                       </Button>
                     </div>
                   )}
-
-                  {proposal.status === 'rejected' && (
-                    <div className="bg-red-900/20 border border-gray-700 rounded-lg p-4">
-                      <div className="flex items-start space-x-2">
-                        <XCircle className="w-5 h-5 text-red-400 mt-0.5 flex-shrink-0" />
-                        <div>
-                          <h3 className="font-medium text-red-300">Proposal Not Selected</h3>
-                          <p className="text-sm text-red-400 mt-1">
-                            The client has chosen to move forward with another freelancer for this project.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
@@ -858,6 +897,7 @@ export default function ProposalDetailsPage() {
         description={successMessage.description}
         isVisible={successMessage.isVisible}
         variant={successMessage.variant}
+        position="center"
         onClose={() => setSuccessMessage(prev => ({ ...prev, isVisible: false }))}
       />
     </div>

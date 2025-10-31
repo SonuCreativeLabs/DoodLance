@@ -7,7 +7,7 @@ interface SuccessMessageProps {
   description?: string;
   isVisible: boolean;
   onClose?: () => void;
-  position?: 'top-right' | 'top-center' | 'bottom-right';
+  position?: 'top-right' | 'top-center' | 'bottom-right' | 'center';
   variant?: 'success' | 'warning' | 'info';
 }
 
@@ -24,7 +24,8 @@ export const SuccessMessage: React.FC<SuccessMessageProps> = ({
   const positionClasses = {
     'top-right': 'top-6 right-6',
     'top-center': 'top-6 left-1/2 transform -translate-x-1/2',
-    'bottom-right': 'bottom-6 right-6'
+    'bottom-right': 'bottom-6 right-6',
+    'center': 'top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2'
   };
 
   const variantStyles = {

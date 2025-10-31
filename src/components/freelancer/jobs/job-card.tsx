@@ -9,7 +9,7 @@ import { Job } from './types';
 import { getStatusStyles, formatTime12Hour } from './utils';
 
 interface JobCardProps {
-  job: Job;
+  job: Job & { isProposal?: boolean };
   index: number;
   onStatusChange?: (jobId: string, newStatus: 'completed' | 'cancelled' | 'started') => void;
 }
@@ -19,7 +19,12 @@ export const JobCard: React.FC<JobCardProps> = ({ job, index, onStatusChange }) 
 
   const handleCardClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    router.push(`/freelancer/jobs/${job.id}`);
+    // Navigate to proposal details for proposal jobs, job details for regular jobs
+    if (job.isProposal) {
+      router.push(`/freelancer/proposals/${job.id}`);
+    } else {
+      router.push(`/freelancer/jobs/${job.id}`);
+    }
   };
 
   const handleMessageClick = (e: React.MouseEvent) => {
@@ -47,6 +52,11 @@ export const JobCard: React.FC<JobCardProps> = ({ job, index, onStatusChange }) 
               <div className={`${getStatusStyles(job.status).bg} ${getStatusStyles(job.status).text} text-xs font-medium px-3 py-1 rounded-full border ${getStatusStyles(job.status).border} w-fit`}>
                 {job.status === 'ongoing' ? 'Ongoing' : job.status.charAt(0).toUpperCase() + job.status.slice(1)}
               </div>
+              {job.isProposal && (
+                <div className="bg-gradient-to-r from-blue-600 to-blue-500 text-white text-xs font-medium px-2 py-1 rounded-full border border-blue-400/30">
+                  Proposal
+                </div>
+              )}
             </div>
             <div className="flex items-center gap-1.5 text-sm text-white/60">
               <span className="font-mono text-xs">
@@ -166,8 +176,8 @@ export const JobCard: React.FC<JobCardProps> = ({ job, index, onStatusChange }) 
             </div>
           )}
 
-          {/* Action Buttons - Only show for upcoming/pending jobs */}
-          {(job.status === 'upcoming' || job.status === 'pending' || job.status === 'confirmed') && (
+          {/* Action Buttons - Show for upcoming, pending, confirmed, and ongoing jobs */}
+          {(job.status === 'upcoming' || job.status === 'pending' || job.status === 'confirmed' || job.status === 'ongoing') && (
             <div className="flex gap-2 pt-2">
               {/* Chat Button */}
               <Button 

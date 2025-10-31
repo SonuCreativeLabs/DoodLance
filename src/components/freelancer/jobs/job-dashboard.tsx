@@ -9,7 +9,7 @@ import { Search, X } from 'lucide-react';
 
 // Import components, types, utils, and mock data from our modular files
 import { JobCard, ApplicationCard } from './index';
-import { Application } from './types';
+import { Application, JobCategory } from './types';
 import { mockUpcomingJobs, mockApplications } from './mock-data';
 
 interface JobDashboardProps {
@@ -23,7 +23,7 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
   // State management
   const router = useRouter();
   const initialTab = searchParams?.tab === 'applications' ? 'applications' : 'upcoming';
-  const initialStatus = searchParams?.status || (initialTab === 'upcoming' ? 'upcoming' : 'pending');
+  const initialStatus = searchParams?.status || (initialTab === 'upcoming' ? 'ongoing' : 'pending');
 
   const [activeTab, setActiveTab] = useState(initialTab);
   const [searchQuery, setSearchQuery] = useState('');
@@ -283,11 +283,11 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
     }
 
     // Extract status from URL parameters with defaults
-    let statusFromUrl = searchParams?.status || (tabFromUrl === 'upcoming' ? 'upcoming' : 'pending');
+    let statusFromUrl = searchParams?.status || (tabFromUrl === 'upcoming' ? 'ongoing' : 'pending');
 
     // Validate status based on current tab
     if (tabFromUrl === 'upcoming' && !['upcoming', 'ongoing', 'completed', 'cancelled'].includes(statusFromUrl)) {
-      statusFromUrl = 'upcoming';
+      statusFromUrl = 'ongoing';
     } else if (tabFromUrl === 'applications' && !['pending', 'accepted', 'rejected', 'withdrawn'].includes(statusFromUrl)) {
       statusFromUrl = 'pending';
     }
@@ -296,6 +296,34 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
     setActiveTab(tabFromUrl);
     setStatusFilter(statusFromUrl);
   }, [searchParams]);
+
+  // Transform application to job-like format for display in upcoming section
+  const transformApplicationForCard = (application: Application) => {
+    return {
+      id: application["#"],
+      title: application.jobTitle,
+      category: application.category as JobCategory,
+      date: application.appliedDate,
+      time: 'TBD',
+      status: 'upcoming' as const,
+      payment: `${application.budget.min} - ${application.budget.max}`,
+      location: application.location,
+      description: application.description,
+      client: {
+        name: application.clientName,
+        rating: application.clientRating,
+        image: application.clientImage,
+        location: application.location,
+        projectsCompleted: application.projectsCompleted,
+        memberSince: application.clientSince,
+        freelancersWorked: application.freelancersWorked,
+        freelancerAvatars: application.freelancerAvatars,
+        experienceLevel: application.experienceLevel
+      },
+      // Flag to identify this as a proposal/accepted application
+      isProposal: true
+    };
+  };
 
   // Filter jobs and applications based on search and status
   const filteredJobs = useMemo(() => {
@@ -309,8 +337,11 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
       } else if (statusFilter === 'ongoing') {
         return jobs.filter(job => job.status === 'started').map(transformJobForCard);
       }
-      // Default to upcoming (includes confirmed and pending)
-      return jobs.filter(job => job.status === 'confirmed' || job.status === 'pending').map(transformJobForCard);
+      // Default to upcoming (includes confirmed, pending jobs AND accepted applications)
+      const regularJobs = jobs.filter(job => job.status === 'confirmed' || job.status === 'pending').map(transformJobForCard);
+      const acceptedApplications = applications.filter(app => app.status === 'accepted').map(transformApplicationForCard);
+
+      return [...regularJobs, ...acceptedApplications];
     }
 
     const filtered = jobs.filter(job => {
@@ -332,8 +363,22 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
       return matchesSearch && matchesStatus;
     });
 
-    return filtered.map(transformJobForCard);
-  }, [jobs, searchQuery, statusFilter]);
+    const filteredApplications = applications.filter(app => {
+      const matchesSearch = [
+        app.jobTitle,
+        app.category,
+        app.location,
+        app.description,
+        app.clientName
+      ].some(value => value && value.toString().toLowerCase().includes(searchLower));
+
+      const matchesStatus = statusFilter === 'upcoming' && app.status === 'accepted';
+
+      return matchesSearch && matchesStatus;
+    });
+
+    return [...filtered.map(transformJobForCard), ...filteredApplications.map(transformApplicationForCard)];
+  }, [jobs, applications, searchQuery, statusFilter]);
 
   const filteredApplications = useMemo(() => {
     if (!applications || applications.length === 0) {
@@ -400,8 +445,8 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
   const statusOptions = useMemo(() => {
     if (activeTab === 'upcoming') {
       return [
-        { value: 'upcoming', label: 'Upcoming', count: tabCounts.upcoming },
         { value: 'ongoing', label: 'Ongoing', count: tabCounts.ongoing },
+        { value: 'upcoming', label: 'Upcoming', count: tabCounts.upcoming },
         { value: 'completed', label: 'Completed', count: tabCounts.completed },
         { value: 'cancelled', label: 'Cancelled', count: tabCounts.cancelled }
       ] as const;
