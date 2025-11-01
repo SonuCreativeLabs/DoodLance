@@ -1,6 +1,28 @@
 import { format } from 'date-fns';
 import { StatusType, Job } from './types';
 
+// Category mapping for display
+export const getCategoryDisplayName = (category: string) => {
+  const categoryMap: Record<string, string> = {
+    'Match Player': 'Match Player',
+    'Net Bowler': 'Net Bowler',
+    'Net Batsman': 'Net Batsman',
+    'Sidearm': 'Sidearm',
+    'Coach': 'Coach',
+    'Sports Conditioning Trainer': 'Sports Conditioning Trainer',
+    'Fitness Trainer': 'Fitness Trainer',
+    'Analyst': 'Analyst',
+    'Physio': 'Physio',
+    'Scorer': 'Scorer',
+    'Umpire': 'Umpire',
+    'Cricket Photo / Videography': 'Cricket Photo / Videography',
+    'Cricket Content Creator': 'Cricket Content Creator',
+    'Commentator': 'Commentator',
+    'OTHER': 'Other Services'
+  };
+  return categoryMap[category] || category;
+};
+
 // Function to format time in 12-hour format with AM/PM
 export const formatTime12Hour = (timeString: string): string => {
   if (!timeString) return '';

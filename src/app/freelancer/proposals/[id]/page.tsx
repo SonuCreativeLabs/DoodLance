@@ -11,7 +11,6 @@ import {
   Calendar as CalendarIcon, 
   Clock as ClockIcon, 
   FileText,
-  Edit2,
   Trash2,
   AlertCircle,
   User,
@@ -30,28 +29,7 @@ import { updateApplicationStatus } from '@/components/freelancer/jobs/mock-data'
 import { ClientProfile } from '@/components/freelancer/jobs/ClientProfile';
 import { FullScreenMap } from '@/components/freelancer/jobs/FullScreenMap';
 import { SuccessMessage } from '@/components/ui/success-message';
-
-// Category mapping for display (same as JobDetailsModal)
-const getCategoryDisplayName = (category: string) => {
-  const categoryMap: Record<string, string> = {
-    'Match Player': 'Match Player',
-    'Net Bowler': 'Net Bowler',
-    'Net Batsman': 'Net Batsman',
-    'Sidearm': 'Sidearm',
-    'Coach': 'Coach',
-    'Sports Conditioning Trainer': 'Sports Conditioning Trainer',
-    'Fitness Trainer': 'Fitness Trainer',
-    'Analyst': 'Analyst',
-    'Physio': 'Physio',
-    'Scorer': 'Scorer',
-    'Cricket Photo / Videography': 'Cricket Photo / Videography',
-    'Cricket Content Creator': 'Cricket Content Creator',
-    'Commentator': 'Commentator',
-    'OTHER': 'Other Services'
-  };
-  return categoryMap[category] || category;
-};
-
+import { getCategoryDisplayName } from '@/components/freelancer/jobs/utils';
 
 export default function ProposalDetailsPage() {
   const router = useRouter();
@@ -445,93 +423,144 @@ export default function ProposalDetailsPage() {
 
                 <div className="relative">
                   <div className="space-y-6">
-                    {/* Timeline items */}
-                    <div className="relative pl-10">
-                      <div className="absolute left-0 top-0 w-8 h-8 rounded-full flex items-center justify-center bg-purple-500">
-                        <CheckCircle className="w-4 h-4 text-white" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-white">Proposal Submitted</p>
-                        <p className="text-xs text-white/60">
-                          {new Date(proposal.appliedDate).toLocaleDateString('en-US', {
-                            month: 'short',
-                            day: 'numeric',
-                            year: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
-                        </p>
-                      </div>
-                    </div>
+                    {/* Dynamic Timeline based on proposal status */}
+                    {(() => {
+                      const timelineItems = [
+                        {
+                          label: 'Proposal Submitted',
+                          date: proposal.appliedDate,
+                          completed: true,
+                          icon: CheckCircle,
+                          color: 'bg-purple-500'
+                        }
+                      ];
 
-                    {/* Viewed Status */}
-                    <div className="relative pl-10">
-                      <div className={`absolute left-0 top-0 w-8 h-8 rounded-full flex items-center justify-center ${
-                        ['accepted', 'rejected', 'completed', 'cancelled'].includes(proposal.status) ? 'bg-purple-500' : 'bg-white/10'
-                      }`}>
-                        <CheckCircle className="w-4 h-4 text-white" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-white">Viewed by Client</p>
-                        {['accepted', 'rejected', 'completed', 'cancelled'].includes(proposal.status) ? (
-                          <p className="text-xs text-white/60">
-                            {new Date(new Date(proposal.appliedDate).getTime() + 3600000).toLocaleDateString('en-US', {
-                              month: 'short',
-                              day: 'numeric',
-                              year: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })}
-                          </p>
-                        ) : (
-                          <p className="text-xs text-white/40">Waiting for client to view</p>
-                        )}
-                      </div>
-                    </div>
+                      // Add timeline items based on status
+                      if (['accepted', 'rejected', 'completed', 'cancelled', 'withdrawn', 'expired', 'archived'].includes(proposal.status)) {
+                        timelineItems.push({
+                          label: 'Viewed by Client',
+                          date: new Date(new Date(proposal.appliedDate).getTime() + 3600000).toISOString(),
+                          completed: true,
+                          icon: CheckCircle,
+                          color: 'bg-purple-500'
+                        });
+                      } else if (proposal.status === 'interview') {
+                        timelineItems.push(
+                          {
+                            label: 'Viewed by Client',
+                            date: new Date(new Date(proposal.appliedDate).getTime() + 3600000).toISOString(),
+                            completed: true,
+                            icon: CheckCircle,
+                            color: 'bg-purple-500'
+                          },
+                          {
+                            label: 'Interview Scheduled',
+                            date: new Date(new Date(proposal.appliedDate).getTime() + 7200000).toISOString(),
+                            completed: true,
+                            icon: User,
+                            color: 'bg-blue-500'
+                          }
+                        );
+                      } else if (proposal.status === 'hired') {
+                        timelineItems.push(
+                          {
+                            label: 'Viewed by Client',
+                            date: new Date(new Date(proposal.appliedDate).getTime() + 3600000).toISOString(),
+                            completed: true,
+                            icon: CheckCircle,
+                            color: 'bg-purple-500'
+                          },
+                          {
+                            label: 'Interview Completed',
+                            date: new Date(new Date(proposal.appliedDate).getTime() + 7200000).toISOString(),
+                            completed: true,
+                            icon: User,
+                            color: 'bg-blue-500'
+                          },
+                          {
+                            label: 'Hired for Job',
+                            date: new Date(new Date(proposal.appliedDate).getTime() + 10800000).toISOString(),
+                            completed: true,
+                            icon: CheckCircle,
+                            color: 'bg-green-500'
+                          }
+                        );
+                      } else if (proposal.status === 'completed') {
+                        timelineItems.push(
+                          {
+                            label: 'Viewed by Client',
+                            date: new Date(new Date(proposal.appliedDate).getTime() + 3600000).toISOString(),
+                            completed: true,
+                            icon: CheckCircle,
+                            color: 'bg-purple-500'
+                          },
+                          {
+                            label: 'Hired for Job',
+                            date: new Date(new Date(proposal.appliedDate).getTime() + 7200000).toISOString(),
+                            completed: true,
+                            icon: CheckCircle,
+                            color: 'bg-green-500'
+                          },
+                          {
+                            label: 'Job Completed',
+                            date: new Date(new Date(proposal.appliedDate).getTime() + 86400000).toISOString(),
+                            completed: true,
+                            icon: CheckCircle,
+                            color: 'bg-emerald-500'
+                          }
+                        );
+                      } else {
+                        // For pending status, show viewed as pending
+                        timelineItems.push({
+                          label: 'Viewed by Client',
+                          date: null,
+                          completed: false,
+                          icon: CheckCircle,
+                          color: 'bg-white/10'
+                        });
+                      }
 
-                    {/* Status Update */}
-                    <div className="relative pl-10">
-                      <div className={`absolute left-0 top-0 w-8 h-8 rounded-full flex items-center justify-center ${
-                        ['accepted', 'rejected'].includes(proposal.status) ? 'bg-purple-500' :
-                        proposal.status === 'completed' ? 'bg-green-500' :
-                        proposal.status === 'cancelled' ? 'bg-red-500' : 'bg-white/10'
-                      }`}>
-                        {proposal.status === 'accepted' ? (
-                          <CheckCircle className="w-4 h-4 text-white" />
-                        ) : proposal.status === 'rejected' ? (
-                          <XCircle className="w-4 h-4 text-white" />
-                        ) : proposal.status === 'completed' ? (
-                          <CheckCircle className="w-4 h-4 text-white" />
-                        ) : proposal.status === 'cancelled' ? (
-                          <XCircle className="w-4 h-4 text-white" />
-                        ) : (
-                          <ClockIcon className="w-4 h-4 text-white" />
-                        )}
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-white">
-                          {proposal.status === 'accepted' ? 'Proposal Accepted' :
-                           proposal.status === 'rejected' ? 'Proposal Not Selected' :
-                           proposal.status === 'completed' ? 'Job Completed' :
-                           proposal.status === 'cancelled' ? 'Job Cancelled' : 'Awaiting Client Decision'}
-                        </p>
-                        {['accepted', 'rejected', 'completed', 'cancelled'].includes(proposal.status) ? (
-                          <p className="text-xs text-white/60">
-                            {new Date(new Date(proposal.appliedDate).getTime() + 86400000).toLocaleDateString('en-US', {
-                              month: 'short',
-                              day: 'numeric',
-                              year: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })}
-                          </p>
-                        ) : (
-                          <p className="text-xs text-white/40">
-                            {proposal.status === 'pending' ? 'Client is reviewing your proposal' : 'Waiting for update'}
-                          </p>
-                        )}
-                      </div>
-                    </div>
+                      // Add final status if applicable
+                      if (['rejected', 'cancelled', 'withdrawn', 'expired'].includes(proposal.status)) {
+                        const statusLabels = {
+                          rejected: 'Proposal Rejected',
+                          cancelled: 'Proposal Cancelled',
+                          withdrawn: 'Proposal Withdrawn',
+                          expired: 'Proposal Expired'
+                        };
+                        timelineItems.push({
+                          label: statusLabels[proposal.status as keyof typeof statusLabels],
+                          date: new Date().toISOString(),
+                          completed: true,
+                          icon: XCircle,
+                          color: 'bg-red-500'
+                        });
+                      }
+
+                      return timelineItems.map((item, index) => (
+                        <div key={index} className="relative pl-10">
+                          <div className={`absolute left-0 top-0 w-8 h-8 rounded-full flex items-center justify-center ${item.color}`}>
+                            <item.icon className="w-4 h-4 text-white" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-white">{item.label}</p>
+                            {item.date ? (
+                              <p className="text-xs text-white/60">
+                                {new Date(item.date).toLocaleDateString('en-US', {
+                                  month: 'short',
+                                  day: 'numeric',
+                                  year: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}
+                              </p>
+                            ) : (
+                              <p className="text-xs text-white/40">Waiting for client to view</p>
+                            )}
+                          </div>
+                        </div>
+                      ));
+                    })()}
                   </div>
                 </div>
               </div>

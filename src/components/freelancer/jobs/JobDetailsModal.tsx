@@ -9,34 +9,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-import { calculateJobEarnings } from './utils';
+import { calculateJobEarnings, getCategoryDisplayName } from './utils';
 import { Job } from './types';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { ClientProfile } from './ClientProfile';
 import { SuccessMessage } from '@/components/ui/success-message';
-
-// Category mapping for display
-const getCategoryDisplayName = (category: string) => {
-  const categoryMap: Record<string, string> = {
-    'Match Player': 'Match Player',
-    'Net Bowler': 'Net Bowler',
-    'Net Batsman': 'Net Batsman',
-    'Sidearm': 'Sidearm',
-    'Coach': 'Coach',
-    'Sports Conditioning Trainer': 'Sports Conditioning Trainer',
-    'Fitness Trainer': 'Fitness Trainer',
-    'Analyst': 'Analyst',
-    'Physio': 'Physio',
-    'Scorer': 'Scorer',
-    'Umpire': 'Umpire',
-    'Cricket Photo / Videography': 'Cricket Photo / Videography',
-    'Cricket Content Creator': 'Cricket Content Creator',
-    'Commentator': 'Commentator',
-    'OTHER': 'Other Services'
-  };
-  return categoryMap[category] || category;
-};
 
 // Experience level mapping for display
 const getExperienceLevelDisplayName = (level: string) => {
@@ -1582,7 +1560,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                           }`}
                           style={star <= rating ? {} : { color: '#404040' }}
                         >
-                          <Star className="w-14 h-14 fill-current" />
+                          <Star className="w-12 h-12 fill-current" />
                         </button>
                       ))}
                     </div>
