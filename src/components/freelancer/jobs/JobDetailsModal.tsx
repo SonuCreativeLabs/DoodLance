@@ -1141,10 +1141,6 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
 
             {/* Safety Tips */}
             <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#111111] via-[#0f0f0f] to-[#111111] border border-gray-600/30 shadow-lg">
-              {/* Background decoration */}
-              <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/5 rounded-full blur-2xl"></div>
-              <div className="absolute bottom-0 left-0 w-24 h-24 bg-red-400/5 rounded-full blur-xl"></div>
-
               {/* Card content */}
               <div className="relative p-5">
                 <h2 className="text-lg font-semibold text-white mb-4">Safety Tips</h2>

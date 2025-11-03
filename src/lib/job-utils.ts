@@ -3,12 +3,20 @@ import type { JobCategory } from '@/components/freelancer/jobs/types';
 
 // Map of category to two-letter codes
 const CATEGORY_CODES: Record<JobCategory, string> = {
-  'PHOTO': 'PH',
-  'VIDEO': 'VD',
-  'DESIGN': 'DS',
-  'MUSIC': 'MS',
-  'DANCE': 'DN',
-  'EVENT': 'EV',
+  'Match Player': 'MP',
+  'Net Bowler': 'NB',
+  'Net Batsman': 'NT',
+  'Sidearm': 'SA',
+  'Coach': 'CO',
+  'Sports Conditioning Trainer': 'SC',
+  'Fitness Trainer': 'FT',
+  'Analyst': 'AN',
+  'Physio': 'PH',
+  'Scorer': 'SR',
+  'Umpire': 'UM',
+  'Cricket Photo / Videography': 'PV',
+  'Cricket Content Creator': 'CC',
+  'Commentator': 'CT',
   'OTHER': 'OT'
 };
 

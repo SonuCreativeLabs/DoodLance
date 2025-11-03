@@ -218,7 +218,7 @@ export default function JobDetailsFull({ job, onBack, onApply }: JobDetailsFullP
             freelancerAvatars: job.client?.freelancerAvatars
           }}
           location={job.location}
-          defaultExpanded={true}
+          defaultExpanded={false}
         />
 
         {/* Spacer */}
