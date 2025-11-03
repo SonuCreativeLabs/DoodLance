@@ -611,7 +611,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
 
         {/* Enhanced Separator - Between rating and earnings */}
         {job.status === 'completed' && job.freelancerRating && (
-          <div className="relative flex items-center justify-center py-8 mb-8">
+          <div className="relative flex items-center justify-center py-4 mb-4">
             {/* Gradient Background */}
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-green-500/10 to-transparent"></div>
 
@@ -643,7 +643,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
 
         {/* Earnings Section - Moved above Job Title and Location */}
         {job.status === 'completed' && (
-          <div className="mb-8">
+          <div className="mb-6">
             {/* Calculate earnings preview for the job */}
             {(() => {
               const earningsPreview = calculateJobEarnings(job);
@@ -653,7 +653,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                   {/* Total Earnings */}
                   <div className="rounded-xl border border-white/10 overflow-hidden">
                     {/* Title Section - Black Background */}
-                    <div className="bg-[#111111] p-6 border-b border-white/10 group">
+                    <div className="bg-[#111111] p-4 border-b border-white/10 group">
                       <div className="flex items-center justify-between">
                         <div>
                           <h2 className="text-lg font-semibold text-white" aria-label="Click the toggle button to see detailed earnings breakdown">Total Earnings</h2>
@@ -669,7 +669,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                     </div>
 
                     {/* Content Section - Green Background */}
-                    <div className="bg-gradient-to-br from-green-900/20 via-green-800/10 to-emerald-900/20 p-6 relative">
+                    <div className="bg-gradient-to-br from-green-900/20 via-green-800/10 to-emerald-900/20 p-4 relative">
                       <div className="absolute top-0 right-0 w-16 h-16 bg-green-500/10 rounded-full blur-xl"></div>
                       <div className="absolute bottom-0 left-0 w-12 h-12 bg-emerald-500/10 rounded-full blur-lg"></div>
 
@@ -928,6 +928,13 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                 </>
               );
             })()}
+          </div>
+        )}
+
+        {/* Simple Separator Line - Below Earnings Section */}
+        {job.status === 'completed' && (
+          <div className="flex items-center justify-center py-6">
+            <div className="w-full max-w-xs h-px bg-gradient-to-r from-transparent via-gray-600/50 to-transparent"></div>
           </div>
         )}
 
