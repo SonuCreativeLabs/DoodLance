@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
+import prisma from '@/lib/db'
 
 // GET /api/freelancers/[id] - Get freelancer profile and services
 export async function GET(
@@ -39,7 +39,7 @@ export async function GET(
 
     // Calculate average rating from reviews
     const avgRating = freelancer.freelancerProfile?.reviews?.length
-      ? freelancer.freelancerProfile.reviews.reduce((acc, review) => acc + review.rating, 0) / freelancer.freelancerProfile.reviews.length
+      ? freelancer.freelancerProfile.reviews.reduce((acc: number, review: { rating: number }) => acc + review.rating, 0) / freelancer.freelancerProfile.reviews.length
       : 0
 
     return NextResponse.json({

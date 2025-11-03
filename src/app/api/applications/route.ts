@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
+import prisma from '@/lib/db'
 
 // GET /api/applications - Get applications (for freelancers or clients)
 export async function GET(request: NextRequest) {
@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
         where: { clientId: userId },
         select: { id: true }
       })
-      where.jobId = { in: userJobs.map(job => job.id) }
+      where.jobId = { in: userJobs.map((job: { id: string }) => job.id) }
     }
 
     if (jobId) where.jobId = jobId

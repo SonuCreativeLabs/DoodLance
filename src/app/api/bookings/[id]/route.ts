@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
+import prisma from '@/lib/db'
 
 // Mock data for fallback when database is not available
 const mockBookings = {

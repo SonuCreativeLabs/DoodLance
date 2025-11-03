@@ -107,6 +107,15 @@ export default function ProfessionalsFeed({
     }
   };
 
+  const handleJobApply = (jobId: string, proposal: string, rate: string, rateType: string, attachments: File[]) => {
+    if (onApply) {
+      onApply(jobId, proposal, rate, rateType, attachments);
+    } else {
+      // Default behavior: just log for now
+      console.log('Apply to job:', { jobId, proposal, rate, rateType, attachments });
+    }
+  };
+
   if (!items || items.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-10 text-white/60">
@@ -121,7 +130,7 @@ export default function ProfessionalsFeed({
   if (showFullView && selectedJob && !filteredProfessionals) {
     return (
       <OverlayPortal>
-        <JobDetailsFull job={selectedJob} onBack={handleBack} onApply={onApply} />
+        <JobDetailsFull job={selectedJob} onBack={handleBack} onApply={handleJobApply} />
       </OverlayPortal>
     );
   }

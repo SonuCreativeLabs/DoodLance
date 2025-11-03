@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
+import prisma from '@/lib/db'
 
 // GET /api/categories - Get all categories
 export async function GET(request: NextRequest) {
