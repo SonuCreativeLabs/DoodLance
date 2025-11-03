@@ -21,7 +21,9 @@ import {
   Eye,
   UploadCloud,
   PlusCircle,
-  ArrowLeft
+  ArrowLeft,
+  Briefcase,
+  Calendar
 } from 'lucide-react';
 import { Application } from '@/components/freelancer/jobs/types';
 import { mySkills } from '@/components/freelancer/jobs/mock-data';
@@ -30,6 +32,7 @@ import { ClientProfile } from '@/components/freelancer/jobs/ClientProfile';
 import { FullScreenMap } from '@/components/freelancer/jobs/FullScreenMap';
 import { SuccessMessage } from '@/components/ui/success-message';
 import { getCategoryDisplayName } from '@/components/freelancer/jobs/utils';
+import { CollapsibleTimeline, createTimelineItems } from '@/components/freelancer/jobs/CollapsibleTimeline';
 
 export default function ProposalDetailsPage() {
   const router = useRouter();
@@ -80,6 +83,12 @@ export default function ProposalDetailsPage() {
         const applicationData = mockApplications.find(app => app["#"] === id);
 
         if (applicationData) {
+          // Track client view (like read receipt)
+          if (!applicationData.clientViewedAt) {
+            applicationData.clientViewedAt = new Date().toISOString();
+            console.log(`📖 Client viewed application ${applicationData["#"]} at ${applicationData.clientViewedAt}`);
+          }
+          
           setProposal(applicationData);
 
           // Check if we should auto-enable edit mode (from card edit button)
@@ -407,161 +416,106 @@ export default function ProposalDetailsPage() {
             </div>
 
             {/* Timeline */}
-            <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#111111] via-[#0f0f0f] to-[#111111] border border-gray-600/30 shadow-lg">
+            <CollapsibleTimeline
+              items={createTimelineItems('proposal', proposal)}
+              title="Application Timeline"
+              defaultExpanded={false}
+            />
+
+            {/* Job Title & Location */}
+            <div className="mb-8">
+              <div className="space-y-4">
+                <h1 className="text-3xl md:text-4xl font-bold text-white leading-tight">{proposal.jobTitle}</h1>
+                <button
+                  type="button"
+                  onClick={() => handleOpenMap(proposal.location)}
+                  className="inline-flex items-center gap-2 px-3 py-1.5 text-sm text-white/80 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-purple-500/30 rounded-lg transition-all duration-200 backdrop-blur-sm"
+                >
+                  <MapPin className="w-4 h-4 text-purple-400" />
+                  <span className="font-medium">{proposal.location}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Job Highlights */}
+            <div className="mb-8">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-5 h-5 flex items-center justify-center mt-0.5 flex-shrink-0">
+                    <span className="text-gray-400 text-lg leading-none">₹</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm text-gray-400 mb-0.5">Budget</div>
+                    <div className="text-white font-medium leading-tight">
+                      <span className="whitespace-nowrap">
+                        ₹{proposal.budget.min.toLocaleString('en-IN')} - ₹{proposal.budget.max.toLocaleString('en-IN')}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Briefcase className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <div className="text-sm text-gray-400">Work Mode</div>
+                    <div className="text-white font-medium capitalize">{proposal.duration || 'Not specified'}</div>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Calendar className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <div className="text-sm text-gray-400">Posted</div>
+                    <div className="text-white font-medium">
+                      {new Date(proposal.postedDate).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                      })}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <User className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <div className="text-sm text-gray-400">Experience</div>
+                    <div className="text-white font-medium">{proposal.experienceLevel || 'Not specified'}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* About the Job */}
+            <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#111111] via-[#0f0f0f] to-[#111111] border border-gray-600/30 shadow-lg mb-6">
               {/* Background decoration */}
-              <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full blur-2xl"></div>
-              <div className="absolute bottom-0 left-0 w-24 h-24 bg-indigo-400/5 rounded-full blur-xl"></div>
+              <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/5 rounded-full blur-2xl"></div>
+              <div className="absolute bottom-0 left-0 w-24 h-24 bg-purple-400/5 rounded-full blur-xl"></div>
 
               {/* Card content */}
               <div className="relative p-5">
-                {/* Header */}
                 <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-sm font-semibold text-white/90">Timeline</h2>
-                  </div>
+                  <h2 className="text-lg font-semibold text-white">About the Job</h2>
                 </div>
+                <div className="prose prose-invert max-w-none">
+                  {proposal.description && (
+                    <p className="text-white/80 leading-relaxed mb-6">
+                      {proposal.description}
+                    </p>
+                  )}
 
-                <div className="relative">
-                  <div className="space-y-6">
-                    {/* Dynamic Timeline based on proposal status */}
-                    {(() => {
-                      const timelineItems = [
-                        {
-                          label: 'Proposal Submitted',
-                          date: proposal.appliedDate,
-                          completed: true,
-                          icon: CheckCircle,
-                          color: 'bg-purple-500'
-                        }
-                      ];
-
-                      // Add timeline items based on status
-                      if (['accepted', 'rejected', 'completed', 'cancelled', 'withdrawn', 'expired', 'archived'].includes(proposal.status)) {
-                        timelineItems.push({
-                          label: 'Viewed by Client',
-                          date: new Date(new Date(proposal.appliedDate).getTime() + 3600000).toISOString(),
-                          completed: true,
-                          icon: CheckCircle,
-                          color: 'bg-purple-500'
-                        });
-                      } else if (proposal.status === 'interview') {
-                        timelineItems.push(
-                          {
-                            label: 'Viewed by Client',
-                            date: new Date(new Date(proposal.appliedDate).getTime() + 3600000).toISOString(),
-                            completed: true,
-                            icon: CheckCircle,
-                            color: 'bg-purple-500'
-                          },
-                          {
-                            label: 'Interview Scheduled',
-                            date: new Date(new Date(proposal.appliedDate).getTime() + 7200000).toISOString(),
-                            completed: true,
-                            icon: User,
-                            color: 'bg-blue-500'
-                          }
-                        );
-                      } else if (proposal.status === 'hired') {
-                        timelineItems.push(
-                          {
-                            label: 'Viewed by Client',
-                            date: new Date(new Date(proposal.appliedDate).getTime() + 3600000).toISOString(),
-                            completed: true,
-                            icon: CheckCircle,
-                            color: 'bg-purple-500'
-                          },
-                          {
-                            label: 'Interview Completed',
-                            date: new Date(new Date(proposal.appliedDate).getTime() + 7200000).toISOString(),
-                            completed: true,
-                            icon: User,
-                            color: 'bg-blue-500'
-                          },
-                          {
-                            label: 'Hired for Job',
-                            date: new Date(new Date(proposal.appliedDate).getTime() + 10800000).toISOString(),
-                            completed: true,
-                            icon: CheckCircle,
-                            color: 'bg-green-500'
-                          }
-                        );
-                      } else if (proposal.status === 'completed') {
-                        timelineItems.push(
-                          {
-                            label: 'Viewed by Client',
-                            date: new Date(new Date(proposal.appliedDate).getTime() + 3600000).toISOString(),
-                            completed: true,
-                            icon: CheckCircle,
-                            color: 'bg-purple-500'
-                          },
-                          {
-                            label: 'Hired for Job',
-                            date: new Date(new Date(proposal.appliedDate).getTime() + 7200000).toISOString(),
-                            completed: true,
-                            icon: CheckCircle,
-                            color: 'bg-green-500'
-                          },
-                          {
-                            label: 'Job Completed',
-                            date: new Date(new Date(proposal.appliedDate).getTime() + 86400000).toISOString(),
-                            completed: true,
-                            icon: CheckCircle,
-                            color: 'bg-emerald-500'
-                          }
-                        );
-                      } else {
-                        // For pending status, show viewed as pending
-                        timelineItems.push({
-                          label: 'Viewed by Client',
-                          date: null,
-                          completed: false,
-                          icon: CheckCircle,
-                          color: 'bg-white/10'
-                        });
-                      }
-
-                      // Add final status if applicable
-                      if (['rejected', 'cancelled', 'withdrawn', 'expired'].includes(proposal.status)) {
-                        const statusLabels = {
-                          rejected: 'Proposal Rejected',
-                          cancelled: 'Proposal Cancelled',
-                          withdrawn: 'Proposal Withdrawn',
-                          expired: 'Proposal Expired'
-                        };
-                        timelineItems.push({
-                          label: statusLabels[proposal.status as keyof typeof statusLabels],
-                          date: new Date().toISOString(),
-                          completed: true,
-                          icon: XCircle,
-                          color: 'bg-red-500'
-                        });
-                      }
-
-                      return timelineItems.map((item, index) => (
-                        <div key={index} className="relative pl-10">
-                          <div className={`absolute left-0 top-0 w-8 h-8 rounded-full flex items-center justify-center ${item.color}`}>
-                            <item.icon className="w-4 h-4 text-white" />
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium text-white">{item.label}</p>
-                            {item.date ? (
-                              <p className="text-xs text-white/60">
-                                {new Date(item.date).toLocaleDateString('en-US', {
-                                  month: 'short',
-                                  day: 'numeric',
-                                  year: 'numeric',
-                                  hour: '2-digit',
-                                  minute: '2-digit'
-                                })}
-                              </p>
-                            ) : (
-                              <p className="text-xs text-white/40">Waiting for client to view</p>
-                            )}
-                          </div>
-                        </div>
-                      ));
-                    })()}
-                  </div>
+                  {proposal.proposal.skills && proposal.proposal.skills.length > 0 && (
+                    <div className="mt-6 pt-6 border-t border-white/5">
+                      <h3 className="text-md font-semibold text-white mb-3">Required Skills</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {proposal.proposal.skills.map((skill: string, i: number) => (
+                          <span
+                            key={i}
+                            className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-[#2D2D2D] text-white/90 border border-white/5 hover:bg-[#3D3D3D] transition-colors"
+                          >
+                            {skill}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -585,88 +539,6 @@ export default function ProposalDetailsPage() {
               onChat={handleChat}
               onCall={handleCall}
             />
-
-            {/* Job Details */}
-            <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#111111] via-[#0f0f0f] to-[#111111] border border-gray-600/30 shadow-lg">
-              {/* Background decoration */}
-              <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-2xl"></div>
-              <div className="absolute bottom-0 left-0 w-24 h-24 bg-blue-400/5 rounded-full blur-xl"></div>
-
-              {/* Card content */}
-              <div className="relative p-5">
-                {/* Header with status */}
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-sm font-semibold text-white/90">Job Details</h2>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="text-center space-y-2">
-                    <p className="text-sm text-gray-400">Project</p>
-                    <p className="text-base font-medium text-white break-words">{proposal.jobTitle}</p>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="text-center space-y-1">
-                      <p className="text-sm text-gray-400">Posted on</p>
-                      <p className="text-sm font-medium">
-                        {new Date(proposal.appliedDate).toLocaleDateString('en-US', {
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric'
-                        })}
-                      </p>
-                    </div>
-                    <div className="text-center space-y-1">
-                      <p className="text-sm text-gray-400">Location</p>
-                      <button
-                        onClick={() => handleOpenMap(proposal.location)}
-                        className="text-sm font-medium text-purple-400 hover:text-purple-300 transition-colors underline decoration-purple-400/50 hover:decoration-purple-300"
-                        title="View on map"
-                      >
-                        {proposal.location}
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="border-t border-gray-600/30 pt-4 space-y-3">
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-400 mb-2">Job Description</h3>
-                      <p className="text-gray-300 text-sm">{proposal.description}</p>
-                    </div>
-
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-400 mb-2">Required Skills</h3>
-                      <div className="flex flex-wrap gap-2">
-                        {proposal.proposal.skills?.map((skill: string, index: number) => {
-                          const isMatching = mySkills.some((mySkill: string) =>
-                            mySkill.toLowerCase().includes(skill.toLowerCase()) ||
-                            skill.toLowerCase().includes(mySkill.toLowerCase())
-                          );
-
-                          return (
-                            <span
-                              key={index}
-                              className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                                isMatching
-                                  ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
-                                  : 'bg-gray-700/50 text-gray-300 border border-gray-600/30'
-                              }`}
-                            >
-                              {isMatching && (
-                                <CheckCircle className="w-3 h-3 mr-1 text-purple-400" />
-                              )}
-                              {skill}
-                            </span>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
 
             {/* Your Proposal */}
             <div ref={yourProposalRef} className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#111111] via-[#0f0f0f] to-[#111111] border border-gray-600/30 shadow-lg">
@@ -817,25 +689,6 @@ export default function ProposalDetailsPage() {
                     </div>
                   </div>
 
-                  {proposal.status === 'accepted' && (
-                    <div className="grid grid-cols-2 gap-3">
-                      <Button
-                        variant="outline"
-                        className="border-purple-500/30 text-purple-400 hover:bg-purple-500/10 hover:border-purple-400/50 transition-all hover:shadow-lg hover:shadow-purple-500/10"
-                        onClick={handleChat}
-                      >
-                        <MessageCircle className="w-4 h-4 mr-2" />
-                        Message
-                      </Button>
-                      <Button
-                        className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 transition-all"
-                        onClick={handleCall}
-                      >
-                        <Phone className="w-4 h-4 mr-2" />
-                        Call
-                      </Button>
-                    </div>
-                  )}
                 </div>
               </div>
             </div>

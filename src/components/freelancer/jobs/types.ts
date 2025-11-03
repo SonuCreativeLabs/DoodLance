@@ -129,6 +129,13 @@ export interface Job {
   cancelledBy?: 'client' | 'freelancer';
   cancelledAt?: string;
   notes?: string;
+  // Proposal history for timeline continuity
+  proposalHistory?: {
+    postedAt: string;
+    appliedDate: string;
+    clientSpottedDate?: string;
+    acceptedDate?: string;
+  };
 }
 
 export interface Proposal {
@@ -170,6 +177,7 @@ export interface Application {
   freelancersWorked?: number;
   freelancerAvatars?: string[];
   experienceLevel?: string;
+  clientViewedAt?: string; // Timestamp when client viewed this application
 }
 
 export interface Transaction {

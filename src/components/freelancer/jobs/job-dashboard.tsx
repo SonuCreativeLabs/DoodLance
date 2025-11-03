@@ -10,7 +10,7 @@ import { Search, X } from 'lucide-react';
 // Import components, types, utils, and mock data from our modular files
 import { JobCard, ApplicationCard } from './index';
 import { Application, JobCategory } from './types';
-import { mockUpcomingJobs, mockApplications } from './mock-data';
+import { mockUpcomingJobs } from './mock-data';
 
 interface JobDashboardProps {
   searchParams?: {
@@ -194,7 +194,14 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
 
     const jobsWithUpdates = applyStoredJobUpdates();
     setJobs(jobsWithUpdates);
-    setApplications(mockApplications);
+
+    // Dynamically import applications to get latest data
+    const loadApplications = async () => {
+      const { mockApplications } = await import('./mock-data');
+      setApplications(mockApplications);
+    };
+    loadApplications();
+
     setLoading(false);
   }, []);
 

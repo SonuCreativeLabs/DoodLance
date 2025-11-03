@@ -42,7 +42,7 @@ interface ProfessionalsFeedProps {
   filteredProfessionals?: BaseProfessional[];
   onProfessionalSelect?: (professional: BaseProfessional) => void;
   onJobSelect?: (job: Job) => void;
-  onApply?: (jobId: string) => void;
+  onApply?: (jobId: string, proposal: string, rate: string, rateType: string, attachments: File[]) => void;
   className?: string;
 }
 
@@ -100,12 +100,10 @@ export default function ProfessionalsFeed({
   };
 
   const handleApply = (jobId: string) => {
-    if (onApply) {
-      onApply(jobId);
-    } else {
-      // Default apply behavior
-      console.log('Applying to job:', jobId);
-      handleBack();
+    // For list view, open the job details modal instead of applying directly
+    const job = items.find((item: any) => item.id === jobId);
+    if (job) {
+      handleJobClick(job as Job);
     }
   };
 
@@ -123,7 +121,7 @@ export default function ProfessionalsFeed({
   if (showFullView && selectedJob && !filteredProfessionals) {
     return (
       <OverlayPortal>
-        <JobDetailsFull job={selectedJob} onBack={handleBack} onApply={handleApply} />
+        <JobDetailsFull job={selectedJob} onBack={handleBack} onApply={onApply} />
       </OverlayPortal>
     );
   }

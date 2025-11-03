@@ -215,7 +215,8 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
                   duration: originalJobData.duration,
                   experienceLevel: originalJobData.experienceLevel,
                   skills: originalJobData.skills,
-                  client: originalJobData.client
+                  client: originalJobData.client,
+                  proposalHistory: originalJobData.proposalHistory
                 })
               }
             };
@@ -242,7 +243,8 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
                 duration: originalJobData.duration,
                 experienceLevel: originalJobData.experienceLevel,
                 skills: originalJobData.skills,
-                client: originalJobData.client
+                client: originalJobData.client,
+                proposalHistory: originalJobData.proposalHistory
               }),
               // Ensure we have the correct ID
               id: jobId,

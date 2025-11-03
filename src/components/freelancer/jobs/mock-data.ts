@@ -56,6 +56,13 @@ export const mockUpcomingJobs: Job[] = [
         'https://randomuser.me/api/portraits/women/45.jpg',
         'https://randomuser.me/api/portraits/men/67.jpg'
       ]
+    },
+    // Add proposal history for timeline continuity
+    proposalHistory: {
+      postedAt: '2024-07-01T10:30:00.000Z', // Original job posting date from feed
+      appliedDate: '2024-07-05',
+      clientSpottedDate: '2024-07-05T13:00:00.000Z',
+      acceptedDate: '2024-07-08T10:30:00.000Z'
     }
   },
   {
@@ -166,6 +173,13 @@ export const mockUpcomingJobs: Job[] = [
         'https://randomuser.me/api/portraits/women/28.jpg',
         'https://randomuser.me/api/portraits/men/35.jpg'
       ]
+    },
+    // Add proposal history for timeline continuity
+    proposalHistory: {
+      postedAt: '2024-06-15T14:20:00.000Z', // Original job posting date from feed
+      appliedDate: '2024-06-20',
+      clientSpottedDate: '2024-06-20T15:30:00.000Z',
+      acceptedDate: '2024-06-22T09:15:00.000Z'
     }
   },
   {
@@ -199,6 +213,13 @@ export const mockUpcomingJobs: Job[] = [
       cancelledBy: 'client',
       cancelledAt: '2024-06-16T14:30:00',
       notes: 'Client found another coach with more experience in junior cricket.'
+    },
+    // Add proposal history for timeline continuity
+    proposalHistory: {
+      postedAt: '2024-06-10T09:15:00.000Z', // Original job posting date from feed
+      appliedDate: '2024-06-12',
+      clientSpottedDate: '2024-06-12T16:45:00.000Z',
+      acceptedDate: '2024-06-14T11:20:00.000Z'
     }
   },
   {
@@ -234,6 +255,13 @@ export const mockUpcomingJobs: Job[] = [
       cancelledBy: 'freelancer',
       cancelledAt: '2024-06-14T16:45:00',
       notes: 'Unable to make it due to injury during previous net session.'
+    },
+    // Add proposal history for timeline continuity
+    proposalHistory: {
+      postedAt: '2024-06-08T11:30:00.000Z', // Original job posting date from feed
+      appliedDate: '2024-06-10',
+      clientSpottedDate: '2024-06-10T14:15:00.000Z',
+      acceptedDate: '2024-06-12T09:45:00.000Z'
     }
   },
   {
@@ -273,6 +301,13 @@ export const mockUpcomingJobs: Job[] = [
     addOnServices: [
       { name: 'Detailed Performance Report', price: 800, description: 'Comprehensive analysis report with recommendations' }
     ],
+    // Add proposal history for timeline continuity
+    proposalHistory: {
+      postedAt: '2024-06-20T08:00:00.000Z', // Original job posting date from feed
+      appliedDate: '2024-06-22',
+      clientSpottedDate: '2024-06-22T10:30:00.000Z',
+      acceptedDate: '2024-06-24T14:15:00.000Z'
+    }
   },
 
   // Cricket-focused jobs continued
@@ -309,7 +344,14 @@ export const mockUpcomingJobs: Job[] = [
     addOnServices: [
       { name: 'Professional Photo Editing', price: 1200, description: 'Advanced editing and retouching of tournament photos' },
       { name: 'Social Media Package', price: 800, description: 'Ready-to-post content for social media platforms' }
-    ]
+    ],
+    // Add proposal history for timeline continuity
+    proposalHistory: {
+      postedAt: '2024-07-05T07:30:00.000Z', // Original job posting date from feed
+      appliedDate: '2024-07-08',
+      clientSpottedDate: '2024-07-08T11:45:00.000Z',
+      acceptedDate: '2024-07-10T15:20:00.000Z'
+    }
   },
   {
     id: 'DLCC3456',
@@ -339,6 +381,13 @@ export const mockUpcomingJobs: Job[] = [
         'https://randomuser.me/api/portraits/men/18.jpg',
         'https://randomuser.me/api/portraits/women/33.jpg'
       ]
+    },
+    // Add proposal history for timeline continuity
+    proposalHistory: {
+      postedAt: '2024-07-01T06:00:00.000Z', // Original job posting date from feed
+      appliedDate: '2024-07-03',
+      clientSpottedDate: '2024-07-03T09:30:00.000Z',
+      acceptedDate: '2024-07-05T14:45:00.000Z'
     }
   },
   {
@@ -373,7 +422,14 @@ export const mockUpcomingJobs: Job[] = [
     addOnServices: [
       { name: 'Match Report Documentation', price: 600, description: 'Detailed match reports and scorecards' },
       { name: 'Player Conduct Monitoring', price: 400, description: 'Monitoring and reporting on-field behavior' }
-    ]
+    ],
+    // Add proposal history for timeline continuity
+    proposalHistory: {
+      postedAt: '2024-07-08T10:15:00.000Z', // Original job posting date from feed
+      appliedDate: '2024-07-11',
+      clientSpottedDate: '2024-07-11T13:20:00.000Z',
+      acceptedDate: '2024-07-13T16:30:00.000Z'
+    }
   },
   {
     id: 'DLCS2468',
@@ -403,6 +459,13 @@ export const mockUpcomingJobs: Job[] = [
         'https://randomuser.me/api/portraits/men/47.jpg',
         'https://randomuser.me/api/portraits/women/24.jpg'
       ]
+    },
+    // Add proposal history for timeline continuity
+    proposalHistory: {
+      postedAt: '2024-07-13T07:00:00.000Z', // Original job posting date from feed
+      appliedDate: '2024-07-16',
+      clientSpottedDate: '2024-07-16T10:45:00.000Z',
+      acceptedDate: '2024-07-18T14:30:00.000Z'
     }
   },
   {
@@ -433,6 +496,13 @@ export const mockUpcomingJobs: Job[] = [
         'https://randomuser.me/api/portraits/women/27.jpg',
         'https://randomuser.me/api/portraits/men/51.jpg'
       ]
+    },
+    // Add proposal history for timeline continuity
+    proposalHistory: {
+      postedAt: '2024-07-18T09:30:00.000Z', // Original job posting date from feed
+      appliedDate: '2024-07-21',
+      clientSpottedDate: '2024-07-21T12:15:00.000Z',
+      acceptedDate: '2024-07-23T16:45:00.000Z'
     }
   },
   {
@@ -463,6 +533,13 @@ export const mockUpcomingJobs: Job[] = [
         'https://randomuser.me/api/portraits/men/26.jpg',
         'https://randomuser.me/api/portraits/women/41.jpg'
       ]
+    },
+    // Add proposal history for timeline continuity
+    proposalHistory: {
+      postedAt: '2024-07-23T06:30:00.000Z', // Original job posting date from feed
+      appliedDate: '2024-07-26',
+      clientSpottedDate: '2024-07-26T08:45:00.000Z',
+      acceptedDate: '2024-07-28T11:30:00.000Z'
     }
   },
   {
@@ -493,6 +570,13 @@ export const mockUpcomingJobs: Job[] = [
         'https://randomuser.me/api/portraits/women/29.jpg',
         'https://randomuser.me/api/portraits/men/48.jpg'
       ]
+    },
+    // Add proposal history for timeline continuity
+    proposalHistory: {
+      postedAt: '2024-07-26T08:00:00.000Z', // Original job posting date from feed
+      appliedDate: '2024-07-29',
+      clientSpottedDate: '2024-07-29T10:20:00.000Z',
+      acceptedDate: '2024-07-31T14:15:00.000Z'
     }
   },
   {
@@ -522,6 +606,13 @@ export const mockUpcomingJobs: Job[] = [
         'https://randomuser.me/api/portraits/women/36.jpg',
         'https://randomuser.me/api/portraits/men/41.jpg'
       ]
+    },
+    // Add proposal history for timeline continuity
+    proposalHistory: {
+      postedAt: '2024-07-29T09:00:00.000Z', // Original job posting date from feed
+      appliedDate: '2024-08-01',
+      clientSpottedDate: '2024-08-01T11:30:00.000Z',
+      acceptedDate: '2024-08-03T15:45:00.000Z'
     }
   },
   {
@@ -575,6 +666,13 @@ export const mockUpcomingJobs: Job[] = [
         'https://randomuser.me/api/portraits/women/43.jpg',
         'https://randomuser.me/api/portraits/men/52.jpg'
       ]
+    },
+    // Add proposal history for timeline continuity
+    proposalHistory: {
+      postedAt: '2024-08-01T13:00:00.000Z', // Original job posting date from feed
+      appliedDate: '2024-08-04',
+      clientSpottedDate: '2024-08-04T15:30:00.000Z',
+      acceptedDate: '2024-08-06T10:15:00.000Z'
     }
   },
   {
@@ -628,6 +726,13 @@ export const mockUpcomingJobs: Job[] = [
         'https://randomuser.me/api/portraits/men/39.jpg',
         'https://randomuser.me/api/portraits/women/47.jpg'
       ]
+    },
+    // Add proposal history for timeline continuity
+    proposalHistory: {
+      postedAt: '2024-08-03T10:30:00.000Z', // Original job posting date from feed
+      appliedDate: '2024-08-06',
+      clientSpottedDate: '2024-08-06T12:45:00.000Z',
+      acceptedDate: '2024-08-08T09:20:00.000Z'
     }
   },
   {
@@ -680,6 +785,13 @@ export const mockUpcomingJobs: Job[] = [
         'https://randomuser.me/api/portraits/men/31.jpg',
         'https://randomuser.me/api/portraits/women/38.jpg'
       ]
+    },
+    // Add proposal history for timeline continuity
+    proposalHistory: {
+      postedAt: '2024-08-05T07:15:00.000Z', // Original job posting date from feed
+      appliedDate: '2024-08-08',
+      clientSpottedDate: '2024-08-08T09:45:00.000Z',
+      acceptedDate: '2024-08-10T11:30:00.000Z'
     }
   },
   {
@@ -710,6 +822,13 @@ export const mockUpcomingJobs: Job[] = [
         'https://randomuser.me/api/portraits/men/44.jpg',
         'https://randomuser.me/api/portraits/women/49.jpg'
       ]
+    },
+    // Add proposal history for timeline continuity
+    proposalHistory: {
+      postedAt: '2024-08-08T13:30:00.000Z', // Original job posting date from feed
+      appliedDate: '2024-08-11',
+      clientSpottedDate: '2024-08-11T15:45:00.000Z',
+      acceptedDate: '2024-08-13T10:20:00.000Z'
     }
   },
   {
@@ -740,6 +859,13 @@ export const mockUpcomingJobs: Job[] = [
         'https://randomuser.me/api/portraits/women/35.jpg',
         'https://randomuser.me/api/portraits/men/46.jpg'
       ]
+    },
+    // Add proposal history for timeline continuity
+    proposalHistory: {
+      postedAt: '2024-08-11T05:45:00.000Z', // Original job posting date from feed
+      appliedDate: '2024-08-14',
+      clientSpottedDate: '2024-08-14T08:30:00.000Z',
+      acceptedDate: '2024-08-16T12:15:00.000Z'
     }
   },
   {
@@ -770,6 +896,13 @@ export const mockUpcomingJobs: Job[] = [
         'https://randomuser.me/api/portraits/men/37.jpg',
         'https://randomuser.me/api/portraits/women/42.jpg'
       ]
+    },
+    // Add proposal history for timeline continuity
+    proposalHistory: {
+      postedAt: '2024-08-13T08:30:00.000Z', // Original job posting date from feed
+      appliedDate: '2024-08-16',
+      clientSpottedDate: '2024-08-16T11:00:00.000Z',
+      acceptedDate: '2024-08-18T14:45:00.000Z'
     }
   },
   {
@@ -799,6 +932,13 @@ export const mockUpcomingJobs: Job[] = [
         'https://randomuser.me/api/portraits/men/34.jpg',
         'https://randomuser.me/api/portraits/women/39.jpg'
       ]
+    },
+    // Add proposal history for timeline continuity
+    proposalHistory: {
+      postedAt: '2024-08-15T17:00:00.000Z', // Original job posting date from feed
+      appliedDate: '2024-08-18',
+      clientSpottedDate: '2024-08-18T19:30:00.000Z',
+      acceptedDate: '2024-08-20T14:45:00.000Z'
     }
   }
 ];
@@ -847,6 +987,7 @@ export const mockApplications: Application[] = [
     postedDate: '2024-06-26',
     description: 'Seeking a skilled mystery spinner who can coach our academy batsmen on facing different variations of spin bowling.',
     clientId: 'tnca456',
+    category: 'Coach',
     moneySpent: 65000,
     freelancersWorked: 10,
     freelancerAvatars: [
@@ -941,6 +1082,7 @@ export const mockApplications: Application[] = [
     postedDate: '2024-06-18',
     description: 'Need a cricket analyst to review player performances and provide detailed technical feedback for our academy team',
     clientId: 'tnca987',
+    category: 'Coach',
     moneySpent: 85000,
     freelancersWorked: 14,
     freelancerAvatars: [
@@ -970,6 +1112,7 @@ export const mockApplications: Application[] = [
     postedDate: '2024-06-08',
     description: 'Looking for someone to manage cricket equipment and maintain our sports facilities.',
     clientId: 'csc123',
+    category: 'Physio',
     moneySpent: 25000,
     freelancersWorked: 5,
     freelancerAvatars: [
@@ -999,55 +1142,69 @@ export const updateApplicationStatus = (applicationId: string, newStatus: Applic
   }
 };
 
-// Function to create a new application
-export const createApplication = (jobId: string, proposalData: Partial<Application['proposal']>) => {
-  // Import the Feed's jobs data
-  const { jobs: feedJobs } = require('@/app/freelancer/feed/data/jobs');
+// Function to create a new application when user applies to a job
+export const createApplication = async (jobId: string, proposalText: string, rate: string, rateType: string, attachments: File[]) => {
+  try {
+    // Import the Feed's jobs data
+    const { jobs: feedJobs } = await import('@/app/freelancer/feed/data/jobs');
 
-  // Find the job data from Feed's jobs
-  const job = feedJobs.find((j: any) => j.id === jobId);
-  if (!job) {
-    console.error('Job not found for application creation');
+    // Find the job data from Feed's jobs
+    const job = feedJobs.find((j: any) => j.id === jobId);
+    if (!job) {
+      console.error('Job not found for application creation');
+      return null;
+    }
+
+    // Generate a unique application ID
+    const applicationId = `DL${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+
+    // Create the application object
+    const newApplication: Application = {
+      "#": applicationId,
+      jobTitle: job.title,
+      appliedDate: new Date().toISOString().split('T')[0], // YYYY-MM-DD format
+      status: 'pending',
+      clientName: job.clientName,
+      budget: { min: job.budget, max: job.budget },
+      progress: 0,
+      clientImage: job.clientImage,
+      location: job.location,
+      postedDate: job.postedAt,
+      description: job.description,
+      clientId: `${job.clientName.toLowerCase().replace(/\s+/g, '')}123`,
+      category: job.category,
+      experienceLevel: job.experience,
+      proposal: {
+        coverLetter: proposalText,
+        proposedRate: parseInt(rate),
+        estimatedDays: 7, // Default estimation
+        skills: job.skills,
+        attachments: attachments.map(file => file.name) // Store file names
+      }
+    };
+
+    // Add to mock applications array
+    mockApplications.push(newApplication);
+
+    console.log(`Created new application ${applicationId} for job: ${job.title}`);
+
+    return newApplication;
+  } catch (error) {
+    console.error('Error creating application:', error);
     return null;
   }
-
-  // Generate a unique ID for the application
-  const applicationId = `DLA${Date.now()}`;
-
-  const newApplication: Application = {
-    "#": applicationId,
-    jobTitle: job.title,
-    appliedDate: new Date().toISOString(),
-    status: 'pending',
-    clientName: job.clientName || 'Unknown Client',
-    budget: { min: Number(job.budget || job.rate), max: Number(job.budget || job.rate) },
-    progress: 0,
-    clientImage: job.clientImage || '',
-    location: job.location,
-    postedDate: job.postedAt || new Date().toISOString(),
-    description: job.description,
-    clientId: 'client123', // Mock client ID
-    moneySpent: Number(job.client?.moneySpent) || 0,
-    freelancersWorked: Number(job.client?.freelancersWorked) || 0,
-    freelancerAvatars: job.client?.freelancerAvatars || [],
-    proposal: {
-      coverLetter: proposalData.coverLetter || 'I am interested in this job and believe I can deliver quality work.',
-      proposedRate: Number(proposalData.proposedRate) || Number(job.budget || job.rate),
-      estimatedDays: Number(proposalData.estimatedDays) || 1,
-      skills: proposalData.skills || job.skills || [],
-      attachments: proposalData.attachments || []
-    }
-  };
-
-  // Add to mock applications
-  mockApplications.push(newApplication);
-
-  console.log(`Created new application ${applicationId} for job ${jobId}`);
-
-  return newApplication;
 };
 
-// Function to accept a proposal and create a job
+// Function to check if user has applied to a specific job
+export const hasUserAppliedToJob = (jobId: string) => {
+  return mockApplications.some(app => {
+    // For now, we'll match by job title since we don't have user tracking
+    // In a real app, this would check the current user's applications
+    const { jobs: feedJobs } = require('@/app/freelancer/feed/data/jobs');
+    const job = feedJobs.find((j: any) => j.id === jobId);
+    return job && app.jobTitle === job.title;
+  });
+};
 export const acceptProposalAndCreateJob = (applicationId: string) => {
   // Update proposal status to accepted
   updateApplicationStatus(applicationId, 'accepted');
@@ -1097,6 +1254,13 @@ export const acceptProposalAndCreateJob = (applicationId: string) => {
       joinedDate: '2023-01-01',
       freelancersWorked: Number(application.freelancersWorked),
       freelancerAvatars: application.freelancerAvatars
+    },
+    // Add proposal history for timeline continuity
+    proposalHistory: {
+      postedAt: application.postedDate, // From the original application postedDate
+      appliedDate: application.appliedDate,
+      clientSpottedDate: application.clientViewedAt || new Date(new Date(application.appliedDate).getTime() + 3600000).toISOString(),
+      acceptedDate: new Date().toISOString()
     }
   };
 
