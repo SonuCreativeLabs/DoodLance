@@ -312,7 +312,7 @@ enum JobStatus {
 
 // Job Applications
 model Application {
-  id              String   @id @default(cuid())
+  id              String   @id @default(cuid()) @map("_id")
   
   // Job and Freelancer
   jobId           String   @db.ObjectId

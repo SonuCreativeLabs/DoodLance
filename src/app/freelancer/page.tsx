@@ -26,7 +26,7 @@ export default function FreelancerHome() {
       import('@/app/freelancer/feed/types')
     ]).then(([jobsModule]) => {
       // User's skills for personalized job matching (should match the ones in feed/page.tsx)
-      const userSkills = ['RH Batsman', 'Sidearm Specialist', 'Off Spin', 'Coach', 'Analyst', 'Mystery Spin'];
+      const userSkills = ['RH Batsman', 'Sidearm Specialist', 'Off Spin', 'Batting coach', 'Analyst', 'Mystery Spin'];
       
       // Filter jobs to match the "For You" tab logic
       const forYouJobs = jobsModule.jobs.filter(job => {

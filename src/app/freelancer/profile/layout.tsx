@@ -16,21 +16,15 @@ export default function ProfileLayout({
   const isMainProfilePage = pathname === '/freelancer/profile' || pathname === '/freelancer/profile/';
 
   useEffect(() => {
-    if (isMainProfilePage) {
-      hideHeader();
-      // Keep the navbar visible
-      showNavbar();
-    } else {
-      // Show both header and navbar on subpages
-      showHeader();
-      showNavbar();
-    }
+    // Hide both header and navbar on all profile pages
+    hideHeader();
+    hideNavbar();
 
     return () => {
       showHeader();
       showNavbar();
     };
-  }, [pathname, isMainProfilePage, hideHeader, hideNavbar, showHeader, showNavbar]);
+  }, [hideHeader, hideNavbar, showHeader, showNavbar]);
 
   return <ModalProvider>{children}</ModalProvider>;
 }

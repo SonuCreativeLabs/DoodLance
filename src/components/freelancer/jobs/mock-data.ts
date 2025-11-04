@@ -8,7 +8,7 @@ export const mySkills = [
   'Wicket Keeping', 'Fielding Specialist', 'Sidearm Thrower', 'Net Bowler',
   
   // Coaching skills
-  'Cricket Coaching', 'One-on-One Coaching', 'Batting Techniques', 'Bowling Techniques', 
+  'Batting coach', 'One-on-One Coaching', 'Batting Techniques', 'Bowling Techniques', 
   'Fielding Drills', 'Wicket Keeping Techniques', 'Match Strategy', 'Video Analysis',
   
   // Support skills
@@ -38,7 +38,7 @@ export const mockUpcomingJobs: Job[] = [
     category: 'Coach',
     date: '2024-07-10',
     time: '16:00',
-    status: 'confirmed',
+    status: 'upcoming',
     payment: 2500,
     location: 'Mylapore, Chennai',
     description: 'Looking for an experienced cricket coach for our U-16 academy team. Must have prior coaching experience and knowledge of modern cricket techniques.',
@@ -359,7 +359,7 @@ export const mockUpcomingJobs: Job[] = [
     category: 'Cricket Content Creator',
     date: '2024-07-08',
     time: '08:00',
-    status: 'confirmed',
+    status: 'upcoming',
     payment: 18000,
     location: 'Chepauk, Chennai',
     description: 'Looking for a cricket content creator to produce engaging videos for our social media channels. Need highlights packages, player profiles, and technique analysis videos.',
@@ -437,7 +437,7 @@ export const mockUpcomingJobs: Job[] = [
     category: 'Scorer',
     date: '2024-07-20',
     time: '08:00',
-    status: 'confirmed',
+    status: 'upcoming',
     payment: 5000,
     location: 'Anna Nagar Cricket Ground, Chennai',
     description: 'Looking for experienced cricket scorers for our upcoming weekend tournament. Must be familiar with digital scoring systems and cricket statistics.',
@@ -585,7 +585,7 @@ export const mockUpcomingJobs: Job[] = [
     category: 'Match Player',
     date: '2024-08-05',
     time: '10:00',
-    status: 'confirmed',
+    status: 'upcoming',
     payment: 2000,
     location: 'T Nagar Cricket Ground, Chennai',
     description: 'Need a fielding specialist for boundary catching and ground fielding drills. Focus on athletic fielding and preventing boundaries.',
@@ -800,7 +800,7 @@ export const mockUpcomingJobs: Job[] = [
     category: 'Commentator',
     date: '2024-08-15',
     time: '14:00',
-    status: 'confirmed',
+    status: 'upcoming',
     payment: 6000,
     location: 'Mylapore Cricket Ground, Chennai',
     description: 'Need an experienced cricket commentator for live streaming of our local tournament matches. Must have good voice and cricket knowledge.',
@@ -874,7 +874,7 @@ export const mockUpcomingJobs: Job[] = [
     category: 'Coach',
     date: '2024-08-20',
     time: '09:00',
-    status: 'confirmed',
+    status: 'upcoming',
     payment: 3000,
     location: 'Teynampet Cricket Academy, Chennai',
     description: 'Need experienced coaches to assess junior players for team selection. Focus on batting, bowling, fielding, and overall potential evaluation.',
@@ -940,8 +940,9 @@ export const mockUpcomingJobs: Job[] = [
       clientSpottedDate: '2024-08-18T19:30:00.000Z',
       acceptedDate: '2024-08-20T14:45:00.000Z'
     }
-  }
+  },
 ];
+
 
 export const mockApplications: Application[] = [
   {
@@ -1234,7 +1235,7 @@ export const acceptProposalAndCreateJob = (applicationId: string) => {
     category: 'Coach' as JobCategory, // Default category - could be mapped from job title or proposal
     date: new Date().toISOString().split('T')[0],
     time: '09:00',
-    status: 'confirmed',
+    status: 'upcoming',
     payment: Number(application.proposal.proposedRate),
     location: application.location,
     description: application.description,

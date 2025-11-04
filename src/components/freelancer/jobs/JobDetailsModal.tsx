@@ -512,7 +512,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
             <h2 className="text-base font-medium text-white">
               {jobStarted || job.status === 'started'
                 ? 'Ongoing Job'
-                : job.status === 'upcoming' || job.status === 'confirmed' || job.status === 'pending'
+                : job.status === 'upcoming' || job.status === 'pending'
                   ? 'Upcoming Job'
                   : job.status === 'completed'
                     ? 'Completed Job'
@@ -1181,7 +1181,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
             />
 
             {/* Action Buttons - Moved below safety tips */}
-            {(job.status === 'upcoming' || job.status === 'pending' || job.status === 'confirmed') && !jobStarted && (
+            {(job.status === 'upcoming' || job.status === 'pending') && !jobStarted && (
               <>
                 <div className="text-xs text-white/50 text-center mb-3">
                   Get verification code from client on the field (💡 Test: 1234), then click "Start Job"

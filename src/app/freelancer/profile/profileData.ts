@@ -62,7 +62,7 @@ export const freelancerData: ExtendedFreelancerData = {
   completionRate: 100,
   online: true,
   location: "Chennai, India",
-  skills: ["RH Batsman", "Sidearm Specialist", "Off Spin", "Coach", "Analyst", "Mystery Spin"],
+  skills: ["RH Batsman", "Sidearm Specialist", "Off Spin", "Batting coach", "Analyst", "Mystery Spin"],
   services: [
     {
       id: "1",

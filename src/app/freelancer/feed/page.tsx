@@ -189,8 +189,8 @@ export default function FeedPage() {
     setFiltersApplied(false);
   };
 
-  // User's skills for personalized job matching - from profile data
-  const userSkills = ['RH Batsman', 'Sidearm Specialist', 'Off Spin', 'Coach', 'Analyst', 'Mystery Spin'];
+  // User's skills for personalized job matching
+  const userSkills = ['RH Batsman', 'Sidearm Specialist', 'Off Spin', 'Batting coach', 'Analyst', 'Mystery Spin'];
 
   // Filter jobs based on selected tab and filters
   const filterJobs = async (): Promise<JobWithCoordinates[]> => {
@@ -256,150 +256,135 @@ export default function FeedPage() {
       return jobWithCoords;
     });
     
-    // For "For You" tab - filter jobs based on user's skills
+    // For "For You" tab - filter jobs based on user's skills with percentage matching
     if (selectedCategory === 'For You') {
       console.log('SELECTED CATEGORY:', selectedCategory);
       console.log('Filtering jobs for user skills:', userSkills);
-    console.log('Total jobs before filtering:', filtered.length);
-    console.log('First job skills:', filtered[0]?.skills);
-      
+      console.log('Total jobs before filtering:', filtered.length);
+
       filtered = filtered.filter(job => {
-        // Combine job title, description, category, and skills into a single searchable string
-        const jobText = [
-          job.title || '',
-          job.description || '',
-          job.category || '',
-          ...(job.skills || [])
-        ].join(' ').toLowerCase();
-        
-        // Check if any of the user's skills match the job
-        const hasMatchingSkill = userSkills.some(skill => 
-          jobText.includes(skill.toLowerCase())
-        );
-        
-        if (!hasMatchingSkill) {
-          console.log(`Filtered out job - no matching skills: ${job.title}`);
-          return false;
+        // Calculate skill match percentage
+        let totalMatchScore = 0;
+        let maxPossibleScore = userSkills.length * 100; // 100 points per user skill
+
+        // Check each user skill against job
+        userSkills.forEach(skill => {
+          const skillLower = skill.toLowerCase();
+          let skillMatchScore = 0;
+          let hasExactMatch = false;
+          let hasRelatedMatch = false;
+
+          // 1. Exact skill match in job skills array (80 points)
+          if (job.skills && job.skills.some(jobSkill =>
+            jobSkill.toLowerCase().includes(skillLower) ||
+            skillLower.includes(jobSkill.toLowerCase())
+          )) {
+            skillMatchScore = 80;
+            hasExactMatch = true;
+          }
+          
+          // 2. Partial match in job title/description (60 points) - only if no exact match
+          if (!hasExactMatch && (job.title.toLowerCase().includes(skillLower) ||
+              job.description.toLowerCase().includes(skillLower))) {
+            skillMatchScore = 60;
+          }
+          
+          // 3. Related skill mapping (40 points) - always check, but reduce if exact match exists
+          const skillMappings = {
+            'rh batsman': ['batting', 'batsman', 'batter', 'opening batsman', 'right-handed', 'rh'],
+            'sidearm specialist': ['sidearm', 'side arm', 'side-arm', 'yorker', 'death overs'],
+            'batting coach': ['batting coach', 'batting technique', 'batting training', 'batsman coach'],
+            'analyst': ['analysis', 'analyst', 'video analysis', 'performance analysis', 'metrics'],
+            'mystery spin': ['mystery spin', 'carrom ball', 'doosra', 'slider', 'teesra'],
+            'off spin': ['off spin', 'off-spinner', 'orthodox spin', 'finger spin']
+          };
+
+          const relatedSkills = skillMappings[skillLower as keyof typeof skillMappings] || [];
+          const relatedMatches = relatedSkills.filter(relatedSkill =>
+            job.skills?.some(jobSkill => jobSkill.toLowerCase().includes(relatedSkill)) ||
+            job.title.toLowerCase().includes(relatedSkill) ||
+            job.description.toLowerCase().includes(relatedSkill)
+          );
+          
+          if (relatedMatches.length > 0) {
+            hasRelatedMatch = true;
+            // If we have exact match, give 20 points for related matches, otherwise 40
+            const relatedScore = hasExactMatch ? 20 : 40;
+            // Bonus for multiple related matches
+            const matchBonus = Math.min(relatedMatches.length - 1, 2) * 5; // Max +10 for multiple matches
+            skillMatchScore += relatedScore + matchBonus;
+          }
+
+          // 4. Category bonus (only 10 points - considered last)
+          if (skillMatchScore > 0 && job.category.toLowerCase().includes(skillLower.split(' ')[0])) {
+            skillMatchScore += 10;
+          }
+
+          totalMatchScore += skillMatchScore;
+        });
+
+        // Calculate percentage match
+        const matchPercentage = (totalMatchScore / maxPossibleScore) * 100;
+
+        // Only include jobs with at least 15% match (reduced from 30% to be more inclusive)
+        const isMatch = matchPercentage >= 15;
+
+        if (isMatch) {
+          console.log(`✓ Including job (${matchPercentage.toFixed(1)}% match): "${job.title}" (Category: ${job.category})`);
+        } else {
+          console.log(`✗ Filtered out job (${matchPercentage.toFixed(1)}% match): "${job.title}" (Category: ${job.category})`);
         }
-        
-        console.log(`Including job - matched user skill: ${job.title}`);
-        return true;
-        
-        // Shouldn't reach here if our category filtering is working
-        console.log(`Unexpected job category: ${job.category} - ${job.title}`);
-        return false;
+
+        return isMatch;
       });
-      
+
       console.log(`For You tab: Found ${filtered.length} jobs matching your skills (${userSkills.join(', ')})`);
-      
+
       // Apply search query if one exists
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
-        filtered = filtered.filter(job => 
+        filtered = filtered.filter(job =>
           job.title.toLowerCase().includes(query) ||
           job.description.toLowerCase().includes(query) ||
           job.category.toLowerCase().includes(query) ||
-          (job.skills && job.skills.some(skill => 
+          (job.skills && job.skills.some(skill =>
             skill.toLowerCase().includes(query)
           ))
         );
         console.log(`After search (${searchQuery}): ${filtered.length} jobs remaining`);
       }
-      
+
       // Filter out jobs user has already applied to
       const { hasUserAppliedToJob } = await import('@/components/freelancer/jobs/mock-data');
       filtered = filtered.filter(job => !hasUserAppliedToJob(job.id));
-      
+
       // If no jobs found, suggest searching in the Explore tab
       if (filtered.length === 0) {
         console.log('No jobs found matching your criteria. Try adjusting your search or check the Explore tab for more options.');
       }
+
+      return filtered;
     }
     
     // For Explore tab - show all jobs by default, apply filters only if explicitly set
     if (selectedCategory === 'Explore') {
       console.log('SELECTED CATEGORY: Explore - showing all jobs');
-      let filtersApplied = false;
-      const appliedFilters: Record<string, string> = {};
-
-      // Only apply search if user has typed something
-      if (searchQuery) {
-        filtersApplied = true;
-        appliedFilters.searchQuery = searchQuery;
-        const query = searchQuery.toLowerCase();
-        filtered = filtered.filter(job => 
-          job.title.toLowerCase().includes(query) ||
-          job.description.toLowerCase().includes(query) ||
-          job.category.toLowerCase().includes(query) ||
-          (job.skills && job.skills.some(skill => 
-            skill.toLowerCase().includes(query)
-          ))
-        );
-      }
-      
-      // Only apply location filter if user has selected a location other than Chennai
-      if (location && !location.toLowerCase().includes('chennai')) {
-        filtersApplied = true;
-        appliedFilters.location = location;
-        const locality = location.split(',')[0].trim().toLowerCase();
-        filtered = filtered.filter(job => {
-          if (!job.location) return false; // Don't show jobs without location when filtering by location
-          return job.location.toLowerCase().includes(locality);
-        });
-      }
-      
-      // Only apply category filter if user has selected a specific category
-      if (serviceCategory !== 'all') {
-        filtersApplied = true;
-        appliedFilters.category = serviceCategory;
-        filtered = filtered.filter(job => job.category === serviceCategory);
-      }
-      
-      // Only apply work mode filter if user has selected one
-      if (workMode) {
-        filtersApplied = true;
-        appliedFilters.workMode = workMode;
-        filtered = filtered.filter(job => job.workMode === workMode);
-      }
-      
-      // Only apply skills filter if user has selected skills
-      if (selectedSkills.length > 0) {
-        filtersApplied = true;
-        appliedFilters.skills = selectedSkills.join(', ');
-        filtered = filtered.filter(job =>
-          selectedSkills.every(skill => 
-            job.skills.some(jobSkill => 
-              jobSkill.toLowerCase().includes(skill.toLowerCase())
-            )
-          )
-        );
-      }
-      
-      // Only apply price range filter if user has changed it
-      if (priceRange[0] !== 500 || priceRange[1] !== 2500) {
-        filtersApplied = true;
-        appliedFilters.priceRange = `₹${priceRange[0]}-₹${priceRange[1]}`;
-        filtered = filtered.filter(job => 
-          job.rate >= priceRange[0] && job.rate <= priceRange[1]
-        );
-      }
-      
-      if (filtersApplied) {
-        console.log('Explore tab: Filters applied:', appliedFilters);
-      } else {
-        console.log('Explore tab: Showing all jobs (no filters applied)');
-      }
       console.log(`Total jobs shown: ${filtered.length}`);
-    }
     
-    // Filter out jobs user has already applied to (applies to all tabs)
+      // Filter out jobs user has already applied to (applies to all tabs)
+      const { hasUserAppliedToJob } = await import('@/components/freelancer/jobs/mock-data');
+      filtered = filtered.filter(job => !hasUserAppliedToJob(job.id));
+    
+      return filtered;
+    }
+
+    // Default case - filter out applied jobs and return
     const { hasUserAppliedToJob } = await import('@/components/freelancer/jobs/mock-data');
     filtered = filtered.filter(job => !hasUserAppliedToJob(job.id));
     
     return filtered;
   };
 
-  // Initialize with all jobs on mount
   useEffect(() => {
     const initializeJobs = async () => {
       // Ensure all jobs have coordinates before setting the state
@@ -469,6 +454,16 @@ export default function FeedPage() {
 
     initializeJobs();
   }, [jobs]);
+
+  // Re-filter jobs when category changes
+  useEffect(() => {
+    const reFilterJobs = async () => {
+      const filtered = await filterJobs();
+      setFilteredJobs(filtered);
+    };
+
+    reFilterJobs();
+  }, [selectedCategory, searchQuery]);
 
   const handleApply = async (jobId: string, proposal: string, rate: string, rateType: string, attachments: File[]) => {
     try {

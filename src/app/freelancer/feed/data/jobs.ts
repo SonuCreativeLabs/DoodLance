@@ -481,6 +481,57 @@ const generateJobs = (): Job[] => {
       workMode: 'hybrid',
       minRate: 2500,
       maxRate: 6000
+    }),
+    // Additional jobs that match user skills
+    createJobWithClient({
+      id: 'crk-batting-2',
+      title: 'RH Batsman Training — Cover drive and off-side mastery',
+      description: 'Specialized right-handed batsman training focusing on off-side shots, cover drives, and classical technique. For intermediate players.',
+      category: 'Coach',
+      skills: ['Batting Technique', 'Cover Drive', 'Off-side Play', 'batting', 'coaching', 'Coach', 'RH Batsman'],
+      workMode: 'onsite',
+      minRate: 1800,
+      maxRate: 4500
+    }),
+    createJobWithClient({
+      id: 'crk-offspin-1',
+      title: 'Off Spin Coaching — Flight and turn variations',
+      description: 'Master the art of off spin with focus on flight, turn, and arm ball. Perfect for spinners looking to add variations.',
+      category: 'Coach',
+      skills: ['Off Spin', 'Flight Control', 'Arm Ball', 'Spin Bowling', 'coaching', 'Coach'],
+      workMode: 'onsite',
+      minRate: 2000,
+      maxRate: 5000
+    }),
+    createJobWithClient({
+      id: 'crk-analyst-2',
+      title: 'Performance Analysis — Batting metrics and insights',
+      description: 'Comprehensive batting analysis using video footage and metrics. Identify strengths, weaknesses, and improvement areas.',
+      category: 'Analyst',
+      skills: ['Performance Analysis', 'Batting Analysis', 'Video Analysis', 'Metrics', 'analysis', 'Analyst'],
+      workMode: 'hybrid',
+      minRate: 3000,
+      maxRate: 7000
+    }),
+    createJobWithClient({
+      id: 'crk-sidearm-2',
+      title: 'Sidearm Specialist — Death overs simulation',
+      description: 'Professional sidearm specialist for death overs practice. Simulate tournament pressure with yorkers and slower balls.',
+      category: 'Sidearm',
+      skills: ['Sidearm Specialist', 'Death Overs', 'Yorker Specialist', 'Pressure Bowling', 'Sidearm'],
+      workMode: 'onsite',
+      minRate: 2500,
+      maxRate: 6000
+    }),
+    createJobWithClient({
+      id: 'crk-coach-1',
+      title: 'Cricket Coach — All-round skill development',
+      description: 'Comprehensive cricket coaching for players aged 12-18. Covering batting, bowling, fielding, and match strategy.',
+      category: 'Coach',
+      skills: ['Cricket Coaching', 'Batting Technique', 'Bowling Technique', 'Fielding', 'Match Strategy', 'coaching', 'Coach'],
+      workMode: 'onsite',
+      minRate: 1500,
+      maxRate: 4000
     })
   ];
 

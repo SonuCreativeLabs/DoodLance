@@ -1,5 +1,5 @@
 // Status Types
-export type JobStatus = 'confirmed' | 'pending' | 'completed' | 'cancelled' | 'upcoming' | 'started' | 'ongoing';
+export type JobStatus = 'pending' | 'completed' | 'cancelled' | 'upcoming' | 'started' | 'ongoing';
 export type ApplicationStatus = 'pending' | 'accepted' | 'rejected' | 'withdrawn' | 'interview' | 'hired' | 'completed' | 'cancelled' | 'expired' | 'archived';
 export type TransactionStatus = 'pending' | 'failed' | 'completed';
 
@@ -136,6 +136,7 @@ export interface Job {
     clientSpottedDate?: string;
     acceptedDate?: string;
   };
+  isProposal?: boolean; // Flag to identify jobs that originated from accepted proposals
 }
 
 export interface Proposal {

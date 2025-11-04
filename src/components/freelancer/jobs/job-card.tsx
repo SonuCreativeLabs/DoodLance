@@ -177,7 +177,7 @@ export const JobCard: React.FC<JobCardProps> = ({ job, index, onStatusChange }) 
           )}
 
           {/* Action Buttons - Show for upcoming, pending, confirmed, and ongoing jobs */}
-          {(job.status === 'upcoming' || job.status === 'pending' || job.status === 'confirmed' || job.status === 'ongoing') && (
+          {(job.status === 'upcoming' || job.status === 'pending' || job.status === 'ongoing') && (
             <div className="flex gap-2 pt-2">
               {/* Chat Button */}
               <Button 

@@ -310,12 +310,15 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
       id: application["#"],
       title: application.jobTitle,
       category: application.category as JobCategory,
-      date: application.appliedDate,
-      time: 'TBD',
-      status: 'upcoming' as const,
-      payment: `${application.budget.min} - ${application.budget.max}`,
+      date: application.postedDate, // Use posted date instead of applied date for better UX
+      time: '09:00', // Default time for upcoming jobs
+      status: 'upcoming' as const, // Accepted applications become upcoming jobs
+      payment: application.proposal.proposedRate, // Use the agreed rate instead of budget range
       location: application.location,
       description: application.description,
+      skills: application.proposal.skills,
+      duration: `${application.proposal.estimatedDays} days`,
+      experienceLevel: application.experienceLevel as 'Beginner' | 'Intermediate' | 'Expert' | undefined,
       client: {
         name: application.clientName,
         rating: application.clientRating,
@@ -325,10 +328,15 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
         memberSince: application.clientSince,
         freelancersWorked: application.freelancersWorked,
         freelancerAvatars: application.freelancerAvatars,
-        experienceLevel: application.experienceLevel
+        experienceLevel: application.experienceLevel as 'Beginner' | 'Intermediate' | 'Expert' | undefined
       },
-      // Flag to identify this as a proposal/accepted application
-      isProposal: true
+      // Add proposal history for timeline continuity
+      proposalHistory: {
+        postedAt: application.postedDate,
+        appliedDate: application.appliedDate,
+        clientSpottedDate: new Date(new Date(application.appliedDate).getTime() + 3600000).toISOString(),
+        acceptedDate: new Date().toISOString()
+      }
     };
   };
 
@@ -397,7 +405,6 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
     if (!searchLower) {
       return applications.filter(app => {
         if (statusFilter === 'pending') return app.status === 'pending';
-        if (statusFilter === 'accepted') return app.status === 'accepted';
         if (statusFilter === 'rejected') return app.status === 'rejected';
         if (statusFilter === 'withdrawn') return app.status === 'withdrawn';
         return true;
@@ -415,7 +422,6 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
       if (!matchesSearch) return false;
 
       if (statusFilter === 'pending') return app.status === 'pending';
-      if (statusFilter === 'accepted') return app.status === 'accepted';
       if (statusFilter === 'rejected') return app.status === 'rejected';
       if (statusFilter === 'withdrawn') return app.status === 'withdrawn';
 
@@ -425,7 +431,7 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
 
   // Calculate counts for each tab and status
   const tabCounts = useMemo(() => {
-    const upcomingJobs = jobs.filter(job => job.status === 'confirmed' || job.status === 'pending');
+    const upcomingJobs = jobs.filter(job => job.status === 'upcoming' || job.status === 'pending');
     const ongoingJobs = jobs.filter(job => job.status === 'started');
     const completedJobs = jobs.filter(job => job.status === 'completed');
     const cancelledJobs = jobs.filter(job => job.status === 'cancelled');
@@ -460,7 +466,6 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
     } else if (activeTab === 'applications') {
       return [
         { value: 'pending', label: 'Pending', count: tabCounts.pending },
-        { value: 'accepted', label: 'Accepted', count: tabCounts.accepted },
         { value: 'rejected', label: 'Rejected', count: tabCounts.rejected },
         { value: 'withdrawn', label: 'Withdrawn', count: tabCounts.withdrawn }
       ] as const;
@@ -515,40 +520,6 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
       params.set('tab', 'applications');
       params.set('status', 'withdrawn');
       router.push(`/freelancer/jobs?${params.toString()}`);
-    } else if (newStatus === 'accepted') {
-      // Handle acceptance: move to accepted status and create job
-      setApplications(prevApplications =>
-        prevApplications.map(app =>
-          app["#"] === applicationId ? { ...app, status: newStatus } : app
-        )
-      );
-
-      // Import and use acceptProposalAndCreateJob function
-      import('./mock-data').then(({ acceptProposalAndCreateJob }) => {
-        const newJob = acceptProposalAndCreateJob(applicationId);
-
-        if (newJob) {
-          // Add the new job to the jobs state
-          setJobs(prevJobs => [...prevJobs, newJob]);
-
-          // Switch to My Jobs tab and upcoming status
-          setActiveTab('upcoming');
-          setStatusFilter('upcoming');
-
-          // Update URL
-          const params = new URLSearchParams();
-          params.set('tab', 'upcoming');
-          params.set('status', 'upcoming');
-          router.push(`/freelancer/jobs?${params.toString()}`);
-
-          alert('Proposal accepted! Job has been added to My Jobs.');
-        } else {
-          alert('Failed to accept proposal. Please try again.');
-        }
-      }).catch(error => {
-        console.error('Error accepting proposal:', error);
-        alert('Error accepting proposal. Please try again.');
-      });
     }
   };
 
