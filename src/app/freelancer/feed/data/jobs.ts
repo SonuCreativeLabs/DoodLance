@@ -49,13 +49,6 @@ const clientNames = [
   'Suresh Kumar'
 ];
 
-const devSkills = [
-  ['React', 'TypeScript', 'Redux', 'Frontend Development'],
-  ['Node.js', 'Express', 'MongoDB', 'Backend Development'],
-  ['React Native', 'Mobile Development', 'Firebase'],
-  ['Python', 'Django', 'REST APIs', 'AWS']
-];
-
 const cricketSkills = [
   ['Cricket Coaching', 'Batting Coach', 'Bowling Coach', 'Fielding Coach'],
   ['Fitness Training', 'Sports Nutrition', 'Injury Prevention'],
@@ -86,100 +79,10 @@ const generateJobs = (): Job[] => {
 
   // Define job categories with mixed pricing units (₹500-5,000)
   const categoryRates = {
-    // Tech jobs (higher value, specialized skills)
-    frontend: { 
-      min: 1000, 
-      max: 150000, 
-      unit: 'project',
-      periods: [
-        { type: 'project', min: 10000, max: 150000, multiplier: 1 },
-        { type: 'monthly', min: 30000, max: 150000, multiplier: 1 },
-        { type: 'hourly', min: 800, max: 3000, multiplier: 1 }
-      ]
-    },
-    backend: { 
-      min: 1500, 
-      max: 200000, 
-      unit: 'project',
-      periods: [
-        { type: 'project', min: 20000, max: 200000, multiplier: 1 },
-        { type: 'monthly', min: 40000, max: 200000, multiplier: 1 },
-        { type: 'hourly', min: 1000, max: 4000, multiplier: 1 }
-      ]
-    },
-    mobile: { 
-      min: 1500, 
-      max: 180000, 
-      unit: 'project',
-      periods: [
-        { type: 'project', min: 15000, max: 180000, multiplier: 1 },
-        { type: 'monthly', min: 35000, max: 180000, multiplier: 1 },
-        { type: 'hourly', min: 900, max: 3500, multiplier: 1 }
-      ]
-    },
-    
-    // Home services (moderate pricing, based on service complexity)
-    plumbing: { 
-      min: 200, 
-      max: 8000, 
-      unit: 'job',
-      periods: [
-        { type: 'fixed', min: 200, max: 5000, multiplier: 1 },
-        { type: 'emergency', min: 500, max: 10000, multiplier: 1.5 },
-        { type: 'visit', min: 200, max: 1000, multiplier: 1 }
-      ]
-    },
-    electrical: { 
-      min: 300, 
-      max: 10000, 
-      unit: 'visit',
-      periods: [
-        { type: 'visit', min: 300, max: 2000, multiplier: 1 },
-        { type: 'fixed', min: 500, max: 8000, multiplier: 1 },
-        { type: 'emergency', min: 1000, max: 15000, multiplier: 1.8 }
-      ]
-    },
-    
-    // Creative services (varies by project scope)
-    design: { 
-      min: 2000, 
-      max: 100000, 
-      unit: 'project',
-      periods: [
-        { type: 'project', min: 5000, max: 100000, multiplier: 1 },
-        { type: 'monthly', min: 20000, max: 100000, multiplier: 1 },
-        { type: 'hourly', min: 500, max: 2500, multiplier: 1 }
-      ]
-    },
-    
-    // Education (lower rates for tutoring, higher for specialized training)
-    tutoring: { 
-      min: 200, 
-      max: 10000, 
-      unit: 'session',
-      periods: [
-        { type: 'hourly', min: 200, max: 1500, multiplier: 1 },
-        { type: 'session', min: 500, max: 5000, multiplier: 1 },
-        { type: 'monthly', min: 3000, max: 10000, multiplier: 1 }
-      ]
-    },
-    
-    // Fitness and wellness (moderate pricing)
-    fitness: { 
-      min: 300, 
-      max: 20000, 
-      unit: 'session',
-      periods: [
-        { type: 'session', min: 300, max: 3000, multiplier: 1 },
-        { type: 'package', min: 2000, max: 10000, multiplier: 1 },
-        { type: 'monthly', min: 4000, max: 20000, multiplier: 1 }
-      ]
-    },
-    
-    // Sports coaching (varies by sport and level)
-    cricket: { 
-      min: 500, 
-      max: 15000, 
+    // Cricket coaching and training
+    cricket: {
+      min: 500,
+      max: 15000,
       unit: 'session',
       periods: [
         { type: 'session', min: 500, max: 5000, multiplier: 1 },
@@ -187,48 +90,14 @@ const generateJobs = (): Job[] => {
         { type: 'monthly', min: 8000, max: 30000, multiplier: 1 }
       ]
     },
-    sports: { 
-      min: 300, 
-      max: 10000, 
+    sports: {
+      min: 300,
+      max: 10000,
       unit: 'session',
       periods: [
         { type: 'session', min: 300, max: 3000, multiplier: 1 },
         { type: 'package', min: 2000, max: 10000, multiplier: 1 },
         { type: 'monthly', min: 5000, max: 20000, multiplier: 1 }
-      ]
-    },
-    
-    // Health and beauty (moderate to high end)
-    diet: { 
-      min: 500, 
-      max: 25000, 
-      unit: 'package',
-      periods: [
-        { type: 'session', min: 1000, max: 5000, multiplier: 1 },
-        { type: 'package', min: 3000, max: 15000, multiplier: 1 },
-        { type: 'monthly', min: 8000, max: 25000, multiplier: 1 }
-      ]
-    },
-    makeup: { 
-      min: 1000, 
-      max: 50000, 
-      unit: 'event',
-      periods: [
-        { type: 'session', min: 1000, max: 10000, multiplier: 1 },
-        { type: 'package', min: 5000, max: 30000, multiplier: 1 },
-        { type: 'event', min: 5000, max: 50000, multiplier: 1.5 }
-      ]
-    },
-    
-    // Business services (higher value)
-    marketing: { 
-      min: 5000, 
-      max: 300000, 
-      unit: 'project',
-      periods: [
-        { type: 'project', min: 10000, max: 300000, multiplier: 1 },
-        { type: 'monthly', min: 25000, max: 200000, multiplier: 1 },
-        { type: 'hourly', min: 1000, max: 5000, multiplier: 1 }
       ]
     }
   };
@@ -275,7 +144,7 @@ const generateJobs = (): Job[] => {
     const workModeMultiplier = workModeMultipliers[workMode] || 1;
     
     // Select a random pricing period for this job
-    const periods = rateInfo.periods || [
+    const periods = (rateInfo as any).periods || [
       { type: 'fixed', min: rateInfo.min, max: rateInfo.max, multiplier: 1 }
     ];
     const period = periods[Math.floor(Math.random() * periods.length)];
@@ -384,7 +253,7 @@ const generateJobs = (): Job[] => {
       title,
       description,
       category: jobType as any,
-      skills: [...new Set([...skills, 'Cricket'])],
+      skills: Array.from(new Set([...skills, 'Cricket'])),
       workMode: 'onsite',
       minRate: 500,
       maxRate: 3000

@@ -76,23 +76,23 @@ type FreelancerData = {
 const experiences: Experience[] = [
   {
     id: '1',
-    role: 'Senior UI/UX Designer',
-    company: 'TechCorp',
-    location: 'San Francisco, CA',
+    role: 'Senior Cricket Coach',
+    company: 'Chennai Cricket Academy',
+    location: 'Chennai, India',
     startDate: '2020-01-01',
     endDate: '2023-12-31',
     isCurrent: false,
-    description: 'Led a team of 5 designers to create user-centered designs for web and mobile applications.'
+    description: 'Led coaching programs for 50+ players, specializing in batting and bowling techniques. Coached teams that won multiple district-level tournaments.'
   },
   {
     id: '2',
-    role: 'Product Designer',
-    company: 'DesignHub',
-    location: 'Remote',
+    role: 'Professional Cricket Player',
+    company: 'Tamil Nadu Cricket Association',
+    location: 'Chennai, India',
     startDate: '2023-01-01',
     endDate: undefined,
     isCurrent: true,
-    description: 'Designing intuitive user experiences for enterprise SaaS products.'
+    description: 'Competitive cricketer playing in state-level tournaments. Right-handed batsman and off-spin bowler with championship-level experience.'
   }
 ];
 

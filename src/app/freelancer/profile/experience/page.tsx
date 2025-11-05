@@ -19,13 +19,13 @@ const experiences: Experience[] = [
   },
   {
     id: '2',
-    role: 'AI Engineer & Developer',
-    company: 'Freelance',
-    location: 'Remote',
+    role: 'Cricket Performance Consultant',
+    company: 'Freelance Cricket Services',
+    location: 'India',
     startDate: '2020-01-01',
     endDate: null,
     isCurrent: true,
-    description: 'Developing AI solutions and applications with a focus on machine learning, natural language processing, and automation. Specializing in creating intelligent systems that solve complex problems.'
+    description: 'Providing cricket performance analysis and consulting services. Specializing in match strategy, player development, and team performance optimization. Working with clubs and individual players to enhance their cricket skills and competitive edge.'
   },
   {
     id: '3',

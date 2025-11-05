@@ -6,32 +6,32 @@ import { ServicePackages } from "@/components/freelancer/profile/ServicePackages
 const services = [
   {
     id: '1',
-    title: 'AI Development Consultation',
-    description: 'Expert guidance on AI implementation for your business needs',
-    price: '₹25,000',
+    title: 'Cricket Performance Analysis',
+    description: 'Comprehensive cricket performance analysis and strategy consultation',
+    price: '₹15,000',
     type: 'online' as const,
     deliveryTime: '1 week',
     features: [
-      '1-hour consultation session',
-      'Technical requirements analysis',
-      'Solution architecture design',
-      'Implementation roadmap',
-      'Follow-up email support for 1 week'
+      'Player performance assessment',
+      'Match strategy planning',
+      'Video analysis review',
+      'Performance improvement recommendations',
+      'Follow-up consultation session'
     ]
   },
   {
     id: '2',
-    title: 'Custom AI Solution Development',
-    description: 'Tailored AI application development for your specific needs',
-    price: '₹1,50,000',
-    type: 'online' as const,
-    deliveryTime: '4-6 weeks',
+    title: 'Team Coaching Package',
+    description: 'Complete coaching package for cricket teams and clubs',
+    price: '₹75,000',
+    type: 'in-person' as const,
+    deliveryTime: '8 weeks',
     features: [
-      'Custom AI model development',
-      'API integration',
-      'Testing & deployment',
-      'Documentation',
-      '1 month of maintenance support'
+      'Team training sessions (16 sessions)',
+      'Individual player assessments',
+      'Tactical planning workshops',
+      'Match preparation sessions',
+      'Performance tracking dashboard'
     ]
   },
   {
