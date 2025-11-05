@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Star, Edit2, Camera, Upload, Loader2, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
+import { useProfile } from '@/contexts/ProfileContext';
 
 // CoverImage component defined outside the ProfileHeader component
 const CoverImage = () => (
@@ -26,30 +27,17 @@ const CoverImage = () => (
 );
 
 interface ProfileHeaderProps {
-  name: string;
-  title: string;
-  rating: number;
-  reviewCount: number;
-  location: string;
-  online: boolean;
-  skills: string[];
+  isPreview?: boolean;
   avatarUrl?: string;
   coverImageUrl?: string;
-  isPreview?: boolean;
 }
 
 export function ProfileHeader({
-  name = "Sathish Sonu",
-  title = "All Rounder",
-  rating = 4.8,
-  reviewCount = 42,
-  location = "Chennai, India",
-  online = true,
-  skills = ["Top Order Batsman", "Sidearm Specialist", "Off Spin", "Batting coach", "Analyst", "Mystery Spinner"],
-  avatarUrl = "/images/profile-sonu.jpg",
-  coverImageUrl = "/images/cover-pic.JPG",
-  isPreview = false
+  isPreview = false,
+  avatarUrl,
+  coverImageUrl
 }: ProfileHeaderProps) {
+  const { profileData } = useProfile();
   const [coverImage, setCoverImage] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [imageError, setImageError] = useState(false);
@@ -200,8 +188,8 @@ export function ProfileHeader({
           <div className="relative group">
             <div className="relative w-32 h-32 sm:w-40 sm:h-40 rounded-full border-4 border-[#1E1E1E] overflow-hidden bg-[#111111]">
               <Avatar className="w-full h-full">
-                <AvatarImage src={avatarUrl} alt={name} />
-                <AvatarFallback>{name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                <AvatarImage src={avatarUrl || profileData.avatarUrl} alt={profileData.name} />
+                <AvatarFallback>{profileData.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
               </Avatar>
               {!isPreview && (
                 <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -226,25 +214,25 @@ export function ProfileHeader({
 
         {/* Profile Info */}
         <div className="text-center mb-4">
-          <h1 className="text-2xl font-bold text-white">{name}</h1>
-          <p className="text-purple-400 mt-0.5">{title}</p>
+          <h1 className="text-2xl font-bold text-white">{profileData.name}</h1>
+          <p className="text-purple-400 mt-0.5">{profileData.title}</p>
           
           <div className="mt-2 flex flex-col items-center gap-0.5 text-sm text-white/70">
-            <div>{location}</div>
+            <div>{profileData.location}</div>
             <div className="flex items-center gap-1">
               {[...Array(5)].map((_, i) => (
                 <Star
                   key={i}
-                  className={`h-4 w-4 ${i < Math.floor(rating) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-500'}`}
+                  className={`h-4 w-4 ${i < Math.floor(profileData.rating) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-500'}`}
                 />
               ))}
-              <span className="ml-1 font-medium text-white">{rating.toFixed(1)}</span>
+              <span className="ml-1 font-medium text-white">{profileData.rating.toFixed(1)}</span>
               <span className="mx-1">·</span>
-              <span>{reviewCount} reviews</span>
+              <span>{profileData.reviewCount} reviews</span>
               <span className="mx-1">·</span>
               <span className="flex items-center">
                 <span className="h-2 w-2 rounded-full bg-green-500 mr-1.5"></span>
-                {online ? 'Online' : 'Offline'}
+                {profileData.online ? 'Online' : 'Offline'}
               </span>
             </div>
           </div>
@@ -252,7 +240,7 @@ export function ProfileHeader({
 
         {/* Skills */}
         <div className="flex flex-wrap justify-center gap-2 pb-2">
-          {skills.map((skill, i) => (
+          {profileData.skills.map((skill, i) => (
             <Badge 
               key={i} 
               variant="secondary" 
@@ -290,13 +278,13 @@ export function ProfileHeader({
         isOpen={isPreviewOpen}
         onClose={handlePreviewClose}
         profileData={{
-          name,
-          title,
-          rating: 4.9, // Average from reviews
-          reviewCount: 6, // Total number of reviews
-          location,
-          online,
-          skills,
+          name: profileData.name,
+          title: profileData.title,
+          rating: profileData.rating,
+          reviewCount: profileData.reviewCount,
+          location: profileData.location,
+          online: profileData.online,
+          skills: profileData.skills,
           about: 'Professional Cricketer and AI Engineer with a passion for both sports and technology. I bring the same dedication and strategic thinking from the cricket field to developing intelligent AI solutions.',
           responseTime: '1-2 hours',
           deliveryTime: '1-2 weeks',

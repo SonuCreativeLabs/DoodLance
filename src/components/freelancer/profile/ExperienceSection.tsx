@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 import { Plus, Briefcase, Calendar, MapPin, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -25,7 +25,24 @@ interface ExperienceSectionProps {
 }
 
 export function ExperienceSection({ experiences: initialExperiences }: ExperienceSectionProps) {
-  const [experiences, setExperiences] = useState<Experience[]>(initialExperiences);
+  // Load experiences from localStorage or use initialExperiences
+  const [experiences, setExperiences] = useState<Experience[]>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('userExperiences');
+      if (saved) {
+        try {
+          const parsedExperiences = JSON.parse(saved);
+          return parsedExperiences;
+        } catch (error) {
+          console.error('Failed to parse saved experiences:', error);
+        }
+      }
+    }
+
+    // Fallback to initial experiences
+    return initialExperiences;
+  });
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [experienceToDelete, setExperienceToDelete] = useState<Experience | null>(null);
@@ -40,6 +57,13 @@ export function ExperienceSection({ experiences: initialExperiences }: Experienc
     description: '',
     isCurrent: true
   });
+
+  // Save experiences to localStorage whenever they change
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('userExperiences', JSON.stringify(experiences));
+    }
+  }, [experiences]);
 
   const handleAddExperience = (e: React.FormEvent) => {
     e.preventDefault(); // Prevent default form submission

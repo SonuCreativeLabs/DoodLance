@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, memo } from 'react';
+import { useState, memo, useEffect } from 'react';
 import { Plus, GripVertical, Pencil, ChevronDown, Clock, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
 import { cn } from "@/lib/utils";
+import { useProfile } from '@/contexts/ProfileContext';
 
 interface SkillItemType {
   id: string;
@@ -370,21 +371,54 @@ export function SkillsSection({
   initialSkills = defaultSkills,
   className 
 }: { initialSkills?: Array<string | SkillItemType>; className?: string }) {
-  const [skills, setSkills] = useState<SkillItemType[]>(
-    initialSkills.map(skill => ({
+  const { updateSkills } = useProfile();
+  
+  // Initialize skills from localStorage or initialSkills
+  const [skills, setSkills] = useState<SkillItemType[]>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('userSkills');
+      if (saved) {
+        try {
+          const parsedSkills = JSON.parse(saved);
+          return parsedSkills.map((skillName: string) => ({
+            id: Math.random().toString(36).substr(2, 9),
+            name: skillName,
+            description: undefined,
+            experience: undefined,
+            level: 'Intermediate' as const
+          }));
+        } catch (error) {
+          console.error('Failed to parse saved skills:', error);
+        }
+      }
+    }
+    
+    // Fallback to initialSkills
+    return initialSkills.map(skill => ({
       id: Math.random().toString(36).substr(2, 9),
       name: typeof skill === 'string' ? skill : skill.name,
       description: typeof skill === 'object' ? skill.description : undefined,
       experience: typeof skill === 'object' ? skill.experience : undefined,
       level: (typeof skill === 'object' ? skill.level : 'Intermediate') as 'Beginner' | 'Intermediate' | 'Expert'
-    }))
-  );
+    }));
+  });
   
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newSkill, setNewSkill] = useState('');
   const [newExperience, setNewExperience] = useState('');
   const [newDescription, setNewDescription] = useState('');
   const [newLevel, setNewLevel] = useState<'Beginner' | 'Intermediate' | 'Expert'>('Intermediate');
+
+  // Sync skills with ProfileContext and localStorage whenever skills change
+  useEffect(() => {
+    const skillNames = skills.map(skill => skill.name);
+    updateSkills(skillNames);
+    
+    // Also save to localStorage for persistence
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('userSkills', JSON.stringify(skillNames));
+    }
+  }, [skills, updateSkills]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),

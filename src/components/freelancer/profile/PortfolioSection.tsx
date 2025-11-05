@@ -780,14 +780,14 @@ export function PortfolioSection({
                     onClick={() => openLightbox(0)}
                   >
                     <Image
-                      src={item.images && item.images.length > 0 ? item.images[0] : '/placeholder-project.jpg'}
+                      src={item.images && item.images.length > 0 ? item.images[0] : '/images/default-avatar.svg'}
                       alt={item.title}
                       fill
                       className="object-cover transition-all duration-300 group-hover:scale-105 rounded-xl"
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
                         target.onerror = null;
-                        target.src = '/placeholder-project.jpg';
+                        target.src = '/images/default-avatar.svg';
                       }}
                       unoptimized={process.env.NODE_ENV !== 'production'}
                       priority={item.id === '1' || item.id === '2' || item.id === '3'}

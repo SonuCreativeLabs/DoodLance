@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { useProfile } from '@/contexts/ProfileContext';
 
 type PersonalInfo = {
   fullName: string;
@@ -137,27 +138,62 @@ const FormField = ({
 type EditSection = 'personal' | 'contact' | 'location' | null;
 
 export default function PersonalDetailsPage() {
+  const { updatePersonalDetails } = useProfile();
   const [editingSection, setEditingSection] = useState<EditSection>(null);
   
-  const [personalInfo, setPersonalInfo] = useState<PersonalInfo>({
-    fullName: "Sathish Sonu",
-    jobTitle: "Cricketer & AI Engineer",
-    gender: "Male",
-    dateOfBirth: "1990-01-15",
-    bio: "Professional Cricketer & AI Engineer with a passion for technology and sports."
+  // Load saved data from localStorage or use defaults
+  const [personalInfo, setPersonalInfo] = useState<PersonalInfo>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('personalInfo');
+      return saved ? JSON.parse(saved) : {
+        fullName: "Sathish Sonu",
+        jobTitle: "Cricketer & AI Engineer",
+        gender: "Male",
+        dateOfBirth: "1990-01-15",
+        bio: "Professional Cricketer & AI Engineer with a passion for technology and sports."
+      };
+    }
+    return {
+      fullName: "Sathish Sonu",
+      jobTitle: "Cricketer & AI Engineer",
+      gender: "Male",
+      dateOfBirth: "1990-01-15",
+      bio: "Professional Cricketer & AI Engineer with a passion for technology and sports."
+    };
   });
   
-  const [contactInfo, setContactInfo] = useState<ContactInfo>({
-    email: "sathish.sonu@example.com",
-    phone: "+91 98765 43210",
-    website: "sathishsonu.com"
+  const [contactInfo, setContactInfo] = useState<ContactInfo>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('contactInfo');
+      return saved ? JSON.parse(saved) : {
+        email: "sathish.sonu@example.com",
+        phone: "+91 98765 43210",
+        website: "sathishsonu.com"
+      };
+    }
+    return {
+      email: "sathish.sonu@example.com",
+      phone: "+91 98765 43210",
+      website: "sathishsonu.com"
+    };
   });
 
-  const [locationInfo, setLocationInfo] = useState<LocationInfo>({
-    address: "123 Cricket Street",
-    city: "Chennai",
-    country: "India",
-    postalCode: "600001"
+  const [locationInfo, setLocationInfo] = useState<LocationInfo>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('locationInfo');
+      return saved ? JSON.parse(saved) : {
+        address: "123 Cricket Street",
+        city: "Chennai",
+        country: "India",
+        postalCode: "600001"
+      };
+    }
+    return {
+      address: "123 Cricket Street",
+      city: "Chennai",
+      country: "India",
+      postalCode: "600001"
+    };
   });
 
   const [editPersonalInfo, setEditPersonalInfo] = useState<PersonalInfo>({ ...personalInfo });
@@ -166,11 +202,21 @@ export default function PersonalDetailsPage() {
 
   const handleSave = (section: EditSection) => {
     if (section === 'personal') {
-      setPersonalInfo({ ...editPersonalInfo });
+      const newPersonalInfo = { ...editPersonalInfo };
+      setPersonalInfo(newPersonalInfo);
+      localStorage.setItem('personalInfo', JSON.stringify(newPersonalInfo));
+      // Sync name and title with ProfileContext
+      updatePersonalDetails(editPersonalInfo.fullName, editPersonalInfo.jobTitle, locationInfo.city + ', ' + locationInfo.country);
     } else if (section === 'contact') {
-      setContactInfo({ ...editContact });
+      const newContactInfo = { ...editContact };
+      setContactInfo(newContactInfo);
+      localStorage.setItem('contactInfo', JSON.stringify(newContactInfo));
     } else if (section === 'location') {
-      setLocationInfo({ ...editLocation });
+      const newLocationInfo = { ...editLocation };
+      setLocationInfo(newLocationInfo);
+      localStorage.setItem('locationInfo', JSON.stringify(newLocationInfo));
+      // Sync location with ProfileContext when location changes
+      updatePersonalDetails(personalInfo.fullName, personalInfo.jobTitle, editLocation.city + ', ' + editLocation.country);
     }
     setEditingSection(null);
   };
@@ -209,7 +255,7 @@ export default function PersonalDetailsPage() {
 
   const startEditing = (section: EditSection) => {
     setEditingSection(section);
-    // Reset edit states when starting to edit
+    // Reset edit states when starting to edit with current values
     setEditPersonalInfo({ ...personalInfo });
     setEditContact({ ...contactInfo });
     setEditLocation({ ...locationInfo });

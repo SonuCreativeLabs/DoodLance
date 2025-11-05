@@ -282,70 +282,93 @@ export function ServicePackages({ services = [] }: ServicePackagesProps) {
       }))
     : [];
 
-  const [packages, setPackages] = useState<ServicePackage[]>(initialPackages.length > 0 ? initialPackages : [
-    {
-      id: "1",
-      name: "AI Consultation",
-      price: "2,500",
-      description: "1-hour consultation to discuss your AI needs and solutions",
-      features: [
-        "Business process analysis",
-        "AI solution recommendations",
-        "Implementation roadmap",
-        "Q&A session"
-      ],
-      deliveryTime: "",
-      revisions: "1 revision"
-    },
-    {
-      id: "2",
-      name: "Process Automation",
-      price: "15,000",
-      description: "Automate repetitive business processes to save time and reduce errors",
-      features: [
-        "Process analysis & mapping",
-        "Automation workflow design",
-        "Basic automation setup",
-        "1 month support"
-      ],
-      popular: true,
-      deliveryTime: "1-2 weeks",
-      revisions: "2 revisions"
-    },
-    {
-      id: "3",
-      name: "Custom AI Agent",
-      price: "25,000",
-      description: "Custom AI agent development tailored to your specific needs",
-      features: [
-        "Requirement analysis",
-        "Custom development",
-        "Testing & deployment",
-        "1 month support"
-      ],
-      deliveryTime: "2-3 weeks",
-      revisions: "3 revisions"
-    },
-    {
-      id: "4",
-      name: "AI Maintenance",
-      price: "10,000/month",
-      description: "Ongoing maintenance and support for your AI solutions",
-      features: [
-        "Monthly system checks",
-        "Performance optimization",
-        "Bug fixes & updates",
-        "Priority support"
-      ],
-      deliveryTime: "Ongoing",
-      revisions: "Unlimited"
+  // Load packages from localStorage or use defaults
+  const [packages, setPackages] = useState<ServicePackage[]>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('userPackages');
+      if (saved) {
+        try {
+          const parsedPackages = JSON.parse(saved);
+          return parsedPackages;
+        } catch (error) {
+          console.error('Failed to parse saved packages:', error);
+        }
+      }
     }
-  ]);
+
+    // Fallback to initial packages or defaults
+    return initialPackages.length > 0 ? initialPackages : [
+      {
+        id: "1",
+        name: "AI Consultation",
+        price: "2,500",
+        description: "1-hour consultation to discuss your AI needs and solutions",
+        features: [
+          "Business process analysis",
+          "AI solution recommendations",
+          "Implementation roadmap",
+          "Q&A session"
+        ],
+        deliveryTime: "",
+        revisions: "1 revision"
+      },
+      {
+        id: "2",
+        name: "Process Automation",
+        price: "15,000",
+        description: "Automate repetitive business processes to save time and reduce errors",
+        features: [
+          "Process analysis & mapping",
+          "Automation workflow design",
+          "Basic automation setup",
+          "1 month support"
+        ],
+        popular: true,
+        deliveryTime: "1-2 weeks",
+        revisions: "2 revisions"
+      },
+      {
+        id: "3",
+        name: "Custom AI Agent",
+        price: "25,000",
+        description: "Custom AI agent development tailored to your specific needs",
+        features: [
+          "Requirement analysis",
+          "Custom development",
+          "Testing & deployment",
+          "1 month support"
+        ],
+        deliveryTime: "2-3 weeks",
+        revisions: "3 revisions"
+      },
+      {
+        id: "4",
+        name: "AI Maintenance",
+        price: "10,000/month",
+        description: "Ongoing maintenance and support for your AI solutions",
+        features: [
+          "Monthly system checks",
+          "Performance optimization",
+          "Bug fixes & updates",
+          "Priority support"
+        ],
+        deliveryTime: "Ongoing",
+        revisions: "Unlimited"
+      }
+    ];
+  });
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [packageToDelete, setPackageToDelete] = useState<string | null>(null);
   const [editingPackage, setEditingPackage] = useState<ServicePackage | null>(null);
+
+  // Save packages to localStorage whenever they change
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('userPackages', JSON.stringify(packages));
+    }
+  }, [packages]);
 
   const handleSavePackage = (pkg: Partial<ServicePackage>) => {
     // Ensure features is always an array and filter out empty strings

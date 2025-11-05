@@ -7,6 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "clean": "rm -rf .next node_modules/.cache",
+    "dev:clean": "npm run clean && npm run dev",
     "db:generate": "prisma generate",
     "db:setup": "tsx scripts/setup-db.ts",
     "db:push": "prisma db push",

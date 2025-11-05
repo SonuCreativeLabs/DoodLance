@@ -8,6 +8,7 @@ import { LayoutProvider } from "@/contexts/LayoutContext";
 import { ChatViewProvider } from "@/contexts/ChatViewContext";
 import { DateRangeProvider } from "@/contexts/DateRangeContext";
 import { ModalProvider } from "@/contexts/ModalContext";
+import { ProfileProvider } from "@/contexts/ProfileContext";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -42,7 +43,9 @@ export default function RootLayout({
             <ChatViewProvider>
               <DateRangeProvider>
                 <ModalProvider>
-                  {children}
+                  <ProfileProvider>
+                    {children}
+                  </ProfileProvider>
                 </ModalProvider>
               </DateRangeProvider>
             </ChatViewProvider>

@@ -10,6 +10,7 @@ import { ProfileHeader } from '@/components/freelancer/profile/ProfileHeader';
 import { ProfileStatsCard } from '@/components/freelancer/profile/ProfileStatsCard';
 import { MonthlyActivities } from '@/components/freelancer/profile/MonthlyActivities';
 import { ProfileSectionCard } from '@/components/freelancer/profile/ProfileSectionCard';
+import { SkillsSection } from '@/components/freelancer/profile/SkillsSection';
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useRef } from 'react';
 import { PortfolioItem } from './preview/portfolio/page';
@@ -181,15 +182,7 @@ export default function ProfilePage() {
   }, [searchParams]);
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-white pb-20 md:pb-24">
-      <ProfileHeader 
-        name={freelancerData.name}
-        title={freelancerData.title}
-        rating={freelancerData.rating}
-        reviewCount={freelancerData.reviewCount}
-        online={freelancerData.online}
-        location={freelancerData.location}
-        skills={freelancerData.skills}
-      />
+      <ProfileHeader />
 
       {/* Gradient separation line */}
       <div className="relative py-1">
@@ -315,6 +308,11 @@ export default function ProfilePage() {
             </svg>
           </Link>
         </div>
+      </div>
+
+      {/* Hidden SkillsSection to sync skills immediately on page load */}
+      <div className="hidden">
+        <SkillsSection />
       </div>
     </div>
   );
