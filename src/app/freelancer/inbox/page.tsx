@@ -8,6 +8,7 @@ import { ArrowLeft, Search, Plus, Filter, ChevronDown, Check } from 'lucide-reac
 import { useChatView } from '@/contexts/ChatViewContext';
 import { mockUpcomingJobs } from '@/components/freelancer/jobs/mock-data';
 import { mockChats } from './mockChats';
+import { useSearchParams } from 'next/navigation';
 
 // Function to generate consistent avatar URL based on name and gender
 const getAvatarUrl = (name: string, gender: 'men' | 'women' | 'male' | 'female' = 'men') => {
@@ -74,9 +75,19 @@ function InboxPageInner() {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const filterRef = useRef<HTMLDivElement>(null);
   const { setFullChatView } = useChatView();
-  
+  const searchParams = useSearchParams();
+
   const statusOptions = ['All', 'Upcoming', 'Ongoing', 'Completed', 'Cancelled'];
-  
+
+  // Auto-select job chat if jobId parameter is present
+  useEffect(() => {
+    const jobId = searchParams.get('jobId');
+    if (jobId) {
+      const jobChatId = `job-${jobId}`;
+      setSelectedChatId(jobChatId);
+    }
+  }, [searchParams]);
+
   // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {

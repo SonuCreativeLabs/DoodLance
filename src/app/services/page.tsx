@@ -4,7 +4,7 @@
 
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Check, Clock, MessageCircle } from 'lucide-react';
+import { ArrowLeft, Check, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface Service {
@@ -24,7 +24,7 @@ interface ServicesPageProps {
   };
 }
 
-export default function ServicesPage({ searchParams }: ServicesPageProps) {
+export default function ServicesPage() {
   const router = useRouter();
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
@@ -143,7 +143,7 @@ export default function ServicesPage({ searchParams }: ServicesPageProps) {
           </button>
           <div className="ml-3">
             <h1 className="text-lg font-semibold text-white">Professional Services</h1>
-            <p className="text-white/50 text-xs">Browse and book {freelancerName}'s expert services</p>
+            <p className="text-white/50 text-xs">Browse and book {freelancerName}&apos;s expert services</p>
           </div>
         </div>
       </div>

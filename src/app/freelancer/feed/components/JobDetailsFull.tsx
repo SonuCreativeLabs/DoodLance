@@ -1,58 +1,113 @@
-'use client';
-
-import React, { useState } from 'react';
-import { 
-  ArrowLeft, 
-  Clock, 
-  Calendar, 
-  Star, 
-  MapPin, 
-  Briefcase, 
-  User, 
-  CheckCircle, 
-  Clock as ClockIcon, 
-  Check 
+import React, { useState, useMemo } from 'react';
+import {
+  ArrowLeft,
+  Clock,
+  Calendar,
+  MapPin,
+  DollarSign,
+  User,
+  Star,
+  Briefcase,
+  CheckCircle,
+  FileText,
+  PlusCircle
 } from 'lucide-react';
 import { Job } from '../types';
+import { ClientProfile } from '@/components/freelancer/jobs/ClientProfile';
 
 interface JobDetailsFullProps {
   job: Job;
   onBack: () => void;
-  onApply: (jobId: string, proposal: string) => void;
+  onApply: (jobId: string, proposal: string, rate: string, rateType: string, attachments: File[]) => void;
 }
 
 export default function JobDetailsFull({ job, onBack, onApply }: JobDetailsFullProps) {
   const [proposal, setProposal] = useState('');
+  const [rate, setRate] = useState(job.budget ? job.budget.toString() : '');
+  const [rateType, setRateType] = useState('project');
+  const [attachments, setAttachments] = useState<File[]>([]);
+
+  // Generate stable job ID based on category and job ID
+  const jobId = useMemo(() => {
+    const categoryCodes: Record<string, string> = {
+      'Cricket': 'CRK',
+      'Sports': 'SPT',
+      'Technology': 'TEC',
+      'Business': 'BUS',
+      'Education': 'EDU',
+      'Healthcare': 'HCR',
+      'Other': 'OTH'
+    };
+    const code = categoryCodes[job.category] || 'JOB';
+
+    // Create a simple hash from job.id for uniqueness
+    let hash = 0;
+    for (let i = 0; i < job.id.length; i++) {
+      const char = job.id.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+    const jobNum = Math.abs(hash).toString().slice(-4).padStart(4, '0');
+
+    return `DL${code}${jobNum}`;
+  }, [job.category, job.id]);
   
   return (
     <div className="fixed inset-0 bg-[#0A0A0A] z-[9999] w-screen h-screen overflow-y-auto">
       {/* Header with back button */}
-      <header className="fixed top-0 left-0 right-0 w-screen z-[10000] bg-gradient-to-b from-black/90 to-transparent backdrop-blur-sm">
-        <div className="container mx-auto px-4 py-5 flex items-center">
-          <button
-            onClick={onBack}
-            className="flex items-center text-white/80 hover:text-white transition-all duration-200 p-2 -ml-2 rounded-full hover:bg-white/10"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <h1 className="text-xl font-semibold text-white ml-2">Job Details</h1>
+      <header className="fixed top-0 left-0 right-0 w-screen z-[10000] bg-black/95 backdrop-blur-sm border-b border-gray-800/50">
+        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+          <div className="flex items-center">
+            <button
+              onClick={onBack}
+              className="flex items-center text-white/80 hover:text-white transition-all duration-200 p-2 -ml-2 rounded-full hover:bg-white/10"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <div className="flex flex-col ml-2">
+              <h1 className="text-lg font-semibold text-white">Job Details</h1>
+              <p className="text-sm font-medium text-gray-400">{job.category}</p>
+            </div>
+          </div>
+          <div className="text-xs text-gray-400 font-mono">
+            {jobId}
+          </div>
         </div>
       </header>
 
       {/* Main Content */}
       <main className="pt-20 pb-32 px-4 w-full max-w-4xl mx-auto">
-        {/* Job Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold text-white mb-3">{job.title}</h1>
-          <div className="flex items-center gap-3 flex-wrap">
-            <span className="text-purple-400 text-sm font-medium">
-              {job.category}
-            </span>
-            <span className="text-gray-400">•</span>
-            <div className="flex items-center text-gray-400 text-sm">
-              <MapPin className="w-4 h-4 mr-1.5" />
-              {job.location}
+        {/* Header Section */}
+        <div className="text-center space-y-3 mb-8">
+          <div className="flex items-center justify-center">
+            <div className="relative">
+              <div className="absolute inset-0 bg-purple-500/20 rounded-full blur-lg"></div>
+              <div className="relative p-4 rounded-full bg-gradient-to-br from-purple-500/10 to-purple-600/20 border border-purple-500/30">
+                <FileText className="w-8 h-8 text-purple-400" />
+              </div>
             </div>
+          </div>
+
+          <div className="space-y-1">
+            <h1 className="text-xl font-bold text-white">Job Details</h1>
+            <p className="text-gray-400 text-sm leading-relaxed max-w-sm mx-auto">
+              Review job requirements and submit your proposal to get started.
+            </p>
+          </div>
+        </div>
+
+        {/* Job Header - Title and Location */}
+        <div className="mb-8">
+          <div className="space-y-4">
+            <h1 className="text-3xl md:text-4xl font-bold text-white leading-tight">{job.title}</h1>
+            <button
+              type="button"
+              onClick={() => {/* TODO: Add map functionality */}}
+              className="inline-flex items-center gap-2 px-3 py-1.5 text-sm text-white/80 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-purple-500/30 rounded-lg transition-all duration-200 backdrop-blur-sm"
+            >
+              <MapPin className="w-4 h-4 text-purple-400" />
+              <span className="font-medium">{job.location}</span>
+            </button>
           </div>
         </div>
 
@@ -113,243 +168,227 @@ export default function JobDetailsFull({ job, onBack, onApply }: JobDetailsFullP
         </div>
 
         {/* Job Details */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* About the Job with Skills */}
-            <div className="bg-[#1E1E1E] rounded-2xl p-6 border border-white/5">
-              <h2 className="text-lg font-semibold text-white mb-4">About the Job</h2>
-              <div className="prose prose-invert max-w-none">
+        <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#111111] via-[#0f0f0f] to-[#111111] border border-gray-600/30 shadow-lg mb-6">
+          {/* Background decoration */}
+          <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/5 rounded-full blur-2xl"></div>
+          <div className="absolute bottom-0 left-0 w-24 h-24 bg-purple-400/5 rounded-full blur-xl"></div>
+
+          {/* Card content */}
+          <div className="relative p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-white">About the Job</h2>
+            </div>
+            <div className="prose prose-invert max-w-none">
+              {job.description && (
                 <p className="text-white/80 leading-relaxed mb-6">
                   {job.description}
                 </p>
-                
+              )}
+
+              {job.skills && job.skills.length > 0 && (
                 <div className="mt-6 pt-6 border-t border-white/5">
-                  <h3 className="text-md font-semibold text-white mb-3">Skills Required</h3>
+                  <h3 className="text-md font-semibold text-white mb-3">Required Skills</h3>
                   <div className="flex flex-wrap gap-2">
                     {job.skills.map((skill, i) => (
-                      <span 
+                      <span
                         key={i}
-                        className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-[#2D2D2D] text-white/90 border border-white/5 hover:bg-[#3D3D3D] transition-colors"
+                        className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-[#2D2D2D] text-white/90 border border-white/5 hover:bg-[#3D3D3D] transition-colors"
                       >
                         {skill}
                       </span>
                     ))}
                   </div>
                 </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* About the Client */}
-            <div className="bg-[#111111] rounded-xl border border-white/10 p-6">
-              <h2 className="text-lg font-semibold text-white mb-4">Client Profile</h2>
-              <div className="space-y-4">
-                <div className="flex items-center space-x-3">
-                  <div className="w-12 h-12 rounded-full bg-purple-500/10 flex items-center justify-center">
-                    {job.client?.image || job.clientImage ? (
-                      <img 
-                        src={(job.client?.image || job.clientImage) as string} 
-                        alt={job.client?.name || job.clientName || 'Client'}
-                        className="w-full h-full rounded-full object-cover"
-                      />
-                    ) : (
-                      <User className="w-6 h-6 text-purple-400" />
-                    )}
-                  </div>
-                  <div>
-                    <h2 className="font-medium text-white">{job.client?.name || job.clientName || 'Client'}</h2>
-                    <p className="text-sm text-gray-400">{job.client?.location || job.location || 'Location not specified'}</p>
-                  </div>
-                </div>
-                
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <h3 className="text-xs font-medium text-gray-400 mb-1">Job Posted</h3>
-                      <p className="text-sm text-white/90">
-                        {new Date(job.postedAt).toLocaleDateString('en-US', {
-                          year: 'numeric',
-                          month: 'short',
-                          day: 'numeric'
-                        })}
-                      </p>
-                    </div>
-                    <div>
-                      <h3 className="text-xs font-medium text-gray-400 mb-1">Member Since</h3>
-                      <p className="text-sm text-white/90">
-                        {job.client?.memberSince ? 
-                          new Date(job.client.memberSince).getFullYear() : 
-                          new Date().getFullYear() - 1}
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="pt-4 border-t border-gray-800">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <div className="flex -space-x-2">
-                          {job.client?.freelancerAvatars?.length ? (
-                            job.client.freelancerAvatars.map((avatar: string, i: number) => (
-                              <img 
-                                key={i}
-                                src={avatar}
-                                alt={`Freelancer ${i + 1}`}
-                                className="w-7 h-7 rounded-full border-2 border-[#111111] object-cover"
-                              />
-                            ))
-                          ) : (
-                            Array.from({ length: Math.min(3, job.client?.freelancersWorked || job.clientJobs || 1) }).map((_, i) => (
-                              <div key={i} className="w-7 h-7 rounded-full bg-purple-500/20 border-2 border-[#111111] flex items-center justify-center">
-                                <User className="w-3.5 h-3.5 text-purple-300" />
-                              </div>
-                            ))
-                          )}
-                          {(job.client?.freelancersWorked || job.clientJobs || 0) > 3 && (
-                            <div className="w-7 h-7 rounded-full bg-purple-500/20 border-2 border-[#111111] flex items-center justify-center">
-                              <span className="text-xs font-medium text-purple-300">
-                                +{(job.client?.freelancersWorked || job.clientJobs || 0) - 3}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                        <div>
-                          <p className="text-xs text-gray-300 font-medium">
-                            {job.client?.freelancersWorked || job.clientJobs || 0} Freelancers
-                          </p>
-                          <p className="text-xs text-gray-500">Worked with this client</p>
-                        </div>
-                      </div>
-                      
-                      <div className="flex flex-col items-end">
-                        <div className="flex items-center space-x-1">
-                          <div className="flex items-center">
-                            {[...Array(5)].map((_, i) => {
-                              const rating = typeof job.client?.rating === 'number' 
-                                ? job.client.rating 
-                                : typeof job.clientRating === 'number' 
-                                  ? job.clientRating 
-                                  : 5; // Default to 5 if no rating is available
-                              return (
-                                <Star 
-                                  key={i} 
-                                  className={`w-3.5 h-3.5 ${i < Math.floor(rating) ? 'text-yellow-400 fill-current' : 'text-gray-600'}`} 
-                                />
-                              );
-                            })}
-                          </div>
-                          <span className="text-sm font-medium text-white">
-                            {typeof job.client?.rating === 'number' 
-                              ? job.client.rating.toFixed(1)
-                              : typeof job.clientRating === 'number'
-                                ? job.clientRating.toFixed(1)
-                                : '5.0'}
-                          </span>
-                        </div>
-                        <p className="text-xs text-gray-500">Client Rating</p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="pt-4 border-t border-gray-800">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="text-xs font-medium text-gray-400 mb-1">Money Spent</h3>
-                        <p className="text-sm font-medium text-white/90">
-                          ₹{(
-                            (job.client?.moneySpent && job.client.moneySpent > 0) 
-                              ? job.client.moneySpent 
-                              : Math.round(job.budget * 0.8) || 0
-                          ).toLocaleString('en-IN')}+
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-xs text-gray-400">On DoodLance</p>
-                        <p className="text-xs text-green-400">
-                          {job.client?.jobsCompleted || job.clientJobs || 1} {job.client?.jobsCompleted === 1 || job.clientJobs === 1 ? 'Project' : 'Projects'}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Safety Tips */}
-            <div className="bg-[#1E1E1E] rounded-2xl p-6 border border-white/5">
-              <h2 className="text-lg font-semibold text-white mb-4">Safety Tips</h2>
-              <ul className="space-y-3">
-                <li className="flex items-start gap-3">
-                  <CheckCircle className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
-                  <span className="text-sm text-white/80">Avoid sharing personal information</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <CheckCircle className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
-                  <span className="text-sm text-white/80">Never pay to apply for a job</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <CheckCircle className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
-                  <span className="text-sm text-white/80">Meet in public spaces for interviews</span>
-                </li>
-              </ul>
+              )}
             </div>
           </div>
         </div>
-        {/* Apply Now Section */}
-        <div className="mt-8 w-full">
-          <div className="bg-gradient-to-br from-[#1E1E1E] to-[#161618] rounded-2xl p-6 border border-white/5 shadow-2xl w-full max-w-[360px] mx-auto">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center">
-                <User className="w-5 h-5 text-purple-400" />
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-white">Apply Now</h3>
-                <p className="text-xs text-white/60">1 position open</p>
-              </div>
-            </div>
-            <p className="text-sm text-white/70 mb-5">
-              Your profile and application will be shared with the client. Make a great first impression!
-            </p>
-            
+
+        {/* Client Profile */}
+        <ClientProfile
+          client={{
+            name: job.client?.name || job.clientName,
+            image: job.client?.image || job.clientImage,
+            location: job.location,
+            memberSince: job.client?.memberSince,
+            rating: job.client?.rating,
+            moneySpent: job.client?.moneySpent,
+            jobsCompleted: job.client?.jobsCompleted,
+            freelancersWorked: job.client?.freelancersWorked,
+            freelancerAvatars: job.client?.freelancerAvatars
+          }}
+          location={job.location}
+          defaultExpanded={false}
+        />
+
+        {/* Spacer */}
+        <div className="mb-6"></div>
+
+        {/* Apply Section */}
+        <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#111111] via-[#0f0f0f] to-[#111111] border border-gray-600/30 shadow-lg mb-6">
+          {/* Background decoration */}
+          <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/5 rounded-full blur-2xl"></div>
+          <div className="absolute bottom-0 left-0 w-24 h-24 bg-green-400/5 rounded-full blur-xl"></div>
+
+          {/* Card content */}
+          <div className="relative p-5">
+
             <div className="space-y-4">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-white">Your Proposal</h2>
+              </div>
               <div>
-                <label htmlFor="proposal" className="block text-sm font-medium text-white/80 mb-2">
-                  Your Message
-                </label>
+                <h3 className="text-sm font-medium text-gray-400 mb-2">Cover Letter <span className="text-red-500">*</span></h3>
                 <textarea
-                  id="proposal"
-                  className="w-full min-h-[140px] bg-[#1A1A1D] border border-white/5 rounded-xl text-white p-4 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-transparent transition-all duration-200 resize-none"
-                  placeholder="Explain why you're the best fit for this job..."
                   value={proposal}
-                  onChange={e => setProposal(e.target.value)}
-                  rows={5}
+                  onChange={(e) => setProposal(e.target.value)}
+                  placeholder="Explain why you're the best fit for this job, your relevant experience, and how you plan to deliver exceptional results."
+                  className="w-full p-3 bg-[#111111] border border-gray-600 rounded-xl text-white resize-none text-sm"
+                  rows={6}
+                  maxLength={1500}
+                  required
                 />
-                <p className="mt-1 text-xs text-white/50 text-right">
-                  {proposal.length}/1000 characters
+                <p className="mt-1 text-xs text-gray-400 text-right">
+                  {proposal.length}/1500 characters
                 </p>
               </div>
-              
+
+              <div>
+                <h3 className="text-sm font-medium text-gray-400 mb-2">Your Rate <span className="text-red-500">*</span></h3>
+                <div className="flex items-center space-x-3">
+                  <input
+                    id="rate"
+                    type="number"
+                    value={rate}
+                    onChange={(e) => setRate(e.target.value)}
+                    placeholder="₹400"
+                    className="bg-[#111111] border border-gray-600 rounded px-3 py-2 text-white w-32 text-sm flex-1 max-w-[120px] placeholder:text-gray-500"
+                    min="0"
+                  />
+                  <span className="text-sm text-gray-400">/</span>
+                  <select
+                    value={rateType}
+                    onChange={(e) => setRateType(e.target.value)}
+                    className="bg-[#111111] border border-gray-600 rounded px-3 py-2 text-white text-sm w-28 appearance-none"
+                    style={{ backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'white\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6,9 12,15 18,9\'%3e%3c/polyline%3e%3c/svg%3e")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 8px center', backgroundSize: '16px', paddingRight: '2.5rem' }}
+                  >
+                    <option value="project">project</option>
+                    <option value="hour">hour</option>
+                    <option value="match">match</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-sm font-medium text-gray-400">Attachments</h3>
+                  <label className="p-1.5 text-gray-400 hover:text-purple-400 rounded-full hover:bg-purple-500/10 transition-colors cursor-pointer" title="Add attachment">
+                    <PlusCircle className="w-4 h-4" />
+                    <input
+                      type="file"
+                      className="hidden"
+                      multiple
+                      accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
+                      onChange={(e) => {
+                        const files = Array.from(e.target.files || []);
+                        setAttachments(prev => [...prev, ...files]);
+                        // Reset input
+                        e.target.value = '';
+                      }}
+                    />
+                  </label>
+                </div>
+                <div 
+                  className="space-y-2 cursor-pointer"
+                  onClick={() => {
+                    // Find the hidden input and trigger click
+                    const input = document.querySelector('input[type="file"][accept*=".pdf"]') as HTMLInputElement;
+                    input?.click();
+                  }}
+                >
+                  {attachments.length > 0 ? (
+                    attachments.map((file, index) => (
+                      <div key={index} className="group flex items-center justify-between p-3 bg-[#1e1e1e] rounded-lg hover:bg-gray-500/30 transition-colors">
+                        <div className="flex items-center space-x-3">
+                          <div className="p-1.5 bg-purple-500/10 rounded-md">
+                            <svg className="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                          </div>
+                          <span className="text-sm text-gray-300 font-medium truncate max-w-[200px]">
+                            {file.name}
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => {
+                            const newAttachments = attachments.filter((_, i) => i !== index);
+                            setAttachments(newAttachments);
+                          }}
+                          className="p-1 text-gray-400 hover:text-red-400 rounded-full hover:bg-red-500/10 transition-colors"
+                          title="Remove file"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="flex flex-col items-center justify-center py-6 border-2 border-dashed border-gray-700 rounded-lg bg-gray-800/30">
+                      <svg className="w-8 h-8 text-gray-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                      </svg>
+                      <p className="text-sm text-gray-400">No attachments yet</p>
+                      <p className="text-xs text-gray-500 mt-1">Upload files to support your proposal</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
               <button
-                onClick={() => onApply(job.id, proposal)}
+                onClick={() => onApply(job.id, proposal, rate, rateType, attachments)}
                 disabled={!proposal.trim()}
-                className={`w-full py-3.5 px-6 rounded-xl font-medium transition-all duration-200 flex items-center justify-center gap-2
-                  ${!proposal.trim() 
-                    ? 'bg-gray-700 text-gray-400 cursor-not-allowed' 
-                    : 'bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:shadow-lg hover:shadow-purple-500/20 transform hover:-translate-y-0.5'}
-                `}
+                className="w-full h-10 bg-purple-600 hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50 text-white font-medium rounded-lg shadow-lg transition-all duration-200"
               >
-                <span>Apply Now</span>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                </svg>
+                Send Proposal
               </button>
-              
-              <p className="text-xs text-center text-white/50 mt-4">
-                By submitting, you agree to our Terms of Service and Privacy Policy
-              </p>
             </div>
+          </div>
+        </div>
+
+        {/* Safety Tips */}
+        <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#111111] via-[#0f0f0f] to-[#111111] border border-gray-600/30 shadow-lg">
+          {/* Background decoration */}
+          <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-2xl"></div>
+          <div className="absolute bottom-0 left-0 w-24 h-24 bg-blue-400/5 rounded-full blur-xl"></div>
+
+          {/* Card content */}
+          <div className="relative p-5">
+
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-white">Safety Tips</h2>
+            </div>
+
+            <ul className="space-y-3">
+              <li className="flex items-start gap-3">
+                <CheckCircle className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
+                <span className="text-sm text-white/80">Research client's reputation and verify their cricket coaching requirements</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <CheckCircle className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
+                <span className="text-sm text-white/80">Never share personal contact details until you have a confirmed booking</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <CheckCircle className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
+                <span className="text-sm text-white/80">Verify payment terms and cricket session details before accepting jobs</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <CheckCircle className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
+                <span className="text-sm text-white/80">Report suspicious job postings related to cricket coaching immediately</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <CheckCircle className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
+                <span className="text-sm text-white/80">Keep records of all cricket coaching applications and communications</span>
+              </li>
+            </ul>
           </div>
         </div>
       </main>

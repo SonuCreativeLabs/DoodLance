@@ -1,13 +1,16 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, MapPin, Calendar, Clock, MessageSquare, Phone, Star, Briefcase, Shield, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, MapPin, Calendar, Clock, MessageSquare, Phone, Star, Briefcase, Shield, CheckCircle2, X, CheckCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { bookings } from "@/lib/mock/bookings";
 import { useNavbar } from "@/contexts/NavbarContext";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 
 const statusCopy: Record<string, string> = {
   ongoing: "Ongoing",
@@ -21,6 +24,12 @@ export default function BookingDetailPage() {
   const router = useRouter();
   const { setNavbarVisibility } = useNavbar();
 
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [showCompleteDialog, setShowCompleteDialog] = useState(false);
+  const [cancelNotes, setCancelNotes] = useState('');
+  const [rating, setRating] = useState(5);
+  const [review, setReview] = useState('');
+
   useEffect(() => {
     setNavbarVisibility(false);
     return () => setNavbarVisibility(true);
@@ -31,6 +40,88 @@ export default function BookingDetailPage() {
     const value = Array.isArray(params.id) ? params.id[0] : params.id;
     return decodeURIComponent(value);
   }, [params]);
+
+  const handleCancelBooking = () => {
+    setShowCancelDialog(true);
+  };
+
+  const confirmCancelBooking = async () => {
+    if (!cancelNotes.trim()) {
+      alert('Please provide a reason for cancellation.');
+      return;
+    }
+
+    if (!booking) return;
+
+    try {
+      const response = await fetch(`/api/bookings/${booking["#"]}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          status: 'cancelled',
+          notes: cancelNotes
+        }),
+      });
+
+      if (response.ok) {
+        alert('Booking cancelled successfully!');
+        setShowCancelDialog(false);
+        setCancelNotes('');
+        // Update booking status in the mock data or refetch
+        booking.status = 'cancelled';
+      } else {
+        const errorData = await response.json();
+        alert(`Failed to cancel booking: ${errorData.error}`);
+      }
+    } catch (error) {
+      console.error('Error cancelling booking:', error);
+      alert('Failed to cancel booking. Please try again.');
+    }
+  };
+
+  const handleMarkComplete = () => {
+    setShowCompleteDialog(true);
+  };
+
+  const confirmMarkComplete = async () => {
+    if (!review.trim()) {
+      alert('Please provide a review before marking as complete.');
+      return;
+    }
+
+    if (!booking) return;
+
+    try {
+      const response = await fetch(`/api/bookings/${booking["#"]}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          status: 'completed',
+          rating: rating,
+          review: review
+        }),
+      });
+
+      if (response.ok) {
+        alert('Booking marked as complete!');
+        setShowCompleteDialog(false);
+        setReview('');
+        setRating(5);
+        // Update booking status in the mock data or refetch
+        booking.status = 'completed';
+      } else {
+        const errorData = await response.json();
+        alert(`Failed to complete booking: ${errorData.error}`);
+      }
+    } catch (error) {
+      console.error('Error completing booking:', error);
+      alert('Failed to complete booking. Please try again.');
+    }
+  };
 
   const booking = useMemo(() => bookings.find((entry) => entry["#"] === rawId), [rawId]);
 
@@ -230,21 +321,208 @@ export default function BookingDetailPage() {
 
       {/* Action Bar */}
       <div className="sticky bottom-0 z-20 border-t border-white/10 bg-gradient-to-t from-[#111111] via-[#0b0b0b] to-transparent px-4 py-4 backdrop-blur-xl">
-        <div className="flex flex-col gap-3 sm:flex-row">
-          <Button
-            variant="outline"
-            className="flex-1 border-white/20 bg-white/5 text-white hover:bg-white/10"
-            onClick={() => router.push(`/client/inbox?booking=${encodeURIComponent(booking["#"])}`)}
-          >
-            <MessageSquare className="mr-2 h-4 w-4" />
-            Message coach
-          </Button>
-          <Button className="flex-1 bg-purple-600 hover:bg-purple-700">
-            <Calendar className="mr-2 h-4 w-4" />
-            Reschedule session
-          </Button>
-        </div>
+        {booking.status === 'confirmed' || booking.status === 'ongoing' ? (
+          <div className="grid grid-cols-2 gap-3">
+            <Button
+              variant="outline"
+              className="border-red-500/50 bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:border-red-500"
+              onClick={handleCancelBooking}
+            >
+              <X className="mr-2 h-4 w-4" />
+              Cancel Booking
+            </Button>
+            <Button className="bg-green-600 hover:bg-green-700" onClick={handleMarkComplete}>
+              <CheckCircle className="mr-2 h-4 w-4" />
+              Mark Complete
+            </Button>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <Button
+              variant="outline"
+              className="flex-1 border-white/20 bg-white/5 text-white hover:bg-white/10"
+              onClick={() => router.push(`/client/inbox?booking=${encodeURIComponent(booking["#"])}`)}
+            >
+              <MessageSquare className="mr-2 h-4 w-4" />
+              Message coach
+            </Button>
+            <Button className="flex-1 bg-purple-600 hover:bg-purple-700">
+              <Calendar className="mr-2 h-4 w-4" />
+              Reschedule session
+            </Button>
+          </div>
+        )}
       </div>
+
+      {/* Cancel Booking Dialog */}
+      <Dialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+        <DialogContent className="w-[320px] max-w-[320px] bg-[#111111] border-gray-800">
+          <DialogHeader>
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-full bg-red-500/20">
+                <X className="w-6 h-6 text-red-500" />
+              </div>
+              <DialogTitle className="text-white">Cancel Booking</DialogTitle>
+            </div>
+            <DialogDescription className="pt-2 text-gray-400">
+              Are you sure you want to cancel this booking? This action cannot be undone and may affect your rating.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="cancel-notes" className="text-sm font-medium text-white">
+                Reason for cancellation *
+              </Label>
+              <Textarea
+                id="cancel-notes"
+                value={cancelNotes}
+                onChange={(e) => setCancelNotes(e.target.value)}
+                placeholder="Please provide a reason for cancelling this booking..."
+                className="mt-2 min-h-[100px] bg-gray-900 border-gray-700 text-white"
+                required
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full sm:w-auto border-gray-700 text-white hover:bg-gray-800"
+              onClick={() => {
+                setShowCancelDialog(false);
+                setCancelNotes('');
+              }}
+            >
+              Go Back
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              className="w-full sm:w-auto bg-red-600 hover:bg-red-700"
+              onClick={confirmCancelBooking}
+              disabled={!cancelNotes.trim()}
+            >
+              Yes, Cancel Booking
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Mark Complete Dialog */}
+      <Dialog open={showCompleteDialog} onOpenChange={setShowCompleteDialog}>
+        <DialogContent className="w-[400px] max-w-[400px] bg-[#111111] border-gray-800">
+          <DialogHeader>
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-full bg-green-500/20">
+                <CheckCircle className="w-6 h-6 text-green-500" />
+              </div>
+              <DialogTitle className="text-white">Mark Booking as Complete</DialogTitle>
+            </div>
+            <DialogDescription className="pt-2 text-gray-400">
+              Please rate your experience with this coach and provide feedback before marking the booking as complete.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-6">
+            <div>
+              <Label className="text-sm font-medium text-white mb-3 block">
+                Rate your experience *
+              </Label>
+              <div className="flex items-center gap-1">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    onClick={() => setRating(star)}
+                    className={`p-1 rounded transition-colors ${
+                      star <= rating ? 'text-yellow-400' : 'text-gray-600'
+                    }`}
+                  >
+                    <Star className="w-6 h-6 fill-current" />
+                  </button>
+                ))}
+                <span className="ml-2 text-sm text-white/70">
+                  {rating === 1 ? 'Poor' :
+                   rating === 2 ? 'Fair' :
+                   rating === 3 ? 'Good' :
+                   rating === 4 ? 'Very Good' : 'Excellent'}
+                </span>
+              </div>
+            </div>
+
+            <div>
+              <Label className="text-sm font-medium text-white mb-3 block">
+                What did you love about this experience? (Optional)
+              </Label>
+              <div className="grid grid-cols-2 gap-2 mb-4">
+                {[
+                  'Professional coaching',
+                  'Clear communication',
+                  'Punctual sessions',
+                  'Expert knowledge',
+                  'Friendly approach',
+                  'Good facilities',
+                  'Value for money',
+                  'Skill improvement'
+                ].map((chip) => (
+                  <button
+                    key={chip}
+                    onClick={() => {
+                      const currentReview = review;
+                      const phrase = currentReview.includes(chip)
+                        ? currentReview.replace(chip, '').trim()
+                        : `${currentReview} ${chip}`.trim();
+                      setReview(phrase);
+                    }}
+                    className={`px-3 py-2 text-sm rounded-full border transition-colors ${
+                      review.includes(chip)
+                        ? 'bg-purple-600 border-purple-600 text-white'
+                        : 'bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700'
+                    }`}
+                  >
+                    {chip}
+                  </button>
+                ))}
+              </div>
+
+              <Label htmlFor="review" className="text-sm font-medium text-white">
+                Additional feedback (optional)
+              </Label>
+              <Textarea
+                id="review"
+                value={review}
+                onChange={(e) => setReview(e.target.value)}
+                placeholder="Share more details about your experience..."
+                className="mt-2 min-h-[100px] bg-gray-900 border-gray-700 text-white"
+                rows={4}
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full sm:w-auto border-gray-700 text-white hover:bg-gray-800"
+              onClick={() => {
+                setShowCompleteDialog(false);
+                setReview('');
+                setRating(5);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              className="w-full sm:w-auto bg-green-600 hover:bg-green-700"
+              onClick={confirmMarkComplete}
+            >
+              Mark Complete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

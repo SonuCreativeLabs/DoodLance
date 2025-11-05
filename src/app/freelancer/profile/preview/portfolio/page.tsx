@@ -1,12 +1,11 @@
 'use client';
 
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
-import { freelancerData } from '../../profileData';
+import { useEffect } from 'react';
 import { setSessionFlag, setSessionItem } from '@/utils/sessionStorage';
+import { freelancerData } from '../../profileData';
 
 export type PortfolioItem = {
   id: string;
@@ -19,110 +18,44 @@ export type PortfolioItem = {
 
 export default function PortfolioPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const [portfolioItems] = useState<PortfolioItem[]>(freelancerData.portfolio);
-  const [freelancerName, setFreelancerName] = useState('My');
-  const [returnUrl, setReturnUrl] = useState('');
+  const portfolioItems: PortfolioItem[] = freelancerData.portfolio;
 
-  // Hide header and navbar for this page
   useEffect(() => {
     const header = document.querySelector('header');
     const navbar = document.querySelector('nav');
-    
+
     if (header) header.style.display = 'none';
     if (navbar) navbar.style.display = 'none';
-    
+
     return () => {
       if (header) header.style.display = '';
       if (navbar) navbar.style.display = '';
     };
   }, []);
 
-  // Portfolio data is now always in sync with profileData.ts
-// No need to fetch from sessionStorage or URL params
-/*useEffect(() => {
-    // Check if we're coming from the profile preview modal
-    const isFromPreview = window.location.hash === '#fromPreview';
-    
-    if (isFromPreview) {
-      // Get data from session storage
-      const storedPortfolio = sessionStorage.getItem('portfolioPreviewData');
-      const storedName = sessionStorage.getItem('freelancerName');
-      
-      if (storedPortfolio) {
-        try {
-          const parsedPortfolio = JSON.parse(storedPortfolio);
-          setPortfolioItems(parsedPortfolio);
-          
-          // Clear the stored data after using it
-          sessionStorage.removeItem('portfolioPreviewData');
-        } catch (error) {
-          console.error('Error parsing portfolio data from session storage:', error);
-        }
-      }
-      
-      if (storedName) {
-        setFreelancerName(storedName);
-        sessionStorage.removeItem('freelancerName');
-      }
-      
-      // Set return URL to go back to the profile page
-      setReturnUrl('/freelancer/profile');
-    } else {
-      // Fallback to URL parameters if not coming from preview
-      const portfolioParam = searchParams.get('portfolio');
-      const nameParam = searchParams.get('freelancerName');
-      const returnUrlParam = searchParams.get('returnUrl');
-      
-      if (portfolioParam) {
-        try {
-          const decodedPortfolio = decodeURIComponent(portfolioParam);
-          const parsedPortfolio = JSON.parse(decodedPortfolio);
-          setPortfolioItems(parsedPortfolio);
-        } catch (error) {
-          console.error('Error parsing portfolio data from URL:', error);
-        }
-      }
-      
-      if (nameParam) {
-        setFreelancerName(decodeURIComponent(nameParam));
-      }
-      
-      if (returnUrlParam) {
-        setReturnUrl(decodeURIComponent(returnUrlParam));
-      }
-    }
-  }, [searchParams]);*/
-
   const handleBack = () => {
     if (typeof window !== 'undefined') {
-      // Set flags for the profile preview to handle the scroll position
       setSessionFlag('fromPortfolio', true);
       setSessionItem('lastVisitedSection', 'portfolio');
-      
-      // Store a flag to indicate we need to scroll to the portfolio section
       setSessionFlag('scrollToPortfolio', true);
-      
-      // Navigate back to the main profile page with the portfolio hash
+
       const returnPath = '/freelancer/profile';
-      
-      // Store the return URL in session storage for reference
-      setSessionItem('returnToProfilePreview', `${window.location.origin}${returnPath}#portfolio`);
-      
-      // Use window.location to force a full page load to ensure the section is scrolled to
-      window.location.href = returnPath + '#portfolio';
+      setSessionItem(
+        'returnToProfilePreview',
+        `${window.location.origin}${returnPath}#portfolio`,
+      );
+
+      window.location.href = `${returnPath}#portfolio`;
     } else {
-      // Fallback to browser's back navigation if window is not available
       router.back();
     }
   };
 
   return (
     <div className="min-h-screen bg-[#0F0F0F] text-white">
-      {/* Sticky Header with back button and title */}
       <div className="sticky top-0 z-50 px-4 py-2 border-b border-white/5 bg-[#0f0f0f]/95 backdrop-blur-sm">
         <div className="flex items-center">
-          <button 
+          <button
             onClick={handleBack}
             className="inline-flex items-center text-sm text-purple-400 hover:text-purple-300 transition-colors duration-200"
             aria-label="Back to profile preview"
@@ -132,24 +65,25 @@ export default function PortfolioPage() {
             </div>
           </button>
           <div className="ml-3">
-            <h1 className="text-lg font-semibold text-white">
-              {freelancerName === 'My' ? 'My Portfolio' : `${freelancerName}\'s Portfolio`}
-            </h1>
+            <h1 className="text-lg font-semibold text-white">My Portfolio</h1>
             <p className="text-white/50 text-xs">Showcase of my best work and projects</p>
           </div>
         </div>
       </div>
 
-      {/* Portfolio Grid */}
       <div className="container mx-auto px-4 py-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {portfolioItems.length > 0 ? (
             portfolioItems.map((item) => (
-              <div 
-                key={item.id} 
+              <div
+                key={item.id}
                 className="group relative aspect-video rounded-xl overflow-hidden border border-white/10 hover:border-white/20 transition-all duration-300 cursor-pointer"
                 onClick={() => {
-                  try { sessionStorage.removeItem('returnToProfilePreview'); } catch {}
+                  try {
+                    sessionStorage.removeItem('returnToProfilePreview');
+                  } catch {
+                    // ignore storage errors
+                  }
                   router.push(`/freelancer/profile/preview/portfolio/${item.id}`);
                 }}
               >
@@ -160,18 +94,18 @@ export default function PortfolioPage() {
                       alt={item.title}
                       fill
                       className="object-cover transition-all duration-300 group-hover:scale-105"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjAwIiBoZWlnaHQ9IjgwMCIgdmlld0JveD0iMCAwIDYwMCA0MDAiPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiMxQTFBMUEiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE4IiBmb250LXdlaWdodD0iYm9sZCIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGRvbWluYW50LWJhc2VsaW5lPSJtaWRkbGUiPk5vIFRodW1ibmFpbCBBdmFpbGFibGU8L3RleHQ+PC9zdmc+';
+                      onError={(event) => {
+                        const target = event.target as HTMLImageElement;
+                        target.src =
+                          'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjAwIiBoZWlnaHQ9IjgwMCIgdmlld0JveD0iMCAwIDYwMCA0MDAiPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiMxQTFBMUEiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE4IiBmb250LXdlaWdodD0iYm9sZCIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGRvbWluYW50LWJhc2VsaW5lPSJtaWRkbGUiPk5vIFRodW1ibmFpbCBBdmFpbGFibGU8L3RleHQ+PC9zdmc+';
                       }}
                     />
-                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
                   <div className="absolute inset-0 p-4 flex flex-col justify-end bg-gradient-to-t from-black/70 via-black/40 to-transparent rounded-xl">
                     <div className="flex justify-between items-end">
                       <div className="pr-2">
                         <h3 className="font-medium text-white line-clamp-1 text-sm">{item.title}</h3>
-                        <p className="text-xs text-white/80 mt-0.5">{item.category}</p>
                       </div>
                     </div>
                   </div>

@@ -1,9 +1,9 @@
 "use client"
 
 import { useState } from 'react'
-import { Mail, Phone, MapPin, Calendar, ArrowLeft, Camera, Trash2 } from 'lucide-react'
+import { User, Camera, ArrowLeft, Trash2 } from 'lucide-react'
 import Image from 'next/image'
-import Link from 'next/link'
+// import Link from 'next/link' // Unused
 import { useRouter } from 'next/navigation'
 
 export default function EditProfile() {

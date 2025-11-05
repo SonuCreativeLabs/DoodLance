@@ -2,14 +2,12 @@
 
 import "./globals.css";
 import { Inter } from "next/font/google";
-import { AuthProvider } from "@/contexts/auth-context";
-import { RoleProvider } from "@/contexts/role-context";
-import { ModalProvider } from "@/contexts/ModalContext";
-import { LayoutProvider } from "@/contexts/LayoutContext";
-import { DateRangeProvider } from "@/contexts/DateRangeContext";
-import { SplashScreen } from "@/components/splash-screen";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { NavbarProvider } from "@/contexts/NavbarContext";
+import { LayoutProvider } from "@/contexts/LayoutContext";
+import { ChatViewProvider } from "@/contexts/ChatViewContext";
+import { DateRangeProvider } from "@/contexts/DateRangeContext";
+import { ModalProvider } from "@/contexts/ModalContext";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -19,15 +17,6 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Temporarily disabled splash screen
-  const [showSplash, setShowSplash] = useState(false);
-  const [mounted, setMounted] = useState(false);
-
-  // After mounting, we have access to the theme
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
   // We're using a fixed dark theme
   const theme = 'dark';
 
@@ -48,25 +37,17 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </head>
       <body className={`${inter.className} antialiased`} suppressHydrationWarning>
-        <AuthProvider>
-          <RoleProvider>
-            <ModalProvider>
-              <LayoutProvider>
-                <DateRangeProvider>
-                {showSplash ? (
-                  <SplashScreen onComplete={() => setShowSplash(false)} />
-                ) : (
-                  <main className="flex flex-col min-h-screen">
-                    <NavbarProvider>
-                      {children}
-                    </NavbarProvider>
-                  </main>
-                )}
-                </DateRangeProvider>
-              </LayoutProvider>
-            </ModalProvider>
-          </RoleProvider>
-        </AuthProvider>
+        <NavbarProvider>
+          <LayoutProvider>
+            <ChatViewProvider>
+              <DateRangeProvider>
+                <ModalProvider>
+                  {children}
+                </ModalProvider>
+              </DateRangeProvider>
+            </ChatViewProvider>
+          </LayoutProvider>
+        </NavbarProvider>
       </body>
     </html>
   );

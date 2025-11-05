@@ -42,7 +42,7 @@ export function KYCVerification() {
           </Button>
         </div>
         <div className="text-sm text-neutral-400">
-          Accepted documents: Aadhar Card, PAN Card, Passport, Driver's License
+          Accepted documents: Aadhar Card, PAN Card, Passport, Driver&apos;s License
         </div>
       </section>
 

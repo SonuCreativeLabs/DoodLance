@@ -1,53 +1,16 @@
 "use client"
 
-import { Search, MapPin, Star, Clock, Calendar, User, Briefcase, GraduationCap, ChevronRight, Bell, X, Brain, Cpu, Sparkles, Wallet, Copy, Check } from 'lucide-react'
+import { MapPin, Star, Clock, Calendar, ChevronDown, ChevronRight, ArrowRight, Copy, Check, Zap, Shield, Users, Award, TrendingUp, Heart, MessageCircle, Filter, X, Wallet, Bell, Sparkles } from 'lucide-react'
+import { motion } from 'framer-motion'
 import { Input } from '@/components/ui/input'
 import ClientLayout from '@/components/layouts/client-layout'
-import { FreelancerCard } from '@/components/client/freelancer-card'
-import { ServiceCategory } from '@/components/client/service-category'
-import { cn } from '@/lib/utils'
-import { motion } from 'framer-motion'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation' // Ensure correct import for Next.js 13+ app directory
+import { useRouter } from 'next/navigation'
 import { professionals } from './nearby/mockData'
-import Image from 'next/image'
 import ServiceCard from '@/components/client/services/service-card'
 import { popularServices } from '@/data/services'
 
-const AnimatedCard = ({ icon, delay }: { icon: React.ReactNode; delay: number }) => (
-  <motion.div
-    initial={{ scale: 0.8, opacity: 0 }}
-    animate={{ scale: 1, opacity: 1 }}
-    transition={{
-      duration: 0.5,
-      delay,
-      repeat: Infinity,
-      repeatType: "reverse",
-      repeatDelay: 2
-    }}
-    className="bg-white rounded-xl p-3 shadow-lg"
-  >
-    <div className="flex items-center gap-3">
-      <div className="w-10 h-10 bg-sky-100 rounded-full flex items-center justify-center text-sky-600">
-        {icon}
-      </div>
-      <div className="space-y-2">
-        <div className="h-2 w-20 bg-gray-200 rounded animate-pulse"></div>
-        <div className="h-2 w-16 bg-gray-100 rounded animate-pulse"></div>
-      </div>
-    </div>
-  </motion.div>
-)
-
-import { useState, useEffect, useRef } from "react";
-
-const mockSearches = [
-  { id: 1, text: "Plumber near me", count: 2450 },
-  { id: 2, text: "Math tutor", count: 1830 },
-  { id: 3, text: "House cleaning service", count: 1560 },
-  { id: 4, text: "AC repair and service", count: 1240 },
-  { id: 5, text: "Pet grooming", count: 980 },
-];
+import { useState, useEffect } from 'react';
 
 const searchExamples = [
   "Bowler for cricket practice in Chepauk",
@@ -79,19 +42,17 @@ const mockNotifications = [
 
 export default function ClientHome() {
   const router = useRouter();
-  const [showNotifications, setShowNotifications] = useState(false);
-  const [showLocationPicker, setShowLocationPicker] = useState(false);
-  const [currentLocation, setCurrentLocation] = useState(mockLocations[0]);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentExample, setCurrentExample] = useState(0);
   const [placeholder, setPlaceholder] = useState("");
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
   const [typingSpeed, setTypingSpeed] = useState(100);
-  const [isSticky, setIsSticky] = useState(false);
-  const [showSidebar, setShowSidebar] = useState(false);
-  const headerRef = useRef<HTMLDivElement>(null);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
+  const [showLocationPicker, setShowLocationPicker] = useState(false);
+  // const [currentLocation, setCurrentLocation] = useState(mockLocations[0]);
+  const [showSidebar, setShowSidebar] = useState(false);
+  // const [isSticky, setIsSticky] = useState(false);
 
   const handleCopyCode = async (code: string) => {
     try {
@@ -103,13 +64,13 @@ export default function ClientHome() {
     }
   };
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsSticky(window.scrollY > 10);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  // useEffect(() => {
+  //   const handleScroll = () => {
+  //     setIsSticky(window.scrollY > 10);
+  //   };
+  //   window.addEventListener('scroll', handleScroll);
+  //   return () => window.removeEventListener('scroll', handleScroll);
+  // }, []);
 
   // Handle rotating search examples
   useEffect(() => {
@@ -156,15 +117,15 @@ export default function ClientHome() {
     return () => window.removeEventListener('keydown', handleEsc);
   }, []);
 
-  const handleHire = (id: number) => {
-    // TODO: Implement hire functionality
-    console.log('Hiring freelancer:', id)
-  }
+  // const handleHire = (id: number) => {
+  //   // TODO: Implement hire functionality
+  //   console.log('Hiring freelancer:', id)
+  // }
 
-  const handleCategoryClick = (name: string) => {
-    // TODO: Implement category filtering
-    console.log('Selected category:', name)
-  }
+  // const handleCategoryClick = (name: string) => {
+  //   // TODO: Implement category filtering
+  //   console.log('Selected category:', name)
+  // }
 
   return (
     <ClientLayout>
@@ -299,7 +260,7 @@ export default function ClientHome() {
                         key={`${loc.city}-${loc.state}`}
                         className="w-full px-4 py-2.5 text-xs text-white/90 hover:bg-white/10 hover:text-white text-left flex items-center gap-2.5 transition-colors duration-200 first:rounded-t-xl last:rounded-b-xl"
                         onClick={() => {
-                          setCurrentLocation(loc);
+                          // setCurrentLocation(loc);
                           setShowLocationPicker(false);
                         }}
                       >

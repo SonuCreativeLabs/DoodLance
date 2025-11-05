@@ -1,18 +1,25 @@
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
+import { authkitMiddleware } from '@workos-inc/authkit-nextjs';
+import { NextResponse } from 'next/server';
+import type { NextFetchEvent, NextRequest } from 'next/server';
 
-export function middleware(request: NextRequest) {
-  // Get the pathname of the request (e.g. /post)
-  const pathname = request.nextUrl.pathname
+const authkit = authkitMiddleware({
+  redirectUri: process.env.WORKOS_REDIRECT_URI,
+});
 
-  // If the pathname is /post, redirect to /client/post
+export function middleware(request: NextRequest, event: NextFetchEvent) {
+  const pathname = request.nextUrl.pathname;
+
   if (pathname === '/post') {
-    return NextResponse.redirect(new URL('/client/post', request.url))
+    const response = NextResponse.redirect(new URL('/client/post', request.url));
+    for (const [key, value] of request.headers) {
+      response.headers.append(key, value);
+    }
+    return response;
   }
 
-  return NextResponse.next()
+  return authkit(request, event);
 }
 
 export const config = {
-  matcher: ['/post']
-} 
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
+};

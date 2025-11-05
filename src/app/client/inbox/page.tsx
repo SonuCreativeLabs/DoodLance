@@ -1,32 +1,15 @@
 "use client"
 
 import { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import dynamic from 'next/dynamic';
-import { Search, Plus, Filter, ChevronDown, Check, MessageSquare } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Search, Filter, ChevronDown, Check, MessageSquare } from 'lucide-react';
 import { useChatView } from '@/contexts/ChatViewContext';
-import { useNavbar } from '@/contexts/NavbarContext';
 import { professionals } from '../nearby/mockData';
 
-// Define component types for better type safety
-type ChatListProps = {
-  chats: any[];
-  selectedChatId?: string;
-  onSelectChat: (id: string) => void;
-};
-
-type ChatViewProps = {
-  chatId: string;
-  recipientName: string;
-  recipientAvatar: string;
-  recipientJobTitle: string;
-  online: boolean;
-  onBack: () => void;
-  messages: any[];
-};
 
 // Dynamically import client-side components with SSR disabled
-const ChatList = dynamic<ChatListProps>(
+const ChatList = dynamic(
   () => import('@/components/client/inbox/chat-list').then(mod => ({
     default: mod.ChatList
   })),
@@ -36,7 +19,7 @@ const ChatList = dynamic<ChatListProps>(
   }
 );
 
-const ChatView = dynamic<ChatViewProps>(
+const ChatView = dynamic(
   () => import('@/components/client/inbox/chat-view').then(mod => ({
     default: mod.ChatView
   })),
@@ -202,7 +185,7 @@ const generateMockMessages = (proId: string, jobTitle: string): Message[] => {
 };
 
 // First generate mock messages for all professionals
-const mockMessages = professionals.reduce((acc, pro, index) => {
+const mockMessages = professionals.reduce((acc, pro) => {
   const chatId = `pro-${pro.id}`;
   return {
     ...acc,
@@ -262,7 +245,6 @@ function InboxPage() {
   const filterButtonRef = useRef<HTMLButtonElement>(null);
   const filterRef = useRef<HTMLDivElement>(null);
   const { setFullChatView } = useChatView();
-  const { setNavbarVisibility } = useNavbar();
   const statusOptions = ['All', 'Upcoming', 'Ongoing', 'Completed', 'Cancelled'];
   
   // Set client-side flag
@@ -323,10 +305,6 @@ function InboxPage() {
     return matchesSearch && matchesStatus;
   });
 
-  const handleBackClick = () => {
-    setSelectedChatId(null);
-    setFullChatView(false);
-  };
 
   return (
     <div className="flex h-full w-full max-w-full overflow-hidden bg-[#111111] text-white">

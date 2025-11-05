@@ -2,21 +2,32 @@
 
 import { Bell, Wallet, Home, Inbox, Briefcase, User, Compass } from 'lucide-react'
 import { useEffect, useState } from 'react';
-import { createPortal } from 'react-dom';
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { ChatViewProvider, useChatView } from '@/contexts/ChatViewContext';
+import { useChatView } from '@/contexts/ChatViewContext';
 import { useModal } from '@/contexts/ModalContext';
-import { DateRangeProvider } from '@/contexts/DateRangeContext';
 import { useLayout } from '@/contexts/LayoutContext';
 
 interface FreelancerLayoutProps {
   children: React.ReactNode
 }
 
-// Wrapper component to handle the chat view context
-function LayoutContent({ children }: { children: React.ReactNode }) {
+export default function FreelancerLayout({ children }: FreelancerLayoutProps) {
   const pathname = usePathname();
+  const chatView = useChatView();
+  const { isHeaderVisible: contextHeaderVisible, isNavbarVisible: contextNavbarVisible } = useLayout();
+  const { isModalOpen } = useModal();
+  
+  // Check if current path is a preview page
+  const isPreviewPage = pathname?.startsWith('/freelancer/profile/preview');
+  // Hide mobile bottom navbar on job details pages like /freelancer/jobs/[id]
+  const isJobDetailsPage = !!(pathname && /^\/freelancer\/jobs\/[^/]+/.test(pathname));
+  // Hide mobile bottom navbar on proposal details pages like /freelancer/proposals/[id]
+  const isProposalDetailsPage = !!(pathname && /^\/freelancer\/proposals\/[^/]+/.test(pathname));
+  
+  // Hide header and navbar for preview pages
+  const isHeaderVisible = isPreviewPage ? false : contextHeaderVisible;
+  const isNavbarVisible = (isPreviewPage || isJobDetailsPage || isProposalDetailsPage) ? false : contextNavbarVisible;
   
   // Use a ref to track if we're in a browser environment
   const [isMounted, setIsMounted] = useState(false);
@@ -26,35 +37,8 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
     return () => setIsMounted(false);
   }, []);
   
-  // Always call the hook at the top level
-  const chatView = useChatView();
   // Only access the context value after mount
   const fullChatView = isMounted ? chatView?.fullChatView || false : false;
-  
-  return (
-    <FreelancerLayoutInner fullChatView={fullChatView} pathname={pathname}>
-      {children}
-    </FreelancerLayoutInner>
-  );
-}
-
-// Inner layout component that receives fullChatView as a prop
-function FreelancerLayoutInner({ 
-  children, 
-  fullChatView = false,
-  pathname 
-}: FreelancerLayoutProps & { fullChatView?: boolean; pathname: string }) {
-  const { isHeaderVisible: contextHeaderVisible, isNavbarVisible: contextNavbarVisible } = useLayout();
-  const { isModalOpen } = useModal();
-  
-  // Check if current path is a preview page
-  const isPreviewPage = pathname?.startsWith('/freelancer/profile/preview');
-  
-  // Hide header and navbar for preview pages
-  const isHeaderVisible = isPreviewPage ? false : contextHeaderVisible;
-  const isNavbarVisible = isPreviewPage ? false : contextNavbarVisible;
-  
-  // Rest of the component logic remains the same
 
   const isActive = (path: string) => {
     // Handle home page specifically
@@ -72,13 +56,6 @@ function FreelancerLayoutInner({
     { href: '/freelancer/inbox', label: 'Inbox', icon: Inbox },
     { href: '/freelancer/profile', label: 'Profile', icon: User },
   ]
-
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-    return () => setMounted(false);
-  }, []);
 
   return (
     <div className="min-h-screen bg-[#111111] text-white relative">
@@ -170,14 +147,4 @@ function FreelancerLayoutInner({
       </main>
     </div>
   )
-}
-
-export default function FreelancerLayout(props: FreelancerLayoutProps) {
-  return (
-    <DateRangeProvider>
-      <ChatViewProvider>
-        <LayoutContent {...props} />
-      </ChatViewProvider>
-    </DateRangeProvider>
-  );
 }

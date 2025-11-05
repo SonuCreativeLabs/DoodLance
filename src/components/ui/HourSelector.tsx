@@ -62,7 +62,7 @@ const HourSelector: React.FC<HourSelectorProps> = ({
       const scrollTop = container.scrollTop;
       const itemHeight = (children[0] as HTMLElement).offsetHeight;
       const totalHeight = itemHeight * hours.length;
-      const visibleCount = Math.floor(container.offsetHeight / itemHeight);
+      // const visibleCount = Math.floor(container.offsetHeight / itemHeight); // Unused
       // If scrolled near top, jump to middle
       if (scrollTop < itemHeight * 2) {
         container.scrollTop = scrollTop + baseHours.length * itemHeight;

@@ -1,6 +1,5 @@
 import { motion } from 'framer-motion';
-import { Briefcase, MapPin, Clock, Users, Bookmark, Star } from 'lucide-react';
-import Image from 'next/image';
+import { MapPin, Clock, Users, Bookmark, Star } from 'lucide-react';
 import { Job } from '@/app/freelancer/feed/types';
 
 interface JobCardProps {

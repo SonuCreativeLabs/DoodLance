@@ -9,24 +9,15 @@ import {
   ArrowLeft, 
   User, 
   MapPin, 
-  Mail, 
-  Phone, 
-  Globe, 
-  Cake, 
-  Info,
+  Globe,
   Pencil,
   Check,
   X,
-  Map as MapIcon,
-  Smartphone,
   Calendar,
-  User as UserIcon,
-  Mail as MailIcon,
-  Phone as PhoneIcon,
-  MapPin as MapPinIcon,
+  MailIcon,
+  PhoneIcon,
+  MapPinIcon,
   Briefcase,
-  VenetianMask,
-  Asterisk,
   CircleUser,
   Quote
 } from 'lucide-react';
@@ -126,12 +117,10 @@ const SectionCard = ({
 
 const FormField = ({ 
   label, 
-  icon: Icon, 
   children,
   className = ''
 }: { 
   label: string; 
-  icon?: React.ElementType; 
   children: React.ReactNode;
   className?: string;
 }) => (
@@ -391,7 +380,7 @@ export default function PersonalDetailsPage() {
           {isEditing ? (
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField label="Email" icon={MailIcon} className="text-white/60">
+                <FormField label="Email" className="text-white/60">
                   <Input
                     type="email"
                     value={editContact.email}
@@ -400,7 +389,7 @@ export default function PersonalDetailsPage() {
                   />
                 </FormField>
                 
-                <FormField label="Phone" icon={PhoneIcon} className="text-white/60">
+                <FormField label="Phone" className="text-white/60">
                   <Input
                     type="tel"
                     value={editContact.phone}
@@ -410,7 +399,7 @@ export default function PersonalDetailsPage() {
                 </FormField>
               </div>
               
-              <FormField label="Website" icon={Globe} className="text-white/60">
+              <FormField label="Website" className="text-white/60">
                 <Input
                   type="url"
                   value={editContact.website}

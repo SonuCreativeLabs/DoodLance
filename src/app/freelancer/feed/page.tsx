@@ -170,11 +170,12 @@ export default function FeedPage() {
   };
 
   // Handle filter application
-  const applyFilters = () => {
+  const applyFilters = async () => {
     setFiltersApplied(true);
     setShowFilterModal(false);
     // Trigger a re-filter
-    setFilteredJobs(filterJobs());
+    const filtered = await filterJobs();
+    setFilteredJobs(filtered);
   };
 
   // Clear all filters
@@ -192,7 +193,7 @@ export default function FeedPage() {
   const userSkills = ['RH Batsman', 'Sidearm Specialist', 'Off Spin', 'Coach', 'Analyst', 'Mystery Spin'];
 
   // Filter jobs based on selected tab and filters
-  const filterJobs = (): JobWithCoordinates[] => {
+  const filterJobs = async (): Promise<JobWithCoordinates[]> => {
     console.log('\n=== Starting job filtering ===');
     
     // Start with all jobs and ensure they have coordinates
@@ -305,6 +306,10 @@ export default function FeedPage() {
         console.log(`After search (${searchQuery}): ${filtered.length} jobs remaining`);
       }
       
+      // Filter out jobs user has already applied to
+      const { hasUserAppliedToJob } = await import('@/components/freelancer/jobs/mock-data');
+      filtered = filtered.filter(job => !hasUserAppliedToJob(job.id));
+      
       // If no jobs found, suggest searching in the Explore tab
       if (filtered.length === 0) {
         console.log('No jobs found matching your criteria. Try adjusting your search or check the Explore tab for more options.');
@@ -387,86 +392,111 @@ export default function FeedPage() {
       console.log(`Total jobs shown: ${filtered.length}`);
     }
     
+    // Filter out jobs user has already applied to (applies to all tabs)
+    const { hasUserAppliedToJob } = await import('@/components/freelancer/jobs/mock-data');
+    filtered = filtered.filter(job => !hasUserAppliedToJob(job.id));
+    
     return filtered;
   };
 
   // Initialize with all jobs on mount
   useEffect(() => {
-    // Ensure all jobs have coordinates before setting the state
-    const jobsWithCoords = jobs.map(job => {
-      // Check if job has coordinates in any form
-      let coords: [number, number];
+    const initializeJobs = async () => {
+      // Ensure all jobs have coordinates before setting the state
+      const jobsWithCoords = jobs.map(job => {
+        // Check if job has coordinates in any form
+        let coords: [number, number];
+        
+        // First check for coords array
+        if (Array.isArray(job.coords) && job.coords.length === 2) {
+          coords = [job.coords[0], job.coords[1]] as [number, number];
+        } 
+        // If no coordinates found, use default (Chennai)
+        else {
+          coords = [80.2707, 13.0827];
+        }
+        
+        // Create a new job object with the required properties
+        const jobWithCoords: JobWithCoordinates = {
+          // Spread all existing job properties
+          ...job,
+          // Ensure coordinates are set
+          coordinates: coords,
+          coords: coords,
+          // Ensure all required properties have default values
+          id: job.id ?? '',
+          title: job.title ?? '',
+          description: job.description ?? '',
+          category: job.category ?? '',
+          rate: job.rate ?? 0,
+          budget: job.budget ?? 0,
+          priceUnit: job.priceUnit ?? 'project',
+          location: job.location ?? 'Chennai, India',
+          skills: Array.isArray(job.skills) ? job.skills : [],
+          workMode: (job.workMode === 'remote' || job.workMode === 'onsite' || job.workMode === 'hybrid') 
+            ? job.workMode 
+            : 'onsite',
+          type: (job.type === 'freelance' || job.type === 'part-time' || job.type === 'full-time' || job.type === 'contract')
+            ? job.type
+            : 'freelance',
+          postedAt: job.postedAt ?? new Date().toISOString(),
+          company: job.company ?? 'Unknown',
+          companyLogo: job.companyLogo ?? '',
+          clientName: job.clientName ?? 'Anonymous',
+          clientImage: job.clientImage,
+          clientRating: typeof job.clientRating === 'number' || typeof job.clientRating === 'string' 
+            ? job.clientRating 
+            : 0,
+          clientJobs: typeof job.clientJobs === 'number' ? job.clientJobs : 0,
+          proposals: typeof job.proposals === 'number' ? job.proposals : 0,
+          duration: (job.duration === 'hourly' || job.duration === 'daily' || job.duration === 'weekly' || 
+                   job.duration === 'monthly' || job.duration === 'one-time')
+            ? job.duration
+            : 'one-time',
+          experience: (job.experience === 'Entry Level' || job.experience === 'Intermediate' || job.experience === 'Expert')
+            ? job.experience
+            : 'Intermediate',
+          client: job.client
+        };
+        
+        return jobWithCoords;
+      });
       
-      // First check for coords array
-      if (Array.isArray(job.coords) && job.coords.length === 2) {
-        coords = [job.coords[0], job.coords[1]] as [number, number];
-      } 
-      // If no coordinates found, use default (Chennai)
-      else {
-        coords = [80.2707, 13.0827];
-      }
-      
-      // Create a new job object with the required properties
-      const jobWithCoords: JobWithCoordinates = {
-        // Spread all existing job properties
-        ...job,
-        // Ensure coordinates are set
-        coordinates: coords,
-        coords: coords,
-        // Ensure all required properties have default values
-        id: job.id ?? '',
-        title: job.title ?? '',
-        description: job.description ?? '',
-        category: job.category ?? '',
-        rate: job.rate ?? 0,
-        budget: job.budget ?? 0,
-        priceUnit: job.priceUnit ?? 'project',
-        location: job.location ?? 'Chennai, India',
-        skills: Array.isArray(job.skills) ? job.skills : [],
-        workMode: (job.workMode === 'remote' || job.workMode === 'onsite' || job.workMode === 'hybrid') 
-          ? job.workMode 
-          : 'onsite',
-        type: (job.type === 'freelance' || job.type === 'part-time' || job.type === 'full-time' || job.type === 'contract')
-          ? job.type
-          : 'freelance',
-        postedAt: job.postedAt ?? new Date().toISOString(),
-        company: job.company ?? 'Unknown',
-        companyLogo: job.companyLogo ?? '',
-        clientName: job.clientName ?? 'Anonymous',
-        clientImage: job.clientImage,
-        clientRating: typeof job.clientRating === 'number' || typeof job.clientRating === 'string' 
-          ? job.clientRating 
-          : 0,
-        clientJobs: typeof job.clientJobs === 'number' ? job.clientJobs : 0,
-        proposals: typeof job.proposals === 'number' ? job.proposals : 0,
-        duration: (job.duration === 'hourly' || job.duration === 'daily' || job.duration === 'weekly' || 
-                 job.duration === 'monthly' || job.duration === 'one-time')
-          ? job.duration
-          : 'one-time',
-        experience: (job.experience === 'Entry Level' || job.experience === 'Intermediate' || job.experience === 'Expert')
-          ? job.experience
-          : 'Intermediate',
-        client: job.client
-      };
-      
-      return jobWithCoords;
-    });
-    
-    setFilteredJobs(jobsWithCoords);
+      // Apply initial filtering to remove applied jobs
+      const filtered = await filterJobs();
+      setFilteredJobs(filtered);
+    };
+
+    initializeJobs();
   }, [jobs]);
 
-  // Filter jobs when any filter changes
-  useEffect(() => {
-    // Only filter if the component is mounted and jobs are loaded
-    if (jobs.length > 0) {
-      const timer = setTimeout(() => {
-        const results = filterJobs();
-        setFilteredJobs(results);
-      }, 100);
-      
-      return () => clearTimeout(timer);
+  const handleApply = async (jobId: string, proposal: string, rate: string, rateType: string, attachments: File[]) => {
+    try {
+      // Import the createApplication function
+      const { createApplication } = await import('@/components/freelancer/jobs/mock-data');
+
+      const newApplication = await createApplication(jobId, proposal || 'I am interested in this job and believe I can deliver quality work.', rate || '2500', rateType || 'project', attachments);
+
+      if (newApplication) {
+        console.log('Application submitted successfully:', newApplication["#"]);
+
+        // Debug: Check current applications count
+        const { mockApplications } = await import('@/components/freelancer/jobs/mock-data');
+        console.log('Total applications after creation:', mockApplications.length);
+
+        // Show success message
+        alert('Application submitted successfully!');
+
+        // Navigate to My Proposals page
+        router.push('/freelancer/jobs?tab=applications&status=pending');
+      } else {
+        alert('Failed to submit application. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error submitting application:', error);
+      alert('Error submitting application. Please try again.');
     }
-  }, [selectedCategory, searchQuery, location, serviceCategory, workMode, priceRange, selectedSkills, jobs.length]);
+  };
 
   return (
     <div className="relative h-screen w-full bg-black overflow-hidden">
@@ -675,7 +705,7 @@ export default function FeedPage() {
           <div className="container max-w-2xl mx-auto px-0 pb-6">
             {/* Jobs list */}
             <div className="space-y-2 px-4">
-              <ProfessionalsFeed jobs={filteredJobs} />
+              <ProfessionalsFeed jobs={filteredJobs} onApply={handleApply} />
             </div>
           </div>
         </div>

@@ -1,7 +1,5 @@
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, Plus } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ServicePackages } from "@/components/freelancer/profile/ServicePackages";
 
 // Professional Services

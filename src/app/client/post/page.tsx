@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
+// import Image from 'next/image' // Unused;
 import { ArrowLeft } from 'lucide-react';
 import PostJobForm from "@/components/job/post-job-form";
 

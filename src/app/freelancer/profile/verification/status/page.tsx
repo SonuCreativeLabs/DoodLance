@@ -1,7 +1,7 @@
 'use client';
 
 import { useSearchParams, useRouter } from 'next/navigation';
-import { ArrowLeft, CheckCircle, Clock, FileText } from 'lucide-react';
+import { ArrowLeft, CheckCircle, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
@@ -39,8 +39,8 @@ export default function VerificationStatusPage() {
             </div>
             <h2 className="text-2xl font-bold text-white mb-4">Thank You!</h2>
             <p className="text-white/70 mb-8 max-w-md mx-auto">
-              We've received your verification documents and they are currently under review.
-              You'll receive a notification once your verification is complete.
+              We&apos;ve received your verification documents and they are currently under review.
+              You&apos;ll receive a notification once your verification is complete.
               This usually takes 1-2 business days.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">

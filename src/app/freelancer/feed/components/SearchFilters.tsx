@@ -45,12 +45,12 @@ const serviceCategories = [
   { id: 'events', name: 'Event Planning', online: true, offline: true },
 ];
 
-const jobTypes = [
-  { id: 'fulltime', label: 'Full-time', icon: <Clock className="w-4 h-4" /> },
-  { id: 'parttime', label: 'Part-time', icon: <Clock className="w-4 h-4" /> },
-  { id: 'contract', label: 'Contract', icon: <Briefcase className="w-4 h-4" /> },
-  { id: 'freelance', label: 'Freelance', icon: <Code className="w-4 h-4" /> }
-];
+// const jobTypes = [
+//   { id: 'fulltime', label: 'Full-time', icon: <Clock className="w-4 h-4" /> },
+//   { id: 'parttime', label: 'Part-time', icon: <Clock className="w-4 h-4" /> },
+//   { id: 'contract', label: 'Contract', icon: <Briefcase className="w-4 h-4" /> },
+//   { id: 'freelance', label: 'Freelance', icon: <Code className="w-4 h-4" /> }
+// ]; // Unused
 
 const workModes = [
   { id: 'hybrid', label: 'Hybrid', icon: <MapPin className="w-4 h-4" /> },
@@ -58,18 +58,18 @@ const workModes = [
   { id: 'remote', label: 'Remote', icon: <MapPin className="w-4 h-4" /> }
 ];
 
-const experienceLevels = [
-  { id: 'entry', label: 'Entry Level' },
-  { id: 'mid', label: 'Mid Level' },
-  { id: 'senior', label: 'Senior' },
-  { id: 'expert', label: 'Expert' }
-];
+// const experienceLevels = [
+//   { id: 'entry', label: 'Entry Level' },
+//   { id: 'mid', label: 'Mid Level' },
+//   { id: 'senior', label: 'Senior' },
+//   { id: 'expert', label: 'Expert' }
+// ]; // Unused
 
-const skills = [
-  'Web Development', 'Mobile Development', 'UI/UX Design',
-  'Graphic Design', 'Content Writing', 'Digital Marketing',
-  'Video Editing', 'Data Entry', 'Customer Service'
-];
+// const skills = [
+//   'Web Development', 'Mobile Development', 'UI/UX Design',
+//   'Graphic Design', 'Content Writing', 'Digital Marketing',
+//   'Video Editing', 'Data Entry', 'Customer Service'
+// ]; // Unused
 
 export default function SearchFilters({
   isOpen,
@@ -86,7 +86,7 @@ export default function SearchFilters({
   setDistance,
   filtersApplied,
   currentLocation,
-  selectedSkills,
+  // selectedSkills, // Unused
   setSelectedSkills,
   clearFilters,
   applyFilters,
@@ -143,19 +143,13 @@ export default function SearchFilters({
     setLocalLocation(locationName);
     setLocation(locationName);
     setShowSuggestions(false);
-    // Focus back on the input to close mobile keyboard if open
     const input = document.activeElement as HTMLElement;
     if (input) input.blur();
   };
 
-  // Handle work mode changes with proper type safety
-  const handleWorkModeChange = (mode: WorkMode) => {
-    setWorkMode(mode);
-  };
-
   // Helper function to safely handle work mode selection from UI
   const handleWorkModeSelect = (mode: string) => {
-    if (mode === 'remote' || mode === 'onsite' || mode === 'hybrid') {
+    if (isWorkMode(mode)) {
       setWorkMode(mode as WorkMode);
     } else {
       setWorkMode('');

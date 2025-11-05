@@ -4,9 +4,8 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Progress } from "@/components/ui/progress"
 import { Button } from "@/components/ui/button"
-import { Star, Clock, MapPin, Calendar, ChevronLeft, ChevronRight, ThumbsUp, ThumbsDown, Search, X, Briefcase } from "lucide-react"
+import { Clock, Calendar, Search, X, Briefcase } from "lucide-react"
 import { cn } from "@/lib/utils"
 import ClientLayout from "@/components/layouts/client-layout"
 import { bookings, applications, historyJobs, Booking, Application, HistoryJob } from "@/lib/mock/bookings"
@@ -450,18 +449,12 @@ const HistoryCard = ({ job }: { job: HistoryJob }) => {
 }
 
 export default function BookingsPage() {
-  const [currentApplicationIndex, setCurrentApplicationIndex] = useState(0)
-  const [activeTab, setActiveTab] = useState('active')
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedFilter, setSelectedFilter] = useState('all')
   const [applicationFilter, setApplicationFilter] = useState('new')
   const [historyFilter, setHistoryFilter] = useState('all')
   const [isSearchOpen, setIsSearchOpen] = useState(false)
 
-  const handleSwipe = (direction: "left" | "right") => {
-    console.log(`Swiped ${direction} on application ${applications[currentApplicationIndex]["#"]}`)
-    setCurrentApplicationIndex((prev) => Math.min(prev + 1, applications.length - 1))
-  }
 
   const filteredBookings = bookings.filter(booking => {
     const bookingMatchesSearch = booking.service.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -625,7 +618,7 @@ export default function BookingsPage() {
 
         {/* Main Content */}
         <div className="flex-1 pb-24">
-          <Tabs defaultValue="active" className="h-full flex flex-col" onValueChange={setActiveTab}>
+          <Tabs defaultValue="active" className="h-full flex flex-col">
             {/* Fixed Tabs Header */}
             <div className="fixed top-[64px] left-0 right-0 z-40 bg-[#111111]">
               <div className="container max-w-4xl mx-auto px-4">
@@ -698,7 +691,7 @@ export default function BookingsPage() {
                         </div>
                         <h3 className="text-lg font-medium text-white/90 mb-2">No current bookings</h3>
                         <p className="text-white/60 text-sm">
-                          You don't have any ongoing or upcoming bookings
+                          You haven&apos;t applied for any services yet
                         </p>
                       </div>
                     ) : (
@@ -741,7 +734,7 @@ export default function BookingsPage() {
                         </div>
                         <h3 className="text-lg font-medium text-white/90 mb-2">No applications yet</h3>
                         <p className="text-white/60 text-sm">
-                          You haven't received any job applications
+                          You haven&apos;t received any job applications
                         </p>
                       </div>
                     ) : (
@@ -781,7 +774,7 @@ export default function BookingsPage() {
                         </div>
                         <h3 className="text-lg font-medium text-white/90 mb-2">No booking history</h3>
                         <p className="text-white/60 text-sm">
-                          You haven't completed any bookings yet
+                          You haven&apos;t completed any bookings yet
                         </p>
                       </div>
                     ) : (

@@ -1,6 +1,6 @@
 "use client"
 
-import { motion } from 'framer-motion'
+// import { motion } from 'framer-motion' // Unused
 import ClientLayout from '@/components/layouts/client-layout'
 import { Search, ArrowLeft, Clock, Video, Dumbbell, Cpu, Package, Camera, Clapperboard, Brain, Briefcase, Sparkles } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
@@ -14,34 +14,33 @@ const sidebarCategories = [
   { id: 'coaching', name: ['Coaching &', 'Training'], icon: <Dumbbell className="w-6 h-6" /> },
   { id: 'support', name: ['Support', 'Staff'], icon: <Brain className="w-6 h-6" /> },
   { id: 'media', name: ['Media &', 'Content'], icon: <Camera className="w-6 h-6" /> },
-  { id: 'ground', name: ['Ground', 'Services'], icon: <Package className="w-6 h-6" /> },
 ]
 
 // Service items (comprehensive, grouped by category)
 const serviceItems = [
   // Cricket Playing Services
+  { id: 'match-player', name: 'Match Player', category: 'playing', providerCount: 52, mostBooked: true, image: '/images/categories/sports-fitness.jpg', fallbackEmoji: '🏏' },
   { id: 'bowler', name: 'Bowler', category: 'playing', providerCount: 45, mostBooked: true, image: '/images/Bowler & batsman.png', fallbackEmoji: '🏏' },
   { id: 'batsman', name: 'Batsman', category: 'playing', providerCount: 38, mostBooked: true, image: '/images/Bowler & batsman.png', fallbackEmoji: '🏏' },
-  { id: 'sidearm-specialist', name: 'Sidearm Specialist', category: 'playing', providerCount: 22, image: '/images/Bowler & batsman.png', fallbackEmoji: '🎯' },
+  { id: 'sidearm-specialist', name: 'Sidearm Specialist', category: 'playing', providerCount: 22, image: '/images/drone.jpeg', fallbackEmoji: '🎯' },
 
   // Cricket Coaching & Training
-  { id: 'coach', name: 'Coach', category: 'coaching', providerCount: 35, mostBooked: true, image: '/images/Bowler & batsman.png', fallbackEmoji: '👨‍🏫' },
-  { id: 'sports-conditioning-trainer', name: 'Sports Conditioning Trainer', category: 'coaching', providerCount: 28, image: '/images/Bowler & batsman.png', fallbackEmoji: '💪' },
-  { id: 'fitness-trainer', name: 'Fitness Trainer', category: 'coaching', providerCount: 32, image: '/images/Bowler & batsman.png', fallbackEmoji: '🏃‍♂️' },
+  { id: 'coach', name: 'Coach', category: 'coaching', providerCount: 35, mostBooked: true, image: '/images/categories/education.jpg', fallbackEmoji: '👨‍🏫' },
+  { id: 'sports-conditioning-trainer', name: 'Sports Conditioning Trainer', category: 'coaching', providerCount: 28, image: '/images/categories/sports-fitness.jpg', fallbackEmoji: '💪' },
+  { id: 'fitness-trainer', name: 'Fitness Trainer', category: 'coaching', providerCount: 32, image: '/images/categories/sports-fitness.jpg', fallbackEmoji: '🏃‍♂️' },
 
   // Cricket Support Services
-  { id: 'analyst', name: 'Analyst', category: 'support', providerCount: 18, image: '/images/Bowler & batsman.png', fallbackEmoji: '📊' },
-  { id: 'physio', name: 'Physio', category: 'support', providerCount: 25, image: '/images/Bowler & batsman.png', fallbackEmoji: '🏥' },
-  { id: 'scorer', name: 'Scorer', category: 'support', providerCount: 15, image: '/images/Bowler & batsman.png', fallbackEmoji: '📝' },
-  { id: 'umpire', name: 'Umpire', category: 'support', providerCount: 20, image: '/images/Bowler & batsman.png', fallbackEmoji: '⚖️' },
+  { id: 'analyst', name: 'Analyst', category: 'support', providerCount: 18, image: '/images/companies/digitalvibes.png', fallbackEmoji: '📊' },
+  { id: 'physio', name: 'Physio', category: 'support', providerCount: 25, image: '/images/categories/beauty-spa.jpg', fallbackEmoji: '🏥' },
+  { id: 'scorer', name: 'Scorer', category: 'support', providerCount: 15, image: '/images/companies/capture.png', fallbackEmoji: '📝' },
+  { id: 'umpire', name: 'Umpire', category: 'support', providerCount: 20, image: '/images/live events.jpeg', fallbackEmoji: '⚖️' },
 
   // Cricket Media & Content
-  { id: 'cricket-photo-videography', name: 'Cricket Photo / Videography', category: 'media', providerCount: 30, mostBooked: true, image: '/images/Bowler & batsman.png', fallbackEmoji: '📷' },
-  { id: 'cricket-content-creator', name: 'Cricket Content Creator', category: 'media', providerCount: 24, image: '/images/Bowler & batsman.png', fallbackEmoji: '🎬' },
-  { id: 'commentator', name: 'Commentator', category: 'media', providerCount: 16, image: '/images/Bowler & batsman.png', fallbackEmoji: '🎤' },
+  { id: 'cricket-photo-videography', name: 'Cricket Photo / Videography', category: 'media', providerCount: 30, mostBooked: true, image: '/images/Event production.jpeg', fallbackEmoji: '📷' },
+  { id: 'cricket-content-creator', name: 'Cricket Content Creator', category: 'media', providerCount: 24, image: '/images/Influencer:creator.jpeg', fallbackEmoji: '🎬' },
+  { id: 'commentator', name: 'Commentator', category: 'media', providerCount: 16, image: '/images/live events.jpeg', fallbackEmoji: '🎤' },
 
   // Cricket Ground Services
-  { id: 'groundsman', name: 'Groundsman', category: 'ground', providerCount: 12, image: '/images/Bowler & batsman.png', fallbackEmoji: '🌱' },
 ]
 
 export default function ServicesPage() {

@@ -261,6 +261,7 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
         
         // Add event listeners for geolocation
         geolocate.on('geolocate', (e: any) => {
+          if (!e.coords) return;
           const { longitude, latitude } = e.coords;
           map.current?.flyTo({
             center: [longitude, latitude],
@@ -779,10 +780,34 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
     setIsJobDetailsOpen(true);
   }, [processedJobs]);
   
-  const handleApplyToJob = useCallback(() => {
-    console.log('Applying to job:', selectedJob?.id);
-    // Handle apply logic here
-  }, [selectedJob]);
+  const handleApplyToJob = useCallback(async (jobId: string, proposal: string, rate: string, rateType: string, attachments: File[]) => {
+    try {
+      // Import the createApplication function
+      const { createApplication } = await import('@/components/freelancer/jobs/mock-data');
+
+      // Create the application
+      const newApplication = await createApplication(jobId, proposal, rate, rateType, attachments);
+
+      if (newApplication) {
+        console.log('Successfully created application:', newApplication["#"]);
+
+        // Close the job details modal
+        setIsJobDetailsOpen(false);
+
+        // Show success message
+        alert('Application submitted successfully!');
+
+        // Navigate to proposals page
+        window.location.href = '/freelancer/jobs?tab=applications&status=pending';
+      } else {
+        console.error('Failed to create application');
+        alert('Failed to submit application. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error applying to job:', error);
+      alert('Error submitting application. Please try again.');
+    }
+  }, []);
 
   // If there's an error, show error message
   if (error) {
@@ -835,10 +860,8 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
           <JobDetailsFull
             job={selectedJob}
             onBack={handleCloseJobDetails}
-            onApply={(jobId: string, proposal: string) => {
-              console.log(`Applying to job ${jobId} with proposal:`, proposal);
-              // Handle apply logic here
-              handleApplyToJob();
+            onApply={(jobId: string, proposal: string, rate: string, rateType: string, attachments: File[]) => {
+              handleApplyToJob(jobId, proposal, rate, rateType, attachments);
             }}
           />
         </OverlayPortal>

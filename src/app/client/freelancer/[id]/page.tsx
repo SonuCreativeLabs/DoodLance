@@ -2,11 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Phone, MessageSquare, Star, MapPin, Clock, Briefcase, Award, Calendar, Check } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
 import { useNavbar } from '@/contexts/NavbarContext';
 import { professionals } from '@/app/client/nearby/mockData';
 

@@ -2,9 +2,8 @@
 
 import Image from "next/image"
 import { motion } from "framer-motion"
-import { CircleDollarSign, Calendar, ChevronRight, Star, MapPin, Wallet, TrendingUp, Award, Clock, Users, Target, Award as AwardIcon, Dumbbell, Code, Trophy } from "lucide-react"
+import { Calendar, ChevronRight, Star, MapPin, TrendingUp, Award, Clock, Users, Target, Award as AwardIcon, Dumbbell, Trophy } from "lucide-react"
 import Link from "next/link"
-import { cn } from "@/lib/utils"
 import { useState, useEffect } from "react"
 import { useLayout } from "@/contexts/LayoutContext"
 
@@ -25,7 +24,7 @@ export default function FreelancerHome() {
     Promise.all([
       import('@/app/freelancer/feed/data/jobs'),
       import('@/app/freelancer/feed/types')
-    ]).then(([jobsModule, typesModule]) => {
+    ]).then(([jobsModule]) => {
       // User's skills for personalized job matching (should match the ones in feed/page.tsx)
       const userSkills = ['RH Batsman', 'Sidearm Specialist', 'Off Spin', 'Coach', 'Analyst', 'Mystery Spin'];
       
@@ -138,7 +137,7 @@ export default function FreelancerHome() {
 
             <div className="relative">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-white">Today's Earnings</h2>
+                <h2 className="text-lg font-semibold text-white">Today&apos;s Earnings</h2>
                 <span className="inline-flex items-center gap-1 text-xs text-green-400">
                   <TrendingUp className="w-3 h-3" /> +12%
                 </span>

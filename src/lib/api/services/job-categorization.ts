@@ -1,16 +1,7 @@
-import { env } from "@/env.mjs";
-
 interface Category {
   label: string;
   score: number;
 }
-
-interface ZeroShotClassificationResult {
-  labels: string[];
-  scores: number[];
-}
-
-const HUGGING_FACE_API_URL = "https://api-inference.huggingface.co/models/facebook/bart-large-mnli";
 
 export async function categorizeJob(title: string, description: string): Promise<Category[]> {
   try {

@@ -64,71 +64,6 @@ const cricketSkills = [
   ['Wicket Keeping Coach', 'Glove Work', 'Stance', 'Reflex Training']
 ];
 
-const sportsSkills = [
-  ['Badminton Coach', 'Footwork', 'Smashes', 'Drops'],
-  ['Swimming Instructor', 'Freestyle', 'Breaststroke', 'Water Safety'],
-  ['Tennis Coach', 'Forehand', 'Backhand', 'Serve Techniques']
-];
-
-const dietCookingSkills = [
-  ['Meal Planning', 'Macro Counting', 'Special Diets', 'Grocery Shopping'],
-  ['Keto Meal Prep', 'Low-Carb Cooking', 'Meal Planning', 'Nutrition']
-];
-
-const makeupSkills = [
-  ['Bridal Makeup', 'Airbrush', 'Contouring', 'Natural Look'],
-  ['Special Effects', 'Prosthetics', 'Character Makeup', 'Theatrical']
-];
-
-const offlineServiceSkills = [
-  ['Plumbing', 'Pipe Fitting', 'Leak Repair', 'Water Heater Installation'],
-  ['Electrical Work', 'Wiring', 'Circuit Installation', 'Safety Inspection'],
-  ['Carpentry', 'Woodworking', 'Furniture Assembly', 'Cabinet Making'],
-  ['Painting', 'Wall Preparation', 'Interior Finishing', 'Exterior Painting'],
-  ['House Cleaning', 'Deep Cleaning', 'Sanitization', 'Organizing'],
-  ['Gardening', 'Landscaping', 'Plant Care', 'Lawn Maintenance'],
-  ['AC Repair', 'HVAC Maintenance', 'Cooling System', 'Installation'],
-  ['Home Tutoring', 'Math', 'Science', 'English', 'Test Prep'],
-  ['Fitness Training', 'Personal Training', 'Yoga', 'Zumba'],
-  ['Cooking', 'Meal Prep', 'Catering', 'Baking']
-];
-
-const otherSkills = [
-  ['Content Writing', 'Blogging', 'SEO'],
-  ['Graphic Design', 'UI/UX', 'Figma'],
-  ['Digital Marketing', 'Social Media', 'PPC'],
-  ['Data Entry', 'Excel', 'Google Sheets']
-];
-
-// Job categories and titles
-const jobCategories = {
-  offline: {
-    plumbing: ['Emergency Plumber', 'Plumbing Maintenance Expert', 'Water System Specialist'],
-    electrical: ['Residential Electrician', 'Electrical Repair Specialist', 'Electrical Safety Inspector'],
-    carpentry: ['Custom Furniture Maker', 'Home Repair Carpenter', 'Cabinet Installation Expert'],
-    painting: ['House Painter', 'Interior Paint Specialist', 'Commercial Painting Contractor'],
-    cleaning: ['Professional House Cleaner', 'Deep Cleaning Specialist', 'Move-in/out Cleaning Expert'],
-    gardening: ['Garden Maintenance Expert', 'Landscape Designer', 'Plant Care Specialist'],
-    ac_repair: ['AC Repair Technician', 'HVAC Maintenance Expert', 'Cooling System Specialist'],
-    tutoring: ['Math & Science Tutor', 'English Language Tutor', 'Test Prep Coach'],
-    fitness: ['Personal Fitness Trainer', 'Yoga Instructor', 'Zumba Instructor'],
-    cooking: ['Personal Chef', 'Meal Prep Specialist', 'Catering Service Provider']
-  },
-  tech: {
-    frontend: ['Frontend Developer'],
-    backend: ['Backend Developer'],
-    mobile: ['Mobile App Developer']
-  },
-  sports: {
-    cricket: ['Cricket Batting Coach', 'Cricket Bowling Specialist', 'Fielding Coach'],
-    other: ['Badminton Coach', 'Swimming Instructor', 'Tennis Coach']
-  },
-  lifestyle: {
-    diet: ['Meal Prep Specialist', 'Keto Diet Consultant', 'Sports Nutritionist'],
-    makeup: ['Bridal Makeup Artist', 'Special Effects Makeup Artist']
-  }
-};
-
 // Generate jobs
 const generateJobs = (): Job[] => {
   const jobs: Job[] = [];
@@ -438,47 +373,9 @@ const generateJobs = (): Job[] => {
     return job;
   };
 
-  // Generate offline service jobs (30 jobs)
-  Object.entries(jobCategories.offline).forEach(([category, titles]) => {
-    titles.forEach((title, index) => {
-      const skills = offlineServiceSkills[Math.floor(Math.random() * offlineServiceSkills.length)];
-      const description = `Looking for an experienced ${title.toLowerCase()} for local service. Must be available for on-site work in the specified location.`;
-      
-      jobs.push(createJobWithClient({
-        id: `offline-${category}-${index + 1}`,
-        title,
-        description,
-        category: category.charAt(0).toUpperCase() + category.slice(1).replace('_', ' '),
-        skills,
-        workMode: 'hybrid',
-        minRate: 350,
-        maxRate: 18000
-      }));
-    });
-  });
-
-  // Generate tech jobs (15 jobs)
-  Object.entries(jobCategories.tech).forEach(([category, titles]) => {
-    titles.forEach((title, index) => {
-      const skills = devSkills[Math.floor(Math.random() * devSkills.length)];
-      const description = `Looking for an experienced ${title.toLowerCase()} with strong expertise in ${skills.slice(0, -1).join(', ')} and ${skills[skills.length - 1]}.`;
-      
-      jobs.push(createJobWithClient({
-        id: `tech-${category}-${index + 1}`,
-        title,
-        description,
-        category: 'Development',
-        skills,
-        workMode: workModes[Math.floor(Math.random() * workModes.length)],
-        minRate: 1500,
-        maxRate: 5000
-      }));
-    });
-  });
-
   // Generate cricket coaching jobs (5 jobs)
   cricketSkills.forEach((skills, index) => {
-    const jobType = skills[0].includes('Coach') ? 'Coach' : 'Specialist';
+    const jobType = skills[0].includes('Coach') ? 'Coach' : 'Fitness Trainer';
     const title = `Cricket ${jobType} - ${skills[1]}`;
     const description = `Professional cricket ${jobType.toLowerCase()} with expertise in ${skills.slice(1, 3).join(' and ')}. ${skills[3] ? `Specializes in ${skills[3]}.` : ''} Local candidates preferred.`;
     
@@ -486,62 +383,11 @@ const generateJobs = (): Job[] => {
       id: `cricket-${index + 1}`,
       title,
       description,
-      category: 'Sports',
+      category: jobType as any,
       skills: [...new Set([...skills, 'Cricket'])],
       workMode: 'onsite',
       minRate: 500,
       maxRate: 3000
-    }));
-  });
-
-  // Generate other sports jobs (3 jobs)
-  sportsSkills.forEach((skills, index) => {
-    const title = skills[0];
-    const description = `Experienced ${skills[0].toLowerCase()} available for private lessons. Specializes in ${skills.slice(1, 3).join(' and ')}. All skill levels welcome.`;
-    
-    jobs.push(createJobWithClient({
-      id: `sports-${index + 1}`,
-      title,
-      description,
-      category: 'Sports Coaching',
-      skills: [...new Set([...skills, 'Fitness', 'Training'])],
-      workMode: 'onsite',
-      minRate: 400,
-      maxRate: 2500
-    }));
-  });
-
-  // Generate diet and nutrition jobs (2 jobs)
-  dietCookingSkills.forEach((skills, index) => {
-    const title = skills[0].includes('Keto') ? 'Keto Diet Specialist' : 'Meal Planning Expert';
-    const description = `Certified ${title.toLowerCase()} offering ${skills[0].toLowerCase()} services. Specializes in ${skills.slice(1, 3).join(' and ')}.`;
-    
-    jobs.push(createJobWithClient({
-      id: `diet-${index + 1}`,
-      title,
-      description,
-      category: 'Diet & Nutrition',
-      skills: [...new Set([...skills, 'Nutrition', 'Healthy Cooking'])],
-      workMode: 'hybrid',
-      minRate: 800,
-      maxRate: 3000
-    }));
-  });
-
-  // Generate makeup artist jobs (2 jobs)
-  makeupSkills.forEach((skills, index) => {
-    const title = skills[0];
-    const description = `Professional makeup artist specializing in ${skills[0].toLowerCase()}. Services include ${skills.slice(1, 3).join(', ')} and more.`;
-    
-    jobs.push(createJobWithClient({
-      id: `makeup-${index + 1}`,
-      title,
-      description,
-      category: 'Beauty & Makeup',
-      skills: [...new Set([...skills, 'Makeup Artistry', 'Cosmetics'])],
-      workMode: 'onsite',
-      minRate: 1000,
-      maxRate: 5000
     }));
   });
 
@@ -550,8 +396,8 @@ const generateJobs = (): Job[] => {
     {
       title: 'Event Photographer',
       description: 'Need a professional photographer for a corporate event. Must have own equipment and portfolio.',
-      category: 'Photography',
-      skills: ['Event Photography', 'Portrait Photography', 'Photo Editing'],
+      category: 'Cricket Photo / Videography',
+      skills: ['Cricket Photography', 'Sports Photography', 'Action Shots', 'Photo Editing'],
       workMode: 'onsite',
       minRate: 2000,
       maxRate: 8000
@@ -559,20 +405,11 @@ const generateJobs = (): Job[] => {
     {
       title: 'Video Editor',
       description: 'Looking for a skilled video editor for YouTube content. Experience with Premiere Pro required.',
-      category: 'Video Production',
+      category: 'Cricket Content Creator',
       skills: ['Video Editing', 'Color Grading', 'Motion Graphics'],
       workMode: 'remote',
       minRate: 1500,
       maxRate: 6000
-    },
-    {
-      title: 'Interior Designer',
-      description: 'Need an interior designer for a 2BHK apartment. Space planning and 3D visualization skills required.',
-      category: 'Interior Design',
-      skills: ['Space Planning', '3D Visualization', 'Material Selection'],
-      workMode: 'hybrid',
-      minRate: 3000,
-      maxRate: 9000
     }
   ];
 
@@ -589,7 +426,7 @@ const generateJobs = (): Job[] => {
       id: 'crk-sidearm-1',
       title: 'Sidearm for extended net — yorker/bouncer mix',
       description: 'Simulate powerplay and death overs. Consistent yorkers and short balls for top-order prep. 2-hour session with interval blocks.',
-      category: 'Sports',
+      category: 'Sidearm',
       skills: ['Sidearm', 'Batting Practice', 'Death Overs', 'Yorker Control', 'Sidearm Specialist'],
       workMode: 'onsite',
       minRate: 800,
@@ -599,7 +436,7 @@ const generateJobs = (): Job[] => {
       id: 'crk-netbowler-1',
       title: 'Net bowler — left-arm angle for right-handers',
       description: 'Left-arm seam focusing on hard length and wobble seam to RH batters. Red-ball preparation. 90-minute session.',
-      category: 'Sports',
+      category: 'Net Bowler',
       skills: ['Left-arm Seam', 'Hard Length', 'Swing Bowling', 'bowling'],
       workMode: 'onsite',
       minRate: 700,
@@ -609,7 +446,7 @@ const generateJobs = (): Job[] => {
       id: 'crk-batting-1',
       title: 'One-on-one batting — front-foot play vs hard length',
       description: 'Contact point and weight transfer drills. Strike-rotation focus with throwdowns and sidearm. Includes short video feedback.',
-      category: 'Sports',
+      category: 'Coach',
       skills: ['Batting Technique', 'Front-foot Play', 'Strike Rotation', 'Video Analysis', 'batting', 'coaching', 'Coach'],
       workMode: 'onsite',
       minRate: 1200,
@@ -619,7 +456,7 @@ const generateJobs = (): Job[] => {
       id: 'crk-mystery-1',
       title: 'Mystery spin workshop — doosra & carrom ball reading',
       description: 'Picking cues out of the hand and off the pitch. Tempo, trigger movement, and sweep options. Group session welcome.',
-      category: 'Sports',
+      category: 'Net Bowler',
       skills: ['Mystery Spin', 'Carrom Ball', 'Doosra', 'Reading Cues', 'mystery spin', 'bowling', 'Mystery Spin'],
       workMode: 'onsite',
       minRate: 1500,
@@ -629,7 +466,7 @@ const generateJobs = (): Job[] => {
       id: 'crk-keeping-1',
       title: 'Wicketkeeping — glove work and standing-up skills',
       description: 'Glove technique and quick glove skills. Standing-up to pace and spin. Basic stumping practice. 60-minute session.',
-      category: 'Sports',
+      category: 'Match Player',
       skills: ['Wicket Keeping', 'Glove Work', 'Standing Up', 'Stumping'],
       workMode: 'onsite',
       minRate: 600,
@@ -639,7 +476,7 @@ const generateJobs = (): Job[] => {
       id: 'crk-analyst-1',
       title: 'Match video breakdown — shot selection heatmaps',
       description: 'Analyze match footage and create heatmaps. Focus on shot selection, footwork, and decision-making. Post-session report.',
-      category: 'Sports',
+      category: 'Analyst',
       skills: ['Video Analysis', 'Performance Analysis', 'Heatmaps', 'Decision Making', 'analysis', 'Analyst'],
       workMode: 'hybrid',
       minRate: 2500,
@@ -647,7 +484,9 @@ const generateJobs = (): Job[] => {
     })
   ];
 
-  return curated;
+  jobs.push(...curated);
+
+  return jobs;
 };
 
 export const jobs = generateJobs();

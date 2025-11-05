@@ -1,27 +1,43 @@
 // Status Types
-export type JobStatus = 'confirmed' | 'pending' | 'completed' | 'cancelled' | 'upcoming';
-export type ApplicationStatus = 'pending' | 'accepted' | 'rejected' | 'completed' | 'cancelled';
+export type JobStatus = 'confirmed' | 'pending' | 'completed' | 'cancelled' | 'upcoming' | 'started' | 'ongoing';
+export type ApplicationStatus = 'pending' | 'accepted' | 'rejected' | 'withdrawn' | 'interview' | 'hired' | 'completed' | 'cancelled' | 'expired' | 'archived';
 export type TransactionStatus = 'pending' | 'failed' | 'completed';
 
 export type StatusType = JobStatus | ApplicationStatus | TransactionStatus;
 
 // Job Categories
-export type JobCategory = 
-  | 'PHOTO' 
-  | 'VIDEO' 
-  | 'DESIGN' 
-  | 'MUSIC' 
-  | 'DANCE' 
-  | 'EVENT' 
+export type JobCategory =
+  | 'Match Player'
+  | 'Net Bowler'
+  | 'Net Batsman'
+  | 'Sidearm'
+  | 'Coach'
+  | 'Sports Conditioning Trainer'
+  | 'Fitness Trainer'
+  | 'Analyst'
+  | 'Physio'
+  | 'Scorer'
+  | 'Umpire'
+  | 'Cricket Photo / Videography'
+  | 'Cricket Content Creator'
+  | 'Commentator'
   | 'OTHER';
 
 export const JOB_CATEGORIES = [
-  'PHOTO',
-  'VIDEO',
-  'DESIGN',
-  'MUSIC',
-  'DANCE',
-  'EVENT',
+  'Match Player',
+  'Net Bowler',
+  'Net Batsman',
+  'Sidearm',
+  'Coach',
+  'Sports Conditioning Trainer',
+  'Fitness Trainer',
+  'Analyst',
+  'Physio',
+  'Scorer',
+  'Umpire',
+  'Cricket Photo / Videography',
+  'Cricket Content Creator',
+  'Commentator',
   'OTHER'
 ] as const;
 
@@ -37,6 +53,7 @@ export interface ClientInfo {
   joinedDate?: string;
   freelancersWorked?: number;
   freelancerAvatars?: string[];
+  experienceLevel?: string;
 }
 
 export interface CancellationDetails {
@@ -48,6 +65,13 @@ export interface CancellationDetails {
 export interface Rating {
   stars: 1 | 2 | 3 | 4 | 5;
   feedback: string;
+  date: string;
+}
+
+export interface FreelancerRating {
+  stars: 1 | 2 | 3 | 4 | 5;
+  review: string;
+  feedbackChips: string[];
   date: string;
 }
 
@@ -70,12 +94,48 @@ export interface Job {
   cancellationDetails?: CancellationDetails;
   rating?: Rating;
   clientRating?: Rating;
+  freelancerRating?: FreelancerRating;
+  review?: string; // Direct review property for backward compatibility
+  feedbackChips?: string[]; // Direct feedback chips property for backward compatibility
+  otp?: string; // 4-digit verification code for starting job
+  startedAt?: string; // Timestamp when job was started
   earnings?: {
-    amount: number;
-    platformFee: number;
-    total: number;
+    baseAmount: number;
+    tips: number;
+    addOnServices: number;
+    platformCommission: number;
+    gst: number; // GST amount
+    totalEarnings: number;
+    commissionRate?: number; // percentage
+    gstRate?: number; // GST percentage
+    breakdown?: {
+      baseAmount: number;
+      tips: number;
+      addOnServices: {
+        name: string;
+        amount: number;
+      }[];
+      platformCommission: number;
+      gst: number;
+      totalEarnings: number;
+    };
   };
+  addOnServices?: {
+    name: string;
+    price: number;
+    description?: string;
+  }[];
   completedAt?: string;
+  cancelledBy?: 'client' | 'freelancer';
+  cancelledAt?: string;
+  notes?: string;
+  // Proposal history for timeline continuity
+  proposalHistory?: {
+    postedAt: string;
+    appliedDate: string;
+    clientSpottedDate?: string;
+    acceptedDate?: string;
+  };
 }
 
 export interface Proposal {
@@ -99,6 +159,7 @@ export interface Application {
   postedDate: string;
   description: string;
   clientId: string;
+  category: string;
   rating?: number;
   projectsCompleted?: number;
   duration?: string;
@@ -115,6 +176,8 @@ export interface Application {
   moneySpent?: number;
   freelancersWorked?: number;
   freelancerAvatars?: string[];
+  experienceLevel?: string;
+  clientViewedAt?: string; // Timestamp when client viewed this application
 }
 
 export interface Transaction {

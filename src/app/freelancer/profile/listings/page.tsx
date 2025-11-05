@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useDateRange } from '@/contexts/DateRangeContext';
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, Check, X, Plus, ArrowLeft } from "lucide-react";
+import { Calendar, Plus, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { format } from 'date-fns';
@@ -90,7 +90,7 @@ export default function AvailabilityListingsPage() {
     },
   ]);
   
-  const { dateRange, updateDateRange } = useDateRange();
+  const { updateDateRange } = useDateRange();
 
   const handleExtendClick = (availability: Availability) => {
     setSelectedAvailability(availability);

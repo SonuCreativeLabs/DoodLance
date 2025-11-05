@@ -6,7 +6,6 @@ import { useEffect } from 'react';
 
 export default function PortfolioDetailPage({ params }: { params: { id: string } }) {
   const item = freelancerData.portfolio.find((p) => p.id === String(params.id));
-  if (!item) return notFound();
 
   // Hide header and navbar for this page
   useEffect(() => {
@@ -21,6 +20,11 @@ export default function PortfolioDetailPage({ params }: { params: { id: string }
       if (navbar) navbar.style.display = '';
     };
   }, []);
+
+  if (!item) {
+    notFound();
+    return null;
+  }
 
   const handleCancel = () => {
     // Scroll to portfolio section in the profile preview

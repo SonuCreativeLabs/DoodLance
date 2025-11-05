@@ -2,7 +2,6 @@
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, Star, User, MessageSquare } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { useEffect, useState } from 'react';
 
 export type Review = {
@@ -34,7 +33,6 @@ export default function ReviewsPage() {
   }, []);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [freelancerName, setFreelancerName] = useState('My');
-  const [returnUrl, setReturnUrl] = useState('');
 
   useEffect(() => {
     // Check if we're coming from the profile preview modal
@@ -63,8 +61,6 @@ export default function ReviewsPage() {
         sessionStorage.removeItem('freelancerName');
       }
       
-      // Set return URL to go back to the profile page
-      setReturnUrl('/freelancer/profile');
     } else {
       // Fallback to URL parameters if not coming from preview
       const reviewsParam = searchParams.get('reviews');
@@ -148,7 +144,7 @@ export default function ReviewsPage() {
       }
       
       if (returnUrlParam) {
-        setReturnUrl(decodeURIComponent(returnUrlParam));
+        sessionStorage.setItem('returnToProfilePreview', decodeURIComponent(returnUrlParam));
       }
     }
   }, [searchParams]);

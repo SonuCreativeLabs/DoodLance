@@ -1,8 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, Plus } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { SkillsSection } from "@/components/freelancer/profile/SkillsSection";
 import { useLayout } from '@/contexts/LayoutContext';

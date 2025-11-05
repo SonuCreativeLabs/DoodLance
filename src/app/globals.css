@@ -474,8 +474,89 @@ button:not(.rounded-full) {
 }
 
 /* Ensure buttons maintain rounded corners in all states except rounded-full */
-button:hover:not(.rounded-full),
-button:focus:not(.rounded-full),
-button:active:not(.rounded-full) {
-  border-radius: 0.375rem !important;
+/* Disable all question mark tooltips */
+*:not(button):not([role="button"]):not(svg):not(a):not(input):not(textarea):not(select) {
+  cursor: default !important;
+}
+
+/* Specifically disable question mark tooltips for interactive elements */
+button:hover,
+[role="button"]:hover,
+svg:hover,
+div[role="button"]:hover {
+  cursor: pointer !important;
+}
+
+button:hover::after,
+button:hover::before,
+[role="button"]:hover::after,
+[role="button"]:hover::before,
+svg:hover::after,
+svg:hover::before {
+  content: none !important;
+  display: none !important;
+}
+
+/* Disable Info icon tooltips completely */
+svg.lucide-info,
+svg.lucide-info *,
+[stroke="none"][fill="none"] {
+  pointer-events: auto;
+}
+
+svg.lucide-info:hover::after,
+svg.lucide-info:hover::before,
+[stroke="none"][fill="none"]:hover::after,
+[stroke="none"][fill="none"]:hover::before {
+  content: none !important;
+  display: none !important;
+}
+
+/* Override any default tooltip behavior */
+[title] {
+  position: relative;
+}
+
+[title]:hover::after {
+  content: none !important;
+}
+
+[title]:hover::before {
+  content: none !important;
+}
+
+/* Custom tooltip styles */
+[role="button"] {
+  position: relative;
+}
+
+/* Tooltip container styling with rounded corners */
+.tooltip-container {
+  position: absolute;
+  z-index: 50;
+  background: #111111 !important;
+  color: #D1D5DB;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid #374151;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  white-space: nowrap;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  text-align: center;
+}
+
+/* Tooltip arrow with matching background */
+.tooltip-arrow {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0.5rem;
+  height: 0.5rem;
+  background: #111111 !important;
+  border-right: 1px solid #374151;
+  border-bottom: 1px solid #374151;
+  border-radius: 0;
+  transform: translateX(-50%) rotate(45deg);
 }

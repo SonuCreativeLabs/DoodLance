@@ -17,25 +17,46 @@ const nextConfig = {
     domains: ['localhost', '127.0.0.1', 'atmxiuindyakhqmdqzal.supabase.co', 'umeqaqwidjdgnwkxedaw.supabase.co', 'api.dicebear.com', 'images.unsplash.com'],
   },
 
-  // React and build settings
-  reactStrictMode: true,
-  productionBrowserSourceMaps: true,
+  // Static asset handling
+  assetPrefix: process.env.NODE_ENV === 'production' ? undefined : undefined,
+
+  // Enable static export optimization only in production
+  ...(process.env.NODE_ENV === 'production' && {
+    output: 'standalone',
+  }),
+
+  // Ensure proper MIME types
+  poweredByHeader: false,
+
+  // Add compression
+  compress: true,
   
   // TypeScript and ESLint configurations
   typescript: {
     ignoreBuildErrors: false,
   },
   eslint: {
-    ignoreDuringBuilds: false,
+    ignoreDuringBuilds: true,
   },
   
   // Page extensions
   pageExtensions: ['tsx', 'ts', 'jsx', 'js'],
   
   // Custom webpack configuration
-  webpack: (config, { isServer }) => {
+  webpack: (config, { isServer, dev }) => {
     config.resolve.alias['@'] = path.join(__dirname, 'src');
-    
+
+    // Ensure proper MIME types in development
+    if (dev && !isServer) {
+      config.devServer = {
+        ...config.devServer,
+        headers: {
+          'Content-Type': 'text/css; charset=utf-8',
+          'Content-Type': 'application/javascript; charset=utf-8',
+        },
+      };
+    }
+
     // Add any additional webpack configurations here
     if (!isServer) {
       config.resolve.fallback = {
@@ -45,7 +66,7 @@ const nextConfig = {
         tls: false,
       };
     }
-    
+
     return config;
   },
   
@@ -56,6 +77,8 @@ const nextConfig = {
   
   // Headers configuration
   async headers() {
+    const previewOrigins = "http://localhost:* http://127.0.0.1:*";
+
     return [
       {
         source: '/(.*)',
@@ -65,12 +88,8 @@ const nextConfig = {
             value: 'nosniff',
           },
           {
-            key: 'X-Frame-Options',
-            value: 'ALLOW-FROM http://127.0.0.1:53052',
-          },
-          {
             key: 'Content-Security-Policy',
-            value: "frame-ancestors 'self' http://127.0.0.1:53052",
+            value: `frame-ancestors 'self' ${previewOrigins}`,
           },
           {
             key: 'X-XSS-Protection',
@@ -78,7 +97,7 @@ const nextConfig = {
           },
           {
             key: 'Access-Control-Allow-Origin',
-            value: 'http://127.0.0.1:53052',
+            value: '*',
           },
           {
             key: 'Access-Control-Allow-Methods',

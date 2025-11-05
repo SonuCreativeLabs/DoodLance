@@ -1,8 +1,8 @@
 "use client"
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { format, subMonths, addMonths, startOfMonth, endOfMonth, isSameMonth } from 'date-fns';
 
 type TimeRange = 'week' | 'month' | 'year' | 'custom';
@@ -12,26 +12,15 @@ interface TimeRangeSelectorProps {
   defaultRange?: TimeRange;
 }
 
-const rangeOptions = [
-  { value: 'week', label: 'This Week' },
-  { value: 'month', label: 'This Month' },
-  { value: 'year', label: 'This Year' },
-  { value: 'custom', label: 'Custom Range' },
-];
-
 export function TimeRangeSelector({ onRangeChange, defaultRange = 'month' }: TimeRangeSelectorProps) {
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [rangeType, setRangeType] = useState<TimeRange>(defaultRange);
-  const [selectedOption, setSelectedOption] = useState(() => {
-    const found = rangeOptions.find(opt => opt.value === defaultRange);
-    return found || rangeOptions[1];
-  });
 
   useEffect(() => {
-    updateRange();
-  }, [currentDate, rangeType]);
+    setRangeType(defaultRange);
+  }, [defaultRange]);
 
-  const updateRange = () => {
+  useEffect(() => {
     let startDate: Date;
     let endDate: Date = new Date();
 
@@ -60,13 +49,7 @@ export function TimeRangeSelector({ onRangeChange, defaultRange = 'month' }: Tim
     }
 
     onRangeChange({ start: startDate, end: endDate });
-  };
-
-  const handleRangeChange = (value: TimeRange) => {
-    const option = rangeOptions.find(opt => opt.value === value) || rangeOptions[1];
-    setSelectedOption(option);
-    setRangeType(value);
-  };
+  }, [currentDate, rangeType, onRangeChange]);
 
   const handlePrev = () => {
     if (rangeType === 'week') {

@@ -20,12 +20,35 @@ export interface ExtendedFreelancerData {
   online: boolean;
   location: string;
   skills: string[];
-  services: any[];
+  services: Service[];
   portfolio: PortfolioItem[];
-  clientReviews: any[];
-  availability: any[];
+  clientReviews: ClientReview[];
+  availability: AvailabilityEntry[];
   completedJobs: number;
   activeJobs: number;
+}
+
+export interface Service {
+  id: string;
+  title: string;
+  description: string;
+  price: string;
+  deliveryTime: string;
+  type?: 'online' | 'in-person';
+  features?: string[];
+}
+
+export interface ClientReview {
+  id: string;
+  author: string;
+  rating: number;
+  comment: string;
+  date: string;
+}
+
+export interface AvailabilityEntry {
+  day: string;
+  available: boolean;
 }
 
 export const freelancerData: ExtendedFreelancerData = {

@@ -12,8 +12,8 @@ const mockNotifications = [
 ];
 
 export default function NotificationsPage() {
-  const unread = mockNotifications.filter(n => n.unread);
-  const read = mockNotifications.filter(n => !n.unread);
+  // const unread = mockNotifications.filter(n => n.unread);
+  // const read = mockNotifications.filter(n => !n.unread);
 
   return (
     <main className="min-h-screen w-full bg-gradient-to-br from-[#18181b] to-[#2D1B69] flex flex-col">

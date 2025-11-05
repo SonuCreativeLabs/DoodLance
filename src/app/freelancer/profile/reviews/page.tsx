@@ -1,4 +1,4 @@
-import { ArrowLeft, Star, StarHalf, MessageSquare, CheckCircle } from "lucide-react";
+import { ArrowLeft, Star, StarHalf, MessageSquare } from "lucide-react";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -169,7 +169,7 @@ export default function ReviewsPage() {
                         {review.rating.toFixed(1)}
                       </span>
                     </div>
-                    <p className="text-white/90 leading-relaxed italic mb-3">"{review.comment}"</p>
+                    <p className="text-white/90 leading-relaxed italic mb-3">&quot;{review.comment}&quot;</p>
                     <div className="flex items-center justify-between pt-1">
                       <div className="text-xs text-white/40">
                         {new Date(review.date).toLocaleDateString('en-US', { 
