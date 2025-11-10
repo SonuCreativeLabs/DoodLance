@@ -17,6 +17,7 @@ import { useExperience } from '@/contexts/ExperienceContext';
 import { useServices } from '@/contexts/ServicesContext';
 import { SkillInfoDialog } from '@/components/common/SkillInfoDialog';
 import { getSkillInfo, type SkillInfo } from '@/utils/skillUtils';
+import { calculateAge, getPersonalInfo } from '@/utils/personalUtils';
 
 // CoverImage component defined outside the ProfileHeader component
 const CoverImage = () => (
@@ -58,6 +59,9 @@ export function ProfileHeader({
   const [selectedSkillInfo, setSelectedSkillInfo] = useState<SkillInfo | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
+  // Calculate age from personal info
+  const personalInfo = getPersonalInfo();
+  const age = personalInfo ? calculateAge(personalInfo.dateOfBirth) : null;
   
   // Merge context with localStorage fallbacks to avoid stale preview on refresh
   const merged = {
@@ -312,7 +316,15 @@ export function ProfileHeader({
           <p className="text-purple-400 mt-0.5">{personalDetails.title}</p>
           
           <div className="mt-2 flex flex-col items-center gap-0.5 text-sm text-white/70">
-            <div>{personalDetails.location}</div>
+            <div className="flex items-center gap-2">
+              <span>{personalDetails.location}</span>
+              {age && (
+                <>
+                  <span className="mx-1">·</span>
+                  <span>Age {age}</span>
+                </>
+              )}
+            </div>
             <div className="flex items-center gap-1">
               {[...Array(5)].map((_, i) => (
                 <Star
@@ -380,6 +392,7 @@ export function ProfileHeader({
           online: merged.personalDetails.online,
           skills: merged.skills.map((s: any) => s.name),
           about: merged.personalDetails.about,
+          bio: merged.personalDetails.bio,
           responseTime: '1-2 hours',
           deliveryTime: '1-2 weeks',
           completionRate: 100,
@@ -405,7 +418,7 @@ export function ProfileHeader({
             features: svc.features || [],
             category: svc.category
           })),
-          portfolio: merged.portfolio.map((item: any) => ({
+          portfolio: portfolio.map((item) => ({
             id: item.id,
             title: item.title,
             category: item.category,

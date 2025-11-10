@@ -437,17 +437,6 @@ export function PortfolioSection({
 
                 {/* Action Buttons */}
                 <div className="flex flex-wrap gap-4 pt-4">
-                  {viewingItem.url && (
-                    <a 
-                      href={viewingItem.url} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center justify-center rounded-lg px-5 py-2.5 text-sm font-medium bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-700 hover:to-purple-600 transition-all hover:shadow-lg hover:shadow-purple-500/20"
-                    >
-                      <ExternalLink className="h-4 w-4 mr-2" />
-                      Visit Project
-                    </a>
-                  )}
                   <Button 
                     variant="outline" 
                     className="bg-transparent border-white/20 hover:bg-white/5 hover:border-white/30"

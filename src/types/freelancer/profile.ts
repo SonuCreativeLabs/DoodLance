@@ -46,6 +46,7 @@ export interface ProfileData {
   name: string;
   title: string;
   about: string;
+  bio?: string;
   rating: number;
   reviewCount: number;
   responseTime: string;

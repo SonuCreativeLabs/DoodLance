@@ -7,6 +7,7 @@ export interface PersonalDetails {
   title: string;
   location: string;
   about: string;
+  bio: string;
   avatarUrl: string;
   coverImageUrl: string;
   online: boolean;
@@ -22,6 +23,7 @@ const initialPersonalDetails: PersonalDetails = {
   title: "Cricketer & AI Engineer",
   location: "Chennai, India",
   about: "Professional Cricketer & AI Engineer with a passion for technology and sports. I bring the same dedication and strategic thinking from the cricket field to developing intelligent AI solutions.",
+  bio: "Professional Cricketer & AI Engineer with a passion for technology and sports.",
   avatarUrl: '/images/profile-sonu.jpg',
   coverImageUrl: '/images/cover-pic.JPG',
   online: true,
@@ -46,6 +48,18 @@ export function PersonalDetailsProvider({ children }: { children: ReactNode }) {
       const saved = localStorage.getItem('personalDetails');
       if (saved) {
         setPersonalDetails(JSON.parse(saved));
+      }
+      
+      // Also sync with personalInfo data from personal details page
+      const personalInfo = localStorage.getItem('personalInfo');
+      if (personalInfo) {
+        const parsedPersonalInfo = JSON.parse(personalInfo);
+        setPersonalDetails(prev => ({
+          ...prev,
+          name: parsedPersonalInfo.fullName || prev.name,
+          title: parsedPersonalInfo.jobTitle || prev.title,
+          bio: parsedPersonalInfo.bio || prev.bio,
+        }));
       }
     } catch (error) {
       console.error('Failed to parse personal details:', error);

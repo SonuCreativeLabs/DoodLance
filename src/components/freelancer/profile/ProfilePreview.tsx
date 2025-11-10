@@ -750,7 +750,7 @@ const ProfilePreview = memo(({
             {/* About Section */}
             <section id="about" data-section="about" className="scroll-mt-20 pt-8">
               <h2 className="text-xl font-semibold text-white mb-4">About Me</h2>
-              <p className="text-white/80 mb-6 whitespace-pre-line">{profileData.about}</p>
+              <p className="text-white/80 mb-6 whitespace-pre-line">{profileData.bio || profileData.about}</p>
               
               <div className="flex items-center gap-6 mb-6 text-sm">
                 <div className="flex items-center gap-2">

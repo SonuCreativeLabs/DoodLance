@@ -137,7 +137,7 @@ export default function ServicesPage() {
   return (
     <div className="min-h-screen bg-[#0F0F0F] text-white flex flex-col">
       {/* Header */}
-      <div className="px-2 py-3 border-b border-white/5">
+      <div className="sticky top-0 z-50 px-4 py-2 border-b border-white/5 bg-[#0f0f0f]/95 backdrop-blur-sm">
         <div className="flex items-center">
           <button 
             onClick={handleBack}

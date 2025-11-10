@@ -14,6 +14,7 @@ export interface PortfolioItem {
 
 interface PortfolioContextType {
   portfolio: PortfolioItem[];
+  isHydrated: boolean;
   updatePortfolio: (items: PortfolioItem[]) => void;
   addPortfolioItem: (item: PortfolioItem) => void;
   removePortfolioItem: (itemId: string) => void;
@@ -67,7 +68,7 @@ const PortfolioContext = createContext<PortfolioContextType | undefined>(undefin
 
 export function PortfolioProvider({ children }: { children: ReactNode }) {
   const [portfolio, setPortfolio] = useState<PortfolioItem[]>(initialPortfolio);
-  const hasHydrated = useRef(false);
+  const [isHydrated, setIsHydrated] = useState(false);
 
   const updatePortfolio = useCallback((items: PortfolioItem[]) => {
     setPortfolio(items);
@@ -97,18 +98,19 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error('Failed to parse portfolio:', error);
     } finally {
-      hasHydrated.current = true;
+      setIsHydrated(true);
     }
   }, []);
 
   // Save to localStorage whenever it changes (skip first paint to avoid overwriting saved data)
   useEffect(() => {
-    if (!hasHydrated.current) return;
+    if (!isHydrated) return;
     localStorage.setItem('portfolioItems', JSON.stringify(portfolio));
-  }, [portfolio]);
+  }, [portfolio, isHydrated]);
 
   const value: PortfolioContextType = {
     portfolio,
+    isHydrated,
     updatePortfolio,
     addPortfolioItem,
     removePortfolioItem,

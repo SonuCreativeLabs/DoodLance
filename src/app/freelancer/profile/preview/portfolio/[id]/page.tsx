@@ -6,7 +6,7 @@ import { useEffect } from 'react';
 import { CategoryBadge } from '@/components/common/CategoryBadge';
 
 export default function PortfolioDetailPage({ params }: { params: { id: string } }) {
-  const { portfolio } = usePortfolio();
+  const { portfolio, isHydrated } = usePortfolio();
   const item = portfolio.find((p) => p.id === String(params.id));
 
   // Hide header and navbar for this page
@@ -22,6 +22,15 @@ export default function PortfolioDetailPage({ params }: { params: { id: string }
       if (navbar) navbar.style.display = '';
     };
   }, []);
+
+  // Wait for context to hydrate before checking if item exists
+  if (!isHydrated) {
+    return (
+      <div className="min-h-screen bg-[#0F0F0F] text-white flex items-center justify-center">
+        <div className="text-white/60">Loading...</div>
+      </div>
+    );
+  }
 
   if (!item) {
     notFound();

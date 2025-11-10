@@ -9,7 +9,7 @@ import { CategoryBadge } from '@/components/common/CategoryBadge';
 
 export default function PortfolioPage() {
   const router = useRouter();
-  const { portfolio } = usePortfolio();
+  const { portfolio, isHydrated } = usePortfolio();
   const [overrideItems, setOverrideItems] = useState<PortfolioItem[] | null>(null);
   const portfolioItems = useMemo(() => overrideItems ?? portfolio, [overrideItems, portfolio]);
 
@@ -69,6 +69,15 @@ export default function PortfolioPage() {
       router.back();
     }
   };
+
+  // Wait for context to hydrate before showing content
+  if (!isHydrated && !overrideItems) {
+    return (
+      <div className="min-h-screen bg-[#0F0F0F] text-white flex items-center justify-center">
+        <div className="text-white/60">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#0F0F0F] text-white">
