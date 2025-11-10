@@ -107,7 +107,7 @@ export const freelancerData: ExtendedFreelancerData = {
     {
       id: '4',
       title: 'Cricket Performance Analytics',
-      category: 'Cricket Analytics',
+      category: 'Analyst',
       image: 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
       description: 'Developed comprehensive cricket performance analytics tracking player statistics, match data, and performance metrics. Created detailed reports for coaches and players to improve game strategies.',
       skills: ['Cricket Analytics', 'Performance Metrics', 'Data Analysis', 'Strategy']
@@ -115,7 +115,7 @@ export const freelancerData: ExtendedFreelancerData = {
     {
       id: '5',
       title: 'Live Cricket Scoring System',
-      category: 'Cricket Technology',
+      category: 'Cricket Content Creator',
       image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
       description: 'Built a real-time cricket scoring platform that tracks live match statistics, player performance, and generates comprehensive match reports. Used by local cricket clubs for tournament management.',
       skills: ['Cricket Scoring', 'Live Analytics', 'Match Management', 'Data Visualization']

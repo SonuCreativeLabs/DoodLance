@@ -23,7 +23,7 @@ import {
 } from 'lucide-react';
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { useProfile } from '@/contexts/ProfileContext';
+import { usePersonalDetails } from '@/contexts/PersonalDetailsContext';
 
 type PersonalInfo = {
   fullName: string;
@@ -138,7 +138,7 @@ const FormField = ({
 type EditSection = 'personal' | 'contact' | 'location' | null;
 
 export default function PersonalDetailsPage() {
-  const { updatePersonalDetails } = useProfile();
+  const { updatePersonalDetails } = usePersonalDetails();
   const [editingSection, setEditingSection] = useState<EditSection>(null);
   
   // Load saved data from localStorage or use defaults
@@ -205,8 +205,12 @@ export default function PersonalDetailsPage() {
       const newPersonalInfo = { ...editPersonalInfo };
       setPersonalInfo(newPersonalInfo);
       localStorage.setItem('personalInfo', JSON.stringify(newPersonalInfo));
-      // Sync name and title with ProfileContext
-      updatePersonalDetails(editPersonalInfo.fullName, editPersonalInfo.jobTitle, locationInfo.city + ', ' + locationInfo.country);
+      // Sync name and title with PersonalDetailsContext
+      updatePersonalDetails({
+        name: editPersonalInfo.fullName,
+        title: editPersonalInfo.jobTitle,
+        location: locationInfo.city + ', ' + locationInfo.country
+      });
     } else if (section === 'contact') {
       const newContactInfo = { ...editContact };
       setContactInfo(newContactInfo);
@@ -215,8 +219,12 @@ export default function PersonalDetailsPage() {
       const newLocationInfo = { ...editLocation };
       setLocationInfo(newLocationInfo);
       localStorage.setItem('locationInfo', JSON.stringify(newLocationInfo));
-      // Sync location with ProfileContext when location changes
-      updatePersonalDetails(personalInfo.fullName, personalInfo.jobTitle, editLocation.city + ', ' + editLocation.country);
+      // Sync location with PersonalDetailsContext when location changes
+      updatePersonalDetails({
+        name: personalInfo.fullName,
+        title: personalInfo.jobTitle,
+        location: editLocation.city + ', ' + editLocation.country
+      });
     }
     setEditingSection(null);
   };

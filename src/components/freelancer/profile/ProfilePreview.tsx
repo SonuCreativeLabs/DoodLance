@@ -9,7 +9,6 @@ import {
   CheckCircle,
   ArrowRight,
   MessageSquare,
-  MessageCircle,
   Award, 
   Briefcase, 
   MapPin, 
@@ -17,6 +16,9 @@ import {
   Star,
   User
 } from 'lucide-react';
+import { CategoryBadge } from '@/components/common/CategoryBadge';
+import { SkillInfoDialog } from '@/components/common/SkillInfoDialog';
+import { getSkillInfo, type SkillInfo } from '@/utils/skillUtils';
 
 // Local Components
 import { ProfileHeader } from './ProfileHeader';
@@ -50,6 +52,8 @@ const ProfilePreview = memo(({
   const activeTabRef = useRef('top');
   const isScrollingRef = useRef(false);
   const [activeTab, setActiveTab] = useState('top');
+  const [isSkillDialogOpen, setIsSkillDialogOpen] = useState(false);
+  const [selectedSkillInfo, setSelectedSkillInfo] = useState<SkillInfo | null>(null);
   
   // Define tabs with their corresponding section IDs
   const tabs = [
@@ -565,12 +569,11 @@ const ProfilePreview = memo(({
     [profileData.experience]
   );
 
-  // Handle backdrop click to close modal
-  const handleBackdropClick = useCallback((e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
-  }, [onClose]);
+  const handleSkillClick = (skillName: string) => {
+    const skillInfo = getSkillInfo(skillName);
+    setSelectedSkillInfo(skillInfo);
+    setIsSkillDialogOpen(true);
+  };
 
   if (!isOpen) return null;
 
@@ -797,12 +800,13 @@ const ProfilePreview = memo(({
                   <h3 className="font-medium text-white mb-3">Skills</h3>
                   <div className="flex flex-wrap gap-2">
                     {profileData.skills.map((skill, i) => (
-                      <span 
+                      <button
                         key={i}
-                        className="px-3 py-1 bg-white/5 text-white/80 text-sm rounded-full"
+                        onClick={() => handleSkillClick(skill)}
+                        className="px-2 py-0.5 bg-white/5 hover:bg-white/10 text-white/80 hover:text-white text-xs rounded-full transition-colors cursor-pointer"
                       >
                         {skill}
-                      </span>
+                      </button>
                     ))}
                   </div>
                 </div>
@@ -821,20 +825,19 @@ const ProfilePreview = memo(({
                 <div className="flex -mx-2 overflow-x-auto scrollbar-hide pb-2">
                   <div className="flex gap-4 px-2">
                     {profileData.services.map((service) => (
-                      <div key={service.id} className="w-80 flex-shrink-0 p-5 rounded-3xl border border-white/10 bg-white/5 hover:border-purple-500/30 transition-colors">
+                      <div key={service.id} className="w-80 flex-shrink-0 p-5 pt-8 rounded-3xl border border-white/10 bg-white/5 hover:border-purple-500/30 transition-colors flex flex-col h-full relative">
+                        {service.category && (
+                          <CategoryBadge
+                            category={service.category}
+                            type="service"
+                            size="sm"
+                            className="absolute top-3 left-3"
+                          />
+                        )}
                         <div className="flex flex-col h-full">
-                          <div className="flex-1">
+                          <div className="flex-1 mt-2">
                             <div className="flex items-start justify-between">
                               <h3 className="text-lg font-semibold text-white">{service.title}</h3>
-                              {service.type && (
-                                <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
-                                  service.type === 'online' 
-                                    ? 'bg-blue-500/10 text-blue-400' 
-                                    : 'bg-green-500/10 text-green-400'
-                                }`}>
-                                  {service.type === 'online' ? 'Online' : 'In-Person'}
-                                </span>
-                              )}
                             </div>
                             
                             <p className="text-white/70 mt-2 text-sm">{service.description}</p>
@@ -863,11 +866,8 @@ const ProfilePreview = memo(({
                                 </div>
                               </div>
                               <div className="flex items-center gap-2">
-                                <button className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-white/80 hover:text-white transition-colors">
-                                  <MessageCircle className="h-5 w-5" />
-                                </button>
                                 <button className="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-xl text-sm font-medium transition-colors">
-                                  Book Now
+                                  Hire Me
                                 </button>
                               </div>
                             </div>
@@ -946,7 +946,7 @@ const ProfilePreview = memo(({
                               <div className="flex justify-between items-end">
                                 <div className="pr-2">
                                   <h3 className="font-medium text-white line-clamp-1 text-sm">{item.title}</h3>
-                                  <p className="text-xs text-white/80 mt-0.5">{item.category}</p>
+                                  <CategoryBadge category={item.category} type="portfolio" size="sm" className="mt-1" />
                                 </div>
                               </div>
                             </div>
@@ -1115,6 +1115,13 @@ const ProfilePreview = memo(({
         </div>
       </div>
       </div>
+
+      {/* Skill Info Dialog */}
+      <SkillInfoDialog
+        isOpen={isSkillDialogOpen}
+        onClose={() => setIsSkillDialogOpen(false)}
+        skillInfo={selectedSkillInfo}
+      />
     </div>
   ), document.body);
 }, (prevProps, nextProps) => {

@@ -79,7 +79,7 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
     category: acceptedApplication.category as any,
     date: acceptedApplication.appliedDate,
     time: 'TBD',
-    status: 'confirmed' as const,
+    status: 'upcoming' as const,
     payment: acceptedApplication.proposal.proposedRate,
     location: acceptedApplication.location,
     description: acceptedApplication.description,

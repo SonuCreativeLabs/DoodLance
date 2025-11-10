@@ -1,11 +1,13 @@
 'use client';
 import { notFound } from 'next/navigation';
-import { freelancerData } from '../../../profileData';
+import { usePortfolio } from '@/contexts/PortfolioContext';
 import Image from 'next/image';
 import { useEffect } from 'react';
+import { CategoryBadge } from '@/components/common/CategoryBadge';
 
 export default function PortfolioDetailPage({ params }: { params: { id: string } }) {
-  const item = freelancerData.portfolio.find((p) => p.id === String(params.id));
+  const { portfolio } = usePortfolio();
+  const item = portfolio.find((p) => p.id === String(params.id));
 
   // Hide header and navbar for this page
   useEffect(() => {
@@ -63,15 +65,12 @@ export default function PortfolioDetailPage({ params }: { params: { id: string }
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent rounded-t-3xl" />
           {/* Category tag on image */}
-          <span
-            className="absolute bottom-3 left-3 px-4 py-1 rounded-full text-white text-xs font-semibold tracking-wide uppercase shadow-md border border-white/10 backdrop-blur-sm"
-            style={{
-              background: 'rgba(30, 30, 40, 0.44)',
-              letterSpacing: '0.08em',
-            }}
-          >
-            {item.category}
-          </span>
+          <CategoryBadge
+            category={item.category}
+            type="portfolio"
+            size="sm"
+            className="absolute bottom-3 left-3"
+          />
         </div>
         {/* Card Content */}
         <div className="p-8 pt-6 flex flex-col gap-2">

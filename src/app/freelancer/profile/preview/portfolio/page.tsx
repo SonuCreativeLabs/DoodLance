@@ -2,23 +2,41 @@
 
 import { useRouter } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
-import Image from 'next/image';
-import { useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { setSessionFlag, setSessionItem } from '@/utils/sessionStorage';
-import { freelancerData } from '../../profileData';
-
-export type PortfolioItem = {
-  id: string;
-  title: string;
-  category: string;
-  image: string;
-  description?: string;
-  tags?: string[];
-};
+import { usePortfolio, type PortfolioItem } from '@/contexts/PortfolioContext';
+import { CategoryBadge } from '@/components/common/CategoryBadge';
 
 export default function PortfolioPage() {
   const router = useRouter();
-  const portfolioItems: PortfolioItem[] = freelancerData.portfolio;
+  const { portfolio } = usePortfolio();
+  const [overrideItems, setOverrideItems] = useState<PortfolioItem[] | null>(null);
+  const portfolioItems = useMemo(() => overrideItems ?? portfolio, [overrideItems, portfolio]);
+
+  // Debug: Log portfolio changes
+  useEffect(() => {
+    console.log('Portfolio Preview Page - Portfolio items:', portfolio.length, portfolio);
+  }, [portfolio]);
+
+  // Prefer data passed from ProfilePreview via sessionStorage to avoid reload races
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const isFromPreview = window.location.hash === '#fromPreview';
+    if (!isFromPreview) return;
+    try {
+      const stored = sessionStorage.getItem('portfolioPreviewData');
+      if (stored) {
+        const parsed = JSON.parse(stored) as PortfolioItem[];
+        // Basic validation
+        if (Array.isArray(parsed)) {
+          setOverrideItems(parsed);
+        }
+        sessionStorage.removeItem('portfolioPreviewData');
+      }
+    } catch (e) {
+      console.error('Failed to load preview portfolio from sessionStorage', e);
+    }
+  }, []);
 
   useEffect(() => {
     const header = document.querySelector('header');
@@ -45,7 +63,8 @@ export default function PortfolioPage() {
         `${window.location.origin}${returnPath}#portfolio`,
       );
 
-      window.location.href = `${returnPath}#portfolio`;
+      // Use router.push instead of window.location.href to prevent full page reload
+      router.push(`${returnPath}#portfolio`);
     } else {
       router.back();
     }
@@ -89,13 +108,12 @@ export default function PortfolioPage() {
               >
                 <div className="relative w-full h-full">
                   <div className="absolute inset-0 flex items-center justify-center bg-gray-800/50 rounded-xl">
-                    <Image
+                    <img
                       src={item.image}
                       alt={item.title}
-                      fill
-                      className="object-cover transition-all duration-300 group-hover:scale-105"
+                      className="w-full h-full object-cover transition-all duration-300 group-hover:scale-105"
                       onError={(event) => {
-                        const target = event.target as HTMLImageElement;
+                        const target = event.currentTarget as HTMLImageElement;
                         target.src =
                           'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjAwIiBoZWlnaHQ9IjgwMCIgdmlld0JveD0iMCAwIDYwMCA0MDAiPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiMxQTFBMUEiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE4IiBmb250LXdlaWdodD0iYm9sZCIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGRvbWluYW50LWJhc2VsaW5lPSJtaWRkbGUiPk5vIFRodW1ibmFpbCBBdmFpbGFibGU8L3RleHQ+PC9zdmc+';
                       }}
@@ -106,6 +124,7 @@ export default function PortfolioPage() {
                     <div className="flex justify-between items-end">
                       <div className="pr-2">
                         <h3 className="font-medium text-white line-clamp-1 text-sm">{item.title}</h3>
+                        <CategoryBadge category={item.category} type="portfolio" size="sm" className="mt-1" />
                       </div>
                     </div>
                   </div>

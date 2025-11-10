@@ -67,7 +67,7 @@ export const serviceItems = [
     description: 'Sidearm specialists for realistic bowling simulation'
   },
 
-  // Coaching & Training (3)
+  // Coaching & Training (2)
   {
     id: 'coach',
     name: 'Coach',
@@ -79,22 +79,13 @@ export const serviceItems = [
     description: 'Professional cricket coaches for all skill levels'
   },
   {
-    id: 'sports-conditioning-trainer',
-    name: 'Sports Conditioning Trainer',
+    id: 'trainer',
+    name: 'Trainer',
     category: 'coaching',
-    providerCount: 28,
+    providerCount: 60,
     image: '/images/Bowler & batsman.png',
     icon: '💪',
-    description: 'Specialized trainers for cricket-specific conditioning'
-  },
-  {
-    id: 'fitness-trainer',
-    name: 'Fitness Trainer',
-    category: 'coaching',
-    providerCount: 32,
-    image: '/images/Bowler & batsman.png',
-    icon: '🏃‍♂️',
-    description: 'General fitness trainers with cricket expertise'
+    description: 'Sports conditioning and fitness trainers specialized for cricket'
   },
 
   // Support Staff (4)

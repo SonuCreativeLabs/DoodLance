@@ -29,8 +29,8 @@ const jobChats = mockUpcomingJobs.map((job, index) => {
   
   // Add some variation to the statuses
   let status = job.status;
-  if (status === 'confirmed' && Math.random() > 0.7) {
-    status = 'upcoming'; // Convert some confirmed to upcoming for variety
+  if (status === 'ongoing' && Math.random() > 0.7) {
+    status = 'upcoming'; // Convert some ongoing to upcoming for variety
   }
   
   return {
@@ -43,9 +43,9 @@ const jobChats = mockUpcomingJobs.map((job, index) => {
     time: new Date(job.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + 
           (job.time ? ' • ' + job.time : ''),
     budget: `₹${payment.toLocaleString()}`,
-    status: status === 'confirmed' ? 'Ongoing' : 
-             status === 'completed' ? 'Completed' :
-             status === 'cancelled' ? 'Cancelled' : 'Upcoming',
+    status: status === 'ongoing' ? 'Ongoing' : 
+           status === 'completed' ? 'Completed' :
+           status === 'cancelled' ? 'Cancelled' : 'Upcoming',
     unread,
     rating: (job.client?.rating || 4.0) + (Math.random() * 0.5) // Add some rating variation
   };

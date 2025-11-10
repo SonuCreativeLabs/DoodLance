@@ -17,6 +17,7 @@ export interface Service {
   type?: 'online' | 'in-person';
   deliveryTime: string;
   features?: string[];
+  category?: string;
 }
 
 export interface PortfolioItem {

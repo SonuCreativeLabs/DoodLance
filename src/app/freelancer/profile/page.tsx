@@ -13,7 +13,7 @@ import { ProfileSectionCard } from '@/components/freelancer/profile/ProfileSecti
 import { SkillsSection } from '@/components/freelancer/profile/SkillsSection';
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useRef } from 'react';
-import { PortfolioItem } from './preview/portfolio/page';
+import { type PortfolioItem } from '@/contexts/PortfolioContext';
 import { getSessionFlag, removeSessionItem } from '@/utils/sessionStorage';
 
 // Types

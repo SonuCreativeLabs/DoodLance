@@ -1,8 +1,10 @@
 'use client';
 
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { ArrowLeft, Star, User, MessageSquare } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useReviews } from '@/contexts/ReviewsContext';
+import { usePersonalDetails } from '@/contexts/PersonalDetailsContext';
 
 export type Review = {
   id: string;
@@ -16,7 +18,10 @@ export type Review = {
 
 export default function ReviewsPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const { reviewsData: contextReviewsData } = useReviews();
+  const { personalDetails } = usePersonalDetails();
+  const [reviews, setReviews] = useState<Review[]>(contextReviewsData.reviews);
+  const [freelancerName, setFreelancerName] = useState(personalDetails.name);
 
   // Hide header and navbar for this page
   useEffect(() => {
@@ -31,138 +36,32 @@ export default function ReviewsPage() {
       if (navbar) navbar.style.display = '';
     };
   }, []);
-  const [reviews, setReviews] = useState<Review[]>([]);
-  const [freelancerName, setFreelancerName] = useState('My');
 
+  // Sync reviews from context
   useEffect(() => {
-    // Check if we're coming from the profile preview modal
-    const isFromPreview = window.location.hash === '#fromPreview';
-    
-    if (isFromPreview) {
-      // Get data from session storage
-      const storedReviews = sessionStorage.getItem('reviewsPreviewData');
-      const storedName = sessionStorage.getItem('freelancerName');
-      
-      if (storedReviews) {
-        try {
-          const parsedReviews = JSON.parse(storedReviews);
-          console.log('Loaded reviews from session storage:', parsedReviews);
-          setReviews(parsedReviews);
-          
-          // Clear the stored data after using it
-          sessionStorage.removeItem('reviewsPreviewData');
-        } catch (error) {
-          console.error('Error parsing reviews data from session storage:', error);
-        }
-      }
-      
-      if (storedName) {
-        setFreelancerName(storedName);
-        sessionStorage.removeItem('freelancerName');
-      }
-      
-    } else {
-      // Fallback to URL parameters if not coming from preview
-      const reviewsParam = searchParams.get('reviews');
-      const nameParam = searchParams.get('freelancerName');
-      const returnUrlParam = searchParams.get('returnUrl');
-      
-      console.log('Raw reviews param:', reviewsParam);
-      
-      // Mock reviews data in case URL parameter is missing
-      const mockReviews: Review[] = [
-        {
-          id: '1',
-          author: 'Rahul Sharma',
-          role: 'U-19 Cricket Team Captain',
-          rating: 5,
-          comment: 'Sonu transformed my batting technique completely. His one-on-one sessions helped me improve my average by 35% in just 3 months. His knowledge of the game is exceptional!',
-          date: '2024-05-10',
-          isVerified: true
-        },
-        {
-          id: '2',
-          author: 'Neha Patel',
-          role: 'Startup Founder',
-          rating: 5,
-          comment: 'The AI solution developed by Sonu automated our customer service, reducing response time by 80%. His technical expertise and problem-solving skills are top-notch!',
-          date: '2024-04-18',
-          isVerified: true
-        },
-        {
-          id: '3',
-          author: 'Amit Kumar',
-          role: 'Cricket Academy Director',
-          rating: 4,
-          comment: 'Sonu\'s coaching methods are innovative and effective. He has a unique way of breaking down complex techniques into simple, actionable steps.',
-          date: '2024-03-29',
-          isVerified: true
-        },
-        {
-          id: '4',
-          author: 'Priya Singh',
-          role: 'Tech Entrepreneur',
-          rating: 5,
-          comment: 'Working with Sonu was a game-changer for our business. His technical solutions are not just effective but also scalable. Highly recommended!',
-          date: '2024-03-15',
-          isVerified: true
-        },
-        {
-          id: '5',
-          author: 'Vikram Mehta',
-          role: 'Cricket Enthusiast',
-          rating: 5,
-          comment: 'The best coach I\'ve ever worked with. Sonu\'s attention to detail and personalized approach helped me correct years of bad batting habits.',
-          date: '2024-02-28',
-          isVerified: true
-        }
-      ];
-
-      if (reviewsParam) {
-        try {
-          const decodedReviews = decodeURIComponent(reviewsParam);
-          console.log('Decoded reviews:', decodedReviews);
-          const parsedReviews = JSON.parse(decodedReviews);
-          console.log('Parsed reviews:', parsedReviews);
-          setReviews(parsedReviews);
-        } catch (error) {
-          console.error('Error parsing reviews data:', error);
-          // Fallback to mock data if there's an error
-          setReviews(mockReviews);
-        }
-      } else {
-        // Use mock data if no reviews parameter is provided
-        console.log('Using mock reviews data');
-        setReviews(mockReviews);
-      }
-      
-      if (nameParam) {
-        setFreelancerName(decodeURIComponent(nameParam));
-      } else {
-        // Default name if not provided
-        setFreelancerName("Sonu's");
-      }
-      
-      if (returnUrlParam) {
-        sessionStorage.setItem('returnToProfilePreview', decodeURIComponent(returnUrlParam));
-      }
-    }
-  }, [searchParams]);
+    setReviews(contextReviewsData.reviews);
+    setFreelancerName(personalDetails.name);
+  }, [contextReviewsData.reviews, personalDetails.name]);
 
   const handleBack = () => {
     if (typeof window !== 'undefined') {
-      // Store a flag to indicate we want to scroll to reviews
       sessionStorage.setItem('scrollToReviews', 'true');
-      
-      // Check if we have a return URL from the profile preview
       const returnUrl = sessionStorage.getItem('returnToProfilePreview');
-      
       if (returnUrl) {
-        // Navigate back to the exact URL that was stored when opening reviews
-        window.location.href = returnUrl;
+        try {
+          const u = new URL(returnUrl);
+          const relative = `${u.pathname}${u.search}${u.hash}`;
+          router.push(relative);
+          return;
+        } catch {
+          // fall through to default path
+        }
+      }
+      // Fallbacks
+      if (window.history.length > 1) {
+        router.back();
       } else {
-        // Fallback to history back if no return URL is found
-        window.history.back();
+        router.push('/freelancer/profile');
       }
     } else {
       router.back();

@@ -11,15 +11,6 @@ export const reviews = [
   },
   {
     id: '2',
-    author: 'Neha Patel',
-    role: 'Startup Founder',
-    rating: 5,
-    comment: 'The AI solution developed by Sonu automated our customer service, reducing response time by 80%. His technical expertise and problem-solving skills are top-notch!',
-    date: '2024-04-18',
-    avatar: ''
-  },
-  {
-    id: '3',
     author: 'Vikram Singh',
     role: 'Cricket Academy Director',
     rating: 5,
@@ -28,16 +19,7 @@ export const reviews = [
     avatar: ''
   },
   {
-    id: '4',
-    author: 'Ananya Gupta',
-    role: 'Tech Entrepreneur',
-    rating: 4.5,
-    comment: 'Worked with Sonu on a complex AI project. His understanding of machine learning models and their practical implementation is impressive. Delivered beyond expectations!',
-    date: '2024-02-15',
-    avatar: ''
-  },
-  {
-    id: '5',
+    id: '3',
     author: 'Arjun Mehta',
     role: 'Professional Cricketer',
     rating: 5,
@@ -46,12 +28,30 @@ export const reviews = [
     avatar: ''
   },
   {
-    id: '6',
-    author: 'Priya Desai',
-    role: 'Product Manager',
+    id: '4',
+    author: 'Karan Patel',
+    role: 'District Cricket Team Coach',
+    rating: 4.5,
+    comment: 'Sonu\'s cricket analytics service helped our team win the district championship. His performance data and strategic insights were crucial in our success. Highly recommended!',
+    date: '2024-02-15',
+    avatar: ''
+  },
+  {
+    id: '5',
+    author: 'Priya Sharma',
+    role: 'Women\'s Cricket Captain',
     rating: 5,
-    comment: 'Sonu developed a custom AI tool that saved our team 20+ hours of work per week. His ability to understand business needs and translate them into technical solutions is remarkable.',
+    comment: 'Sonu coached our women\'s cricket team and the improvement was incredible. His training methods and mental coaching techniques helped us secure the state finals.',
     date: '2023-12-10',
+    avatar: ''
+  },
+  {
+    id: '6',
+    author: 'Rajesh Kumar',
+    role: 'Cricket Club President',
+    rating: 5,
+    comment: 'Our club hired Sonu for performance analysis and team development. His live scoring system and match analytics have revolutionized how we prepare for tournaments.',
+    date: '2023-11-05',
     avatar: ''
   }
 ];

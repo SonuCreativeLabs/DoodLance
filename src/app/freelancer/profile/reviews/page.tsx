@@ -5,18 +5,18 @@ import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useEffect } from 'react';
-import { useProfile } from '@/contexts/ProfileContext';
+import { useReviews } from '@/contexts/ReviewsContext';
 import { reviews, getInitialRatingStats } from '@/data/reviewsData';
 
 export default function ReviewsPage() {
-  const { updateRating } = useProfile();
+  const { updateRating } = useReviews();
 
-  // Calculate average rating and sync with ProfileContext
+  // Calculate average rating and sync with ReviewsContext
   const averageRating = reviews.reduce((acc, review) => acc + review.rating, 0) / reviews.length;
   const totalReviews = reviews.length;
 
   useEffect(() => {
-    // Update the profile context with the calculated rating and review count
+    // Update the reviews context with the calculated rating and review count
     updateRating(averageRating, totalReviews);
   }, [averageRating, totalReviews, updateRating]);
 
