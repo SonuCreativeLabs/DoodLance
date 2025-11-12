@@ -148,7 +148,7 @@ export default function ProfessionalsFeed({
       {items.map((item: any) => (
         <div
           key={item.id}
-          className="group bg-gradient-to-br from-[#1E1E1E] to-[#1A1A1A] rounded-2xl p-6 shadow-xl hover:shadow-purple-500/20 transition-all duration-300 w-full border border-white/5 hover:border-white/10"
+          className="group bg-gradient-to-br from-[#1E1E1E] to-[#1A1A1A] rounded-2xl px-6 py-4 shadow-xl hover:shadow-purple-500/20 transition-all duration-300 w-full border border-white/5 hover:border-white/10"
           onClick={() => filteredProfessionals ? handleProfessionalClick(item) : handleJobClick(item as Job)}
         >
           <div className="space-y-2">
