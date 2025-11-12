@@ -812,14 +812,20 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
       if (newApplication) {
         console.log('Successfully created application:', newApplication["#"]);
 
+        // Refresh the ForYouJobs context to exclude the applied job
+        // Dispatch a custom event that the ForYouJobsContext will listen to
+        window.dispatchEvent(new CustomEvent('applicationCreated', { detail: { jobId } }));
+
         // Close the job details modal
         setIsJobDetailsOpen(false);
 
         // Show success message
         alert('Application submitted successfully!');
 
-        // Navigate to proposals page
-        window.location.href = '/freelancer/jobs?tab=applications&status=pending';
+        // Small delay to allow event processing before navigation
+        setTimeout(() => {
+          window.location.href = '/freelancer/jobs?tab=applications&status=pending';
+        }, 500);
       } else {
         console.error('Failed to create application');
         alert('Failed to submit application. Please try again.');

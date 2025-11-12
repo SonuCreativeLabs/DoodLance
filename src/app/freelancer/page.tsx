@@ -7,14 +7,20 @@ import Link from "next/link"
 import { useState, useEffect } from "react"
 import { useLayout } from "@/contexts/LayoutContext"
 import { useRouter } from "next/navigation"
+import { useSkills } from "@/contexts/SkillsContext"
+import { useForYouJobs } from "@/contexts/ForYouJobsContext"
+import type { Job } from "./feed/types"
+import { getWorkModeLabel, getJobDurationLabel } from "./feed/types"
 
 export const dynamic = 'force-dynamic'
 
 export default function FreelancerHome() {
   const { showHeader, showNavbar } = useLayout();
   const router = useRouter();
+  const { skills } = useSkills();
+  const { forYouJobs } = useForYouJobs();
   const [jobCount, setJobCount] = useState(0);
-  const [recommendedJobs, setRecommendedJobs] = useState<any[]>([]);
+  const [recommendedJobs, setRecommendedJobs] = useState<Job[]>([]);
 
   useEffect(() => {
     // Always show header and navbar for the home page
@@ -23,46 +29,20 @@ export default function FreelancerHome() {
   }, [showHeader, showNavbar]);
 
   useEffect(() => {
-    // Import jobs data and filter logic dynamically
-    Promise.all([
-      import('@/app/freelancer/feed/data/jobs'),
-      import('@/app/freelancer/feed/types')
-    ]).then(([jobsModule]) => {
-      // User's skills for personalized job matching (should match the ones in feed/page.tsx)
-      const userSkills = ['RH Batsman', 'Sidearm Specialist', 'Off Spin', 'Batting coach', 'Analyst', 'Mystery Spin'];
-      
-      // Filter jobs to match the "For You" tab logic
-      const forYouJobs = jobsModule.jobs.filter(job => {
-        // Combine job title, description, category, and skills into a single searchable string
-        const jobText = [
-          job.title || '',
-          job.description || '',
-          job.category || '',
-          ...(job.skills || [])
-        ].join(' ').toLowerCase();
-        
-        // Check if any of the user's skills match the job
-        return userSkills.some(skill => 
-          jobText.includes(skill.toLowerCase())
-        );
-      });
-      
-      setJobCount(forYouJobs.length);
-      // Take the first 2 jobs for the home page
-      setRecommendedJobs(forYouJobs.slice(0, 2));
-    }).catch(error => {
-      console.error('Failed to load jobs:', error);
-    });
-  }, []);
+    // Use the first 2 jobs from the shared forYouJobs context
+    setJobCount(forYouJobs.length);
+    setRecommendedJobs(forYouJobs.slice(0, 2));
+  }, [forYouJobs]);
 
-  const handleJobClick = (job: any) => {
+  const handleJobClick = (job: Job) => {
     router.push(`/freelancer/feed?jobId=${job.id}`);
   };
 
-  const handleQuickApply = (job: any) => {
+  const handleQuickApply = (job: Job) => {
     // Navigate to the feed page with job details open
     router.push(`/freelancer/feed?jobId=${job.id}`);
   };
+
   return (
     <div className="min-h-screen bg-[#111111] pb-24">
       {/* Hero Banner */}
@@ -324,17 +304,17 @@ export default function FreelancerHome() {
             </div>
           </div>
         </motion.div>
-        {/* Recommended Jobs */}
-        <motion.div 
+        {/* Your Top Recommended Jobs */}
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.9 }}
           className="mb-8"
         >
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-gray-200">Recommended Jobs</h2>
+            <h2 className="text-lg font-semibold text-gray-200">Your Top Recommended Jobs</h2>
             <Link href="/freelancer/feed?tab=for-you">
-              <motion.button 
+              <motion.button
                 whileHover={{ x: 3 }}
                 className="text-white/70 hover:text-white/90 text-sm font-medium flex items-center transition-colors duration-200"
               >
@@ -345,7 +325,7 @@ export default function FreelancerHome() {
           </div>
           <div className="grid gap-4">
             {recommendedJobs.map((job, index) => (
-              <motion.div 
+              <motion.div
                 key={job.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -371,9 +351,14 @@ export default function FreelancerHome() {
                         {job.title}
                       </h3>
                       <div className="flex items-center gap-2">
-                        <span className="text-[12px] font-medium text-white/80 bg-white/10 px-2 py-0.5 rounded-full whitespace-nowrap">
+                        <span className="text-[12px] font-medium text-white/80 bg-white/10 px-2 py-0.5 rounded whitespace-nowrap">
                           {job.category}
                         </span>
+                        {job.workMode && (
+                          <span className="text-[12px] font-medium text-white/80 bg-white/10 px-2 py-0.5 rounded whitespace-nowrap">
+                            {getWorkModeLabel(job.workMode)}
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -421,10 +406,10 @@ export default function FreelancerHome() {
                   <div className="flex items-center justify-between pt-3 border-t border-white/5 mt-2">
                     <div className="flex items-baseline gap-1">
                       <span className="text-[17px] font-semibold text-white">
-                        ₹{job.rate?.toLocaleString()}
+                        ₹{job.budget?.toLocaleString()}
                       </span>
                       <span className="text-[13px] text-white/60">
-                        / {job.priceUnit}
+                        / {getJobDurationLabel(job)}
                       </span>
                     </div>
                     <button
@@ -434,7 +419,7 @@ export default function FreelancerHome() {
                       }}
                       className="px-4 py-2 text-xs font-medium text-white bg-gradient-to-r from-[#6B46C1] to-[#4C1D95] hover:from-[#5B35B0] hover:to-[#3D1B7A] rounded-xl transition-all duration-300 shadow-lg shadow-purple-600/20 hover:shadow-purple-600/30 flex items-center justify-center gap-1.5 group-hover:shadow-lg group-hover:shadow-purple-500/20"
                     >
-                      <span>Quick Apply</span>
+                      <span>Apply Now</span>
                       <svg className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                       </svg>
@@ -456,12 +441,12 @@ export default function FreelancerHome() {
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.2 }}
+          transition={{ delay: 0.9 }}
           className="mb-8"
         >
           {/* Skills Header - Moved outside the card */}
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-white">Your Skills</h2>
+            <h2 className="text-lg font-semibold text-white">Your Top Skills</h2>
             <Link href="/freelancer/profile/skills">
               <motion.button 
                 whileHover={{ x: 3 }}

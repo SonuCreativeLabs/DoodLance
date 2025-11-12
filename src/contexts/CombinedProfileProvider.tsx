@@ -3,6 +3,7 @@
 import React, { ReactNode } from 'react';
 import { PersonalDetailsProvider } from './PersonalDetailsContext';
 import { SkillsProvider } from './SkillsContext';
+import { ForYouJobsProvider } from './ForYouJobsContext';
 import { PortfolioProvider } from './PortfolioContext';
 import { ExperienceProvider } from './ExperienceContext';
 import { ServicesProvider } from './ServicesContext';
@@ -20,15 +21,17 @@ export function CombinedProfileProvider({ children }: CombinedProfileProviderPro
   return (
     <PersonalDetailsProvider>
       <SkillsProvider>
-        <PortfolioProvider>
-          <ExperienceProvider>
-            <ServicesProvider>
-              <ReviewsProvider>
-                {children}
-              </ReviewsProvider>
-            </ServicesProvider>
-          </ExperienceProvider>
-        </PortfolioProvider>
+        <ForYouJobsProvider>
+          <PortfolioProvider>
+            <ExperienceProvider>
+              <ServicesProvider>
+                <ReviewsProvider>
+                  {children}
+                </ReviewsProvider>
+              </ServicesProvider>
+            </ExperienceProvider>
+          </PortfolioProvider>
+        </ForYouJobsProvider>
       </SkillsProvider>
     </PersonalDetailsProvider>
   );

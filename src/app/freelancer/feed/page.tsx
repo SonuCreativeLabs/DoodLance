@@ -18,6 +18,7 @@ const MapView = dynamic(() => import('./components/MapViewComponent'), {
 import ProfessionalsFeed from './components/ProfessionalsFeed';
 import SearchFilters from './components/SearchFilters';
 import { useSkills } from '@/contexts/SkillsContext';
+import { useForYouJobs } from '@/contexts/ForYouJobsContext';
 
 
 
@@ -29,6 +30,7 @@ export default function FeedPage() {
   const [isSheetCollapsed, setIsSheetCollapsed] = useState(false);
   const router = useRouter();
   const { skills } = useSkills();
+  const { forYouJobs } = useForYouJobs();
   // UI State
   const [isDragging, setIsDragging] = useState(false);
   const [isDragTextVisible, setIsDragTextVisible] = useState(true);
@@ -189,9 +191,6 @@ export default function FeedPage() {
     setFiltersApplied(false);
   };
 
-  // User's skills for personalized job matching
-  const userSkills = skills.map(skill => skill.name);
-
   // Filter jobs based on selected tab and filters
   const filterJobs = async (): Promise<JobWithCoordinates[]> => {
     console.log('\n=== Starting job filtering ===');
@@ -256,89 +255,34 @@ export default function FeedPage() {
       return jobWithCoords;
     });
     
-    // For "For You" tab - filter jobs based on user's skills with percentage matching
+    // For "For You" tab - use the shared forYouJobs from context
     if (selectedCategory === 'For You') {
       console.log('SELECTED CATEGORY:', selectedCategory);
-      console.log('Filtering jobs for user skills:', userSkills);
-      console.log('Total jobs before filtering:', filtered.length);
+      console.log('Using shared forYouJobs from context:', forYouJobs.length);
 
-      filtered = filtered.filter(job => {
-        // Calculate skill match percentage
-        let totalMatchScore = 0;
-        let maxPossibleScore = userSkills.length * 100; // 100 points per user skill
-
-        // Check each user skill against job
-        userSkills.forEach(skill => {
-          const skillLower = skill.toLowerCase();
-          let skillMatchScore = 0;
-          let hasExactMatch = false;
-          let hasRelatedMatch = false;
-
-          // 1. Exact skill match in job skills array (80 points)
-          if (job.skills && job.skills.some(jobSkill =>
-            jobSkill.toLowerCase().includes(skillLower) ||
-            skillLower.includes(jobSkill.toLowerCase())
-          )) {
-            skillMatchScore = 80;
-            hasExactMatch = true;
-          }
-          
-          // 2. Partial match in job title/description (60 points) - only if no exact match
-          if (!hasExactMatch && (job.title.toLowerCase().includes(skillLower) ||
-              job.description.toLowerCase().includes(skillLower))) {
-            skillMatchScore = 60;
-          }
-          
-          // 3. Related skill mapping (40 points) - always check, but reduce if exact match exists
-          const skillMappings = {
-            'rh batsman': ['batting', 'batsman', 'batter', 'opening batsman', 'right-handed', 'rh'],
-            'sidearm specialist': ['sidearm', 'side arm', 'side-arm', 'yorker', 'death overs'],
-            'batting coach': ['batting coach', 'batting technique', 'batting training', 'batsman coach'],
-            'analyst': ['analysis', 'analyst', 'video analysis', 'performance analysis', 'metrics'],
-            'mystery spin': ['mystery spin', 'carrom ball', 'doosra', 'slider', 'teesra'],
-            'off spin': ['off spin', 'off-spinner', 'orthodox spin', 'finger spin']
-          };
-
-          const relatedSkills = skillMappings[skillLower as keyof typeof skillMappings] || [];
-          const relatedMatches = relatedSkills.filter(relatedSkill =>
-            job.skills?.some(jobSkill => jobSkill.toLowerCase().includes(relatedSkill)) ||
-            job.title.toLowerCase().includes(relatedSkill) ||
-            job.description.toLowerCase().includes(relatedSkill)
-          );
-          
-          if (relatedMatches.length > 0) {
-            hasRelatedMatch = true;
-            // If we have exact match, give 20 points for related matches, otherwise 40
-            const relatedScore = hasExactMatch ? 20 : 40;
-            // Bonus for multiple related matches
-            const matchBonus = Math.min(relatedMatches.length - 1, 2) * 5; // Max +10 for multiple matches
-            skillMatchScore += relatedScore + matchBonus;
-          }
-
-          // 4. Category bonus (only 10 points - considered last)
-          if (skillMatchScore > 0 && job.category.toLowerCase().includes(skillLower.split(' ')[0])) {
-            skillMatchScore += 10;
-          }
-
-          totalMatchScore += skillMatchScore;
-        });
-
-        // Calculate percentage match
-        const matchPercentage = (totalMatchScore / maxPossibleScore) * 100;
-
-        // Only include jobs with at least 15% match (reduced from 30% to be more inclusive)
-        const isMatch = matchPercentage >= 15;
-
-        if (isMatch) {
-          console.log(`✓ Including job (${matchPercentage.toFixed(1)}% match): "${job.title}" (Category: ${job.category})`);
-        } else {
-          console.log(`✗ Filtered out job (${matchPercentage.toFixed(1)}% match): "${job.title}" (Category: ${job.category})`);
+      // Convert forYouJobs to JobWithCoordinates format
+      const forYouJobsWithCoords = forYouJobs.map(job => {
+        // Check if job has coordinates in any form
+        let coords: [number, number];
+        
+        // First check for coords array
+        if (Array.isArray(job.coords) && job.coords.length === 2) {
+          coords = [job.coords[0], job.coords[1]] as [number, number];
+        } 
+        // If no coordinates found, use default (Chennai)
+        else {
+          coords = [80.2707, 13.0827];
         }
-
-        return isMatch;
+        
+        return {
+          ...job,
+          coordinates: coords,
+          coords: coords,
+        } as JobWithCoordinates;
       });
 
-      console.log(`For You tab: Found ${filtered.length} jobs matching your skills (${userSkills.join(', ')})`);
+      filtered = forYouJobsWithCoords;
+      console.log(`For You tab: Found ${filtered.length} jobs from shared context`);
 
       // Apply search query if one exists
       if (searchQuery) {
@@ -352,15 +296,6 @@ export default function FeedPage() {
           ))
         );
         console.log(`After search (${searchQuery}): ${filtered.length} jobs remaining`);
-      }
-
-      // Filter out jobs user has already applied to
-      const { hasUserAppliedToJob } = await import('@/components/freelancer/jobs/mock-data');
-      filtered = filtered.filter(job => !hasUserAppliedToJob(job.id));
-
-      // If no jobs found, suggest searching in the Explore tab
-      if (filtered.length === 0) {
-        console.log('No jobs found matching your criteria. Try adjusting your search or check the Explore tab for more options.');
       }
 
       return filtered;
@@ -507,7 +442,7 @@ export default function FeedPage() {
     initializeJobs();
   }, [jobs]);
 
-  // Re-filter jobs when category changes
+  // Re-filter jobs when category changes or forYouJobs updates
   useEffect(() => {
     const reFilterJobs = async () => {
       const filtered = await filterJobs();
@@ -515,7 +450,7 @@ export default function FeedPage() {
     };
 
     reFilterJobs();
-  }, [selectedCategory, searchQuery]);
+  }, [selectedCategory, searchQuery, forYouJobs]);
 
   // Re-filter jobs when filters are applied or filter values change
   useEffect(() => {
@@ -538,9 +473,8 @@ export default function FeedPage() {
       if (newApplication) {
         console.log('Application submitted successfully:', newApplication["#"]);
 
-        // Debug: Check current applications count
-        const { mockApplications } = await import('@/components/freelancer/jobs/mock-data');
-        console.log('Total applications after creation:', mockApplications.length);
+        // Dispatch event to refresh ForYouJobs context
+        window.dispatchEvent(new CustomEvent('applicationCreated', { detail: { jobId } }));
 
         // Show success message
         alert('Application submitted successfully!');
