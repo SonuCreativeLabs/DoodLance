@@ -1,4 +1,5 @@
 // Status Types
+import { JobDuration } from '@/app/freelancer/feed/types';
 export type JobStatus = 'pending' | 'completed' | 'cancelled' | 'upcoming' | 'started' | 'ongoing';
 export type ApplicationStatus = 'pending' | 'accepted' | 'rejected' | 'withdrawn' | 'interview' | 'hired' | 'completed' | 'cancelled' | 'expired' | 'archived';
 export type TransactionStatus = 'pending' | 'failed' | 'completed';
@@ -79,16 +80,20 @@ export interface Job {
   id: string;
   title: string;
   category: JobCategory;
-  date: string;
-  time: string;
+  date?: string;
+  time?: string;
   jobDate?: string; // Scheduled date for the job
   jobTime?: string;  // Scheduled time for the job
+  scheduledAt?: string;
+  postedAt?: string;
   status: JobStatus | 'upcoming' | 'completed' | 'cancelled';
   payment: number | string;
   location: string;
   description?: string;
   skills?: string[];
-  duration?: string;
+  duration?: string | JobDuration;
+  workMode?: 'remote' | 'onsite' | 'all';
+  experience?: string;
   experienceLevel?: 'Beginner' | 'Intermediate' | 'Expert';
   client?: ClientInfo;
   cancellationDetails?: CancellationDetails;
@@ -158,6 +163,7 @@ export interface Application {
   clientImage?: string;
   location: string;
   postedDate: string;
+  scheduledAt?: string; // When the job will actually happen
   description: string;
   clientId: string;
   category: string;

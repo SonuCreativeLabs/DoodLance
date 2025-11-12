@@ -15,9 +15,10 @@ import { useReviews } from '@/contexts/ReviewsContext';
 import { usePortfolio } from '@/contexts/PortfolioContext';
 import { useExperience } from '@/contexts/ExperienceContext';
 import { useServices } from '@/contexts/ServicesContext';
+import { useAvailability } from '@/contexts/AvailabilityContext';
 import { SkillInfoDialog } from '@/components/common/SkillInfoDialog';
 import { getSkillInfo, type SkillInfo } from '@/utils/skillUtils';
-import { calculateAge, getPersonalInfo } from '@/utils/personalUtils';
+import { calculateAge } from '@/utils/personalUtils';
 
 // CoverImage component defined outside the ProfileHeader component
 const CoverImage = () => (
@@ -51,6 +52,7 @@ export function ProfileHeader({
   const { portfolio } = usePortfolio();
   const { experiences } = useExperience();
   const { services } = useServices();
+  const { days: availabilityDays, getWorkingHoursText } = useAvailability();
   const [coverImage, setCoverImage] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [imageError, setImageError] = useState(false);
@@ -59,83 +61,20 @@ export function ProfileHeader({
   const [selectedSkillInfo, setSelectedSkillInfo] = useState<SkillInfo | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
-  // Calculate age from personal info
-  const personalInfo = getPersonalInfo();
-  const age = personalInfo ? calculateAge(personalInfo.dateOfBirth) : null;
   
-  // Merge context with localStorage fallbacks to avoid stale preview on refresh
-  const merged = {
-    get skills() {
-      try {
-        if (typeof window === 'undefined') return skills;
-        const saved = localStorage.getItem('userSkills');
-        if (!saved) return skills;
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) {
-          if (typeof parsed[0] === 'string') {
-            return (parsed as string[]).map((name, i) => ({ id: `${i}`, name }));
-          }
-          return parsed;
-        }
-      } catch {}
-      return skills;
-    },
-    get services() {
-      try {
-        if (typeof window === 'undefined') return services;
-        const saved = localStorage.getItem('services');
-        if (saved) return JSON.parse(saved);
-        const legacy = localStorage.getItem('userPackages');
-        if (legacy) {
-          const pkgArr = JSON.parse(legacy);
-          if (Array.isArray(pkgArr)) {
-            return pkgArr.map((pkg: any) => ({
-              id: String(pkg.id ?? `${Date.now()}`),
-              title: String(pkg.name ?? pkg.title ?? 'Package'),
-              description: String(pkg.description ?? ''),
-              price: String(pkg.price ?? '' ).startsWith('₹') ? String(pkg.price) : `₹${pkg.price ?? ''}`,
-              deliveryTime: String(pkg.deliveryTime ?? ''),
-              features: Array.isArray(pkg.features) ? pkg.features : [],
-              type: pkg.type === 'online' || pkg.type === 'in-person' ? pkg.type : undefined,
-            }));
-          }
-        }
-      } catch {}
-      return services;
-    },
-    get portfolio() {
-      try {
-        if (typeof window === 'undefined') return portfolio;
-        const saved = localStorage.getItem('portfolioItems');
-        if (saved) return JSON.parse(saved);
-      } catch {}
-      return portfolio;
-    },
-    get experiences() {
-      try {
-        if (typeof window === 'undefined') return experiences;
-        const saved = localStorage.getItem('experiences');
-        if (saved) return JSON.parse(saved);
-      } catch {}
-      return experiences;
-    },
-    get reviewsData() {
-      try {
-        if (typeof window === 'undefined') return reviewsData;
-        const saved = localStorage.getItem('reviewsData');
-        if (saved) return JSON.parse(saved);
-      } catch {}
-      return reviewsData;
-    },
-    get personalDetails() {
-      try {
-        if (typeof window === 'undefined') return personalDetails;
-        const saved = localStorage.getItem('personalDetails');
-        if (saved) return JSON.parse(saved);
-      } catch {}
-      return personalDetails;
+  // Calculate age from personal details
+  const age = (() => {
+    try {
+      if (personalDetails.dateOfBirth && typeof personalDetails.dateOfBirth === 'string') {
+        const calculatedAge = calculateAge(personalDetails.dateOfBirth);
+        return isNaN(calculatedAge) ? null : calculatedAge;
+      }
+      return null;
+    } catch (error) {
+      console.error('Error calculating age:', error);
+      return null;
     }
-  };
+  })();
   
   // Check for #preview or section hash in URL on component mount and after navigation
   useEffect(() => {
@@ -281,7 +220,7 @@ export function ProfileHeader({
 
       {/* Profile Content */}
       <div className="max-w-6xl mx-auto px-4 relative">
-        <div className="flex flex-col items-center md:flex-row md:items-end md:justify-between -mt-16 mb-4">
+        <div className="flex flex-col items-center md:flex-row md:items-end md:justify-between -mt-16 mb-4 relative">
           {/* Profile Picture */}
           <div className="relative group">
             <div className="relative w-32 h-32 sm:w-40 sm:h-40 rounded-full border-4 border-[#1E1E1E] overflow-hidden bg-[#111111]">
@@ -305,48 +244,60 @@ export function ProfileHeader({
                 </div>
               )}
             </div>
+            {/* Online/Offline Badge - Mobile: right side of profile picture */}
+            <div className="md:hidden absolute top-[calc(50%+32px)] -translate-y-1/2 left-full ml-10">
+              <div className={`inline-flex items-center gap-1 px-2 py-1 text-[8px] font-bold border-2 shadow-lg whitespace-nowrap transform rotate-[-2deg] ${
+                personalDetails.online
+                  ? 'bg-gradient-to-br from-green-400 to-green-600 border-green-300 text-white shadow-green-500/50 border-dashed'
+                  : 'bg-gradient-to-br from-amber-400 to-orange-500 border-amber-300 text-white shadow-amber-500/50 border-dashed'
+              }`}>
+                <span className="tracking-widest font-black">{personalDetails.online ? 'GAME ON' : 'OFFLINE'}</span>
+              </div>
+            </div>
           </div>
           
-
+          {/* Online/Offline Badge - Desktop: top right corner */}
+          <div className="hidden md:block absolute top-8 right-3">
+            <div className={`inline-flex items-center gap-2 px-3 py-1.5 text-[10px] font-bold border-2 shadow-xl whitespace-nowrap transform rotate-[1deg] ${
+              personalDetails.online
+                ? 'bg-gradient-to-br from-green-400 to-green-600 border-green-300 text-white shadow-green-500/60 border-dashed'
+                : 'bg-gradient-to-br from-amber-400 to-orange-500 border-amber-300 text-white shadow-amber-500/60 border-dashed'
+            }`}>
+              <span className="tracking-widest font-black">{personalDetails.online ? 'GAME ON' : 'OFFLINE'}</span>
+            </div>
+          </div>
         </div>
 
-        {/* Profile Info */}
         <div className="text-center mb-4">
-          <h1 className="text-2xl font-bold text-white">{personalDetails.name}</h1>
+          <div className="flex items-center justify-center gap-2">
+            <h1 className="text-2xl font-bold text-white">{personalDetails.name}</h1>
+            {age && (
+              <span className="text-lg font-semibold text-purple-300">({age})</span>
+            )}
+          </div>
           <p className="text-purple-400 mt-0.5">{personalDetails.title}</p>
           
           <div className="mt-2 flex flex-col items-center gap-0.5 text-sm text-white/70">
             <div className="flex items-center gap-2">
               <span>{personalDetails.location}</span>
-              {age && (
-                <>
-                  <span className="mx-1">·</span>
-                  <span>Age {age}</span>
-                </>
-              )}
             </div>
             <div className="flex items-center gap-1">
               {[...Array(5)].map((_, i) => (
                 <Star
                   key={i}
-                  className={`h-4 w-4 ${i < Math.floor(reviewsData.averageRating) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-500'}`}
+                  className={`h-4 w-4 ${i < Math.floor(reviewsData?.averageRating || 0) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-500'}`}
                 />
               ))}
-              <span className="ml-1 font-medium text-white">{reviewsData.averageRating.toFixed(1)}</span>
+              <span className="ml-1 font-medium text-white">{(reviewsData?.averageRating || 0).toFixed(1)}</span>
               <span className="mx-1">·</span>
-              <span>{reviewsData.totalReviews} reviews</span>
-              <span className="mx-1">·</span>
-              <span className="flex items-center">
-                <span className="h-2 w-2 rounded-full bg-green-500 mr-1.5"></span>
-                {personalDetails.online ? 'Online' : 'Offline'}
-              </span>
+              <span>{reviewsData?.totalReviews || 0} reviews</span>
             </div>
           </div>
         </div>
 
         {/* Skills */}
         <div className="flex flex-wrap justify-center gap-2 pb-2">
-          {skills.map((skill) => (
+          {Array.isArray(skills) && skills.map((skill) => (
             <button
               key={skill.id}
               onClick={() => handleSkillClick(skill.name)}
@@ -384,31 +335,32 @@ export function ProfileHeader({
         isOpen={isPreviewOpen}
         onClose={handlePreviewClose}
         profileData={{
-          name: merged.personalDetails.name,
-          title: merged.personalDetails.title,
-          rating: merged.reviewsData.averageRating,
-          reviewCount: merged.reviewsData.totalReviews,
-          location: merged.personalDetails.location,
-          online: merged.personalDetails.online,
-          skills: merged.skills.map((s: any) => s.name),
-          about: merged.personalDetails.about,
-          bio: merged.personalDetails.bio,
+          name: personalDetails.name,
+          title: personalDetails.title,
+          rating: reviewsData?.averageRating || 0,
+          reviewCount: reviewsData?.totalReviews || 0,
+          location: personalDetails.location,
+          online: personalDetails.online,
+          skills: Array.isArray(skills) ? skills.map((s: any) => s.name) : [],
+          about: personalDetails.about,
+          bio: personalDetails.bio,
           responseTime: '1-2 hours',
           deliveryTime: '1-2 weeks',
           completionRate: 100,
           completedJobs: 24,
           activeJobs: 3,
-          experience: merged.experiences.map((exp: any) => ({
+          workingHours: getWorkingHoursText(),
+          experience: Array.isArray(experiences) ? experiences.map((exp: any) => ({
             id: exp.id,
             role: exp.role,
             company: exp.company,
             location: exp.location,
-            startDate: exp.startDate.split('-')[0],
+            startDate: exp.startDate?.split('-')[0] || '',
             endDate: exp.endDate ? exp.endDate.split('-')[0] : undefined,
             isCurrent: exp.isCurrent,
             description: exp.description
-          })),
-          services: merged.services.map((svc: any) => ({
+          })) : [],
+          services: Array.isArray(services) ? services.map((svc: any) => ({
             id: svc.id,
             title: svc.title,
             description: svc.description,
@@ -417,16 +369,16 @@ export function ProfileHeader({
             deliveryTime: svc.deliveryTime,
             features: svc.features || [],
             category: svc.category
-          })),
-          portfolio: portfolio.map((item) => ({
+          })) : [],
+          portfolio: Array.isArray(portfolio) ? portfolio.map((item: any) => ({
             id: item.id,
             title: item.title,
             category: item.category,
             image: item.image,
             description: item.description,
             skills: item.skills
-          })),
-          reviews: merged.reviewsData.reviews.map((review: any) => ({
+          })) : [],
+          reviews: reviewsData?.reviews ? reviewsData.reviews.map((review: any) => ({
             id: review.id,
             author: review.author,
             role: review.role,
@@ -434,16 +386,11 @@ export function ProfileHeader({
             comment: review.comment,
             date: review.date,
             isVerified: review.isVerified
-          })),
-          availability: [
-            { day: 'Monday', available: true },
-            { day: 'Tuesday', available: true },
-            { day: 'Wednesday', available: true },
-            { day: 'Thursday', available: true },
-            { day: 'Friday', available: true },
-            { day: 'Saturday', available: false },
-            { day: 'Sunday', available: false }
-          ]
+          })) : [],
+          availability: availabilityDays.map(day => ({
+            day: day.name,
+            available: day.available
+          }))
         }}
       />
       

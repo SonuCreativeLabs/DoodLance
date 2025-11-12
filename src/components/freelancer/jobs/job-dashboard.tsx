@@ -310,7 +310,7 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
       id: application["#"],
       title: application.jobTitle,
       category: application.category as JobCategory,
-      date: application.postedDate, // Use posted date instead of applied date for better UX
+      date: application.scheduledAt || application.postedDate, // Use scheduled date if available, otherwise posted date
       time: '09:00', // Default time for upcoming jobs
       status: 'upcoming' as const, // Accepted applications become upcoming jobs
       payment: application.proposal.proposedRate, // Use the agreed rate instead of budget range

@@ -146,18 +146,18 @@ export default function PersonalDetailsPage() {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('personalInfo');
       return saved ? JSON.parse(saved) : {
-        fullName: "Sathish Sonu",
-        jobTitle: "Cricketer & AI Engineer",
+        fullName: "Sathishraj",
+        jobTitle: "All rounder",
         gender: "Male",
-        dateOfBirth: "1990-01-15",
+        dateOfBirth: "2000-01-14",
         bio: "Professional Cricketer & AI Engineer with a passion for technology and sports."
       };
     }
     return {
-      fullName: "Sathish Sonu",
-      jobTitle: "Cricketer & AI Engineer",
+      fullName: "Sathishraj",
+      jobTitle: "All rounder",
       gender: "Male",
-      dateOfBirth: "1990-01-15",
+      dateOfBirth: "2000-01-14",
       bio: "Professional Cricketer & AI Engineer with a passion for technology and sports."
     };
   });
@@ -205,11 +205,12 @@ export default function PersonalDetailsPage() {
       const newPersonalInfo = { ...editPersonalInfo };
       setPersonalInfo(newPersonalInfo);
       localStorage.setItem('personalInfo', JSON.stringify(newPersonalInfo));
-      // Sync name and title with PersonalDetailsContext
+      // Sync name, title, and dateOfBirth with PersonalDetailsContext
       updatePersonalDetails({
         name: editPersonalInfo.fullName,
         title: editPersonalInfo.jobTitle,
-        location: locationInfo.city + ', ' + locationInfo.country
+        location: locationInfo.city + ', ' + locationInfo.country,
+        dateOfBirth: editPersonalInfo.dateOfBirth
       });
     } else if (section === 'contact') {
       const newContactInfo = { ...editContact };
@@ -223,7 +224,8 @@ export default function PersonalDetailsPage() {
       updatePersonalDetails({
         name: personalInfo.fullName,
         title: personalInfo.jobTitle,
-        location: editLocation.city + ', ' + editLocation.country
+        location: editLocation.city + ', ' + editLocation.country,
+        dateOfBirth: personalInfo.dateOfBirth
       });
     }
     setEditingSection(null);

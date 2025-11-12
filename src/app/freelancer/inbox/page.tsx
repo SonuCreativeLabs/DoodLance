@@ -40,7 +40,7 @@ const jobChats = mockUpcomingJobs.map((job, index) => {
     jobTitle: job.title,
     online: index % 3 === 0, // Make some users online
     lastMessage: description.substring(0, 60) + (description.length > 60 ? '...' : ''),
-    time: new Date(job.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + 
+    time: new Date(job.date || new Date()).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + 
           (job.time ? ' • ' + job.time : ''),
     budget: `₹${payment.toLocaleString()}`,
     status: status === 'ongoing' ? 'Ongoing' : 

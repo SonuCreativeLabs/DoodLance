@@ -1,10 +1,12 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Slider } from '@/components/ui/slider';
 import { X, Clock, Briefcase, MapPin, Code } from 'lucide-react';
 
 import { WorkMode } from '../types';
+import { useNavbar } from '@/contexts/NavbarContext';
+import { SERVICE_CATEGORIES } from '@/constants/categories';
 
 interface SearchFiltersProps {
   isOpen: boolean;
@@ -15,34 +17,26 @@ interface SearchFiltersProps {
   setServiceCategory: (category: string) => void;
   workMode: WorkMode | '';
   setWorkMode: (mode: WorkMode | '') => void;
+  // Price range in INR per hour/session (adjusted for cricket services)
   priceRange: [number, number];
   setPriceRange: (range: [number, number]) => void;
   distance: number;
   setDistance: (distance: number) => void;
   filtersApplied: boolean;
   currentLocation: string;
-  selectedSkills: string[];
-  setSelectedSkills: (skills: string[] | ((prevSkills: string[]) => string[])) => void;
   clearFilters: () => void;
   applyFilters: () => void;
 }
 
 const serviceCategories = [
-  { id: 'all', name: 'All Services', online: true, offline: true },
-  { id: 'design', name: 'Design & Creative', online: true, offline: true },
-  { id: 'development', name: 'Development & IT', online: true, offline: false },
-  { id: 'marketing', name: 'Sales & Marketing', online: true, offline: true },
-  { id: 'writing', name: 'Writing & Translation', online: true, offline: false },
-  { id: 'admin', name: 'Admin Support', online: true, offline: true },
-  { id: 'finance', name: 'Finance & Accounting', online: true, offline: true },
-  { id: 'engineering', name: 'Engineering', online: true, offline: true },
-  { id: 'legal', name: 'Legal', online: true, offline: true },
-  { id: 'beauty', name: 'Beauty & Wellness', online: false, offline: true },
-  { id: 'fitness', name: 'Fitness Training', online: false, offline: true },
-  { id: 'tutoring', name: 'Tutoring', online: true, offline: true },
-  { id: 'consulting', name: 'Business Consulting', online: true, offline: true },
-  { id: 'photography', name: 'Photography', online: true, offline: true },
-  { id: 'events', name: 'Event Planning', online: true, offline: true },
+  { id: 'all', name: 'All', online: true, offline: true },
+  // Add specific cricket services from unified categories
+  ...SERVICE_CATEGORIES.map(category => ({
+    id: category.toLowerCase().replace(/\s*\/\s*/g, '-').replace(/\s+/g, '-'),
+    name: category,
+    online: ['Cricket Content Creator', 'Analyst', 'Coach', 'Trainer'].includes(category) || category.includes('Content'),
+    offline: true
+  }))
 ];
 
 // const jobTypes = [
@@ -53,23 +47,10 @@ const serviceCategories = [
 // ]; // Unused
 
 const workModes = [
-  { id: 'hybrid', label: 'Hybrid', icon: <MapPin className="w-4 h-4" /> },
-  { id: 'onsite', label: 'On-site', icon: <MapPin className="w-4 h-4" /> },
-  { id: 'remote', label: 'Remote', icon: <MapPin className="w-4 h-4" /> }
+  { id: 'all', label: 'All' },
+  { id: 'onsite', label: 'On field' },
+  { id: 'remote', label: 'Online' }
 ];
-
-// const experienceLevels = [
-//   { id: 'entry', label: 'Entry Level' },
-//   { id: 'mid', label: 'Mid Level' },
-//   { id: 'senior', label: 'Senior' },
-//   { id: 'expert', label: 'Expert' }
-// ]; // Unused
-
-// const skills = [
-//   'Web Development', 'Mobile Development', 'UI/UX Design',
-//   'Graphic Design', 'Content Writing', 'Digital Marketing',
-//   'Video Editing', 'Data Entry', 'Customer Service'
-// ]; // Unused
 
 export default function SearchFilters({
   isOpen,
@@ -86,15 +67,19 @@ export default function SearchFilters({
   setDistance,
   filtersApplied,
   currentLocation,
-  // selectedSkills, // Unused
-  setSelectedSkills,
   clearFilters,
   applyFilters,
 }: SearchFiltersProps) {
+  const { setNavbarVisibility } = useNavbar();
   const [localLocation, setLocalLocation] = useState(location);
   const [locationSuggestions, setLocationSuggestions] = useState<any[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Hide/show navbar when filter modal opens/closes
+  useEffect(() => {
+    setNavbarVisibility(!isOpen);
+  }, [isOpen, setNavbarVisibility]);
 
   // Update local location when prop changes
   React.useEffect(() => {
@@ -163,16 +148,15 @@ export default function SearchFilters({
   
   // Type guard for WorkMode
   const isWorkMode = (value: string): value is WorkMode => {
-    return ['remote', 'onsite', 'hybrid'].includes(value);
+    return ['remote', 'onsite', 'all'].includes(value);
   };
 
   const handleClear = () => {
     setLocalLocation('');
     setServiceCategory('all');
     setWorkMode('');
-    setPriceRange([0, 1000]);
+    setPriceRange([0, 10000]);
     setDistance(50);
-    setSelectedSkills([]);
     clearFilters();
   };
 
@@ -186,30 +170,11 @@ export default function SearchFilters({
     setLocalLocation(newLocation);
   };
 
-  // Update selected skills with proper type safety
-  const toggleSkill = (skill: string) => {
-    setSelectedSkills(currentSkills => {
-      // Create a new array to ensure we're not mutating the state directly
-      const updatedSkills = [...currentSkills];
-      const skillIndex = updatedSkills.indexOf(skill);
-      
-      if (skillIndex > -1) {
-        // Remove the skill if it exists
-        updatedSkills.splice(skillIndex, 1);
-      } else {
-        // Add the skill if it doesn't exist
-        updatedSkills.push(skill);
-      }
-      
-      return updatedSkills;
-    });
-  };
-
   return (
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          className="fixed inset-0 z-50 bg-[#121212] text-white overflow-y-auto"
+          className="fixed inset-0 z-50 bg-[#121212] text-white flex flex-col"
           style={{
             top: 0,
             left: 0,
@@ -217,10 +182,6 @@ export default function SearchFilters({
             bottom: 0,
             height: '100vh',
             width: '100vw',
-            overflow: 'hidden',
-            touchAction: 'pan-y',
-            WebkitOverflowScrolling: 'touch',
-            overscrollBehavior: 'contain',
             position: 'fixed',
             zIndex: 50
           }}
@@ -230,8 +191,8 @@ export default function SearchFilters({
           transition={{ duration: 0.2, ease: 'easeInOut' }}
         >
           {/* Header */}
-          <div className="sticky top-0 z-10 p-4 border-b border-white/5 bg-[#1A1A1A]/95 backdrop-blur-md flex justify-between items-center pt-12">
-            <h2 className="text-lg font-medium">Filters</h2>
+          <div className="sticky top-0 z-10 p-4 border-b border-white/5 bg-[#1A1A1A]/95 backdrop-blur-md flex justify-between items-center">
+            <h2 className="text-lg font-medium">Filter</h2>
             <button
               onClick={onClose}
               className="p-2 rounded-full hover:bg-white/10 transition-colors"
@@ -241,8 +202,8 @@ export default function SearchFilters({
             </button>
           </div>
 
-          {/* Content */}
-          <div className="p-5 space-y-8 pb-24 max-w-3xl mx-auto w-full">
+          {/* Scrollable Content */}
+          <div className="flex-1 overflow-y-auto p-5 space-y-8 max-w-3xl mx-auto w-full pb-24">
             {/* Location */}
             <div className="space-y-3">
               <div className="flex justify-between items-center">
@@ -268,11 +229,25 @@ export default function SearchFilters({
                     }}
                     onFocus={() => setShowSuggestions(true)}
                     onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                    placeholder="Search areas in Chennai..."
-                    className="w-full pl-10 pr-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white/80 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                    placeholder="Enter location..."
+                    className="w-full pl-10 pr-10 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white/80 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
                   />
                   <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" />
-                  {isLoading && (
+                  {localLocation && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setLocalLocation('');
+                        setLocation('');
+                        setShowSuggestions(false);
+                      }}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50 hover:text-white/80 transition-colors"
+                      aria-label="Clear location"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                  {isLoading && !localLocation && (
                     <div className="absolute right-3 top-1/2 -translate-y-1/2">
                       <div className="w-4 h-4 border-2 border-white/20 border-t-purple-400 rounded-full animate-spin"></div>
                     </div>
@@ -369,7 +344,7 @@ export default function SearchFilters({
                   step={1}
                   value={[distance]}
                   onValueChange={(value) => setDistance(value[0])}
-                  className="w-full"
+                  className="w-full [&_[role=slider]]:bg-gradient-to-r [&_[role=slider]]:from-purple-500 [&_[role=slider]]:to-purple-600 [&_[role=slider]]:border-2 [&_[role=slider]]:border-white [&_[role=slider]]:shadow-lg [&_[role=slider]]:shadow-purple-500/30 [&_[role=slider]]:w-5 [&_[role=slider]]:h-5 [&_[role=slider]]:rounded-full"
                 />
               </div>
               <div className="flex justify-between text-xs text-white/50 px-1">
@@ -386,14 +361,13 @@ export default function SearchFilters({
                   <button
                     key={mode.id}
                     onClick={() => handleWorkModeButtonClick(mode.id as WorkMode)}
-                    className={`flex flex-col items-center justify-center py-3 rounded-xl transition-colors ${
+                    className={`w-full px-3 py-2 text-xs rounded-lg transition-colors ${
                       workMode === mode.id
-                        ? 'bg-gradient-to-br from-purple-500/90 to-purple-600/90 text-white shadow-lg shadow-purple-500/20'
+                        ? 'bg-purple-500/90 text-white shadow-lg shadow-purple-500/20'
                         : 'bg-white/5 text-white/70 hover:bg-white/10'
                     }`}
                   >
-                    {mode.icon}
-                    <span className="text-xs mt-1">{mode.label}</span>
+                    <span>{mode.label}</span>
                   </button>
                 ))}
               </div>
@@ -422,12 +396,11 @@ export default function SearchFilters({
               </div>
             </div>
 
-            {/* Price Range */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-medium text-white/80">Price Range</h3>
                 <span className="text-sm text-white/70">
-                  ₹{priceRange[0]} - ₹{priceRange[1]}{priceRange[1] === 10000 ? '+' : ''}
+                  ₹{priceRange[0]} - ₹{priceRange[1]}{priceRange[1] === 10000 ? '+' : ''} per session
                 </span>
               </div>
               <div className="px-2">
@@ -438,7 +411,7 @@ export default function SearchFilters({
                   value={priceRange}
                   onValueChange={(value) => setPriceRange([value[0], value[1]])}
                   minStepsBetweenThumbs={1}
-                  className="w-full"
+                  className="w-full [&_[role=slider]]:bg-gradient-to-r [&_[role=slider]]:from-purple-500 [&_[role=slider]]:to-purple-600 [&_[role=slider]]:border-2 [&_[role=slider]]:border-white [&_[role=slider]]:shadow-lg [&_[role=slider]]:shadow-purple-500/30 [&_[role=slider]]:w-5 [&_[role=slider]]:h-5 [&_[role=slider]]:rounded-full"
                 />
               </div>
               <div className="flex justify-between text-xs text-white/50 px-1">
@@ -447,29 +420,30 @@ export default function SearchFilters({
               </div>
             </div>
 
-            {/* Footer with action buttons */}
-            <div className="sticky bottom-0 left-0 right-0 p-5 border-t border-white/5 bg-[#1A1A1A] mt-auto">
-              <div className="flex gap-3">
-                <button
-                  onClick={clearFilters}
-                  className="flex-1 px-4 py-3 text-sm font-medium text-white/90 bg-white/5 hover:bg-white/10 transition-colors rounded-xl"
-                >
-                  Clear All
-                </button>
-                <button
-                  onClick={() => {
-                    applyFilters();
-                    onClose();
-                  }}
-                  className={`flex-1 px-4 py-3 text-sm font-medium text-white transition-colors rounded-xl ${
-                    filtersApplied
-                      ? 'bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600'
-                      : 'bg-gradient-to-r from-purple-500 to-purple-400 hover:from-purple-600 hover:to-purple-500'
-                  }`}
-                >
-                  {filtersApplied ? 'Update Filters' : 'Apply Filters'}
-                </button>
-              </div>
+          </div>
+
+          {/* Fixed Footer with action buttons */}
+          <div className="fixed bottom-0 left-0 right-0 p-5 border-t border-white/5 bg-[#1A1A1A] z-50">
+            <div className="flex gap-3 max-w-3xl mx-auto">
+              <button
+                onClick={clearFilters}
+                className="flex-1 px-4 py-3 text-sm font-medium text-white/90 bg-white/5 hover:bg-white/10 transition-colors rounded-xl"
+              >
+                Clear All
+              </button>
+              <button
+                onClick={() => {
+                  applyFilters();
+                  onClose();
+                }}
+                className={`flex-1 px-4 py-3 text-sm font-medium text-white transition-colors rounded-xl ${
+                  filtersApplied
+                    ? 'bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600'
+                    : 'bg-gradient-to-r from-purple-500 to-purple-400 hover:from-purple-600 hover:to-purple-500'
+                }`}
+              >
+                {filtersApplied ? 'Update Filters' : 'Apply Filters'}
+              </button>
             </div>
           </div>
         </motion.div>

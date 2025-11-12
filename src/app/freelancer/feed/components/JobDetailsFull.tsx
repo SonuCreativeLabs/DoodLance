@@ -2,17 +2,17 @@ import React, { useState, useMemo } from 'react';
 import {
   ArrowLeft,
   Clock,
+  ClockIcon,
   Calendar,
   MapPin,
   DollarSign,
   User,
   Star,
-  Briefcase,
   CheckCircle,
   FileText,
   PlusCircle
 } from 'lucide-react';
-import { Job } from '../types';
+import { Job, getJobDurationLabel, getWorkModeLabel } from '../types';
 import { ClientProfile } from '@/components/freelancer/jobs/ClientProfile';
 
 interface JobDetailsFullProps {
@@ -24,7 +24,6 @@ interface JobDetailsFullProps {
 export default function JobDetailsFull({ job, onBack, onApply }: JobDetailsFullProps) {
   const [proposal, setProposal] = useState('');
   const [rate, setRate] = useState(job.budget ? job.budget.toString() : '');
-  const [rateType, setRateType] = useState('project');
   const [attachments, setAttachments] = useState<File[]>([]);
 
   // Generate stable job ID based on category and job ID
@@ -99,7 +98,14 @@ export default function JobDetailsFull({ job, onBack, onApply }: JobDetailsFullP
         {/* Job Header - Title and Location */}
         <div className="mb-8">
           <div className="space-y-4">
-            <h1 className="text-3xl md:text-4xl font-bold text-white leading-tight">{job.title}</h1>
+            <h1 className="text-3xl md:text-4xl font-bold text-white leading-tight">
+              {job.title}
+              {job.workMode && (
+                <span className="inline-flex items-center px-1.5 py-0.5 text-xs font-medium text-white/80 bg-white/10 border border-white/20 rounded-full whitespace-nowrap ml-2 align-middle">
+                  {getWorkModeLabel(job.workMode)}
+                </span>
+              )}
+            </h1>
             <button
               type="button"
               onClick={() => {/* TODO: Add map functionality */}}
@@ -122,38 +128,59 @@ export default function JobDetailsFull({ job, onBack, onApply }: JobDetailsFullP
                 <div className="text-sm text-gray-400 mb-0.5">Budget</div>
                 <div className="text-white font-medium leading-tight">
                   <span className="whitespace-nowrap">
-                    {job.budget.toLocaleString('en-IN')}
-                    {job.duration === 'one-time' ? (
-                      <span className="text-gray-400 text-sm font-normal ml-1">per job</span>
-                    ) : (
-                      <span className="text-gray-400 text-sm font-normal ml-1">
-                        {job.duration === 'hourly' ? '/hr' : 
-                         job.duration === 'daily' ? '/day' : 
-                         job.duration === 'weekly' ? '/wk' : 
-                         job.duration === 'monthly' ? '/mo' : ''}
-                      </span>
-                    )}
+                    ₹{job.budget.toLocaleString('en-IN')}
                   </span>
                 </div>
               </div>
             </div>
             <div className="flex items-start gap-3">
-              <Briefcase className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
+              <ClockIcon className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
               <div>
-                <div className="text-sm text-gray-400">Work Mode</div>
-                <div className="text-white font-medium capitalize">{job.workMode}</div>
+                <div className="text-sm text-gray-400">Duration</div>
+                <div className="text-white font-medium capitalize">{getJobDurationLabel(job as any)}</div>
               </div>
             </div>
             <div className="flex items-start gap-3">
               <Calendar className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
               <div>
-                <div className="text-sm text-gray-400">Posted</div>
+                <div className="text-sm text-gray-400">Scheduled</div>
                 <div className="text-white font-medium">
-                  {job.postedAt ? new Date(job.postedAt).toLocaleDateString('en-US', { 
-                    year: 'numeric', 
-                    month: 'short', 
-                    day: 'numeric' 
-                  }) : 'Date not specified'}
+                  {job.scheduledAt ? (() => {
+                    const scheduled = new Date(job.scheduledAt);
+                    const month = scheduled.toLocaleDateString('en-US', { month: 'short' });
+                    const day = scheduled.getDate();
+                    const year = scheduled.getFullYear();
+                    const time = scheduled.toLocaleTimeString('en-US', { 
+                      hour: 'numeric', 
+                      minute: '2-digit',
+                      hour12: true
+                    });
+                    return (
+                      <>
+                        {`${month} ${day}, ${year}`}
+                        <br />
+                        at {time}
+                      </>
+                    );
+                  })() : (() => {
+                    // Hardcoded date for consistent demo: November 14, 2025 at 3:30 PM
+                    const demoDate = new Date('2025-11-14T15:30:00.000Z');
+                    const month = demoDate.toLocaleDateString('en-US', { month: 'short' });
+                    const day = demoDate.getDate();
+                    const year = demoDate.getFullYear();
+                    const time = demoDate.toLocaleTimeString('en-US', { 
+                      hour: 'numeric', 
+                      minute: '2-digit',
+                      hour12: true
+                    });
+                    return (
+                      <>
+                        {`${month} ${day}, ${year}`}
+                        <br />
+                        at {time}
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
             </div>
@@ -175,6 +202,35 @@ export default function JobDetailsFull({ job, onBack, onApply }: JobDetailsFullP
 
           {/* Card content */}
           <div className="relative p-5">
+            <div className="text-left mb-2">
+              <div className="text-white/60 font-medium text-xs">
+              {job.postedAt ? (() => {
+                const posted = new Date(job.postedAt);
+                const now = new Date();
+                const diffTime = Math.abs(now.getTime() - posted.getTime());
+                const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+                const diffMinutes = Math.floor(diffTime / (1000 * 60));
+
+                if (diffMinutes < 60) {
+                  return `${diffMinutes}m ago`;
+                } else if (diffHours < 24) {
+                  return `${diffHours}h ago`;
+                } else if (diffDays < 7) {
+                  return `${diffDays}d ago`;
+                } else if (diffDays < 30) {
+                  const weeks = Math.floor(diffDays / 7);
+                  return `${weeks}w ago`;
+                } else if (diffDays < 365) {
+                  const months = Math.floor(diffDays / 30);
+                  return `${months}mo ago`;
+                } else {
+                  const years = Math.floor(diffDays / 365);
+                  return `${years}y ago`;
+                }
+              })() : 'Date not specified'}
+            </div>
+            </div>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-white">About the Job</h2>
             </div>
@@ -265,17 +321,7 @@ export default function JobDetailsFull({ job, onBack, onApply }: JobDetailsFullP
                     className="bg-[#111111] border border-gray-600 rounded px-3 py-2 text-white w-32 text-sm flex-1 max-w-[120px] placeholder:text-gray-500"
                     min="0"
                   />
-                  <span className="text-sm text-gray-400">/</span>
-                  <select
-                    value={rateType}
-                    onChange={(e) => setRateType(e.target.value)}
-                    className="bg-[#111111] border border-gray-600 rounded px-3 py-2 text-white text-sm w-28 appearance-none"
-                    style={{ backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'white\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6,9 12,15 18,9\'%3e%3c/polyline%3e%3c/svg%3e")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 8px center', backgroundSize: '16px', paddingRight: '2.5rem' }}
-                  >
-                    <option value="project">project</option>
-                    <option value="hour">hour</option>
-                    <option value="match">match</option>
-                  </select>
+                  <span className="text-sm text-gray-400">/ project</span>
                 </div>
               </div>
 
@@ -344,7 +390,7 @@ export default function JobDetailsFull({ job, onBack, onApply }: JobDetailsFullP
               </div>
 
               <button
-                onClick={() => onApply(job.id, proposal, rate, rateType, attachments)}
+                onClick={() => onApply(job.id, proposal, rate, "project", attachments)}
                 disabled={!proposal.trim()}
                 className="w-full h-10 bg-purple-600 hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50 text-white font-medium rounded-lg shadow-lg transition-all duration-200"
               >

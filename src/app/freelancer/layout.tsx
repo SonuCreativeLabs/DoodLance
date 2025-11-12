@@ -7,6 +7,7 @@ import { usePathname } from 'next/navigation'
 import { useChatView } from '@/contexts/ChatViewContext';
 import { useModal } from '@/contexts/ModalContext';
 import { useLayout } from '@/contexts/LayoutContext';
+import { useNavbar } from '@/contexts/NavbarContext';
 
 interface FreelancerLayoutProps {
   children: React.ReactNode
@@ -16,6 +17,7 @@ export default function FreelancerLayout({ children }: FreelancerLayoutProps) {
   const pathname = usePathname();
   const chatView = useChatView();
   const { isHeaderVisible: contextHeaderVisible, isNavbarVisible: contextNavbarVisible } = useLayout();
+  const { isNavbarVisible: navbarContextVisible } = useNavbar();
   const { isModalOpen } = useModal();
   
   // Check if current path is a preview page
@@ -31,7 +33,7 @@ export default function FreelancerLayout({ children }: FreelancerLayoutProps) {
   
   // Hide header and navbar for preview pages and profile sub-pages, but show navbar only on main profile page
   const isHeaderVisible = isPreviewPage ? false : contextHeaderVisible;
-  const isNavbarVisible = (isPreviewPage || isProfileSubPage || isJobDetailsPage || isProposalDetailsPage) ? false : (isMainProfilePage ? true : contextNavbarVisible);
+  const isNavbarVisible = (isPreviewPage || isProfileSubPage || isJobDetailsPage || isProposalDetailsPage) ? false : (isMainProfilePage ? true : (contextNavbarVisible && navbarContextVisible));
   
   // Use a ref to track if we're in a browser environment
   const [isMounted, setIsMounted] = useState(false);

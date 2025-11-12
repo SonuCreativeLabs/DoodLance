@@ -7,6 +7,7 @@ import { ChatViewProvider } from '@/contexts/ChatViewContext';
 import { DateRangeProvider } from '@/contexts/DateRangeContext';
 import { ModalProvider } from '@/contexts/ModalContext';
 import { CombinedProfileProvider } from '@/contexts/CombinedProfileProvider';
+import { AvailabilityProvider } from '@/contexts/AvailabilityContext';
 import { RoleProvider } from '@/contexts/role-context';
 
 interface ProvidersProps {
@@ -21,9 +22,11 @@ export function Providers({ children }: ProvidersProps) {
           <ChatViewProvider>
             <DateRangeProvider>
               <ModalProvider>
-                <CombinedProfileProvider>
-                  {children}
-                </CombinedProfileProvider>
+                <AvailabilityProvider>
+                  <CombinedProfileProvider>
+                    {children}
+                  </CombinedProfileProvider>
+                </AvailabilityProvider>
               </ModalProvider>
             </DateRangeProvider>
           </ChatViewProvider>

@@ -6,12 +6,15 @@ import { Calendar, ChevronRight, Star, MapPin, TrendingUp, Award, Clock, Users, 
 import Link from "next/link"
 import { useState, useEffect } from "react"
 import { useLayout } from "@/contexts/LayoutContext"
+import { useRouter } from "next/navigation"
 
 export const dynamic = 'force-dynamic'
 
 export default function FreelancerHome() {
   const { showHeader, showNavbar } = useLayout();
+  const router = useRouter();
   const [jobCount, setJobCount] = useState(0);
+  const [recommendedJobs, setRecommendedJobs] = useState<any[]>([]);
 
   useEffect(() => {
     // Always show header and navbar for the home page
@@ -45,10 +48,21 @@ export default function FreelancerHome() {
       });
       
       setJobCount(forYouJobs.length);
+      // Take the first 2 jobs for the home page
+      setRecommendedJobs(forYouJobs.slice(0, 2));
     }).catch(error => {
       console.error('Failed to load jobs:', error);
     });
   }, []);
+
+  const handleJobClick = (job: any) => {
+    router.push(`/freelancer/feed?jobId=${job.id}`);
+  };
+
+  const handleQuickApply = (job: any) => {
+    // Navigate to the feed page with job details open
+    router.push(`/freelancer/feed?jobId=${job.id}`);
+  };
   return (
     <div className="min-h-screen bg-[#111111] pb-24">
       {/* Hero Banner */}
@@ -330,177 +344,111 @@ export default function FreelancerHome() {
             </Link>
           </div>
           <div className="grid gap-4">
-            {/* Junior Cricket Coach Job */}
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1 }}
-              className="bg-gradient-to-br from-[#1E1E1E] to-[#121212] rounded-2xl p-6 border border-white/10 transition-all duration-300 shadow-lg"
-            >
-  
-              <div className="relative">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-medium text-white group-hover:opacity-90 transition-colors">Junior Cricket Coach</h3>
-                      <span className="px-1.5 py-0.5 rounded-full bg-green-500/20 text-green-400 text-[10px] font-medium">Urgent</span>
+            {recommendedJobs.map((job, index) => (
+              <motion.div 
+                key={job.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1 + (index * 0.1) }}
+                className="group bg-gradient-to-br from-[#1E1E1E] to-[#1A1A1A] rounded-2xl p-6 shadow-xl hover:shadow-purple-500/20 transition-all duration-300 w-full border border-white/5 hover:border-white/10"
+                onClick={() => handleJobClick(job)}
+              >
+                <div className="space-y-2">
+                  {/* Job header with client profile */}
+                  <div className="flex items-center gap-3 mb-1">
+                    <div className="relative flex-shrink-0">
+                      <div className="relative w-12 h-12 rounded-xl overflow-hidden ring-2 ring-white/20 group-hover:ring-white/30 transition-all duration-300">
+                        <Image
+                          src={job.clientImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(job.clientName || 'Client')}&background=6B46C1&color=fff&bold=true`}
+                          alt="Client"
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-white/60">
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-3 h-3" /> Posted 2h ago
-                      </span>
-                      <span className="w-1 h-1 rounded-full bg-white/30"></span>
-                      <span className="flex items-center gap-1">
-                        <MapPin className="w-3 h-3" /> 2.5 km away
-                      </span>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#bf82fb] to-[#9537ea]">₹2,000</span>
-                    <p className="text-[10px] text-white/40 font-medium">PER SESSION</p>
-                  </div>
-                </div>
-                <p className="text-sm text-white/60 mb-4">Looking for an experienced cricket coach for junior team training sessions (ages 10-14). Must have experience coaching beginners.</p>
-                <div className="flex flex-wrap gap-2 mb-4">
-                  <span className="flex items-center gap-1 px-3 py-1 bg-white/10 border border-white/10 text-white text-xs rounded-full backdrop-blur-sm">
-                    <Users className="w-3 h-3" />
-                    Junior Coaching
-                  </span>
-                  <span className="flex items-center gap-1 px-3 py-1 bg-white/10 border border-white/10 text-white text-xs rounded-full backdrop-blur-sm">
-                    <Target className="w-3 h-3" />
-                    Batting Specialist
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="relative h-10 w-10 rounded-xl overflow-hidden ring-2 ring-[#6B46C1]/30 group-hover:ring-[#6B46C1]/50 transition-all duration-300">
-                      <Image
-                        src="https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah"
-                        alt="Client"
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-[var(--purple-light)] group-hover:opacity-90 transition-colors">Sarah Wilson</p>
-                      <div className="flex items-center gap-1">
-                        <div className="flex">
-                          {[1, 2, 3, 4, 5].map((star) => {
-                            const rating = 4.5; // Sarah's rating
-                            const fillAmount = Math.min(Math.max(rating - star + 1, 0), 1);
-                            const fillPercentage = fillAmount * 100;
-                            return (
-                              <div key={star} className="relative h-3 w-3">
-                                <Star className="absolute h-3 w-3 text-gray-300" fill="none" />
-                                {fillAmount > 0 && (
-                                  <div className="absolute inset-0 overflow-hidden" style={{ width: `${fillPercentage}%` }}>
-                                    <Star className="h-3 w-3 text-yellow-500" fill="currentColor" />
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
-                        <span className="text-xs text-white/60">(4.5)</span>
+                    <div className="flex flex-col gap-1 flex-1 min-w-0">
+                      <h3 className="text-[15px] font-semibold text-white leading-tight line-clamp-2 break-words">
+                        {job.title}
+                      </h3>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[12px] font-medium text-white/80 bg-white/10 px-2 py-0.5 rounded-full whitespace-nowrap">
+                          {job.category}
+                        </span>
                       </div>
                     </div>
                   </div>
-                  <motion.button 
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="px-4 py-2 bg-gradient-to-r from-[#6B46C1] to-[#4C1D95] hover:from-[#5B35B0] hover:to-[#3D1B7A] text-white text-sm font-medium rounded-xl transition-all duration-300 shadow-lg shadow-purple-600/20 hover:shadow-purple-600/30"
-                  >
-                    Quick Apply
-                  </motion.button>
-                </div>
-              </div>
-            </motion.div>
 
-            {/* Cricket Net Bowler Job */}
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.1 }}
-              className="bg-gradient-to-br from-[#1E1E1E] to-[#121212] rounded-2xl p-6 border border-white/10 transition-all duration-300 shadow-lg"
-            >
-  
-              <div className="relative">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-medium text-white group-hover:opacity-90 transition-colors">Cricket Net Bowler</h3>
-                      <span className="px-1.5 py-0.5 rounded-full bg-blue-500/20 text-blue-400 text-[10px] font-medium">New</span>
+                  {/* Description */}
+                  <p className="text-[13px] text-white/80 line-clamp-2 leading-relaxed mb-1">{job.description}</p>
+
+                  {/* Location and Date */}
+                  <div className="flex items-center justify-between text-[12px] text-white/60 mb-2">
+                    <div className="flex items-center gap-1 min-w-0 flex-1">
+                      <MapPin className="w-3 h-3 flex-shrink-0" />
+                      <span className="truncate" title={job.location}>{job.location}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-white/60">
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-3 h-3" /> Posted 1d ago
-                      </span>
-                      <span className="w-1 h-1 rounded-full bg-white/30"></span>
-                      <span className="flex items-center gap-1">
-                        <MapPin className="w-3 h-3" /> 5 km away
+                    <div className="flex items-center gap-1 flex-shrink-0 ml-2">
+                      <Clock className="w-3 h-3 flex-shrink-0 text-white/50" />
+                      <span className="text-white/60 text-[11px] whitespace-nowrap">
+                        {job.scheduledAt ? (() => {
+                          const demoDate = new Date('2024-12-15T15:30:00.000Z');
+                          const date = demoDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                          const time = demoDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+                          return `${date}, ${time}`;
+                        })() : 'Date TBD'}
                       </span>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <span className="text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-[#bf82fb] to-[#9537ea]">₹1,500</span>
-                    <p className="text-[10px] text-white/40 font-medium">PER HOUR</p>
+
+                  {/* Skills */}
+                  <div className="flex flex-wrap gap-2 mb-1">
+                    {(job.skills || []).slice(0, 2).map((skill: string, skillIndex: number) => (
+                      <span
+                        key={skillIndex}
+                        className="px-2.5 py-1 h-6 flex items-center text-[11px] rounded-full bg-white/5 text-white/70 backdrop-blur-sm whitespace-nowrap"
+                      >
+                        {skill}
+                      </span>
+                    ))}
+                    {(job.skills || []).length > 2 && (
+                      <span className="px-2.5 py-1 h-6 flex items-center text-[11px] rounded-full bg-white/5 text-white/50 whitespace-nowrap">
+                        +{(job.skills || []).length - 2} more
+                      </span>
+                    )}
                   </div>
-                </div>
-                <p className="text-sm text-white/60 mb-4">Need a right-arm fast bowler for net practice sessions. Must maintain consistent line and length. Prior experience in club cricket preferred.</p>
-                <div className="flex flex-wrap gap-2 mb-4">
-                  <span className="flex items-center gap-1 px-3 py-1 bg-white/10 border border-white/10 text-white text-xs rounded-full backdrop-blur-sm">
-                    <Dumbbell className="w-3 h-3" />
-                    Fast Bowling
-                  </span>
-                  <span className="flex items-center gap-1 px-3 py-1 bg-white/10 border border-white/10 text-white text-xs rounded-full backdrop-blur-sm">
-                    <AwardIcon className="w-3 h-3" />
-                    Club Experience
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="relative h-10 w-10 rounded-xl overflow-hidden ring-2 ring-[#6B46C1]/30 group-hover:ring-[#6B66D1]/50 transition-all duration-300">
-                      <Image
-                        src="https://api.dicebear.com/7.x/avataaars/svg?seed=Raj"
-                        alt="Client"
-                        fill
-                        className="object-cover"
-                      />
+
+                  {/* Footer */}
+                  <div className="flex items-center justify-between pt-3 border-t border-white/5 mt-2">
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-[17px] font-semibold text-white">
+                        ₹{job.rate?.toLocaleString()}
+                      </span>
+                      <span className="text-[13px] text-white/60">
+                        / {job.priceUnit}
+                      </span>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-[var(--purple-light)] group-hover:opacity-90 transition-colors">Raj Patel</p>
-                      <div className="flex items-center gap-1">
-                        <div className="flex">
-                          {[1, 2, 3, 4, 5].map((star) => {
-                            const rating = 3.3; // Raj's rating
-                            const fillAmount = Math.min(Math.max(rating - star + 1, 0), 1);
-                            const fillPercentage = fillAmount * 100;
-                            return (
-                              <div key={star} className="relative h-3 w-3">
-                                <Star className="absolute h-3 w-3 text-gray-300" fill="none" />
-                                {fillAmount > 0 && (
-                                  <div className="absolute inset-0 overflow-hidden" style={{ width: `${fillPercentage}%` }}>
-                                    <Star className="h-3 w-3 text-yellow-500" fill="currentColor" />
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
-                        <span className="text-xs text-white/60">(3.3)</span>
-                      </div>
-                    </div>
-                  </div>
-                    <motion.button 
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      className="px-4 py-2 bg-gradient-to-r from-[#6B46C1] to-[#4C1D95] hover:from-[#5B35B0] hover:to-[#3D1B7A] text-white text-sm font-medium rounded-xl transition-all duration-300 shadow-lg shadow-purple-600/20 hover:shadow-purple-600/30"
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleQuickApply(job);
+                      }}
+                      className="px-4 py-2 text-xs font-medium text-white bg-gradient-to-r from-[#6B46C1] to-[#4C1D95] hover:from-[#5B35B0] hover:to-[#3D1B7A] rounded-xl transition-all duration-300 shadow-lg shadow-purple-600/20 hover:shadow-purple-600/30 flex items-center justify-center gap-1.5 group-hover:shadow-lg group-hover:shadow-purple-500/20"
                     >
-                      Quick Apply
-                    </motion.button>
+                      <span>Quick Apply</span>
+                      <svg className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                      </svg>
+                    </button>
                   </div>
                 </div>
               </motion.div>
+            ))}
+            {recommendedJobs.length === 0 && (
+              <div className="text-center py-8 text-white/60">
+                <p className="text-sm">No recommended jobs found at the moment.</p>
+                <p className="text-xs mt-1">Try updating your skills or check back later!</p>
+              </div>
+            )}
           </div>
         </motion.div>
 

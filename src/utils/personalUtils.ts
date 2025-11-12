@@ -1,10 +1,32 @@
 /**
+ * Normalize date string to ensure consistent format for Date constructor
+ * @param dateString - Date string in various formats
+ * @returns Normalized date string or original if already valid
+ */
+function normalizeDateString(dateString: string): string {
+  // If already in YYYY-MM-DD format, return as is
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+    return dateString;
+  }
+
+  // If in DD/MM/YYYY format, convert to YYYY-MM-DD
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateString)) {
+    const [day, month, year] = dateString.split('/');
+    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+  }
+
+  // Return original for other formats (let Date constructor handle it)
+  return dateString;
+}
+
+/**
  * Calculate age from date of birth
- * @param dateOfBirth - Date of birth in YYYY-MM-DD format or Date object
+ * @param dateOfBirth - Date of birth in YYYY-MM-DD, DD/MM/YYYY, or Date object
  * @returns Age in years
  */
 export function calculateAge(dateOfBirth: string | Date): number {
-  const birthDate = typeof dateOfBirth === 'string' ? new Date(dateOfBirth) : dateOfBirth;
+  const normalizedDate = typeof dateOfBirth === 'string' ? normalizeDateString(dateOfBirth) : dateOfBirth;
+  const birthDate = typeof normalizedDate === 'string' ? new Date(normalizedDate) : normalizedDate;
   const today = new Date();
 
   let age = today.getFullYear() - birthDate.getFullYear();

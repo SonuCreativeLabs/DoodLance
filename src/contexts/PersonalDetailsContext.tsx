@@ -11,22 +11,27 @@ export interface PersonalDetails {
   avatarUrl: string;
   coverImageUrl: string;
   online: boolean;
+  readyToWork: boolean;
+  dateOfBirth?: string;
 }
 
 interface PersonalDetailsContextType {
   personalDetails: PersonalDetails;
   updatePersonalDetails: (updates: Partial<PersonalDetails>) => void;
+  toggleReadyToWork: () => void;
 }
 
 const initialPersonalDetails: PersonalDetails = {
-  name: "Sathish Sonu",
-  title: "Cricketer & AI Engineer",
+  name: "Sathishraj",
+  title: "All rounder",
   location: "Chennai, India",
   about: "Professional Cricketer & AI Engineer with a passion for technology and sports. I bring the same dedication and strategic thinking from the cricket field to developing intelligent AI solutions.",
   bio: "Professional Cricketer & AI Engineer with a passion for technology and sports.",
   avatarUrl: '/images/profile-sonu.jpg',
   coverImageUrl: '/images/cover-pic.JPG',
   online: true,
+  readyToWork: true,
+  dateOfBirth: "2000-01-14",
 };
 
 const PersonalDetailsContext = createContext<PersonalDetailsContextType | undefined>(undefined);
@@ -40,6 +45,17 @@ export function PersonalDetailsProvider({ children }: { children: ReactNode }) {
       ...prev,
       ...updates
     }));
+  }, []);
+
+  const toggleReadyToWork = useCallback(() => {
+    setPersonalDetails(prev => {
+      const newStatus = !prev.readyToWork;
+      return {
+        ...prev,
+        readyToWork: newStatus,
+        online: newStatus, // Sync online status with ready to work
+      };
+    });
   }, []);
 
   // Load from localStorage on mount
@@ -59,6 +75,7 @@ export function PersonalDetailsProvider({ children }: { children: ReactNode }) {
           name: parsedPersonalInfo.fullName || prev.name,
           title: parsedPersonalInfo.jobTitle || prev.title,
           bio: parsedPersonalInfo.bio || prev.bio,
+          dateOfBirth: parsedPersonalInfo.dateOfBirth || prev.dateOfBirth,
         }));
       }
     } catch (error) {
@@ -77,6 +94,7 @@ export function PersonalDetailsProvider({ children }: { children: ReactNode }) {
   const value: PersonalDetailsContextType = {
     personalDetails,
     updatePersonalDetails,
+    toggleReadyToWork,
   };
 
   return (

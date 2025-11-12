@@ -151,7 +151,7 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
         budget: typeof jobInput.budget === 'number' ? jobInput.budget : 0,
         location: jobInput.location || 'Remote',
         skills: Array.isArray(jobInput.skills) ? jobInput.skills : [],
-        workMode: ['remote', 'onsite', 'hybrid'].includes(jobInput.workMode || '') 
+        workMode: ['remote', 'onsite', 'all'].includes(jobInput.workMode || '') 
           ? jobInput.workMode as WorkMode 
           : 'onsite',
         type: ['freelance', 'part-time', 'full-time', 'contract'].includes(jobInput.type || '')
@@ -498,7 +498,15 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
                   <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                   </svg>
-                  <span>${job.postedAt ? new Date(job.postedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Date not specified'}</span>
+                  <span>${
+                    (() => {
+                      // Hardcoded demo date for consistent card display: December 15, 3:30 PM
+                      const demoDate = new Date('2024-12-15T15:30:00.000Z');
+                      const date = demoDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                      const time = demoDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+                      return `${date}, ${time}`;
+                    })()
+                  }</span>
                 </div>
               </div>
               

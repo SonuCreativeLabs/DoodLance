@@ -2,9 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { Star, Clock, MapPin, ArrowLeft } from 'lucide-react';
+import Image from 'next/image';
 import JobDetailsFull from './JobDetailsFull';
 import OverlayPortal from './OverlayPortal';
-import { Job } from '../types';
+import { Job, getWorkModeLabel, getJobDurationLabel } from '../types';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 // Define a base professional type with common fields
@@ -29,7 +30,7 @@ export type BaseProfessional = {
   coords?: [number, number];
   availability?: string[];
   skills?: string[];
-  workMode?: 'remote' | 'onsite' | 'hybrid';
+  workMode?: 'remote' | 'onsite' | 'all';
   type?: string;
   postedAt?: string;
   description?: string;
@@ -54,7 +55,13 @@ export default function ProfessionalsFeed({
   onApply,
   className = ''
 }: ProfessionalsFeedProps) {
-  // Use filteredProfessionals if available, otherwise use jobs
+  const formatScheduledDate = (scheduledAt: string) => {
+    // Hardcoded demo date for consistent card display: December 15, 3:30 PM
+    const demoDate = new Date('2024-12-15T15:30:00.000Z');
+    const date = demoDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    const time = demoDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+    return `${date}, ${time}`;
+  };
   type ItemType = Job | BaseProfessional;
   const items: ItemType[] = (filteredProfessionals || jobs || []) as ItemType[];
   const router = useRouter();
@@ -141,10 +148,10 @@ export default function ProfessionalsFeed({
       {items.map((item: any) => (
         <div
           key={item.id}
-          className="group bg-gradient-to-br from-[#1E1E1E] to-[#1A1A1A] rounded-2xl p-6 shadow-xl hover:shadow-purple-500/20 transition-all duration-300 w-full border border-white/5 hover:border-white/10 min-h-[220px] h-full"
+          className="group bg-gradient-to-br from-[#1E1E1E] to-[#1A1A1A] rounded-2xl p-6 shadow-xl hover:shadow-purple-500/20 transition-all duration-300 w-full border border-white/5 hover:border-white/10"
           onClick={() => filteredProfessionals ? handleProfessionalClick(item) : handleJobClick(item as Job)}
         >
-          <div className="space-y-3">
+          <div className="space-y-2">
             {/* Avatar + Rating (for professionals) */}
             {filteredProfessionals && (
               <div className="flex items-start gap-4">
@@ -174,12 +181,12 @@ export default function ProfessionalsFeed({
                         )}
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-[12px] font-medium text-white/80 bg-white/10 px-2 py-0.5 rounded-full whitespace-nowrap">
+                        <span className="text-[12px] font-medium text-white/80 bg-white/10 px-2 py-0.5 rounded whitespace-nowrap">
                           {item.category || item.service}
                         </span>
                         {item.workMode && (
-                          <span className="px-2 py-0.5 text-[11px] rounded-full bg-white/5 text-white/70">
-                            {item.workMode}
+                          <span className="text-[12px] font-medium text-white/80 bg-white/10 px-2 py-0.5 rounded whitespace-nowrap">
+                            {getWorkModeLabel(item.workMode)}
                           </span>
                         )}
                       </div>
@@ -188,49 +195,65 @@ export default function ProfessionalsFeed({
                 </div>
               </div>
             )}
-            {/* Fallback for jobs (no avatar) */}
+            {/* Job header with client profile */}
             {!filteredProfessionals && (
-              <div className="flex flex-col gap-2">
-                <h3 className="text-[15px] font-semibold text-white leading-tight line-clamp-2 break-words">
-                  {item.title || item.name}
-                </h3>
-                <div className="flex items-center gap-2">
-                  <span className="text-[12px] font-medium text-white/80 bg-white/10 px-2 py-0.5 rounded-full whitespace-nowrap">
-                    {item.category || item.service}
-                  </span>
-                  {item.workMode && (
-                    <span className="px-2 py-0.5 text-[11px] rounded-full bg-white/5 text-white/70">
-                      {item.workMode}
+              <div className="flex items-center gap-3 mb-1">
+                <div className="relative flex-shrink-0">
+                  <div className="relative w-12 h-12 rounded-xl overflow-hidden ring-2 ring-white/20 group-hover:ring-white/30 transition-all duration-300">
+                    <Image
+                      src={item.clientImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(item.clientName || 'Client')}&background=6B46C1&color=fff&bold=true`}
+                      alt="Client"
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                </div>
+                <div className="flex flex-col gap-1 flex-1 min-w-0">
+                  <h3 className="text-[15px] font-semibold text-white leading-tight line-clamp-2 break-words">
+                    {item.title || item.name}
+                  </h3>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[12px] font-medium text-white/80 bg-white/10 px-2 py-0.5 rounded whitespace-nowrap">
+                      {item.category || item.service}
                     </span>
-                  )}
+                    {item.workMode && (
+                      <span className="text-[12px] font-medium text-white/80 bg-white/10 px-2 py-0.5 rounded whitespace-nowrap">
+                        {getWorkModeLabel(item.workMode)}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
 
             {/* Description */}
-            <p className="text-[13px] text-white/80 line-clamp-2 leading-relaxed">
+            <p className="text-[13px] text-white/80 line-clamp-2 leading-relaxed mb-1">
               {item.description || `${item.name} is available for ${item.service}`}
             </p>
 
             {/* Location and Date */}
-            <div className="flex items-center gap-3 text-[12px] text-white/60 pt-1">
+            <div className="flex items-center justify-between text-[12px] text-white/60 mb-2">
               <div className="flex items-center gap-1 min-w-0 flex-1">
                 <MapPin className="w-3 h-3 flex-shrink-0" />
                 <span className="truncate" title={item.location}>{item.location}</span>
               </div>
-              <div className="flex items-center gap-1 flex-shrink-0">
+              <div className="flex items-center gap-1 flex-shrink-0 ml-2">
                 <Clock className="w-3 h-3 flex-shrink-0 text-white/50" />
                 <span className="text-white/60 text-[11px] whitespace-nowrap">
                   {item.responseTime || 
-                   (item.postedAt 
-                    ? new Date(item.postedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-                    : item.availability?.[0] || 'Available now')}
+                   (filteredProfessionals ? 
+                    (item.postedAt 
+                     ? new Date(item.postedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                     : item.availability?.[0] || 'Available now') :
+                    (item.scheduledAt 
+                     ? formatScheduledDate(item.scheduledAt)
+                     : 'Date TBD'))}
                 </span>
               </div>
             </div>
 
             {/* Skills */}
-            <div className="flex gap-2 items-center pt-1">
+            <div className="flex flex-wrap gap-2 mb-1">
               {(item.skills || []).slice(0, 2).map((skill: string, i: number) => (
                 <span
                   key={i}
@@ -247,20 +270,13 @@ export default function ProfessionalsFeed({
             </div>
 
             {/* Footer */}
-            <div className="flex items-center justify-between pt-3 border-t border-white/5 mt-3">
+            <div className="flex items-center justify-between pt-3 border-t border-white/5 mt-2">
               <div className="flex items-baseline gap-1">
                 <span className="text-[17px] font-semibold text-white">
                   ₹{item.budget?.toLocaleString()}
                 </span>
                 <span className="text-[13px] text-white/60">
-                  {item.priceUnit ? ` / ${item.priceUnit}` : 
-                   item.category === 'Sports' ? ' / session' :
-                   item.category?.toLowerCase().includes('tutoring') ? ' / session' :
-                   item.category?.toLowerCase().includes('coach') ? ' / session' :
-                   item.category?.toLowerCase().includes('fitness') ? ' / session' :
-                   item.category?.toLowerCase().includes('makeup') ? ' / session' :
-                   item.category?.toLowerCase().includes('diet') ? ' / plan' :
-                   ' / project'}
+                  / {filteredProfessionals ? 'hour' : getJobDurationLabel(item as Job)}
                 </span>
               </div>
               <button
@@ -272,7 +288,7 @@ export default function ProfessionalsFeed({
                     handleApply(item.id);
                   }
                 }}
-                className="px-4 py-1.5 text-xs font-medium text-white bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-400 hover:to-purple-500 rounded-full transition-all duration-300 flex items-center justify-center gap-1.5 group-hover:shadow-lg group-hover:shadow-purple-500/20"
+                className="px-4 py-2 text-xs font-medium text-white bg-gradient-to-r from-[#6B46C1] to-[#4C1D95] hover:from-[#5B35B0] hover:to-[#3D1B7A] rounded-xl transition-all duration-300 shadow-lg shadow-purple-600/20 hover:shadow-purple-600/30 flex items-center justify-center gap-1.5 group-hover:shadow-lg group-hover:shadow-purple-500/20"
               >
                 <span>Apply Now</span>
                 <svg className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">

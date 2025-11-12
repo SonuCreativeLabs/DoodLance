@@ -1,45 +1,22 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
+import { usePersonalDetails } from '@/contexts/PersonalDetailsContext';
+import { useAvailability } from '@/contexts/AvailabilityContext';
 import { ArrowLeft, Clock, Calendar, Plus, X, Pencil, Check, List, Zap, Navigation, Bell, Minus } from "lucide-react";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { format, addDays, startOfWeek } from 'date-fns';
 
-interface TimeSlot {
-  id: string;
-  start: string;
-  end: string;
-  isEditing: boolean;
-}
-
-interface DayAvailability {
-  id: string;
-  name: string;
-  available: boolean;
-  timeSlots: TimeSlot[];
-}
-
 // Initial days data with time slots
-const initialDays: DayAvailability[] = [
-  { id: 'monday', name: 'Monday', available: true, timeSlots: [{ id: '1', start: '09:00', end: '18:00', isEditing: false }] },
-  { id: 'tuesday', name: 'Tuesday', available: true, timeSlots: [{ id: '1', start: '09:00', end: '18:00', isEditing: false }] },
-  { id: 'wednesday', name: 'Wednesday', available: true, timeSlots: [{ id: '1', start: '09:00', end: '18:00', isEditing: false }] },
-  { id: 'thursday', name: 'Thursday', available: true, timeSlots: [{ id: '1', start: '09:00', end: '18:00', isEditing: false }] },
-  { id: 'friday', name: 'Friday', available: true, timeSlots: [{ id: '1', start: '09:00', end: '18:00', isEditing: false }] },
-  { id: 'saturday', name: 'Saturday', available: false, timeSlots: [] },
-  { id: 'sunday', name: 'Sunday', available: false, timeSlots: [] },
-];
 
 
 export default function AvailabilityPage() {
-  const [days, setDays] = useState<DayAvailability[]>(initialDays);
+  const { personalDetails, toggleReadyToWork } = usePersonalDetails();
+  const { days, updateDays } = useAvailability();
   const [currentWeekStart, setCurrentWeekStart] = useState(startOfWeek(new Date()));
-  
-  // Ready to work toggle state
-  const [readyToWork, setReadyToWork] = useState(false);
   
   // Booking notice state
   const [enableAdvanceNotice, setEnableAdvanceNotice] = useState(false);
@@ -57,7 +34,7 @@ export default function AvailabilityPage() {
   
   
   const toggleDayAvailability = (dayId: string) => {
-    setDays(days.map(day => 
+    updateDays(days.map(day => 
       day.id === dayId 
         ? { 
             ...day, 
@@ -71,7 +48,7 @@ export default function AvailabilityPage() {
   };
 
   const addTimeSlot = (dayId: string) => {
-    setDays(days.map(day => 
+    updateDays(days.map(day => 
       day.id === dayId 
         ? { 
             ...day, 
@@ -85,7 +62,7 @@ export default function AvailabilityPage() {
   };
 
   const removeTimeSlot = (dayId: string, slotId: string) => {
-    setDays(days.map(day => 
+    updateDays(days.map(day => 
       day.id === dayId 
         ? { 
             ...day, 
@@ -96,7 +73,7 @@ export default function AvailabilityPage() {
   };
 
   const toggleEditTimeSlot = (dayId: string, slotId: string) => {
-    setDays(days.map(day => 
+    updateDays(days.map(day => 
       day.id === dayId 
         ? { 
             ...day, 
@@ -111,7 +88,7 @@ export default function AvailabilityPage() {
   };
 
   const updateTimeSlot = (dayId: string, slotId: string, field: 'start' | 'end', value: string) => {
-    setDays(days.map(day => 
+    updateDays(days.map(day => 
       day.id === dayId 
         ? { 
             ...day, 
@@ -221,16 +198,16 @@ export default function AvailabilityPage() {
                 </div>
                 <div>
                   <h3 className="text-lg font-medium text-white">Ready to Work</h3>
-                  <p className="text-sm text-white/60">Toggle to show/hide your working hours</p>
+                  <p className="text-sm text-white/60">{personalDetails.readyToWork ? 'You are available for new jobs' : 'You are currently unavailable'}</p>
                 </div>
               </div>
               <button
-                onClick={() => setReadyToWork(!readyToWork)}
-                className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 ${readyToWork ? 'bg-purple-600' : 'bg-[#2A2A2A]'}`}
+                onClick={toggleReadyToWork}
+                className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${personalDetails.readyToWork ? 'bg-green-600' : 'bg-[#2A2A2A]'}`}
               >
                 <span className="sr-only">Toggle ready to work</span>
                 <span
-                  className={`${readyToWork ? 'translate-x-7' : 'translate-x-1'} inline-block h-6 w-6 transform rounded-full bg-white transition-transform shadow-sm`}
+                  className={`${personalDetails.readyToWork ? 'translate-x-7' : 'translate-x-1'} inline-block h-6 w-6 transform rounded-full bg-white transition-transform shadow-sm`}
                 />
               </button>
             </div>
@@ -239,7 +216,7 @@ export default function AvailabilityPage() {
       </div>
 
       {/* Working Hours Section - Only show when ready to work */}
-      {readyToWork && (
+      {personalDetails.readyToWork && (
         <>
           <div className="mb-4">
             <div className="flex items-center gap-2 mb-1">

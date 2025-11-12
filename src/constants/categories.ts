@@ -10,9 +10,9 @@ export const SERVICE_CATEGORIES = [
   'Physio',
   'Scorer',
   'Umpire',
-  'Cricket Photo / Videography',
-  'Cricket Content Creator',
   'Commentator',
+  'Cricket Content Creator',
+  'Cricket Photo / Videography',
   'Other'
 ] as const;
 

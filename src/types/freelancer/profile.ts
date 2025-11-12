@@ -60,6 +60,7 @@ export interface ProfileData {
   portfolio: PortfolioItem[];
   reviews: Review[];
   availability: Availability[];
+  workingHours?: string;
   completedJobs?: number;
   activeJobs?: number;
 }

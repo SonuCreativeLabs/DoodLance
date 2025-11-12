@@ -36,7 +36,7 @@ export const mockUpcomingJobs: Job[] = [
     id: 'DLSP1234',
     title: 'U-16 Academy Coach',
     category: 'Coach',
-    date: '2024-07-10',
+    date: '2025-07-10',
     time: '16:00',
     status: 'upcoming',
     payment: 2500,
@@ -59,17 +59,17 @@ export const mockUpcomingJobs: Job[] = [
     },
     // Add proposal history for timeline continuity
     proposalHistory: {
-      postedAt: '2024-07-01T10:30:00.000Z', // Original job posting date from feed
-      appliedDate: '2024-07-05',
-      clientSpottedDate: '2024-07-05T13:00:00.000Z',
-      acceptedDate: '2024-07-08T10:30:00.000Z'
+      postedAt: '2025-07-01T10:30:00.000Z', // Original job posting date from feed
+      appliedDate: '2025-07-05',
+      clientSpottedDate: '2025-07-05T13:00:00.000Z',
+      acceptedDate: '2025-07-08T10:30:00.000Z'
     }
   },
   {
     id: 'DLST5678',
     title: 'Sidearm Specialist — Powerplay & Death Overs',
     category: 'Sidearm',
-    date: '2024-06-25',
+    date: '2025-06-25',
     time: '10:00',
     status: 'completed',
     otp: '1234', // Test OTP for easy testing
@@ -117,17 +117,19 @@ export const mockUpcomingJobs: Job[] = [
     addOnServices: [
       { name: 'Video Analysis', price: 2000, description: 'Detailed technical breakdown of performance' }
     ],
-    clientRating: {
+    freelancerRating: {
       stars: 5,
-      feedback: 'Excellent work! The specialist accurately simulated professional conditions and helped our batsmen adapt to T20 demands. Would definitely hire again.',
-      date: '2024-06-26T10:15:00'
-    }
+      review: 'Excellent work! The specialist accurately simulated professional conditions and helped our batsmen adapt to T20 demands. Would definitely hire again.',
+      feedbackChips: ['Professional', 'Expert Knowledge', 'Great Communication', 'Delivered on Time'],
+      date: '2025-06-26T10:15:00'
+    },
+    completedAt: '2025-06-26T10:15:00.000Z'
   },
   {
     id: 'DLMS9012',
     title: 'Mystery Spin Training — Carrom Ball & Doosra',
     category: 'Net Bowler',
-    date: '2024-06-20',
+    date: '2025-06-20',
     time: '14:00',
     status: 'completed',
     payment: 2000,
@@ -176,17 +178,24 @@ export const mockUpcomingJobs: Job[] = [
     },
     // Add proposal history for timeline continuity
     proposalHistory: {
-      postedAt: '2024-06-15T14:20:00.000Z', // Original job posting date from feed
-      appliedDate: '2024-06-20',
-      clientSpottedDate: '2024-06-20T15:30:00.000Z',
-      acceptedDate: '2024-06-22T09:15:00.000Z'
-    }
+      postedAt: '2025-06-15T14:20:00.000Z', // Original job posting date from feed
+      appliedDate: '2025-06-20',
+      clientSpottedDate: '2025-06-20T15:30:00.000Z',
+      acceptedDate: '2025-06-22T09:15:00.000Z'
+    },
+    freelancerRating: {
+      stars: 4,
+      review: 'Great spinner with excellent carrom ball variations. Helped our batsmen significantly improve their footwork and shot selection.',
+      feedbackChips: ['Technical Skills', 'Patient Teaching', 'Good Energy', 'Helpful'],
+      date: '2025-06-21T12:30:00'
+    },
+    completedAt: '2025-06-21T12:30:00.000Z'
   },
   {
     id: 'DLOC1234',
     title: 'Personal Batting Coach — Front-Foot Technique',
     category: 'Coach',
-    date: '2024-06-18',
+    date: '2025-06-18',
     time: '10:00',
     status: 'cancelled',
     payment: 2000,
@@ -211,22 +220,22 @@ export const mockUpcomingJobs: Job[] = [
     },
     cancellationDetails: {
       cancelledBy: 'client',
-      cancelledAt: '2024-06-16T14:30:00',
+      cancelledAt: '2025-06-16T14:30:00',
       notes: 'Client found another coach with more experience in junior cricket.'
     },
     // Add proposal history for timeline continuity
     proposalHistory: {
-      postedAt: '2024-06-10T09:15:00.000Z', // Original job posting date from feed
-      appliedDate: '2024-06-12',
-      clientSpottedDate: '2024-06-12T16:45:00.000Z',
-      acceptedDate: '2024-06-14T11:20:00.000Z'
+      postedAt: '2025-06-10T09:15:00.000Z', // Original job posting date from feed
+      appliedDate: '2025-06-12',
+      clientSpottedDate: '2025-06-12T16:45:00.000Z',
+      acceptedDate: '2025-06-14T11:20:00.000Z'
     }
   },
   {
     id: 'DLNB3456',
     title: 'Fast Bowling Practice — 140+ kph Nets',
     category: 'Net Bowler',
-    date: '2024-06-15',
+    date: '2025-06-15',
     client: {
       name: 'Tamil Nadu Cricket Academy',
       rating: 4.5,
@@ -253,22 +262,22 @@ export const mockUpcomingJobs: Job[] = [
     otp: '1234', // Test OTP for easy testing
     cancellationDetails: {
       cancelledBy: 'freelancer',
-      cancelledAt: '2024-06-14T16:45:00',
+      cancelledAt: '2025-06-14T16:45:00',
       notes: 'Unable to make it due to injury during previous net session.'
     },
     // Add proposal history for timeline continuity
     proposalHistory: {
-      postedAt: '2024-06-08T11:30:00.000Z', // Original job posting date from feed
-      appliedDate: '2024-06-10',
-      clientSpottedDate: '2024-06-10T14:15:00.000Z',
-      acceptedDate: '2024-06-12T09:45:00.000Z'
+      postedAt: '2025-06-08T11:30:00.000Z', // Original job posting date from feed
+      appliedDate: '2025-06-10',
+      clientSpottedDate: '2025-06-10T14:15:00.000Z',
+      acceptedDate: '2025-06-12T09:45:00.000Z'
     }
   },
   {
     id: 'DLCA7890',
     title: 'Match Footage Analysis — Technical Breakdown',
     category: 'Analyst',
-    date: '2024-06-28',
+    date: '2025-06-28',
     time: '09:00',
     status: 'completed',
     payment: 3500,
@@ -303,11 +312,18 @@ export const mockUpcomingJobs: Job[] = [
     ],
     // Add proposal history for timeline continuity
     proposalHistory: {
-      postedAt: '2024-06-20T08:00:00.000Z', // Original job posting date from feed
-      appliedDate: '2024-06-22',
-      clientSpottedDate: '2024-06-22T10:30:00.000Z',
-      acceptedDate: '2024-06-24T14:15:00.000Z'
-    }
+      postedAt: '2025-06-20T08:00:00.000Z', // Original job posting date from feed
+      appliedDate: '2025-06-22',
+      clientSpottedDate: '2025-06-22T10:30:00.000Z',
+      acceptedDate: '2025-06-24T14:15:00.000Z'
+    },
+    freelancerRating: {
+      stars: 5,
+      review: 'Outstanding technical analysis! The detailed breakdown of our team\'s weaknesses and the actionable recommendations have been incredibly valuable.',
+      feedbackChips: ['Expert Analysis', 'Detailed Report', 'Actionable Insights', 'Professional'],
+      date: '2025-06-29T11:45:00'
+    },
+    completedAt: '2025-06-29T11:45:00.000Z'
   },
 
   // Cricket-focused jobs continued
@@ -315,7 +331,7 @@ export const mockUpcomingJobs: Job[] = [
     id: 'DLCP1234',
     title: 'Tournament Photography — Action Shots & Highlights',
     category: 'Cricket Photo / Videography',
-    date: '2024-07-12',
+    date: '2025-07-12',
     time: '09:00',
     status: 'pending',
     payment: 5000,
@@ -347,17 +363,17 @@ export const mockUpcomingJobs: Job[] = [
     ],
     // Add proposal history for timeline continuity
     proposalHistory: {
-      postedAt: '2024-07-05T07:30:00.000Z', // Original job posting date from feed
-      appliedDate: '2024-07-08',
-      clientSpottedDate: '2024-07-08T11:45:00.000Z',
-      acceptedDate: '2024-07-10T15:20:00.000Z'
+      postedAt: '2025-07-05T07:30:00.000Z', // Original job posting date from feed
+      appliedDate: '2025-07-08',
+      clientSpottedDate: '2025-07-08T11:45:00.000Z',
+      acceptedDate: '2025-07-10T15:20:00.000Z'
     }
   },
   {
     id: 'DLCC3456',
     title: 'Social Media Content — Highlights & Player Profiles',
     category: 'Cricket Content Creator',
-    date: '2024-07-08',
+    date: '2025-07-08',
     time: '08:00',
     status: 'upcoming',
     payment: 18000,
@@ -384,17 +400,17 @@ export const mockUpcomingJobs: Job[] = [
     },
     // Add proposal history for timeline continuity
     proposalHistory: {
-      postedAt: '2024-07-01T06:00:00.000Z', // Original job posting date from feed
-      appliedDate: '2024-07-03',
-      clientSpottedDate: '2024-07-03T09:30:00.000Z',
-      acceptedDate: '2024-07-05T14:45:00.000Z'
+      postedAt: '2025-07-01T06:00:00.000Z', // Original job posting date from feed
+      appliedDate: '2025-07-03',
+      clientSpottedDate: '2025-07-03T09:30:00.000Z',
+      acceptedDate: '2025-07-05T14:45:00.000Z'
     }
   },
   {
     id: 'DLCU7890',
     title: 'Tournament Officiating — T20 Weekend Panel',
     category: 'Umpire',
-    date: '2024-07-15',
+    date: '2025-07-15',
     time: '08:00',
     status: 'pending',
     payment: 8000,
@@ -425,17 +441,17 @@ export const mockUpcomingJobs: Job[] = [
     ],
     // Add proposal history for timeline continuity
     proposalHistory: {
-      postedAt: '2024-07-08T10:15:00.000Z', // Original job posting date from feed
-      appliedDate: '2024-07-11',
-      clientSpottedDate: '2024-07-11T13:20:00.000Z',
-      acceptedDate: '2024-07-13T16:30:00.000Z'
+      postedAt: '2025-07-08T10:15:00.000Z', // Original job posting date from feed
+      appliedDate: '2025-07-11',
+      clientSpottedDate: '2025-07-11T13:20:00.000Z',
+      acceptedDate: '2025-07-13T16:30:00.000Z'
     }
   },
   {
     id: 'DLCS2468',
     title: 'Digital Scoring — Weekend T20 Tournament',
     category: 'Scorer',
-    date: '2024-07-20',
+    date: '2025-12-15',
     time: '08:00',
     status: 'upcoming',
     payment: 5000,
@@ -462,17 +478,17 @@ export const mockUpcomingJobs: Job[] = [
     },
     // Add proposal history for timeline continuity
     proposalHistory: {
-      postedAt: '2024-07-13T07:00:00.000Z', // Original job posting date from feed
-      appliedDate: '2024-07-16',
-      clientSpottedDate: '2024-07-16T10:45:00.000Z',
-      acceptedDate: '2024-07-18T14:30:00.000Z'
+      postedAt: '2025-07-13T07:00:00.000Z', // Original job posting date from feed
+      appliedDate: '2025-07-16',
+      clientSpottedDate: '2025-07-16T10:45:00.000Z',
+      acceptedDate: '2025-07-18T14:30:00.000Z'
     }
   },
   {
     id: 'DLCP1357',
     title: 'Sports Physiotherapy — Injury Prevention Program',
     category: 'Physio',
-    date: '2024-07-25',
+    date: '2025-07-25',
     time: '10:00',
     status: 'pending',
     payment: 12000,
@@ -499,17 +515,17 @@ export const mockUpcomingJobs: Job[] = [
     },
     // Add proposal history for timeline continuity
     proposalHistory: {
-      postedAt: '2024-07-18T09:30:00.000Z', // Original job posting date from feed
-      appliedDate: '2024-07-21',
-      clientSpottedDate: '2024-07-21T12:15:00.000Z',
-      acceptedDate: '2024-07-23T16:45:00.000Z'
+      postedAt: '2025-07-18T09:30:00.000Z', // Original job posting date from feed
+      appliedDate: '2025-07-21',
+      clientSpottedDate: '2025-07-21T12:15:00.000Z',
+      acceptedDate: '2025-07-23T16:45:00.000Z'
     }
   },
   {
     id: 'DLNT1111',
     title: 'Net Practice Session — Opening Batsmen',
     category: 'Net Batsman',
-    date: '2024-07-30',
+    date: '2025-07-30',
     time: '07:00',
     status: 'pending',
     payment: 3000,
@@ -536,17 +552,17 @@ export const mockUpcomingJobs: Job[] = [
     },
     // Add proposal history for timeline continuity
     proposalHistory: {
-      postedAt: '2024-07-23T06:30:00.000Z', // Original job posting date from feed
-      appliedDate: '2024-07-26',
-      clientSpottedDate: '2024-07-26T08:45:00.000Z',
-      acceptedDate: '2024-07-28T11:30:00.000Z'
+      postedAt: '2025-07-23T06:30:00.000Z', // Original job posting date from feed
+      appliedDate: '2025-07-26',
+      clientSpottedDate: '2025-07-26T08:45:00.000Z',
+      acceptedDate: '2025-07-28T11:30:00.000Z'
     }
   },
   {
     id: 'DLWK2222',
     title: 'Wicket Keeping Drills — Advanced Techniques',
     category: 'Match Player',
-    date: '2024-08-02',
+    date: '2025-08-02',
     time: '09:00',
     status: 'pending',
     payment: 2500,
@@ -573,17 +589,17 @@ export const mockUpcomingJobs: Job[] = [
     },
     // Add proposal history for timeline continuity
     proposalHistory: {
-      postedAt: '2024-07-26T08:00:00.000Z', // Original job posting date from feed
-      appliedDate: '2024-07-29',
-      clientSpottedDate: '2024-07-29T10:20:00.000Z',
-      acceptedDate: '2024-07-31T14:15:00.000Z'
+      postedAt: '2025-07-26T08:00:00.000Z', // Original job posting date from feed
+      appliedDate: '2025-07-29',
+      clientSpottedDate: '2025-07-29T10:20:00.000Z',
+      acceptedDate: '2025-07-31T14:15:00.000Z'
     }
   },
   {
     id: 'DLFB3333',
     title: 'Fielding Specialist — Boundary Catching',
     category: 'Match Player',
-    date: '2024-08-05',
+    date: '2025-08-05',
     time: '10:00',
     status: 'upcoming',
     payment: 2000,
@@ -609,17 +625,17 @@ export const mockUpcomingJobs: Job[] = [
     },
     // Add proposal history for timeline continuity
     proposalHistory: {
-      postedAt: '2024-07-29T09:00:00.000Z', // Original job posting date from feed
-      appliedDate: '2024-08-01',
-      clientSpottedDate: '2024-08-01T11:30:00.000Z',
-      acceptedDate: '2024-08-03T15:45:00.000Z'
+      postedAt: '2025-07-29T09:00:00.000Z', // Original job posting date from feed
+      appliedDate: '2025-08-01',
+      clientSpottedDate: '2025-08-01T11:30:00.000Z',
+      acceptedDate: '2025-08-03T15:45:00.000Z'
     }
   },
   {
     id: 'DLSP4444',
     title: 'Sports Psychology — Mental Preparation',
     category: 'Coach',
-    date: '2024-08-08',
+    date: '2025-08-08',
     time: '14:00',
     status: 'completed',
     payment: 4000,
@@ -669,17 +685,24 @@ export const mockUpcomingJobs: Job[] = [
     },
     // Add proposal history for timeline continuity
     proposalHistory: {
-      postedAt: '2024-08-01T13:00:00.000Z', // Original job posting date from feed
-      appliedDate: '2024-08-04',
-      clientSpottedDate: '2024-08-04T15:30:00.000Z',
-      acceptedDate: '2024-08-06T10:15:00.000Z'
-    }
+      postedAt: '2025-08-01T13:00:00.000Z', // Original job posting date from feed
+      appliedDate: '2025-08-04',
+      clientSpottedDate: '2025-08-04T15:30:00.000Z',
+      acceptedDate: '2025-08-06T10:15:00.000Z'
+    },
+    freelancerRating: {
+      stars: 5,
+      review: 'Transformative session! The mental preparation techniques have significantly boosted our team\'s confidence and performance under pressure.',
+      feedbackChips: ['Life-changing', 'Expert Guidance', 'Motivational', 'Highly Recommended'],
+      date: '2025-08-09T16:20:00'
+    },
+    completedAt: '2025-08-09T16:20:00.000Z'
   },
   {
     id: 'DLNV5555',
     title: 'Nutrition Consultation — Cricket-Specific Diet',
     category: 'Sports Conditioning Trainer',
-    date: '2024-08-10',
+    date: '2025-08-10',
     time: '11:00',
     status: 'completed',
     payment: 3500,
@@ -729,17 +752,24 @@ export const mockUpcomingJobs: Job[] = [
     },
     // Add proposal history for timeline continuity
     proposalHistory: {
-      postedAt: '2024-08-03T10:30:00.000Z', // Original job posting date from feed
-      appliedDate: '2024-08-06',
-      clientSpottedDate: '2024-08-06T12:45:00.000Z',
-      acceptedDate: '2024-08-08T09:20:00.000Z'
-    }
+      postedAt: '2025-08-03T10:30:00.000Z', // Original job posting date from feed
+      appliedDate: '2025-08-06',
+      clientSpottedDate: '2025-08-06T12:45:00.000Z',
+      acceptedDate: '2025-08-08T09:20:00.000Z'
+    },
+    freelancerRating: {
+      stars: 4,
+      review: 'Excellent nutrition planning! The cricket-specific diet recommendations have improved our players\' energy levels and recovery times noticeably.',
+      feedbackChips: ['Knowledgeable', 'Customized Plans', 'Results-oriented', 'Supportive'],
+      date: '2025-08-11T14:30:00'
+    },
+    completedAt: '2025-08-11T14:30:00.000Z'
   },
   {
     id: 'DLTE6666',
     title: 'Technical Equipment Setup — Bowling Machines',
     category: 'Coach',
-    date: '2024-08-12',
+    date: '2025-08-12',
     time: '08:00',
     status: 'completed',
     payment: 2500,
@@ -788,17 +818,24 @@ export const mockUpcomingJobs: Job[] = [
     },
     // Add proposal history for timeline continuity
     proposalHistory: {
-      postedAt: '2024-08-05T07:15:00.000Z', // Original job posting date from feed
-      appliedDate: '2024-08-08',
-      clientSpottedDate: '2024-08-08T09:45:00.000Z',
-      acceptedDate: '2024-08-10T11:30:00.000Z'
-    }
+      postedAt: '2025-08-05T07:15:00.000Z', // Original job posting date from feed
+      appliedDate: '2025-08-08',
+      clientSpottedDate: '2025-08-08T09:45:00.000Z',
+      acceptedDate: '2025-08-10T11:30:00.000Z'
+    },
+    freelancerRating: {
+      stars: 4,
+      review: 'Professional setup and excellent training! The equipment is working perfectly and the maintenance guidance will be very helpful.',
+      feedbackChips: ['Technical Expert', 'Efficient Setup', 'Clear Instructions', 'Reliable'],
+      date: '2025-08-13T13:15:00'
+    },
+    completedAt: '2025-08-13T13:15:00.000Z'
   },
   {
     id: 'DLMC7777',
     title: 'Match Commentary — Live Streaming',
     category: 'Commentator',
-    date: '2024-08-15',
+    date: '2025-08-15',
     time: '14:00',
     status: 'upcoming',
     payment: 6000,
@@ -825,17 +862,17 @@ export const mockUpcomingJobs: Job[] = [
     },
     // Add proposal history for timeline continuity
     proposalHistory: {
-      postedAt: '2024-08-08T13:30:00.000Z', // Original job posting date from feed
-      appliedDate: '2024-08-11',
-      clientSpottedDate: '2024-08-11T15:45:00.000Z',
-      acceptedDate: '2024-08-13T10:20:00.000Z'
+      postedAt: '2025-08-08T13:30:00.000Z', // Original job posting date from feed
+      appliedDate: '2025-08-11',
+      clientSpottedDate: '2025-08-11T15:45:00.000Z',
+      acceptedDate: '2025-08-13T10:20:00.000Z'
     }
   },
   {
     id: 'DLFT8888',
     title: 'Fitness Training — Cricket-Specific Conditioning',
     category: 'Fitness Trainer',
-    date: '2024-08-18',
+    date: '2025-08-18',
     time: '06:00',
     status: 'pending',
     payment: 4500,
@@ -862,17 +899,17 @@ export const mockUpcomingJobs: Job[] = [
     },
     // Add proposal history for timeline continuity
     proposalHistory: {
-      postedAt: '2024-08-11T05:45:00.000Z', // Original job posting date from feed
-      appliedDate: '2024-08-14',
-      clientSpottedDate: '2024-08-14T08:30:00.000Z',
-      acceptedDate: '2024-08-16T12:15:00.000Z'
+      postedAt: '2025-08-11T05:45:00.000Z', // Original job posting date from feed
+      appliedDate: '2025-08-14',
+      clientSpottedDate: '2025-08-14T08:30:00.000Z',
+      acceptedDate: '2025-08-16T12:15:00.000Z'
     }
   },
   {
     id: 'DLSS9999',
     title: 'Skill Assessment — Junior Player Evaluation',
     category: 'Coach',
-    date: '2024-08-20',
+    date: '2025-08-20',
     time: '09:00',
     status: 'upcoming',
     payment: 3000,
@@ -899,17 +936,17 @@ export const mockUpcomingJobs: Job[] = [
     },
     // Add proposal history for timeline continuity
     proposalHistory: {
-      postedAt: '2024-08-13T08:30:00.000Z', // Original job posting date from feed
-      appliedDate: '2024-08-16',
-      clientSpottedDate: '2024-08-16T11:00:00.000Z',
-      acceptedDate: '2024-08-18T14:45:00.000Z'
+      postedAt: '2025-08-13T08:30:00.000Z', // Original job posting date from feed
+      appliedDate: '2025-08-16',
+      clientSpottedDate: '2025-08-16T11:00:00.000Z',
+      acceptedDate: '2025-08-18T14:45:00.000Z'
     }
   },
   {
     id: 'DLRC0000',
     title: 'Recovery Coaching — Post-Match Recovery',
     category: 'Physio',
-    date: '2024-08-22',
+    date: '2025-08-22',
     time: '18:00',
     status: 'pending',
     payment: 2800,
@@ -935,10 +972,10 @@ export const mockUpcomingJobs: Job[] = [
     },
     // Add proposal history for timeline continuity
     proposalHistory: {
-      postedAt: '2024-08-15T17:00:00.000Z', // Original job posting date from feed
-      appliedDate: '2024-08-18',
-      clientSpottedDate: '2024-08-18T19:30:00.000Z',
-      acceptedDate: '2024-08-20T14:45:00.000Z'
+      postedAt: '2025-08-15T17:00:00.000Z', // Original job posting date from feed
+      appliedDate: '2025-08-18',
+      clientSpottedDate: '2025-08-18T19:30:00.000Z',
+      acceptedDate: '2025-08-20T14:45:00.000Z'
     }
   },
 ];
@@ -948,14 +985,15 @@ export const mockApplications: Application[] = [
   {
     "#": 'DLST1234',
     jobTitle: 'Sidearm Thrower for Professional Team',
-    appliedDate: '2024-06-28',
+    appliedDate: '2025-06-28',
     status: 'pending',
     clientName: 'Chennai Super Kings Academy',
     budget: { min: 2000, max: 3500 },
     progress: 0,
     clientImage: '/avatars/csk.jpg',
     location: 'Chepauk, Chennai',
-    postedDate: '2024-06-25',
+    postedDate: '2025-06-25',
+    scheduledAt: '2025-06-30T10:00:00.000Z', // Added scheduled date from original job
     description: 'Looking for an experienced sidearm specialist who can simulate various bowling actions for our professional batsmen practice sessions.',
     clientId: 'csk123',
     category: 'Sidearm',
@@ -978,14 +1016,15 @@ export const mockApplications: Application[] = [
   {
     "#": 'DLMS5678',
     jobTitle: 'Mystery Spinner for Academy Training',
-    appliedDate: '2024-06-29',
+    appliedDate: '2025-06-29',
     status: 'pending',
     clientName: 'Tamil Nadu Cricket Academy',
     budget: { min: 3000, max: 5000 },
     progress: 0,
     clientImage: '/avatars/tnca.jpg',
     location: 'Anna Nagar Cricket Ground, Chennai',
-    postedDate: '2024-06-26',
+    postedDate: '2025-06-26',
+    scheduledAt: '2025-07-02T14:00:00.000Z', // Added scheduled date from original job
     description: 'Seeking a skilled mystery spinner who can coach our academy batsmen on facing different variations of spin bowling.',
     clientId: 'tnca456',
     category: 'Coach',
@@ -1010,14 +1049,14 @@ export const mockApplications: Application[] = [
   {
     "#": 'DLOC9012',
     jobTitle: 'One-on-One Cricket Coaching for Teenager',
-    appliedDate: '2024-06-20',
+    appliedDate: '2025-06-20',
     status: 'pending',
     clientName: 'Mehta Family',
     budget: { min: 2500, max: 3500 },
     progress: 0,
     clientImage: '/avatars/family.jpg',
     location: 'T Nagar, Chennai',
-    postedDate: '2024-06-18',
+    postedDate: '2025-06-18',
     description: 'Looking for a personal cricket coach for my 16-year-old son who wants to improve his batting technique and footwork',
     clientId: 'mehta456',
     category: 'Coach',
@@ -1043,14 +1082,15 @@ export const mockApplications: Application[] = [
   {
     "#": 'DLCS5678',
     jobTitle: 'Cricket Scorer for Local Tournament',
-    appliedDate: '2024-06-19',
+    appliedDate: '2025-06-19',
     status: 'accepted',
     clientName: 'Chennai Cricket Association',
     budget: { min: 2000, max: 2500 },
     progress: 100,
     clientImage: '/avatars/cca.jpg',
     location: 'Velachery Cricket Ground, Chennai',
-    postedDate: '2024-06-15',
+    postedDate: '2025-06-15',
+    scheduledAt: '2025-12-20T14:00:00.000Z', // Future date for the tournament
     description: 'Need an experienced cricket scorer for our weekend tournament. Must be familiar with digital scoring applications.',
     clientId: 'cca321',
     category: 'Scorer',
@@ -1073,14 +1113,15 @@ export const mockApplications: Application[] = [
   {
     "#": 'DLCA3456',
     jobTitle: 'Cricket Video Analyst',
-    appliedDate: '2024-06-21',
+    appliedDate: '2025-06-21',
     status: 'rejected',
     clientName: 'Tamil Nadu Cricket Academy',
     budget: { min: 3000, max: 4500 },
     progress: 0,
     clientImage: '/avatars/tnca.jpg',
     location: 'Chepauk, Chennai',
-    postedDate: '2024-06-18',
+    postedDate: '2025-06-18',
+    scheduledAt: '2025-06-28T09:00:00.000Z', // Added scheduled date from original job
     description: 'Need a cricket analyst to review player performances and provide detailed technical feedback for our academy team',
     clientId: 'tnca987',
     category: 'Coach',
@@ -1103,14 +1144,15 @@ export const mockApplications: Application[] = [
   {
     "#": 'DLWB7890',
     jobTitle: 'Cricket Equipment Manager',
-    appliedDate: '2024-06-10',
+    appliedDate: '2025-06-10',
     status: 'withdrawn',
     clientName: 'Chennai Sports Club',
     budget: { min: 1500, max: 2500 },
     progress: 0,
     clientImage: '/avatars/sportsclub.jpg',
     location: 'Nungambakkam, Chennai',
-    postedDate: '2024-06-08',
+    postedDate: '2025-06-08',
+    scheduledAt: '2025-06-15T08:00:00.000Z', // Added scheduled date from original job
     description: 'Looking for someone to manage cricket equipment and maintain our sports facilities.',
     clientId: 'csc123',
     category: 'Physio',
@@ -1171,6 +1213,7 @@ export const createApplication = async (jobId: string, proposalText: string, rat
       clientImage: job.clientImage,
       location: job.location,
       postedDate: job.postedAt,
+      scheduledAt: job.scheduledAt, // When the job will actually happen
       description: job.description,
       clientId: `${job.clientName.toLowerCase().replace(/\s+/g, '')}123`,
       category: job.category,
@@ -1310,7 +1353,7 @@ export const mockFreelancerProfile = {
     {
       id: 'TRX1234',
       amount: 2200,
-      date: '2024-06-28T15:00:00',
+      date: '2025-06-28T15:00:00',
       jobTitle: 'Cricket Scorer for Tournament',
       client: 'Chennai Cricket Association',
       status: 'completed'
@@ -1318,7 +1361,7 @@ export const mockFreelancerProfile = {
     {
       id: 'TRX5678',
       amount: 4500,
-      date: '2024-06-25T12:30:00',
+      date: '2025-06-25T12:30:00',
       jobTitle: 'Cricket Video Analysis',
       client: 'Tamil Nadu Cricket Academy',
       status: 'completed'
@@ -1326,7 +1369,7 @@ export const mockFreelancerProfile = {
     {
       id: 'TRX9012',
       amount: 3500,
-      date: '2024-06-20T10:45:00',
+      date: '2025-06-20T10:45:00',
       jobTitle: 'Sidearm Specialist Session',
       client: 'Chennai Super Kings Academy',
       status: 'completed'
@@ -1334,7 +1377,7 @@ export const mockFreelancerProfile = {
     {
       id: 'TRX3456',
       amount: 3000,
-      date: '2024-06-15T16:20:00',
+      date: '2025-06-15T16:20:00',
       jobTitle: 'One-on-One Cricket Coaching',
       client: 'Mehta Family',
       status: 'completed'

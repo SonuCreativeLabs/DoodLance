@@ -33,6 +33,7 @@ import { FullScreenMap } from '@/components/freelancer/jobs/FullScreenMap';
 import { SuccessMessage } from '@/components/ui/success-message';
 import { getCategoryDisplayName } from '@/components/freelancer/jobs/utils';
 import { CollapsibleTimeline, createTimelineItems } from '@/components/freelancer/jobs/CollapsibleTimeline';
+import { getJobDurationLabel } from '@/app/freelancer/feed/types';
 
 export default function ProposalDetailsPage() {
   const router = useRouter();
@@ -425,7 +426,12 @@ export default function ProposalDetailsPage() {
             {/* Job Title & Location */}
             <div className="mb-8">
               <div className="space-y-4">
-                <h1 className="text-3xl md:text-4xl font-bold text-white leading-tight">{proposal.jobTitle}</h1>
+                <h1 className="text-3xl md:text-4xl font-bold text-white leading-tight">
+                  {proposal.jobTitle}
+                  <span className="inline-flex items-center px-1.5 py-0.5 text-xs font-medium text-white/80 bg-white/10 border border-white/20 rounded-full whitespace-nowrap ml-2 align-middle">
+                    On field
+                  </span>
+                </h1>
                 <button
                   type="button"
                   onClick={() => handleOpenMap(proposal.location)}
@@ -448,28 +454,44 @@ export default function ProposalDetailsPage() {
                     <div className="text-sm text-gray-400 mb-0.5">Budget</div>
                     <div className="text-white font-medium leading-tight">
                       <span className="whitespace-nowrap">
-                        ₹{proposal.budget.min.toLocaleString('en-IN')} - ₹{proposal.budget.max.toLocaleString('en-IN')}
+                        {['pending', 'rejected', 'withdrawn'].includes(proposal.status) 
+                          ? `₹${proposal.budget.max.toLocaleString('en-IN')}`
+                          : `₹${proposal.budget.min.toLocaleString('en-IN')} - ₹${proposal.budget.max.toLocaleString('en-IN')}`
+                        }
                       </span>
                     </div>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
-                  <Briefcase className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
+                  <ClockIcon className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
                   <div>
-                    <div className="text-sm text-gray-400">Work Mode</div>
-                    <div className="text-white font-medium capitalize">{proposal.duration || 'Not specified'}</div>
+                    <div className="text-sm text-gray-400">Duration</div>
+                    <div className="text-white font-medium capitalize">{getJobDurationLabel(proposal as any)}</div>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
                   <Calendar className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
                   <div>
-                    <div className="text-sm text-gray-400">Posted</div>
+                    <div className="text-sm text-gray-400">Scheduled</div>
                     <div className="text-white font-medium">
-                      {new Date(proposal.postedDate).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric'
-                      })}
+                      {proposal.scheduledAt ? (() => {
+                        const scheduled = new Date(proposal.scheduledAt);
+                        const month = scheduled.toLocaleDateString('en-US', { month: 'short' });
+                        const day = scheduled.getDate();
+                        const year = scheduled.getFullYear();
+                        const time = scheduled.toLocaleTimeString('en-US', { 
+                          hour: 'numeric', 
+                          minute: '2-digit',
+                          hour12: true
+                        });
+                        return (
+                          <>
+                            {`${month} ${day}, ${year}`}
+                            <br />
+                            at {time}
+                          </>
+                        );
+                      })() : 'Date TBD'}
                     </div>
                   </div>
                 </div>
@@ -491,6 +513,35 @@ export default function ProposalDetailsPage() {
 
               {/* Card content */}
               <div className="relative p-5">
+                <div className="text-left mb-2">
+                  <div className="text-white/60 font-medium text-xs">
+                  {proposal.postedDate ? (() => {
+                    const posted = new Date(proposal.postedDate);
+                    const now = new Date();
+                    const diffTime = Math.abs(now.getTime() - posted.getTime());
+                    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                    const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+                    const diffMinutes = Math.floor(diffTime / (1000 * 60));
+
+                    if (diffMinutes < 60) {
+                      return `${diffMinutes}m ago`;
+                    } else if (diffHours < 24) {
+                      return `${diffHours}h ago`;
+                    } else if (diffDays < 7) {
+                      return `${diffDays}d ago`;
+                    } else if (diffDays < 30) {
+                      const weeks = Math.floor(diffDays / 7);
+                      return `${weeks}w ago`;
+                    } else if (diffDays < 365) {
+                      const months = Math.floor(diffDays / 30);
+                      return `${months}mo ago`;
+                    } else {
+                      const years = Math.floor(diffDays / 365);
+                      return `${years}y ago`;
+                    }
+                  })() : 'Date not specified'}
+                </div>
+                </div>
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-semibold text-white">About the Job</h2>
                 </div>

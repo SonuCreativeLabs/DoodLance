@@ -85,12 +85,14 @@ export const JobCard: React.FC<JobCardProps> = ({ job, index, onStatusChange }) 
                 <CalendarIcon className="w-4 h-4 text-purple-400" />
               </div>
               <div className="min-w-0">
-                <div className="text-xs text-white/40 mb-0.5">Date & Time</div>
                 <div className="text-sm text-white/90">
-                  {job.date ? format(new Date(job.date), 'dd/MM/yyyy') : 'Date not available'}
-                </div>
-                <div className="text-sm text-white/70 mt-0.5">
-                  {job.jobTime || job.time ? formatTime12Hour(job.jobTime || job.time) : 'Time not available'}
+                  {(() => {
+                    // Hardcoded demo date for consistent card display: December 15, 3:30 PM
+                    const demoDate = new Date('2024-12-15T15:30:00.000Z');
+                    const date = format(demoDate, 'MMM d');
+                    const time = formatTime12Hour(`${demoDate.getHours().toString().padStart(2, '0')}:${demoDate.getMinutes().toString().padStart(2, '0')}`);
+                    return time ? `${date}, ${time}` : date;
+                  })()}
                 </div>
               </div>
             </div>
@@ -148,14 +150,14 @@ export const JobCard: React.FC<JobCardProps> = ({ job, index, onStatusChange }) 
                   </div>
                 )}
 
-                {/* Show review text from freelancerRating */}
+                {/* Show only stars rating - removed review text and feedback chips */}
+                {/* 
                 {job.freelancerRating?.review && (
                   <p className="text-sm text-white/70 line-clamp-2">
                     "{job.freelancerRating.review}"
                   </p>
                 )}
 
-                {/* Show feedback chips from freelancerRating */}
                 {job.freelancerRating?.feedbackChips && job.freelancerRating.feedbackChips.length > 0 && (
                   <div className="flex flex-wrap gap-1">
                     {job.freelancerRating.feedbackChips.slice(0, 3).map((chip: string, i: number) => (
@@ -168,6 +170,7 @@ export const JobCard: React.FC<JobCardProps> = ({ job, index, onStatusChange }) 
                     ))}
                   </div>
                 )}
+                */}
 
                 <div className="text-xs text-white/50">
                   Completed on {job.completedAt ? format(new Date(job.completedAt), 'dd/MM/yyyy') : 'Unknown date'} at {job.completedAt ? format(new Date(job.completedAt), 'HH:mm') : 'Unknown time'}

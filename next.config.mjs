@@ -14,7 +14,7 @@ const nextConfig = {
         hostname: 'images.unsplash.com',
       },
     ],
-    domains: ['localhost', '127.0.0.1', 'atmxiuindyakhqmdqzal.supabase.co', 'umeqaqwidjdgnwkxedaw.supabase.co', 'api.dicebear.com', 'images.unsplash.com'],
+    domains: ['localhost', '127.0.0.1', 'atmxiuindyakhqmdqzal.supabase.co', 'umeqaqwidjdgnwkxedaw.supabase.co', 'api.dicebear.com', 'images.unsplash.com', 'ui-avatars.com', 'i.pravatar.cc'],
   },
 
   // Static asset handling

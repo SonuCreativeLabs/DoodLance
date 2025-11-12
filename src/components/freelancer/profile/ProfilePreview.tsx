@@ -14,7 +14,9 @@ import {
   MapPin, 
   Calendar, 
   Star,
-  User
+  User,
+  ChevronDown,
+  Clock
 } from 'lucide-react';
 import { CategoryBadge } from '@/components/common/CategoryBadge';
 import { SkillInfoDialog } from '@/components/common/SkillInfoDialog';
@@ -54,6 +56,7 @@ const ProfilePreview = memo(({
   const [activeTab, setActiveTab] = useState('top');
   const [isSkillDialogOpen, setIsSkillDialogOpen] = useState(false);
   const [selectedSkillInfo, setSelectedSkillInfo] = useState<SkillInfo | null>(null);
+  const [isHoursDropdownOpen, setIsHoursDropdownOpen] = useState(false);
   
   // Define tabs with their corresponding section IDs
   const tabs = [
@@ -697,7 +700,7 @@ const ProfilePreview = memo(({
         {/* Profile Header */}
         <section id="top" data-section="top" className="scroll-mt-20">
           <div className="w-full bg-[#0f0f0f]">
-            <ProfileHeader {...profileData} isPreview={true} />
+            <ProfileHeader isPreview={true} />
           </div>
         </section>
         
@@ -779,6 +782,7 @@ const ProfilePreview = memo(({
                       <span>Available</span>
                     </div>
                   </div>
+                  
                   <div className="grid grid-cols-7 gap-2">
                     {profileData.availability.map((day, i) => (
                       <div key={i} className="flex flex-col items-center">
@@ -793,6 +797,34 @@ const ProfilePreview = memo(({
                         </div>
                       </div>
                     ))}
+                  </div>
+                  
+                  {/* Working Hours Dropdown */}
+                  <div className="mt-4">
+                    <button
+                      onClick={() => setIsHoursDropdownOpen(!isHoursDropdownOpen)}
+                      className="w-full flex items-center justify-between p-3 bg-[#1E1E1E] border border-white/10 rounded-lg hover:border-white/20 transition-colors"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-4 w-4 text-purple-400" />
+                        <span className="text-sm text-white font-medium">Working Hours</span>
+                      </div>
+                      <ChevronDown className={`h-4 w-4 text-white/60 transition-transform ${isHoursDropdownOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                    
+                    {isHoursDropdownOpen && (
+                      <div className="mt-2 p-3 bg-[#1E1E1E] border border-white/10 rounded-lg">
+                        {/* Detailed hours by day */}
+                        <div className="space-y-1">
+                          {profileData.availability.filter(day => day.available).map((day, index) => (
+                            <div key={index} className="flex justify-between items-center text-sm">
+                              <span className="text-white/60">{day.day}:</span>
+                              <span className="text-white/80">9 AM - 6 PM</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
                 

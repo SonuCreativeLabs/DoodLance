@@ -17,6 +17,7 @@ const MapView = dynamic(() => import('./components/MapViewComponent'), {
 
 import ProfessionalsFeed from './components/ProfessionalsFeed';
 import SearchFilters from './components/SearchFilters';
+import { useSkills } from '@/contexts/SkillsContext';
 
 
 
@@ -27,6 +28,7 @@ export default function FeedPage() {
   // Sheet and UI state
   const [isSheetCollapsed, setIsSheetCollapsed] = useState(false);
   const router = useRouter();
+  const { skills } = useSkills();
   // UI State
   const [isDragging, setIsDragging] = useState(false);
   const [isDragTextVisible, setIsDragTextVisible] = useState(true);
@@ -48,7 +50,7 @@ export default function FeedPage() {
     priceUnit: string;
     location: string;
     skills: string[];
-    workMode: 'remote' | 'onsite' | 'hybrid';
+    workMode: 'remote' | 'onsite' | 'all';
     type: 'freelance' | 'part-time' | 'full-time' | 'contract';
     postedAt: string;
     company: string;
@@ -77,7 +79,6 @@ export default function FeedPage() {
   // Price range in INR per hour (aligned with job.rate values)
   const [priceRange, setPriceRange] = useState<[number, number]>([500, 2500]);
   const [distance, setDistance] = useState<number>(50);
-  const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [currentLocation, setCurrentLocation] = useState('Getting location...');
 
   // Function to reverse geocode coordinates to address
@@ -183,14 +184,13 @@ export default function FeedPage() {
     setLocation('Current Location');
     setServiceCategory('all');
     setWorkMode('');
-    setPriceRange([0, 1000]);
+    setPriceRange([0, 10000]);
     setDistance(50);
-    setSelectedSkills([]);
     setFiltersApplied(false);
   };
 
   // User's skills for personalized job matching
-  const userSkills = ['RH Batsman', 'Sidearm Specialist', 'Off Spin', 'Batting coach', 'Analyst', 'Mystery Spin'];
+  const userSkills = skills.map(skill => skill.name);
 
   // Filter jobs based on selected tab and filters
   const filterJobs = async (): Promise<JobWithCoordinates[]> => {
@@ -227,7 +227,7 @@ export default function FeedPage() {
         priceUnit: job.priceUnit ?? 'project',
         location: job.location ?? 'Chennai, India',
         skills: Array.isArray(job.skills) ? job.skills : [],
-        workMode: (job.workMode === 'remote' || job.workMode === 'onsite' || job.workMode === 'hybrid') 
+        workMode: (job.workMode === 'remote' || job.workMode === 'onsite') 
           ? job.workMode 
           : 'onsite',
         type: (job.type === 'freelance' || job.type === 'part-time' || job.type === 'full-time' || job.type === 'contract')
@@ -371,6 +371,58 @@ export default function FeedPage() {
       console.log('SELECTED CATEGORY: Explore - showing all jobs');
       console.log(`Total jobs shown: ${filtered.length}`);
     
+      // Apply filters if any are set
+      if (filtersApplied) {
+        console.log('Applying filters to Explore tab...');
+        
+        // Filter by service category
+        if (serviceCategory && serviceCategory !== 'all') {
+          const categoryKey = serviceCategory.toLowerCase().replace(/\s*\/\s*/g, '-').replace(/\s+/g, '-');
+          filtered = filtered.filter(job => {
+            const jobCategoryKey = job.category.toLowerCase().replace(/\s*\/\s*/g, '-').replace(/\s+/g, '-');
+            return jobCategoryKey === categoryKey || job.category.toLowerCase().includes(serviceCategory.toLowerCase());
+          });
+          console.log(`After category filter (${serviceCategory}): ${filtered.length} jobs`);
+        }
+        
+        // Filter by work mode (skip if 'all' is selected)
+        if (workMode && workMode !== 'all') {
+          filtered = filtered.filter(job => job.workMode === workMode);
+          console.log(`After work mode filter (${workMode}): ${filtered.length} jobs`);
+        }
+        
+        // Filter by price range
+        if (priceRange && priceRange[0] !== 0 && priceRange[1] !== 10000) {
+          filtered = filtered.filter(job => {
+            const jobPrice = job.rate || job.budget || 0;
+            return jobPrice >= priceRange[0] && jobPrice <= priceRange[1];
+          });
+          console.log(`After price range filter (₹${priceRange[0]} - ₹${priceRange[1]}): ${filtered.length} jobs`);
+        }
+        
+        // Filter by location (basic text match for now)
+        if (location && location !== 'Current Location' && location !== 'Chennai, India') {
+          const locationQuery = location.toLowerCase();
+          filtered = filtered.filter(job => 
+            job.location.toLowerCase().includes(locationQuery) ||
+            job.title.toLowerCase().includes(locationQuery) ||
+            job.description.toLowerCase().includes(locationQuery)
+          );
+          console.log(`After location filter (${location}): ${filtered.length} jobs`);
+        }
+        
+        // Filter by distance (basic implementation - could be improved with actual distance calculation)
+        if (distance && distance < 100) {
+          // For now, just keep all jobs since we don't have proper distance calculation
+          // This could be enhanced with actual geographic distance calculations
+          console.log(`Distance filter (${distance}km) - not implemented yet`);
+        }
+        
+        console.log(`Explore tab with filters applied: ${filtered.length} jobs`);
+      } else {
+        console.log(`Explore tab without filters: ${filtered.length} jobs`);
+      }
+    
       // Filter out jobs user has already applied to (applies to all tabs)
       const { hasUserAppliedToJob } = await import('@/components/freelancer/jobs/mock-data');
       filtered = filtered.filter(job => !hasUserAppliedToJob(job.id));
@@ -418,7 +470,7 @@ export default function FeedPage() {
           priceUnit: job.priceUnit ?? 'project',
           location: job.location ?? 'Chennai, India',
           skills: Array.isArray(job.skills) ? job.skills : [],
-          workMode: (job.workMode === 'remote' || job.workMode === 'onsite' || job.workMode === 'hybrid') 
+          workMode: (job.workMode === 'remote' || job.workMode === 'onsite') 
             ? job.workMode 
             : 'onsite',
           type: (job.type === 'freelance' || job.type === 'part-time' || job.type === 'full-time' || job.type === 'contract')
@@ -464,6 +516,17 @@ export default function FeedPage() {
 
     reFilterJobs();
   }, [selectedCategory, searchQuery]);
+
+  // Re-filter jobs when filters are applied or filter values change
+  useEffect(() => {
+    if (filtersApplied || selectedCategory === 'Explore') {
+      const reFilterJobs = async () => {
+        const filtered = await filterJobs();
+        setFilteredJobs(filtered);
+      };
+      reFilterJobs();
+    }
+  }, [filtersApplied, serviceCategory, workMode, priceRange, location, distance]);
 
   const handleApply = async (jobId: string, proposal: string, rate: string, rateType: string, attachments: File[]) => {
     try {
@@ -511,8 +574,6 @@ export default function FeedPage() {
         setDistance={setDistance}
         filtersApplied={filtersApplied}
         currentLocation={currentLocation}
-        selectedSkills={selectedSkills}
-        setSelectedSkills={setSelectedSkills}
         clearFilters={clearAllFilters}
         applyFilters={applyFilters}
       />

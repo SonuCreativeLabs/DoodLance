@@ -16,6 +16,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { ClientProfile } from './ClientProfile';
 import { SuccessMessage } from '@/components/ui/success-message';
 import { CollapsibleTimeline, createTimelineItems } from './CollapsibleTimeline';
+import { getJobDurationLabel, getWorkModeLabel } from '@/app/freelancer/feed/types';
 
 // Experience level mapping for display
 const getExperienceLevelDisplayName = (level: string) => {
@@ -1013,7 +1014,14 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
 
           {/* Job Title and Details */}
           <div className="space-y-4">
-            <h1 className="text-3xl md:text-4xl font-bold text-white leading-tight">{job.title}</h1>
+            <h1 className="text-3xl md:text-4xl font-bold text-white leading-tight">
+              {job.title}
+              {job.workMode && (
+                <span className="inline-flex items-center px-1.5 py-0.5 text-xs font-medium text-white/80 bg-white/10 border border-white/20 rounded-full whitespace-nowrap ml-2 align-middle">
+                  {getWorkModeLabel(job.workMode)}
+                </span>
+              )}
+            </h1>
             <button
               type="button"
               onClick={() => setShowMap(true)}
@@ -1037,7 +1045,6 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                 <div className="text-white font-medium leading-tight">
                   <span className="whitespace-nowrap">
                     ₹{job.payment ? job.payment.toLocaleString('en-IN') : '0'}
-                    <span className="text-gray-400 text-sm font-normal ml-1">/ job</span>
                   </span>
                 </div>
               </div>
@@ -1046,7 +1053,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
               <ClockIcon className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
               <div>
                 <div className="text-sm text-gray-400">Duration</div>
-                <div className="text-white font-medium capitalize">{job.duration || 'Not specified'}</div>
+                <div className="text-white font-medium capitalize">{getJobDurationLabel(job as any)}</div>
               </div>
             </div>
             <div className="flex items-start gap-3">
@@ -1054,11 +1061,42 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
               <div>
                 <div className="text-sm text-gray-400">Scheduled</div>
                 <div className="text-white font-medium">
-                  {new Date(job.jobDate || job.date).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric'
-                  })}
+                  {job.scheduledAt ? (() => {
+                    const scheduled = new Date(job.scheduledAt);
+                    const month = scheduled.toLocaleDateString('en-US', { month: 'short' });
+                    const day = scheduled.getDate();
+                    const year = scheduled.getFullYear();
+                    const time = scheduled.toLocaleTimeString('en-US', { 
+                      hour: 'numeric', 
+                      minute: '2-digit',
+                      hour12: true
+                    });
+                    return (
+                      <>
+                        {`${month} ${day}, ${year}`}
+                        <br />
+                        at {time}
+                      </>
+                    );
+                  })() : (() => {
+                    // Hardcoded date for consistent demo: November 14, 2025 at 3:30 PM
+                    const demoDate = new Date('2025-11-14T15:30:00.000Z');
+                    const month = demoDate.toLocaleDateString('en-US', { month: 'short' });
+                    const day = demoDate.getDate();
+                    const year = demoDate.getFullYear();
+                    const time = demoDate.toLocaleTimeString('en-US', { 
+                      hour: 'numeric', 
+                      minute: '2-digit',
+                      hour12: true
+                    });
+                    return (
+                      <>
+                        {`${month} ${day}, ${year}`}
+                        <br />
+                        at {time}
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
             </div>
@@ -1066,7 +1104,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
               <User className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
               <div>
                 <div className="text-sm text-gray-400">Experience</div>
-                <div className="text-white font-medium">{getExperienceLevelDisplayName(job.experienceLevel || 'Expert')}</div>
+                <div className="text-white font-medium">{getExperienceLevelDisplayName(job.experienceLevel || job.experience || 'Expert')}</div>
               </div>
             </div>
           </div>
@@ -1084,6 +1122,35 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
 
               {/* Card content */}
               <div className="relative p-5">
+                <div className="text-left mb-2">
+                  <div className="text-white/60 font-medium text-xs">
+                    {job.postedAt ? (() => {
+                      const posted = new Date(job.postedAt);
+                      const now = new Date();
+                      const diffTime = Math.abs(now.getTime() - posted.getTime());
+                      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                      const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+                      const diffMinutes = Math.floor(diffTime / (1000 * 60));
+
+                      if (diffMinutes < 60) {
+                        return `${diffMinutes}m ago`;
+                      } else if (diffHours < 24) {
+                        return `${diffHours}h ago`;
+                      } else if (diffDays < 7) {
+                        return `${diffDays}d ago`;
+                      } else if (diffDays < 30) {
+                        const weeks = Math.floor(diffDays / 7);
+                        return `${weeks}w ago`;
+                      } else if (diffDays < 365) {
+                        const months = Math.floor(diffDays / 30);
+                        return `${months}mo ago`;
+                      } else {
+                        const years = Math.floor(diffDays / 365);
+                        return `${years}y ago`;
+                      }
+                    })() : 'Date not specified'}
+                  </div>
+                </div>
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-semibold text-white">About the Job</h2>
                 </div>
@@ -1125,6 +1192,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
             <ClientProfile
               client={job.client ? {
                 name: job.client.name,
+                image: job.client.image,
                 rating: job.client.rating,
                 moneySpent: undefined,
                 jobsCompleted: job.client.jobsCompleted,

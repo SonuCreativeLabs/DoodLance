@@ -178,7 +178,10 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
     payment: currentJob.payment || 0,
     duration: currentJob.duration || 'Not specified',
     category: currentJob.category || 'Other',
-    experienceLevel: currentJob.experienceLevel || 'Any',
+    experienceLevel: currentJob.experienceLevel || (currentJob.experience === 'Entry Level' ? 'Beginner' : currentJob.experience) || 'Any',
+    workMode: currentJob.workMode || 'onsite',
+    postedAt: currentJob.postedAt || currentJob.proposalHistory?.postedAt || new Date().toISOString(),
+    scheduledAt: currentJob.scheduledAt || (currentJob.date && currentJob.time ? `${currentJob.date}T${currentJob.time}:00.000Z` : new Date().toISOString()),
     skills: currentJob.skills || [],
     status: currentJob.status || 'pending',
     client: {

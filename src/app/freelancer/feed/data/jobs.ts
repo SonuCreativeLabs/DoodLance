@@ -1,4 +1,4 @@
-import { Job, ExperienceLevel } from '../types';
+import { Job, ExperienceLevel, JobDuration } from '../types';
 
 // Helper function to generate random coordinates near a point
 const generateNearbyCoords = (baseCoords: [number, number], radiusKm = 0.5): [number, number] => {
@@ -35,6 +35,17 @@ const areaCoords = {
 
 const areas = Object.keys(areaCoords) as (keyof typeof areaCoords)[];
 
+// Helper function to generate consistent image ID from client name
+const getClientImageId = (clientName: string): number => {
+  let hash = 0;
+  for (let i = 0; i < clientName.length; i++) {
+    const char = clientName.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32-bit integer
+  }
+  return Math.abs(hash) % 70 + 1; // Ensure it's between 1-70
+};
+
 // Common skills
 const clientNames = [
   'Priya Sharma',
@@ -49,14 +60,6 @@ const clientNames = [
   'Suresh Kumar'
 ];
 
-const cricketSkills = [
-  ['Cricket Coaching', 'Batting Coach', 'Bowling Coach', 'Fielding Coach'],
-  ['Fitness Training', 'Sports Nutrition', 'Injury Prevention'],
-  ['Team Management', 'Match Strategy', 'Video Analysis'],
-  ['Spin Bowling Specialist', 'Leg Spin', 'Off Spin', 'Googly'],
-  ['Wicket Keeping Coach', 'Glove Work', 'Stance', 'Reflex Training']
-];
-
 // Generate jobs
 const generateJobs = (): Job[] => {
   const jobs: Job[] = [];
@@ -65,8 +68,6 @@ const generateJobs = (): Job[] => {
     'Nungambakkam', 'Mylapore', 'Besant Nagar', 'Porur', 'Guindy',
     'Kodambakkam', 'Vadapalani', 'Chromepet', 'Tambaram', 'Pallavaram'
   ];
-  const workModes: Array<'remote' | 'onsite' | 'hybrid'> = ['remote', 'onsite', 'hybrid'];
-  const jobTypes: Array<'full-time' | 'part-time' | 'contract'> = ['full-time', 'part-time', 'contract'];
 
   // Helper function to get random area
   const getRandomArea = () => {
@@ -106,9 +107,16 @@ const generateJobs = (): Job[] => {
   const experienceLevels = ['Entry Level', 'Intermediate', 'Expert'] as const;
   const workModeMultipliers = {
     'onsite': 1,
-    'hybrid': 1.2,
     'remote': 1.5
   };
+
+  const cricketSkills = [
+    ['Cricket Coaching', 'Batting Coach', 'Bowling Coach', 'Fielding Coach'],
+    ['Fitness Training', 'Sports Nutrition', 'Injury Prevention'],
+    ['Team Management', 'Match Strategy', 'Video Analysis'],
+    ['Spin Bowling Specialist', 'Leg Spin', 'Off Spin', 'Googly'],
+    ['Wicket Keeping Coach', 'Glove Work', 'Stance', 'Reflex Training']
+  ];
 
   const createJob = ({
     id,
@@ -123,7 +131,7 @@ const generateJobs = (): Job[] => {
     description: string;
     category: string;
     skills: string[];
-    workMode: 'remote' | 'onsite' | 'hybrid';
+    workMode: 'remote' | 'onsite';
   }) => {
     // Determine category and get base rate
     const categoryKey = Object.keys(categoryRates).find(key => 
@@ -187,10 +195,43 @@ const generateJobs = (): Job[] => {
     budget = Math.min(Math.round(budget), maxBudget);
     const { name: location, coords: baseCoords } = getRandomArea();
     const coords = generateNearbyCoords(baseCoords);
-    const clientName = clientNames[Math.floor(Math.random() * clientNames.length)];
+    // Assign client consistently based on job ID for deterministic client-job assignment
+    const clientIndex = id.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0) % clientNames.length;
+    const clientName = clientNames[clientIndex];
     // Set default company info (simplified for demo)
     const company = 'DoodLance';
     const companyLogo = '/images/logo.png';
+    
+    // Determine specific duration based on job characteristics
+    let duration: JobDuration = 'hourly';
+    
+    // Check title for specific duration hints first
+    const titleLower = title.toLowerCase();
+    if (titleLower.includes('90-minute') || titleLower.includes('90 minute')) {
+      duration = 'hourly'; // Will be displayed as "90 minutes" by getJobDurationLabel
+    } else if (titleLower.includes('2-hour') || titleLower.includes('2 hour')) {
+      duration = 'hourly'; // Will be displayed as "2 hours"
+    } else if (titleLower.includes('1-hour') || titleLower.includes('1 hour')) {
+      duration = 'hourly'; // Will be displayed as "1 hour"
+    } else {
+      // Duration based on category
+      const categoryLower = category.toLowerCase();
+      if (categoryLower.includes('photography') || categoryLower.includes('videography') || categoryLower.includes('content creator')) {
+        duration = 'hourly'; // "3 hours", "4 hours" for events
+      } else if (categoryLower.includes('analyst') || categoryLower.includes('analysis')) {
+        duration = 'hourly'; // "2 hours", "per match"
+      } else if (categoryLower.includes('physio') || categoryLower.includes('conditioning') || categoryLower.includes('fitness')) {
+        duration = 'hourly'; // "1 hour", "1.5 hours"
+      } else if (categoryLower.includes('scorer') || categoryLower.includes('umpire')) {
+        duration = 'one-time'; // "per match", "full day"
+      } else if (categoryLower.includes('sidearm') || categoryLower.includes('net bowler')) {
+        duration = 'hourly'; // "1.5 hours", "90 minutes"
+      } else if (categoryLower.includes('coach') || categoryLower.includes('coaching')) {
+        duration = 'hourly'; // "1 hour", "2 hours", "per session"
+      } else {
+        duration = 'hourly'; // Default to hourly for most cricket services
+      }
+    }
     
     const job: Job = {
       id,
@@ -206,18 +247,19 @@ const generateJobs = (): Job[] => {
       workMode,
       type: 'freelance',
       postedAt: new Date(Date.now() - Math.floor(Math.random() * 7 * 24 * 60 * 60 * 1000)).toISOString(),
+      scheduledAt: new Date(Date.now() + Math.floor(Math.random() * 14 * 24 * 60 * 60 * 1000)).toISOString(), // 0-14 days from now
       company,
       companyLogo,
       clientName,
-      clientImage: `https://ui-avatars.com/api/?name=${encodeURIComponent(clientName)}&background=6B46C1&color=fff&bold=true`,
+      clientImage: `https://i.pravatar.cc/150?img=${getClientImageId(clientName)}`,
       clientRating: (Math.floor(Math.random() * 10) / 2 + 3).toFixed(1),
       clientJobs: Math.floor(Math.random() * 50) + 1,
       proposals: Math.floor(Math.random() * 30),
-      duration: 'one-time',
+      duration,
       experience: experience as ExperienceLevel,
       client: {
         name: clientName,
-        image: `https://ui-avatars.com/api/?name=${encodeURIComponent(clientName)}&background=6B46C1&color=fff&bold=true`,
+        image: `https://i.pravatar.cc/150?img=${getClientImageId(clientName)}`,
         memberSince: new Date(Date.now() - Math.floor(Math.random() * 3 * 365 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0],
         freelancerAvatars: Array(3).fill(0).map((_, i) => `https://i.pravatar.cc/150?img=${Math.floor(Math.random() * 70) + 1}`),
         freelancersWorked: Math.floor(Math.random() * 50) + 5,
@@ -233,11 +275,15 @@ const generateJobs = (): Job[] => {
 
   // Helper function to create a job with client info
   const createJobWithClient = (jobData: any) => {
-    const clientName = clientNames[Math.floor(Math.random() * clientNames.length)];
+    // Assign client consistently based on job ID for deterministic client-job assignment
+    const jobId = jobData.id || 'default';
+    const clientIndex = jobId.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0) % clientNames.length;
+    const clientName = clientNames[clientIndex];
+
     const job = createJob({
       ...jobData,
       clientName,
-      clientImage: `https://ui-avatars.com/api/?name=${encodeURIComponent(clientName)}&background=6B46C1&color=fff&bold=true`
+      clientImage: `https://i.pravatar.cc/150?img=${getClientImageId(clientName)}`
     });
     return job;
   };
@@ -347,7 +393,7 @@ const generateJobs = (): Job[] => {
       description: 'Analyze match footage and create heatmaps. Focus on shot selection, footwork, and decision-making. Post-session report.',
       category: 'Analyst',
       skills: ['Video Analysis', 'Performance Analysis', 'Heatmaps', 'Decision Making', 'analysis', 'Analyst'],
-      workMode: 'hybrid',
+      workMode: 'remote',
       minRate: 2500,
       maxRate: 6000
     }),
@@ -378,7 +424,7 @@ const generateJobs = (): Job[] => {
       description: 'Comprehensive batting analysis using video footage and metrics. Identify strengths, weaknesses, and improvement areas.',
       category: 'Analyst',
       skills: ['Performance Analysis', 'Batting Analysis', 'Video Analysis', 'Metrics', 'analysis', 'Analyst'],
-      workMode: 'hybrid',
+      workMode: 'remote',
       minRate: 3000,
       maxRate: 7000
     }),
