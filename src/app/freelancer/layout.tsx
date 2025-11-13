@@ -31,9 +31,12 @@ export default function FreelancerLayout({ children }: FreelancerLayoutProps) {
   // Hide mobile bottom navbar on proposal details pages like /freelancer/proposals/[id]
   const isProposalDetailsPage = !!(pathname && /^\/freelancer\/proposals\/[^/]+/.test(pathname));
   
+  // Check if current path is the notifications page
+  const isNotificationsPage = pathname === '/freelancer/notifications';
+  
   // Hide header and navbar for preview pages and profile sub-pages, but show navbar only on main profile page
-  const isHeaderVisible = isPreviewPage ? false : contextHeaderVisible;
-  const isNavbarVisible = (isPreviewPage || isProfileSubPage || isJobDetailsPage || isProposalDetailsPage) ? false : (isMainProfilePage ? true : (contextNavbarVisible && navbarContextVisible));
+  const isHeaderVisible = (isPreviewPage || isNotificationsPage) ? false : contextHeaderVisible;
+  const isNavbarVisible = (isPreviewPage || isProfileSubPage || isJobDetailsPage || isProposalDetailsPage || isNotificationsPage) ? false : (isMainProfilePage ? true : (contextNavbarVisible && navbarContextVisible));
   
   // Use a ref to track if we're in a browser environment
   const [isMounted, setIsMounted] = useState(false);
