@@ -33,10 +33,12 @@ export default function FreelancerLayout({ children }: FreelancerLayoutProps) {
   
   // Check if current path is the notifications page
   const isNotificationsPage = pathname === '/freelancer/notifications';
+  // Check if current path is the wallet page
+  const isWalletPage = pathname === '/freelancer/wallet';
   
   // Hide header and navbar for preview pages and profile sub-pages, but show navbar only on main profile page
-  const isHeaderVisible = (isPreviewPage || isNotificationsPage) ? false : contextHeaderVisible;
-  const isNavbarVisible = (isPreviewPage || isProfileSubPage || isJobDetailsPage || isProposalDetailsPage || isNotificationsPage) ? false : (isMainProfilePage ? true : (contextNavbarVisible && navbarContextVisible));
+  const isHeaderVisible = (isPreviewPage || isNotificationsPage || isWalletPage) ? false : contextHeaderVisible;
+  const isNavbarVisible = (isPreviewPage || isProfileSubPage || isJobDetailsPage || isProposalDetailsPage || isNotificationsPage || isWalletPage) ? false : (isMainProfilePage ? true : (contextNavbarVisible && navbarContextVisible));
   
   // Use a ref to track if we're in a browser environment
   const [isMounted, setIsMounted] = useState(false);
