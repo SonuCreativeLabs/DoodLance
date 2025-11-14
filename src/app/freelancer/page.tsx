@@ -2,7 +2,7 @@
 
 import Image from "next/image"
 import { motion } from "framer-motion"
-import { Calendar, ChevronRight, Star, MapPin, TrendingUp, Award, Clock, Users, Target, Award as AwardIcon, Dumbbell, Trophy } from "lucide-react"
+import { Calendar, ChevronRight, Star, MapPin, TrendingUp, Award, Clock, Target, Trophy } from "lucide-react"
 import Link from "next/link"
 import { useState, useEffect } from "react"
 import { useLayout } from "@/contexts/LayoutContext"

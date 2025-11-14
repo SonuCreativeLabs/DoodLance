@@ -66,6 +66,7 @@ export interface CancellationDetails {
 export interface Rating {
   stars: 1 | 2 | 3 | 4 | 5;
   feedback: string;
+  feedbackChips?: string[];
   date: string;
 }
 

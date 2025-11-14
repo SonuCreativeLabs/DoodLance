@@ -123,6 +123,12 @@ export const mockUpcomingJobs: Job[] = [
       feedbackChips: ['Professional', 'Expert Knowledge', 'Great Communication', 'Delivered on Time'],
       date: '2025-06-26T10:15:00'
     },
+    clientRating: {
+      stars: 5,
+      feedback: 'Outstanding sidearm specialist! Perfect simulation of tournament conditions. Our batsmen improved significantly under pressure. Highly recommended!',
+      feedbackChips: ['Tournament Ready', 'Pressure Handling', 'Technical Excellence', 'Highly Skilled'],
+      date: '2025-06-26T11:30:00'
+    },
     completedAt: '2025-06-26T10:15:00.000Z'
   },
   {
@@ -188,6 +194,12 @@ export const mockUpcomingJobs: Job[] = [
       review: 'Great spinner with excellent carrom ball variations. Helped our batsmen significantly improve their footwork and shot selection.',
       feedbackChips: ['Technical Skills', 'Patient Teaching', 'Good Energy', 'Helpful'],
       date: '2025-06-21T12:30:00'
+    },
+    clientRating: {
+      stars: 4,
+      feedback: 'Excellent mystery spinner! The variations were spot-on and our batsmen learned a lot. Very patient and professional throughout the session.',
+      feedbackChips: ['Patient Teaching', 'Technical Variations', 'Professional', 'Knowledgeable'],
+      date: '2025-06-21T13:45:00'
     },
     completedAt: '2025-06-21T12:30:00.000Z'
   },
@@ -322,6 +334,12 @@ export const mockUpcomingJobs: Job[] = [
       review: 'Outstanding technical analysis! The detailed breakdown of our team\'s weaknesses and the actionable recommendations have been incredibly valuable.',
       feedbackChips: ['Expert Analysis', 'Detailed Report', 'Actionable Insights', 'Professional'],
       date: '2025-06-29T11:45:00'
+    },
+    clientRating: {
+      stars: 5,
+      feedback: 'Incredible analysis work! The technical breakdowns were thorough and the recommendations have already improved our team\'s performance. Worth every penny!',
+      feedbackChips: ['Detailed Analysis', 'Actionable Insights', 'Performance Improvement', 'Expert Knowledge'],
+      date: '2025-06-29T13:00:00'
     },
     completedAt: '2025-06-29T11:45:00.000Z'
   },
@@ -696,6 +714,12 @@ export const mockUpcomingJobs: Job[] = [
       feedbackChips: ['Life-changing', 'Expert Guidance', 'Motivational', 'Highly Recommended'],
       date: '2025-08-09T16:20:00'
     },
+    clientRating: {
+      stars: 5,
+      feedback: 'Game-changing psychology session! Our team\'s mental toughness has improved dramatically. The techniques provided have made a real difference in our performance.',
+      feedbackChips: ['Mental Toughness', 'Performance Enhancement', 'Team Building', 'Motivational'],
+      date: '2025-08-09T17:30:00'
+    },
     completedAt: '2025-08-09T16:20:00.000Z'
   },
   {
@@ -763,6 +787,12 @@ export const mockUpcomingJobs: Job[] = [
       feedbackChips: ['Knowledgeable', 'Customized Plans', 'Results-oriented', 'Supportive'],
       date: '2025-08-11T14:30:00'
     },
+    clientRating: {
+      stars: 4,
+      feedback: 'Great nutrition consultation! The cricket-specific diet plans are working well. Our players have more sustained energy and better recovery. Very knowledgeable specialist.',
+      feedbackChips: ['Cricket-Specific', 'Energy Management', 'Recovery Focused', 'Knowledgeable'],
+      date: '2025-08-11T15:45:00'
+    },
     completedAt: '2025-08-11T14:30:00.000Z'
   },
   {
@@ -828,6 +858,12 @@ export const mockUpcomingJobs: Job[] = [
       review: 'Professional setup and excellent training! The equipment is working perfectly and the maintenance guidance will be very helpful.',
       feedbackChips: ['Technical Expert', 'Efficient Setup', 'Clear Instructions', 'Reliable'],
       date: '2025-08-13T13:15:00'
+    },
+    clientRating: {
+      stars: 4,
+      feedback: 'Excellent technical setup! The bowling machines are calibrated perfectly and the maintenance training was very thorough. Equipment is working flawlessly now.',
+      feedbackChips: ['Technical Expertise', 'Perfect Calibration', 'Thorough Training', 'Reliable Setup'],
+      date: '2025-08-13T14:30:00'
     },
     completedAt: '2025-08-13T13:15:00.000Z'
   },

@@ -124,18 +124,18 @@ export const JobCard: React.FC<JobCardProps> = ({ job, index, onStatusChange }) 
           </div>
 
           {/* Rating and Review for Completed Jobs */}
-          {job.status === 'completed' && job.freelancerRating && (
+          {job.status === 'completed' && job.clientRating && (
             <div className="pt-3 border-t border-white/10">
               <div className="space-y-2">
-                {/* Show freelancer rating */}
-                {job.freelancerRating && (
+                {/* Show client rating */}
+                {job.clientRating && (
                   <div className="flex items-center gap-2">
                     <div className="flex items-center gap-1">
                       {Array.from({ length: 5 }, (_, i) => (
                         <Star
                           key={i}
                           className={`w-4 h-4 ${
-                            i < (job.freelancerRating?.stars || 0)
+                            i < (job.clientRating?.stars || 0)
                               ? 'text-amber-400 fill-current'
                               : 'text-gray-400'
                           }`}
@@ -143,24 +143,24 @@ export const JobCard: React.FC<JobCardProps> = ({ job, index, onStatusChange }) 
                       ))}
                     </div>
                     <span className="text-sm text-white/80">
-                      {job.freelancerRating?.stars % 1 === 0
-                        ? `${Math.floor(job.freelancerRating.stars)}/5`
-                        : `${job.freelancerRating.stars.toFixed(2)}/5`} stars
+                      {job.clientRating?.stars % 1 === 0
+                        ? `${Math.floor(job.clientRating.stars)}/5`
+                        : `${job.clientRating.stars.toFixed(2)}/5`} stars
                     </span>
                   </div>
                 )}
 
                 {/* Show only stars rating - removed review text and feedback chips */}
-                {/* 
-                {job.freelancerRating?.review && (
+                {/*
+                {job.clientRating?.feedback && (
                   <p className="text-sm text-white/70 line-clamp-2">
-                    "{job.freelancerRating.review}"
+                    "{job.clientRating.feedback}"
                   </p>
                 )}
 
-                {job.freelancerRating?.feedbackChips && job.freelancerRating.feedbackChips.length > 0 && (
+                {job.clientRating?.feedbackChips && job.clientRating.feedbackChips.length > 0 && (
                   <div className="flex flex-wrap gap-1">
-                    {job.freelancerRating.feedbackChips.slice(0, 3).map((chip: string, i: number) => (
+                    {job.clientRating.feedbackChips.slice(0, 3).map((chip: string, i: number) => (
                       <span
                         key={i}
                         className="px-2 py-1 text-xs rounded-full bg-purple-600/20 text-purple-300 border border-purple-600/30"
@@ -172,8 +172,10 @@ export const JobCard: React.FC<JobCardProps> = ({ job, index, onStatusChange }) 
                 )}
                 */}
 
-                <div className="text-xs text-white/50">
-                  Completed on {job.completedAt ? format(new Date(job.completedAt), 'dd/MM/yyyy') : 'Unknown date'} at {job.completedAt ? format(new Date(job.completedAt), 'HH:mm') : 'Unknown time'}
+                <div className="text-xs text-white/50 space-y-1">
+                  <div>
+                    Completed on {job.completedAt ? format(new Date(job.completedAt), 'dd/MM/yyyy') : 'Unknown date'} at {job.completedAt ? format(new Date(job.completedAt), 'HH:mm') : 'Unknown time'}
+                  </div>
                 </div>
               </div>
             </div>

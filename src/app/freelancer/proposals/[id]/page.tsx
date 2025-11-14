@@ -159,13 +159,12 @@ export default function ProposalDetailsPage() {
         proposedRate: editedProposal.proposal.proposedRate,
       });
 
-      console.log('Proposal updated successfully');
+      alert('Proposal updated successfully!');
 
       // Update local state
       setProposal(editedProposal);
       setIsEditing(false);
 
-      alert('Proposal updated successfully!');
     } catch (error) {
       console.error('Error updating proposal:', error);
       alert('Error updating proposal. Please check your connection and try again.');
@@ -175,12 +174,10 @@ export default function ProposalDetailsPage() {
   };
 
   const handleChat = () => {
-    // TODO: Implement chat functionality - could open chat modal or navigate to messages
     alert('Chat functionality will be implemented soon!');
   };
 
   const handleCall = () => {
-    // TODO: Implement call functionality - could initiate call or show contact options
     alert('Call functionality will be implemented soon!');
   };
 
