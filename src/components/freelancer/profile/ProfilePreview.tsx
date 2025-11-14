@@ -9,14 +9,13 @@ import {
   CheckCircle,
   ArrowRight,
   MessageSquare,
-  Award, 
   Briefcase, 
   MapPin, 
   Calendar, 
   Star,
-  User,
   ChevronDown,
-  Clock
+  Clock,
+  Award
 } from 'lucide-react';
 import { CategoryBadge } from '@/components/common/CategoryBadge';
 import { SkillInfoDialog } from '@/components/common/SkillInfoDialog';
@@ -639,8 +638,12 @@ const ProfilePreview = memo(({
                         }, 2000);
                       }
                   } catch (error) {
+                    // Handle share cancellation gracefully without logging
+                    if (error instanceof Error && error.name === 'AbortError') {
+                      // User canceled the share - no need to log this
+                      return;
+                    }
                     console.error('Error sharing profile:', error);
-                    // Optionally show an error message to the user
                   }
                 }}
                 id="share-button"
@@ -751,9 +754,32 @@ const ProfilePreview = memo(({
           <div className="px-6 pb-8">
             <div className="space-y-8">
             {/* About Section */}
-            <section id="about" data-section="about" className="scroll-mt-20 pt-8">
-              <h2 className="text-xl font-semibold text-white mb-4">About Me</h2>
-              <p className="text-white/80 mb-6 whitespace-pre-line">{profileData.bio || profileData.about}</p>
+            <section id="about" data-section="about" className="scroll-mt-20 pt-4">
+              <p className="text-white mb-6 whitespace-pre-line">{profileData.bio || profileData.about}</p>
+              
+              {/* Cricket Information - Simple text below bio */}
+              <div className="space-y-2 mb-6">
+                {profileData.cricketRole && (
+                  <div className="text-white/80">
+                    <span className="text-white/50">Role:</span> <span className="text-white">{profileData.cricketRole}</span>
+                  </div>
+                )}
+                {profileData.battingStyle && (
+                  <div className="text-white/80">
+                    <span className="text-white/50">Batting Style:</span> <span className="text-white">{profileData.battingStyle}</span>
+                  </div>
+                )}
+                {profileData.bowlingStyle && (
+                  <div className="text-white/80">
+                    <span className="text-white/50">Bowling Style:</span> <span className="text-white">{profileData.bowlingStyle}</span>
+                  </div>
+                )}
+                {profileData.languages && (
+                  <div className="text-white/80">
+                    <span className="text-white/50">Languages:</span> <span className="text-white">{profileData.languages}</span>
+                  </div>
+                )}
+              </div>
               
               <div className="flex items-center gap-6 mb-6 text-sm">
                 <div className="flex items-center gap-2">
@@ -1101,7 +1127,7 @@ const ProfilePreview = memo(({
                           <div className="flex justify-between items-start mb-3">
                             <div className="flex items-center gap-3">
                               <div className="w-10 h-10 rounded-2xl bg-white/5 flex items-center justify-center flex-shrink-0">
-                                <User className="h-4 w-4 text-white/60" />
+                                <div className="w-5 h-5 rounded-full bg-white/20"></div>
                               </div>
                               <div className="min-w-0">
                                 <h4 className="font-medium text-white text-sm truncate">{review.author}</h4>

@@ -13,6 +13,10 @@ export interface PersonalDetails {
   online: boolean;
   readyToWork: boolean;
   dateOfBirth?: string;
+  languages?: string;
+  cricketRole?: string;
+  battingStyle?: string;
+  bowlingStyle?: string;
 }
 
 interface PersonalDetailsContextType {
@@ -73,9 +77,25 @@ export function PersonalDetailsProvider({ children }: { children: ReactNode }) {
         setPersonalDetails(prev => ({
           ...prev,
           name: parsedPersonalInfo.fullName || prev.name,
-          title: parsedPersonalInfo.jobTitle || prev.title,
+          title: parsedPersonalInfo.cricketRole || prev.title,
           bio: parsedPersonalInfo.bio || prev.bio,
           dateOfBirth: parsedPersonalInfo.dateOfBirth || prev.dateOfBirth,
+          languages: parsedPersonalInfo.languages || prev.languages,
+          cricketRole: parsedPersonalInfo.cricketRole || prev.cricketRole,
+          battingStyle: parsedPersonalInfo.battingStyle || prev.battingStyle,
+          bowlingStyle: parsedPersonalInfo.bowlingStyle || prev.bowlingStyle,
+        }));
+      }
+
+      // Also sync with cricketInfo data from cricket section
+      const cricketInfo = localStorage.getItem('cricketInfo');
+      if (cricketInfo) {
+        const parsedCricketInfo = JSON.parse(cricketInfo);
+        setPersonalDetails(prev => ({
+          ...prev,
+          cricketRole: parsedCricketInfo.cricketRole || prev.cricketRole,
+          battingStyle: parsedCricketInfo.battingStyle || prev.battingStyle,
+          bowlingStyle: parsedCricketInfo.bowlingStyle || prev.bowlingStyle,
         }));
       }
     } catch (error) {

@@ -2,6 +2,8 @@
 
 import { useSearchParams } from 'next/navigation';
 import { CheckCircle, FileText } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export default function VerificationStatusPage() {
   const searchParams = useSearchParams();

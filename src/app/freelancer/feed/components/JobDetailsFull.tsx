@@ -108,7 +108,7 @@ export default function JobDetailsFull({ job, onBack, onApply }: JobDetailsFullP
             </h1>
             <button
               type="button"
-              onClick={() => {/* TODO: Add map functionality */}}
+              onClick={() => window.open(`https://maps.google.com/maps?q=${encodeURIComponent(job.location)}`, '_blank')}
               className="inline-flex items-center gap-2 px-3 py-1.5 text-sm text-white/80 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-purple-500/30 rounded-lg transition-all duration-200 backdrop-blur-sm"
             >
               <MapPin className="w-4 h-4 text-purple-400" />

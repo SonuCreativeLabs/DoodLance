@@ -8,18 +8,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { 
   ArrowLeft, 
   User, 
-  MapPin, 
-  Globe,
   Pencil,
   Check,
   X,
   Calendar,
+  MapPin,
   MailIcon,
-  PhoneIcon,
-  MapPinIcon,
-  Briefcase,
-  CircleUser,
-  Quote
+  Trophy
 } from 'lucide-react';
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -27,7 +22,6 @@ import { usePersonalDetails } from '@/contexts/PersonalDetailsContext';
 
 type PersonalInfo = {
   fullName: string;
-  jobTitle: string;
   gender: string;
   dateOfBirth: string;
   bio: string;
@@ -44,6 +38,12 @@ type LocationInfo = {
   city: string;
   country: string;
   postalCode: string;
+};
+
+type CricketInfo = {
+  cricketRole: string;
+  battingStyle: string;
+  bowlingStyle: string;
 };
 
 interface SectionCardProps {
@@ -119,15 +119,17 @@ const SectionCard = ({
 const FormField = ({ 
   label, 
   children,
-  className = ''
+  className = '',
+  required = false
 }: { 
   label: string; 
   children: React.ReactNode;
   className?: string;
+  required?: boolean;
 }) => (
   <div className={cn("flex flex-col gap-2", className)}>
     <Label className="text-sm font-medium text-white/70">
-      {label}
+      {label}{required && <span className="text-red-500 ml-1">*</span>}
     </Label>
     <div className="relative">
       {children}
@@ -135,7 +137,7 @@ const FormField = ({
   </div>
 );
 
-type EditSection = 'personal' | 'contact' | 'location' | null;
+type EditSection = 'personal' | 'contact' | 'location' | 'cricket' | null;
 
 export default function PersonalDetailsPage() {
   const { updatePersonalDetails } = usePersonalDetails();
@@ -147,18 +149,16 @@ export default function PersonalDetailsPage() {
       const saved = localStorage.getItem('personalInfo');
       return saved ? JSON.parse(saved) : {
         fullName: "Sathishraj",
-        jobTitle: "All rounder",
         gender: "Male",
         dateOfBirth: "2000-01-14",
-        bio: "Professional Cricketer & AI Engineer with a passion for technology and sports."
+        bio: "Professional Cricketer & AI Engineer with a passion for technology and sports.",
       };
     }
     return {
       fullName: "Sathishraj",
-      jobTitle: "All rounder",
       gender: "Male",
       dateOfBirth: "2000-01-14",
-      bio: "Professional Cricketer & AI Engineer with a passion for technology and sports."
+      bio: "Professional Cricketer & AI Engineer with a passion for technology and sports.",
     };
   });
   
@@ -196,9 +196,26 @@ export default function PersonalDetailsPage() {
     };
   });
 
+  const [cricketInfo, setCricketInfo] = useState<CricketInfo>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('cricketInfo');
+      return saved ? JSON.parse(saved) : {
+        cricketRole: "All-rounder",
+        battingStyle: "Right-handed",
+        bowlingStyle: "Right-arm off-spin"
+      };
+    }
+    return {
+      cricketRole: "All-rounder",
+      battingStyle: "Right-handed",
+      bowlingStyle: "Right-arm off-spin"
+    };
+  });
+
   const [editPersonalInfo, setEditPersonalInfo] = useState<PersonalInfo>({ ...personalInfo });
   const [editContact, setEditContact] = useState<ContactInfo>({ ...contactInfo });
   const [editLocation, setEditLocation] = useState<LocationInfo>({ ...locationInfo });
+  const [editCricket, setEditCricket] = useState<CricketInfo>({ ...cricketInfo });
 
   const handleSave = (section: EditSection) => {
     if (section === 'personal') {
@@ -208,7 +225,7 @@ export default function PersonalDetailsPage() {
       // Sync name, title, and dateOfBirth with PersonalDetailsContext
       updatePersonalDetails({
         name: editPersonalInfo.fullName,
-        title: editPersonalInfo.jobTitle,
+        title: cricketInfo.cricketRole || 'Cricketer',
         location: locationInfo.city + ', ' + locationInfo.country,
         dateOfBirth: editPersonalInfo.dateOfBirth
       });
@@ -223,10 +240,14 @@ export default function PersonalDetailsPage() {
       // Sync location with PersonalDetailsContext when location changes
       updatePersonalDetails({
         name: personalInfo.fullName,
-        title: personalInfo.jobTitle,
+        title: cricketInfo.cricketRole || 'Cricketer',
         location: editLocation.city + ', ' + editLocation.country,
         dateOfBirth: personalInfo.dateOfBirth
       });
+    } else if (section === 'cricket') {
+      const newCricketInfo = { ...editCricket };
+      setCricketInfo(newCricketInfo);
+      localStorage.setItem('cricketInfo', JSON.stringify(newCricketInfo));
     }
     setEditingSection(null);
   };
@@ -238,11 +259,13 @@ export default function PersonalDetailsPage() {
       setEditContact({ ...contactInfo });
     } else if (section === 'location') {
       setEditLocation({ ...locationInfo });
+    } else if (section === 'cricket') {
+      setEditCricket({ ...cricketInfo });
     }
     setEditingSection(null);
   };
   
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>, section: 'personal' | 'contact' | 'location', field: string) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>, section: 'personal' | 'contact' | 'location' | 'cricket', field: string) => {
     const value = e.target.value;
     
     if (section === 'personal') {
@@ -255,9 +278,14 @@ export default function PersonalDetailsPage() {
         ...editContact,
         [field]: value
       });
-    } else {
+    } else if (section === 'location') {
       setEditLocation({
         ...editLocation,
+        [field]: value
+      });
+    } else if (section === 'cricket') {
+      setEditCricket({
+        ...editCricket,
         [field]: value
       });
     }
@@ -269,6 +297,7 @@ export default function PersonalDetailsPage() {
     setEditPersonalInfo({ ...personalInfo });
     setEditContact({ ...contactInfo });
     setEditLocation({ ...locationInfo });
+    setEditCricket({ ...cricketInfo });
   };
 
   const formatFullAddress = (loc: LocationInfo) => {
@@ -297,22 +326,14 @@ export default function PersonalDetailsPage() {
             {isEditing ? (
               <>
                 <div className="space-y-4">
-                  <FormField label="Full Name">
+                  <FormField label="Full Name" required>
                     <Input
                       value={editPersonalInfo.fullName}
                       onChange={(e) => handleInputChange(e, 'personal', 'fullName')}
                       className="bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50"
                     />
                   </FormField>
-                  <FormField label="Job Title">
-                    <Input
-                      value={editPersonalInfo.jobTitle}
-                      onChange={(e) => handleInputChange(e, 'personal', 'jobTitle')}
-                      className="bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50"
-                      placeholder="e.g., Web Developer, Designer"
-                    />
-                  </FormField>
-                  <FormField label="Gender">
+                  <FormField label="Gender" required>
                     <div className="relative">
                       <select
                         value={editPersonalInfo.gender}
@@ -334,7 +355,7 @@ export default function PersonalDetailsPage() {
                 </div>
                 
                 <div className="space-y-4">
-                  <FormField label="Date of Birth">
+                  <FormField label="Date of Birth" required>
                     <Input
                       type="date"
                       value={editPersonalInfo.dateOfBirth}
@@ -343,7 +364,7 @@ export default function PersonalDetailsPage() {
                     />
                   </FormField>
                   
-                  <FormField label="Bio">
+                  <FormField label="Bio" required>
                     <Textarea
                       value={editPersonalInfo.bio}
                       onChange={(e) => handleInputChange(e, 'personal', 'bio')}
@@ -351,24 +372,22 @@ export default function PersonalDetailsPage() {
                     />
                   </FormField>
                   
-                  <div className="mt-6 pt-4 border-t border-white/10">
-                    <div className="flex justify-center gap-4">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => handleCancel('personal')}
-                        className="h-10 px-8 rounded-xl border-white/10 text-white/80 hover:bg-white/5 hover:text-white transition-colors"
-                      >
-                        Cancel
-                      </Button>
-                      <Button
-                        type="button"
-                        onClick={() => handleSave('personal')}
-                        className="h-10 px-8 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-700 hover:to-purple-600 shadow-md hover:shadow-purple-500/30 transition-all"
-                      >
-                        Save Changes
-                      </Button>
-                    </div>
+                  <div className="flex justify-center gap-4">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => handleCancel('personal')}
+                      className="h-10 px-8 rounded-xl border-white/10 text-white/80 hover:bg-white/5 hover:text-white transition-colors"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={() => handleSave('personal')}
+                      className="h-10 px-8 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-700 hover:to-purple-600 shadow-md hover:shadow-purple-500/30 transition-all"
+                    >
+                      Save Changes
+                    </Button>
                   </div>
                 </div>
               </>
@@ -378,28 +397,18 @@ export default function PersonalDetailsPage() {
     <div className="space-y-1">
       <p className="text-sm font-medium text-white/70 mb-0.5">Full Name</p>
       <div className="flex items-center gap-2">
-        <CircleUser className="h-4 w-4 text-white/60" />
         <span className="text-white/90 font-medium text-base">{personalInfo.fullName}</span>
-      </div>
-    </div>
-    <div className="space-y-1">
-      <p className="text-sm font-medium text-white/70 mb-0.5">Job Title</p>
-      <div className="flex items-center gap-2">
-        <Briefcase className="h-4 w-4 text-white/60" />
-        <span className="text-white/90 font-medium text-base">{personalInfo.jobTitle || <span className="text-white/40">Not set</span>}</span>
       </div>
     </div>
     <div className="space-y-1">
       <p className="text-sm font-medium text-white/70 mb-0.5">Gender</p>
       <div className="flex items-center gap-2">
-        <User className="h-4 w-4 text-white/60" />
         <span className="text-white/90">{personalInfo.gender}</span>
       </div>
     </div>
     <div className="space-y-1">
       <p className="text-sm font-medium text-white/70 mb-0.5">Date of Birth</p>
       <div className="flex items-center gap-2">
-        <Calendar className="h-4 w-4 text-white/60" />
         <span className="text-white/90">
           {new Date(personalInfo.dateOfBirth).toLocaleDateString('en-US', {
             year: 'numeric',
@@ -412,7 +421,6 @@ export default function PersonalDetailsPage() {
     <div className="space-y-1 md:col-span-2">
       <p className="text-sm font-medium text-white/70 mb-0.5">Bio</p>
       <div className="flex items-start gap-2">
-        <Quote className="h-6 w-6 text-white/60" />
         <span className="text-white/80 whitespace-pre-line">{personalInfo.bio}</span>
       </div>
     </div>
@@ -436,7 +444,7 @@ export default function PersonalDetailsPage() {
           {isEditing ? (
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField label="Email" className="text-white/60">
+                <FormField label="Email" required>
                   <Input
                     type="email"
                     value={editContact.email}
@@ -445,7 +453,7 @@ export default function PersonalDetailsPage() {
                   />
                 </FormField>
                 
-                <FormField label="Phone" className="text-white/60">
+                <FormField label="Phone" required>
                   <Input
                     type="tel"
                     value={editContact.phone}
@@ -454,16 +462,6 @@ export default function PersonalDetailsPage() {
                   />
                 </FormField>
               </div>
-              
-              <FormField label="Website" className="text-white/60">
-                <Input
-                  type="url"
-                  value={editContact.website}
-                  onChange={(e) => handleInputChange(e, 'contact', 'website')}
-                  className="bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50"
-                  placeholder="https://example.com"
-                />
-              </FormField>
 
               <div className="mt-6 pt-4 border-t border-white/10">
                 <div className="flex justify-center gap-4">
@@ -486,11 +484,10 @@ export default function PersonalDetailsPage() {
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <p className="text-sm font-medium text-white/70 mb-1">Email</p>
                 <div className="text-white/90 inline-flex items-center gap-1.5">
-                  <MailIcon className="h-4 w-4 text-white/60" />
                   {contactInfo.email}
                 </div>
               </div>
@@ -498,16 +495,7 @@ export default function PersonalDetailsPage() {
               <div>
                 <p className="text-sm font-medium text-white/70 mb-1">Phone</p>
                 <div className="text-white/90 inline-flex items-center gap-1.5">
-                  <PhoneIcon className="h-4 w-4 text-white/60" />
                   {contactInfo.phone}
-                </div>
-              </div>
-              
-              <div>
-                <p className="text-sm font-medium text-white/70 mb-1">Website</p>
-                <div className="text-white/90 inline-flex items-center gap-1.5">
-                  <Globe className="h-4 w-4 text-white/60" />
-                  {contactInfo.website.replace(/^https?:\/\//, '')}
                 </div>
               </div>
             </div>
@@ -529,7 +517,7 @@ export default function PersonalDetailsPage() {
           {isEditing ? (
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField label="Address">
+                <FormField label="Address" required>
                   <Input
                     value={editLocation.address}
                     onChange={(e) => handleInputChange(e, 'location', 'address')}
@@ -537,7 +525,7 @@ export default function PersonalDetailsPage() {
                   />
                 </FormField>
                 
-                <FormField label="City">
+                <FormField label="City" required>
                   <Input
                     value={editLocation.city}
                     onChange={(e) => handleInputChange(e, 'location', 'city')}
@@ -545,7 +533,7 @@ export default function PersonalDetailsPage() {
                   />
                 </FormField>
                 
-                <FormField label="Country">
+                <FormField label="Country" required>
                   <Input
                     value={editLocation.country}
                     onChange={(e) => handleInputChange(e, 'location', 'country')}
@@ -553,7 +541,7 @@ export default function PersonalDetailsPage() {
                   />
                 </FormField>
                 
-                <FormField label="Postal Code">
+                <FormField label="Postal Code" required>
                   <Input
                     value={editLocation.postalCode}
                     onChange={(e) => handleInputChange(e, 'location', 'postalCode')}
@@ -592,16 +580,101 @@ export default function PersonalDetailsPage() {
               </div>
               <div className="pt-1">
                 <a
-                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(formatFullAddress(locationInfo))}`}
+                  href={`https://maps.google.com/maps?q=${encodeURIComponent(formatFullAddress(locationInfo))}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center text-sm text-purple-400 hover:text-purple-300 transition-colors group"
                 >
                   <span className="inline-flex items-center px-3 py-1.5 bg-white/5 rounded-full border border-white/10 group-hover:border-purple-500/30 transition-colors">
-                    <MapPinIcon className="h-3.5 w-3.5 mr-1.5" />
                     View on Map
                   </span>
                 </a>
+              </div>
+            </div>
+          )}
+        </SectionCard>
+      );
+    } else if (section === 'cricket') {
+      return (
+        <SectionCard 
+          key="cricket"
+          title="Cricket Information" 
+          icon={Trophy}
+          onEdit={!isEditing ? () => startEditing('cricket') : undefined}
+          isEditing={isEditing}
+          onSave={() => handleSave('cricket')}
+          onCancel={() => handleCancel('cricket')}
+        >
+          {isEditing ? (
+            <div className="space-y-4">
+              <FormField label="Cricket Role" required>
+                <Input
+                  value={editCricket.cricketRole}
+                  onChange={(e) => handleInputChange(e, 'cricket', 'cricketRole')}
+                  className="bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50"
+                  placeholder="e.g., All-rounder, Batsman, Bowler"
+                />
+              </FormField>
+
+              <FormField label="Batting Style" required>
+                <Input
+                  value={editCricket.battingStyle}
+                  onChange={(e) => handleInputChange(e, 'cricket', 'battingStyle')}
+                  className="bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50"
+                  placeholder="e.g., Right-handed, Left-handed"
+                />
+              </FormField>
+
+              <FormField label="Bowling Style" required>
+                <Input
+                  value={editCricket.bowlingStyle}
+                  onChange={(e) => handleInputChange(e, 'cricket', 'bowlingStyle')}
+                  className="bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50"
+                  placeholder="e.g., Right-arm off-spin, Left-arm orthodox"
+                />
+              </FormField>
+
+              <div className="pt-4 border-t border-white/10">
+                <div className="flex justify-center gap-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => handleCancel('cricket')}
+                    className="h-10 px-8 rounded-xl border-white/10 text-white/80 hover:bg-white/5 hover:text-white transition-colors"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={() => handleSave('cricket')}
+                    className="h-10 px-8 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-700 hover:to-purple-600 shadow-md hover:shadow-purple-500/30 transition-all"
+                  >
+                    Save Changes
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <p className="text-sm font-medium text-white/70 mb-1">Cricket Role</p>
+                <div className="text-white/90 inline-flex items-center gap-1.5">
+                  {cricketInfo.cricketRole}
+                </div>
+              </div>
+              
+              <div>
+                <p className="text-sm font-medium text-white/70 mb-1">Batting Style</p>
+                <div className="text-white/90 inline-flex items-center gap-1.5">
+                  {cricketInfo.battingStyle}
+                </div>
+              </div>
+              
+              <div>
+                <p className="text-sm font-medium text-white/70 mb-1">Bowling Style</p>
+                <div className="text-white/90 inline-flex items-center gap-1.5">
+                  {cricketInfo.bowlingStyle}
+                </div>
               </div>
             </div>
           )}
@@ -646,6 +719,7 @@ export default function PersonalDetailsPage() {
             // Show all sections in view mode
             <>
               {renderSection('personal')}
+              {renderSection('cricket')}
               {renderSection('contact')}
               {renderSection('location')}
             </>

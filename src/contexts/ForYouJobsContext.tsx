@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo } from 'react';
 import { useSkills } from './SkillsContext';
 import { jobs } from '@/app/freelancer/feed/data/jobs';
 import type { Job } from '@/app/freelancer/feed/types';
@@ -13,10 +13,29 @@ interface ForYouJobsContextType {
 const ForYouJobsContext = createContext<ForYouJobsContextType | undefined>(undefined);
 
 export function ForYouJobsProvider({ children }: { children: ReactNode }) {
-  const { skills } = useSkills();
+  let skills: any[] = [];
+  try {
+    const skillsContext = useSkills();
+    skills = skillsContext.skills;
+  } catch (error) {
+    // Skills context not available yet, use empty array
+    console.warn('Skills context not available, using empty skills array');
+    skills = [];
+  }
   const [forYouJobs, setForYouJobs] = useState<Job[]>([]);
 
+  // Create stable dependency for skills changes
+  const skillsDependency = useMemo(() => {
+    return skills.map(skill => skill.name).join(',');
+  }, [skills]);
+
   const filterForYouJobs = async () => {
+    // Don't filter if skills are not available yet
+    if (!skills || skills.length === 0) {
+      setForYouJobs([]);
+      return;
+    }
+    
     // Filter jobs for recommended section based on user skills - exactly like the feed "For You" tab
     const userSkills = skills.map(skill => skill.name);
 
@@ -102,7 +121,7 @@ export function ForYouJobsProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     filterForYouJobs();
-  }, [skills]);
+  }, [skillsDependency]); // Use stable skills dependency
 
   // Listen for application creation events and refresh jobs
   useEffect(() => {

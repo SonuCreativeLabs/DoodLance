@@ -282,10 +282,10 @@ export function ProfileHeader({
           <div className="flex items-center justify-center gap-2">
             <h1 className="text-2xl font-bold text-white">{personalDetails.name}</h1>
             {age && (
-              <span className="text-lg font-semibold text-purple-300">({age})</span>
+              <span className="text-lg font-semibold text-white/70">{age}</span>
             )}
           </div>
-          <p className="text-purple-400 mt-0.5">{personalDetails.title}</p>
+          <p className="text-purple-400 mt-0.5">{personalDetails.cricketRole || 'Cricketer'}</p>
           
           <div className="mt-2 flex flex-col items-center gap-0.5 text-sm text-white/70">
             <div className="flex items-center gap-2">
@@ -346,7 +346,7 @@ export function ProfileHeader({
         onClose={handlePreviewClose}
         profileData={{
           name: personalDetails.name,
-          title: personalDetails.title,
+          title: personalDetails.cricketRole || 'Cricketer',
           rating: reviewsData?.averageRating || 0,
           reviewCount: reviewsData?.totalReviews || 0,
           location: personalDetails.location,
@@ -354,6 +354,10 @@ export function ProfileHeader({
           skills: Array.isArray(skills) ? skills.map((s: any) => s.name) : [],
           about: personalDetails.about,
           bio: personalDetails.bio,
+          languages: personalDetails.languages,
+          cricketRole: personalDetails.cricketRole,
+          battingStyle: personalDetails.battingStyle,
+          bowlingStyle: personalDetails.bowlingStyle,
           responseTime: '1-2 hours',
           deliveryTime: '1-2 weeks',
           completionRate: 100,

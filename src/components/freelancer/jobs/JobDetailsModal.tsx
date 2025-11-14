@@ -11,8 +11,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 import { calculateJobEarnings, getCategoryDisplayName } from './utils';
 import { Job } from './types';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
 import { ClientProfile } from './ClientProfile';
 import { SuccessMessage } from '@/components/ui/success-message';
 import { CollapsibleTimeline, createTimelineItems } from './CollapsibleTimeline';
@@ -88,11 +86,6 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
   const [selectedChips, setSelectedChips] = useState<string[]>([]);
   const [isEarningsExpanded, setIsEarningsExpanded] = useState(false);
   const [isClientProfileExpanded, setIsClientProfileExpanded] = useState(false);
-  const [showMap, setShowMap] = useState(false);
-  const mapRef = useRef<HTMLDivElement | null>(null);
-  const mapInstance = useRef<mapboxgl.Map | null>(null);
-  const [mapError, setMapError] = useState<string | null>(null);
-  const [mapLoading, setMapLoading] = useState(false);
   const [showFreelancerRating, setShowFreelancerRating] = useState(false);
 
   // Success message states
@@ -143,85 +136,6 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
       setJobStarted(true);
     }
   }, [job]);
-
-  // Initialize map when showMap changes
-  useEffect(() => {
-    if (!showMap || mapInstance.current || !mapRef.current) return;
-    const token = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
-    if (!token) {
-      setMapError('Mapbox access token is not configured');
-      return;
-    }
-    mapboxgl.accessToken = token;
-    setMapLoading(true);
-    const map = new mapboxgl.Map({
-      container: mapRef.current,
-      style: 'mapbox://styles/mapbox/streets-v11',
-      center: [80.2707, 13.0827],
-      zoom: 12,
-      attributionControl: false
-    });
-    mapInstance.current = map;
-    const onLoad = async () => {
-      try {
-        // Add common map controls
-        const nav = new mapboxgl.NavigationControl({ showCompass: false, visualizePitch: false });
-        map.addControl(nav, 'top-right');
-
-        const fullscreen = new mapboxgl.FullscreenControl();
-        map.addControl(fullscreen, 'top-right');
-
-        const geolocate = new mapboxgl.GeolocateControl({
-          positionOptions: { enableHighAccuracy: true },
-          trackUserLocation: true,
-          showUserHeading: true,
-          showUserLocation: true,
-          fitBoundsOptions: { maxZoom: 15 }
-        });
-        map.addControl(geolocate, 'top-right');
-        
-        // Request geolocation when map loads
-        geolocate.on('geolocate', (e: any) => {
-          const { longitude, latitude } = e.coords;
-          map.flyTo({
-            center: [longitude, latitude],
-            zoom: 14,
-            essential: true
-          });
-        });
-
-        const scale = new mapboxgl.ScaleControl({ maxWidth: 120, unit: 'metric' });
-        map.addControl(scale, 'bottom-left');
-      } catch (e) {
-        // Controls are non-critical; ignore control init errors
-      }
-      try {
-        const resp = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(job.location)}.json?access_token=${token}&limit=1`);
-        const data = await resp.json();
-        const feature = data?.features?.[0];
-        if (feature?.center && Array.isArray(feature.center)) {
-          const [lng, lat] = feature.center;
-          map.flyTo({ center: [lng, lat], zoom: 13, essential: true });
-          new mapboxgl.Marker({ color: '#1d59eb' }).setLngLat([lng, lat]).addTo(map);
-        }
-      } catch (e) {
-        setMapError('Failed to locate the address on the map');
-      } finally {
-        setMapLoading(false);
-      }
-    };
-    map.on('load', onLoad);
-    const onError = () => setMapLoading(false);
-    map.on('error', onError);
-    return () => {
-      map.off('load', onLoad);
-      map.off('error', onError);
-      if (mapInstance.current) {
-        mapInstance.current.remove();
-        mapInstance.current = null;
-      }
-    };
-  }, [showMap, job.location]);
 
   const handleOtpDigitChange = (index: number, value: string) => {
     if (value.length > 1) return; // Only allow single digit
@@ -1029,7 +943,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
             </h1>
             <button
               type="button"
-              onClick={() => setShowMap(true)}
+              onClick={() => window.open(`https://maps.google.com/maps?q=${encodeURIComponent(job.location)}`, '_blank')}
               className="inline-flex items-center gap-2 px-3 py-1.5 text-sm text-white/80 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-purple-500/30 rounded-lg transition-all duration-200 backdrop-blur-sm"
             >
               <MapPin className="w-4 h-4 text-purple-400" />
@@ -1906,117 +1820,6 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
               </div>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* Map Modal - Full Page */}
-      {showMap && (
-        <div className="fixed inset-0 z-[9999] bg-[#0a0a0a] w-screen h-screen overflow-hidden flex flex-col dl-map-modal">
-          {/* Header (common style) */}
-          <div className="fixed top-0 left-0 right-0 border-b border-white/10 bg-[#111111]/95 backdrop-blur-xl z-[100]">
-            <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="truncate">
-                  <h2 className="text-base md:text-lg font-semibold text-white truncate">Job Location</h2>
-                  <p className="text-xs md:text-sm text-white/60 truncate">{job.location}</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setShowMap(false)}
-                className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-all"
-                aria-label="Close map"
-              >
-                <X className="w-4 h-4 text-white" />
-              </button>
-            </div>
-          </div>
-
-          {/* Map Container - Full Page */}
-          <div className="absolute top-16 left-0 right-0 bottom-0" style={{ perspective: '1000px' }}>
-            {mapLoading && (
-              <div className="absolute inset-0 flex items-center justify-center bg-[#111111] z-10">
-                <div className="flex flex-col items-center gap-3">
-                  <div className="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
-                  <p className="text-sm text-gray-400">Loading map...</p>
-                </div>
-              </div>
-            )}
-            
-            {mapError && (
-              <div className="absolute inset-0 flex items-center justify-center bg-[#111111] z-10">
-                <div className="p-6 max-w-md w-full bg-[#1E1E1E] rounded-lg border border-red-500/20">
-                  <div className="flex items-center gap-3 mb-3">
-                    <AlertCircle className="w-5 h-5 text-red-400" />
-                    <h3 className="text-sm font-semibold text-red-400">Error Loading Map</h3>
-                  </div>
-                  <p className="text-sm text-gray-300 mb-4">{mapError}</p>
-                  <button
-                    onClick={() => {
-                      setMapError(null);
-                      setShowMap(false);
-                    }}
-                    className="w-full px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors text-sm font-medium"
-                  >
-                    Close
-                  </button>
-                </div>
-              </div>
-            )}
-            
-            <div
-              ref={mapRef}
-              className="w-full h-full"
-              style={{ display: mapError ? 'none' : 'block' }}
-            />
-          </div>
-
-          
-          {/* Hide Mapbox attribution/logo and style controls within this modal only */}
-          <style jsx global>{`
-            .dl-map-modal .mapboxgl-ctrl-logo,
-            .dl-map-modal .mapboxgl-ctrl-attrib,
-            .dl-map-modal .mapbox-improve-map {
-              display: none !important;
-            }
-
-            /* Control sizes adjusted smaller */
-            .dl-map-modal .mapboxgl-ctrl button {
-              width: 28px !important;
-              height: 28px !important;
-              font-size: 10px !important;
-            }
-
-            .dl-map-modal .mapboxgl-ctrl-group button {
-              width: 28px !important;
-              height: 28px !important;
-              font-size: 10px !important;
-            }
-
-            /* Icon sizing for controls */
-            .dl-map-modal .mapboxgl-ctrl button .mapboxgl-ctrl-icon,
-            .dl-map-modal .mapboxgl-ctrl-group button .mapboxgl-ctrl-icon {
-              width: 10px !important;
-              height: 10px !important;
-            }
-
-            /* Increase zoom in/out icon sizes */
-            .dl-map-modal .mapboxgl-ctrl-group button:nth-child(1) .mapboxgl-ctrl-icon,
-            .dl-map-modal .mapboxgl-ctrl-group button:nth-child(2) .mapboxgl-ctrl-icon {
-              width: 14px !important;
-              height: 14px !important;
-            }
-
-            /* Push controls down by 5% */
-            .dl-map-modal .mapboxgl-ctrl-top-right {
-              top: 80px !important;
-              right: 10px !important;
-            }
-
-            .dl-map-modal .mapboxgl-ctrl-bottom-left {
-              bottom: 10px !important;
-              left: 10px !important;
-            }
-          `}</style>
         </div>
       )}
 

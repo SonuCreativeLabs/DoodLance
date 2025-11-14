@@ -29,7 +29,6 @@ import { Application } from '@/components/freelancer/jobs/types';
 import { mySkills } from '@/components/freelancer/jobs/mock-data';
 import { updateApplicationStatus } from '@/components/freelancer/jobs/mock-data';
 import { ClientProfile } from '@/components/freelancer/jobs/ClientProfile';
-import { FullScreenMap } from '@/components/freelancer/jobs/FullScreenMap';
 import { SuccessMessage } from '@/components/ui/success-message';
 import { getCategoryDisplayName } from '@/components/freelancer/jobs/utils';
 import { CollapsibleTimeline, createTimelineItems } from '@/components/freelancer/jobs/CollapsibleTimeline';
@@ -43,8 +42,6 @@ export default function ProposalDetailsPage() {
   const [showWithdrawConfirm, setShowWithdrawConfirm] = useState(false);
   const [isWithdrawing, setIsWithdrawing] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [showMapModal, setShowMapModal] = useState(false);
-  const [mapLocation, setMapLocation] = useState('');
   const yourProposalRef = useRef<HTMLDivElement>(null);
 
   // Success message state
@@ -248,11 +245,6 @@ export default function ProposalDetailsPage() {
     alert(`"${fileName}" has been removed from attachments.`);
   };
 
-  const handleOpenMap = (location: string) => {
-    setMapLocation(location);
-    setShowMapModal(true);
-  };
-
   const handleWithdraw = async () => {
     setIsWithdrawing(true);
     try {
@@ -431,7 +423,7 @@ export default function ProposalDetailsPage() {
                 </h1>
                 <button
                   type="button"
-                  onClick={() => handleOpenMap(proposal.location)}
+                  onClick={() => window.open(`https://maps.google.com/maps?q=${encodeURIComponent(proposal.location)}`, '_blank')}
                   className="inline-flex items-center gap-2 px-3 py-1.5 text-sm text-white/80 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-purple-500/30 rounded-lg transition-all duration-200 backdrop-blur-sm"
                 >
                   <MapPin className="w-4 h-4 text-purple-400" />
@@ -813,13 +805,6 @@ export default function ProposalDetailsPage() {
           </motion.div>
         </div>
       )}
-
-      {/* Full Screen Map */}
-      <FullScreenMap
-        isOpen={showMapModal}
-        onClose={() => setShowMapModal(false)}
-        location={mapLocation}
-      />
 
       {/* Success Message */}
       <SuccessMessage
