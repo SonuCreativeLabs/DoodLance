@@ -25,66 +25,91 @@ export function SelfieCapture({
   const [isCameraReady, setIsCameraReady] = useState(false);
   const [showInstructions, setShowInstructions] = useState(true);
   const [cameraError, setCameraError] = useState<string | null>(null);
+  const [isStartingCamera, setIsStartingCamera] = useState(false);
 
   // Initialize camera
   const startCamera = useCallback(async () => {
     try {
-      // Check if we have permissions
-      const permissionResult = await navigator.permissions.query({ name: 'camera' as PermissionName });
-      
-      if (permissionResult.state === 'denied') {
-        setCameraError('Enable camera access in settings to verify your identity.');
-        return;
-      }
+      console.log('Starting camera...');
+      setIsStartingCamera(true);
+      setCameraError(null);
+      setShowInstructions(false);
 
-      const constraints = {
-        video: { 
-          facingMode: { exact: facingMode },
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
-        },
+      // First try with minimal constraints (no facingMode)
+      const minimalConstraints = {
+        video: true,
         audio: false
       };
 
-      // Try with exact constraints first
       let mediaStream;
       try {
-        mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
-      } catch {
-        console.log('Exact constraints failed, trying with more lenient constraints');
-        // Try with more lenient constraints
+        console.log('Trying minimal constraints...');
+        mediaStream = await navigator.mediaDevices.getUserMedia(minimalConstraints);
+        console.log('Minimal constraints successful');
+      } catch (minimalError) {
+        console.error('Minimal constraints failed:', minimalError);
+        // Try with even more basic constraints
         try {
+          console.log('Trying ultra-minimal constraints...');
           mediaStream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: facingMode },
+            video: {
+              width: { ideal: 640 },
+              height: { ideal: 480 }
+            },
             audio: false
           });
-        } catch (lenientError) {
-          console.error('Error accessing camera with lenient constraints:', lenientError);
-          throw lenientError;
+          console.log('Ultra-minimal constraints successful');
+        } catch (ultraMinimalError) {
+          console.error('Ultra-minimal constraints failed:', ultraMinimalError);
+          setIsStartingCamera(false);
+          setCameraError('Camera not accessible. Please check permissions and try again.');
+          setShowInstructions(true);
+          return;
         }
       }
-      
+
+      // Set stream and setup video element
+      setStream(mediaStream);
+
+      // Video element is always rendered, so it should be available
       if (videoRef.current) {
+        console.log('Setting video source...');
         videoRef.current.srcObject = mediaStream;
-        setStream(mediaStream);
-        setIsCameraReady(true);
-        setShowInstructions(false);
-        if (cameraError) {
-          setCameraError(null);
-        }
+
+        // Small delay to ensure DOM is updated
+        setTimeout(() => {
+          console.log('Attempting play after DOM update...');
+          videoRef.current?.play().then(() => {
+            console.log('Video playing after delay');
+            console.log('Video element dimensions:', videoRef.current?.offsetWidth, 'x', videoRef.current?.offsetHeight);
+            console.log('Video element visibility:', getComputedStyle(videoRef.current).visibility);
+            console.log('Video element display:', getComputedStyle(videoRef.current).display);
+            setIsStartingCamera(false);
+            setIsCameraReady(true);
+            setShowInstructions(false);
+            console.log('Camera setup complete - isCameraReady:', true);
+          }).catch((playError) => {
+            console.error('Delayed play failed:', playError);
+            setIsStartingCamera(false);
+            setCameraError('Failed to start camera. Please try again.');
+            setShowInstructions(true);
+          });
+        }, 100);
+      } else {
+        console.error('Video element not found after stream setup!');
+        setIsStartingCamera(false);
+        setCameraError('Video element not available. Please try again.');
+        setShowInstructions(true);
       }
     } catch (err) {
-      console.error('Error accessing camera:', err);
-      setCameraError('Camera not accessible. Check connection and permissions.');
-      setShowInstructions(false);
+      console.error('Unexpected error accessing camera:', err);
+      setCameraError('Camera not accessible. Please check permissions and try again.');
+      setShowInstructions(true);
     }
-  }, [facingMode, cameraError]);
+  }, []);
 
   // Clean up camera stream
   useEffect(() => {
-    // Start camera when component mounts
-    startCamera();
-    
     return () => {
       if (stream) {
         stream.getTracks().forEach(track => {
@@ -93,7 +118,7 @@ export function SelfieCapture({
         setStream(null);
       }
     };
-  }, [startCamera, stream]); // Add stream to dependencies
+  }, [stream]);
 
   const captureImage = () => {
     if (!videoRef.current) return;
@@ -239,6 +264,7 @@ export function SelfieCapture({
 
   return (
     <div className="w-full">
+      {console.log('Rendering SelfieCapture:', { isCameraReady, showInstructions, cameraError, isStartingCamera })}
       {showInstructions ? (
         <div className="bg-gradient-to-br from-[#1A1A1A] to-[#0D0D0D] border border-white/5 rounded-2xl p-6 text-center shadow-xl">
           <div className="relative">
@@ -276,18 +302,20 @@ export function SelfieCapture({
           </Button>
         </div>
       ) : (
-        <div className="relative w-full aspect-[3/4] bg-black rounded-2xl overflow-hidden border border-white/10">
-          {/* Camera preview */}
+        <div className="relative w-full h-96 bg-black rounded-2xl overflow-hidden border border-white/10">
+          {/* Always render video element, just hide it when not ready */}
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            muted
+            className={`w-full h-full object-contain bg-black ${isCameraReady ? '' : 'hidden'}`}
+            style={{ transform: 'scaleX(-1)' }} // Mirror the video for selfie
+          />
+          
+          {/* Camera preview when ready */}
           {isCameraReady ? (
             <>
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                muted
-                className="w-full h-full object-cover"
-              />
-              
               {/* Face guide overlay */}
               <div className="absolute inset-0 pointer-events-none">
                 <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-80 border-2 border-white/30 rounded-3xl"></div>
@@ -340,11 +368,17 @@ export function SelfieCapture({
                   <Camera className="h-8 w-8 text-purple-300 animate-pulse" />
                 </div>
               </div>
-              <h3 className="text-lg font-medium text-white mb-2">Preparing Camera</h3>
-              <p className="text-white/50 text-sm max-w-xs">Please allow camera access when prompted</p>
-              <div className="w-48 h-1 bg-white/10 rounded-full overflow-hidden mt-6">
-                <div className="h-full bg-gradient-to-r from-purple-500 to-pink-500 animate-pulse w-3/4"></div>
-              </div>
+              <h3 className="text-lg font-medium text-white mb-2">
+                {isStartingCamera ? 'Starting Camera...' : 'Preparing Camera'}
+              </h3>
+              <p className="text-white/50 text-sm max-w-xs">
+                {isStartingCamera ? 'Please wait while we access your camera...' : 'Please allow camera access when prompted'}
+              </p>
+              {isStartingCamera && (
+                <div className="w-48 h-1 bg-white/10 rounded-full overflow-hidden mt-6">
+                  <div className="h-full bg-gradient-to-r from-purple-500 to-pink-500 animate-pulse w-3/4"></div>
+                </div>
+              )}
             </div>
           )}
           

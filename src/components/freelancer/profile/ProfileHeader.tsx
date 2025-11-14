@@ -19,6 +19,7 @@ import { useAvailability } from '@/contexts/AvailabilityContext';
 import { SkillInfoDialog } from '@/components/common/SkillInfoDialog';
 import { getSkillInfo, type SkillInfo } from '@/utils/skillUtils';
 import { calculateAge } from '@/utils/personalUtils';
+import { IdVerifiedBadge } from './IdVerifiedBadge';
 
 // CoverImage component defined outside the ProfileHeader component
 const CoverImage = () => (
@@ -244,6 +245,10 @@ export function ProfileHeader({
                 </div>
               )}
             </div>
+            {/* ID Verified Badge - Mobile: left side of profile picture */}
+            <div className="md:hidden absolute top-[calc(50%+32px)] -translate-y-1/2 -left-28 ml-0">
+              <IdVerifiedBadge isVerified={true} />
+            </div>
             {/* Online/Offline Badge - Mobile: right side of profile picture */}
             <div className="md:hidden absolute top-[calc(50%+32px)] -translate-y-1/2 left-full ml-10">
               <div className={`inline-flex items-center gap-1 px-2 py-1 text-[8px] font-bold border-2 shadow-lg whitespace-nowrap transform rotate-[-2deg] ${
@@ -265,6 +270,11 @@ export function ProfileHeader({
             }`}>
               <span className="tracking-widest font-black">{personalDetails.online ? 'GAME ON' : 'OFFLINE'}</span>
             </div>
+          </div>
+          
+          {/* ID Verified Badge - Desktop: left corner of profile picture */}
+          <div className="hidden md:block absolute top-8 -left-28 transform rotate-[1deg]">
+            <IdVerifiedBadge isVerified={true} isDesktop={true} />
           </div>
         </div>
 
