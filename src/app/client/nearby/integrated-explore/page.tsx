@@ -7,7 +7,7 @@ import ProfessionalsFeed, { BaseProfessional } from '@/app/freelancer/feed/compo
 import { Search, Map, Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { categories } from '../constants';
-import { professionals } from '../mockData';
+import { useNearbyProfessionals } from '@/contexts/NearbyProfessionalsContext';
 import { Freelancer } from '../types';
 import SearchFilters from '../components/SearchFilters';
 
@@ -19,6 +19,7 @@ export default function IntegratedExplorePage() {
   const [sheetOffset, setSheetOffset] = useState(0);
   const [isDragTextVisible, setIsDragTextVisible] = useState(true);
   const router = useRouter();
+  const { professionals } = useNearbyProfessionals();
 
   // Filter state
   const [selectedArea, setSelectedArea] = useState("Velachery");

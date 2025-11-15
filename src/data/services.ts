@@ -23,6 +23,11 @@ export const sidebarCategories = [
     id: 'media',
     name: ['Media &', 'Content'],
     icon: '📷'
+  },
+  {
+    id: 'other',
+    name: ['Other', 'Services'],
+    icon: '🔧'
   }
 ]
 
@@ -83,7 +88,7 @@ export const serviceItems = [
     name: 'Trainer',
     category: 'coaching',
     providerCount: 60,
-    image: '/images/Bowler & batsman.png',
+    image: '/images/categories/sports-fitness.jpg',
     icon: '💪',
     description: 'Sports conditioning and fitness trainers specialized for cricket'
   },
@@ -151,9 +156,18 @@ export const serviceItems = [
     name: 'Commentator',
     category: 'media',
     providerCount: 16,
-    image: '/images/Bowler & batsman.png',
+    image: '/images/live events.jpeg',
     icon: '🎤',
     description: 'Professional cricket commentators for matches and events'
+  },
+  {
+    id: 'other',
+    name: 'Other',
+    category: 'other',
+    providerCount: 5,
+    image: '/images/Bowler & batsman.png',
+    icon: '🔧',
+    description: 'Other cricket-related services and specializations'
   }
 ]
 

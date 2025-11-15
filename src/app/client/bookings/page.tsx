@@ -8,7 +8,9 @@ import { Button } from "@/components/ui/button"
 import { Clock, Calendar, Search, X, Briefcase } from "lucide-react"
 import { cn } from "@/lib/utils"
 import ClientLayout from "@/components/layouts/client-layout"
-import { bookings, applications, historyJobs, Booking, Application, HistoryJob } from "@/lib/mock/bookings"
+import { useBookings } from "@/contexts/BookingsContext"
+import { useApplications } from "@/contexts/ApplicationsContext"
+import { useHistoryJobs } from "@/contexts/HistoryJobsContext"
 
 interface BookingCardProps {
   booking: Booking;
@@ -454,6 +456,10 @@ export default function BookingsPage() {
   const [applicationFilter, setApplicationFilter] = useState('new')
   const [historyFilter, setHistoryFilter] = useState('all')
   const [isSearchOpen, setIsSearchOpen] = useState(false)
+
+  const { bookings } = useBookings()
+  const { applications } = useApplications()
+  const { historyJobs } = useHistoryJobs()
 
 
   const filteredBookings = bookings.filter(booking => {

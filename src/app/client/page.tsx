@@ -6,11 +6,10 @@ import { Input } from '@/components/ui/input'
 import ClientLayout from '@/components/layouts/client-layout'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { professionals } from './nearby/mockData'
 import ServiceCard from '@/components/client/services/service-card'
-import { popularServices } from '@/data/services'
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react'
+import { useNearbyProfessionals } from '@/contexts/NearbyProfessionalsContext'
+import { usePopularServices } from '@/contexts/PopularServicesContext'
 
 const searchExamples = [
   "Bowler for cricket practice in Chepauk",
@@ -42,6 +41,8 @@ const mockNotifications = [
 
 export default function ClientHome() {
   const router = useRouter();
+  const { professionals } = useNearbyProfessionals();
+  const { popularServices } = usePopularServices();
   const [searchQuery, setSearchQuery] = useState("");
   const [currentExample, setCurrentExample] = useState(0);
   const [placeholder, setPlaceholder] = useState("");
@@ -303,20 +304,13 @@ export default function ClientHome() {
         <div className="relative pb-4 h-auto overflow-hidden rounded-b-[2.5rem] shadow-xl" style={{ minHeight: 'auto' }}>
           {/* Background Elements */}
           <div className="absolute inset-0 bg-gradient-to-br from-[#6B46C1] via-[#4C1D95] to-[#2D1B69] rounded-b-[2.5rem] overflow-hidden">
-            {/* Cover Image */}
-            <div className="absolute inset-0 w-full h-full">
-              <img
-                src="/images/Purple ground.png"
-                alt="Cover"
-                className="w-full h-full object-cover opacity-[35%] transform translate-y-[10%]"
-              />
-            </div>
+            {/* Cover Image - Removed */}
           </div>
 
           {/* Hero Content */}
           <div className="relative container mx-auto px-4">
             {/* Adjusted space for optimal position */}
-            <div className="pt-24 md:pt-28">
+            <div className="pt-20 md:pt-28">
               <div className="max-w-2xl mx-auto text-center">
                 <h1 className="text-[22px] md:text-4xl font-bold font-serif text-white mb-2 text-center drop-shadow-[0_4px_8px_rgba(0,0,0,0.3)]">
                   Practice like a pro, with a pro
@@ -327,7 +321,7 @@ export default function ClientHome() {
               </div>
 
               {/* Modern Search Bar */}
-              <div className="max-w-3xl mx-auto">
+              <div className="max-w-3xl mx-auto mb-6">
                 <div className="relative w-full">
                   <Input
                     type="text"
@@ -341,46 +335,6 @@ export default function ClientHome() {
                   </span>
                 </div>
               </div>
-
-              {/* Why DoodLance Section */}
-              <div className="mt-4 max-w-3xl mx-auto">
-                <div className="mb-1">
-                  <h2 className="text-sm font-semibold text-white tracking-wide text-left drop-shadow-[0_2px_4px_rgba(0,0,0,0.25)]" data-component-name="ClientHome">WHY DOODLANCE?</h2>
-                </div>
-                <div className="flex flex-row justify-center gap-2 md:gap-3">
-                  {/* Local Delivery */}
-                  <div className="flex flex-col items-center w-24 md:w-28 py-2">
-                    <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center mb-2">
-                      <MapPin className="w-5 h-5 text-purple-500" />
-                    </div>
-                    <div className="text-center">
-                      <div className="font-bold text-sm md:text-base text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)]">Fast Service</div>
-                      <div className="text-[10px] md:text-xs text-white/80 leading-tight drop-shadow-[0_1px_2px_rgba(0,0,0,0.2)]">In Your<br />Neighborhood</div>
-                    </div>
-                  </div>
-                  {/* Smart Matching */}
-                  <div className="flex flex-col items-center w-24 md:w-28 py-2">
-                    <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center mb-2">
-                      {/* AI-related icon - Sparkles */}
-                      <Sparkles className="w-5 h-5 text-purple-500" />
-                    </div>
-                    <div className="text-center">
-                      <div className="font-bold text-sm md:text-base text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)]">AI-Powered</div>
-                      <div className="text-[10px] md:text-xs text-white/80 leading-tight drop-shadow-[0_1px_2px_rgba(0,0,0,0.2)]">Find the<br />Right Expert</div>
-                    </div>
-                  </div>
-                  {/* Instant Booking */}
-                  <div className="flex flex-col items-center w-24 md:w-28 py-2">
-                    <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center mb-2">
-                      <Clock className="w-5 h-5 text-purple-500" />
-                    </div>
-                    <div className="text-center">
-                      <div className="font-bold text-sm md:text-base text-white whitespace-nowrap drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)]">Book Instantly</div>
-                      <div className="text-[10px] md:text-xs text-white/80 leading-tight whitespace-nowrap drop-shadow-[0_1px_2px_rgba(0,0,0,0.2)]">Real-Time<br />Availability</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -388,8 +342,8 @@ export default function ClientHome() {
         <div className="container mx-auto px-4 py-4 bg-[#111111] mb-8 relative z-0">
           {/* Service Categories */}
           <section className="mb-4 relative z-0">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-base font-medium text-white/90">Popular Services in your area</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-base font-semibold text-white tracking-wide text-left">Popular Services in your area</h2>
               <Link href="/client/services" className="text-white/80 hover:text-white text-sm font-medium flex items-center transition-colors">
                 View All
                 <ChevronRight className="w-4 h-4 ml-1" />
@@ -397,7 +351,7 @@ export default function ClientHome() {
             </div>
             <div className="relative -mx-4">
               <div className="overflow-x-auto scrollbar-hide px-4">
-                <div className="flex space-x-4 pb-4">
+                <div className="flex space-x-4 pb-2">
                   {popularServices.map((service) => (
                     <ServiceCard
                       key={service.id}
@@ -406,7 +360,7 @@ export default function ClientHome() {
                       image={service.image}
                       icon={service.icon}
                       providerCount={service.providerCount}
-                      className="w-[150px] flex-shrink-0"
+                      className="w-[140px] flex-shrink-0"
                     />
                   ))}
                 </div>
@@ -426,9 +380,9 @@ export default function ClientHome() {
           `}</style>
 
           {/* Top Rated Experts Section */}
-          <section className="mb-8 relative z-0">
+          <section className="mb-4 relative z-0">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-white">
+              <h2 className="text-base font-semibold text-white tracking-wide text-left">
                 <span className="bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 text-transparent bg-clip-text">Top Rated</span>
                 {" "}Experts
               </h2>
@@ -439,7 +393,7 @@ export default function ClientHome() {
             </div>
             <div className="relative">
               <div className="overflow-x-auto scrollbar-hide -mx-4 px-4">
-                <div className="flex gap-3 pb-4">
+                <div className="flex gap-3 pb-2">
                   {professionals
                     .sort((a, b) => {
                       // First sort by rating
@@ -499,15 +453,55 @@ export default function ClientHome() {
             </div>
           </section>
 
+          {/* Why DoodLance Section */}
+          <section className="mb-4 relative z-0">
+            <div className="mb-4">
+              <h2 className="text-base font-semibold text-white tracking-wide text-left">Why DoodLance?</h2>
+            </div>
+            <div className="flex flex-row justify-center gap-2 md:gap-3 pb-4">
+              {/* Local Delivery */}
+              <div className="flex flex-col items-center w-24 md:w-28 py-2">
+                <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center mb-2">
+                  <MapPin className="w-5 h-5 text-purple-500" />
+                </div>
+                <div className="text-center">
+                  <div className="font-bold text-sm md:text-base text-white">Fast Service</div>
+                  <div className="text-[10px] md:text-xs text-white/80 leading-tight">In Your<br />Neighborhood</div>
+                </div>
+              </div>
+              {/* Smart Matching */}
+              <div className="flex flex-col items-center w-24 md:w-28 py-2">
+                <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center mb-2">
+                  {/* AI-related icon - Sparkles */}
+                  <Sparkles className="w-5 h-5 text-purple-500" />
+                </div>
+                <div className="text-center">
+                  <div className="font-bold text-sm md:text-base text-white">AI-Powered</div>
+                  <div className="text-[10px] md:text-xs text-white/80 leading-tight">Find the<br />Right Expert</div>
+                </div>
+              </div>
+              {/* Instant Booking */}
+              <div className="flex flex-col items-center w-24 md:w-28 py-2">
+                <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center mb-2">
+                  <Clock className="w-5 h-5 text-purple-500" />
+                </div>
+                <div className="text-center">
+                  <div className="font-bold text-sm md:text-base text-white whitespace-nowrap">Book Instantly</div>
+                  <div className="text-[10px] md:text-xs text-white/80 leading-tight whitespace-nowrap">Real-Time<br />Availability</div>
+                </div>
+              </div>
+            </div>
+          </section>
+
           {/* Coupon Banner */}
           <motion.section 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
-            className="mt-4 mb-2 relative z-0"
+            className="mb-4 relative z-0"
           >
             <div className="mb-4">
-              <h2 className="text-sm font-semibold text-white tracking-wide text-left" data-component-name="ClientHome">EXCLUSIVE OFFERS</h2>
+              <h2 className="text-base font-semibold text-white tracking-wide text-left" data-component-name="ClientHome">Exclusive Offers</h2>
             </div>
             <div className="relative -mx-4">
               <div className="overflow-x-auto scrollbar-hide px-4">

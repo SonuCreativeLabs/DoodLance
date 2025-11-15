@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Star, MapPin, Clock, Briefcase } from 'lucide-react';
-import { professionals } from './mockData';
+import { useNearbyProfessionals } from '@/contexts/NearbyProfessionalsContext';
 import type { Freelancer } from './types';
 
 // Define BaseProfessional interface to match what we receive from integrated-explore
@@ -34,6 +34,7 @@ interface ProfessionalsFeedProps {
 export default function ProfessionalsFeed({ filteredProfessionals }: ProfessionalsFeedProps) {
   const router = useRouter();
   const [favoriteIds, setFavoriteIds] = useState<number[]>([]);
+  const { professionals } = useNearbyProfessionals();
   const displayProfessionals = filteredProfessionals || professionals;
 
   const getNumericId = (id: string | number): number => {

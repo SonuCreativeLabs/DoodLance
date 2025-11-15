@@ -16,9 +16,9 @@ export const areas = [
 
 export const serviceTypes = [
   "Bowler", "Batsman", "Sidearm Specialist", "Coach",
-  "Sports Conditioning Trainer", "Fitness Trainer", "Analyst",
-  "Physio", "Scorer", "Umpire", "Cricket Photo/Videography",
-  "Cricket Content Creator", "Commentator", "Groundsman"
+  "Trainer", "Analyst", "Physio", "Scorer", "Umpire",
+  "Cricket Photo/Videography", "Cricket Content Creator", "Commentator",
+  "Match Player", "Other"
 ];
 
 export const availabilityOptions = [

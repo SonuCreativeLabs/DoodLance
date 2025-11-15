@@ -9,6 +9,12 @@ import { ModalProvider } from '@/contexts/ModalContext';
 import { CombinedProfileProvider } from '@/contexts/CombinedProfileProvider';
 import { AvailabilityProvider } from '@/contexts/AvailabilityContext';
 import { RoleProvider } from '@/contexts/role-context';
+import { NearbyProfessionalsProvider } from '@/contexts/NearbyProfessionalsContext';
+import { PopularServicesProvider } from '@/contexts/PopularServicesContext';
+import { BookingsProvider } from '@/contexts/BookingsContext';
+import { ApplicationsProvider } from '@/contexts/ApplicationsContext';
+import { HistoryJobsProvider } from '@/contexts/HistoryJobsContext';
+import { ClientServicesProvider } from '@/contexts/ClientServicesContext';
 
 interface ProvidersProps {
   children: ReactNode;
@@ -24,7 +30,19 @@ export function Providers({ children }: ProvidersProps) {
               <ModalProvider>
                 <AvailabilityProvider>
                   <CombinedProfileProvider>
-                    {children}
+                    <NearbyProfessionalsProvider>
+                      <PopularServicesProvider>
+                        <ClientServicesProvider>
+                          <BookingsProvider>
+                            <ApplicationsProvider>
+                              <HistoryJobsProvider>
+                                {children}
+                              </HistoryJobsProvider>
+                            </ApplicationsProvider>
+                          </BookingsProvider>
+                        </ClientServicesProvider>
+                      </PopularServicesProvider>
+                    </NearbyProfessionalsProvider>
                   </CombinedProfileProvider>
                 </AvailabilityProvider>
               </ModalProvider>

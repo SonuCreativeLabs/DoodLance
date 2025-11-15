@@ -6,6 +6,7 @@ import { Search, ArrowLeft, Clock, Video, Dumbbell, Cpu, Package, Camera, Clappe
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { useClientServices } from '@/contexts/ClientServicesContext'
 
 // Sidebar categories using Lucide icons
 const sidebarCategories = [
@@ -14,39 +15,17 @@ const sidebarCategories = [
   { id: 'coaching', name: ['Coaching &', 'Training'], icon: <Dumbbell className="w-6 h-6" /> },
   { id: 'support', name: ['Support', 'Staff'], icon: <Brain className="w-6 h-6" /> },
   { id: 'media', name: ['Media &', 'Content'], icon: <Camera className="w-6 h-6" /> },
+  { id: 'other', name: ['Other', 'Services'], icon: <Package className="w-6 h-6" /> },
 ]
 
 // Service items (comprehensive, grouped by category)
-const serviceItems = [
-  // Cricket Playing Services
-  { id: 'match-player', name: 'Match Player', category: 'playing', providerCount: 52, mostBooked: true, image: '/images/categories/sports-fitness.jpg', fallbackEmoji: '🏏' },
-  { id: 'bowler', name: 'Bowler', category: 'playing', providerCount: 45, mostBooked: true, image: '/images/Bowler & batsman.png', fallbackEmoji: '🏏' },
-  { id: 'batsman', name: 'Batsman', category: 'playing', providerCount: 38, mostBooked: true, image: '/images/Bowler & batsman.png', fallbackEmoji: '🏏' },
-  { id: 'sidearm-specialist', name: 'Sidearm Specialist', category: 'playing', providerCount: 22, image: '/images/drone.jpeg', fallbackEmoji: '🎯' },
-
-  // Cricket Coaching & Training
-  { id: 'coach', name: 'Coach', category: 'coaching', providerCount: 35, mostBooked: true, image: '/images/categories/education.jpg', fallbackEmoji: '👨‍🏫' },
-  { id: 'sports-conditioning-trainer', name: 'Sports Conditioning Trainer', category: 'coaching', providerCount: 28, image: '/images/categories/sports-fitness.jpg', fallbackEmoji: '💪' },
-  { id: 'fitness-trainer', name: 'Fitness Trainer', category: 'coaching', providerCount: 32, image: '/images/categories/sports-fitness.jpg', fallbackEmoji: '🏃‍♂️' },
-
-  // Cricket Support Services
-  { id: 'analyst', name: 'Analyst', category: 'support', providerCount: 18, image: '/images/companies/digitalvibes.png', fallbackEmoji: '📊' },
-  { id: 'physio', name: 'Physio', category: 'support', providerCount: 25, image: '/images/categories/beauty-spa.jpg', fallbackEmoji: '🏥' },
-  { id: 'scorer', name: 'Scorer', category: 'support', providerCount: 15, image: '/images/companies/capture.png', fallbackEmoji: '📝' },
-  { id: 'umpire', name: 'Umpire', category: 'support', providerCount: 20, image: '/images/live events.jpeg', fallbackEmoji: '⚖️' },
-
-  // Cricket Media & Content
-  { id: 'cricket-photo-videography', name: 'Cricket Photo / Videography', category: 'media', providerCount: 30, mostBooked: true, image: '/images/Event production.jpeg', fallbackEmoji: '📷' },
-  { id: 'cricket-content-creator', name: 'Cricket Content Creator', category: 'media', providerCount: 24, image: '/images/Influencer:creator.jpeg', fallbackEmoji: '🎬' },
-  { id: 'commentator', name: 'Commentator', category: 'media', providerCount: 16, image: '/images/live events.jpeg', fallbackEmoji: '🎤' },
-
-  // Cricket Ground Services
-]
+// const serviceItems = [ ... ] - Now using context
 
 export default function ServicesPage() {
   const [selectedCategory, setSelectedCategory] = useState('for-you')
   const sidebarRef = useRef<HTMLDivElement>(null)
   const selectedButtonRef = useRef<HTMLButtonElement>(null)
+  const { services } = useClientServices()
 
   // Function to scroll selected category into view
   useEffect(() => {
@@ -138,7 +117,7 @@ export default function ServicesPage() {
                 <div className="max-w-[1400px] mx-auto px-4">
                   <div className="py-6">
                     <div className="grid grid-cols-2 gap-5 pb-24">
-                      {serviceItems
+                      {services
                         // TODO: Replace this heuristic with a real user-behavior-based ranking.
                         // Example future signal sources: recently viewed, clicks, bookings, category affinity.
                         .filter(service => selectedCategory === 'for-you' ? !!service.mostBooked : service.category === selectedCategory)
@@ -157,8 +136,8 @@ export default function ServicesPage() {
                                 {service.category === 'coaching' && <Dumbbell className="w-12 h-12" />}
                                 {service.category === 'support' && <Brain className="w-12 h-12" />}
                                 {service.category === 'media' && <Camera className="w-12 h-12" />}
-                                {service.category === 'ground' && <Package className="w-12 h-12" />}
-                                {service.category !== 'playing' && service.category !== 'coaching' && service.category !== 'support' && service.category !== 'media' && service.category !== 'ground' && (
+                                {service.category === 'other' && <Package className="w-12 h-12" />}
+                                {service.category !== 'playing' && service.category !== 'coaching' && service.category !== 'support' && service.category !== 'media' && service.category !== 'other' && (
                                   <Video className="w-12 h-12" />
                                 )}
                               </div>
