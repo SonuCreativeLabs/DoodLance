@@ -8,6 +8,8 @@ import { PortfolioProvider } from './PortfolioContext';
 import { ExperienceProvider } from './ExperienceContext';
 import { ServicesProvider } from './ServicesContext';
 import { ReviewsProvider } from './ReviewsContext';
+import { BankAccountProvider } from './BankAccountContext';
+import { SettingsProvider } from './SettingsContext';
 
 interface CombinedProfileProviderProps {
   children: ReactNode;
@@ -26,7 +28,11 @@ export function CombinedProfileProvider({ children }: CombinedProfileProviderPro
             <ExperienceProvider>
               <ServicesProvider>
                 <ReviewsProvider>
-                  {children}
+                  <BankAccountProvider>
+                    <SettingsProvider>
+                      {children}
+                    </SettingsProvider>
+                  </BankAccountProvider>
                 </ReviewsProvider>
               </ServicesProvider>
             </ExperienceProvider>

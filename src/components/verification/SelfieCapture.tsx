@@ -82,8 +82,8 @@ export function SelfieCapture({
           videoRef.current?.play().then(() => {
             console.log('Video playing after delay');
             console.log('Video element dimensions:', videoRef.current?.offsetWidth, 'x', videoRef.current?.offsetHeight);
-            console.log('Video element visibility:', getComputedStyle(videoRef.current).visibility);
-            console.log('Video element display:', getComputedStyle(videoRef.current).display);
+            console.log('Video element visibility:', videoRef.current ? getComputedStyle(videoRef.current).visibility : 'null');
+            console.log('Video element display:', videoRef.current ? getComputedStyle(videoRef.current).display : 'null');
             setIsStartingCamera(false);
             setIsCameraReady(true);
             setShowInstructions(false);
@@ -264,7 +264,6 @@ export function SelfieCapture({
 
   return (
     <div className="w-full">
-      {console.log('Rendering SelfieCapture:', { isCameraReady, showInstructions, cameraError, isStartingCamera })}
       {showInstructions ? (
         <div className="bg-gradient-to-br from-[#1A1A1A] to-[#0D0D0D] border border-white/5 rounded-2xl p-6 text-center shadow-xl">
           <div className="relative">

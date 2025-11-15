@@ -1,6 +1,6 @@
 "use client"
 
-import { Briefcase, Code, Award, Star, FileText, Calendar, MessageSquare, Settings, User, Mail, Phone, Globe, MapPin, GraduationCap, Languages, Edit2, CheckCircle, CircleDollarSign, ChevronRight, BarChart2, Clock, Users, Target, Dumbbell, Trophy } from 'lucide-react';
+import { Briefcase, Code, Award, Star, FileText, Calendar, MessageSquare, Settings, User, Mail, Phone, Globe, MapPin, GraduationCap, Languages, Edit2, CheckCircle, CircleDollarSign, ChevronRight, BarChart2, Clock, Users, Target, Dumbbell, Trophy, CreditCard, Settings as SettingsIcon } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -270,10 +270,24 @@ export default function ProfilePage() {
           />
           
           <ProfileSectionCard
+            title="Bank Account"
+            description="Manage your bank account details for payments"
+            href="/freelancer/profile/bank-account"
+            icon={<CreditCard className="h-4 w-4" />}
+          />
+          
+          <ProfileSectionCard
             title="Identity Verification"
             description="Complete your KYC verification to unlock all features"
             href="/freelancer/profile/verification"
             icon={<CheckCircle className="h-4 w-4" />}
+          />
+
+          <ProfileSectionCard
+            title="Settings"
+            description="Manage your account, notifications and preferences"
+            href="/freelancer/profile/settings"
+            icon={<SettingsIcon className="h-4 w-4" />}
           />
           
           <Link 
