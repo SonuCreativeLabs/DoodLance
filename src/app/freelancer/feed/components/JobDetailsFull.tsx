@@ -137,7 +137,7 @@ export default function JobDetailsFull({ job, onBack, onApply }: JobDetailsFullP
               <ClockIcon className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
               <div>
                 <div className="text-sm text-gray-400">Duration</div>
-                <div className="text-white font-medium capitalize">{getJobDurationLabel(job as any)}</div>
+                <div className="text-white font-medium capitalize break-words whitespace-normal leading-tight">{getJobDurationLabel(job as any)}</div>
               </div>
             </div>
             <div className="flex items-start gap-3">

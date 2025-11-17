@@ -972,7 +972,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
               <ClockIcon className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
               <div>
                 <div className="text-sm text-gray-400">Duration</div>
-                <div className="text-white font-medium capitalize">{getJobDurationLabel(job as any)}</div>
+                <div className="text-white font-medium capitalize break-words whitespace-normal leading-tight">{getJobDurationLabel(job as any)}</div>
               </div>
             </div>
             <div className="flex items-start gap-3">
@@ -1072,7 +1072,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                 </div>
                 <div className="prose prose-invert max-w-none">
                   {job.description && (
-                    <p className="text-white/80 leading-relaxed mb-6">
+                    <p className="text-white/80 leading-relaxed break-words whitespace-normal">
                       {job.description}
                     </p>
                   )}

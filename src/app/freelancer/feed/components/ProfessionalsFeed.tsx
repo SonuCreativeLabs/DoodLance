@@ -56,11 +56,15 @@ export default function ProfessionalsFeed({
   className = ''
 }: ProfessionalsFeedProps) {
   const formatScheduledDate = (scheduledAt: string) => {
-    // Hardcoded demo date for consistent card display: December 15, 3:30 PM
-    const demoDate = new Date('2024-12-15T15:30:00.000Z');
-    const date = demoDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    const time = demoDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-    return `${date}, ${time}`;
+    if (!scheduledAt) return 'Date TBD';
+    try {
+      const date = new Date(scheduledAt);
+      const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      const timeStr = date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+      return `${dateStr}, ${timeStr}`;
+    } catch (error) {
+      return 'Date TBD';
+    }
   };
   type ItemType = Job | BaseProfessional;
   const items: ItemType[] = (filteredProfessionals || jobs || []) as ItemType[];
@@ -237,7 +241,7 @@ export default function ProfessionalsFeed({
                 <MapPin className="w-3 h-3 flex-shrink-0" />
                 <span className="truncate" title={item.location}>{item.location}</span>
               </div>
-              <div className="flex items-center gap-1 flex-shrink-0 ml-2">
+              <div className="flex items-center gap-1">
                 <Clock className="w-3 h-3 flex-shrink-0 text-white/50" />
                 <span className="text-white/60 text-[11px] whitespace-nowrap">
                   {item.responseTime || 
@@ -257,7 +261,8 @@ export default function ProfessionalsFeed({
               {(item.skills || []).slice(0, 2).map((skill: string, i: number) => (
                 <span
                   key={i}
-                  className="px-2.5 py-1 h-6 flex items-center text-[11px] rounded-full bg-white/5 text-white/70 backdrop-blur-sm whitespace-nowrap"
+                  className="px-2.5 py-1 h-6 flex items-center text-[11px] rounded-full bg-white/5 text-white/70 backdrop-blur-sm truncate max-w-[100px]"
+                  title={skill}
                 >
                   {skill}
                 </span>
@@ -271,11 +276,11 @@ export default function ProfessionalsFeed({
 
             {/* Footer */}
             <div className="flex items-center justify-between pt-3 border-t border-white/5 mt-2">
-              <div className="flex items-baseline gap-1">
-                <span className="text-[17px] font-semibold text-white">
+              <div className="flex items-baseline gap-1 min-w-0 flex-1">
+                <span className="text-[17px] font-semibold text-white truncate max-w-[120px]" title={`₹${item.budget?.toLocaleString()}`}>
                   ₹{item.budget?.toLocaleString()}
                 </span>
-                <span className="text-[13px] text-white/60">
+                <span className="text-[13px] text-white/60 truncate leading-tight max-w-[80px]">
                   / {filteredProfessionals ? 'hour' : getJobDurationLabel(item as Job)}
                 </span>
               </div>
@@ -288,7 +293,7 @@ export default function ProfessionalsFeed({
                     handleApply(item.id);
                   }
                 }}
-                className="px-4 py-2 text-xs font-medium text-white bg-gradient-to-r from-[#6B46C1] to-[#4C1D95] hover:from-[#5B35B0] hover:to-[#3D1B7A] rounded-xl transition-all duration-300 shadow-lg shadow-purple-600/20 hover:shadow-purple-600/30 flex items-center justify-center gap-1.5 group-hover:shadow-lg group-hover:shadow-purple-500/20"
+                className="px-4 py-2 text-xs font-medium text-white bg-gradient-to-r from-[#6B46C1] to-[#4C1D95] hover:from-[#5B35B0] hover:to-[#3D1B7A] rounded-xl transition-all duration-300 shadow-lg shadow-purple-600/20 hover:shadow-purple-600/30 flex items-center justify-center gap-1.5 group-hover:shadow-lg group-hover:shadow-purple-500/20 flex-shrink-0"
               >
                 <span>Apply Now</span>
                 <svg className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">

@@ -376,10 +376,10 @@ export default function FreelancerHome() {
                       <Clock className="w-3 h-3 flex-shrink-0 text-white/50" />
                       <span className="text-white/60 text-[11px] whitespace-nowrap">
                         {job.scheduledAt ? (() => {
-                          const demoDate = new Date('2024-12-15T15:30:00.000Z');
-                          const date = demoDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                          const time = demoDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-                          return `${date}, ${time}`;
+                          const date = new Date(job.scheduledAt);
+                          const formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                          const formattedTime = date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+                          return `${formattedDate}, ${formattedTime}`;
                         })() : 'Date TBD'}
                       </span>
                     </div>
@@ -408,7 +408,7 @@ export default function FreelancerHome() {
                       <span className="text-[17px] font-semibold text-white">
                         ₹{job.budget?.toLocaleString()}
                       </span>
-                      <span className="text-[13px] text-white/60">
+                      <span className="text-[13px] text-white/60 break-words whitespace-normal leading-tight">
                         / {getJobDurationLabel(job)}
                       </span>
                     </div>

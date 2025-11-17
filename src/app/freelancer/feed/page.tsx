@@ -20,9 +20,8 @@ import SearchFilters from './components/SearchFilters';
 import { useSkills } from '@/contexts/SkillsContext';
 import { useForYouJobs } from '@/contexts/ForYouJobsContext';
 
-
-
-import { jobs } from './data/jobs';
+// Re-import mock jobs for reference
+import { jobs as mockJobs } from './data/jobs';
 import type { Job, WorkMode } from './types';
 
 export default function FeedPage() {
@@ -40,6 +39,7 @@ export default function FeedPage() {
   
   // Data State
   const [selectedCategory, setSelectedCategory] = useState('For You');
+  const [allJobs, setAllJobs] = useState<Job[]>([]); // Store all jobs fetched from API
   // Define JobWithCoordinates type that matches the MapView component's expectations
   type JobWithCoordinates = {
     // Required properties from Job
@@ -196,7 +196,7 @@ export default function FeedPage() {
     console.log('\n=== Starting job filtering ===');
     
     // Start with all jobs and ensure they have coordinates
-    let filtered = jobs.map(job => {
+    let filtered = allJobs.map(job => {
       // Check if job has coordinates in any form
       let coords: [number, number];
       
@@ -242,10 +242,7 @@ export default function FeedPage() {
           : 0,
         clientJobs: typeof job.clientJobs === 'number' ? job.clientJobs : 0,
         proposals: typeof job.proposals === 'number' ? job.proposals : 0,
-        duration: (job.duration === 'hourly' || job.duration === 'daily' || job.duration === 'weekly' || 
-                 job.duration === 'monthly' || job.duration === 'one-time')
-          ? job.duration
-          : 'one-time',
+        duration: job.duration || 'one-time',
         experience: (job.experience === 'Entry Level' || job.experience === 'Intermediate' || job.experience === 'Expert')
           ? job.experience
           : 'Intermediate',
@@ -357,6 +354,20 @@ export default function FeedPage() {
       } else {
         console.log(`Explore tab without filters: ${filtered.length} jobs`);
       }
+
+      // Apply search query if one exists (same logic as For You tab)
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        filtered = filtered.filter(job =>
+          job.title.toLowerCase().includes(query) ||
+          job.description.toLowerCase().includes(query) ||
+          job.category.toLowerCase().includes(query) ||
+          (job.skills && job.skills.some(skill =>
+            skill.toLowerCase().includes(query)
+          ))
+        );
+        console.log(`After search (${searchQuery}): ${filtered.length} jobs remaining`);
+      }
     
       // Filter out jobs user has already applied to (applies to all tabs)
       const { hasUserAppliedToJob } = await import('@/components/freelancer/jobs/mock-data');
@@ -372,10 +383,45 @@ export default function FeedPage() {
     return filtered;
   };
 
+  // Fetch all jobs from API on component mount
+  useEffect(() => {
+    const fetchJobs = async () => {
+      try {
+        const response = await fetch('/api/jobs');
+        let apiJobs: Job[] = [];
+        
+        if (response.ok) {
+          apiJobs = await response.json();
+        } else {
+          console.error('Failed to fetch API jobs:', response.statusText);
+        }
+
+        // Combine API jobs with mock jobs, avoiding duplicates by ID
+        const combinedJobs = [...mockJobs];
+        
+        // Add API jobs that don't already exist in mock jobs
+        apiJobs.forEach(apiJob => {
+          if (!combinedJobs.some(mockJob => mockJob.id === apiJob.id)) {
+            combinedJobs.push(apiJob);
+          }
+        });
+
+        console.log(`Loaded ${apiJobs.length} API jobs and ${mockJobs.length} mock jobs, total: ${combinedJobs.length}`);
+        setAllJobs(combinedJobs);
+      } catch (error) {
+        console.error('Error fetching jobs:', error);
+        // Fallback to mock jobs only
+        setAllJobs(mockJobs);
+      }
+    };
+
+    fetchJobs();
+  }, []);
+
   useEffect(() => {
     const initializeJobs = async () => {
       // Ensure all jobs have coordinates before setting the state
-      const jobsWithCoords = jobs.map(job => {
+      const jobsWithCoords = allJobs.map((job: Job) => {
         // Check if job has coordinates in any form
         let coords: [number, number];
         
@@ -421,10 +467,7 @@ export default function FeedPage() {
             : 0,
           clientJobs: typeof job.clientJobs === 'number' ? job.clientJobs : 0,
           proposals: typeof job.proposals === 'number' ? job.proposals : 0,
-          duration: (job.duration === 'hourly' || job.duration === 'daily' || job.duration === 'weekly' || 
-                   job.duration === 'monthly' || job.duration === 'one-time')
-            ? job.duration
-            : 'one-time',
+          duration: job.duration || 'one-time',
           experience: (job.experience === 'Entry Level' || job.experience === 'Intermediate' || job.experience === 'Expert')
             ? job.experience
             : 'Intermediate',
@@ -440,7 +483,7 @@ export default function FeedPage() {
     };
 
     initializeJobs();
-  }, [jobs]);
+  }, [allJobs]);
 
   // Re-filter jobs when category changes or forYouJobs updates
   useEffect(() => {

@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from 'react'
-import { MapPin, DollarSign, Calendar, Clock, Tag, Sparkles } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { MapPin, DollarSign, Calendar, Clock, Tag, Sparkles, User, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
-type ServiceCategory = 'Playing' | 'Coaching' | 'Support' | 'Media' | 'Grounds'
+type ServiceCategory = 'Match Player' | 'Net Bowler' | 'Net Batsman' | 'Sidearm' | 'Coach' | 'Trainer' | 'Analyst' | 'Physio' | 'Scorer' | 'Umpire' | 'Commentator' | 'Cricket Content Creator' | 'Cricket Photo / Videography' | 'Other'
 
 interface BudgetSuggestion {
   min: number
@@ -22,13 +22,11 @@ interface BudgetSuggestion {
   avg: number
 }
 
-// Updated budget suggestions for cricket services
-const budgetSuggestions: Record<ServiceCategory, BudgetSuggestion> = {
-  'Playing': { min: 2000, max: 5000, avg: 3500 },
-  'Coaching': { min: 1500, max: 4000, avg: 2500 },
-  'Support': { min: 1000, max: 3000, avg: 1800 },
-  'Media': { min: 3000, max: 8000, avg: 5000 },
-  'Grounds': { min: 800, max: 2000, avg: 1200 },
+// Experience-based budget suggestions
+const experienceBudgets = {
+  'Beginner': { min: 300, max: 500, avg: 400 },
+  'Intermediate': { min: 500, max: 800, avg: 650 },
+  'Expert': { min: 800, max: 5000, avg: 2000 },
 }
 
 export default function PostJobForm() {
@@ -39,9 +37,59 @@ export default function PostJobForm() {
   const [startDate, setStartDate] = useState('')
   const [duration, setDuration] = useState('')
   const [title, setTitle] = useState('')
+  const [workMode, setWorkMode] = useState<'remote' | 'onsite'>('onsite')
+  const [experience, setExperience] = useState<'Beginner' | 'Intermediate' | 'Expert'>('Beginner')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [skills, setSkills] = useState<string[]>([])
+  const [currentSkill, setCurrentSkill] = useState('')
+  const [skillError, setSkillError] = useState('')
+
+  // Check if all required fields are filled
+  const isFormValid = title.trim() && description.trim() && selectedCategory && budget.trim() && location.trim() && startDate && duration.trim()
+
+  // Update budget suggestions based on experience level
+  useEffect(() => {
+    if (!budget && experienceBudgets[experience]) {
+      // Set suggested budget as placeholder when no budget is entered
+      // This will be shown as helper text instead
+    }
+  }, [experience, budget])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate required fields
+    if (!title.trim()) {
+      alert('Job title is required');
+      return;
+    }
+    if (!description.trim()) {
+      alert('Job description is required');
+      return;
+    }
+    if (!selectedCategory) {
+      alert('Service category is required');
+      return;
+    }
+    if (!budget.trim()) {
+      alert('Budget is required');
+      return;
+    }
+    if (!location.trim()) {
+      alert('Location is required');
+      return;
+    }
+    if (!startDate) {
+      alert('Date & time is required');
+      return;
+    }
+    if (!duration.trim()) {
+      alert('Duration is required');
+      return;
+    }
+
+    setIsSubmitting(true);
 
     try {
       // Get current user session
@@ -53,17 +101,18 @@ export default function PostJobForm() {
 
       // Prepare job data
       const jobData = {
-        title,
-        description,
+        title: title.trim(),
+        description: description.trim(),
         category: selectedCategory,
-        budget,
-        location,
+        budget: budget.trim(),
+        location: location.trim(),
         coords: [], // You can add geolocation later
-        skills: [], // Extract from description or add form field
-        workMode: 'remote', // Default, can be enhanced
-        type: 'freelance', // Default, can be enhanced
-        duration,
-        experience: 'Intermediate', // Default, can be enhanced
+        skills,
+        workMode,
+        type: 'freelance', // Default since not displayed in feed
+        duration: duration.trim(),
+        experience,
+        startDate, // Add start date to job data
       };
 
       // Submit job
@@ -83,36 +132,51 @@ export default function PostJobForm() {
       const job = await response.json();
       console.log('Job posted successfully:', job);
 
-      // Reset form
-      setSelectedCategory('');
-      setDescription('');
-      setBudget('');
-      setLocation('');
-      setStartDate('');
-      setDuration('');
-      setTitle('');
+      // Dispatch event to refresh ForYouJobs context
+      window.dispatchEvent(new CustomEvent('jobPosted', { detail: { jobId: job.id } }));
 
-      alert('Job posted successfully!');
+      // Show success modal
+      setShowSuccessModal(true);
+
     } catch (error) {
       console.error('Error posting job:', error);
       alert(error instanceof Error ? error.message : 'An error occurred while posting the job');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
+  const handlePostAnother = () => {
+    // Reset form
+    setSelectedCategory('');
+    setDescription('');
+    setBudget('');
+    setLocation('');
+    setStartDate('');
+    setDuration('');
+    setTitle('');
+    setWorkMode('onsite');
+    setExperience('Beginner');
+    setSkills([]);
+    setCurrentSkill('');
+    setSkillError('');
+    setShowSuccessModal(false);
+  };
+
+  const handleClose = () => {
+    // Close the modal and go back
+    setShowSuccessModal(false);
+    // You could navigate back to the previous page here
+    window.history.back();
+  };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
-        {/* Form header */}
-        <div className="border-b border-white/10 pb-6">
-          <h2 className="text-2xl font-bold bg-gradient-to-r from-white to-purple-200 bg-clip-text text-transparent">Create a New Job Posting</h2>
-          <p className="text-white/80 text-base mt-2">Fill in the details below to find the perfect cricket professional for your job</p>
-        </div>
         
         {/* Category Selection */}
         <div>
-          <Label htmlFor="category" className="text-white font-medium flex items-center gap-2">
-            <Tag className="h-4 w-4 text-purple-400" />
-            Service Category
+          <Label htmlFor="category" className="text-white font-medium">
+            Service Category <span className="text-red-500">*</span>
           </Label>
           <div className="mt-2">
             <Select value={selectedCategory} onValueChange={(v) => setSelectedCategory(v as ServiceCategory)}>
@@ -120,11 +184,38 @@ export default function PostJobForm() {
                 <SelectValue placeholder="Select a category" />
               </SelectTrigger>
               <SelectContent className="bg-[#111111] text-white border-white/20">
-                <SelectItem value="Playing">Playing</SelectItem>
-                <SelectItem value="Coaching">Coaching</SelectItem>
-                <SelectItem value="Support">Support</SelectItem>
-                <SelectItem value="Media">Media</SelectItem>
-                <SelectItem value="Grounds">Grounds</SelectItem>
+                <SelectItem value="Match Player">Match Player</SelectItem>
+                <SelectItem value="Net Bowler">Net Bowler</SelectItem>
+                <SelectItem value="Net Batsman">Net Batsman</SelectItem>
+                <SelectItem value="Sidearm">Sidearm</SelectItem>
+                <SelectItem value="Coach">Coach</SelectItem>
+                <SelectItem value="Trainer">Trainer</SelectItem>
+                <SelectItem value="Analyst">Analyst</SelectItem>
+                <SelectItem value="Physio">Physio</SelectItem>
+                <SelectItem value="Scorer">Scorer</SelectItem>
+                <SelectItem value="Umpire">Umpire</SelectItem>
+                <SelectItem value="Commentator">Commentator</SelectItem>
+                <SelectItem value="Cricket Content Creator">Cricket Content Creator</SelectItem>
+                <SelectItem value="Cricket Photo / Videography">Cricket Photo / Videography</SelectItem>
+                <SelectItem value="Other">Other</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {/* Work Mode */}
+        <div>
+          <Label htmlFor="workMode" className="text-white font-medium">
+            Work Mode <span className="text-red-500">*</span>
+          </Label>
+          <div className="mt-2">
+            <Select value={workMode} onValueChange={(v) => setWorkMode(v as 'remote' | 'onsite')}>
+              <SelectTrigger className="w-full rounded-lg border border-white/20 bg-black/50 backdrop-blur-sm text-white focus:ring-1 focus:ring-purple-400 focus:border-purple-300">
+                <SelectValue placeholder="Select work mode" />
+              </SelectTrigger>
+              <SelectContent className="bg-[#111111] text-white border-white/20">
+                <SelectItem value="onsite">On field (in-person)</SelectItem>
+                <SelectItem value="remote">Online</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -132,110 +223,209 @@ export default function PostJobForm() {
 
         {/* Job Title */}
         <div>
-          <Label htmlFor="title" className="text-white font-medium">Job Title</Label>
+          <Label htmlFor="title" className="text-white font-medium">Job Title <span className="text-red-500">*</span></Label>
           <Input
             id="title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="e.g., Need a batting coach for weekend sessions"
-            className="mt-2 border-white/20 focus:border-purple-300 focus:ring-1 focus:ring-purple-400 bg-black/50 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-200 text-white placeholder:text-white/50"
+            placeholder="Need a sidearmer for weekend sessions"
+            className="mt-2 border-white/20 focus:border-purple-300 focus:ring-1 focus:ring-purple-400 bg-black/50 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-200 text-white placeholder:text-white/50 break-words whitespace-normal"
           />
         </div>
 
         {/* Description with AI Assist */}
         <div>
           <div className="flex items-center justify-between mb-2">
-            <Label htmlFor="description" className="text-white font-medium">Job Description</Label>
+            <Label htmlFor="description" className="text-white font-medium">Job Description <span className="text-red-500">*</span></Label>
           </div>
           <Textarea
             id="description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Describe the job requirements, timeline, and any specific needs..."
-            className="min-h-[150px] border-white/20 focus:border-purple-300 focus:ring-1 focus:ring-purple-400 bg-black/50 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-200 text-white placeholder:text-white/50"
+            placeholder="Describe your job requirements, session details, number of players, and any special instructions. Include venue preferences and equipment requirements."
+            className="min-h-[150px] border-white/20 focus:border-purple-300 focus:ring-1 focus:ring-purple-400 bg-black/50 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-200 text-white placeholder:text-white/50 break-words whitespace-normal"
           />
         </div>
 
-        {/* Budget */}
+        {/* Experience Level */}
         <div>
-          <div className="flex items-center justify-between mb-2">
-            <Label htmlFor="budget" className="text-white font-medium flex items-center gap-2">
-              <DollarSign className="h-4 w-4 text-purple-400" />
-              Budget
-            </Label>
+          <Label htmlFor="experience" className="text-white font-medium">
+            Experience Level Required <span className="text-red-500">*</span>
+          </Label>
+          <div className="mt-2">
+            <Select value={experience} onValueChange={(v) => setExperience(v as 'Beginner' | 'Intermediate' | 'Expert')}>
+              <SelectTrigger className="w-full rounded-lg border border-white/20 bg-black/50 backdrop-blur-sm text-white focus:ring-1 focus:ring-purple-400 focus:border-purple-300">
+                <SelectValue placeholder="Select experience level" />
+              </SelectTrigger>
+              <SelectContent className="bg-[#111111] text-white border-white/20">
+                <SelectItem value="Beginner">Beginner</SelectItem>
+                <SelectItem value="Intermediate">Intermediate</SelectItem>
+                <SelectItem value="Expert">Expert</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {/* Budget and Duration Row */}
+        <div className="grid grid-cols-[1fr_0.8fr] gap-3 items-end">
+          <div>
+            <div className="mb-2">
+              <Label htmlFor="budget" className="text-white font-medium flex items-center gap-2">
+                Budget <span className="text-red-500">*</span>
+              </Label>
+            </div>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white text-lg font-medium z-10 pointer-events-none">₹</span>
+              <Input
+                id="budget"
+                type="number"
+                value={budget}
+                onChange={(e) => setBudget(e.target.value)}
+                placeholder="1200"
+                className="pl-8 pr-3 border-white/20 focus:border-purple-300 focus:ring-1 focus:ring-purple-400 bg-black/50 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-200 text-white placeholder:text-white/50 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
+              />
+            </div>
           </div>
           <div>
+            <div className="mb-2">
+              <Label htmlFor="duration" className="text-white font-medium">
+                Duration <span className="text-red-500">*</span>
+              </Label>
+            </div>
             <Input
-              id="budget"
-              type="number"
-              value={budget}
-              onChange={(e) => setBudget(e.target.value)}
-              placeholder="Enter your budget"
-              className="border-white/20 focus:border-purple-300 focus:ring-1 focus:ring-purple-400 bg-black/50 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-200 text-white placeholder:text-white/50"
+              id="duration"
+              value={duration}
+              onChange={(e) => setDuration(e.target.value)}
+              placeholder="2 hours, 1 match, 1 day"
+              className="h-10 border-white/20 focus:border-purple-300 focus:ring-1 focus:ring-purple-400 bg-black/50 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-200 text-white placeholder:text-white/50 break-words whitespace-normal"
             />
           </div>
         </div>
 
         {/* Location */}
         <div>
-          <Label htmlFor="location" className="text-white font-medium flex items-center gap-2">
-            <MapPin className="h-4 w-4 text-purple-400" />
-            Location
+          <Label htmlFor="location" className="text-white font-medium">
+            Location <span className="text-red-500">*</span>
           </Label>
           <div className="mt-2">
             <Input
               id="location"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
-              placeholder="Enter location or drop pin on map"
-              className="border-white/20 focus:border-purple-300 focus:ring-1 focus:ring-purple-400 bg-black/50 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-200 text-white placeholder:text-white/50"
+              placeholder="Marina Cricket Ground, Chennai or specific address"
+              className="border-white/20 focus:border-purple-300 focus:ring-1 focus:ring-purple-400 bg-black/50 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-200 text-white placeholder:text-white/50 break-words whitespace-normal"
             />
           </div>
         </div>
 
-        {/* Timeline */}
-        <div className="grid grid-cols-[1.7fr_0.8fr] gap-3">
-          <div>
-            <Label htmlFor="startDate" className="text-white font-medium flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-purple-400" />
-              Date & Time
-            </Label>
-            <div className="mt-2 grid grid-cols-[1.2fr_1fr] gap-2">
-              <div>
-                <input
-                  id="startDate"
-                  type="date"
-                  value={startDate ? startDate.split('T')[0] : ''}
-                  onChange={(e) => setStartDate(e.target.value + (startDate ? 'T' + startDate.split('T')[1] : 'T12:00'))}
-                  min={new Date().toISOString().split('T')[0]}
-                  className="w-full h-8 rounded-md border border-white/20 px-2 py-1 text-xs focus:border-purple-300 focus:ring-1 focus:ring-purple-400 bg-[#1a1a1a] backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-200 text-white cursor-pointer"
-                  style={{ colorScheme: 'dark' }}
-                />
-              </div>
-              <div>
-                <input
-                  id="startTime"
-                  type="time"
-                  value={startDate ? startDate.split('T')[1] : ''}
-                  onChange={(e) => setStartDate((startDate ? startDate.split('T')[0] : new Date().toISOString().split('T')[0]) + 'T' + e.target.value)}
-                  className="w-full h-8 rounded-md border border-white/20 px-2 py-1 text-xs focus:border-purple-300 focus:ring-1 focus:ring-purple-400 bg-[#1a1a1a] backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-200 text-white cursor-pointer"
-                  style={{ colorScheme: 'dark' }}
-                />
-              </div>
-            </div>
-          </div>
-          <div>
-            <Label htmlFor="duration" className="text-white font-medium flex items-center gap-2">
-              <Clock className="h-4 w-4 text-purple-400" />
-              Duration
-            </Label>
-            <div className="mt-2">
+        {/* Required Skills */}
+        <div>
+          <Label htmlFor="skills" className="text-white font-medium">
+            Required Skills
+          </Label>
+          <div className="mt-2">
+            <div className="flex gap-2 mb-3">
               <Input
-                id="duration"
-                value={duration}
-                onChange={(e) => setDuration(e.target.value)}
-                placeholder="e.g., 2h"
-                className="h-8 border-white/20 focus:border-purple-300 focus:ring-1 focus:ring-purple-400 bg-black/50 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-200 text-white placeholder:text-white/50 text-xs"
+                id="currentSkill"
+                value={currentSkill}
+                onChange={(e) => setCurrentSkill(e.target.value)}
+                placeholder={
+                  experience === 'Beginner' ? 'Basic batting, fielding, wicket keeping' :
+                  experience === 'Intermediate' ? 'Slog hitting, Yorker expert, fast bowling' :
+                  experience === 'Expert' ? 'Spin bowling, cover drive, leg spin' :
+                  'Slog hitting, Yorker expert, FIELDOING COACH, fast bowler'
+                }
+                className="border-white/20 focus:border-purple-300 focus:ring-1 focus:ring-purple-400 bg-black/50 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-200 text-white placeholder:text-white/50 break-words whitespace-normal"
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const trimmedSkill = currentSkill.trim();
+                    if (trimmedSkill) {
+                      if (skills.includes(trimmedSkill)) {
+                        setSkillError('Skill already exists');
+                        setTimeout(() => setSkillError(''), 3000);
+                      } else {
+                        setSkills([...skills, trimmedSkill]);
+                        setCurrentSkill('');
+                        setSkillError('');
+                      }
+                    }
+                  }
+                }}
+              />
+              <Button
+                type="button"
+                onClick={() => {
+                  const trimmedSkill = currentSkill.trim();
+                  if (trimmedSkill) {
+                    if (skills.includes(trimmedSkill)) {
+                      setSkillError('Skill already exists');
+                      setTimeout(() => setSkillError(''), 3000);
+                    } else {
+                      setSkills([...skills, trimmedSkill]);
+                      setCurrentSkill('');
+                      setSkillError('');
+                    }
+                  }
+                }}
+                className="px-4 bg-purple-600 hover:bg-purple-700 text-white border border-purple-500/30"
+                disabled={!currentSkill.trim()}
+              >
+                Add
+              </Button>
+            </div>
+            {skillError && (
+              <div className="text-red-400 text-sm mt-1">
+                {skillError}
+              </div>
+            )}
+            {skills.length > 0 && (
+              <div className="flex flex-wrap gap-2 break-words whitespace-normal">
+                {skills.map((skill, index) => (
+                  <span
+                    key={index}
+                    className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-500/20 text-purple-200 border border-purple-300/30 break-words whitespace-normal"
+                  >
+                    {skill}
+                    <button
+                      type="button"
+                      onClick={() => setSkills(skills.filter((_, i) => i !== index))}
+                      className="ml-1 hover:text-purple-100 transition-colors"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Date & Time */}
+        <div>
+          <Label htmlFor="startDate" className="text-white font-medium">
+            Date & Time <span className="text-red-500">*</span>
+          </Label>
+          <div className="mt-2 grid grid-cols-[1.2fr_1fr] gap-2">
+            <div>
+              <input
+                id="startDate"
+                type="date"
+                value={startDate ? startDate.split('T')[0] : ''}
+                onChange={(e) => setStartDate(e.target.value + (startDate ? 'T' + startDate.split('T')[1] : 'T12:00'))}
+                min={new Date().toISOString().split('T')[0]}
+                className="w-full h-8 rounded-md border border-white/20 px-2 py-1 text-xs focus:border-purple-300 focus:ring-1 focus:ring-purple-400 bg-[#1a1a1a] backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-200 text-white cursor-pointer"
+                style={{ colorScheme: 'dark' }}
+              />
+            </div>
+            <div>
+              <input
+                id="startTime"
+                type="time"
+                value={startDate ? startDate.split('T')[1] : ''}
+                onChange={(e) => setStartDate((startDate ? startDate.split('T')[0] : new Date().toISOString().split('T')[0]) + 'T' + e.target.value)}
+                className="w-full h-8 rounded-md border border-white/20 px-2 py-1 text-xs focus:border-purple-300 focus:ring-1 focus:ring-purple-400 bg-[#1a1a1a] backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-200 text-white cursor-pointer"
+                style={{ colorScheme: 'dark' }}
               />
             </div>
           </div>
@@ -243,10 +433,54 @@ export default function PostJobForm() {
 
         {/* Submit Button */}
         <div className="pt-4">
-          <Button type="submit" className="w-full bg-gradient-to-r from-purple-600 via-purple-500 to-purple-400 hover:from-purple-700 hover:via-purple-600 hover:to-purple-500 text-white shadow-lg hover:shadow-xl transition-all duration-300 py-6 text-lg font-medium">
-            Post Job
+          <Button
+            type="submit"
+            disabled={isSubmitting || !isFormValid}
+            className="w-full bg-gradient-to-r from-purple-600 via-purple-500 to-purple-400 hover:from-purple-700 hover:via-purple-600 hover:to-purple-500 disabled:from-purple-400 disabled:to-purple-300 text-white shadow-lg hover:shadow-xl transition-all duration-300 py-6 text-lg font-medium"
+          >
+            {isSubmitting ? (
+              <div className="flex items-center gap-3">
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                Posting Job...
+              </div>
+            ) : (
+              'Post Job'
+            )}
           </Button>
         </div>
+
+        {/* Success Modal */}
+        {showSuccessModal && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-gradient-to-br from-gray-900 to-black border border-white/20 rounded-2xl p-8 max-w-md w-full text-center shadow-2xl">
+              <div className="mb-6">
+                <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold text-white mb-2">Job Posted Successfully!</h3>
+                <p className="text-white/70">Your job is now visible to freelancers</p>
+              </div>
+              
+              <div className="space-y-3">
+                <Button
+                  onClick={handlePostAnother}
+                  className="w-full bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white py-3 font-medium transition-all duration-300"
+                >
+                  Post Another Job
+                </Button>
+                <Button
+                  onClick={handleClose}
+                  variant="outline"
+                  className="w-full border-white/30 text-white hover:bg-white/10 py-3 font-medium transition-all duration-300"
+                >
+                  Close
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
     </form>
   )
 } 
