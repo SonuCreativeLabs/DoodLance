@@ -8,9 +8,9 @@ import { Button } from "@/components/ui/button"
 import { Clock, Calendar, Search, X, Briefcase } from "lucide-react"
 import { cn } from "@/lib/utils"
 import ClientLayout from "@/components/layouts/client-layout"
-import { useBookings } from "@/contexts/BookingsContext"
-import { useApplications } from "@/contexts/ApplicationsContext"
-import { useHistoryJobs } from "@/contexts/HistoryJobsContext"
+import { useBookings, Booking } from "@/contexts/BookingsContext"
+import { useApplications, Application } from "@/contexts/ApplicationsContext"
+import { useHistoryJobs, HistoryJob } from "@/contexts/HistoryJobsContext"
 
 interface BookingCardProps {
   booking: Booking;
