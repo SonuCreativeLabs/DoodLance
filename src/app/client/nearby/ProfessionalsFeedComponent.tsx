@@ -49,12 +49,25 @@ export default function ProfessionalsFeed({ filteredProfessionals }: Professiona
   };
 
   const handleProfessionalClick = (freelancer: BaseProfessional) => {
-    router.push(`/client/freelancer/${freelancer.id}`);
+    if (freelancer && freelancer.id) {
+      router.push(`/client/freelancer/${freelancer.id}`);
+    }
   };
+
+  if (!displayProfessionals || displayProfessionals.length === 0) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-white/60">No professionals available</p>
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      {displayProfessionals.map(freelancer => (
+      {displayProfessionals.map(freelancer => {
+        if (!freelancer || !freelancer.id) return null;
+        
+        return (
         <div
           key={freelancer.id}
           className="group bg-gradient-to-br from-[#1E1E1E] to-[#1A1A1A] rounded-2xl p-6 shadow-xl hover:shadow-purple-500/20 transition-all duration-300 w-full border border-white/5 hover:border-white/10 min-h-[220px] h-full relative cursor-pointer"
@@ -80,9 +93,13 @@ export default function ProfessionalsFeed({ filteredProfessionals }: Professiona
               <div className="relative">
                 <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full opacity-20 blur-md"></div>
                 <img
-                  src={freelancer.image}
-                  alt={freelancer.name}
+                  src={freelancer.avatar || freelancer.image || 'https://via.placeholder.com/64x64?text=No+Image'}
+                  alt={freelancer.name || 'Professional'}
                   className="relative w-16 h-16 rounded-full border-2 border-purple-200/50 object-cover"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = 'https://via.placeholder.com/64x64?text=No+Image';
+                  }}
                 />
               </div>
             </div>
@@ -156,7 +173,8 @@ export default function ProfessionalsFeed({ filteredProfessionals }: Professiona
             </div>
           </div>
         </div>
-      ))}
+        );
+      })}
     </div>
   );
 } 

@@ -414,14 +414,16 @@ export default function ClientHome() {
                         {/* Card Background */}
                         <div className="absolute inset-0 rounded-2xl border border-purple-400/10 transition-all duration-300 group-hover:border-purple-400/20"></div>
                         
+                        {/* Rating Badge - positioned at top corner of card */}
+                        <div className="absolute top-2 left-2 z-30 bg-gradient-to-r from-yellow-400 to-yellow-600 px-2 py-0.5 rounded-full flex items-center gap-1 shadow-lg">
+                          <Star className="w-2.5 h-2.5 text-black fill-current" />
+                          <span className="text-black text-[10px] font-bold">{expert.rating}</span>
+                        </div>
+                        
                         {/* Card Content */}
                         <div className="relative p-2.5">
                           <div className="relative group">
-                            {/* Rating Badge */}
-                            <div className="absolute top-2 left-2 z-20 bg-gradient-to-r from-yellow-400 to-yellow-600 px-2 py-0.5 rounded-full flex items-center gap-1 shadow-lg">
-                              <Star className="w-2.5 h-2.5 text-black fill-current" />
-                              <span className="text-black text-[10px] font-bold">{expert.rating}</span>
-                            </div>
+                            {/* Rating Badge - moved to outer card */}
                             
                             {/* Profile Picture */}
                             <div className="relative w-[80px] h-[80px] mx-auto">
@@ -441,7 +443,7 @@ export default function ClientHome() {
                                 <span className="text-white/30">•</span>
                                 <p className="text-white/70 text-[9px]">{expert.completedJobs} jobs</p>
                               </div>
-                              <p className="text-white/50 text-[9px] font-medium mt-0.5">{expert.location}</p>
+                              <p className="text-white/50 text-[9px] font-medium mt-0.5 truncate">{expert.location}</p>
                             </div>
                           </div>
                         </div>

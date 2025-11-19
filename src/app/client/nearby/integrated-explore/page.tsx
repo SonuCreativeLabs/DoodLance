@@ -66,16 +66,21 @@ export default function IntegratedExplorePage() {
   useEffect(() => {
     if (selectedCategory && selectedCategory !== "All") {
       const categoryServices: { [key: string]: string[] } = {
-        'Playing': ['Fast Bowler', 'Batting Coach', 'Wicket Keeper', 'Spin Bowler'],
-        'Coaching': ['Batting Coach', 'Sports Conditioning Trainer', 'Fitness Trainer', 'Coach'],
-        'Support': ['Sports Physio', 'Groundsman'],
-        'Media': ['Cricket Analyst', 'Cricket Photo/Videography', 'Cricket Content Creator', 'Commentator'],
-        'Grounds': ['Groundsman']
+        'Playing Services': ['Match Player', 'Net Bowler', 'Net Batsman', 'Sidearm Specialist', 'Bowler', 'Batsman'],
+        'Coaching & Training': ['Coach', 'Sports Conditioning Trainer', 'Fitness Trainer'],
+        'Support Staff': ['Analyst', 'Physio', 'Scorer', 'Umpire'],
+        'Media & Content': ['Cricket Photo/Videography', 'Cricket Content Creator', 'Commentator']
       };
       
       const allowedServices = categoryServices[selectedCategory] || [];
       if (allowedServices.length > 0) {
-        const filtered = professionals.filter(pro => allowedServices.includes(pro.service));
+        const filtered = professionals.filter(pro => {
+          const proService = pro.service.toLowerCase();
+          return allowedServices.some(service => 
+            proService.includes(service.toLowerCase()) || 
+            service.toLowerCase().includes(proService)
+          );
+        });
         // Map filtered professionals to include cricket descriptions
         const mappedFiltered = filtered.map(mapToProfessional);
         setFilteredProfessionals(mappedFiltered);
@@ -89,7 +94,20 @@ export default function IntegratedExplorePage() {
       const mappedProfessionals = professionals.map(mapToProfessional);
       setFilteredProfessionals(mappedProfessionals);
     }
-  }, [selectedCategory, professionals]);
+
+    // Apply search query filter after category filtering
+    if (searchQuery && searchQuery.trim()) {
+      setFilteredProfessionals(prev => {
+        const query = searchQuery.toLowerCase().trim();
+        return prev.filter(pro =>
+          (pro.name && pro.name.toLowerCase().includes(query)) ||
+          (pro.service && pro.service.toLowerCase().includes(query)) ||
+          pro.expertise?.some(skill => skill.toLowerCase().includes(query)) ||
+          (pro.description && pro.description.toLowerCase().includes(query))
+        );
+      });
+    }
+  }, [selectedCategory, professionals, searchQuery]);
   
   // Set initial sheet position to collapsed state (responsive to screen size)
   const getInitialSheetY = () => {
@@ -119,27 +137,38 @@ export default function IntegratedExplorePage() {
     // Apply category filter first (if not "All")
     if (selectedCategory && selectedCategory !== "All") {
       const categoryServices: { [key: string]: string[] } = {
-        'Playing': ['Fast Bowler', 'Batting Coach', 'Wicket Keeper', 'Spin Bowler'],
-        'Coaching': ['Batting Coach', 'Sports Conditioning Trainer', 'Fitness Trainer', 'Coach'],
-        'Support': ['Sports Physio', 'Groundsman'],
-        'Media': ['Cricket Analyst', 'Cricket Photo/Videography', 'Cricket Content Creator', 'Commentator'],
-        'Grounds': ['Groundsman']
+        'Playing Services': ['Match Player', 'Net Bowler', 'Net Batsman', 'Sidearm Specialist', 'Bowler', 'Batsman'],
+        'Coaching & Training': ['Coach', 'Sports Conditioning Trainer', 'Fitness Trainer'],
+        'Support Staff': ['Analyst', 'Physio', 'Scorer', 'Umpire'],
+        'Media & Content': ['Cricket Photo/Videography', 'Cricket Content Creator', 'Commentator']
       };
       
       const allowedServices = categoryServices[selectedCategory] || [];
       if (allowedServices.length > 0) {
-        filtered = filtered.filter(pro => allowedServices.includes(pro.service));
+        filtered = filtered.filter(pro => {
+          const proService = pro.service.toLowerCase();
+          return allowedServices.some(service => 
+            proService.includes(service.toLowerCase()) || 
+            service.toLowerCase().includes(proService)
+          );
+        });
       }
     }
     
     // Apply area filter
-    if (selectedArea) {
-      filtered = filtered.filter(pro => pro.location === selectedArea);
+    if (selectedArea && selectedArea !== "All") {
+      filtered = filtered.filter(pro => 
+        pro.location && pro.location.toLowerCase().includes(selectedArea.toLowerCase())
+      );
     }
     
     // Apply service filter (only if specific service selected and not already filtered by category)
     if (selectedService && selectedService !== "All") {
-      filtered = filtered.filter(pro => pro.service === selectedService);
+      filtered = filtered.filter(pro => {
+        const proService = pro.service.toLowerCase();
+        const filterService = selectedService.toLowerCase();
+        return proService.includes(filterService) || filterService.includes(proService);
+      });
     }
     
     // Apply distance filter
@@ -156,6 +185,17 @@ export default function IntegratedExplorePage() {
     filtered = filtered.filter(pro => 
       pro.price >= priceRange[0] && pro.price <= priceRange[1]
     );
+
+    // Apply search query filter
+    if (searchQuery && searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      filtered = filtered.filter(pro =>
+        pro.name.toLowerCase().includes(query) ||
+        pro.service.toLowerCase().includes(query) ||
+        pro.expertise?.some(skill => skill.toLowerCase().includes(query)) ||
+        (pro.description && pro.description.toLowerCase().includes(query))
+      );
+    }
     
     // Map filtered professionals to BaseProfessional format with cricket descriptions
     const mappedFiltered = filtered.map(mapToProfessional);
@@ -190,20 +230,42 @@ export default function IntegratedExplorePage() {
       <div className={`fixed top-0 left-0 right-0 z-[3] px-0 pt-3 flex flex-col items-center transition-all duration-200 ${
         isSheetCollapsed 
           ? 'bg-transparent' 
-          : 'bg-[#111111] border-b border-white/10'
+          : 'bg-[#111111]'
       }`}>
         <div className="w-full max-w-md mb-2 px-3">
-          <button
-            className={`w-full flex items-center gap-2 px-4 py-2 rounded-full border shadow focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-200 ${
-              isSheetCollapsed 
-                ? 'bg-black/60 backdrop-blur-sm border-white/20 hover:bg-black/70' 
-                : 'bg-black/90 border-white/30 hover:bg-black'
-            }`}
-            onClick={() => setShowFilterModal(true)}
-          >
-            <Search className="w-5 h-5 text-purple-400" />
-            <span className="text-base text-white font-medium text-left">Start your search</span>
-          </button>
+          <div className="flex gap-2">
+            <div className={`flex-1 flex items-center gap-2 px-4 py-2 rounded-full border shadow transition-all duration-200 ${
+              isSheetCollapsed
+                ? 'bg-black/60 backdrop-blur-sm border-white/20'
+                : 'bg-[#111111] border-white/30'
+            }`}>
+              <Search className="w-5 h-5 text-purple-400 flex-shrink-0" />
+              <input
+                type="text"
+                placeholder="Search services, professionals, or areas..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="flex-1 bg-transparent outline-none text-base text-white font-medium placeholder:text-white/60"
+              />
+            </div>
+            <button 
+              onClick={() => setShowFilterModal(true)}
+              className={`w-10 h-10 flex items-center justify-center rounded-full backdrop-blur-sm transition-all duration-300 border ${
+                isSheetCollapsed
+                  ? 'bg-black/60 border-white/20 hover:bg-black/70'
+                  : 'bg-[#111111] border-white/30 hover:bg-[#111111]/80'
+              }`}
+            >
+              <svg 
+                className="w-4 h-4 text-white/90" 
+                fill="none" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+              </svg>
+            </button>
+          </div>
         </div>
         <div className="w-full flex flex-col px-3">
           <div className="flex gap-2 w-full justify-start pb-2">
@@ -211,12 +273,12 @@ export default function IntegratedExplorePage() {
               {categories.map((cat) => (
                 <button
                   key={cat.name}
-                  className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm whitespace-nowrap border transition-all duration-200 font-medium ${
-                    selectedCategory === cat.name 
-                      ? 'bg-purple-600 text-white border-purple-600' 
-                      : isSheetCollapsed 
-                        ? 'bg-black/60 text-white border-white/20 hover:bg-black/70 backdrop-blur-sm' 
-                        : 'bg-black/90 text-white border-white/30 hover:bg-black'
+                  className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-sm whitespace-nowrap border transition-all duration-200 font-medium ${
+                    selectedCategory === cat.name
+                      ? 'bg-purple-600 text-white border-purple-600'
+                      : isSheetCollapsed
+                        ? 'bg-black/60 text-white border-white/20 hover:bg-black/70 backdrop-blur-sm'
+                        : 'bg-[#111111] text-white border-white/30 hover:bg-[#111111]/80'
                   }`}
                   onClick={() => setSelectedCategory(cat.name)}
                 >
@@ -225,7 +287,6 @@ export default function IntegratedExplorePage() {
               ))}
             </div>
           </div>
-          <div className="w-full h-[1px] bg-white/20" />
         </div>
       </div>
 
@@ -235,8 +296,8 @@ export default function IntegratedExplorePage() {
       <motion.div
         className="fixed left-0 right-0 bg-[#111111] shadow-xl z-[2] flex flex-col"
         style={{
-          top: '100px',
-          height: 'calc(100vh - 100px)',
+          top: '85px',
+          height: 'calc(100vh - 85px)',
           touchAction: "pan-y",
           transform: `translateY(${isSheetCollapsed ? `${(initialSheetY / (typeof window !== 'undefined' ? window.innerHeight : 1)) * 100}vh` : '0px'})`,
           willChange: 'transform',
@@ -289,10 +350,10 @@ export default function IntegratedExplorePage() {
 
         {/* Content */}
         <div
-          className={`flex-1 ${isSheetCollapsed ? 'overflow-hidden' : 'overflow-y-auto'} overscroll-contain`}
+          className={`flex-1 ${isSheetCollapsed ? 'overflow-hidden' : 'overflow-y-auto smooth-scroll'} `}
           onScroll={handleScroll}
           style={{
-            maxHeight: isSheetCollapsed ? 'auto' : 'calc(100vh - 100px - 48px)' // 48px accounts for the drag handle
+            maxHeight: isSheetCollapsed ? 'auto' : 'calc(100vh - 85px - 48px)' // 48px accounts for the drag handle
           }}
         >
           <div className="container max-w-2xl mx-auto px-3 pb-6">
@@ -385,8 +446,6 @@ export default function IntegratedExplorePage() {
       <SearchFilters
         showFilterModal={showFilterModal}
         setShowFilterModal={setShowFilterModal}
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
         selectedArea={selectedArea}
         setSelectedArea={setSelectedArea}
         selectedService={selectedService}
@@ -434,6 +493,10 @@ export default function IntegratedExplorePage() {
         }
         .no-scrollbar::-webkit-scrollbar {
           display: none;
+        }
+        .smooth-scroll {
+          -webkit-overflow-scrolling: touch;
+          scroll-behavior: smooth;
         }
       `}</style>
     </div>
