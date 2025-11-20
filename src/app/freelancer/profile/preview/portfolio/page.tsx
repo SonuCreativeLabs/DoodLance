@@ -90,6 +90,9 @@ export default function PortfolioPage() {
         router.push(`${freelancerPath}#portfolio`);
       } else {
         // Go back to user's profile
+        setSessionFlag('fromPortfolio', true);
+        setSessionItem('lastVisitedSection', 'portfolio');
+        setSessionFlag('scrollToPortfolio', true);
         const returnPath = '/freelancer/profile';
         setSessionItem(
           'returnToProfilePreview',

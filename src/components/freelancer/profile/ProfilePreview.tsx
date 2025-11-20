@@ -20,6 +20,8 @@ import {
 import { SkillInfoDialog } from '@/components/common/SkillInfoDialog';
 import { getSkillInfo, type SkillInfo } from '@/utils/skillUtils';
 import { IconButton } from '@/components/ui/icon-button';
+import { ProfileHeader } from './ProfileHeader';
+import { PortfolioItemModal } from '@/components/common/PortfolioItemModal';
 
 // Types
 import type { 
@@ -50,6 +52,8 @@ const ProfilePreview = memo(({
   const activeTabRef = useRef('top');
   const isScrollingRef = useRef(false);
   const [activeTab, setActiveTab] = useState('top');
+  const [isPortfolioModalOpen, setIsPortfolioModalOpen] = useState(false);
+  const [selectedPortfolioItem, setSelectedPortfolioItem] = useState<any>(null);
   const [isSkillDialogOpen, setIsSkillDialogOpen] = useState(false);
   const [selectedSkillInfo, setSelectedSkillInfo] = useState<SkillInfo | null>(null);
   const [isHoursDropdownOpen, setIsHoursDropdownOpen] = useState(false);
@@ -830,7 +834,7 @@ const ProfilePreview = memo(({
                       <button
                         key={i}
                         onClick={() => handleSkillClick(skill)}
-                        className="px-2 py-0.5 bg-white/5 hover:bg-white/10 text-white/80 hover:text-white text-xs rounded-full transition-colors cursor-pointer"
+                        className="px-2 py-0.5 bg-white/10 text-white/80 border border-white/20 text-xs rounded-full transition-colors cursor-pointer hover:bg-white/20"
                       >
                         {skill}
                       </button>
@@ -931,25 +935,13 @@ const ProfilePreview = memo(({
                           tabIndex={0}
                           aria-label={`Open portfolio item: ${item.title}`}
                           onClick={() => {
-                            if (typeof window !== 'undefined') {
-                              try {
-                                const url = new URL(window.location.href);
-                                url.hash = '#portfolio';
-                                sessionStorage.setItem('returnToProfilePreview', url.toString());
-                              } catch {}
-                              window.location.href = `/freelancer/profile/preview/portfolio/${item.id}`;
-                            }
+                            setSelectedPortfolioItem(item);
+                            setIsPortfolioModalOpen(true);
                           }}
                           onKeyDown={e => {
                             if (e.key === 'Enter' || e.key === ' ') {
-                              if (typeof window !== 'undefined') {
-                                try {
-                                  const url = new URL(window.location.href);
-                                  url.hash = '#portfolio';
-                                  sessionStorage.setItem('returnToProfilePreview', url.toString());
-                                } catch {}
-                                window.location.href = `/freelancer/profile/preview/portfolio/${item.id}`;
-                              }
+                              setSelectedPortfolioItem(item);
+                              setIsPortfolioModalOpen(true);
                             }
                           }}
                         >
@@ -967,13 +959,13 @@ const ProfilePreview = memo(({
                               </div>
                             </div>
                             <div className="absolute inset-0 p-4 flex flex-col justify-end bg-gradient-to-t from-black/70 via-black/40 to-transparent rounded-xl">
-                              <div className="flex justify-between items-end">
-                                <div className="pr-2">
+                              <div className="flex justify-between items-end mb-8">
+                                <div className="pr-2 flex-1">
                                   <h3 className="font-medium text-white line-clamp-1 text-sm">{item.title}</h3>
-                                  <div className="bg-purple-500/10 text-purple-300 border-purple-500/30 px-2 py-0.5 text-xs rounded-full border mt-1">
-                                    {item.category}
-                                  </div>
                                 </div>
+                              </div>
+                              <div className="absolute bottom-3 left-3 bg-white/10 text-white/80 border-white/20 px-2 py-0.5 text-xs rounded-full border">
+                                {item.category}
                               </div>
                             </div>
                           </div>
@@ -1147,6 +1139,16 @@ const ProfilePreview = memo(({
         isOpen={isSkillDialogOpen}
         onClose={() => setIsSkillDialogOpen(false)}
         skillInfo={selectedSkillInfo}
+      />
+
+      {/* Portfolio Modal */}
+      <PortfolioItemModal
+        item={selectedPortfolioItem}
+        isOpen={isPortfolioModalOpen}
+        onClose={() => {
+          setIsPortfolioModalOpen(false);
+          setSelectedPortfolioItem(null);
+        }}
       />
     </div>
   ), document.body);

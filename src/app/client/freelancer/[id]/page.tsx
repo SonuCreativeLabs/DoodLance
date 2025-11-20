@@ -117,6 +117,7 @@ export default function FreelancerDetailPage() {
   const [selectedPortfolioItem, setSelectedPortfolioItem] = useState<any>(null);
   const [isPortfolioModalOpen, setIsPortfolioModalOpen] = useState(false);
   const tabsContainerRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const freelancerId = params.id as string;
 
@@ -182,6 +183,42 @@ export default function FreelancerDetailPage() {
       });
     }
     setLoading(false);
+
+    // Handle scroll to specific section when returning from preview pages
+    if (typeof window !== 'undefined') {
+      const hash = window.location.hash;
+      const shouldScrollToPortfolio = sessionStorage.getItem('scrollToPortfolio') === 'true' || hash === '#portfolio';
+      const shouldScrollToServices = sessionStorage.getItem('scrollToServices') === 'true' || hash === '#services';
+      const shouldScrollToReviews = sessionStorage.getItem('scrollToReviews') === 'true' || hash === '#reviews';
+
+      // Clear the sessionStorage flags
+      sessionStorage.removeItem('scrollToPortfolio');
+      sessionStorage.removeItem('scrollToServices');
+      sessionStorage.removeItem('scrollToReviews');
+
+      // Scroll to the appropriate section after a short delay to ensure DOM is ready
+      setTimeout(() => {
+        if (shouldScrollToPortfolio) {
+          const portfolioElement = document.getElementById('portfolio');
+          if (portfolioElement) {
+            portfolioElement.scrollIntoView({ behavior: 'instant', block: 'start' });
+            setActiveTab('portfolio');
+          }
+        } else if (shouldScrollToServices) {
+          const servicesElement = document.getElementById('services');
+          if (servicesElement) {
+            servicesElement.scrollIntoView({ behavior: 'instant', block: 'start' });
+            setActiveTab('services');
+          }
+        } else if (shouldScrollToReviews) {
+          const reviewsElement = document.getElementById('reviews');
+          if (reviewsElement) {
+            reviewsElement.scrollIntoView({ behavior: 'instant', block: 'start' });
+            setActiveTab('reviews');
+          }
+        }
+      }, 100);
+    }
   }, [freelancerId]);
 
   const handleBack = () => {
@@ -317,27 +354,36 @@ export default function FreelancerDetailPage() {
     };
   }, [freelancer]);
 
-  // Scroll listener for cover photo
+  // Scroll listener for tab section reaching top
   useEffect(() => {
     const handleScroll = () => {
-      // Get the scrollable container instead of window
-      const scrollContainer = document.querySelector('.flex-1.overflow-y-auto') as HTMLElement;
-      if (scrollContainer) {
-        const coverHeight = 192; // h-48 = 192px
-        const scrollTop = scrollContainer.scrollTop;
-        setIsScrolledPastCover(scrollTop > coverHeight);
+      if (scrollContainerRef.current) {
+        // Check if the skills section has scrolled past the top
+        // The tabs should be stuck when the profile content (including skills) is scrolled past
+        const profileSection = document.querySelector('[data-section="top"]');
+        if (profileSection) {
+          const profileRect = profileSection.getBoundingClientRect();
+          // Show header when profile section has scrolled past viewport top
+          // Add a buffer to account for the profile section height
+          const shouldShowHeader = profileRect.bottom <= 60; // 60px for tab height
+          setIsScrolledPastCover(shouldShowHeader);
+        }
       }
     };
 
-    // Add scroll listener to the scrollable container
-    const scrollContainer = document.querySelector('.flex-1.overflow-y-auto') as HTMLElement;
-    if (scrollContainer) {
-      scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
-    }
+    // Add scroll listener with a small delay to ensure ref is available
+    const timeoutId = setTimeout(() => {
+      if (scrollContainerRef.current) {
+        scrollContainerRef.current.addEventListener('scroll', handleScroll, { passive: true });
+        // Also call once to set initial state
+        handleScroll();
+      }
+    }, 100);
 
     return () => {
-      if (scrollContainer) {
-        scrollContainer.removeEventListener('scroll', handleScroll);
+      clearTimeout(timeoutId);
+      if (scrollContainerRef.current) {
+        scrollContainerRef.current.removeEventListener('scroll', handleScroll);
       }
     };
   }, []);
@@ -365,7 +411,7 @@ export default function FreelancerDetailPage() {
       {!loading && freelancer && (
         <div className="fixed inset-0 z-[9999] bg-[#0F0F0F] flex flex-col h-screen w-screen overflow-hidden">
           {/* Scrollable Content */}
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto" ref={scrollContainerRef}>
             {/* Profile Header - Using ProfileHeader component style */}
             <section id="top" data-section="top" className="scroll-mt-20">
               <div className="w-full bg-[#0f0f0f]">
@@ -470,7 +516,7 @@ export default function FreelancerDetailPage() {
 
 
                   {/* Skills */}
-                  <div className="flex flex-wrap justify-center gap-2 pb-2">
+                  <div className="flex flex-wrap justify-center gap-2">
                     {(freelancer.skills || freelancer.expertise)?.map((skill, i) => (
                       <button
                         key={i}
@@ -486,18 +532,21 @@ export default function FreelancerDetailPage() {
             </section>
             
             {/* Sticky Tab Navigation with Back/Share Header */}
-            <div className="sticky top-0 z-[100] bg-[#0f0f0f]/95 backdrop-blur-sm">
-              {/* Back/Share Header - Only when scrolled past cover */}
+            <div className={`sticky top-0 z-[100] ${isScrolledPastCover ? 'bg-[#0f0f0f]/95 backdrop-blur-sm' : 'bg-transparent'} mt-1`}>
+              {/* Back/Share Header - Only render when scrolled past cover */}
               {isScrolledPastCover && (
                 <div className="border-b border-white/5">
-                  <div className="flex items-center justify-between px-4 py-3">
+                  <div className="flex items-center justify-between px-4 py-2">
                     <IconButton
                       icon={ArrowLeft}
                       onClick={handleBack}
                       aria-label="Back"
                     />
-                    <div className="flex items-center gap-3">
-                      <span className="text-white font-medium text-sm">Profile</span>
+                    <div className="flex-1 flex justify-center">
+                      <div className="flex flex-col items-center text-center">
+                        <span className="text-white font-medium text-sm truncate">{freelancer.name}</span>
+                        <span className="text-white/60 text-xs truncate">{freelancer.service}</span>
+                      </div>
                     </div>
                     <IconButton
                       icon={Share2}
@@ -508,7 +557,7 @@ export default function FreelancerDetailPage() {
                 </div>
               )}
 
-              {/* Tab Navigation */}
+              {/* Tab Navigation - Always visible */}
               <div className="relative w-full overflow-hidden border-b border-white/5">
                 <div className="flex items-center px-4 max-w-4xl mx-auto">
                   {/* Tabs Container */}
