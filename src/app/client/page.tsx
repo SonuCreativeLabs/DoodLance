@@ -344,9 +344,9 @@ export default function ClientHome() {
           <section className="mb-4 relative z-0">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-base font-semibold text-white tracking-wide text-left">Popular Services in your area</h2>
-              <Link href="/client/services" className="text-white/80 hover:text-white text-sm font-medium flex items-center transition-colors">
+              <Link href="/client/services" className="text-white/80 hover:text-white text-xs font-medium flex items-center transition-colors">
                 View All
-                <ChevronRight className="w-4 h-4 ml-1" />
+                <ChevronRight className="w-3 h-3 ml-1" />
               </Link>
             </div>
             <div className="relative -mx-4">
@@ -386,9 +386,9 @@ export default function ClientHome() {
                 <span className="bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 text-transparent bg-clip-text">Top Rated</span>
                 {" "}Experts
               </h2>
-              <Link href="/client/nearby" className="text-white/80 hover:text-white text-sm font-medium flex items-center transition-colors">
+              <Link href="/client/nearby" className="text-white/80 hover:text-white text-xs font-medium flex items-center transition-colors">
                 View All
-                <ChevronRight className="w-4 h-4 ml-1" />
+                <ChevronRight className="w-3 h-3 ml-1" />
               </Link>
             </div>
             <div className="relative">
