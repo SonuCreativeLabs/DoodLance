@@ -20,6 +20,7 @@ interface Professional {
   expertise: string[];
   experience: string;
   description?: string;
+  coverImage?: string; // New field for unique cover images
 
   // Additional profile fields for detailed view
   bio?: string;
@@ -54,6 +55,9 @@ interface Professional {
     title: string;
     image: string;
     category: string;
+    description?: string;
+    skills?: string[];
+    url?: string;
   }[];
 
   // Experience data
@@ -92,11 +96,12 @@ export const professionals: Professional[] = [
     responseTime: "Usually responds in 30 mins",
     image: "https://randomuser.me/api/portraits/men/1.jpg",
     distance: 1.2,
-    price: 2500,
+    price: 800,
     priceUnit: "session",
     coords: [80.2095, 13.0850],
     expertise: ["Pace Bowling", "Yorkers", "Bouncers", "Death Overs", "Line & Length"],
     experience: "8 years",
+    coverImage: "https://images.unsplash.com/photo-1546519638-68e109498ffc?w=1200&h=400&fit=crop", // Cricket stadium action
 
     // Additional profile fields
     bio: "Professional cricketer and pace bowler with 8+ years of experience. Specialized in fast bowling techniques, death overs, and mentoring young talent.",
@@ -125,7 +130,7 @@ export const professionals: Professional[] = [
         id: "1",
         title: "Fast Bowling Training Session",
         description: "Comprehensive pace bowling training session focusing on technique, accuracy, and power delivery",
-        price: "₹2,500",
+        price: "₹800",
         deliveryTime: "2 hours",
         features: ["Technique Analysis", "Power Development", "Accuracy Drills", "Video Feedback"],
         category: "Bowling Training"
@@ -134,7 +139,7 @@ export const professionals: Professional[] = [
         id: "2",
         title: "Death Overs Specialist Training",
         description: "Specialized training for death overs bowling with focus on yorkers, bouncers, and pressure situations",
-        price: "₹3,200",
+        price: "₹1,200",
         deliveryTime: "2.5 hours",
         features: ["Death Overs Strategy", "Yorker Practice", "Bouncer Control", "Mental Training"],
         category: "Bowling Training"
@@ -143,7 +148,7 @@ export const professionals: Professional[] = [
         id: "3",
         title: "Young Player Development",
         description: "Coaching program for aspiring fast bowlers aged 12-18 with focus on fundamentals and technique",
-        price: "₹2,000",
+        price: "₹600",
         deliveryTime: "1.5 hours",
         features: ["Basic Technique", "Fitness Training", "Mental Preparation", "Progress Tracking"],
         category: "Youth Coaching"
@@ -156,19 +161,25 @@ export const professionals: Professional[] = [
         id: "1",
         title: "Pace Bowling Workshop",
         image: "https://images.unsplash.com/photo-1535131749006-b7f58c99034b?w=400&h=300&fit=crop",
-        category: "Training Session"
+        category: "Training Session",
+        description: "Comprehensive 3-day pace bowling workshop covering advanced techniques, power development, and death overs strategy. Trained 25+ players with focus on yorkers, bouncers, and line & length accuracy.",
+        skills: ["Pace Bowling", "Death Overs", "Yorkers", "Bouncers", "Technique Analysis", "Player Development"]
       },
       {
         id: "2",
         title: "Death Overs Clinic",
         image: "https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=400&h=300&fit=crop",
-        category: "Specialized Training"
+        category: "Specialized Training",
+        description: "Intensive death overs training program for competitive players. Focus on high-pressure situations, yorker variations, and psychological preparation for crucial overs in matches.",
+        skills: ["Death Overs", "Yorkers", "Pressure Performance", "Mental Training", "Match Strategy"]
       },
       {
         id: "3",
         title: "Youth Bowling Camp",
         image: "https://images.unsplash.com/photo-1546519638-68e109498ffc?w=400&h=300&fit=crop",
-        category: "Youth Development"
+        category: "Youth Development",
+        description: "Summer youth development camp for aspiring fast bowlers aged 12-16. Covered fundamental techniques, fitness training, and mental preparation with 98% participant satisfaction rate.",
+        skills: ["Youth Coaching", "Basic Technique", "Fitness Training", "Mental Preparation", "Player Development"]
       }
     ],
 
@@ -245,11 +256,12 @@ export const professionals: Professional[] = [
     responseTime: "Usually responds in 1 hour",
     image: "https://randomuser.me/api/portraits/women/2.jpg",
     distance: 2.1,
-    price: 3000,
+    price: 1200,
     priceUnit: "session",
     coords: [80.2341, 13.0418],
     expertise: ["Footwork Drills", "Shot Selection", "Mental Training", "Technique Analysis", "Pressure Situations"],
     experience: "10 years",
+    coverImage: "https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=1200&h=400&fit=crop", // Cricket training ground
 
     // Additional profile fields
     bio: "Elite batting coach with 10+ years of experience mentoring players at all levels. Specializes in technique refinement, mental training, and performance under pressure.",
@@ -278,7 +290,7 @@ export const professionals: Professional[] = [
         id: "1",
         title: "Elite Batting Coaching",
         description: "Comprehensive batting training focusing on technique, footwork, and shot selection for competitive players",
-        price: "₹3,000",
+        price: "₹1,200",
         deliveryTime: "2 hours",
         features: ["Technique Analysis", "Footwork Drills", "Shot Selection", "Mental Training"],
         category: "Batting Training"
@@ -287,7 +299,7 @@ export const professionals: Professional[] = [
         id: "2",
         title: "Pressure Performance Training",
         description: "Specialized training for performing under pressure situations with mental conditioning and visualization techniques",
-        price: "₹3,500",
+        price: "₹1,500",
         deliveryTime: "2.5 hours",
         features: ["Mental Conditioning", "Pressure Scenarios", "Visualization", "Performance Psychology"],
         category: "Mental Training"
@@ -300,13 +312,17 @@ export const professionals: Professional[] = [
         id: "1",
         title: "Professional Batting Clinic",
         image: "https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=400&h=300&fit=crop",
-        category: "Training Session"
+        category: "Training Session",
+        description: "Elite batting clinic for professional and semi-professional players. Covered advanced footwork techniques, shot selection strategies, and performance under pressure. Improved players' average by 15-20 runs per innings.",
+        skills: ["Batting Technique", "Footwork Drills", "Shot Selection", "Pressure Performance", "Mental Training"]
       },
       {
         id: "2",
         title: "Youth Batting Workshop",
         image: "https://images.unsplash.com/photo-1546519638-68e109498ffc?w=400&h=300&fit=crop",
-        category: "Youth Development"
+        category: "Youth Development",
+        description: "Comprehensive youth development program for young batsmen aged 10-15. Focus on building fundamentals, confidence, and technique. 90% of participants showed significant improvement in their game.",
+        skills: ["Youth Coaching", "Basic Technique", "Confidence Building", "Fundamentals", "Player Development"]
       }
     ],
 
@@ -355,21 +371,22 @@ export const professionals: Professional[] = [
   },
   {
     id: 3,
-    name: "Arjun Singh",
-    service: "Wicket Keeper",
+    name: "Arun Patel",
+    service: "Sidearm Specialist",
     rating: 4.8,
-    reviews: 198,
-    reviewCount: 198,
-    completedJobs: 280,
-    location: "M.A. Chidambaram Stadium",
+    reviews: 189,
+    reviewCount: 189,
+    completedJobs: 267,
+    location: "Mylapore Cricket Club",
     responseTime: "Usually responds in 45 mins",
     image: "https://randomuser.me/api/portraits/men/3.jpg",
-    distance: 3.1,
-    price: 2000,
+    distance: 3.4,
+    price: 500,
     priceUnit: "match",
     coords: [80.2785, 13.0633],
     expertise: ["Glove Work", "Stumping", "Standing Up to Pace/Spin", "Catching Drills", "Wicket-keeping Technique"],
     experience: "7 years",
+    coverImage: "https://images.unsplash.com/photo-1535131749006-b7f58c99034b?w=1200&h=400&fit=crop", // Cricket wicket keeping action
 
     // Additional profile fields
     bio: "Professional wicket-keeper with 7+ years of experience. Expert in glove work, stumping techniques, and keeping up to both pace and spin bowlers.",
@@ -398,7 +415,7 @@ export const professionals: Professional[] = [
         id: "1",
         title: "Wicket-keeping Training",
         description: "Comprehensive wicket-keeping training covering glove work, footwork, and catching techniques",
-        price: "₹2,000",
+        price: "₹700",
         deliveryTime: "2 hours",
         features: ["Glove Work Drills", "Footwork Training", "Catching Practice", "Stumping Technique"],
         category: "Wicket-keeping Training"
@@ -407,7 +424,7 @@ export const professionals: Professional[] = [
         id: "2",
         title: "Match Wicket-keeping",
         description: "Professional wicket-keeping services for club and league matches",
-        price: "₹2,500",
+        price: "₹900",
         deliveryTime: "Match duration",
         features: ["Match Experience", "Professional Conduct", "Equipment Provided", "Match Statistics"],
         category: "Match Services"
@@ -420,13 +437,17 @@ export const professionals: Professional[] = [
         id: "1",
         title: "Wicket-keeping Clinic",
         image: "https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=400&h=300&fit=crop",
-        category: "Training Session"
+        category: "Training Session",
+        description: "Comprehensive wicket-keeping training program covering glove work, footwork, catching techniques, and stumping. Trained 30+ players with focus on both pace and spin bowling scenarios.",
+        skills: ["Wicket-keeping Technique", "Glove Work", "Footwork", "Catching", "Stumping", "Pace/Spin Handling"]
       },
       {
         id: "2",
         title: "Match Day Action",
         image: "https://images.unsplash.com/photo-1546519638-68e109498ffc?w=400&h=300&fit=crop",
-        category: "Match Coverage"
+        category: "Match Coverage",
+        description: "Professional wicket-keeping services for competitive matches. Maintained 95% catch success rate and contributed to team's success in multiple tournaments with crucial stumpings.",
+        skills: ["Match Wicket-keeping", "High Pressure Performance", "Team Coordination", "Quick Reflexes"]
       }
     ],
 
@@ -485,11 +506,12 @@ export const professionals: Professional[] = [
     responseTime: "Usually responds in 2 hours",
     image: "https://randomuser.me/api/portraits/women/4.jpg",
     distance: 1.8,
-    price: 2800,
+    price: 900,
     priceUnit: "session",
     coords: [80.2687, 13.0368],
     expertise: ["Off Spin", "Doosra", "Carrom Ball", "Flight & Drift", "Googly Variations"],
     experience: "9 years",
+    coverImage: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=1200&h=400&fit=crop", // Cricket spin bowling
 
     // Additional profile fields
     bio: "Experienced spin bowler with 9+ years of expertise in off-spin, doosra, and various spin variations. Known for flight, drift, and deceptive bowling.",
@@ -518,7 +540,7 @@ export const professionals: Professional[] = [
         id: "1",
         title: "Spin Bowling Mastery",
         description: "Advanced spin bowling training covering off-spin, doosra, and various deceptive deliveries",
-        price: "₹2,800",
+        price: "₹900",
         deliveryTime: "2 hours",
         features: ["Off Spin Technique", "Doosra Variations", "Flight & Drift", "Mental Approach"],
         category: "Bowling Training"
@@ -527,7 +549,7 @@ export const professionals: Professional[] = [
         id: "2",
         title: "Youth Spin Development",
         description: "Specialized coaching for young spinners focusing on fundamentals and technique building",
-        price: "₹2,200",
+        price: "₹700",
         deliveryTime: "1.5 hours",
         features: ["Basic Technique", "Grip & Release", "Flight Control", "Confidence Building"],
         category: "Youth Coaching"
@@ -540,13 +562,17 @@ export const professionals: Professional[] = [
         id: "1",
         title: "Spin Bowling Workshop",
         image: "https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=400&h=300&fit=crop",
-        category: "Training Session"
+        category: "Training Session",
+        description: "Advanced spin bowling workshop covering off-spin, doosra, carrom ball, and various spin variations. Trained 20+ players with emphasis on flight, drift, and deceptive bowling techniques.",
+        skills: ["Off Spin", "Doosra", "Carrom Ball", "Flight", "Drift", "Spin Variations"]
       },
       {
         id: "2",
         title: "Doosra Clinic",
         image: "https://images.unsplash.com/photo-1546519638-68e109498ffc?w=400&h=300&fit=crop",
-        category: "Specialized Training"
+        category: "Specialized Training",
+        description: "Specialized training program for mastering the doosra delivery. Focus on grip variations, release points, and deception techniques. Helped players develop match-winning variations.",
+        skills: ["Doosra", "Deception Techniques", "Grip Variations", "Release Points", "Match Strategy"]
       }
     ],
 
@@ -605,11 +631,12 @@ export const professionals: Professional[] = [
     responseTime: "Usually responds in 1 hour",
     image: "https://randomuser.me/api/portraits/men/5.jpg",
     distance: 2.7,
-    price: 3500,
+    price: 1500,
     priceUnit: "analysis",
     coords: [80.2574, 13.0012],
     expertise: ["Performance Analysis", "Video Breakdown", "Statistical Modeling", "Strategy Development", "Player Assessment"],
     experience: "6 years",
+    coverImage: "https://images.unsplash.com/photo-1504450758481-7338eba7524a?w=1200&h=400&fit=crop", // Cricket analysis/statistics
 
     // Additional profile fields
     bio: "Professional cricket analyst with 6+ years of experience in performance analysis, video breakdown, and strategic planning for teams and individual players.",
@@ -638,7 +665,7 @@ export const professionals: Professional[] = [
         id: "1",
         title: "Performance Analysis",
         description: "Comprehensive performance analysis including video breakdown, statistical modeling, and strategic recommendations",
-        price: "₹3,500",
+        price: "₹1,500",
         deliveryTime: "3-5 days",
         features: ["Video Analysis", "Statistical Report", "Strategy Recommendations", "Performance Insights"],
         category: "Analysis Services"
@@ -647,7 +674,7 @@ export const professionals: Professional[] = [
         id: "2",
         title: "Match Strategy Planning",
         description: "Strategic planning and opponent analysis for upcoming matches with detailed game plans",
-        price: "₹4,000",
+        price: "₹1,800",
         deliveryTime: "2-3 days",
         features: ["Opponent Analysis", "Game Strategy", "Player Roles", "Tactical Planning"],
         category: "Strategy Services"
@@ -660,13 +687,17 @@ export const professionals: Professional[] = [
         id: "1",
         title: "Tournament Analysis Report",
         image: "https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=400&h=300&fit=crop",
-        category: "Analysis Report"
+        category: "Analysis Report",
+        description: "Comprehensive performance analysis report for a major inter-state tournament. Included player statistics, team strategies, and performance predictions. Helped teams improve by 25% in subsequent matches.",
+        skills: ["Performance Analysis", "Statistical Modeling", "Player Assessment", "Strategic Planning", "Data Visualization"]
       },
       {
         id: "2",
         title: "Player Performance Dashboard",
         image: "https://images.unsplash.com/photo-1546519638-68e109498ffc?w=400&h=300&fit=crop",
-        category: "Data Visualization"
+        category: "Data Visualization",
+        description: "Interactive performance dashboard for individual players tracking batting/bowling statistics, consistency metrics, and improvement trends. Used by coaches for player development planning.",
+        skills: ["Data Analysis", "Performance Metrics", "Dashboard Design", "Player Development", "Statistics"]
       }
     ],
 
@@ -730,6 +761,7 @@ export const professionals: Professional[] = [
     coords: [80.2532, 13.0336],
     expertise: ["Injury Prevention", "Rehabilitation", "Sports Massage", "Strength Training", "Recovery Protocols"],
     experience: "5 years",
+    coverImage: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1200&h=400&fit=crop", // Sports physiotherapy
 
     // Additional profile fields
     bio: "Certified sports physiotherapist specializing in cricket injuries, rehabilitation, and performance enhancement for athletes at all levels.",
@@ -767,7 +799,7 @@ export const professionals: Professional[] = [
         id: "2",
         title: "Injury Rehabilitation Program",
         description: "Structured rehabilitation program for cricket-related injuries with progressive exercises and monitoring",
-        price: "₹2,500",
+        price: "₹1,800",
         deliveryTime: "4-6 weeks",
         features: ["Custom Program", "Progress Monitoring", "Strength Training", "Return to Play"],
         category: "Rehabilitation"
@@ -780,13 +812,17 @@ export const professionals: Professional[] = [
         id: "1",
         title: "Injury Recovery Case Study",
         image: "https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=400&h=300&fit=crop",
-        category: "Rehabilitation"
+        category: "Rehabilitation",
+        description: "Complex shoulder injury rehabilitation case study. Successfully treated professional cricketer with rotator cuff injury using advanced physiotherapy techniques. Player returned to competitive cricket in 8 weeks.",
+        skills: ["Injury Rehabilitation", "Sports Physiotherapy", "Manual Therapy", "Exercise Prescription", "Recovery Protocols"]
       },
       {
         id: "2",
         title: "Sports Massage Session",
         image: "https://images.unsplash.com/photo-1546519638-68e109498ffc?w=400&h=300&fit=crop",
-        category: "Treatment"
+        category: "Treatment",
+        description: "Specialized sports massage therapy for cricket players. Focus on muscle recovery, injury prevention, and performance enhancement. Served 50+ players with 95% satisfaction rate.",
+        skills: ["Sports Massage", "Muscle Recovery", "Injury Prevention", "Performance Enhancement", "Manual Therapy"]
       }
     ],
 
@@ -845,11 +881,12 @@ export const professionals: Professional[] = [
     responseTime: "Usually responds in 30 mins",
     image: "https://randomuser.me/api/portraits/men/7.jpg",
     distance: 3.5,
-    price: 4000,
+    price: 1800,
     priceUnit: "event",
     coords: [80.2242, 13.0569],
     expertise: ["Live Commentary", "Match Analysis", "Player Insights", "Technical Knowledge", "Event Hosting"],
     experience: "12 years",
+    coverImage: "https://images.unsplash.com/photo-1518604666860-9ed391f76460?w=1200&h=400&fit=crop", // Cricket commentary/broadcasting
 
     // Additional profile fields
     bio: "Experienced cricket commentator with 12+ years in live broadcasting, match analysis, and cricket journalism.",
@@ -878,7 +915,7 @@ export const professionals: Professional[] = [
         id: "1",
         title: "Live Match Commentary",
         description: "Professional live commentary for cricket matches with expert analysis and insights",
-        price: "₹4,000",
+        price: "₹1,800",
         deliveryTime: "Match duration",
         features: ["Live Commentary", "Expert Analysis", "Player Insights", "Engaging Narration"],
         category: "Broadcasting"
@@ -887,7 +924,7 @@ export const professionals: Professional[] = [
         id: "2",
         title: "Event Hosting & MC",
         description: "Professional hosting for cricket events, tournaments, and award ceremonies",
-        price: "₹3,500",
+        price: "₹1,500",
         deliveryTime: "Event duration",
         features: ["Event Hosting", "Ceremony Management", "Audience Engagement", "Professional Presentation"],
         category: "Event Services"
@@ -900,13 +937,17 @@ export const professionals: Professional[] = [
         id: "1",
         title: "Tournament Final Commentary",
         image: "https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=400&h=300&fit=crop",
-        category: "Live Commentary"
+        category: "Live Commentary",
+        description: "Live commentary for the TNCA Senior Division Final match. Provided expert analysis, player insights, and engaging narration throughout the match. Broadcast reached 10,000+ viewers with 92% viewer satisfaction.",
+        skills: ["Live Commentary", "Match Analysis", "Player Insights", "Technical Knowledge", "Broadcasting"]
       },
       {
         id: "2",
         title: "Award Ceremony Hosting",
         image: "https://images.unsplash.com/photo-1546519638-68e109498ffc?w=400&h=300&fit=crop",
-        category: "Event Hosting"
+        category: "Event Hosting",
+        description: "Professional hosting for the Chennai Cricket League Awards Ceremony. Managed event flow, presented awards, and engaged with 200+ attendees. Received excellent feedback for presentation and audience engagement.",
+        skills: ["Event Hosting", "Ceremony Management", "Audience Engagement", "Professional Presentation", "Public Speaking"]
       }
     ],
 
@@ -965,11 +1006,12 @@ export const professionals: Professional[] = [
     responseTime: "Usually responds in 1 hour",
     image: "https://randomuser.me/api/portraits/women/8.jpg",
     distance: 2.9,
-    price: 2500,
+    price: 1300,
     priceUnit: "project",
     coords: [80.2707, 13.0524],
     expertise: ["Social Media Content", "Video Editing", "Highlight Reels", "Player Profiles", "Match Coverage"],
     experience: "4 years",
+    coverImage: "https://images.unsplash.com/photo-1485846234645-a62644f84728?w=1200&h=400&fit=crop", // Digital content creation
 
     // Additional profile fields
     bio: "Creative content creator specializing in cricket media, social media content, and digital storytelling for cricket brands and players.",
@@ -998,7 +1040,7 @@ export const professionals: Professional[] = [
         id: "1",
         title: "Highlight Reel Creation",
         description: "Professional highlight reels and video content for matches, players, and cricket events",
-        price: "₹2,500",
+        price: "₹1,300",
         deliveryTime: "3-5 days",
         features: ["Video Editing", "Music & Effects", "Professional Quality", "Multiple Formats"],
         category: "Video Production"
@@ -1007,7 +1049,7 @@ export const professionals: Professional[] = [
         id: "2",
         title: "Social Media Content Package",
         description: "Complete social media content strategy including posts, stories, and promotional materials",
-        price: "₹3,000",
+        price: "₹1,600",
         deliveryTime: "1 week",
         features: ["Content Strategy", "Graphic Design", "Posting Schedule", "Engagement Optimization"],
         category: "Social Media"
@@ -1085,11 +1127,12 @@ export const professionals: Professional[] = [
     responseTime: "Usually responds in 2 hours",
     image: "https://randomuser.me/api/portraits/men/9.jpg",
     distance: 5.1,
-    price: 1800,
+    price: 550,
     priceUnit: "match",
     coords: [80.2244, 13.0512],
     expertise: ["Laws of Cricket", "Decision Making", "Match Officiating", "Player Conduct", "Equipment Standards"],
     experience: "15 years",
+    coverImage: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=1200&h=400&fit=crop", // Cricket umpiring/officiating
 
     // Additional profile fields
     bio: "Certified cricket umpire with 15+ years of experience in officiating matches at all levels, from club cricket to professional tournaments.",
@@ -1118,7 +1161,7 @@ export const professionals: Professional[] = [
         id: "1",
         title: "Match Officiating",
         description: "Professional umpiring services for cricket matches with accurate decisions and fair play enforcement",
-        price: "₹1,800",
+        price: "₹550",
         deliveryTime: "Match duration",
         features: ["Accurate Decisions", "Fair Play Enforcement", "Match Management", "Professional Conduct"],
         category: "Officiating"
@@ -1127,7 +1170,7 @@ export const professionals: Professional[] = [
         id: "2",
         title: "Umpiring Training",
         description: "Training programs for aspiring umpires covering laws of cricket and decision-making skills",
-        price: "₹2,200",
+        price: "₹700",
         deliveryTime: "2 hours",
         features: ["Laws of Cricket", "Decision Training", "Practical Sessions", "Certification Guidance"],
         category: "Training"
@@ -1210,6 +1253,7 @@ export const professionals: Professional[] = [
     coords: [80.2707, 12.9941],
     expertise: ["Pitch Preparation", "Outfield Maintenance", "Equipment Setup", "Ground Standards", "Weather Management"],
     experience: "11 years",
+    coverImage: "https://images.unsplash.com/photo-1504450758481-7338eba7524a?w=1200&h=400&fit=crop", // Cricket ground maintenance
 
     // Additional profile fields
     bio: "Experienced groundsman with 11+ years in cricket pitch preparation, ground maintenance, and facility management.",
@@ -1325,11 +1369,12 @@ export const professionals: Professional[] = [
     responseTime: "Usually responds in 45 mins",
     image: "https://randomuser.me/api/portraits/men/11.jpg",
     distance: 4.5,
-    price: 2200,
+    price: 700,
     priceUnit: "event",
     coords: [80.2183, 12.9815],
     expertise: ["Action Photography", "Portrait Shoots", "Event Coverage", "Post-Processing", "Sports Photography"],
     experience: "8 years",
+    coverImage: "https://images.unsplash.com/photo-1452587925148-ce544e77e70d?w=1200&h=400&fit=crop", // Sports photography
 
     // Additional profile fields
     bio: "Professional sports photographer specializing in cricket action shots, player portraits, and event photography with 8+ years of experience.",
@@ -1358,7 +1403,7 @@ export const professionals: Professional[] = [
         id: "1",
         title: "Match Photography",
         description: "Complete match photography coverage including action shots, portraits, and team photos",
-        price: "₹2,200",
+        price: "₹1,900",
         deliveryTime: "2-3 days",
         features: ["Action Shots", "Portrait Photos", "Team Photos", "High Resolution", "Post-Processing"],
         category: "Event Photography"
@@ -1367,7 +1412,7 @@ export const professionals: Professional[] = [
         id: "2",
         title: "Player Portrait Session",
         description: "Professional portrait photography for individual players or teams",
-        price: "₹1,500",
+        price: "₹1,200",
         deliveryTime: "1-2 days",
         features: ["Studio Setup", "Multiple Looks", "High Resolution", "Professional Editing"],
         category: "Portrait Photography"
@@ -1445,11 +1490,12 @@ export const professionals: Professional[] = [
     responseTime: "Usually responds in 2 hours",
     image: "https://randomuser.me/api/portraits/women/12.jpg",
     distance: 3.2,
-    price: 800,
+    price: 400,
     priceUnit: "match",
     coords: [80.2244, 13.0387],
     expertise: ["Scorekeeping", "Match Statistics", "Digital Scoring", "Rules Compliance", "Data Management"],
     experience: "6 years",
+    coverImage: "https://images.unsplash.com/photo-1518604666860-9ed391f76460?w=1200&h=400&fit=crop", // Cricket scoring/statistics
 
     // Additional profile fields
     bio: "Professional cricket scorer with 6+ years of experience in accurate scorekeeping, match statistics, and digital scoring systems.",
@@ -1478,7 +1524,7 @@ export const professionals: Professional[] = [
         id: "1",
         title: "Match Scoring",
         description: "Professional match scoring service with accurate record-keeping and real-time statistics",
-        price: "₹800",
+        price: "₹400",
         deliveryTime: "Match duration",
         features: ["Accurate Scoring", "Real-time Updates", "Match Statistics", "Score Sheets"],
         category: "Scoring Services"
@@ -1487,7 +1533,7 @@ export const professionals: Professional[] = [
         id: "2",
         title: "Tournament Scoring",
         description: "Complete tournament scoring services including statistics compilation and final reports",
-        price: "₹1,200",
+        price: "₹600",
         deliveryTime: "Tournament duration",
         features: ["Tournament Stats", "Player Records", "Team Statistics", "Final Reports"],
         category: "Tournament Services"

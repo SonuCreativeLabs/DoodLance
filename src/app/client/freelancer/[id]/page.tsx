@@ -4,15 +4,14 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { Badge } from "@/components/ui/badge";
 import {
   ArrowLeft,
-  MessageSquare,
   Star,
   MapPin,
   Clock,
   Briefcase,
   Award,
-  Calendar,
   Check,
   ChevronDown,
   Share2,
@@ -25,6 +24,9 @@ import { professionals } from '@/app/client/nearby/mockData';
 import { IdVerifiedBadge } from '@/components/freelancer/profile/IdVerifiedBadge';
 import { SkillInfoDialog } from '@/components/common/SkillInfoDialog';
 import { getSkillInfo, type SkillInfo } from '@/utils/skillUtils';
+import Image from 'next/image';
+import { IconButton } from '@/components/ui/icon-button';
+import { PortfolioItemModal } from '@/components/common/PortfolioItemModal';
 
 interface FreelancerDetail {
   id: string;
@@ -57,6 +59,7 @@ interface FreelancerDetail {
   languages?: string;
   completionRate?: number;
   skills?: string[];
+  coverImage?: string; // New field for unique cover images
 
   // Services data
   services?: {
@@ -109,7 +112,10 @@ export default function FreelancerDetailPage() {
   const [isSkillDialogOpen, setIsSkillDialogOpen] = useState(false);
   const [selectedSkillInfo, setSelectedSkillInfo] = useState<SkillInfo | null>(null);
   const [isHoursDropdownOpen, setIsHoursDropdownOpen] = useState(false);
+  const [isScrolledPastCover, setIsScrolledPastCover] = useState(false);
   const [activeTab, setActiveTab] = useState('top');
+  const [selectedPortfolioItem, setSelectedPortfolioItem] = useState<any>(null);
+  const [isPortfolioModalOpen, setIsPortfolioModalOpen] = useState(false);
   const tabsContainerRef = useRef<HTMLDivElement>(null);
 
   const freelancerId = params.id as string;
@@ -137,6 +143,7 @@ export default function FreelancerDetailPage() {
   useEffect(() => {
     const foundFreelancer = professionals.find((p: typeof professionals[0]) => p.id.toString() === freelancerId);
     if (foundFreelancer) {
+      const onlineStatus = Math.random() > 0.5;
       setFreelancer({
         id: foundFreelancer.id.toString(),
         name: foundFreelancer.name,
@@ -154,7 +161,7 @@ export default function FreelancerDetailPage() {
         expertise: foundFreelancer.expertise,
         description: foundFreelancer.bio || foundFreelancer.about || `${foundFreelancer.name} is a ${foundFreelancer.experience} cricket professional specializing in ${foundFreelancer.service.toLowerCase()} with expertise in ${foundFreelancer.expertise?.slice(0, 3).join(', ')}${foundFreelancer.expertise && foundFreelancer.expertise.length > 3 ? ' & more' : ''}.`,
         availability: foundFreelancer.availability || [],
-        online: Math.random() > 0.5,
+        online: onlineStatus,
 
         // Additional profile fields
         bio: foundFreelancer.bio,
@@ -165,6 +172,7 @@ export default function FreelancerDetailPage() {
         languages: foundFreelancer.languages,
         completionRate: foundFreelancer.completionRate,
         skills: foundFreelancer.skills,
+        coverImage: foundFreelancer.coverImage,
 
         // Services, portfolio, experience, and reviews data
         services: foundFreelancer.services,
@@ -177,17 +185,7 @@ export default function FreelancerDetailPage() {
   }, [freelancerId]);
 
   const handleBack = () => {
-    router.back();
-  };
-
-  const handleBook = () => {
-    // Navigate to booking page with freelancer ID
-    router.push(`/client/bookings/new?freelancerId=${freelancerId}`);
-  };
-
-  const handleMessage = () => {
-    // Navigate to inbox with this freelancer
-    router.push(`/client/inbox?freelancerId=${freelancerId}`);
+    router.push('/client/nearby/integrated-explore');
   };
 
   const handleSkillClick = (skillName: string) => {
@@ -209,7 +207,8 @@ export default function FreelancerDetailPage() {
       
       sessionStorage.setItem('returnToProfilePreview', currentUrl);
       
-      window.location.href = `/services#fromPreview`;
+      // Pass freelancer ID to show this freelancer's services
+      router.push(`/freelancer/profile/preview/services?freelancerId=${freelancerId}#fromPreview`);
     }
   };
 
@@ -225,7 +224,8 @@ export default function FreelancerDetailPage() {
       
       sessionStorage.setItem('returnToProfilePreview', currentUrl);
       
-      window.location.href = `/freelancer/profile/preview/reviews`;
+      // Pass freelancer ID to show this freelancer's reviews
+      router.push(`/freelancer/profile/preview/reviews?freelancerId=${freelancerId}`);
     }
   };
 
@@ -265,7 +265,14 @@ export default function FreelancerDetailPage() {
     
     if (tabId === 'top') {
       // Special handling for profile (top) tab
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      // Scroll the scrollable content container instead of window
+      const scrollContainer = document.querySelector('.flex-1.overflow-y-auto');
+      if (scrollContainer) {
+        scrollContainer.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        // Fallback to window scroll
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
       if (history.pushState) {
         history.pushState(null, '', '#');
       } else {
@@ -310,6 +317,31 @@ export default function FreelancerDetailPage() {
     };
   }, [freelancer]);
 
+  // Scroll listener for cover photo
+  useEffect(() => {
+    const handleScroll = () => {
+      // Get the scrollable container instead of window
+      const scrollContainer = document.querySelector('.flex-1.overflow-y-auto') as HTMLElement;
+      if (scrollContainer) {
+        const coverHeight = 192; // h-48 = 192px
+        const scrollTop = scrollContainer.scrollTop;
+        setIsScrolledPastCover(scrollTop > coverHeight);
+      }
+    };
+
+    // Add scroll listener to the scrollable container
+    const scrollContainer = document.querySelector('.flex-1.overflow-y-auto') as HTMLElement;
+    if (scrollContainer) {
+      scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
+    }
+
+    return () => {
+      if (scrollContainer) {
+        scrollContainer.removeEventListener('scroll', handleScroll);
+      }
+    };
+  }, []);
+
   return (
     <div>
       {loading && (
@@ -339,38 +371,32 @@ export default function FreelancerDetailPage() {
               <div className="w-full bg-[#0f0f0f]">
                 {/* Cover Photo */}
                 <div className="relative h-48 md:h-64 w-full bg-gradient-to-r from-purple-900 to-purple-700">
-                  {/* Back and Share Buttons */}
-                  <div className="absolute top-4 left-4 right-4 z-10 flex items-center justify-between">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleBack}
-                      className="h-10 w-10 rounded-xl bg-black/20 backdrop-blur-sm hover:bg-black/40 transition-all duration-200 border border-white/10"
-                      aria-label="Back"
-                    >
-                      <ArrowLeft className="h-5 w-5 text-white" />
-                    </Button>
-
-                    <button
-                      onClick={handleShare}
-                      aria-label="Share profile"
-                      className="inline-flex items-center text-sm text-white/80 hover:text-white transition-colors duration-200"
-                    >
-                      <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-black/20 backdrop-blur-sm border border-white/10 hover:bg-black/40 transition-colors duration-200">
-                        <Share2 className="h-4 w-4" />
-                      </div>
-                    </button>
-                  </div>
 
                   <div className="absolute inset-0 w-full h-full">
                     <img
-                      src="/images/cover-pic.JPG"
+                      src={freelancer.coverImage || "/images/cover-pic.JPG"}
                       alt="Profile Cover"
                       className="w-full h-full object-cover"
                       onError={(e) => {
                         e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDEyMDAgMzAwIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjNkI0NkMxIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIzMiIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIj5Dcmlja2V0IENvdmVyPC90ZXh0Pjwvc3ZnPg=='
                       }}
                     />
+                  </div>
+
+                  {/* Back and Share Buttons - Original Position */}
+                  <div className="absolute top-4 left-4 right-4 z-10">
+                    <div className="flex items-center justify-between">
+                      <IconButton
+                        icon={ArrowLeft}
+                        onClick={handleBack}
+                        aria-label="Back"
+                      />
+                      <IconButton
+                        icon={Share2}
+                        onClick={handleShare}
+                        aria-label="Share profile"
+                      />
+                    </div>
                   </div>
                 </div>
 
@@ -459,42 +485,67 @@ export default function FreelancerDetailPage() {
               </div>
             </section>
             
-            {/* Sticky Tab Navigation */}
-            <div className="sticky -top-1 z-50 bg-[#0f0f0f] border-b border-white/5">
-              <div className="relative w-full overflow-hidden">
-                <div 
-                  className="flex overflow-x-auto hide-scrollbar px-4 max-w-4xl mx-auto tabs-container" 
-                  ref={tabsContainerRef}
-                  style={{
-                    scrollBehavior: 'smooth',
-                    WebkitOverflowScrolling: 'touch',
-                    scrollbarWidth: 'none',
-                    msOverflowStyle: 'none'
-                  }}>
-                  {tabs.map((tab) => {
-                    const isActive = activeTab === tab.id;
-                    return (
-                      <button
-                        key={tab.id}
-                        data-tab-id={tab.id}
-                        onClick={(e) => handleTabClick(tab.id, e)}
-                        className={`px-4 py-3 text-xs font-medium whitespace-nowrap transition-all duration-200 relative ${
-                          isActive 
-                            ? 'text-white font-semibold' 
-                            : 'text-white/60 hover:text-white/90'
-                        }`}
-                        style={{
-                          position: 'relative',
-                          zIndex: isActive ? 2 : 1,
-                        }}
-                      >
-                        {tab.label}
-                        {isActive && (
-                          <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1/2 h-0.5 bg-white rounded-full"></div>
-                        )}
-                      </button>
-                    );
-                  })}
+            {/* Sticky Tab Navigation with Back/Share Header */}
+            <div className="sticky top-0 z-[100] bg-[#0f0f0f]/95 backdrop-blur-sm">
+              {/* Back/Share Header - Only when scrolled past cover */}
+              {isScrolledPastCover && (
+                <div className="border-b border-white/5">
+                  <div className="flex items-center justify-between px-4 py-3">
+                    <IconButton
+                      icon={ArrowLeft}
+                      onClick={handleBack}
+                      aria-label="Back"
+                    />
+                    <div className="flex items-center gap-3">
+                      <span className="text-white font-medium text-sm">Profile</span>
+                    </div>
+                    <IconButton
+                      icon={Share2}
+                      onClick={handleShare}
+                      aria-label="Share profile"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Tab Navigation */}
+              <div className="relative w-full overflow-hidden border-b border-white/5">
+                <div className="flex items-center px-4 max-w-4xl mx-auto">
+                  {/* Tabs Container */}
+                  <div
+                    className="flex overflow-x-auto hide-scrollbar flex-1 tabs-container"
+                    ref={tabsContainerRef}
+                    style={{
+                      scrollBehavior: 'smooth',
+                      WebkitOverflowScrolling: 'touch',
+                      scrollbarWidth: 'none',
+                      msOverflowStyle: 'none'
+                    }}>
+                    {tabs.map((tab) => {
+                      const isActive = activeTab === tab.id;
+                      return (
+                        <button
+                          key={tab.id}
+                          data-tab-id={tab.id}
+                          onClick={(e) => handleTabClick(tab.id, e)}
+                          className={`px-4 py-3 text-xs font-medium whitespace-nowrap transition-all duration-200 relative ${
+                            isActive
+                              ? 'text-white font-semibold'
+                              : 'text-white/60 hover:text-white/90'
+                          }`}
+                          style={{
+                            position: 'relative',
+                            zIndex: isActive ? 2 : 1,
+                          }}
+                        >
+                          {tab.label}
+                          {isActive && (
+                            <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1/2 h-0.5 bg-white rounded-full"></div>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
                 {/* Gradient fade effect on the right side */}
                 <div className="absolute right-0 top-0 bottom-0 w-10 bg-gradient-to-l from-[#0f0f0f] to-transparent pointer-events-none z-10"></div>
@@ -535,7 +586,7 @@ export default function FreelancerDetailPage() {
 
                     <div className="flex items-center gap-6 mb-6 text-sm">
                       <div className="flex items-center gap-2">
-                        <MessageSquare className="h-4 w-4 text-purple-400 flex-shrink-0" />
+                        <Clock className="h-4 w-4 text-purple-400 flex-shrink-0" />
                         <div className="flex flex-col">
                           <span className="text-white/60">Response Time</span>
                           <span className="font-medium text-white">{freelancer.responseTime}</span>
@@ -643,6 +694,14 @@ export default function FreelancerDetailPage() {
                           <div className="flex gap-4 px-2">
                             {freelancer.services.map((service) => (
                               <div key={service.id} className="w-80 flex-shrink-0 p-5 pt-8 rounded-3xl border border-white/10 bg-white/5 hover:border-purple-500/30 transition-colors flex flex-col h-full relative">
+                                {/* Category badge */}
+                                {service.category && (
+                                  <div className="absolute top-3 left-3 z-10">
+                                    <Badge className="bg-white/10 text-white/80 border-white/20 px-2 py-0.5 text-xs">
+                                      {service.category}
+                                    </Badge>
+                                  </div>
+                                )}
                                 <div className="flex flex-col h-full">
                                   <div className="flex-1 mt-2">
                                     <div className="flex items-start justify-between">
@@ -717,25 +776,13 @@ export default function FreelancerDetailPage() {
                                 tabIndex={0}
                                 aria-label={`Open portfolio item: ${item.title}`}
                                 onClick={() => {
-                                  if (typeof window !== 'undefined') {
-                                    try {
-                                      const url = new URL(window.location.href);
-                                      url.hash = '#portfolio';
-                                      sessionStorage.setItem('returnToProfilePreview', url.toString());
-                                    } catch {}
-                                    window.location.href = `/freelancer/profile/preview/portfolio/${item.id}`;
-                                  }
+                                  setSelectedPortfolioItem(item);
+                                  setIsPortfolioModalOpen(true);
                                 }}
                                 onKeyDown={e => {
                                   if (e.key === 'Enter' || e.key === ' ') {
-                                    if (typeof window !== 'undefined') {
-                                      try {
-                                        const url = new URL(window.location.href);
-                                        url.hash = '#portfolio';
-                                        sessionStorage.setItem('returnToProfilePreview', url.toString());
-                                      } catch {}
-                                      window.location.href = `/freelancer/profile/preview/portfolio/${item.id}`;
-                                    }
+                                    setSelectedPortfolioItem(item);
+                                    setIsPortfolioModalOpen(true);
                                   }
                                 }}
                               >
@@ -752,10 +799,13 @@ export default function FreelancerDetailPage() {
                                   </div>
                                 </div>
                                 <div className="absolute inset-0 p-4 flex flex-col justify-end bg-gradient-to-t from-black/70 via-black/40 to-transparent rounded-xl">
-                                  <div className="flex justify-between items-end">
-                                    <div className="pr-2">
+                                  <div className="flex justify-between items-end mb-8">
+                                    <div className="pr-2 flex-1">
                                       <h3 className="font-medium text-white line-clamp-1 text-sm">{item.title}</h3>
                                     </div>
+                                  </div>
+                                  <div className="absolute bottom-3 left-3 bg-white/10 text-white/80 border-white/20 px-2 py-0.5 text-xs rounded-full border">
+                                    {item.category}
                                   </div>
                                 </div>
                               </div>
@@ -777,7 +827,8 @@ export default function FreelancerDetailPage() {
                             
                             sessionStorage.setItem('returnToProfilePreview', currentUrl);
                             
-                            window.location.href = `/freelancer/profile/preview/portfolio#fromPreview`;
+                            // Use router.push instead of window.location.href for better navigation
+                            router.push(`/freelancer/profile/preview/portfolio?freelancerId=${freelancerId}#fromPreview`);
                           }
                         }}
                         className="w-full mt-2 py-2.5 px-4 border border-white/30 hover:bg-white/5 transition-colors text-sm font-medium flex items-center justify-center gap-2 text-white rounded-[6px]"
@@ -819,7 +870,7 @@ export default function FreelancerDetailPage() {
                                   <MapPin className="h-3.5 w-3.5" />
                                   <span>{exp.location}</span>
                                   <span className="mx-1">•</span>
-                                  <Calendar className="h-3.5 w-3.5" />
+                                  <Award className="h-3.5 w-3.5" />
                                   <span>
                                     {exp.startDate} - {exp.isCurrent ? 'Present' : exp.endDate}
                                   </span>
@@ -913,32 +964,21 @@ export default function FreelancerDetailPage() {
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="sticky bottom-0 bg-gradient-to-t from-[#111111] to-transparent border-t border-white/10 p-4 backdrop-blur-xl">
-            <div className="flex gap-3">
-              <Button
-                onClick={handleMessage}
-                variant="outline"
-                className="flex-1 bg-white/5 border-white/20 hover:bg-white/10 text-white"
-              >
-                <MessageSquare className="w-4 h-4 mr-2" />
-                Message
-              </Button>
-              <Button
-                onClick={handleBook}
-                className="flex-1 bg-purple-600 hover:bg-purple-700"
-              >
-                <Calendar className="w-4 h-4 mr-2" />
-                Book Now
-              </Button>
-            </div>
-          </div>
-
           {/* Skill Info Dialog */}
           <SkillInfoDialog
             isOpen={isSkillDialogOpen}
             onClose={() => setIsSkillDialogOpen(false)}
             skillInfo={selectedSkillInfo}
+          />
+
+          {/* Portfolio Modal */}
+          <PortfolioItemModal
+            item={selectedPortfolioItem}
+            isOpen={isPortfolioModalOpen}
+            onClose={() => {
+              setIsPortfolioModalOpen(false);
+              setSelectedPortfolioItem(null);
+            }}
           />
         </div>
       )}

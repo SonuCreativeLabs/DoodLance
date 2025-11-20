@@ -17,12 +17,9 @@ import {
   Clock,
   Award
 } from 'lucide-react';
-import { CategoryBadge } from '@/components/common/CategoryBadge';
 import { SkillInfoDialog } from '@/components/common/SkillInfoDialog';
 import { getSkillInfo, type SkillInfo } from '@/utils/skillUtils';
-
-// Local Components
-import { ProfileHeader } from './ProfileHeader';
+import { IconButton } from '@/components/ui/icon-button';
 
 // Types
 import type { 
@@ -592,7 +589,8 @@ const ProfilePreview = memo(({
           </div>
           <div className="flex items-center gap-2">
             <div className="relative">
-              <button
+              <IconButton
+                icon={Share2}
                 onClick={async () => {
                   try {
                     const shareData = {
@@ -648,51 +646,22 @@ const ProfilePreview = memo(({
                 }}
                 id="share-button"
                 aria-label="Share profile preview"
-                className="group relative inline-flex items-center text-sm text-purple-400 hover:text-purple-300 transition-colors duration-200"
                 data-copied="false"
-              >
-                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/10 group-hover:bg-white/10 transition-colors duration-200">
-                  <Share2 className="h-4 w-4" />
-                </div>
-                <span className="share-tooltip">Share Profile</span>
-              </button>
+              />
               <style jsx>{`
-                .share-tooltip {
-                  position: absolute;
-                  top: -30px;
-                  left: 50%;
-                  transform: translateX(-50%);
-                  background: var(--card-background);
-                  color: var(--foreground);
-                  padding: 4px 8px;
-                  border-radius: 4px;
-                  font-size: 12px;
-                  white-space: nowrap;
-                  opacity: 0;
-                  pointer-events: none;
-                  transition: opacity 0.2s;
-                  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-                }
-                button:hover .share-tooltip {
-                  opacity: 1;
-                }
-                button[data-copied="true"] .share-tooltip::after {
+                button[data-copied="true"]:after {
                   content: '✓ Copied!';
                 }
-                button[data-copied="false"] .share-tooltip::after {
+                button[data-copied="false"]:after {
                   content: 'Share Profile';
                 }
               `}</style>
             </div>
-            <button 
+            <IconButton
+              icon={X}
               onClick={onClose}
               aria-label="Close preview"
-              className="inline-flex items-center text-sm text-purple-400 hover:text-purple-300 transition-colors duration-200"
-            >
-              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors duration-200">
-                <X className="h-4 w-4" />
-              </div>
-            </button>
+            />
           </div>
         </div>
       </div>
@@ -885,12 +854,9 @@ const ProfilePreview = memo(({
                     {profileData.services.map((service) => (
                       <div key={service.id} className="w-80 flex-shrink-0 p-5 pt-8 rounded-3xl border border-white/10 bg-white/5 hover:border-purple-500/30 transition-colors flex flex-col h-full relative">
                         {service.category && (
-                          <CategoryBadge
-                            category={service.category}
-                            type="service"
-                            size="sm"
-                            className="absolute top-3 left-3"
-                          />
+                          <div className="absolute top-3 left-3 bg-white/10 text-white/80 border-white/20 px-2 py-0.5 text-xs rounded-full border">
+                            {service.category}
+                          </div>
                         )}
                         <div className="flex flex-col h-full">
                           <div className="flex-1 mt-2">
@@ -1004,7 +970,9 @@ const ProfilePreview = memo(({
                               <div className="flex justify-between items-end">
                                 <div className="pr-2">
                                   <h3 className="font-medium text-white line-clamp-1 text-sm">{item.title}</h3>
-                                  <CategoryBadge category={item.category} type="portfolio" size="sm" className="mt-1" />
+                                  <div className="bg-purple-500/10 text-purple-300 border-purple-500/30 px-2 py-0.5 text-xs rounded-full border mt-1">
+                                    {item.category}
+                                  </div>
                                 </div>
                               </div>
                             </div>

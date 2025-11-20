@@ -362,8 +362,8 @@ export function ForYouJobsProvider({ children }: { children: ReactNode }) {
       });
 
       // Filter out jobs user has already applied to (same as feed page)
-      const { hasUserAppliedToJob } = await import('@/components/freelancer/jobs/mock-data');
-      const finalJobs = filteredJobs.filter(job => !hasUserAppliedToJob(job.id));
+      // const { hasUserAppliedToJob } = await import('@/components/freelancer/jobs/mock-data');
+      const finalJobs = filteredJobs; // .filter(job => !hasUserAppliedToJob(job.id));
 
       console.log(`📊 For You Jobs: Found ${finalJobs.length} jobs after filtering ${combinedJobs.length} total jobs`);
       console.log(`   User skills: ${userSkills.join(', ')}`);

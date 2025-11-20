@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { usePortfolio, PortfolioItem } from '@/contexts/PortfolioContext';
-import { CategorySelect, CategoryBadge } from '@/components/common/CategoryBadge';
+import { CategorySelect } from '@/components/common/CategoryBadge';
 
 interface PortfolioFormProps {
   portfolio: PortfolioItem | null;
@@ -389,11 +389,9 @@ export function PortfolioSection({
                     
                     {/* Category */}
                     <div className="absolute top-4 left-4 z-10">
-                      <CategoryBadge
-                        category={viewingItem.category}
-                        type="portfolio"
-                        size="sm"
-                      />
+                      <div className="bg-purple-500/10 text-purple-300 border-purple-500/30 px-2 py-0.5 text-xs rounded-full border">
+                        {viewingItem.category}
+                      </div>
                     </div>
                   </div>
                   <div className="absolute bottom-0 left-0 right-0 p-6 z-10 bg-gradient-to-t from-black/70 via-black/40 to-transparent">
@@ -505,7 +503,9 @@ export function PortfolioSection({
                   <div className="flex justify-between items-end">
                     <div className="pr-2">
                       <h3 className="font-medium text-white line-clamp-1">{item.title}</h3>
-                      <CategoryBadge category={item.category} type="portfolio" size="sm" className="mt-1" />
+                      <div className="bg-purple-500/10 text-purple-300 border-purple-500/30 px-2 py-0.5 text-xs rounded-full border mt-1">
+                        {item.category}
+                      </div>
                     </div>
                     <div className="flex gap-2">
                       <button

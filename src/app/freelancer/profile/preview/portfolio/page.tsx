@@ -1,17 +1,39 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { setSessionFlag, setSessionItem } from '@/utils/sessionStorage';
 import { usePortfolio, type PortfolioItem } from '@/contexts/PortfolioContext';
-import { CategoryBadge } from '@/components/common/CategoryBadge';
+import { professionals } from '@/app/client/nearby/mockData';
+import { PortfolioItemModal } from '@/components/common/PortfolioItemModal';
 
 export default function PortfolioPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const freelancerId = searchParams.get('freelancerId');
+  
   const { portfolio, isHydrated } = usePortfolio();
   const [overrideItems, setOverrideItems] = useState<PortfolioItem[] | null>(null);
   const portfolioItems = useMemo(() => overrideItems ?? portfolio, [overrideItems, portfolio]);
+
+  // Modal state
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedPortfolioItem, setSelectedPortfolioItem] = useState<PortfolioItem | null>(null);
+
+  // Check if we're viewing a freelancer's portfolio or user's own portfolio
+  useEffect(() => {
+    if (freelancerId) {
+      // Show freelancer's portfolio
+      const freelancer = professionals.find(p => p.id.toString() === freelancerId);
+      if (freelancer && freelancer.portfolio) {
+        setOverrideItems(freelancer.portfolio);
+      }
+    } else {
+      // Show user's own portfolio
+      setOverrideItems(null); // Use context data
+    }
+  }, [freelancerId]);
 
   // Debug: Log portfolio changes
   useEffect(() => {
@@ -57,14 +79,24 @@ export default function PortfolioPage() {
       setSessionItem('lastVisitedSection', 'portfolio');
       setSessionFlag('scrollToPortfolio', true);
 
-      const returnPath = '/freelancer/profile';
-      setSessionItem(
-        'returnToProfilePreview',
-        `${window.location.origin}${returnPath}#portfolio`,
-      );
-
-      // Use router.push instead of window.location.href to prevent full page reload
-      router.push(`${returnPath}#portfolio`);
+      // Check if we're viewing a freelancer's portfolio
+      if (freelancerId) {
+        // Go back to the freelancer detail page
+        const freelancerPath = `/client/freelancer/${freelancerId}`;
+        setSessionItem(
+          'returnToProfilePreview',
+          `${window.location.origin}${freelancerPath}#portfolio`,
+        );
+        router.push(`${freelancerPath}#portfolio`);
+      } else {
+        // Go back to user's profile
+        const returnPath = '/freelancer/profile';
+        setSessionItem(
+          'returnToProfilePreview',
+          `${window.location.origin}${returnPath}#portfolio`,
+        );
+        router.push(`${returnPath}#portfolio`);
+      }
     } else {
       router.back();
     }
@@ -107,12 +139,8 @@ export default function PortfolioPage() {
                 key={item.id}
                 className="group relative aspect-video rounded-xl overflow-hidden border border-white/10 hover:border-white/20 transition-all duration-300 cursor-pointer"
                 onClick={() => {
-                  try {
-                    sessionStorage.removeItem('returnToProfilePreview');
-                  } catch {
-                    // ignore storage errors
-                  }
-                  router.push(`/freelancer/profile/preview/portfolio/${item.id}`);
+                  setSelectedPortfolioItem(item);
+                  setIsModalOpen(true);
                 }}
               >
                 <div className="relative w-full h-full">
@@ -130,11 +158,13 @@ export default function PortfolioPage() {
                     <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
                   <div className="absolute inset-0 p-4 flex flex-col justify-end bg-gradient-to-t from-black/70 via-black/40 to-transparent rounded-xl">
-                    <div className="flex justify-between items-end">
-                      <div className="pr-2">
+                    <div className="flex justify-between items-end mb-8">
+                      <div className="pr-2 flex-1">
                         <h3 className="font-medium text-white line-clamp-1 text-sm">{item.title}</h3>
-                        <CategoryBadge category={item.category} type="portfolio" size="sm" className="mt-1" />
                       </div>
+                    </div>
+                    <div className="absolute bottom-3 left-3 bg-white/10 text-white/80 border-white/20 px-2 py-0.5 text-xs rounded-full border">
+                      {item.category}
                     </div>
                   </div>
                 </div>
@@ -147,6 +177,16 @@ export default function PortfolioPage() {
           )}
         </div>
       </div>
+
+      {/* Portfolio Item Modal */}
+      <PortfolioItemModal
+        item={selectedPortfolioItem}
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedPortfolioItem(null);
+        }}
+      />
     </div>
   );
 }

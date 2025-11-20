@@ -90,7 +90,7 @@ async function seedData() {
         userId: freelancer1.id,
         title: 'Cricket All-Rounder',
         about: 'Professional Cricketer and AI Engineer with a passion for both sports and technology. I bring the same dedication and strategic thinking from the cricket field to developing intelligent AI solutions.',
-        hourlyRate: 25000,
+        hourlyRate: 1500,
         skills: JSON.stringify(['RH Batsman', 'Sidearm Specialist', 'Off Spin', 'Coach', 'Analyst', 'Mystery Spin']),
         specializations: JSON.stringify(['AI Development', 'Cricket Coaching', 'Match Analysis']),
         languages: JSON.stringify(['English', 'Tamil', 'Hindi']),
@@ -128,7 +128,7 @@ async function seedData() {
         userId: freelancer2.id,
         title: 'Fast Bowler & Net Specialist',
         about: 'State-level fast bowler available for net practice sessions. Can bowl consistently at 135+ kph with excellent variations.',
-        hourlyRate: 2500,
+        hourlyRate: 800,
         skills: JSON.stringify(['Fast Bowling', 'Net Bowling', 'Pace Variations', 'Death Overs']),
         specializations: JSON.stringify(['Express Pace', 'Yorkers', 'Bouncers']),
         languages: JSON.stringify(['English', 'Hindi', 'Punjabi']),
@@ -306,7 +306,7 @@ async function seedData() {
         data: {
           title: 'AI Development Consultation',
           description: 'Expert guidance on AI implementation for your business needs',
-          price: 25000,
+          price: 2000,
           duration: 60, // 1 hour
           categoryId: coachingCategory.id,
           providerId: freelancer1.id,
@@ -319,9 +319,9 @@ async function seedData() {
           revisions: 1,
           requirements: JSON.stringify(['Technical requirements document', 'Business objectives']),
           packages: JSON.stringify({
-            basic: { price: 25000, features: ['1-hour consultation', 'Technical analysis', 'Implementation roadmap'] },
-            standard: { price: 45000, features: ['2-hour consultation', 'Detailed analysis', 'Custom solution design'] },
-            premium: { price: 75000, features: ['3-hour consultation', 'Full technical audit', 'Complete implementation plan'] }
+            basic: { price: 2000, features: ['1-hour consultation', 'Technical analysis', 'Implementation roadmap'] },
+            standard: { price: 3500, features: ['2-hour consultation', 'Detailed analysis', 'Custom solution design'] },
+            premium: { price: 5000, features: ['3-hour consultation', 'Full technical audit', 'Complete implementation plan'] }
           }),
           isActive: true,
           rating: 4.9,
@@ -358,7 +358,7 @@ async function seedData() {
         data: {
           title: 'Fast Bowling Net Practice',
           description: 'Professional fast bowling services for net practice. Consistent pace at 135+ kph with variations.',
-          price: 2500,
+          price: 1600,
           duration: 120, // 2 hours
           categoryId: playingCategory.id,
           providerId: freelancer2.id,

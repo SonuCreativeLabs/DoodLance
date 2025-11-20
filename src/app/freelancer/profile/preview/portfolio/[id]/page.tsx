@@ -1,13 +1,42 @@
 'use client';
 import { notFound } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { usePortfolio } from '@/contexts/PortfolioContext';
 import Image from 'next/image';
-import { useEffect } from 'react';
-import { CategoryBadge } from '@/components/common/CategoryBadge';
+import { useEffect, useState } from 'react';
+import { professionals } from '@/app/client/nearby/mockData';
 
 export default function PortfolioDetailPage({ params }: { params: { id: string } }) {
+  const searchParams = useSearchParams();
+  const freelancerId = searchParams.get('freelancerId');
+  
   const { portfolio, isHydrated } = usePortfolio();
-  const item = portfolio.find((p) => p.id === String(params.id));
+  const [item, setItem] = useState<any>(null);
+
+  // Check if we're viewing a freelancer's portfolio item or user's own
+  useEffect(() => {
+    console.log('PortfolioDetailPage - freelancerId:', freelancerId, 'params.id:', params.id);
+    
+    if (freelancerId) {
+      // Show freelancer's portfolio item
+      const freelancer = professionals.find(p => p.id.toString() === freelancerId);
+      console.log('Found freelancer:', freelancer?.name, 'portfolio:', freelancer?.portfolio);
+      
+      if (freelancer && freelancer.portfolio) {
+        const portfolioItem = freelancer.portfolio.find((p) => p.id === String(params.id));
+        console.log('Found portfolio item:', portfolioItem);
+        setItem(portfolioItem);
+      } else {
+        console.log('Freelancer not found or no portfolio');
+        setItem(null);
+      }
+    } else {
+      // Show user's own portfolio item
+      const portfolioItem = portfolio.find((p) => p.id === String(params.id));
+      console.log('User portfolio item:', portfolioItem);
+      setItem(portfolioItem);
+    }
+  }, [freelancerId, portfolio, params.id]);
 
   // Hide header and navbar for this page
   useEffect(() => {
@@ -42,8 +71,18 @@ export default function PortfolioDetailPage({ params }: { params: { id: string }
     if (typeof window !== 'undefined') {
       // Store scroll position before navigating back
       sessionStorage.setItem('scrollToPortfolio', 'true');
-      // Navigate back to the portfolio page
-      window.history.back();
+      
+      // Check if we're viewing a freelancer's portfolio
+      const urlParams = new URLSearchParams(window.location.search);
+      const freelancerId = urlParams.get('freelancerId');
+      
+      if (freelancerId) {
+        // Go back to the freelancer detail page
+        window.location.href = `/client/freelancer/${freelancerId}#portfolio`;
+      } else {
+        // Go back to user's profile
+        window.history.back();
+      }
     }
   };
 
@@ -74,12 +113,9 @@ export default function PortfolioDetailPage({ params }: { params: { id: string }
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent rounded-t-3xl" />
           {/* Category tag on image */}
-          <CategoryBadge
-            category={item.category}
-            type="portfolio"
-            size="sm"
-            className="absolute bottom-3 left-3"
-          />
+          <div className="absolute bottom-3 left-3 bg-white/10 text-white/80 border-white/20 px-2 py-0.5 text-xs rounded-full border">
+            {item.category}
+          </div>
         </div>
         {/* Card Content */}
         <div className="p-8 pt-6 flex flex-col gap-2">
@@ -96,7 +132,7 @@ export default function PortfolioDetailPage({ params }: { params: { id: string }
             <>
               <h3 className="text-sm font-medium text-white/60 mb-1 mt-4">Skills Used</h3>
               <div className="flex flex-wrap gap-2 mt-2">
-                {item.skills.map((skill, idx) => (
+                {item.skills.map((skill: string, idx: number) => (
                   <span
                     key={idx}
                     className="inline-block px-3 py-1 rounded-full text-xs font-medium border shadow-sm backdrop-blur-md"

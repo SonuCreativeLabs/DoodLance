@@ -1,10 +1,11 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, Star, User, MessageSquare } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useReviews } from '@/contexts/ReviewsContext';
 import { usePersonalDetails } from '@/contexts/PersonalDetailsContext';
+import { professionals } from '@/app/client/nearby/mockData';
 
 export type Review = {
   id: string;
@@ -18,50 +19,61 @@ export type Review = {
 
 export default function ReviewsPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const freelancerId = searchParams.get('freelancerId');
+  
   const { reviewsData: contextReviewsData } = useReviews();
   const { personalDetails } = usePersonalDetails();
-  const [reviews, setReviews] = useState<Review[]>(contextReviewsData.reviews);
-  const [freelancerName, setFreelancerName] = useState(personalDetails.name);
+  
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [freelancerName, setFreelancerName] = useState('');
 
-  // Hide header and navbar for this page
+  // Check if we're viewing a freelancer's reviews or user's own reviews
   useEffect(() => {
-    const header = document.querySelector('header');
-    const navbar = document.querySelector('nav');
-    
-    if (header) header.style.display = 'none';
-    if (navbar) navbar.style.display = 'none';
-    
-    return () => {
-      if (header) header.style.display = '';
-      if (navbar) navbar.style.display = '';
-    };
-  }, []);
-
-  // Sync reviews from context
-  useEffect(() => {
-    setReviews(contextReviewsData.reviews);
-    setFreelancerName(personalDetails.name);
-  }, [contextReviewsData.reviews, personalDetails.name]);
+    if (freelancerId) {
+      // Show freelancer's reviews
+      const freelancer = professionals.find(p => p.id.toString() === freelancerId);
+      if (freelancer) {
+        setReviews(freelancer.reviewsData || []);
+        setFreelancerName(freelancer.name);
+      }
+    } else {
+      // Show user's own reviews
+      setReviews(contextReviewsData.reviews);
+      setFreelancerName(personalDetails.name);
+    }
+  }, [freelancerId, contextReviewsData.reviews, personalDetails.name]);
 
   const handleBack = () => {
     if (typeof window !== 'undefined') {
       sessionStorage.setItem('scrollToReviews', 'true');
-      const returnUrl = sessionStorage.getItem('returnToProfilePreview');
-      if (returnUrl) {
-        try {
-          const u = new URL(returnUrl);
-          const relative = `${u.pathname}${u.search}${u.hash}`;
-          router.push(relative);
-          return;
-        } catch {
-          // fall through to default path
-        }
-      }
-      // Fallbacks
-      if (window.history.length > 1) {
-        router.back();
+      
+      // Check if we're viewing a freelancer's reviews
+      if (freelancerId) {
+        // Go back to the freelancer detail page
+        const freelancerPath = `/client/freelancer/${freelancerId}`;
+        const returnUrl = `${window.location.origin}${freelancerPath}#reviews`;
+        sessionStorage.setItem('returnToProfilePreview', returnUrl);
+        router.push(`${freelancerPath}#reviews`);
       } else {
-        router.push('/freelancer/profile');
+        // Go back to user's profile
+        const returnUrl = sessionStorage.getItem('returnToProfilePreview');
+        if (returnUrl) {
+          try {
+            const u = new URL(returnUrl);
+            const relative = `${u.pathname}${u.search}${u.hash}`;
+            router.push(relative);
+            return;
+          } catch {
+            // fall through to default path
+          }
+        }
+        // Fallbacks
+        if (window.history.length > 1) {
+          router.back();
+        } else {
+          router.push('/freelancer/profile');
+        }
       }
     } else {
       router.back();

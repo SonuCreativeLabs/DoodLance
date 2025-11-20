@@ -32,6 +32,14 @@ interface NearbyProfessionalsContextType {
 
 const NearbyProfessionalsContext = createContext<NearbyProfessionalsContextType | undefined>(undefined);
 
+// Create a default value for SSR
+const defaultValue: NearbyProfessionalsContextType = {
+  professionals: [],
+  loading: false,
+  error: null,
+  refreshProfessionals: () => {}
+};
+
 // Initial mock data - this would typically come from an API
 const initialProfessionals: Professional[] = [
   {
@@ -45,7 +53,7 @@ const initialProfessionals: Professional[] = [
     responseTime: "Usually responds in 30 mins",
     image: "https://randomuser.me/api/portraits/men/1.jpg",
     distance: 1.2,
-    price: 2500,
+    price: 800,
     priceUnit: "session",
     coords: [80.2095, 13.0850],
     expertise: ["Pace Bowling", "Yorkers", "Bouncers", "Death Overs", "Line & Length"],
@@ -62,7 +70,7 @@ const initialProfessionals: Professional[] = [
     responseTime: "Usually responds in 1 hour",
     image: "https://randomuser.me/api/portraits/women/2.jpg",
     distance: 2.1,
-    price: 3000,
+    price: 1200,
     priceUnit: "session",
     coords: [80.2341, 13.0418],
     expertise: ["Batting Technique", "Shot Selection", "Mental Training", "Fitness"],
@@ -79,7 +87,7 @@ const initialProfessionals: Professional[] = [
     responseTime: "Usually responds in 45 mins",
     image: "https://randomuser.me/api/portraits/men/3.jpg",
     distance: 3.4,
-    price: 2200,
+    price: 500,
     priceUnit: "session",
     coords: [80.2661, 13.0325],
     expertise: ["Sidearm Bowling", "Control", "Variety", "Training"],
@@ -96,7 +104,7 @@ const initialProfessionals: Professional[] = [
     responseTime: "Usually responds in 1 hour",
     image: "https://randomuser.me/api/portraits/women/4.jpg",
     distance: 4.2,
-    price: 2500,
+    price: 900,
     priceUnit: "session",
     coords: [80.2565, 13.0064],
     expertise: ["Strength Training", "Agility", "Endurance", "Injury Prevention"],
@@ -113,7 +121,7 @@ const initialProfessionals: Professional[] = [
     responseTime: "Usually responds in 2 hours",
     image: "https://randomuser.me/api/portraits/men/5.jpg",
     distance: 5.8,
-    price: 3500,
+    price: 1500,
     priceUnit: "analysis",
     coords: [80.2206, 12.9758],
     expertise: ["Match Analysis", "Player Stats", "Strategy", "Video Analysis"],
@@ -131,7 +139,7 @@ const initialProfessionals: Professional[] = [
     responseTime: "Usually responds in 45 mins",
     image: "https://randomuser.me/api/portraits/men/6.jpg",
     distance: 3.1,
-    price: 2000,
+    price: 600,
     priceUnit: "session",
     coords: [80.2210, 13.0840],
     expertise: ["Net Bowling", "Accuracy", "Pace", "Control", "Practice Sessions"],
@@ -148,7 +156,7 @@ const initialProfessionals: Professional[] = [
     responseTime: "Usually responds in 30 mins",
     image: "https://randomuser.me/api/portraits/men/7.jpg",
     distance: 6.2,
-    price: 4000,
+    price: 1800,
     priceUnit: "match",
     coords: [80.1580, 13.0350],
     expertise: ["All-rounder", "Opening Batsman", "Medium Pace", "Fielding"],
@@ -165,7 +173,7 @@ const initialProfessionals: Professional[] = [
     responseTime: "Usually responds in 1 hour",
     image: "https://randomuser.me/api/portraits/women/8.jpg",
     distance: 8.5,
-    price: 1800,
+    price: 550,
     priceUnit: "session",
     coords: [80.1460, 12.9550],
     expertise: ["Batting Practice", "Shot Making", "Footwork", "Timing"],
@@ -183,7 +191,7 @@ const initialProfessionals: Professional[] = [
     responseTime: "Usually responds in 45 mins",
     image: "https://randomuser.me/api/portraits/men/9.jpg",
     distance: 4.8,
-    price: 2800,
+    price: 550,
     priceUnit: "session",
     coords: [80.2120, 13.0500],
     expertise: ["Team Coaching", "Strategy", "Motivation", "Youth Development"],
@@ -200,7 +208,7 @@ const initialProfessionals: Professional[] = [
     responseTime: "Usually responds in 1 hour",
     image: "https://randomuser.me/api/portraits/men/10.jpg",
     distance: 4.2,
-    price: 2300,
+    price: 750,
     priceUnit: "session",
     coords: [80.2565, 13.0064],
     expertise: ["Strength Training", "Cardio", "Flexibility", "Nutrition"],
@@ -218,7 +226,7 @@ const initialProfessionals: Professional[] = [
     responseTime: "Usually responds in 2 hours",
     image: "https://randomuser.me/api/portraits/women/11.jpg",
     distance: 2.1,
-    price: 3500,
+    price: 1600,
     priceUnit: "consultation",
     coords: [80.2341, 13.0418],
     expertise: ["Sports Injuries", "Rehabilitation", "Massage", "Recovery"],
@@ -235,7 +243,7 @@ const initialProfessionals: Professional[] = [
     responseTime: "Usually responds in 1 hour",
     image: "https://randomuser.me/api/portraits/men/12.jpg",
     distance: 1.2,
-    price: 1500,
+    price: 400,
     priceUnit: "match",
     coords: [80.2095, 13.0850],
     expertise: ["Scorekeeping", "Statistics", "Match Records", "Live Scoring"],
@@ -252,7 +260,7 @@ const initialProfessionals: Professional[] = [
     responseTime: "Usually responds in 45 mins",
     image: "https://randomuser.me/api/portraits/men/13.jpg",
     distance: 3.4,
-    price: 2000,
+    price: 650,
     priceUnit: "match",
     coords: [80.2661, 13.0325],
     expertise: ["Match Officiating", "Rules Knowledge", "Decision Making", "Tournament Experience"],
@@ -270,7 +278,7 @@ const initialProfessionals: Professional[] = [
     responseTime: "Usually responds in 1 hour",
     image: "https://randomuser.me/api/portraits/men/14.jpg",
     distance: 5.8,
-    price: 4500,
+    price: 1900,
     priceUnit: "event",
     coords: [80.2206, 12.9758],
     expertise: ["Event Photography", "Video Recording", "Editing", "Highlight Reels"],
@@ -287,7 +295,7 @@ const initialProfessionals: Professional[] = [
     responseTime: "Usually responds in 30 mins",
     image: "https://randomuser.me/api/portraits/women/15.jpg",
     distance: 3.1,
-    price: 3000,
+    price: 1300,
     priceUnit: "content",
     coords: [80.2210, 13.0840],
     expertise: ["Social Media", "Content Strategy", "Video Editing", "Cricket Commentary"],
@@ -304,7 +312,7 @@ const initialProfessionals: Professional[] = [
     responseTime: "Usually responds in 2 hours",
     image: "https://randomuser.me/api/portraits/men/16.jpg",
     distance: 6.2,
-    price: 5000,
+    price: 2000,
     priceUnit: "match",
     coords: [80.1580, 13.0350],
     expertise: ["Live Commentary", "Analysis", "Broadcasting", "Cricket Knowledge"],
@@ -353,7 +361,8 @@ export function NearbyProfessionalsProvider({ children }: { children: ReactNode 
 export function useNearbyProfessionals() {
   const context = useContext(NearbyProfessionalsContext);
   if (context === undefined) {
-    throw new Error('useNearbyProfessionals must be used within a NearbyProfessionalsProvider');
+    // Return default value for SSR or when context is not available
+    return defaultValue;
   }
   return context;
 }
