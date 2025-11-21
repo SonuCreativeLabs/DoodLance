@@ -75,10 +75,8 @@ export default function PortfolioPage() {
 
   const handleBack = () => {
     if (typeof window !== 'undefined') {
-      setSessionFlag('fromPortfolio', true);
-      setSessionItem('lastVisitedSection', 'portfolio');
-      setSessionFlag('scrollToPortfolio', true);
-
+      sessionStorage.setItem('scrollToPortfolio', 'true');
+      
       // Check if we're viewing a freelancer's portfolio
       if (freelancerId) {
         // Go back to the freelancer detail page
@@ -90,9 +88,6 @@ export default function PortfolioPage() {
         router.push(`${freelancerPath}#portfolio`);
       } else {
         // Go back to user's profile
-        setSessionFlag('fromPortfolio', true);
-        setSessionItem('lastVisitedSection', 'portfolio');
-        setSessionFlag('scrollToPortfolio', true);
         const returnPath = '/freelancer/profile';
         setSessionItem(
           'returnToProfilePreview',
@@ -166,7 +161,7 @@ export default function PortfolioPage() {
                         <h3 className="font-medium text-white line-clamp-1 text-sm">{item.title}</h3>
                       </div>
                     </div>
-                    <div className="absolute bottom-3 left-3 bg-white/10 text-white/80 border-white/20 px-2 py-0.5 text-xs rounded-full border">
+                    <div className="absolute bottom-3 left-3 bg-white/10 text-white/80 border-white/20 px-2 py-0.5 text-xs rounded-full border max-w-[180px]">
                       {item.category}
                     </div>
                   </div>

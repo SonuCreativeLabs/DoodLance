@@ -1,0 +1,237 @@
+"use client";
+
+import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+
+export interface ServiceItem {
+  id: string;
+  title: string;
+  description: string;
+  price: string | number;
+  deliveryTime: string;
+  features?: string[];
+  category?: string;
+}
+
+export interface CartItem {
+  service: ServiceItem;
+  date: string | undefined;
+  time: string | undefined;
+  duration: number | undefined;
+  quantity: number;
+}
+
+export interface SelectedServiceItem extends ServiceItem {
+  quantity: number;
+}
+
+export interface HireState {
+  freelancerId: string | null;
+  freelancerName: string | null;
+  freelancerImage: string | null;
+  freelancerRating: number | null;
+  freelancerReviewCount: number | null;
+  freelancerServices: ServiceItem[];
+  selectedServices: SelectedServiceItem[];
+  cartItems: CartItem[];
+  selectedDate: string | undefined;
+  selectedTime: string | undefined;
+  selectedDuration: number | undefined;
+  selectedLocation: string | undefined;
+}
+
+interface HireContextType {
+  state: HireState;
+  setFreelancer: (id: string, name: string, image: string, rating?: number | null, reviewCount?: number | null, services?: ServiceItem[]) => void;
+  addService: (service: ServiceItem) => void;
+  removeService: (serviceId: string) => void;
+  increaseSelectedServiceQuantity: (serviceId: string) => void;
+  decreaseSelectedServiceQuantity: (serviceId: string) => void;
+  setBookingDetails: (date: string, time: string, duration: number, location: string) => void;
+  addToCart: (service: ServiceItem, date?: string, time?: string, duration?: number) => void;
+  removeFromCart: (serviceId: string) => void;
+  increaseQuantity: (serviceId: string) => void;
+  decreaseQuantity: (serviceId: string) => void;
+  clearCart: () => void;
+  resetHireState: () => void;
+  getTotalPrice: () => number;
+}
+
+const initialState: HireState = {
+  freelancerId: null,
+  freelancerName: null,
+  freelancerImage: null,
+  freelancerRating: null,
+  freelancerReviewCount: null,
+  freelancerServices: [],
+  selectedServices: [],
+  cartItems: [],
+  selectedDate: undefined,
+  selectedTime: undefined,
+  selectedDuration: undefined,
+  selectedLocation: undefined,
+};
+
+const HireContext = createContext<HireContextType | undefined>(undefined);
+
+export function HireProvider({ children }: { children: ReactNode }) {
+  const [state, setState] = useState<HireState>(initialState);
+
+  const setFreelancer = useCallback((id: string, name: string, image: string, rating: number | null = null, reviewCount: number | null = null, services: ServiceItem[] = []) => {
+    setState(prev => ({
+      ...prev,
+      freelancerId: id,
+      freelancerName: name,
+      freelancerImage: image,
+      freelancerRating: rating,
+      freelancerReviewCount: reviewCount,
+      freelancerServices: services,
+    }));
+  }, []);
+
+  const addService = useCallback((service: ServiceItem) => {
+    setState(prev => ({
+      ...prev,
+      selectedServices: [...prev.selectedServices, { ...service, quantity: 1 }],
+    }));
+  }, []);
+
+  const increaseSelectedServiceQuantity = useCallback((serviceId: string) => {
+    setState(prev => ({
+      ...prev,
+      selectedServices: prev.selectedServices.map(service =>
+        service.id === serviceId
+          ? { ...service, quantity: service.quantity + 1 }
+          : service
+      ),
+    }));
+  }, []);
+
+  const decreaseSelectedServiceQuantity = useCallback((serviceId: string) => {
+    setState(prev => ({
+      ...prev,
+      selectedServices: prev.selectedServices.map(service =>
+        service.id === serviceId
+          ? { ...service, quantity: Math.max(1, service.quantity - 1) }
+          : service
+      ).filter(service => service.quantity > 0),
+    }));
+  }, []);
+
+  const removeService = useCallback((serviceId: string) => {
+    setState(prev => ({
+      ...prev,
+      selectedServices: prev.selectedServices.filter(s => s.id !== serviceId),
+    }));
+  }, []);
+
+  const setBookingDetails = useCallback((date: string, time: string, duration: number, location: string) => {
+    setState(prev => ({
+      ...prev,
+      selectedDate: date,
+      selectedTime: time,
+      selectedDuration: duration,
+      selectedLocation: location,
+    }));
+  }, []);
+
+  const addToCart = useCallback((service: ServiceItem, date?: string, time?: string, duration?: number) => {
+    setState(prev => {
+      // Find the selected service to get its quantity
+      const selectedService = prev.selectedServices.find(s => s.id === service.id);
+      const quantity = selectedService?.quantity || 1;
+
+      const cartItem: CartItem = {
+        service,
+        date: date || prev.selectedDate || undefined,
+        time: time || prev.selectedTime || undefined,
+        duration: duration || prev.selectedDuration || undefined,
+        quantity,
+      };
+
+      return {
+        ...prev,
+        cartItems: [...prev.cartItems, cartItem],
+      };
+    });
+  }, []);
+
+  const removeFromCart = useCallback((serviceId: string) => {
+    setState(prev => ({
+      ...prev,
+      cartItems: prev.cartItems.filter(item => item.service.id !== serviceId),
+    }));
+  }, []);
+
+  const increaseQuantity = useCallback((serviceId: string) => {
+    setState(prev => ({
+      ...prev,
+      cartItems: prev.cartItems.map(item =>
+        item.service.id === serviceId
+          ? { ...item, quantity: (item.quantity || 1) + 1 }
+          : item
+      ),
+    }));
+  }, []);
+
+  const decreaseQuantity = useCallback((serviceId: string) => {
+    setState(prev => ({
+      ...prev,
+      cartItems: prev.cartItems.map(item =>
+        item.service.id === serviceId
+          ? { ...item, quantity: Math.max(1, (item.quantity || 1) - 1) }
+          : item
+      ).filter(item => item.quantity !== 0),
+    }));
+  }, []);
+
+  const clearCart = useCallback(() => {
+    setState(prev => ({
+      ...prev,
+      cartItems: [],
+    }));
+  }, []);
+
+  const resetHireState = useCallback(() => {
+    setState(initialState);
+  }, []);
+
+  const getTotalPrice = useCallback(() => {
+    return state.selectedServices.reduce((total, service) => {
+      const price = typeof service.price === 'string'
+        ? parseFloat(service.price.replace(/[^\d.]/g, ''))
+        : service.price;
+      return total + (price * service.quantity);
+    }, 0);
+  }, [state.selectedServices]);
+
+  const value: HireContextType = {
+    state,
+    setFreelancer,
+    addService,
+    removeService,
+    increaseSelectedServiceQuantity,
+    decreaseSelectedServiceQuantity,
+    setBookingDetails,
+    addToCart,
+    removeFromCart,
+    increaseQuantity,
+    decreaseQuantity,
+    clearCart,
+    resetHireState,
+    getTotalPrice,
+  };
+
+  return (
+    <HireContext.Provider value={value}>
+      {children}
+    </HireContext.Provider>
+  );
+}
+
+export function useHire() {
+  const context = useContext(HireContext);
+  if (context === undefined) {
+    throw new Error('useHire must be used within a HireProvider');
+  }
+  return context;
+}

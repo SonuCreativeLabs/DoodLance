@@ -15,6 +15,7 @@ import { BookingsProvider } from '@/contexts/BookingsContext';
 import { ApplicationsProvider } from '@/contexts/ApplicationsContext';
 import { HistoryJobsProvider } from '@/contexts/HistoryJobsContext';
 import { ClientServicesProvider } from '@/contexts/ClientServicesContext';
+import { HireProvider } from '@/contexts/HireContext';
 
 interface ProvidersProps {
   children: ReactNode;
@@ -36,7 +37,9 @@ export function Providers({ children }: ProvidersProps) {
                           <BookingsProvider>
                             <ApplicationsProvider>
                               <HistoryJobsProvider>
-                                {children}
+                                <HireProvider>
+                                  {children}
+                                </HireProvider>
                               </HistoryJobsProvider>
                             </ApplicationsProvider>
                           </BookingsProvider>

@@ -389,7 +389,7 @@ export function PortfolioSection({
                     
                     {/* Category */}
                     <div className="absolute top-4 left-4 z-10">
-                      <div className="bg-purple-500/10 text-purple-300 border-purple-500/30 px-2 py-0.5 text-xs rounded-full border">
+                      <div className="bg-white/10 text-white/80 border-white/20 px-2 py-0.5 text-xs rounded-full border">
                         {viewingItem.category}
                       </div>
                     </div>
@@ -500,12 +500,9 @@ export function PortfolioSection({
                   </div>
                 </div>
                 <div className="absolute inset-0 p-4 flex flex-col justify-end bg-gradient-to-t from-black/70 via-black/40 to-transparent rounded-xl">
-                  <div className="flex justify-between items-end">
-                    <div className="pr-2">
+                  <div className="flex justify-between items-end mb-8">
+                    <div className="pr-2 flex-1">
                       <h3 className="font-medium text-white line-clamp-1">{item.title}</h3>
-                      <div className="bg-purple-500/10 text-purple-300 border-purple-500/30 px-2 py-0.5 text-xs rounded-full border mt-1">
-                        {item.category}
-                      </div>
                     </div>
                     <div className="flex gap-2">
                       <button
@@ -529,6 +526,9 @@ export function PortfolioSection({
                         <Trash2 className="h-3.5 w-3.5 text-red-400" />
                       </button>
                     </div>
+                  </div>
+                  <div className="absolute bottom-3 left-3 bg-white/10 text-white/80 border-white/20 px-2 py-0.5 text-xs rounded-full border">
+                    {item.category}
                   </div>
                 </div>
               </div>

@@ -133,7 +133,7 @@ export const professionals: Professional[] = [
         price: "₹800",
         deliveryTime: "2 hours",
         features: ["Technique Analysis", "Power Development", "Accuracy Drills", "Video Feedback"],
-        category: "Bowling Training"
+        category: "Net Bowler"
       },
       {
         id: "2",
@@ -142,7 +142,7 @@ export const professionals: Professional[] = [
         price: "₹1,200",
         deliveryTime: "2.5 hours",
         features: ["Death Overs Strategy", "Yorker Practice", "Bouncer Control", "Mental Training"],
-        category: "Bowling Training"
+        category: "Net Bowler"
       },
       {
         id: "3",
@@ -151,7 +151,7 @@ export const professionals: Professional[] = [
         price: "₹600",
         deliveryTime: "1.5 hours",
         features: ["Basic Technique", "Fitness Training", "Mental Preparation", "Progress Tracking"],
-        category: "Youth Coaching"
+        category: "Coach"
       }
     ],
 
@@ -418,7 +418,7 @@ export const professionals: Professional[] = [
         price: "₹700",
         deliveryTime: "2 hours",
         features: ["Glove Work Drills", "Footwork Training", "Catching Practice", "Stumping Technique"],
-        category: "Wicket-keeping Training"
+        category: "Coach"
       },
       {
         id: "2",
@@ -427,7 +427,7 @@ export const professionals: Professional[] = [
         price: "₹900",
         deliveryTime: "Match duration",
         features: ["Match Experience", "Professional Conduct", "Equipment Provided", "Match Statistics"],
-        category: "Match Services"
+        category: "Match Player"
       }
     ],
 
@@ -543,7 +543,7 @@ export const professionals: Professional[] = [
         price: "₹900",
         deliveryTime: "2 hours",
         features: ["Off Spin Technique", "Doosra Variations", "Flight & Drift", "Mental Approach"],
-        category: "Bowling Training"
+        category: "Net Bowler"
       },
       {
         id: "2",
@@ -552,7 +552,7 @@ export const professionals: Professional[] = [
         price: "₹700",
         deliveryTime: "1.5 hours",
         features: ["Basic Technique", "Grip & Release", "Flight Control", "Confidence Building"],
-        category: "Youth Coaching"
+        category: "Coach"
       }
     ],
 
@@ -668,7 +668,7 @@ export const professionals: Professional[] = [
         price: "₹1,500",
         deliveryTime: "3-5 days",
         features: ["Video Analysis", "Statistical Report", "Strategy Recommendations", "Performance Insights"],
-        category: "Analysis Services"
+        category: "Analyst"
       },
       {
         id: "2",
@@ -677,7 +677,7 @@ export const professionals: Professional[] = [
         price: "₹1,800",
         deliveryTime: "2-3 days",
         features: ["Opponent Analysis", "Game Strategy", "Player Roles", "Tactical Planning"],
-        category: "Strategy Services"
+        category: "Analyst"
       }
     ],
 
@@ -793,7 +793,7 @@ export const professionals: Professional[] = [
         price: "₹1,500",
         deliveryTime: "1 hour",
         features: ["Injury Assessment", "Manual Therapy", "Exercise Prescription", "Recovery Plan"],
-        category: "Physiotherapy"
+        category: "Physio"
       },
       {
         id: "2",
@@ -802,7 +802,7 @@ export const professionals: Professional[] = [
         price: "₹1,800",
         deliveryTime: "4-6 weeks",
         features: ["Custom Program", "Progress Monitoring", "Strength Training", "Return to Play"],
-        category: "Rehabilitation"
+        category: "Physio"
       }
     ],
 
@@ -918,7 +918,7 @@ export const professionals: Professional[] = [
         price: "₹1,800",
         deliveryTime: "Match duration",
         features: ["Live Commentary", "Expert Analysis", "Player Insights", "Engaging Narration"],
-        category: "Broadcasting"
+        category: "Commentator"
       },
       {
         id: "2",
@@ -927,7 +927,7 @@ export const professionals: Professional[] = [
         price: "₹1,500",
         deliveryTime: "Event duration",
         features: ["Event Hosting", "Ceremony Management", "Audience Engagement", "Professional Presentation"],
-        category: "Event Services"
+        category: "Commentator"
       }
     ],
 
@@ -1043,7 +1043,7 @@ export const professionals: Professional[] = [
         price: "₹1,300",
         deliveryTime: "3-5 days",
         features: ["Video Editing", "Music & Effects", "Professional Quality", "Multiple Formats"],
-        category: "Video Production"
+        category: "Cricket Content Creator"
       },
       {
         id: "2",
@@ -1052,7 +1052,7 @@ export const professionals: Professional[] = [
         price: "₹1,600",
         deliveryTime: "1 week",
         features: ["Content Strategy", "Graphic Design", "Posting Schedule", "Engagement Optimization"],
-        category: "Social Media"
+        category: "Cricket Content Creator"
       }
     ],
 
@@ -1164,7 +1164,7 @@ export const professionals: Professional[] = [
         price: "₹550",
         deliveryTime: "Match duration",
         features: ["Accurate Decisions", "Fair Play Enforcement", "Match Management", "Professional Conduct"],
-        category: "Officiating"
+        category: "Umpire"
       },
       {
         id: "2",
@@ -1173,7 +1173,7 @@ export const professionals: Professional[] = [
         price: "₹700",
         deliveryTime: "2 hours",
         features: ["Laws of Cricket", "Decision Training", "Practical Sessions", "Certification Guidance"],
-        category: "Training"
+        category: "Coach"
       }
     ],
 
@@ -1285,7 +1285,7 @@ export const professionals: Professional[] = [
         price: "₹1,200",
         deliveryTime: "Full day",
         features: ["Pitch Rolling", "Grass Cutting", "Line Marking", "Final Preparation"],
-        category: "Ground Preparation"
+        category: "Other"
       },
       {
         id: "2",
@@ -1294,7 +1294,7 @@ export const professionals: Professional[] = [
         price: "₹800",
         deliveryTime: "Half day",
         features: ["Outfield Maintenance", "Drainage Check", "Equipment Storage", "Facility Upkeep"],
-        category: "Maintenance"
+        category: "Other"
       }
     ],
 
@@ -1406,7 +1406,7 @@ export const professionals: Professional[] = [
         price: "₹1,900",
         deliveryTime: "2-3 days",
         features: ["Action Shots", "Portrait Photos", "Team Photos", "High Resolution", "Post-Processing"],
-        category: "Event Photography"
+        category: "Cricket Photo / Videography"
       },
       {
         id: "2",
@@ -1415,7 +1415,7 @@ export const professionals: Professional[] = [
         price: "₹1,200",
         deliveryTime: "1-2 days",
         features: ["Studio Setup", "Multiple Looks", "High Resolution", "Professional Editing"],
-        category: "Portrait Photography"
+        category: "Cricket Photo / Videography"
       }
     ],
 
@@ -1527,7 +1527,7 @@ export const professionals: Professional[] = [
         price: "₹400",
         deliveryTime: "Match duration",
         features: ["Accurate Scoring", "Real-time Updates", "Match Statistics", "Score Sheets"],
-        category: "Scoring Services"
+        category: "Scorer"
       },
       {
         id: "2",
@@ -1536,7 +1536,7 @@ export const professionals: Professional[] = [
         price: "₹600",
         deliveryTime: "Tournament duration",
         features: ["Tournament Stats", "Player Records", "Team Statistics", "Final Reports"],
-        category: "Tournament Services"
+        category: "Scorer"
       }
     ],
 

@@ -27,7 +27,7 @@ const initialPortfolio: PortfolioItem[] = [
     title: '3x Division Cricket Champion',
     category: 'Cricket Achievement',
     description: 'Won the Division Level Cricket Tournament three consecutive years (2020, 2021, 2022) as a top-order batsman and off-spin bowler. Demonstrated exceptional leadership and performance under pressure.',
-    image: 'https://images.unsplash.com/photo-1543351611-58f69d7c1784?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+    image: '/images/purple nets.png',
     skills: ['Cricket', 'Leadership', 'Batting', 'Off-Spin Bowling', 'Team Player']
   },
   {
@@ -42,7 +42,7 @@ const initialPortfolio: PortfolioItem[] = [
     id: '3',
     title: 'Sports Quota Scholar',
     category: 'Academic Achievement',
-    image: 'https://images.unsplash.com/photo-1543351611-58f69d7c1784?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+    image: '/images/Purple ground.png',
     description: 'Awarded sports scholarship for outstanding cricket performance at the state level. Balanced academic responsibilities with rigorous training schedules while maintaining excellent performance in both areas.',
     skills: ['Cricket', 'Time Management', 'Academics']
   },
@@ -91,12 +91,27 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
   // Load from localStorage on mount
   useEffect(() => {
     try {
-      const saved = localStorage.getItem('portfolioItems');
-      if (saved) {
-        setPortfolio(JSON.parse(saved));
+      // Version check - clear old data if version doesn't match
+      const PORTFOLIO_VERSION = '2.2'; // Increment this when you want to reset portfolio data
+      const savedVersion = localStorage.getItem('portfolioVersion');
+      
+      if (savedVersion !== PORTFOLIO_VERSION) {
+        // Clear old data and use new initial portfolio
+        console.log('Portfolio version mismatch, resetting to defaults');
+        localStorage.setItem('portfolioVersion', PORTFOLIO_VERSION);
+        localStorage.setItem('portfolioItems', JSON.stringify(initialPortfolio));
+        setPortfolio(initialPortfolio);
+      } else {
+        // Load saved data
+        const saved = localStorage.getItem('portfolioItems');
+        if (saved) {
+          setPortfolio(JSON.parse(saved));
+        }
       }
     } catch (error) {
       console.error('Failed to parse portfolio:', error);
+      // On error, use initial portfolio
+      setPortfolio(initialPortfolio);
     } finally {
       setIsHydrated(true);
     }

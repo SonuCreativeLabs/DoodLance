@@ -115,8 +115,8 @@ export default function ProfilePage() {
 
   const scrollToSection = (ref: React.RefObject<HTMLElement>) => {
     if (ref.current) {
-      // Get the header height (adjust this value based on your actual header height)
-      const headerHeight = 72; // Approximate height of the header in pixels
+      // ProfileHeader is not fixed, so no header height offset needed
+      const headerHeight = 0;
       
       // Get the element's position relative to the viewport
       const elementRect = ref.current.getBoundingClientRect();
@@ -127,7 +127,7 @@ export default function ProfilePage() {
       // Scroll to the calculated position
       window.scrollTo({
         top: scrollPosition,
-        behavior: 'smooth'
+        behavior: 'instant' // Use instant for immediate scrolling
       });
       
       // Remove the hash without page reload
@@ -151,12 +151,15 @@ export default function ProfilePage() {
       const hash = window.location.hash;
       const isFromPortfolio = getSessionFlag('scrollToPortfolio');
       
+      console.log('Hash change detected:', hash, 'isFromPortfolio:', isFromPortfolio);
+      
       // Small delay to ensure the DOM is fully rendered
       const timer = setTimeout(() => {
         // Check for section hashes first
         if (hash === '#personal-details') {
           scrollToSectionIfNeeded('personal-details', personalDetailsRef);
         } else if (hash === '#portfolio' || isFromPortfolio) {
+          console.log('Scrolling to portfolio section');
           if (isFromPortfolio) {
             removeSessionItem('scrollToPortfolio');
           }
@@ -164,7 +167,7 @@ export default function ProfilePage() {
         } else if (hash === '#skills') {
           scrollToSectionIfNeeded('skills', skillsRef);
         }
-      }, 50); // Reduced delay for better UX
+      }, 200); // Increased delay for better reliability
       
       return () => clearTimeout(timer);
     };
@@ -179,7 +182,7 @@ export default function ProfilePage() {
     return () => {
       window.removeEventListener('hashchange', handleHashChange, false);
     };
-  }, [searchParams]);
+  }, []); // Remove searchParams dependency to ensure it always runs
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-white pb-20 md:pb-24">
       <ProfileHeader />

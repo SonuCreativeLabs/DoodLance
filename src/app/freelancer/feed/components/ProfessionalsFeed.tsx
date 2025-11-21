@@ -295,7 +295,7 @@ export default function ProfessionalsFeed({
                 }}
                 className="px-4 py-2 text-xs font-medium text-white bg-gradient-to-r from-[#6B46C1] to-[#4C1D95] hover:from-[#5B35B0] hover:to-[#3D1B7A] rounded-xl transition-all duration-300 shadow-lg shadow-purple-600/20 hover:shadow-purple-600/30 flex items-center justify-center gap-1.5 group-hover:shadow-lg group-hover:shadow-purple-500/20 flex-shrink-0"
               >
-                <span>Apply Now</span>
+                <span>{filteredProfessionals ? 'Hire Me' : 'Apply Now'}</span>
                 <svg className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                 </svg>

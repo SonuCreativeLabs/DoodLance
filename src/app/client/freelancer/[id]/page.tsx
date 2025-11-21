@@ -1,23 +1,24 @@
 "use client";
 
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from "@/components/ui/badge";
-import {
-  ArrowLeft,
-  Star,
-  MapPin,
-  Clock,
-  Briefcase,
-  Award,
-  Check,
-  ChevronDown,
-  Share2,
-  X,
-  CheckCircle,
-  ArrowRight
+import { 
+  ArrowLeft, 
+  Star, 
+  MapPin, 
+  Clock, 
+  Briefcase, 
+  Award, 
+  Check, 
+  ChevronDown, 
+  Share2, 
+  X, 
+  CheckCircle, 
+  ArrowRight,
+  UserPlus
 } from 'lucide-react';
 import { useNavbar } from '@/contexts/NavbarContext';
 import { professionals } from '@/app/client/nearby/mockData';
@@ -27,6 +28,7 @@ import { getSkillInfo, type SkillInfo } from '@/utils/skillUtils';
 import Image from 'next/image';
 import { IconButton } from '@/components/ui/icon-button';
 import { PortfolioItemModal } from '@/components/common/PortfolioItemModal';
+import { HireBottomSheet } from '@/components/hire/HireBottomSheet';
 
 interface FreelancerDetail {
   id: string;
@@ -116,6 +118,7 @@ export default function FreelancerDetailPage() {
   const [activeTab, setActiveTab] = useState('top');
   const [selectedPortfolioItem, setSelectedPortfolioItem] = useState<any>(null);
   const [isPortfolioModalOpen, setIsPortfolioModalOpen] = useState(false);
+  const [isHireBottomSheetOpen, setIsHireBottomSheetOpen] = useState(false);
   const tabsContainerRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -183,9 +186,11 @@ export default function FreelancerDetailPage() {
       });
     }
     setLoading(false);
+  }, [freelancerId]);
 
-    // Handle scroll to specific section when returning from preview pages
-    if (typeof window !== 'undefined') {
+  // Handle scroll to specific section when returning from preview pages
+  useLayoutEffect(() => {
+    if (typeof window !== 'undefined' && freelancer) {
       const hash = window.location.hash;
       const shouldScrollToPortfolio = sessionStorage.getItem('scrollToPortfolio') === 'true' || hash === '#portfolio';
       const shouldScrollToServices = sessionStorage.getItem('scrollToServices') === 'true' || hash === '#services';
@@ -196,8 +201,8 @@ export default function FreelancerDetailPage() {
       sessionStorage.removeItem('scrollToServices');
       sessionStorage.removeItem('scrollToReviews');
 
-      // Scroll to the appropriate section after a short delay to ensure DOM is ready
-      setTimeout(() => {
+      // Use requestAnimationFrame for better timing
+      const handleScroll = () => {
         if (shouldScrollToPortfolio) {
           const portfolioElement = document.getElementById('portfolio');
           if (portfolioElement) {
@@ -217,9 +222,12 @@ export default function FreelancerDetailPage() {
             setActiveTab('reviews');
           }
         }
-      }, 100);
+      };
+
+      // Use requestAnimationFrame instead of setTimeout for better DOM timing
+      requestAnimationFrame(handleScroll);
     }
-  }, [freelancerId]);
+  }, [freelancer]);
 
   const handleBack = () => {
     router.push('/client/nearby/integrated-explore');
@@ -707,19 +715,20 @@ export default function FreelancerDetailPage() {
                       </div>
 
                       <div>
-                        <h3 className="font-medium text-white mb-3">Skills</h3>
-                        <div className="flex flex-wrap gap-2">
+                        <h3 className="font-medium text-white mb-2">Skills</h3>
+                        <div className="flex flex-wrap gap-1.5">
                           {freelancer.skills?.map((skill, i) => (
                             <button
                               key={i}
-                              className="px-2 py-0.5 bg-white/5 hover:bg-white/10 text-white/80 hover:text-white text-xs rounded-full transition-colors cursor-pointer"
+                              onClick={() => handleSkillClick(skill)}
+                              className="bg-white/5 text-white/80 border border-white/10 hover:bg-white/10 rounded-full px-1.5 py-0.5 text-xs transition-colors cursor-pointer"
                             >
                               {skill}
                             </button>
                           )) || freelancer.expertise?.map((skill, i) => (
                             <span
                               key={i}
-                              className="px-3 py-1 bg-purple-500/10 text-purple-400 rounded-full text-xs font-medium border border-purple-500/20"
+                              className="px-1.5 py-0.5 bg-purple-500/10 text-purple-400 rounded-full text-xs font-medium border border-purple-500/20"
                             >
                               {skill}
                             </span>
@@ -781,11 +790,6 @@ export default function FreelancerDetailPage() {
                                         <div className="text-sm text-white/60 bg-white/5 px-3 py-1 rounded-full">
                                           {service.deliveryTime}
                                         </div>
-                                      </div>
-                                      <div className="flex items-center gap-2">
-                                        <button className="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-xl text-sm font-medium transition-colors">
-                                          Hire Me
-                                        </button>
                                       </div>
                                     </div>
                                   </div>
@@ -1029,6 +1033,31 @@ export default function FreelancerDetailPage() {
               setSelectedPortfolioItem(null);
             }}
           />
+
+          {/* Hire Bottom Sheet */}
+          {freelancer && freelancer.services && (
+            <HireBottomSheet
+              isOpen={isHireBottomSheetOpen}
+              onClose={() => setIsHireBottomSheetOpen(false)}
+              freelancerId={freelancer.id}
+              freelancerName={freelancer.name}
+              freelancerImage={freelancer.image}
+              freelancerRating={freelancer.rating}
+              freelancerReviewCount={freelancer.reviewCount}
+              services={freelancer.services}
+            />
+          )}
+
+          {/* Sticky Hire Me Button */}
+          <div className="fixed bottom-0 left-0 right-0 p-4 bg-[#0F0F0F]/95 backdrop-blur-sm border-t border-white/10">
+            <button
+              onClick={() => setIsHireBottomSheetOpen(true)}
+              className="w-full py-2.5 bg-gradient-to-r from-purple-600 to-purple-500 text-white font-medium rounded-xl hover:from-purple-700 hover:to-purple-600 transition-all flex items-center justify-center gap-2 shadow-lg"
+            >
+              <UserPlus className="w-4 h-4" />
+              Hire {freelancer?.name || 'Freelancer'}
+            </button>
+          </div>
         </div>
       )}
     </div>
