@@ -248,6 +248,16 @@ export default function PersonalDetailsPage() {
       const newCricketInfo = { ...editCricket };
       setCricketInfo(newCricketInfo);
       localStorage.setItem('cricketInfo', JSON.stringify(newCricketInfo));
+      // Sync cricket role with PersonalDetailsContext
+      updatePersonalDetails({
+        name: personalInfo.fullName,
+        title: editCricket.cricketRole || 'Cricketer',
+        cricketRole: editCricket.cricketRole,
+        battingStyle: editCricket.battingStyle,
+        bowlingStyle: editCricket.bowlingStyle,
+        location: locationInfo.city + ', ' + locationInfo.country,
+        dateOfBirth: personalInfo.dateOfBirth
+      });
     }
     setEditingSection(null);
   };

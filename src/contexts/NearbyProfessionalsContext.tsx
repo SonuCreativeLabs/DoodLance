@@ -21,6 +21,7 @@ export interface Professional {
   expertise: string[];
   experience: string;
   description?: string;
+  cricketRole?: string;
 }
 
 interface NearbyProfessionalsContextType {

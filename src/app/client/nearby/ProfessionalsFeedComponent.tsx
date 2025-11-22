@@ -25,6 +25,7 @@ interface BaseProfessional {
   expertise?: string[];
   experience?: string;
   description?: string;
+  cricketRole?: string;
 }
 
 interface ProfessionalsFeedProps {
@@ -116,7 +117,7 @@ export default function ProfessionalsFeed({ filteredProfessionals }: Professiona
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-[12px] font-medium text-white/80 bg-white/10 px-2 py-0.5 rounded-full whitespace-nowrap">{freelancer.service || 'Service'}</span>
+                    <span className="text-[12px] font-medium text-white/80 bg-white/10 px-2 py-0.5 rounded-full whitespace-nowrap">{freelancer.cricketRole || 'All Rounder'}</span>
                   </div>
                 </div>
               </div>

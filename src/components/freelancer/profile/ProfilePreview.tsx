@@ -747,13 +747,24 @@ const ProfilePreview = memo(({
                     <span className="text-white/50">Bowling Style:</span> <span className="text-white">{profileData.bowlingStyle}</span>
                   </div>
                 )}
-                {profileData.languages && (
-                  <div className="text-white/80">
-                    <span className="text-white/50">Languages:</span> <span className="text-white">{profileData.languages}</span>
-                  </div>
-                )}
               </div>
               
+              {/* Skills Section - Moved above response time */}
+              <div className="mb-6">
+                <h3 className="font-medium text-white mb-2">Skills</h3>
+                <div className="flex flex-wrap gap-1.5">
+                  {profileData.skills.map((skill, i) => (
+                    <button
+                      key={i}
+                      onClick={() => handleSkillClick(skill)}
+                      className="px-1.5 py-0.5 bg-white/10 text-white/80 border border-white/20 text-xs rounded-full transition-colors cursor-pointer hover:bg-white/20"
+                    >
+                      {skill}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <div className="flex items-center gap-6 mb-6 text-sm">
                 <div className="flex items-center gap-2">
                   <MessageSquare className="h-4 w-4 text-purple-400 flex-shrink-0" />
@@ -827,20 +838,6 @@ const ProfilePreview = memo(({
                   </div>
                 </div>
                 
-                <div>
-                  <h3 className="font-medium text-white mb-3">Skills</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {profileData.skills.map((skill, i) => (
-                      <button
-                        key={i}
-                        onClick={() => handleSkillClick(skill)}
-                        className="px-2 py-0.5 bg-white/10 text-white/80 border border-white/20 text-xs rounded-full transition-colors cursor-pointer hover:bg-white/20"
-                      >
-                        {skill}
-                      </button>
-                    ))}
-                  </div>
-                </div>
               </div>
             </section>
 

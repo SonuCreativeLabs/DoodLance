@@ -63,7 +63,6 @@ export interface ProfileData {
   workingHours?: string;
   completedJobs?: number;
   activeJobs?: number;
-  languages?: string;
   cricketRole?: string;
   battingStyle?: string;
   bowlingStyle?: string;

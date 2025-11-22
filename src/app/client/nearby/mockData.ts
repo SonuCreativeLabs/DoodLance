@@ -391,7 +391,7 @@ export const professionals: Professional[] = [
     // Additional profile fields
     bio: "Professional wicket-keeper with 7+ years of experience. Expert in glove work, stumping techniques, and keeping up to both pace and spin bowlers.",
     about: "Professional wicket-keeper with 7+ years of experience. Expert in glove work, stumping techniques, and keeping up to both pace and spin bowlers.",
-    cricketRole: "Wicket Keeper",
+    cricketRole: "WK-Batsman",
     battingStyle: "Right-handed",
     bowlingStyle: "Right-arm Medium",
     languages: "English, Hindi, Punjabi",
@@ -766,7 +766,7 @@ export const professionals: Professional[] = [
     // Additional profile fields
     bio: "Certified sports physiotherapist specializing in cricket injuries, rehabilitation, and performance enhancement for athletes at all levels.",
     about: "Certified sports physiotherapist specializing in cricket injuries, rehabilitation, and performance enhancement for athletes at all levels.",
-    cricketRole: "Sports Physiotherapist",
+    cricketRole: "Physiotherapist",
     battingStyle: "Right-handed",
     bowlingStyle: "Right-arm Medium",
     languages: "English, Hindi, Tamil",

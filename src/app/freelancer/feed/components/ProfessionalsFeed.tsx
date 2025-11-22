@@ -36,6 +36,7 @@ export type BaseProfessional = {
   description?: string;
   expertise?: string[];
   experience?: string;
+  cricketRole?: string;
 };
 
 interface ProfessionalsFeedProps {
@@ -45,6 +46,8 @@ interface ProfessionalsFeedProps {
   onJobSelect?: (job: Job) => void;
   onApply?: (jobId: string, proposal: string, rate: string, rateType: string, attachments: File[]) => void;
   className?: string;
+  searchQuery?: string;
+  selectedCategory?: string;
 }
 
 export default function ProfessionalsFeed({ 
@@ -53,7 +56,9 @@ export default function ProfessionalsFeed({
   onProfessionalSelect,
   onJobSelect,
   onApply,
-  className = ''
+  className = '',
+  searchQuery = '',
+  selectedCategory = 'All'
 }: ProfessionalsFeedProps) {
   const formatScheduledDate = (scheduledAt: string) => {
     if (!scheduledAt) return 'Date TBD';
@@ -110,7 +115,7 @@ export default function ProfessionalsFeed({
     setShowFullView(false);
   };
 
-  const handleApply = (jobId: string) => {
+  const handleJobApply = (jobId: string) => {
     // For list view, open the job details modal instead of applying directly
     const job = items.find((item: any) => item.id === jobId);
     if (job) {
@@ -118,13 +123,74 @@ export default function ProfessionalsFeed({
     }
   };
 
-  const handleJobApply = (jobId: string, proposal: string, rate: string, rateType: string, attachments: File[]) => {
-    if (onApply) {
-      onApply(jobId, proposal, rate, rateType, attachments);
-    } else {
-      // Default behavior: just log for now
-      console.log('Apply to job:', { jobId, proposal, rate, rateType, attachments });
+  const getServicePrice = (item: any, searchQuery: string, selectedCategory: string): number => {
+    // Service-specific pricing based on search/filter criteria - Updated competitive rates
+    const servicePricing: { [key: string]: number } = {
+      'Fast Bowler': 750,        // Reduced from 800
+      'Net Bowler': 550,         // Reduced from 600
+      'Sidearm Specialist': 450,  // Reduced from 500
+      'Batting Coach': 1100,     // Reduced from 1200
+      'Sports Conditioning Trainer': 850,  // Reduced from 900
+      'Fitness Trainer': 700,    // Reduced from 750
+      'Cricket Analyst': 1400,   // Reduced from 1500
+      'Physio': 1500,           // Reduced from 1600
+      'Scorer': 350,            // Reduced from 400
+      'Umpire': 600,            // Reduced from 650
+      'Cricket Photo/Videography': 1700,  // Reduced from 1900
+      'Cricket Content Creator': 1200,    // Reduced from 1300
+      'Commentator': 1800,      // Reduced from 2000
+      'Match Player': 1600,     // Reduced from 1800
+      'Net Batsman': 500,       // Reduced from 550
+      'Coach': 500,             // Reduced from 550
+      // Added missing services with competitive rates
+      'Spin Bowler': 700,       // New addition
+      'Wicket Keeper': 600,     // New addition
+      'All Rounder': 900,       // New addition
+      'Physiotherapist': 1450,  // New addition
+      'Videographer': 1650,     // New addition
+      'Content Creator': 1150,  // New addition
+    };
+
+    // If there's a specific search query, try to match it to a service price
+    if (searchQuery && searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      const matchedPrice = Object.entries(servicePricing).find(([serviceName]) => 
+        serviceName.toLowerCase().includes(query) || query.includes(serviceName.toLowerCase())
+      );
+      if (matchedPrice) return matchedPrice[1];
     }
+
+    // If there's a category filter, use category-specific pricing
+    if (selectedCategory && selectedCategory !== 'All') {
+      const categoryServices: { [key: string]: string[] } = {
+        'Playing Services': ['Match Player', 'Net Bowler', 'Net Batsman', 'Sidearm Specialist', 'Bowler', 'Batsman', 'Fast Bowler', 'Spin Bowler', 'Wicket Keeper', 'All Rounder'],
+        'Coaching & Training': ['Coach', 'Batting Coach', 'Sports Conditioning Trainer', 'Fitness Trainer'],
+        'Support Staff': ['Cricket Analyst', 'Physio', 'Physiotherapist', 'Scorer', 'Umpire'],
+        'Media & Content': ['Cricket Photo/Videography', 'Cricket Content Creator', 'Commentator', 'Videographer', 'Content Creator']
+      };
+      
+      const allowedServices = categoryServices[selectedCategory] || [];
+      if (allowedServices.length > 0) {
+        // Find the lowest price among allowed services for this freelancer
+        const freelancerServices = allowedServices.filter(service => 
+          item.service?.toLowerCase().includes(service.toLowerCase()) ||
+          item.category?.toLowerCase().includes(service.toLowerCase())
+        );
+        
+        if (freelancerServices.length > 0) {
+          const prices = freelancerServices.map(service => servicePricing[service]).filter(price => price);
+          if (prices.length > 0) return Math.min(...prices);
+        }
+      }
+    }
+
+    // Default to service-specific pricing or fallback to item.budget
+    const matchedPrice = Object.entries(servicePricing).find(([serviceName]) => 
+      item.service?.toLowerCase().includes(serviceName.toLowerCase()) ||
+      item.category?.toLowerCase().includes(serviceName.toLowerCase())
+    );
+    
+    return matchedPrice ? matchedPrice[1] : (item.budget || item.price || 500);
   };
 
   if (!items || items.length === 0) {
@@ -134,8 +200,6 @@ export default function ProfessionalsFeed({
       </div>
     );
   }
-
-  console.log('ProfessionalsFeed - Rendering items:', items.length);
 
   // If in full view, only show the selected job (only for job items)
   if (showFullView && selectedJob && !filteredProfessionals) {
@@ -186,7 +250,7 @@ export default function ProfessionalsFeed({
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-[12px] font-medium text-white/80 bg-white/10 px-2 py-0.5 rounded whitespace-nowrap">
-                          {item.category || item.service}
+                          {item.cricketRole || 'All Rounder'}
                         </span>
                         {item.workMode && (
                           <span className="text-[12px] font-medium text-white/80 bg-white/10 px-2 py-0.5 rounded whitespace-nowrap">
@@ -277,11 +341,11 @@ export default function ProfessionalsFeed({
             {/* Footer */}
             <div className="flex items-center justify-between pt-3 border-t border-white/5 mt-2">
               <div className="flex items-baseline gap-1 min-w-0 flex-1">
-                <span className="text-[17px] font-semibold text-white truncate max-w-[120px]" title={`₹${item.budget?.toLocaleString()}`}>
-                  ₹{item.budget?.toLocaleString()}
+                <span className="text-[11px] font-medium text-white/50 truncate">
+                  From
                 </span>
-                <span className="text-[13px] text-white/60 truncate leading-tight max-w-[80px]">
-                  / {filteredProfessionals ? 'hour' : getJobDurationLabel(item as Job)}
+                <span className="text-[15px] font-semibold text-white truncate max-w-[120px]">
+                  ₹{getServicePrice(item, searchQuery, selectedCategory).toLocaleString()}
                 </span>
               </div>
               <button
@@ -290,12 +354,12 @@ export default function ProfessionalsFeed({
                   if (filteredProfessionals) {
                     onProfessionalSelect?.(item);
                   } else {
-                    handleApply(item.id);
+                    handleJobApply(item.id);
                   }
                 }}
                 className="px-4 py-2 text-xs font-medium text-white bg-gradient-to-r from-[#6B46C1] to-[#4C1D95] hover:from-[#5B35B0] hover:to-[#3D1B7A] rounded-xl transition-all duration-300 shadow-lg shadow-purple-600/20 hover:shadow-purple-600/30 flex items-center justify-center gap-1.5 group-hover:shadow-lg group-hover:shadow-purple-500/20 flex-shrink-0"
               >
-                <span>{filteredProfessionals ? 'Hire Me' : 'Apply Now'}</span>
+                <span>{filteredProfessionals ? 'Hire Now' : 'Apply Now'}</span>
                 <svg className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                 </svg>

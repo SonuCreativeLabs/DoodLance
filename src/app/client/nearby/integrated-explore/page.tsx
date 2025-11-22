@@ -33,27 +33,89 @@ export default function IntegratedExplorePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredProfessionals, setFilteredProfessionals] = useState<BaseProfessional[]>([]);
   
-  // Map Freelancer to BaseProfessional with default values for required fields
-  const mapToProfessional = (freelancer: Freelancer): BaseProfessional => ({
-    ...freelancer,
-    id: freelancer.id.toString(),
-    name: freelancer.name,
-    title: freelancer.name,
-    service: freelancer.service,
-    availability: ['Available now'],
-    avatar: freelancer.image,
-    image: freelancer.image, // Keep both for compatibility
-    skills: freelancer.expertise || [], // Use expertise as skills
-    description: freelancer.description || `${freelancer.name} is a ${freelancer.experience} cricket professional specializing in ${freelancer.service.toLowerCase()} with expertise in ${freelancer.expertise?.slice(0, 3).join(', ')}${freelancer.expertise && freelancer.expertise.length > 3 ? ' & more' : ''}. ${freelancer.completedJobs}+ successful sessions completed.`,
-    // Map price fields correctly for the freelancer feed component
-    budget: freelancer.price,
-    price: freelancer.price, // Also set price for client nearby component
-    priceUnit: freelancer.priceUnit,
-    category: freelancer.service, // Use the specific service as category
-    // Include the new fields
-    expertise: freelancer.expertise,
-    experience: freelancer.experience
-  });
+  // Map Freelancer to BaseProfessional with service-specific pricing
+  const mapToProfessional = (freelancer: Freelancer): BaseProfessional => {
+    // Service-specific pricing based on freelancer's service type
+    const getServicePrice = (service: string): number => {
+      const servicePricing: { [key: string]: number } = {
+        'Fast Bowler': 800,
+        'Net Bowler': 600,
+        'Sidearm Specialist': 500,
+        'Batting Coach': 1200,
+        'Sports Conditioning Trainer': 900,
+        'Fitness Trainer': 750,
+        'Cricket Analyst': 1500,
+        'Physio': 1600,
+        'Scorer': 400,
+        'Umpire': 650,
+        'Cricket Photo/Videography': 1900,
+        'Cricket Content Creator': 1300,
+        'Commentator': 2000,
+        'Match Player': 1800,
+        'Net Batsman': 550,
+        'Coach': 550,
+      };
+      
+      // Find matching service or return base price
+      const matchedPrice = Object.entries(servicePricing).find(([serviceName]) => 
+        service.toLowerCase().includes(serviceName.toLowerCase())
+      );
+      
+      return matchedPrice ? matchedPrice[1] : freelancer.price;
+    };
+
+    // Map service to cricket role
+    const getCricketRole = (service: string): string => {
+      const roleMapping: { [key: string]: string } = {
+        'Fast Bowler': 'Fast Bowler',
+        'Net Bowler': 'Fast Bowler',
+        'Sidearm Specialist': 'WK-Batsman',
+        'Batting Coach': 'Batting Coach',
+        'Sports Conditioning Trainer': 'Fitness Trainer',
+        'Fitness Trainer': 'Fitness Trainer',
+        'Cricket Analyst': 'Cricket Analyst',
+        'Physio': 'Physiotherapist',
+        'Scorer': 'Scorer',
+        'Umpire': 'Umpire',
+        'Cricket Photo/Videography': 'Videographer',
+        'Cricket Content Creator': 'Content Creator',
+        'Commentator': 'Commentator',
+        'Match Player': 'All Rounder',
+        'Net Batsman': 'Batsman',
+        'Coach': 'Coach',
+        'Spin Bowler': 'Spin Bowler',
+        'Sports Physiotherapist': 'Physiotherapist',
+        'Cricket Commentator': 'Commentator'
+      };
+      
+      return roleMapping[service] || 'All Rounder';
+    };
+
+    const servicePrice = getServicePrice(freelancer.service);
+    const cricketRole = freelancer.cricketRole || getCricketRole(freelancer.service);
+    
+    return {
+      ...freelancer,
+      id: freelancer.id.toString(),
+      name: freelancer.name,
+      title: freelancer.name,
+      service: freelancer.service,
+      availability: ['Available now'],
+      avatar: freelancer.image,
+      image: freelancer.image, // Keep both for compatibility
+      skills: freelancer.expertise || [], // Use expertise as skills
+      description: freelancer.description || `${freelancer.name} is a ${freelancer.experience} cricket professional specializing in ${freelancer.service.toLowerCase()} with expertise in ${freelancer.expertise?.slice(0, 3).join(', ')}${freelancer.expertise && freelancer.expertise.length > 3 ? ' & more' : ''}.`,
+      // Map price fields correctly for the freelancer feed component
+      budget: servicePrice,
+      price: servicePrice, // Also set price for client nearby component
+      priceUnit: freelancer.priceUnit,
+      category: freelancer.service, // Use the specific service as category
+      cricketRole: cricketRole,
+      // Include the new fields
+      expertise: freelancer.expertise,
+      experience: freelancer.experience
+    };
+  };
   
   // Initialize filtered professionals and set initial sheet position
   useEffect(() => {
@@ -234,18 +296,18 @@ export default function IntegratedExplorePage() {
       }`}>
         <div className="w-full max-w-md mb-2 px-3">
           <div className="flex gap-2">
-            <div className={`flex-1 flex items-center gap-2 px-4 py-2 rounded-full border shadow transition-all duration-200 ${
+            <div className={`flex-1 flex items-center gap-2 px-3 py-2 rounded-full border shadow transition-all duration-200 ${
               isSheetCollapsed
                 ? 'bg-black/60 backdrop-blur-sm border-white/20'
                 : 'bg-[#111111] border-white/30'
             }`}>
-              <Search className="w-5 h-5 text-purple-400 flex-shrink-0" />
+              <Search className="w-4 h-4 text-purple-400 flex-shrink-0" />
               <input
                 type="text"
                 placeholder="Search services, professionals, or areas..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1 bg-transparent outline-none text-base text-white font-medium placeholder:text-white/60"
+                className="flex-1 bg-transparent outline-none text-sm text-white font-medium placeholder:text-white/60"
               />
             </div>
             <button 
@@ -435,7 +497,11 @@ export default function IntegratedExplorePage() {
             )}
             {!isSheetCollapsed && (
               <div className="space-y-2.5 px-1">
-                <ProfessionalsFeed filteredProfessionals={filteredProfessionals} />
+                <ProfessionalsFeed 
+                  filteredProfessionals={filteredProfessionals}
+                  searchQuery={searchQuery}
+                  selectedCategory={selectedCategory}
+                />
               </div>
             )}
           </div>

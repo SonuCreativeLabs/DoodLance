@@ -163,7 +163,7 @@ export default function FreelancerDetailPage() {
         responseTime: foundFreelancer.responseTime,
         image: foundFreelancer.image,
         expertise: foundFreelancer.expertise,
-        description: foundFreelancer.bio || foundFreelancer.about || `${foundFreelancer.name} is a ${foundFreelancer.experience} cricket professional specializing in ${foundFreelancer.service.toLowerCase()} with expertise in ${foundFreelancer.expertise?.slice(0, 3).join(', ')}${foundFreelancer.expertise && foundFreelancer.expertise.length > 3 ? ' & more' : ''}.`,
+        description: freelancer?.description || `${foundFreelancer.name} is a ${foundFreelancer.experience} cricket professional specializing in ${foundFreelancer.service.toLowerCase()} with expertise in ${foundFreelancer.expertise?.slice(0, 3).join(', ')}${foundFreelancer.expertise && foundFreelancer.expertise.length > 3 ? ' & more' : ''}.`,
         availability: foundFreelancer.availability || [],
         online: onlineStatus,
 
@@ -502,7 +502,7 @@ export default function FreelancerDetailPage() {
                     <div className="flex items-center justify-center gap-2">
                       <h1 className="text-2xl font-bold text-white">{freelancer.name}</h1>
                     </div>
-                    <p className="text-purple-400 mt-0.5">{freelancer.service}</p>
+                    <p className="text-purple-400 mt-0.5">{freelancer.cricketRole || 'All Rounder'}</p>
                     
                     <div className="mt-2 flex flex-col items-center gap-0.5 text-sm text-white/70">
                       <div className="flex items-center gap-2">
@@ -553,7 +553,7 @@ export default function FreelancerDetailPage() {
                     <div className="flex-1 flex justify-center">
                       <div className="flex flex-col items-center text-center">
                         <span className="text-white font-medium text-sm truncate">{freelancer.name}</span>
-                        <span className="text-white/60 text-xs truncate">{freelancer.service}</span>
+                        <span className="text-white/60 text-xs truncate">{freelancer.cricketRole || 'All Rounder'}</span>
                       </div>
                     </div>
                     <IconButton
@@ -641,6 +641,29 @@ export default function FreelancerDetailPage() {
                       )}
                     </div>
 
+                    {/* Skills Section - Moved above response time */}
+                    <div className="mb-6">
+                      <h3 className="font-medium text-white mb-2">Skills</h3>
+                      <div className="flex flex-wrap gap-1.5">
+                        {freelancer.skills?.map((skill, i) => (
+                          <button
+                            key={i}
+                            onClick={() => handleSkillClick(skill)}
+                            className="bg-white/5 text-white/80 border border-white/10 hover:bg-white/10 rounded-full px-1.5 py-0.5 text-xs transition-colors cursor-pointer"
+                          >
+                            {skill}
+                          </button>
+                        )) || freelancer.expertise?.map((skill, i) => (
+                          <span
+                            key={i}
+                            className="px-1.5 py-0.5 bg-purple-500/10 text-purple-400 rounded-full text-xs font-medium border border-purple-500/20"
+                          >
+                            {skill}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
                     <div className="flex items-center gap-6 mb-6 text-sm">
                       <div className="flex items-center gap-2">
                         <Clock className="h-4 w-4 text-purple-400 flex-shrink-0" />
@@ -714,27 +737,6 @@ export default function FreelancerDetailPage() {
                         </div>
                       </div>
 
-                      <div>
-                        <h3 className="font-medium text-white mb-2">Skills</h3>
-                        <div className="flex flex-wrap gap-1.5">
-                          {freelancer.skills?.map((skill, i) => (
-                            <button
-                              key={i}
-                              onClick={() => handleSkillClick(skill)}
-                              className="bg-white/5 text-white/80 border border-white/10 hover:bg-white/10 rounded-full px-1.5 py-0.5 text-xs transition-colors cursor-pointer"
-                            >
-                              {skill}
-                            </button>
-                          )) || freelancer.expertise?.map((skill, i) => (
-                            <span
-                              key={i}
-                              className="px-1.5 py-0.5 bg-purple-500/10 text-purple-400 rounded-full text-xs font-medium border border-purple-500/20"
-                            >
-                              {skill}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
                     </div>
                   </section>
 
