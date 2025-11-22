@@ -81,7 +81,7 @@ export default function CartPage() {
             <h3 className="text-lg font-medium text-white/90 mb-2">Your cart is empty</h3>
             <p className="text-white/60 text-sm mb-6">Add some services to get started</p>
             <Button
-              onClick={() => router.push('/client/nearby/integrated-explore')}
+              onClick={() => router.push('/client/nearby/hirefeed')}
               className="bg-purple-600 hover:bg-purple-700 text-white"
             >
               Browse Services

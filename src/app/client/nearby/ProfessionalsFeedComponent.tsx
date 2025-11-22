@@ -6,7 +6,7 @@ import { Star, MapPin, Clock, Briefcase } from 'lucide-react';
 import { useNearbyProfessionals } from '@/contexts/NearbyProfessionalsContext';
 import type { Freelancer } from './types';
 
-// Define BaseProfessional interface to match what we receive from integrated-explore
+// Define BaseProfessional interface to match what we receive from hirefeed
 interface BaseProfessional {
   id: string | number;
   name?: string;

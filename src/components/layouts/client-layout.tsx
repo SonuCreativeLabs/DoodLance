@@ -67,7 +67,7 @@ export default function ClientLayout({ children, className }: ClientLayoutProps)
               </Link>
 
               <Link 
-                href="/client/nearby/integrated-explore" 
+                href="/client/nearby/hirefeed" 
                 className="flex flex-col items-center justify-center"
               >
                 <div className={cn(

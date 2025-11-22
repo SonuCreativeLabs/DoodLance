@@ -1,6 +1,6 @@
 "use client";
 
-import IntegratedExplorePage from './integrated-explore/page';
+import IntegratedExplorePage from './hirefeed/page';
 
 export default function NearbyProfessionals() {
   return <IntegratedExplorePage />;

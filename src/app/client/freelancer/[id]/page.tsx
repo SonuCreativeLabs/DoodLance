@@ -235,11 +235,11 @@ export default function FreelancerDetailPage() {
   const handleBack = () => {
     const source = searchParams.get('source');
     if (source === 'list') {
-      // Came from list view, go back to integrated explore with list view expanded
-      router.push('/client/nearby/integrated-explore?view=list');
+      // Came from list view, go back to hirefeed with list view expanded
+      router.push('/client/nearby/hirefeed?view=list');
     } else {
-      // Came from map view or default, go back to integrated explore (map view)
-      router.push('/client/nearby/integrated-explore');
+      // Came from map view or default, go back to hirefeed (map view)
+      router.push('/client/nearby/hirefeed');
     }
   };
 

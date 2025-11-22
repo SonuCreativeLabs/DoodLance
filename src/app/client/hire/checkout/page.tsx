@@ -49,7 +49,7 @@ export default function CheckoutPage() {
         <div className="text-center">
           <h3 className="text-lg font-medium text-white/90 mb-2">No items to checkout</h3>
           <Button
-            onClick={() => router.push('/client/nearby/integrated-explore')}
+            onClick={() => router.push('/client/nearby/hirefeed')}
             className="bg-purple-600 hover:bg-purple-700 text-white"
           >
             Browse Services

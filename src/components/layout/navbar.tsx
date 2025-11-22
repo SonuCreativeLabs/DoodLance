@@ -21,7 +21,7 @@ export function Navbar() {
             <Link href="/client/bookings" className="text-gray-600 hover:text-[#FF8A3D] transition-colors">
               Bookings
             </Link>
-            <Link href="/client/nearby/integrated-explore" className="text-gray-600 hover:text-[#FF8A3D] transition-colors">
+            <Link href="/client/nearby/hirefeed" className="text-gray-600 hover:text-[#FF8A3D] transition-colors">
               Hire
             </Link>
             <Link href="/inbox" className="text-gray-600 hover:text-[#FF8A3D] transition-colors">
