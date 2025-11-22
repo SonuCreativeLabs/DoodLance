@@ -548,13 +548,81 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
                   ₹${job.budget.toLocaleString('en-IN')}
                 </span>
                 <span class="text-[13px] text-white/60">
-                  / ${job.category === 'Sports' ? 'session' :
-                      job.category?.toLowerCase().includes('tutoring') ? 'session' :
-                      job.category?.toLowerCase().includes('coach') ? 'session' :
-                      job.category?.toLowerCase().includes('fitness') ? 'session' :
-                      job.category?.toLowerCase().includes('makeup') ? 'session' :
-                      job.category?.toLowerCase().includes('diet') ? 'plan' :
-                      'project'}
+                  / ${(() => {
+                    const { category, title, duration } = job;
+                    
+                    // Check for specific title hints first (overrides category logic)
+                    const titleLower = title?.toLowerCase() || '';
+                    if (titleLower.includes('90-minute') || titleLower.includes('90 minute')) {
+                      return '90 minutes';
+                    }
+                    if (titleLower.includes('2-hour') || titleLower.includes('2 hour')) {
+                      return '2 hours';
+                    }
+                    if (titleLower.includes('1-hour') || titleLower.includes('1 hour')) {
+                      return '1 hour';
+                    }
+
+                    // If duration is already a formatted string (not an enum), return it directly
+                    if (typeof duration === 'string' && !['hourly', 'daily', 'weekly', 'monthly', 'one-time'].includes(duration)) {
+                      return duration;
+                    }
+
+                    // If job has a specific duration field, use that to determine the label
+                    if (duration) {
+                      const categoryLower = category?.toLowerCase() || '';
+                      const durationValue = typeof duration === 'string' ? duration : duration;
+
+                      // Duration labels based on category and duration type
+                      switch (durationValue) {
+                        case 'hourly':
+                          if (categoryLower.includes('coach') || categoryLower.includes('coaching')) {
+                            return '1 hour'; // Default for coaching
+                          } else if (categoryLower.includes('bowling') || categoryLower.includes('net bowler') || categoryLower.includes('sidearm')) {
+                            return '1.5 hours'; // Bowling sessions
+                          } else if (categoryLower.includes('batting')) {
+                            return '1 hour'; // Batting sessions
+                          } else if (categoryLower.includes('analyst') || categoryLower.includes('analysis')) {
+                            return '2 hours'; // Analysis sessions
+                          } else if (categoryLower.includes('photo') || categoryLower.includes('videography')) {
+                            return '3 hours'; // Event photography
+                          } else if (categoryLower.includes('content creator')) {
+                            return '3 hours'; // Content creation
+                          } else if (categoryLower.includes('physio')) {
+                            return '1 hour'; // Physio sessions
+                          } else if (categoryLower.includes('conditioning') || categoryLower.includes('fitness')) {
+                            return '1.5 hours'; // Conditioning sessions
+                          }
+                          return '1 hour'; // Default hourly
+
+                        case 'daily':
+                          if (categoryLower.includes('scorer')) {
+                            return 'per match';
+                          }
+                          return 'per day';
+
+                        case 'weekly':
+                          return 'per week';
+
+                        case 'monthly':
+                          return 'per month';
+
+                        case 'one-time':
+                          if (categoryLower.includes('scorer') || categoryLower.includes('umpire')) {
+                            return 'per match';
+                          } else if (categoryLower.includes('photo') || categoryLower.includes('video')) {
+                            return 'per event';
+                          }
+                          return 'one-time';
+
+                        default:
+                          return 'per session'; // Fallback
+                      }
+                    }
+
+                    // Fallback if no duration field (shouldn't happen with updated jobs)
+                    return '1 hour';
+                  })()}
                 </span>
               </div>
               <button class="apply-now-btn px-4 py-2 text-xs font-medium text-white bg-gradient-to-r from-[#6B46C1] to-[#4C1D95] hover:from-[#5B35B0] hover:to-[#3D1B7A] rounded-xl transition-all duration-300 shadow-lg shadow-purple-600/20 hover:shadow-purple-600/30 flex items-center justify-center gap-1.5"
@@ -593,8 +661,8 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
           return;
         }
         
-        // Don't trigger if clicking on the apply button or navigation
-        if (!target.closest('.apply-now-btn')) {
+        // Handle apply button clicks and other card clicks
+        if (target.closest('.apply-now-btn') || !target.closest('.nav-btn')) {
           setSelectedJob(job);
           setIsJobDetailsOpen(true);
         }

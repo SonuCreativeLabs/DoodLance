@@ -355,16 +355,10 @@ export default function ProfessionalsFeed({
                 ₹{(item.budget || 0).toLocaleString('en-IN')}
               </span>
               <span className="text-[13px] text-white/60">
-                / {item.category === 'Sports' ? 'session' :
-                    item.category?.toLowerCase().includes('tutoring') ? 'session' :
-                    item.category?.toLowerCase().includes('coach') ? 'session' :
-                    item.category?.toLowerCase().includes('fitness') ? 'session' :
-                    item.category?.toLowerCase().includes('makeup') ? 'session' :
-                    item.category?.toLowerCase().includes('diet') ? 'plan' :
-                    'project'}
+                / {getJobDurationLabel(item)}
               </span>
             </div>
-            <button className="px-4 py-2 text-xs font-medium text-white bg-gradient-to-r from-[#6B46C1] to-[#4C1D95] hover:from-[#5B35B0] hover:to-[#3D1B7A] rounded-xl transition-all duration-300 shadow-lg shadow-purple-600/20 hover:shadow-purple-600/30 flex items-center justify-center gap-1.5" onClick={(e) => { e.stopPropagation(); }}>
+            <button className="px-4 py-2 text-xs font-medium text-white bg-gradient-to-r from-[#6B46C1] to-[#4C1D95] hover:from-[#5B35B0] hover:to-[#3D1B7A] rounded-xl transition-all duration-300 shadow-lg shadow-purple-600/20 hover:shadow-purple-600/30 flex items-center justify-center gap-1.5" onClick={(e) => { e.stopPropagation(); handleJobApply(item.id); }}>
               <span>Apply Now</span>
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
