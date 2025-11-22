@@ -51,7 +51,7 @@ export default function ProfessionalsFeed({ filteredProfessionals }: Professiona
 
   const handleProfessionalClick = (freelancer: BaseProfessional) => {
     if (freelancer && freelancer.id) {
-      router.push(`/client/freelancer/${freelancer.id}`);
+      router.push(`/client/freelancer/${freelancer.id}?source=list`);
     }
   };
 
@@ -117,7 +117,7 @@ export default function ProfessionalsFeed({ filteredProfessionals }: Professiona
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-[12px] font-medium text-white/80 bg-white/10 px-2 py-0.5 rounded-full whitespace-nowrap">{freelancer.cricketRole || 'All Rounder'}</span>
+                    <span className="text-[12px] font-medium text-white/80 whitespace-nowrap">{freelancer.cricketRole || 'All Rounder'}</span>
                   </div>
                 </div>
               </div>
@@ -125,9 +125,9 @@ export default function ProfessionalsFeed({ filteredProfessionals }: Professiona
               <div className="flex items-center gap-4 text-[12px] text-white/60">
                 <div className="flex items-center gap-1.5">
                   <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
-                  <span className="truncate max-w-[120px]" title={freelancer.location}>{freelancer.location}</span>
+                  <span className="truncate max-w-[120px]" title={`${freelancer.location}${freelancer.distance ? ` | ${freelancer.distance < 1 ? `${(freelancer.distance * 1000).toFixed(0)}m` : `${freelancer.distance.toFixed(1)}km`} away` : ''}`}>{freelancer.location}{freelancer.distance ? <><span className="text-white/30 mx-1 text-[10px]">|</span>{freelancer.distance < 1 ? `${(freelancer.distance * 1000).toFixed(0)}m` : `${freelancer.distance.toFixed(1)}km`} away</> : ''}</span>
                 </div>
-                <div className="flex items-center gap-1.5 bg-green-500/10 px-2 py-0.5 rounded-full">
+                <div className="flex items-center gap-1.5">
                   <Clock className="w-3.5 h-3.5 flex-shrink-0 text-green-400" />
                   <span className="text-green-400 font-medium">{freelancer.responseTime}</span>
                 </div>

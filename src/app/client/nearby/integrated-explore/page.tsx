@@ -1,17 +1,18 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { PanInfo } from 'framer-motion';
 import MapView from '../MapViewComponent';
 import ProfessionalsFeed, { BaseProfessional } from '@/app/freelancer/feed/components/ProfessionalsFeed';
 import { Search, Map, Plus } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { categories } from '../constants';
 import { useNearbyProfessionals } from '@/contexts/NearbyProfessionalsContext';
 import { Freelancer } from '../types';
 import SearchFilters from '../components/SearchFilters';
 
 export default function IntegratedExplorePage() {
+  const searchParams = useSearchParams();
   const [isSheetCollapsed, setIsSheetCollapsed] = useState(true);
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -20,6 +21,26 @@ export default function IntegratedExplorePage() {
   const [isDragTextVisible, setIsDragTextVisible] = useState(true);
   const router = useRouter();
   const { professionals } = useNearbyProfessionals();
+  const mapViewRef = useRef<any>(null);
+
+  // Check URL parameters to determine initial sheet state and pin to open
+  useEffect(() => {
+    const view = searchParams.get('view');
+    const pinId = searchParams.get('pinId');
+    
+    if (view === 'list') {
+      setIsSheetCollapsed(false);
+      setIsDragTextVisible(false);
+    }
+    
+    // If there's a pinId, we need to open that specific pin on the map
+    if (pinId && mapViewRef.current) {
+      // Trigger the pin opening after a short delay to ensure map is loaded
+      setTimeout(() => {
+        mapViewRef.current.openPin(pinId);
+      }, 1000);
+    }
+  }, [searchParams]);
 
   // Filter state
   const [selectedArea, setSelectedArea] = useState("Velachery");
@@ -130,7 +151,7 @@ export default function IntegratedExplorePage() {
       const categoryServices: { [key: string]: string[] } = {
         'Playing Services': ['Match Player', 'Net Bowler', 'Net Batsman', 'Sidearm Specialist', 'Bowler', 'Batsman'],
         'Coaching & Training': ['Coach', 'Sports Conditioning Trainer', 'Fitness Trainer'],
-        'Support Staff': ['Analyst', 'Physio', 'Scorer', 'Umpire'],
+        'Support Staff & Others': ['Analyst', 'Physio', 'Scorer', 'Umpire', 'Groundsman'],
         'Media & Content': ['Cricket Photo/Videography', 'Cricket Content Creator', 'Commentator']
       };
       
@@ -201,7 +222,7 @@ export default function IntegratedExplorePage() {
       const categoryServices: { [key: string]: string[] } = {
         'Playing Services': ['Match Player', 'Net Bowler', 'Net Batsman', 'Sidearm Specialist', 'Bowler', 'Batsman'],
         'Coaching & Training': ['Coach', 'Sports Conditioning Trainer', 'Fitness Trainer'],
-        'Support Staff': ['Analyst', 'Physio', 'Scorer', 'Umpire'],
+        'Support Staff & Others': ['Analyst', 'Physio', 'Scorer', 'Umpire', 'Groundsman'],
         'Media & Content': ['Cricket Photo/Videography', 'Cricket Content Creator', 'Commentator']
       };
       
@@ -286,7 +307,7 @@ export default function IntegratedExplorePage() {
   return (
     <div className="h-screen w-full bg-transparent relative overflow-hidden">
       {/* Map View */}
-      <MapView professionals={filteredProfessionals} />
+      <MapView ref={mapViewRef} professionals={filteredProfessionals} />
 
       {/* Fixed Header - Always at top */}
       <div className={`fixed top-0 left-0 right-0 z-[3] px-0 pt-3 flex flex-col items-center transition-all duration-200 ${
@@ -329,9 +350,9 @@ export default function IntegratedExplorePage() {
             </button>
           </div>
         </div>
-        <div className="w-full flex flex-col px-3">
+        <div className="w-full flex flex-col px-0">
           <div className="flex gap-2 w-full justify-start pb-2">
-            <div className="flex gap-1.5 no-scrollbar overflow-x-auto w-full">
+            <div className="flex gap-1.5 no-scrollbar overflow-x-auto w-full px-3">
               {categories.map((cat) => (
                 <button
                   key={cat.name}
@@ -485,7 +506,7 @@ export default function IntegratedExplorePage() {
                 </div>
                 <button
                   onClick={() => router.push('/client/post')}
-                  className="group relative flex items-center gap-1.5 px-4 py-2 bg-white/95 backdrop-blur-xl rounded-xl text-sm font-semibold transition-all duration-300 hover:bg-white shadow-lg hover:shadow-xl"
+                  className="group relative flex items-center gap-1.5 px-3 py-1.5 bg-white/95 backdrop-blur-xl rounded-xl text-sm font-semibold transition-all duration-300 hover:bg-white shadow-lg hover:shadow-xl"
                 >
                   <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-purple-500/5 to-purple-600/5 opacity-80 group-hover:opacity-100 transition-opacity" />
                   <div className="absolute inset-0 rounded-xl border border-purple-200/20 group-hover:border-purple-300/30 transition-colors" />

@@ -437,13 +437,19 @@ export default function ClientHome() {
                             {/* Expert Info with Reduced Spacing */}
                             <div className="mt-1.5 text-center">
                               <h3 className="font-semibold text-white text-xs leading-tight truncate">{expert.name}</h3>
-                              <p className="text-purple-400 text-[10px] font-medium truncate mt-0.5">{expert.service}</p>
-                              <div className="flex items-center justify-center gap-1 mt-0.5">
-                                <p className="text-white/70 text-[9px]">{expert.reviews} reviews</p>
-                                <span className="text-white/30">•</span>
-                                <p className="text-white/70 text-[9px]">{expert.completedJobs} jobs</p>
-                              </div>
-                              <p className="text-white/50 text-[9px] font-medium mt-0.5 truncate">{expert.location}</p>
+                              <p className="text-purple-400 text-[10px] font-medium truncate mt-0.5">{expert.cricketRole || expert.service}</p>
+                              <p className="text-white/70 text-[9px] mt-0.5 truncate">
+                                {expert.location}
+                              </p>
+                              <p className="text-white/50 text-[9px] font-medium mt-0.5 truncate">
+                                {expert.distance ? (
+                                  <>
+                                    {expert.distance < 1 
+                                      ? `${(expert.distance * 1000).toFixed(0)}m` 
+                                      : `${expert.distance.toFixed(1)}km`} away
+                                  </>
+                                ) : ''}
+                              </p>
                             </div>
                           </div>
                         </div>

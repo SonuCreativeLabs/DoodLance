@@ -443,9 +443,9 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
         const hasPrev = currentIndex > 0;
         
         return `
-          <div class="group bg-gradient-to-br from-[#1E1E1E] to-[#1A1A1A] rounded-2xl px-6 py-4 shadow-xl hover:shadow-purple-500/20 transition-all duration-300 w-[360px] border border-white/5 hover:border-white/10">
+          <div class="group bg-gradient-to-br from-[#111111] to-[#000000] opacity-95 backdrop-blur-sm rounded-2xl px-6 py-4 shadow-xl hover:shadow-purple-500/20 transition-all duration-300 w-[360px] border border-white/10 hover:border-white/20">
             
-            <!-- Navigation Buttons (keeping existing) -->
+            <!-- Navigation Buttons -->
             <div class="flex justify-between items-center mb-3">
               <button class="nav-btn prev-btn flex items-center justify-center w-8 h-8 rounded-full bg-black/30 hover:bg-black/50 transition-colors ${!hasPrev ? 'opacity-50 cursor-not-allowed' : 'text-white'}" 
                       ${!hasPrev ? 'disabled' : ''}>
@@ -512,10 +512,13 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
                 </svg>
                 <span class="text-white/60 text-[11px] whitespace-nowrap">
                   ${(() => {
-                    // Hardcoded demo date for consistent card display: December 15, 3:30 PM
-                    const demoDate = new Date('2024-12-15T15:30:00.000Z');
-                    const date = demoDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                    const time = demoDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+                    const scheduledAt = job.scheduledAt ? new Date(job.scheduledAt) : new Date();
+                    const date = scheduledAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                    const time = scheduledAt.toLocaleTimeString('en-US', { 
+                      hour: 'numeric', 
+                      minute: '2-digit',
+                      hour12: true
+                    });
                     return `${date}, ${time}`;
                   })()}
                 </span>

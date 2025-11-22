@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from "@/components/ui/badge";
@@ -36,6 +36,7 @@ interface FreelancerDetail {
   service: string;
   experience: string;
   location: string;
+  distance: number;
   price: number;
   priceUnit: string;
   rating: number;
@@ -108,6 +109,7 @@ interface FreelancerDetail {
 export default function FreelancerDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { setNavbarVisibility } = useNavbar();
   const [freelancer, setFreelancer] = useState<FreelancerDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -154,6 +156,7 @@ export default function FreelancerDetailPage() {
         service: foundFreelancer.service,
         experience: foundFreelancer.experience,
         location: foundFreelancer.location,
+        distance: foundFreelancer.distance,
         price: foundFreelancer.price,
         priceUnit: foundFreelancer.priceUnit,
         rating: foundFreelancer.rating,
@@ -230,7 +233,14 @@ export default function FreelancerDetailPage() {
   }, [freelancer]);
 
   const handleBack = () => {
-    router.push('/client/nearby/integrated-explore');
+    const source = searchParams.get('source');
+    if (source === 'list') {
+      // Came from list view, go back to integrated explore with list view expanded
+      router.push('/client/nearby/integrated-explore?view=list');
+    } else {
+      // Came from map view or default, go back to integrated explore (map view)
+      router.push('/client/nearby/integrated-explore');
+    }
   };
 
   const handleSkillClick = (skillName: string) => {
@@ -506,7 +516,7 @@ export default function FreelancerDetailPage() {
                     
                     <div className="mt-2 flex flex-col items-center gap-0.5 text-sm text-white/70">
                       <div className="flex items-center gap-2">
-                        <span>{freelancer.location}</span>
+                        <span>{freelancer.location}{freelancer.distance ? <><span className="text-white/40 mx-1 text-xs">|</span>{freelancer.distance < 1 ? `${(freelancer.distance * 1000).toFixed(0)}m` : `${freelancer.distance.toFixed(1)}km`} away</> : ''}</span>
                       </div>
                       <div className="flex items-center gap-1">
                         {[...Array(5)].map((_, i) => (

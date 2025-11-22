@@ -4,7 +4,7 @@ export const categories: Category[] = [
   { id: 1, name: 'All', icon: '' },
   { id: 10, name: 'Playing Services', icon: '' },
   { id: 11, name: 'Coaching & Training', icon: '' },
-  { id: 12, name: 'Support Staff', icon: '' },
+  { id: 12, name: 'Support Staff & Others', icon: '' },
   { id: 13, name: 'Media & Content', icon: '' },
 ];
 
