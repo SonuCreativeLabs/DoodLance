@@ -1285,6 +1285,42 @@ export const hasUserAppliedToJob = (jobId: string) => {
     return job && app.jobTitle === job.title;
   });
 };
+
+// Function to get application details for a specific job
+export const getApplicationForJob = async (jobId: string) => {
+  try {
+    const { jobs: feedJobs } = await import('@/app/freelancer/feed/data/jobs');
+    const job = feedJobs.find((j: any) => j.id === jobId);
+    
+    if (!job) return null;
+    
+    return mockApplications.find(app => app.jobTitle === job.title) || null;
+  } catch (error) {
+    console.error('Error getting application for job:', error);
+    return null;
+  }
+};
+
+export const getAppliedJobIds = async () => {
+  try {
+    const { jobs: feedJobs } = await import('@/app/freelancer/feed/data/jobs');
+    const appliedIds: string[] = [];
+    
+    // Iterate through all jobs and check if there's a matching application
+    feedJobs.forEach((job: any) => {
+      const isApplied = mockApplications.some(app => app.jobTitle === job.title);
+      if (isApplied) {
+        appliedIds.push(job.id);
+      }
+    });
+    
+    return appliedIds;
+  } catch (error) {
+    console.error('Error fetching applied job IDs:', error);
+    return [];
+  }
+};
+
 export const acceptProposalAndCreateJob = (applicationId: string) => {
   // Update proposal status to accepted
   updateApplicationStatus(applicationId, 'accepted');

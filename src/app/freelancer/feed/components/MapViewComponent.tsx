@@ -72,6 +72,8 @@ interface MapViewProps {
   jobs: JobWithCoordinates[];
   selectedCategory: string | null;
   style?: React.CSSProperties;
+  onApply?: (jobId: string, proposal: string, rate: string, rateType: string, attachments: File[]) => void;
+  appliedJobIds?: Set<string>;
 }
 
 declare global {
@@ -80,7 +82,7 @@ declare global {
   }
 }
 
-const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, style = {} }) => {
+const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, style = {}, onApply, appliedJobIds = new Set() }) => {
   // Error boundary fallback component
   const ErrorFallback = ({ error, resetErrorBoundary }: { error: Error; resetErrorBoundary: () => void }) => (
     <div className="flex items-center justify-center h-full bg-gray-50">
@@ -625,13 +627,28 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
                   })()}
                 </span>
               </div>
-              <button class="apply-now-btn px-4 py-2 text-xs font-medium text-white bg-gradient-to-r from-[#6B46C1] to-[#4C1D95] hover:from-[#5B35B0] hover:to-[#3D1B7A] rounded-xl transition-all duration-300 shadow-lg shadow-purple-600/20 hover:shadow-purple-600/30 flex items-center justify-center gap-1.5"
-                      data-job-id="${job.id}">
-                <span>Apply Now</span>
-                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                </svg>
-              </button>
+              ${(() => {
+                const isApplied = appliedJobIds?.has(String(job.id));
+                if (isApplied) {
+                  return `
+                    <button class="px-4 py-2 text-xs font-medium text-green-400 bg-green-600/20 border border-green-600/50 rounded-xl transition-all duration-300 shadow-lg cursor-default flex items-center justify-center gap-1.5" disabled>
+                      <span>Applied</span>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                      </svg>
+                    </button>
+                  `;
+                }
+                return `
+                  <button class="apply-now-btn px-4 py-2 text-xs font-medium text-white bg-gradient-to-r from-[#6B46C1] to-[#4C1D95] hover:from-[#5B35B0] hover:to-[#3D1B7A] rounded-xl transition-all duration-300 shadow-lg shadow-purple-600/20 hover:shadow-purple-600/30 flex items-center justify-center gap-1.5"
+                          data-job-id="${job.id}">
+                    <span>Apply Now</span>
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                    </svg>
+                  </button>
+                `;
+              })()}
             </div>
           </div>
         `;
@@ -795,7 +812,7 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
         zoom: 12
       });
     }
-  }, [processedJobs, selectedCategory]);
+  }, [processedJobs, selectedCategory, appliedJobIds]);
 
   // Handle closing job details
   const handleCloseJobDetails = useCallback(() => {
@@ -872,40 +889,6 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
     setIsJobDetailsOpen(true);
   }, [processedJobs]);
   
-  const handleApplyToJob = useCallback(async (jobId: string, proposal: string, rate: string, rateType: string, attachments: File[]) => {
-    try {
-      // Import the createApplication function
-      const { createApplication } = await import('@/components/freelancer/jobs/mock-data');
-
-      // Create the application
-      const newApplication = await createApplication(jobId, proposal, rate, rateType, attachments);
-
-      if (newApplication) {
-        console.log('Successfully created application:', newApplication["#"]);
-
-        // Refresh the ForYouJobs context to exclude the applied job
-        // Dispatch a custom event that the ForYouJobsContext will listen to
-        window.dispatchEvent(new CustomEvent('applicationCreated', { detail: { jobId } }));
-
-        // Close the job details modal
-        setIsJobDetailsOpen(false);
-
-        // Show success message
-        alert('Application submitted successfully!');
-
-        // Small delay to allow event processing before navigation
-        setTimeout(() => {
-          window.location.href = '/freelancer/jobs?tab=applications&status=pending';
-        }, 500);
-      } else {
-        console.error('Failed to create application');
-        alert('Failed to submit application. Please try again.');
-      }
-    } catch (error) {
-      console.error('Error applying to job:', error);
-      alert('Error submitting application. Please try again.');
-    }
-  }, []);
 
   // If there's an error, show error message
   if (error) {
@@ -958,9 +941,8 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
           <JobDetailsFull
             job={selectedJob}
             onBack={handleCloseJobDetails}
-            onApply={(jobId: string, proposal: string, rate: string, rateType: string, attachments: File[]) => {
-              handleApplyToJob(jobId, proposal, rate, rateType, attachments);
-            }}
+            onApply={onApply || (() => {})}
+            isApplied={appliedJobIds?.has(String(selectedJob.id))}
           />
         </OverlayPortal>
       )}

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   ArrowLeft,
   Clock,
@@ -19,12 +19,40 @@ interface JobDetailsFullProps {
   job: Job;
   onBack: () => void;
   onApply: (jobId: string, proposal: string, rate: string, rateType: string, attachments: File[]) => void;
+  isApplied?: boolean;
 }
 
-export default function JobDetailsFull({ job, onBack, onApply }: JobDetailsFullProps) {
+export default function JobDetailsFull({ job, onBack, onApply, isApplied = false }: JobDetailsFullProps) {
   const [proposal, setProposal] = useState('');
   const [rate, setRate] = useState(job.budget ? job.budget.toString() : '');
   const [attachments, setAttachments] = useState<File[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  // Fetch application details if already applied
+  useEffect(() => {
+    if (isApplied) {
+      const fetchApplication = async () => {
+        setLoading(true);
+        try {
+          const { getApplicationForJob } = await import('@/components/freelancer/jobs/mock-data');
+          const application = await getApplicationForJob(job.id);
+          
+          if (application && application.proposal) {
+            setProposal(application.proposal.coverLetter || '');
+            setRate(application.proposal.proposedRate ? application.proposal.proposedRate.toString() : '');
+            // Note: We can't easily restore File objects from strings/URLs in mock data
+            // allowing attachments to remain empty for now in read-only mode
+          }
+        } catch (error) {
+          console.error('Error fetching application details:', error);
+        } finally {
+          setLoading(false);
+        }
+      };
+      
+      fetchApplication();
+    }
+  }, [isApplied, job.id]);
 
   // Generate stable job ID based on category and job ID
   const jobId = useMemo(() => {
@@ -292,6 +320,12 @@ export default function JobDetailsFull({ job, onBack, onApply }: JobDetailsFullP
             <div className="space-y-4">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold text-white">Your Proposal</h2>
+                {isApplied && (
+                  <span className="px-3 py-1 rounded-full bg-green-500/20 text-green-400 text-xs font-medium border border-green-500/30 flex items-center gap-1.5">
+                    <CheckCircle className="w-3 h-3" />
+                    Submitted
+                  </span>
+                )}
               </div>
               <div>
                 <h3 className="text-sm font-medium text-gray-400 mb-2">Cover Letter <span className="text-red-500">*</span></h3>
@@ -299,14 +333,17 @@ export default function JobDetailsFull({ job, onBack, onApply }: JobDetailsFullP
                   value={proposal}
                   onChange={(e) => setProposal(e.target.value)}
                   placeholder="Explain why you're the best fit for this job, your relevant experience, and how you plan to deliver exceptional results."
-                  className="w-full p-3 bg-[#111111] border border-gray-600 rounded-xl text-white resize-none text-sm"
+                  className={`w-full p-3 bg-[#111111] border border-gray-600 rounded-xl text-white resize-none text-sm ${isApplied ? 'opacity-70 cursor-not-allowed' : ''}`}
                   rows={6}
                   maxLength={1500}
                   required
+                  readOnly={isApplied}
                 />
-                <p className="mt-1 text-xs text-gray-400 text-right">
-                  {proposal.length}/1500 characters
-                </p>
+                {!isApplied && (
+                  <p className="mt-1 text-xs text-gray-400 text-right">
+                    {proposal.length}/1500 characters
+                  </p>
+                )}
               </div>
 
               <div>
@@ -318,8 +355,9 @@ export default function JobDetailsFull({ job, onBack, onApply }: JobDetailsFullP
                     value={rate}
                     onChange={(e) => setRate(e.target.value)}
                     placeholder="₹400"
-                    className="bg-[#111111] border border-gray-600 rounded px-3 py-2 text-white w-32 text-sm flex-1 max-w-[120px] placeholder:text-gray-500"
+                    className={`bg-[#111111] border border-gray-600 rounded px-3 py-2 text-white w-32 text-sm flex-1 max-w-[120px] placeholder:text-gray-500 ${isApplied ? 'opacity-70 cursor-not-allowed' : ''}`}
                     min="0"
+                    readOnly={isApplied}
                   />
                   <span className="text-sm text-gray-400">/ project</span>
                 </div>
@@ -328,28 +366,32 @@ export default function JobDetailsFull({ job, onBack, onApply }: JobDetailsFullP
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="text-sm font-medium text-gray-400">Attachments</h3>
-                  <label className="p-1.5 text-gray-400 hover:text-purple-400 rounded-full hover:bg-purple-500/10 transition-colors cursor-pointer" title="Add attachment">
-                    <PlusCircle className="w-4 h-4" />
-                    <input
-                      type="file"
-                      className="hidden"
-                      multiple
-                      accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
-                      onChange={(e) => {
-                        const files = Array.from(e.target.files || []);
-                        setAttachments(prev => [...prev, ...files]);
-                        // Reset input
-                        e.target.value = '';
-                      }}
-                    />
-                  </label>
+                  {!isApplied && (
+                    <label className="p-1.5 text-gray-400 hover:text-purple-400 rounded-full hover:bg-purple-500/10 transition-colors cursor-pointer" title="Add attachment">
+                      <PlusCircle className="w-4 h-4" />
+                      <input
+                        type="file"
+                        className="hidden"
+                        multiple
+                        accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
+                        onChange={(e) => {
+                          const files = Array.from(e.target.files || []);
+                          setAttachments(prev => [...prev, ...files]);
+                          // Reset input
+                          e.target.value = '';
+                        }}
+                      />
+                    </label>
+                  )}
                 </div>
                 <div 
-                  className="space-y-2 cursor-pointer"
+                  className={`space-y-2 ${!isApplied ? 'cursor-pointer' : ''}`}
                   onClick={() => {
-                    // Find the hidden input and trigger click
-                    const input = document.querySelector('input[type="file"][accept*=".pdf"]') as HTMLInputElement;
-                    input?.click();
+                    if (!isApplied) {
+                      // Find the hidden input and trigger click
+                      const input = document.querySelector('input[type="file"][accept*=".pdf"]') as HTMLInputElement;
+                      input?.click();
+                    }
                   }}
                 >
                   {attachments.length > 0 ? (
@@ -365,25 +407,28 @@ export default function JobDetailsFull({ job, onBack, onApply }: JobDetailsFullP
                             {file.name}
                           </span>
                         </div>
-                        <button
-                          onClick={() => {
-                            const newAttachments = attachments.filter((_, i) => i !== index);
-                            setAttachments(newAttachments);
-                          }}
-                          className="p-1 text-gray-400 hover:text-red-400 rounded-full hover:bg-red-500/10 transition-colors"
-                          title="Remove file"
-                        >
-                          ×
-                        </button>
+                        {!isApplied && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const newAttachments = attachments.filter((_, i) => i !== index);
+                              setAttachments(newAttachments);
+                            }}
+                            className="p-1 text-gray-400 hover:text-red-400 rounded-full hover:bg-red-500/10 transition-colors"
+                            title="Remove file"
+                          >
+                            ×
+                          </button>
+                        )}
                       </div>
                     ))
                   ) : (
-                    <div className="flex flex-col items-center justify-center py-6 border-2 border-dashed border-gray-700 rounded-lg bg-gray-800/30">
+                    <div className={`flex flex-col items-center justify-center py-6 border-2 border-dashed border-gray-700 rounded-lg bg-gray-800/30 ${isApplied ? 'opacity-50' : ''}`}>
                       <svg className="w-8 h-8 text-gray-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                       </svg>
-                      <p className="text-sm text-gray-400">No attachments yet</p>
-                      <p className="text-xs text-gray-500 mt-1">Upload files to support your proposal</p>
+                      <p className="text-sm text-gray-400">No attachments</p>
+                      {!isApplied && <p className="text-xs text-gray-500 mt-1">Upload files to support your proposal</p>}
                     </div>
                   )}
                 </div>
@@ -391,10 +436,21 @@ export default function JobDetailsFull({ job, onBack, onApply }: JobDetailsFullP
 
               <button
                 onClick={() => onApply(job.id, proposal, rate, "project", attachments)}
-                disabled={!proposal.trim()}
-                className="w-full h-10 bg-purple-600 hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50 text-white font-medium rounded-lg shadow-lg transition-all duration-200"
+                disabled={!proposal.trim() || isApplied}
+                className={`w-full h-10 font-medium rounded-lg shadow-lg transition-all duration-200 flex items-center justify-center gap-2 ${
+                  isApplied 
+                    ? 'bg-green-600/20 text-green-400 border border-green-600/50 cursor-default' 
+                    : 'bg-purple-600 hover:bg-purple-700 text-white disabled:cursor-not-allowed disabled:opacity-50'
+                }`}
               >
-                Send Proposal
+                {isApplied ? (
+                  <>
+                    <span>Application Submitted</span>
+                    <CheckCircle className="w-4 h-4" />
+                  </>
+                ) : (
+                  'Send Proposal'
+                )}
               </button>
             </div>
           </div>

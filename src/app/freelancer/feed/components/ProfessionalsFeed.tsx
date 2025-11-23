@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Star, Clock, MapPin, ArrowLeft } from 'lucide-react';
+import { Star, Clock, MapPin, ArrowLeft, Check } from 'lucide-react';
 import Image from 'next/image';
 import JobDetailsFull from './JobDetailsFull';
 import OverlayPortal from './OverlayPortal';
@@ -48,6 +48,7 @@ interface ProfessionalsFeedProps {
   className?: string;
   searchQuery?: string;
   selectedCategory?: string;
+  appliedJobIds?: Set<string>;
 }
 
 export default function ProfessionalsFeed({ 
@@ -58,7 +59,8 @@ export default function ProfessionalsFeed({
   onApply,
   className = '',
   searchQuery = '',
-  selectedCategory = 'All'
+  selectedCategory = 'All',
+  appliedJobIds = new Set()
 }: ProfessionalsFeedProps) {
   const formatScheduledDate = (scheduledAt: string) => {
     if (!scheduledAt) return 'Date TBD';
@@ -205,7 +207,12 @@ export default function ProfessionalsFeed({
   if (showFullView && selectedJob && !filteredProfessionals) {
     return (
       <OverlayPortal>
-        <JobDetailsFull job={selectedJob} onBack={handleBack} onApply={handleJobApply} />
+        <JobDetailsFull 
+          job={selectedJob} 
+          onBack={handleBack} 
+          onApply={onApply || (() => {})} 
+          isApplied={appliedJobIds?.has(String(selectedJob.id))}
+        />
       </OverlayPortal>
     );
   }
@@ -358,12 +365,37 @@ export default function ProfessionalsFeed({
                 / {getJobDurationLabel(item)}
               </span>
             </div>
-            <button className="px-4 py-2 text-xs font-medium text-white bg-gradient-to-r from-[#6B46C1] to-[#4C1D95] hover:from-[#5B35B0] hover:to-[#3D1B7A] rounded-xl transition-all duration-300 shadow-lg shadow-purple-600/20 hover:shadow-purple-600/30 flex items-center justify-center gap-1.5" onClick={(e) => { e.stopPropagation(); handleJobApply(item.id); }}>
-              <span>Apply Now</span>
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-              </svg>
-            </button>
+            {(() => {
+              const isApplied = appliedJobIds?.has(String(item.id));
+              return (
+                <button 
+                  className={`px-4 py-2 text-xs font-medium text-white rounded-xl transition-all duration-300 shadow-lg flex items-center justify-center gap-1.5 ${
+                    isApplied 
+                      ? 'bg-green-600/20 text-green-400 border border-green-600/50 cursor-default' 
+                      : 'bg-gradient-to-r from-[#6B46C1] to-[#4C1D95] hover:from-[#5B35B0] hover:to-[#3D1B7A] shadow-purple-600/20 hover:shadow-purple-600/30'
+                  }`} 
+                  onClick={(e) => { 
+                    e.stopPropagation(); 
+                    if (!isApplied) handleJobApply(item.id); 
+                  }}
+                  disabled={isApplied}
+                >
+                  {isApplied ? (
+                    <>
+                      <span>Applied</span>
+                      <Check className="w-3 h-3" />
+                    </>
+                  ) : (
+                    <>
+                      <span>Apply Now</span>
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                      </svg>
+                    </>
+                  )}
+                </button>
+              );
+            })()}
           </div>
         </div>
       );

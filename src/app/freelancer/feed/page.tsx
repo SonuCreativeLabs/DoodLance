@@ -73,6 +73,22 @@ export default function FeedPage() {
     [key: string]: any;
   }
   const [filteredJobs, setFilteredJobs] = useState<JobWithCoordinates[]>([]);
+  const [appliedJobIds, setAppliedJobIds] = useState<Set<string>>(new Set());
+  
+  // Fetch applied job IDs
+  const fetchAppliedStatus = async () => {
+    const { getAppliedJobIds } = await import('@/components/freelancer/jobs/mock-data');
+    const ids = await getAppliedJobIds();
+    setAppliedJobIds(new Set(ids));
+  };
+
+  useEffect(() => {
+    fetchAppliedStatus();
+    
+    const handleAppCreated = () => fetchAppliedStatus();
+    window.addEventListener('applicationCreated', handleAppCreated);
+    return () => window.removeEventListener('applicationCreated', handleAppCreated);
+  }, []);
   
   // State for filters
   const [location, setLocation] = useState<string>('Chennai, Tamil Nadu, India');
@@ -557,7 +573,12 @@ export default function FeedPage() {
 
       {/* Map View */}
       <div className="absolute inset-0 z-0">
-        <MapView jobs={filteredJobs} selectedCategory={selectedCategory} />
+        <MapView 
+          jobs={filteredJobs} 
+          selectedCategory={selectedCategory} 
+          onApply={handleApply} 
+          appliedJobIds={appliedJobIds}
+        />
       </div>
 
       {/* Header - Fixed height to account for search and tabs */}
@@ -738,7 +759,11 @@ export default function FeedPage() {
           <div className="container max-w-2xl mx-auto px-0 pb-6">
             {/* Jobs list */}
             <div className="space-y-2 px-4">
-              <ProfessionalsFeed jobs={filteredJobs} onApply={handleApply} />
+              <ProfessionalsFeed 
+                jobs={filteredJobs} 
+                onApply={handleApply} 
+                appliedJobIds={appliedJobIds}
+              />
             </div>
           </div>
         </div>
