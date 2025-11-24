@@ -45,16 +45,19 @@ export default function ServicesPage() {
     <ClientLayout>
       <div className="min-h-screen bg-[#111111] fixed inset-0 flex flex-col">
         {/* Header */}
-        <div className="sticky top-0 z-50 bg-[#111111] border-b border-white/[0.08] h-[60px]">
-          <div className="max-w-[1400px] mx-auto px-4 h-full">
-            <div className="flex items-center justify-between h-full">
-              <div className="flex items-center gap-4">
-                <Link href="/client">
-                  <button className="p-2 hover:bg-white/5 rounded-full transition-colors">
-                    <ArrowLeft className="w-5 h-5 text-white" />
-                  </button>
+        <div className="sticky top-0 z-50 bg-[#0F0F0F] border-b border-white/5">
+          <div className="container mx-auto px-4 py-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <Link href="/client" className="inline-flex items-center text-sm text-purple-400 hover:text-purple-300 transition-colors duration-200">
+                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors duration-200">
+                    <ArrowLeft className="h-4 w-4" />
+                  </div>
                 </Link>
-                <h1 className="text-lg font-semibold text-white">Services</h1>
+                <div className="ml-3">
+                  <h1 className="text-lg font-semibold text-white">Services</h1>
+                  <p className="text-white/50 text-xs">Find the perfect service for your needs</p>
+                </div>
               </div>
               <button className="p-2 hover:bg-white/5 rounded-full transition-colors">
                 <Search className="w-5 h-5 text-white" />

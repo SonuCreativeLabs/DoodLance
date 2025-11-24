@@ -60,22 +60,25 @@ export default function BookingHistoryDetailPage() {
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-[#111111] via-[#0b0b0b] to-[#050505] text-white">
       {/* Header */}
-      <div className="sticky top-0 z-30 border-b border-white/5 bg-gradient-to-b from-[#1a1a1a] to-[#111111] backdrop-blur-xl">
-        <div className="flex items-center gap-3 px-4 py-3">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => router.back()}
-            className="h-11 w-11 rounded-xl hover:bg-purple-500/10 transition-all duration-200"
-            aria-label="Back"
-          >
-            <ArrowLeft className="h-5 w-5 text-white/70" />
-          </Button>
+      <div className="sticky top-0 z-30 bg-[#0F0F0F] border-b border-white/5">
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex items-center">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => router.back()}
+              className="inline-flex items-center p-0 hover:bg-transparent text-sm text-purple-400 hover:text-purple-300 transition-colors duration-200"
+              aria-label="Back"
+            >
+              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors duration-200">
+                <ArrowLeft className="h-4 w-4" />
+              </div>
+            </Button>
 
-          <div className="flex-1 min-w-0">
-            <p className="text-xs uppercase tracking-wide text-white/40">{historyItem.status.toUpperCase()}</p>
-            <h1 className="text-base font-semibold text-white truncate">{historyItem["#"]}</h1>
-            <p className="text-xs text-white/60 truncate">{historyItem.title}</p>
+            <div className="ml-3">
+              <h1 className="text-lg font-semibold text-white">{historyItem["#"]}</h1>
+              <p className="text-white/50 text-xs">{historyItem.status.toUpperCase()} • {historyItem.title}</p>
+            </div>
           </div>
         </div>
       </div>

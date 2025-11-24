@@ -1,6 +1,7 @@
 'use client';
 
 import { ReactNode } from 'react';
+import { AuthProvider } from '@/contexts/AuthContext';
 import { NavbarProvider } from '@/contexts/NavbarContext';
 import { LayoutProvider } from '@/contexts/LayoutContext';
 import { ChatViewProvider } from '@/contexts/ChatViewContext';
@@ -23,36 +24,38 @@ interface ProvidersProps {
 
 export function Providers({ children }: ProvidersProps) {
   return (
-    <RoleProvider>
-      <NavbarProvider>
-        <LayoutProvider>
-          <ChatViewProvider>
-            <DateRangeProvider>
-              <ModalProvider>
-                <AvailabilityProvider>
-                  <CombinedProfileProvider>
-                    <NearbyProfessionalsProvider>
-                      <PopularServicesProvider>
-                        <ClientServicesProvider>
-                          <BookingsProvider>
-                            <ApplicationsProvider>
-                              <HistoryJobsProvider>
-                                <HireProvider>
-                                  {children}
-                                </HireProvider>
-                              </HistoryJobsProvider>
-                            </ApplicationsProvider>
-                          </BookingsProvider>
-                        </ClientServicesProvider>
-                      </PopularServicesProvider>
-                    </NearbyProfessionalsProvider>
-                  </CombinedProfileProvider>
-                </AvailabilityProvider>
-              </ModalProvider>
-            </DateRangeProvider>
-          </ChatViewProvider>
-        </LayoutProvider>
-      </NavbarProvider>
-    </RoleProvider>
+    <AuthProvider>
+      <RoleProvider>
+        <NavbarProvider>
+          <LayoutProvider>
+            <ChatViewProvider>
+              <DateRangeProvider>
+                <ModalProvider>
+                  <AvailabilityProvider>
+                    <CombinedProfileProvider>
+                      <NearbyProfessionalsProvider>
+                        <PopularServicesProvider>
+                          <ClientServicesProvider>
+                            <BookingsProvider>
+                              <ApplicationsProvider>
+                                <HistoryJobsProvider>
+                                  <HireProvider>
+                                    {children}
+                                  </HireProvider>
+                                </HistoryJobsProvider>
+                              </ApplicationsProvider>
+                            </BookingsProvider>
+                          </ClientServicesProvider>
+                        </PopularServicesProvider>
+                      </NearbyProfessionalsProvider>
+                    </CombinedProfileProvider>
+                  </AvailabilityProvider>
+                </ModalProvider>
+              </DateRangeProvider>
+            </ChatViewProvider>
+          </LayoutProvider>
+        </NavbarProvider>
+      </RoleProvider>
+    </AuthProvider>
   );
 }

@@ -56,6 +56,12 @@ function createMockPrismaClient() {
       findMany: async () => [],
       create: async () => ({}),
     },
+    otp: {
+      create: async () => ({}),
+      findFirst: async () => null,
+      delete: async () => ({}),
+      deleteMany: async () => ({}),
+    },
     // Add other models as needed for the demo
   };
 }

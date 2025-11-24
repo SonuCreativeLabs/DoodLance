@@ -568,3 +568,15 @@ model Notification {
   
   @@map("notifications")
 }
+
+// OTP Verification
+model OTP {
+  id         String   @id @default(cuid())
+  identifier String   // email or phone
+  code       String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  verified   Boolean  @default(false)
+
+  @@map("otps")
+}

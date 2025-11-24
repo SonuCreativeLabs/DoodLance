@@ -15,6 +15,8 @@ interface AuthContextType {
   isAuthenticated: boolean
   signIn: (provider?: string) => void
   signOut: () => void
+  verifyOTP: (identifier: string, code: string, type?: 'email' | 'phone') => Promise<void>
+  sendOTP: (identifier: string, type?: 'email' | 'phone') => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -27,13 +29,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        // Check for mock session in localStorage for dev flow
+        const storedUser = localStorage.getItem('doodlance_mock_user')
+        if (storedUser) {
+          setUser(JSON.parse(storedUser))
+        }
         // TODO: Check AuthKit session state
-        // For now, we'll assume no session exists
-        // const response = await fetch('/api/auth/session')
-        // if (response.ok) {
-        //   const sessionData = await response.json()
-        //   setUser(sessionData.user)
-        // }
       } catch (error) {
         console.error('Auth check failed:', error)
       } finally {
@@ -50,8 +51,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     window.location.href = url
   }
 
+  const sendOTP = async (identifier: string, type: 'email' | 'phone' = 'email') => {
+    const payload = type === 'email' ? { email: identifier } : { phone: identifier }
+    
+    const response = await fetch('/api/auth/otp/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to send OTP')
+    }
+  }
+
+  const verifyOTP = async (identifier: string, code: string, type: 'email' | 'phone' = 'email') => {
+    const payload = type === 'email' ? { email: identifier, code } : { phone: identifier, code }
+    
+    const response = await fetch('/api/auth/otp/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Verification failed')
+    }
+
+    const data = await response.json()
+    const verifiedUser = data.user
+
+    // Set user session
+    setUser(verifiedUser)
+    localStorage.setItem('doodlance_mock_user', JSON.stringify(verifiedUser))
+  }
+
   const signOut = async () => {
     try {
+      // Clear mock session
+      localStorage.removeItem('doodlance_mock_user')
+      
       // Call AuthKit logout and redirect to home
       await fetch('/api/auth/logout?returnTo=/', { method: 'POST' })
       setUser(null)
@@ -70,6 +110,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isAuthenticated: !!user,
     signIn,
     signOut,
+    verifyOTP,
+    sendOTP,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
