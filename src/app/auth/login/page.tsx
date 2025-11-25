@@ -4,9 +4,10 @@ import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Loader2, Smartphone, ArrowRight, ShieldCheck } from 'lucide-react'
+import { ArrowLeft, Smartphone, ArrowRight, ShieldCheck } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { motion, AnimatePresence } from 'framer-motion'
+import { CricketLoader } from '@/components/ui/cricket-loader'
 
 export default function Login() {
   const router = useRouter()
@@ -128,7 +129,7 @@ export default function Login() {
               >
                 {isLoading ? (
                   <>
-                    <Loader2 className="w-4 h-4 animate-spin" /> Sending Code...
+                    <CricketLoader size={20} color="white" /> Sending Code...
                   </>
                 ) : (
                   <>

@@ -17,6 +17,7 @@ import { ApplicationsProvider } from '@/contexts/ApplicationsContext';
 import { HistoryJobsProvider } from '@/contexts/HistoryJobsContext';
 import { ClientServicesProvider } from '@/contexts/ClientServicesContext';
 import { HireProvider } from '@/contexts/HireContext';
+import { RoleSwitchProvider } from '@/contexts/RoleSwitchContext';
 
 interface ProvidersProps {
   children: ReactNode;
@@ -40,7 +41,9 @@ export function Providers({ children }: ProvidersProps) {
                               <ApplicationsProvider>
                                 <HistoryJobsProvider>
                                   <HireProvider>
-                                    {children}
+                                    <RoleSwitchProvider>
+                                      {children}
+                                    </RoleSwitchProvider>
                                   </HireProvider>
                                 </HistoryJobsProvider>
                               </ApplicationsProvider>

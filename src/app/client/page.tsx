@@ -350,7 +350,7 @@ export default function ClientHome() {
               </Link>
             </div>
             <div className="relative -mx-4">
-              <div className="overflow-x-auto scrollbar-hide px-4">
+              <div className="overflow-x-auto scrollbar-hide px-4 pr-8">
                 <div className="flex space-x-4 pb-2">
                   {popularServices.map((service) => (
                     <ServiceCard
@@ -392,7 +392,7 @@ export default function ClientHome() {
               </Link>
             </div>
             <div className="relative">
-              <div className="overflow-x-auto scrollbar-hide -mx-4 px-4">
+              <div className="overflow-x-auto scrollbar-hide -mx-4 px-4 pr-8">
                 <div className="flex gap-3 pb-2">
                   {professionals
                     .sort((a, b) => {
@@ -405,9 +405,10 @@ export default function ClientHome() {
                     })
                     .slice(0, 5) // Only take top 5
                     .map((expert) => (
-                    <div
+                    <button
                       key={expert.id}
-                      className="flex-shrink-0 w-[130px]"
+                      onClick={() => router.push(`/client/freelancer/${expert.id}`)}
+                      className="flex-shrink-0 w-[130px] cursor-pointer"
                     >
                       {/* Outer Layer Card */}
                       <div className="relative group">
@@ -454,7 +455,7 @@ export default function ClientHome() {
                           </div>
                         </div>
                       </div>
-                    </div>
+                    </button>
                   ))}
                 </div>
               </div>
@@ -512,7 +513,7 @@ export default function ClientHome() {
               <h2 className="text-base font-semibold text-white tracking-wide text-left" data-component-name="ClientHome">Exclusive Offers</h2>
             </div>
             <div className="relative -mx-4">
-              <div className="overflow-x-auto scrollbar-hide px-4">
+              <div className="overflow-x-auto scrollbar-hide px-4 pr-8">
                 <div className="flex gap-3">
                   {/* First Coupon */}
                   <div className="flex-shrink-0 w-[300px] min-h-[140px] rounded-2xl p-3 border border-dashed border-white/15 bg-white/5 backdrop-blur-sm relative overflow-hidden flex flex-col justify-between">

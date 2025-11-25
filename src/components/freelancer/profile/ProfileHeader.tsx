@@ -20,6 +20,7 @@ import { SkillInfoDialog } from '@/components/common/SkillInfoDialog';
 import { getSkillInfo, type SkillInfo } from '@/utils/skillUtils';
 import { calculateAge } from '@/utils/personalUtils';
 import { IdVerifiedBadge } from './IdVerifiedBadge';
+import { useRoleSwitch } from '@/contexts/RoleSwitchContext';
 
 // CoverImage component defined outside the ProfileHeader component
 const CoverImage = () => (
@@ -62,6 +63,7 @@ export function ProfileHeader({
   const [selectedSkillInfo, setSelectedSkillInfo] = useState<SkillInfo | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
+  const { switchRole } = useRoleSwitch();
   
   // Calculate age from personal details
   const age = (() => {
@@ -178,7 +180,7 @@ export function ProfileHeader({
             <Button 
               variant="default"
               size="sm"
-              onClick={() => router.push('/client')}
+              onClick={() => switchRole('client')}
               className="group relative h-8 px-3 text-xs rounded-full overflow-hidden bg-gradient-to-r from-[#1A1A1A] via-[#0F0F0F] to-[#1A1A1A] text-white flex items-center gap-1.5 font-medium transition-all duration-300 border border-white/10 hover:border-purple-500/50 hover:shadow-[0_0_15px_rgba(168,85,247,0.3)] hover:scale-[1.02]"
             >
               <RefreshCw className="h-3.5 w-3.5 text-purple-400 transition-transform duration-300 group-hover:rotate-180" />
