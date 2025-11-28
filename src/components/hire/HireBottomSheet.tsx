@@ -28,13 +28,21 @@ export function HireBottomSheet({
   services
 }: HireBottomSheetProps) {
   const router = useRouter();
-  const { state, setFreelancer, addService, removeService } = useHire();
+  const { state, setFreelancer, addService, removeService, resetHireState } = useHire();
+  const prevFreelancerIdRef = React.useRef<string | null>(null);
 
   useEffect(() => {
     if (isOpen) {
+      // Reset if switching to a different freelancer
+      if (prevFreelancerIdRef.current !== null && prevFreelancerIdRef.current !== freelancerId) {
+        resetHireState();
+      }
+      prevFreelancerIdRef.current = freelancerId;
+      
+      // Set freelancer data
       setFreelancer(freelancerId, freelancerName, freelancerImage, freelancerRating, freelancerReviewCount, services);
     }
-  }, [isOpen, freelancerId, freelancerName, freelancerImage, freelancerRating, freelancerReviewCount, services]);
+  }, [isOpen, freelancerId, freelancerName, freelancerImage, freelancerRating, freelancerReviewCount, services, setFreelancer, resetHireState]);
 
   const handleServiceToggle = (service: ServiceItem) => {
     const isSelected = state.selectedServices.some(s => s.id === service.id);
@@ -108,12 +116,23 @@ export function HireBottomSheet({
                   return (
                     <div
                       key={service.id}
-                      className={`p-4 rounded-xl border transition-all cursor-pointer ${
+                      role="button"
+                      tabIndex={0}
+                      className={`p-4 rounded-xl border transition-all cursor-pointer select-none ${
                         isSelected
                           ? 'border-purple-500/50 bg-purple-500/10'
                           : 'border-white/10 bg-white/5 hover:border-white/20'
                       }`}
-                      onClick={() => handleServiceToggle(service)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleServiceToggle(service);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          handleServiceToggle(service);
+                        }
+                      }}
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">

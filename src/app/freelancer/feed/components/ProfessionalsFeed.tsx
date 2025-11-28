@@ -37,6 +37,16 @@ export type BaseProfessional = {
   expertise?: string[];
   experience?: string;
   cricketRole?: string;
+  // Services array for dynamic pricing - used to show lowest price from freelancer's service list
+  services?: {
+    id: string;
+    title: string;
+    description?: string;
+    price: string | number;
+    deliveryTime?: string;
+    features?: string[];
+    category?: string;
+  }[];
 };
 
 interface ProfessionalsFeedProps {
@@ -108,7 +118,8 @@ export default function ProfessionalsFeed({
       onProfessionalSelect(professional);
     } else {
       // Default behavior if no onProfessionalSelect handler is provided
-      router.push(`/client/freelancer/${professional.id}?source=list`);
+      const categoryParam = selectedCategory && selectedCategory !== 'All' ? `&category=${encodeURIComponent(selectedCategory)}` : '';
+      router.push(`/client/freelancer/${professional.id}?source=list${categoryParam}`);
     }
   };
 
@@ -126,73 +137,69 @@ export default function ProfessionalsFeed({
   };
 
   const getServicePrice = (item: any, searchQuery: string, selectedCategory: string): number => {
-    // Service-specific pricing based on search/filter criteria - Updated competitive rates
-    const servicePricing: { [key: string]: number } = {
-      'Fast Bowler': 750,        // Reduced from 800
-      'Net Bowler': 550,         // Reduced from 600
-      'Sidearm Specialist': 450,  // Reduced from 500
-      'Batting Coach': 1100,     // Reduced from 1200
-      'Sports Conditioning Trainer': 850,  // Reduced from 900
-      'Fitness Trainer': 700,    // Reduced from 750
-      'Cricket Analyst': 1400,   // Reduced from 1500
-      'Physio': 1500,           // Reduced from 1600
-      'Scorer': 350,            // Reduced from 400
-      'Umpire': 600,            // Reduced from 650
-      'Cricket Photo/Videography': 1700,  // Reduced from 1900
-      'Cricket Content Creator': 1200,    // Reduced from 1300
-      'Commentator': 1800,      // Reduced from 2000
-      'Match Player': 1600,     // Reduced from 1800
-      'Net Batsman': 500,       // Reduced from 550
-      'Coach': 500,             // Reduced from 550
-      // Added missing services with competitive rates
-      'Spin Bowler': 700,       // New addition
-      'Wicket Keeper': 600,     // New addition
-      'All Rounder': 900,       // New addition
-      'Physiotherapist': 1450,  // New addition
-      'Videographer': 1650,     // New addition
-      'Content Creator': 1150,  // New addition
+    // Helper to parse price string to number (handles "₹500", "₹1,500", etc.)
+    const parsePrice = (priceStr: string | number): number => {
+      if (typeof priceStr === 'number') return priceStr;
+      if (!priceStr) return 0;
+      return parseInt(priceStr.replace(/[₹,\s]/g, ''), 10) || 0;
     };
 
-    // If there's a specific search query, try to match it to a service price
-    if (searchQuery && searchQuery.trim()) {
-      const query = searchQuery.toLowerCase().trim();
-      const matchedPrice = Object.entries(servicePricing).find(([serviceName]) => 
-        serviceName.toLowerCase().includes(query) || query.includes(serviceName.toLowerCase())
-      );
-      if (matchedPrice) return matchedPrice[1];
-    }
-
-    // If there's a category filter, use category-specific pricing
-    if (selectedCategory && selectedCategory !== 'All') {
-      const categoryServices: { [key: string]: string[] } = {
-        'Playing Services': ['Match Player', 'Net Bowler', 'Net Batsman', 'Sidearm Specialist', 'Bowler', 'Batsman', 'Fast Bowler', 'Spin Bowler', 'Wicket Keeper', 'All Rounder'],
-        'Coaching & Training': ['Coach', 'Batting Coach', 'Sports Conditioning Trainer', 'Fitness Trainer'],
-        'Support Staff': ['Cricket Analyst', 'Physio', 'Physiotherapist', 'Scorer', 'Umpire'],
-        'Media & Content': ['Cricket Photo/Videography', 'Cricket Content Creator', 'Commentator', 'Videographer', 'Content Creator']
+    // Check if freelancer has services array with actual prices
+    const freelancerServices = item.services || [];
+    
+    if (freelancerServices.length > 0) {
+      // Category to service category keywords for filtering (matches service card categories)
+      const categoryMapping: { [key: string]: string[] } = {
+        'Players': ['match player', 'net bowler', 'net batsman', 'sidearm', 'bowler', 'batsman', 'player'],
+        'Coaching & Training': ['coach', 'coaching', 'training', 'trainer', 'conditioning'],
+        'Support Staff & Others': ['analyst', 'analysis', 'physio', 'scorer', 'umpire', 'groundsman'],
+        'Media & Content': ['photo', 'video', 'videography', 'content', 'commentator', 'media']
       };
-      
-      const allowedServices = categoryServices[selectedCategory] || [];
-      if (allowedServices.length > 0) {
-        // Find the lowest price among allowed services for this freelancer
-        const freelancerServices = allowedServices.filter(service => 
-          item.service?.toLowerCase().includes(service.toLowerCase()) ||
-          item.category?.toLowerCase().includes(service.toLowerCase())
+
+      let relevantServices = freelancerServices;
+
+      // If there's a search query, filter services matching the query
+      if (searchQuery && searchQuery.trim()) {
+        const query = searchQuery.toLowerCase().trim();
+        const matchingServices = freelancerServices.filter((svc: any) => 
+          svc.title?.toLowerCase().includes(query) ||
+          svc.category?.toLowerCase().includes(query) ||
+          svc.description?.toLowerCase().includes(query)
         );
-        
-        if (freelancerServices.length > 0) {
-          const prices = freelancerServices.map(service => servicePricing[service]).filter(price => price);
-          if (prices.length > 0) return Math.min(...prices);
+        if (matchingServices.length > 0) {
+          relevantServices = matchingServices;
         }
+      }
+      // If there's a category filter, filter services matching the category
+      else if (selectedCategory && selectedCategory !== 'All') {
+        const allowedKeywords = categoryMapping[selectedCategory] || [];
+        if (allowedKeywords.length > 0) {
+          const matchingServices = freelancerServices.filter((svc: any) => {
+            const svcTitle = svc.title?.toLowerCase() || '';
+            const svcCategory = svc.category?.toLowerCase() || '';
+            return allowedKeywords.some(keyword => 
+              svcTitle.includes(keyword.toLowerCase()) || 
+              svcCategory.includes(keyword.toLowerCase())
+            );
+          });
+          if (matchingServices.length > 0) {
+            relevantServices = matchingServices;
+          }
+        }
+      }
+
+      // Get the lowest price from relevant services
+      const prices = relevantServices
+        .map((svc: any) => parsePrice(svc.price))
+        .filter((price: number) => price > 0);
+      
+      if (prices.length > 0) {
+        return Math.min(...prices);
       }
     }
 
-    // Default to service-specific pricing or fallback to item.budget
-    const matchedPrice = Object.entries(servicePricing).find(([serviceName]) => 
-      item.service?.toLowerCase().includes(serviceName.toLowerCase()) ||
-      item.category?.toLowerCase().includes(serviceName.toLowerCase())
-    );
-    
-    return matchedPrice ? matchedPrice[1] : (item.budget || item.price || 500);
+    // Fallback: use item.budget or item.price if no services array
+    return item.budget || item.price || 500;
   };
 
   if (!items || items.length === 0) {

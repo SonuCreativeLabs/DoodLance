@@ -149,6 +149,35 @@ export default function FreelancerDetailPage() {
   useEffect(() => {
     const foundFreelancer = professionals.find((p: typeof professionals[0]) => p.id.toString() === freelancerId);
     if (foundFreelancer) {
+      // Sort services based on category parameter
+      let sortedServices = foundFreelancer.services ? [...foundFreelancer.services] : [];
+      const categoryParam = searchParams.get('category');
+      
+      if (categoryParam && sortedServices.length > 0) {
+        const categoryKeywords: { [key: string]: string[] } = {
+          'Players': ['match player', 'net bowler', 'net batsman', 'sidearm', 'bowler', 'batsman', 'player'],
+          'Coaching & Training': ['coach', 'coaching', 'training', 'trainer', 'conditioning'],
+          'Support Staff & Others': ['analyst', 'analysis', 'physio', 'scorer', 'umpire', 'groundsman'],
+          'Media & Content': ['photo', 'video', 'videography', 'content', 'commentator', 'media']
+        };
+        
+        const keywords = categoryKeywords[decodeURIComponent(categoryParam)] || [];
+        if (keywords.length > 0) {
+          sortedServices.sort((a, b) => {
+            const aMatches = keywords.some(k => 
+              (a.category || '').toLowerCase().includes(k) || (a.title || '').toLowerCase().includes(k)
+            );
+            const bMatches = keywords.some(k => 
+              (b.category || '').toLowerCase().includes(k) || (b.title || '').toLowerCase().includes(k)
+            );
+            
+            if (aMatches && !bMatches) return -1;
+            if (!aMatches && bMatches) return 1;
+            return 0;
+          });
+        }
+      }
+
       const onlineStatus = Math.random() > 0.5;
       setFreelancer({
         id: foundFreelancer.id.toString(),
@@ -182,14 +211,14 @@ export default function FreelancerDetailPage() {
         coverImage: foundFreelancer.coverImage,
 
         // Services, portfolio, experience, and reviews data
-        services: foundFreelancer.services,
+        services: sortedServices,
         portfolio: foundFreelancer.portfolio,
         experienceDetails: foundFreelancer.experienceDetails,
         reviewsData: foundFreelancer.reviewsData
       });
     }
     setLoading(false);
-  }, [freelancerId]);
+  }, [freelancerId, searchParams]);
 
   // Handle scroll to specific section when returning from preview pages
   useLayoutEffect(() => {
@@ -621,7 +650,7 @@ export default function FreelancerDetailPage() {
 
             <div className="w-full max-w-4xl mx-auto">
               {/* Main Content */}
-              <div className="px-6 pb-8">
+              <div className="px-6 pb-32">
                 <div className="space-y-8">
                   {/* About Section */}
                   <section id="about" data-section="about" className="scroll-mt-20 pt-4">

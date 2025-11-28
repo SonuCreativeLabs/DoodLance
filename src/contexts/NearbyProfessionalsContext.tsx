@@ -23,6 +23,23 @@ export interface Professional {
   experience: string;
   description?: string;
   cricketRole?: string;
+  
+  // Additional fields
+  services?: {
+    id: string;
+    title: string;
+    description?: string;
+    price: string | number;
+    deliveryTime?: string;
+    features?: string[];
+    category?: string;
+  }[];
+  availability?: {
+    day: string;
+    available: boolean;
+  }[];
+  portfolio?: any[];
+  reviewsData?: any[];
 }
 
 interface NearbyProfessionalsContextType {

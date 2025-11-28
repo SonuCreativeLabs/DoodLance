@@ -1598,6 +1598,233 @@ export const professionals: Professional[] = [
         date: "2 weeks ago"
       }
     ]
+  },
+  // Test profile - User's freelancer account (Sathishraj)
+  {
+    id: 99,
+    name: "Sathishraj",
+    service: "All Rounder",
+    rating: 4.9,
+    reviews: 6,
+    reviewCount: 6,
+    completedJobs: 45,
+    location: "Chennai",
+    responseTime: "Usually responds in 15 mins",
+    image: "/images/profile-sonu.jpg",
+    distance: 0.5,
+    price: 500,
+    priceUnit: "session",
+    coords: [80.2207, 12.9815],
+    expertise: ["RH Batsman", "Sidearm Specialist", "Off Spin", "Batting Coach", "Analyst", "Mystery Spin"],
+    experience: "9 years",
+    coverImage: "/images/cover-pic.JPG",
+
+    // Additional profile fields
+    bio: "Professional Cricketer & AI Engineer with a passion for technology and sports. I bring the same dedication and strategic thinking from the cricket field to developing intelligent AI solutions.",
+    about: "Professional Cricketer & AI Engineer with a passion for technology and sports. I bring the same dedication and strategic thinking from the cricket field to developing intelligent AI solutions.",
+    cricketRole: "All Rounder",
+    battingStyle: "Right-handed",
+    bowlingStyle: "Right-arm Off Spin",
+    languages: "English, Tamil, Hindi",
+    completionRate: 98,
+    skills: ["RH Batsman", "Sidearm Specialist", "Off Spin", "Batting Coach", "Analyst", "Mystery Spin"],
+
+    // Availability data
+    availability: [
+      { day: "Mon", available: true },
+      { day: "Tue", available: true },
+      { day: "Wed", available: true },
+      { day: "Thu", available: true },
+      { day: "Fri", available: true },
+      { day: "Sat", available: true },
+      { day: "Sun", available: false }
+    ],
+
+    // Services data - Actual services from profile
+    services: [
+      {
+        id: "1",
+        title: "Net Bowling Sessions",
+        description: "Professional net bowling sessions with personalized coaching",
+        price: "₹500",
+        deliveryTime: "1 hour",
+        features: ["1-hour net session", "Ball analysis", "Technique improvement", "Q&A session"],
+        category: "Net Bowler"
+      },
+      {
+        id: "2",
+        title: "Match Player",
+        description: "Professional match player ready to play for your team per match",
+        price: "₹1,500",
+        deliveryTime: "Per match",
+        features: ["Full match participation", "Team contribution", "Match commitment", "Performance guarantee"],
+        category: "Match Player"
+      },
+      {
+        id: "3",
+        title: "Match Videography",
+        description: "Professional match videography and reel content creation during games",
+        price: "₹800",
+        deliveryTime: "Same day",
+        features: ["Full match recording", "Highlight reel creation", "Social media content", "Priority editing"],
+        category: "Cricket Photo / Videography"
+      },
+      {
+        id: "4",
+        title: "Sidearm Bowling",
+        description: "Professional sidearm bowler delivering 140km/h+ speeds for practice sessions",
+        price: "₹1,500",
+        deliveryTime: "per hour",
+        features: ["140km/h+ sidearm bowling", "Practice session delivery", "Consistent speed & accuracy", "Training session support"],
+        category: "Sidearm specialist"
+      },
+      {
+        id: "5",
+        title: "Batting Coaching",
+        description: "Professional batting technique training and skill development",
+        price: "₹1,200",
+        deliveryTime: "per hour",
+        features: ["Batting technique analysis", "Footwork drills", "Shot selection training", "Mental preparation coaching"],
+        category: "Batting coach"
+      },
+      {
+        id: "6",
+        title: "Performance Analysis",
+        description: "Comprehensive cricket performance analysis and improvement recommendations",
+        price: "₹2,000",
+        deliveryTime: "2-3 weeks",
+        features: ["Match statistics review", "Strength/weakness analysis", "Improvement recommendations", "Progress tracking"],
+        category: "Analyst"
+      }
+    ],
+
+    // Portfolio data - Actual achievements from profile
+    portfolio: [
+      {
+        id: "1",
+        title: "3x Division Cricket Champion",
+        image: "/images/purple nets.png",
+        category: "Cricket Achievement",
+        description: "Won the Division Level Cricket Tournament three consecutive years (2020, 2021, 2022) as a top-order batsman and off-spin bowler. Demonstrated exceptional leadership and performance under pressure.",
+        skills: ["Cricket", "Leadership", "Batting", "Off-Spin Bowling", "Team Player"]
+      },
+      {
+        id: "2",
+        title: "State Level College Champion",
+        image: "https://images.unsplash.com/photo-1531415074968-036ba1b575da?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
+        category: "Cricket Achievement",
+        description: "Led college team to victory in the State Level Inter-College Cricket Tournament. Scored 3 consecutive half-centuries in the knockout stages and took crucial wickets in the final match.",
+        skills: ["Cricket", "Strategy", "Batting", "Bowling"]
+      },
+      {
+        id: "3",
+        title: "Sports Quota Scholar",
+        image: "/images/Purple ground.png",
+        category: "Academic Achievement",
+        description: "Awarded sports scholarship for outstanding cricket performance at the state level. Balanced academic responsibilities with rigorous training schedules while maintaining excellent performance in both areas.",
+        skills: ["Cricket", "Time Management", "Academics"]
+      },
+      {
+        id: "4",
+        title: "Cricket Performance Analytics",
+        image: "https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
+        category: "Cricket Analytics",
+        description: "Developed comprehensive cricket performance analytics tracking player statistics, match data, and performance metrics. Created detailed reports for coaches and players to improve game strategies.",
+        skills: ["Cricket Analytics", "Performance Metrics", "Data Analysis", "Strategy"]
+      },
+      {
+        id: "5",
+        title: "Live Cricket Scoring System",
+        image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
+        category: "Cricket Technology",
+        description: "Built a real-time cricket scoring platform that tracks live match statistics, player performance, and generates comprehensive match reports. Used by local cricket clubs for tournament management.",
+        skills: ["Cricket Scoring", "Live Analytics", "Match Management", "Data Visualization"]
+      }
+    ],
+
+    // Experience data - Actual experience from profile
+    experienceDetails: [
+      {
+        id: "1",
+        role: "Cricketer (All-Rounder)",
+        company: "Professional Cricket",
+        location: "India",
+        startDate: "2015",
+        isCurrent: true,
+        description: "Professional cricketer specializing in top-order batting and off-spin bowling. Experienced in high-pressure matches with a focus on building strong team performances."
+      },
+      {
+        id: "2",
+        role: "Cricket Performance Consultant",
+        company: "Freelance Cricket Services",
+        location: "India",
+        startDate: "2020",
+        isCurrent: true,
+        description: "Providing cricket performance analysis and consulting services. Specializing in match strategy, player development, and team performance optimization."
+      },
+      {
+        id: "3",
+        role: "Cricket Coach",
+        company: "Local Academy",
+        location: "India",
+        startDate: "2018",
+        endDate: "2020",
+        isCurrent: false,
+        description: "Coached young cricketers in batting techniques, bowling skills, and match strategies. Helped develop the next generation of cricket talent."
+      }
+    ],
+
+    // Reviews data - Actual reviews from profile
+    reviewsData: [
+      {
+        id: "1",
+        author: "Rahul Sharma",
+        role: "U-19 Cricket Team Captain",
+        rating: 5,
+        comment: "Sonu transformed my batting technique completely. His one-on-one sessions helped me improve my average by 35% in just 3 months. His knowledge of the game is exceptional!",
+        date: "2024-05-10"
+      },
+      {
+        id: "2",
+        author: "Vikram Singh",
+        role: "Cricket Academy Director",
+        rating: 5,
+        comment: "As a coach, Sonu has a unique ability to identify and correct technical flaws. Our academy players have shown remarkable improvement under his guidance.",
+        date: "2024-03-25"
+      },
+      {
+        id: "3",
+        author: "Arjun Mehta",
+        role: "Professional Cricketer",
+        rating: 5,
+        comment: "The best off-spin coach I've worked with. His insights into bowling variations and game situations have taken my bowling to the next level.",
+        date: "2024-01-30"
+      },
+      {
+        id: "4",
+        author: "Karan Patel",
+        role: "District Cricket Team Coach",
+        rating: 5,
+        comment: "Sonu's cricket analytics service helped our team win the district championship. His performance data and strategic insights were crucial in our success.",
+        date: "2024-02-15"
+      },
+      {
+        id: "5",
+        author: "Priya Sharma",
+        role: "Women's Cricket Captain",
+        rating: 5,
+        comment: "Sonu coached our women's cricket team and the improvement was incredible. His training methods and mental coaching techniques helped us secure the state finals.",
+        date: "2023-12-10"
+      },
+      {
+        id: "6",
+        author: "Rajesh Kumar",
+        role: "Cricket Club President",
+        rating: 5,
+        comment: "Our club hired Sonu for performance analysis and team development. His live scoring system and match analytics have revolutionized how we prepare for tournaments.",
+        date: "2023-11-05"
+      }
+    ]
   }
 ];
 

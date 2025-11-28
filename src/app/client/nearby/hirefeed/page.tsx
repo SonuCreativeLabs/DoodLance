@@ -7,8 +7,7 @@ import ProfessionalsFeed, { BaseProfessional } from '@/app/freelancer/feed/compo
 import { Search, Map, Plus } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { categories } from '../constants';
-import { useNearbyProfessionals } from '@/contexts/NearbyProfessionalsContext';
-import { Freelancer } from '../types';
+import { useNearbyProfessionals, Professional } from '@/contexts/NearbyProfessionalsContext';
 import SearchFilters from '../components/SearchFilters';
 
 export default function IntegratedExplorePage() {
@@ -54,37 +53,8 @@ export default function IntegratedExplorePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredProfessionals, setFilteredProfessionals] = useState<BaseProfessional[]>([]);
   
-  // Map Freelancer to BaseProfessional with service-specific pricing
-  const mapToProfessional = (freelancer: Freelancer): BaseProfessional => {
-    // Service-specific pricing based on freelancer's service type
-    const getServicePrice = (service: string): number => {
-      const servicePricing: { [key: string]: number } = {
-        'Fast Bowler': 800,
-        'Net Bowler': 600,
-        'Sidearm Specialist': 500,
-        'Batting Coach': 1200,
-        'Sports Conditioning Trainer': 900,
-        'Fitness Trainer': 750,
-        'Cricket Analyst': 1500,
-        'Physio': 1600,
-        'Scorer': 400,
-        'Umpire': 650,
-        'Cricket Photo/Videography': 1900,
-        'Cricket Content Creator': 1300,
-        'Commentator': 2000,
-        'Match Player': 1800,
-        'Net Batsman': 550,
-        'Coach': 550,
-      };
-      
-      // Find matching service or return base price
-      const matchedPrice = Object.entries(servicePricing).find(([serviceName]) => 
-        service.toLowerCase().includes(serviceName.toLowerCase())
-      );
-      
-      return matchedPrice ? matchedPrice[1] : freelancer.price;
-    };
-
+  // Map Freelancer to BaseProfessional - pricing is handled by ProfessionalsFeed using services array
+  const mapToProfessional = (freelancer: Professional): BaseProfessional => {
     // Map service to cricket role
     const getCricketRole = (service: string): string => {
       const roleMapping: { [key: string]: string } = {
@@ -112,84 +82,94 @@ export default function IntegratedExplorePage() {
       return roleMapping[service] || 'All Rounder';
     };
 
-    const servicePrice = getServicePrice(freelancer.service);
     const cricketRole = freelancer.cricketRole || getCricketRole(freelancer.service);
     
     return {
-      ...freelancer,
+      ...freelancer, // This includes the services array for pricing calculation
       id: freelancer.id.toString(),
       name: freelancer.name,
       title: freelancer.name,
       service: freelancer.service,
       availability: ['Available now'],
       avatar: freelancer.image,
-      image: freelancer.image, // Keep both for compatibility
-      skills: freelancer.expertise || [], // Use expertise as skills
+      image: freelancer.image,
+      skills: freelancer.expertise || [],
       description: freelancer.description || `${freelancer.name} is a ${freelancer.experience} cricket professional specializing in ${freelancer.service.toLowerCase()} with expertise in ${freelancer.expertise?.slice(0, 3).join(', ')}${freelancer.expertise && freelancer.expertise.length > 3 ? ' & more' : ''}.`,
-      // Map price fields correctly for the freelancer feed component
-      budget: servicePrice,
-      price: servicePrice, // Also set price for client nearby component
+      // Price will be calculated dynamically by ProfessionalsFeed from services array
+      budget: freelancer.price, // Fallback price if no services
+      price: freelancer.price,
       priceUnit: freelancer.priceUnit,
-      category: freelancer.service, // Use the specific service as category
+      category: freelancer.service,
       cricketRole: cricketRole,
-      // Include the new fields
       expertise: freelancer.expertise,
       experience: freelancer.experience
     };
   };
   
+  // Helper function to sort professionals by distance (nearest first)
+  const sortByDistance = (profs: BaseProfessional[]) => {
+    return [...profs].sort((a, b) => (a.distance || 999) - (b.distance || 999));
+  };
+
   // Initialize filtered professionals and set initial sheet position
   useEffect(() => {
     const mappedProfessionals = professionals.map(mapToProfessional);
-    setFilteredProfessionals(mappedProfessionals);
+    setFilteredProfessionals(sortByDistance(mappedProfessionals));
     setInitialSheetY(getInitialSheetY());
   }, [professionals]);
 
-  // Filter professionals based on selected category
+  // Filter professionals based on selected category - matches against service card categories
   useEffect(() => {
+    let result: BaseProfessional[] = [];
+    
     if (selectedCategory && selectedCategory !== "All") {
-      const categoryServices: { [key: string]: string[] } = {
-        'Playing Services': ['Match Player', 'Net Bowler', 'Net Batsman', 'Sidearm Specialist', 'Bowler', 'Batsman'],
-        'Coaching & Training': ['Coach', 'Sports Conditioning Trainer', 'Fitness Trainer'],
-        'Support Staff & Others': ['Analyst', 'Physio', 'Scorer', 'Umpire', 'Groundsman'],
-        'Media & Content': ['Cricket Photo/Videography', 'Cricket Content Creator', 'Commentator']
+      // Map filter categories to service card category keywords
+      const categoryKeywords: { [key: string]: string[] } = {
+        'Players': ['match player', 'net bowler', 'net batsman', 'sidearm', 'bowler', 'batsman', 'player'],
+        'Coaching & Training': ['coach', 'coaching', 'training', 'trainer', 'conditioning'],
+        'Support Staff & Others': ['analyst', 'analysis', 'physio', 'scorer', 'umpire', 'groundsman'],
+        'Media & Content': ['photo', 'video', 'videography', 'content', 'commentator', 'media']
       };
       
-      const allowedServices = categoryServices[selectedCategory] || [];
-      if (allowedServices.length > 0) {
+      const keywords = categoryKeywords[selectedCategory] || [];
+      if (keywords.length > 0) {
+        // Filter by checking if freelancer has ANY service with matching category
         const filtered = professionals.filter(pro => {
+          // Check services array categories
+          if (pro.services && pro.services.length > 0) {
+            return pro.services.some((svc: any) => {
+              const svcCategory = (svc.category || '').toLowerCase();
+              const svcTitle = (svc.title || '').toLowerCase();
+              return keywords.some(keyword => 
+                svcCategory.includes(keyword) || svcTitle.includes(keyword)
+              );
+            });
+          }
+          // Fallback to main service field if no services array
           const proService = pro.service.toLowerCase();
-          return allowedServices.some(service => 
-            proService.includes(service.toLowerCase()) || 
-            service.toLowerCase().includes(proService)
-          );
+          return keywords.some(keyword => proService.includes(keyword));
         });
-        // Map filtered professionals to include cricket descriptions
-        const mappedFiltered = filtered.map(mapToProfessional);
-        setFilteredProfessionals(mappedFiltered);
+        result = filtered.map(mapToProfessional);
       } else {
-        // Map all professionals if no category filter
-        const mappedProfessionals = professionals.map(mapToProfessional);
-        setFilteredProfessionals(mappedProfessionals);
+        result = professionals.map(mapToProfessional);
       }
     } else {
-      // Show all professionals if "All" is selected or no category selected
-      const mappedProfessionals = professionals.map(mapToProfessional);
-      setFilteredProfessionals(mappedProfessionals);
+      result = professionals.map(mapToProfessional);
     }
 
-    // Apply search query filter after category filtering
+    // Apply search query filter
     if (searchQuery && searchQuery.trim()) {
-      setFilteredProfessionals(prev => {
-        const query = searchQuery.toLowerCase().trim();
-        return prev.filter(pro =>
-          (pro.name && pro.name.toLowerCase().includes(query)) ||
-          (pro.service && pro.service.toLowerCase().includes(query)) ||
-          pro.expertise?.some(skill => skill.toLowerCase().includes(query)) ||
-          (pro.description && pro.description.toLowerCase().includes(query))
-        );
-      });
+      const query = searchQuery.toLowerCase().trim();
+      result = result.filter(pro =>
+        (pro.name && pro.name.toLowerCase().includes(query)) ||
+        (pro.service && pro.service.toLowerCase().includes(query)) ||
+        pro.expertise?.some(skill => skill.toLowerCase().includes(query)) ||
+        (pro.description && pro.description.toLowerCase().includes(query))
+      );
     }
+
+    // Sort by distance (nearest first) and update state
+    setFilteredProfessionals(sortByDistance(result));
   }, [selectedCategory, professionals, searchQuery]);
   
   // Set initial sheet position to collapsed state (responsive to screen size)
@@ -217,23 +197,31 @@ export default function IntegratedExplorePage() {
     // Apply filters to professionals
     let filtered = [...professionals];
     
-    // Apply category filter first (if not "All")
+    // Apply category filter first (if not "All") - matches against service card categories
     if (selectedCategory && selectedCategory !== "All") {
-      const categoryServices: { [key: string]: string[] } = {
-        'Playing Services': ['Match Player', 'Net Bowler', 'Net Batsman', 'Sidearm Specialist', 'Bowler', 'Batsman'],
-        'Coaching & Training': ['Coach', 'Sports Conditioning Trainer', 'Fitness Trainer'],
-        'Support Staff & Others': ['Analyst', 'Physio', 'Scorer', 'Umpire', 'Groundsman'],
-        'Media & Content': ['Cricket Photo/Videography', 'Cricket Content Creator', 'Commentator']
+      const categoryKeywords: { [key: string]: string[] } = {
+        'Players': ['match player', 'net bowler', 'net batsman', 'sidearm', 'bowler', 'batsman', 'player'],
+        'Coaching & Training': ['coach', 'coaching', 'training', 'trainer', 'conditioning'],
+        'Support Staff & Others': ['analyst', 'analysis', 'physio', 'scorer', 'umpire', 'groundsman'],
+        'Media & Content': ['photo', 'video', 'videography', 'content', 'commentator', 'media']
       };
       
-      const allowedServices = categoryServices[selectedCategory] || [];
-      if (allowedServices.length > 0) {
+      const keywords = categoryKeywords[selectedCategory] || [];
+      if (keywords.length > 0) {
         filtered = filtered.filter(pro => {
+          // Check services array categories
+          if (pro.services && pro.services.length > 0) {
+            return pro.services.some((svc: any) => {
+              const svcCategory = (svc.category || '').toLowerCase();
+              const svcTitle = (svc.title || '').toLowerCase();
+              return keywords.some(keyword => 
+                svcCategory.includes(keyword) || svcTitle.includes(keyword)
+              );
+            });
+          }
+          // Fallback to main service field
           const proService = pro.service.toLowerCase();
-          return allowedServices.some(service => 
-            proService.includes(service.toLowerCase()) || 
-            service.toLowerCase().includes(proService)
-          );
+          return keywords.some(keyword => proService.includes(keyword));
         });
       }
     }
@@ -280,9 +268,9 @@ export default function IntegratedExplorePage() {
       );
     }
     
-    // Map filtered professionals to BaseProfessional format with cricket descriptions
+    // Map filtered professionals and sort by distance (nearest first)
     const mappedFiltered = filtered.map(mapToProfessional);
-    setFilteredProfessionals(mappedFiltered);
+    setFilteredProfessionals(sortByDistance(mappedFiltered));
     setShowFilterModal(false);
   };
 
@@ -294,9 +282,9 @@ export default function IntegratedExplorePage() {
     setPriceRange([0, 20000]);
     setAvailability("");
     setSelectedTimeOptions([]);
-    // Reset to all mapped professionals
+    // Reset to all mapped professionals and sort by distance
     const mappedProfessionals = professionals.map(mapToProfessional);
-    setFilteredProfessionals(mappedProfessionals);
+    setFilteredProfessionals(sortByDistance(mappedProfessionals));
   };
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
