@@ -313,6 +313,25 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
         setOtpInput('');
         setOtpDigits(['', '', '', '']);
 
+        // Update client booking status from 'confirmed' to 'ongoing' in localStorage
+        try {
+          const clientBookings = JSON.parse(localStorage.getItem('clientBookings') || '[]');
+          const updatedBookings = clientBookings.map((booking: any) => {
+            if (booking['#'] === job.id) {
+              return { ...booking, status: 'ongoing' };
+            }
+            return booking;
+          });
+          localStorage.setItem('clientBookings', JSON.stringify(updatedBookings));
+          
+          // Dispatch event to notify client side about booking update
+          window.dispatchEvent(new CustomEvent('clientBookingUpdated', { 
+            detail: { bookings: updatedBookings, action: 'started', jobId: job.id } 
+          }));
+        } catch (e) {
+          console.error('Error updating client booking status:', e);
+        }
+
         // Save job status update to localStorage and update dashboard
         if (onJobUpdate) {
           onJobUpdate(job.id, 'started');
@@ -960,7 +979,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
 
         {/* Job Highlights */}
         <div className="mb-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className={`grid ${job.isDirectHire ? 'grid-cols-2 md:grid-cols-3' : 'grid-cols-2 md:grid-cols-4'} gap-4`}>
             <div className="flex items-start gap-3">
               <div className="w-5 h-5 flex items-center justify-center mt-0.5 flex-shrink-0">
                 <span className="text-gray-400 text-lg leading-none">₹</span>
@@ -969,8 +988,11 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                 <div className="text-sm text-gray-400 mb-0.5">Payment</div>
                 <div className="text-white font-medium leading-tight">
                   <span className="whitespace-nowrap">
-                    ₹{job.payment ? job.payment.toLocaleString('en-IN') : '0'}
+                    ₹{job.payment ? (typeof job.payment === 'number' ? job.payment.toLocaleString('en-IN') : job.payment) : '0'}
                   </span>
+                  {job.paymentMethod === 'cod' && (
+                    <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">COD</span>
+                  )}
                 </div>
               </div>
             </div>
@@ -978,7 +1000,9 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
               <ClockIcon className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
               <div>
                 <div className="text-sm text-gray-400">Duration</div>
-                <div className="text-white font-medium capitalize break-words whitespace-normal leading-tight">{getJobDurationLabel(job as any)}</div>
+                <div className="text-white font-medium capitalize break-words whitespace-normal leading-tight">
+                  {job.isDirectHire ? 'As per booking' : getJobDurationLabel(job as any)}
+                </div>
               </div>
             </div>
             <div className="flex items-start gap-3">
@@ -986,52 +1010,79 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
               <div>
                 <div className="text-sm text-gray-400">Scheduled</div>
                 <div className="text-white font-medium">
-                  {job.scheduledAt ? (() => {
-                    const scheduled = new Date(job.scheduledAt);
-                    const month = scheduled.toLocaleDateString('en-US', { month: 'short' });
-                    const day = scheduled.getDate();
-                    const year = scheduled.getFullYear();
-                    const time = scheduled.toLocaleTimeString('en-US', { 
-                      hour: 'numeric', 
-                      minute: '2-digit',
-                      hour12: true
-                    });
-                    return (
-                      <>
-                        {`${month} ${day}, ${year}`}
-                        <br />
-                        at {time}
-                      </>
-                    );
-                  })() : (() => {
-                    // Hardcoded date for consistent demo: November 14, 2025 at 3:30 PM
-                    const demoDate = new Date('2025-11-14T15:30:00.000Z');
-                    const month = demoDate.toLocaleDateString('en-US', { month: 'short' });
-                    const day = demoDate.getDate();
-                    const year = demoDate.getFullYear();
-                    const time = demoDate.toLocaleTimeString('en-US', { 
-                      hour: 'numeric', 
-                      minute: '2-digit',
-                      hour12: true
-                    });
-                    return (
-                      <>
-                        {`${month} ${day}, ${year}`}
-                        <br />
-                        at {time}
-                      </>
-                    );
+                  {(() => {
+                    // For direct hire jobs, use jobDate and jobTime
+                    if (job.isDirectHire && job.jobDate) {
+                      const [year, month, day] = job.jobDate.split('-').map(Number);
+                      const date = new Date(year, month - 1, day);
+                      const monthStr = date.toLocaleDateString('en-US', { month: 'short' });
+                      return (
+                        <>
+                          {`${monthStr} ${day}, ${year}`}
+                          <br />
+                          at {job.jobTime || job.time || '10:00 AM'}
+                        </>
+                      );
+                    }
+                    // For regular jobs, use scheduledAt
+                    if (job.scheduledAt) {
+                      const scheduled = new Date(job.scheduledAt);
+                      if (!isNaN(scheduled.getTime())) {
+                        const monthStr = scheduled.toLocaleDateString('en-US', { month: 'short' });
+                        const dayNum = scheduled.getDate();
+                        const yearNum = scheduled.getFullYear();
+                        const time = scheduled.toLocaleTimeString('en-US', { 
+                          hour: 'numeric', 
+                          minute: '2-digit',
+                          hour12: true
+                        });
+                        return (
+                          <>
+                            {`${monthStr} ${dayNum}, ${yearNum}`}
+                            <br />
+                            at {time}
+                          </>
+                        );
+                      }
+                    }
+                    // Fallback to date + time fields
+                    if (job.date) {
+                      // Check if date is in YYYY-MM-DD format
+                      if (job.date.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                        const [year, month, day] = job.date.split('-').map(Number);
+                        const date = new Date(year, month - 1, day);
+                        const monthStr = date.toLocaleDateString('en-US', { month: 'short' });
+                        return (
+                          <>
+                            {`${monthStr} ${day}, ${year}`}
+                            <br />
+                            at {job.time || '10:00 AM'}
+                          </>
+                        );
+                      }
+                      return (
+                        <>
+                          {job.date}
+                          <br />
+                          at {job.time || '10:00 AM'}
+                        </>
+                      );
+                    }
+                    return 'Date not set';
                   })()}
                 </div>
               </div>
             </div>
-            <div className="flex items-start gap-3">
-              <User className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
-              <div>
-                <div className="text-sm text-gray-400">Experience</div>
-                <div className="text-white font-medium">{getExperienceLevelDisplayName(job.experienceLevel || job.experience || 'Expert')}</div>
+            {/* Only show experience for non-direct hire jobs */}
+            {!job.isDirectHire && (
+              <div className="flex items-start gap-3">
+                <User className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
+                <div>
+                  <div className="text-sm text-gray-400">Experience</div>
+                  <div className="text-white font-medium">{getExperienceLevelDisplayName(job.experienceLevel || job.experience || 'Expert')}</div>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
 
@@ -1039,51 +1090,102 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
-            {/* About the Job with Skills */}
+            {/* About the Job / Booking Details */}
             <div className="relative overflow-hidden rounded-xl bg-[#111111] border border-gray-600/30 shadow-lg">
-
               {/* Card content */}
               <div className="relative p-5">
-                <div className="text-left mb-2">
-                  <div className="text-white/60 font-medium text-xs">
-                    {job.postedAt ? (() => {
-                      const posted = new Date(job.postedAt);
-                      const now = new Date();
-                      const diffTime = Math.abs(now.getTime() - posted.getTime());
-                      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-                      const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
-                      const diffMinutes = Math.floor(diffTime / (1000 * 60));
+                {/* Show posting time for regular jobs only */}
+                {!job.isDirectHire && job.postedAt && (
+                  <div className="text-left mb-2">
+                    <div className="text-white/60 font-medium text-xs">
+                      {(() => {
+                        const posted = new Date(job.postedAt);
+                        const now = new Date();
+                        const diffTime = Math.abs(now.getTime() - posted.getTime());
+                        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                        const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+                        const diffMinutes = Math.floor(diffTime / (1000 * 60));
 
-                      if (diffMinutes < 60) {
-                        return `${diffMinutes}m ago`;
-                      } else if (diffHours < 24) {
-                        return `${diffHours}h ago`;
-                      } else if (diffDays < 7) {
-                        return `${diffDays}d ago`;
-                      } else if (diffDays < 30) {
-                        const weeks = Math.floor(diffDays / 7);
-                        return `${weeks}w ago`;
-                      } else if (diffDays < 365) {
-                        const months = Math.floor(diffDays / 30);
-                        return `${months}mo ago`;
-                      } else {
-                        const years = Math.floor(diffDays / 365);
-                        return `${years}y ago`;
-                      }
-                    })() : 'Date not specified'}
+                        if (diffMinutes < 60) {
+                          return `${diffMinutes}m ago`;
+                        } else if (diffHours < 24) {
+                          return `${diffHours}h ago`;
+                        } else if (diffDays < 7) {
+                          return `${diffDays}d ago`;
+                        } else if (diffDays < 30) {
+                          const weeks = Math.floor(diffDays / 7);
+                          return `${weeks}w ago`;
+                        } else if (diffDays < 365) {
+                          const months = Math.floor(diffDays / 30);
+                          return `${months}mo ago`;
+                        } else {
+                          const years = Math.floor(diffDays / 365);
+                          return `${years}y ago`;
+                        }
+                      })()}
+                    </div>
                   </div>
-                </div>
+                )}
+
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold text-white">About the Job</h2>
+                  <h2 className="text-lg font-semibold text-white">
+                    {job.isDirectHire ? 'Booking Details' : 'About the Job'}
+                  </h2>
+                  {job.isDirectHire && (
+                    <span className="text-xs px-2 py-1 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                      Direct Hire
+                    </span>
+                  )}
                 </div>
+
                 <div className="prose prose-invert max-w-none">
-                  {job.description && (
+                  {/* For direct hire - show services list */}
+                  {job.isDirectHire && job.services && job.services.length > 0 && (
+                    <div className="mb-6">
+                      <h3 className="text-md font-semibold text-white mb-3">Services Booked</h3>
+                      <div className="space-y-2">
+                        {job.services.map((service, idx) => (
+                          <div key={idx} className="flex items-center justify-between py-2 px-3 rounded-lg bg-white/5 border border-white/5">
+                            <div className="flex items-center gap-3">
+                              <div className="w-2 h-2 rounded-full bg-purple-500"></div>
+                              <span className="text-white/90">{service.title}</span>
+                              {service.quantity > 1 && (
+                                <span className="text-xs text-white/50">x{service.quantity}</span>
+                              )}
+                            </div>
+                            <span className="text-white font-medium">
+                              {typeof service.price === 'number' ? `₹${service.price.toLocaleString('en-IN')}` : service.price}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Notes section for direct hire */}
+                  {job.isDirectHire && job.notes && (
+                    <div className="mb-6 p-4 rounded-xl bg-gradient-to-br from-amber-500/10 to-orange-500/10 border border-amber-500/20">
+                      <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center flex-shrink-0">
+                          <MessageSquare className="w-4 h-4 text-amber-400" />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="text-sm font-medium text-amber-400 mb-2">Client Notes</h3>
+                          <p className="text-white/80 text-sm leading-relaxed">{job.notes}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Description for non-direct hire jobs only */}
+                  {!job.isDirectHire && job.description && (
                     <p className="text-white/80 leading-relaxed break-words whitespace-normal">
                       {job.description}
                     </p>
                   )}
 
-                  {job.skills && job.skills.length > 0 && (
+                  {/* Skills for non-direct hire jobs only */}
+                  {!job.isDirectHire && job.skills && job.skills.length > 0 && (
                     <div className="mt-6 pt-6 border-t border-white/5">
                       <h3 className="text-md font-semibold text-white mb-3">Required Skills</h3>
                       <div className="flex flex-wrap gap-2">
@@ -1097,6 +1199,11 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                         ))}
                       </div>
                     </div>
+                  )}
+
+                  {/* Empty state for direct hire without notes */}
+                  {job.isDirectHire && !job.notes && (!job.services || job.services.length === 0) && (
+                    <p className="text-white/60 text-sm italic">No additional notes provided by the client.</p>
                   )}
                 </div>
               </div>
@@ -1249,31 +1356,42 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
               defaultExpanded={false}
             />
 
-            {/* Action Buttons - Moved below safety tips */}
+            {/* Action Buttons - Modern Design */}
             {(job.status === 'upcoming' || job.status === 'pending') && !jobStarted && (
-              <>
-                <div className="text-xs text-white/50 text-center mb-3">
-                  Get verification code from client on the field (💡 Test: 1234), then click "Start Job"
+              <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#111111] to-[#0a0a0a] border border-gray-600/30 shadow-lg">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-2xl"></div>
+                <div className="relative p-5">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center">
+                      <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-sm font-semibold text-white">Ready to Start?</h3>
+                  </div>
+                  <p className="text-xs text-white/50 mb-4">
+                    Get the 4-digit verification code from your client at the venue to begin the session.
+                  </p>
+                  <div className="space-y-3">
+                    <button
+                      onClick={handleStartJob}
+                      className="w-full py-3 px-6 rounded-xl font-semibold bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-500 hover:to-blue-600 shadow-lg shadow-blue-600/20 hover:shadow-blue-500/30 transition-all duration-300 flex items-center justify-center gap-2 group"
+                    >
+                      <svg className="w-5 h-5 group-hover:animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                      Enter OTP & Start Job
+                    </button>
+                    <button
+                      onClick={handleCancelJob}
+                      className="w-full py-3 px-6 rounded-xl font-medium bg-transparent text-red-400 border border-red-500/20 hover:bg-red-500/10 hover:border-red-400/40 transition-all duration-300 flex items-center justify-center gap-2"
+                    >
+                      <X className="w-4 h-4" />
+                      Cancel Booking
+                    </button>
+                  </div>
                 </div>
-                <div className="space-y-3">
-                  <button
-                    onClick={handleStartJob}
-                    className="w-full py-3 px-6 rounded-lg font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
-                    Start Job
-                  </button>
-                  <button
-                    onClick={handleCancelJob}
-                    className="w-full py-3 px-6 rounded-lg font-medium bg-transparent text-red-400 border border-red-500/30 hover:bg-red-500/10 hover:border-red-400/50 transition-all duration-200 flex items-center justify-center gap-2"
-                  >
-                    <X className="w-4 h-4" />
-                    Cancel Job
-                  </button>
-                </div>
-              </>
+              </div>
             )}
 
           {/* Support Info for Started Jobs */}

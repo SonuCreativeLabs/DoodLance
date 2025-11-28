@@ -165,6 +165,12 @@ export const statusColors = {
     border: 'border-blue-500/20',
     shadow: 'shadow-blue-500/10'
   },
+  started: {
+    bg: 'bg-green-500/10',
+    text: 'text-green-400',
+    border: 'border-green-500/20',
+    shadow: 'shadow-green-500/10'
+  },
   // Application status colors
   accepted: { 
     bg: 'bg-emerald-500/10', 

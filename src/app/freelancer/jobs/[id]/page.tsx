@@ -6,9 +6,86 @@ import { useState, useMemo } from 'react';
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { JobDetailsModal } from '@/components/freelancer/jobs/JobDetailsModal';
+import { JobCategory } from '@/components/freelancer/jobs/types';
+
+// LocalStorage key for client bookings
+const CLIENT_BOOKINGS_KEY = 'clientBookings';
+
+// Convert client booking to job format
+const convertBookingToJob = (booking: any) => {
+  let jobDate = booking.date;
+  if (booking.date && !booking.date.includes('-')) {
+    const parsedDate = new Date(booking.date);
+    if (!isNaN(parsedDate.getTime())) {
+      jobDate = parsedDate.toISOString().split('T')[0];
+    }
+  }
+
+  let jobStatus: 'pending' | 'started' | 'completed' | 'cancelled' = 'pending';
+  if (booking.status === 'ongoing') {
+    jobStatus = 'started';
+  } else if (booking.status === 'completed') {
+    jobStatus = 'completed';
+  } else if (booking.status === 'cancelled') {
+    jobStatus = 'cancelled';
+  }
+
+  // Get OTP from localStorage or booking
+  let storedOtp = booking.otp || '1234';
+  try {
+    const otpStore = JSON.parse(localStorage.getItem('bookingOtps') || '{}');
+    if (otpStore[booking['#']]) {
+      storedOtp = otpStore[booking['#']];
+    }
+  } catch (e) {
+    console.error('Error getting OTP:', e);
+  }
+
+  return {
+    id: booking['#'] || `booking_${Date.now()}`,
+    title: booking.service || 'Service Booking',
+    category: (booking.category as JobCategory) || 'OTHER',
+    date: jobDate,
+    time: booking.time || '10:00 AM',
+    jobDate: jobDate,
+    jobTime: booking.time || '10:00 AM',
+    status: jobStatus,
+    payment: typeof booking.price === 'string' 
+      ? parseInt(booking.price.replace(/[₹,]/g, '')) || 0 
+      : booking.price || 0,
+    location: booking.location || 'Location TBD',
+    description: booking.notes || '', // Use notes for direct hire
+    skills: [],
+    duration: 'As per booking',
+    experienceLevel: undefined,
+    otp: storedOtp,
+    // Direct hire specific fields
+    isDirectHire: true,
+    notes: booking.notes || '',
+    services: booking.services || [],
+    paymentMethod: booking.paymentMethod || 'cod',
+    client: {
+      name: 'Client',
+      rating: 4.5,
+      jobsCompleted: 10,
+      memberSince: new Date().toISOString().split('T')[0],
+      phoneNumber: '+91 9876543210',
+      image: '',
+      moneySpent: 50000,
+      location: booking.location || 'Location TBD',
+      joinedDate: new Date().toISOString().split('T')[0],
+      freelancersWorked: 5,
+      freelancerAvatars: []
+    },
+    isProposal: false
+  };
+};
 
 export default function JobDetailsPage({ params }: { params: { id: string } }) {
   const router = useRouter();
+  
+  // Decode the URL-encoded job ID (handles # and other special characters)
+  const jobId = decodeURIComponent(params.id);
   
   // Initialize updatedJobs with data from localStorage
   const [updatedJobs, setUpdatedJobs] = useState<{[key: string]: any}>(() => {
@@ -69,8 +146,37 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
   }, []);
 
   // Find the job with the matching ID from mock data, or check if it's an accepted application
-  const job = mockUpcomingJobs.find(job => job.id === params.id);
-  const acceptedApplication = mockApplications.find(app => app["#"] === params.id && app.status === 'accepted');
+  const job = mockUpcomingJobs.find(job => job.id === jobId);
+  const acceptedApplication = mockApplications.find(app => app["#"] === jobId && app.status === 'accepted');
+  
+  // Also check client bookings from localStorage - do this synchronously for initial render
+  const getClientBookingJob = () => {
+    try {
+      if (typeof window === 'undefined') return null;
+      const storedBookings = localStorage.getItem(CLIENT_BOOKINGS_KEY);
+      if (storedBookings) {
+        const bookings = JSON.parse(storedBookings);
+        const matchingBooking = bookings.find((b: any) => b['#'] === jobId);
+        if (matchingBooking) {
+          console.log('📦 Found matching client booking:', matchingBooking);
+          return convertBookingToJob(matchingBooking);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading client booking:', error);
+    }
+    return null;
+  };
+  
+  const [clientBookingJob, setClientBookingJob] = useState<any>(() => getClientBookingJob());
+  
+  // Re-check client booking if params change
+  React.useEffect(() => {
+    const bookingJob = getClientBookingJob();
+    if (bookingJob) {
+      setClientBookingJob(bookingJob);
+    }
+  }, [jobId]);
 
   // If it's an accepted application, transform it into a job-like object
   const transformedApplicationJob = acceptedApplication ? {
@@ -107,7 +213,7 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
     }
   } : null;
 
-  const baseJob = job || transformedApplicationJob;
+  const baseJob = job || transformedApplicationJob || clientBookingJob;
 
   if (!baseJob) {
     return (

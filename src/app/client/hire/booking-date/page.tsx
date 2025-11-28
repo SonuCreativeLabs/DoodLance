@@ -9,7 +9,7 @@ import { useNavbar } from '@/contexts/NavbarContext';
 
 export default function BookingDatePage() {
   const router = useRouter();
-  const { state, setBookingDetails, addToCart, clearCart } = useHire();
+  const { state, setBookingDetails, setBookingNotes, addToCart, clearCart } = useHire();
   const { setNavbarVisibility } = useNavbar();
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);
@@ -55,8 +55,13 @@ export default function BookingDatePage() {
 
   const handleContinue = () => {
     if (selectedDate && selectedTimeSlot && location.trim()) {
-      // Set the booking details in context including location
-      setBookingDetails(selectedDate, selectedTimeSlot, 1, location); // Default to 1 hour
+      // Set the booking details in context including location and notes
+      setBookingDetails(selectedDate, selectedTimeSlot, 1, location, notes); // Default to 1 hour
+      
+      // Also explicitly set the notes
+      if (notes.trim()) {
+        setBookingNotes(notes.trim());
+      }
 
       // Clear existing cart items to prevent duplicates
       clearCart();

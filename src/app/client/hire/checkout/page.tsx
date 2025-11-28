@@ -2,19 +2,30 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, CreditCard, Tag, Shield, RefreshCw, AlertCircle, ChevronDown, ChevronUp, Smartphone, Wallet, Truck } from 'lucide-react';
+import { ArrowLeft, CreditCard, Tag, Shield, RefreshCw, AlertCircle, ChevronDown, ChevronUp, Smartphone, Wallet, Truck, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useHire } from '@/contexts/HireContext';
 import { useNavbar } from '@/contexts/NavbarContext';
+import { useBookings } from '@/contexts/BookingsContext';
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { state, getTotalPrice } = useHire();
+  const { state, getTotalPrice, clearCart, resetHireState } = useHire();
+  const { addBooking } = useBookings();
   const { setNavbarVisibility } = useNavbar();
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
   const [discountAmount, setDiscountAmount] = useState(0);
   const [showOrderDetails, setShowOrderDetails] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [bookingSuccess, setBookingSuccess] = useState(false);
+  const [newBookingId, setNewBookingId] = useState<string | null>(null);
+  const [generatedOtp, setGeneratedOtp] = useState<string | null>(null);
+
+  // Generate OTP function
+  const generateOtp = () => {
+    return Math.floor(1000 + Math.random() * 9000).toString();
+  };
 
   // Hide navbar when component mounts
   useEffect(() => {
@@ -36,12 +47,102 @@ export default function CheckoutPage() {
   const discount = appliedCoupon ? Math.round(subtotal * 0.1) : 0; // 10% discount for demo
   const total = subtotal + serviceFee - discount;
 
-  const handlePayment = () => {
-    // In a real app, this would integrate with a payment gateway
-    alert('Payment processing would happen here!');
-    // After successful payment, redirect to booking confirmation
-    router.push('/client/bookings');
+  const handleCODBooking = () => {
+    setIsProcessing(true);
+    
+    // Generate OTP for this booking
+    const otp = generateOtp();
+    
+    // Simulate processing delay
+    setTimeout(() => {
+      // Create the booking
+      const serviceNames = state.cartItems.map(item => item.service.title).join(', ');
+      // Use the date in YYYY-MM-DD format for proper filtering
+      const bookingDate = state.selectedDate || new Date().toISOString().split('T')[0];
+      
+      const bookingId = addBooking({
+        service: serviceNames,
+        provider: state.freelancerName || 'Freelancer',
+        image: state.freelancerImage || '',
+        date: bookingDate,
+        time: state.selectedTime || '10:00 AM',
+        status: 'confirmed',
+        location: state.selectedLocation || 'Location TBD',
+        price: `₹${total.toLocaleString()}`,
+        rating: state.freelancerRating || 4.5,
+        completedJobs: state.freelancerReviewCount || 50,
+        description: `Booking for ${serviceNames}`,
+        category: 'cricket',
+        paymentMethod: 'cod',
+        notes: state.bookingNotes || undefined, // Include notes from booking details
+        otp: otp, // Include OTP for verification
+        services: state.cartItems.map(item => ({
+          id: item.service.id,
+          title: item.service.title,
+          price: item.service.price,
+          quantity: item.quantity || 1
+        }))
+      });
+      
+      // Store OTP in localStorage for the freelancer side to access
+      try {
+        const otpStore = JSON.parse(localStorage.getItem('bookingOtps') || '{}');
+        otpStore[bookingId] = otp;
+        localStorage.setItem('bookingOtps', JSON.stringify(otpStore));
+      } catch (e) {
+        console.error('Error storing OTP:', e);
+      }
+      
+      setNewBookingId(bookingId);
+      setGeneratedOtp(otp);
+      setBookingSuccess(true);
+      setIsProcessing(false);
+      
+      // Clear cart and hire state
+      clearCart();
+      resetHireState();
+      
+      // Redirect to bookings after showing success
+      setTimeout(() => {
+        router.push('/client/bookings');
+      }, 3500); // Extended to show OTP longer
+    }, 1500);
   };
+
+  // Show success screen with OTP
+  if (bookingSuccess) {
+    return (
+      <div className="min-h-screen bg-[#0F0F0F] flex items-center justify-center p-6">
+        <div className="text-center max-w-md mx-auto">
+          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-green-500/20 flex items-center justify-center">
+            <CheckCircle className="w-10 h-10 text-green-500" />
+          </div>
+          <h2 className="text-2xl font-bold text-white mb-2">Booking Confirmed!</h2>
+          <p className="text-white/60 mb-4">Your booking {newBookingId} has been placed successfully.</p>
+          
+          {/* OTP Display Card */}
+          {generatedOtp && (
+            <div className="mb-6 p-6 rounded-2xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 border border-purple-500/30">
+              <p className="text-sm text-white/60 mb-2">Your Verification Code</p>
+              <div className="flex justify-center gap-3 mb-3">
+                {generatedOtp.split('').map((digit, idx) => (
+                  <div key={idx} className="w-14 h-14 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center">
+                    <span className="text-3xl font-bold text-white">{digit}</span>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-purple-300">
+                Share this code with your coach to start the session
+              </p>
+            </div>
+          )}
+          
+          <p className="text-white/40 text-sm mb-4">Payment: Cash on Delivery</p>
+          <p className="text-white/50 text-sm">Redirecting to your bookings...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (state.cartItems.length === 0) {
     return (
@@ -161,12 +262,25 @@ export default function CheckoutPage() {
                 <p className="text-white/60 text-sm">Pay when service is completed</p>
               </div>
             </div>
-            <button className="w-full py-3 px-6 rounded-xl bg-white/10 hover:bg-white/20 text-white font-medium transition-all duration-200 flex items-center justify-center gap-3">
-              <Truck className="w-5 h-5" />
-              Pay ₹{total.toLocaleString()} on Delivery
+            <button 
+              onClick={handleCODBooking}
+              disabled={isProcessing}
+              className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white font-medium transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+            >
+              {isProcessing ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                <>
+                  <Truck className="w-4 h-4" />
+                  Book Now • ₹{total.toLocaleString()} COD
+                </>
+              )}
             </button>
             <div className="text-xs text-white/40 text-center">
-              No advance payment • Additional ₹50 fee may apply
+              No advance payment required • Pay after service completion
             </div>
           </div>
 

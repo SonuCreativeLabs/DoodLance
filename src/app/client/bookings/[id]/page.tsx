@@ -2,13 +2,12 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, MapPin, Calendar, Clock, MessageSquare, Phone, Star, Briefcase, Shield, CheckCircle2, X, CheckCircle } from "lucide-react";
+import { ArrowLeft, MapPin, Calendar, Clock, MessageSquare, Phone, Star, Briefcase, Shield, CheckCircle2, X, CheckCircle, AlertTriangle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { bookings } from "@/lib/mock/bookings";
+import { useBookings } from "@/contexts/BookingsContext";
 import { useNavbar } from "@/contexts/NavbarContext";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 
@@ -19,16 +18,35 @@ const statusCopy: Record<string, string> = {
   cancelled: "Cancelled",
 };
 
+// Format date from YYYY-MM-DD to readable format
+const formatBookingDate = (dateStr: string): string => {
+  if (!dateStr) return '';
+  // Check if it's in YYYY-MM-DD format
+  if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+    const [year, month, day] = dateStr.split('-').map(Number);
+    const date = new Date(year, month - 1, day);
+    return date.toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  }
+  return dateStr;
+};
+
 export default function BookingDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { setNavbarVisibility } = useNavbar();
+  const { bookings, loading } = useBookings();
 
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showCompleteDialog, setShowCompleteDialog] = useState(false);
   const [cancelNotes, setCancelNotes] = useState('');
-  const [rating, setRating] = useState(5);
+  const [rating, setRating] = useState(0);
   const [review, setReview] = useState('');
+  const [selectedChips, setSelectedChips] = useState<string[]>([]);
 
   useEffect(() => {
     setNavbarVisibility(false);
@@ -45,7 +63,7 @@ export default function BookingDetailPage() {
     setShowCancelDialog(true);
   };
 
-  const confirmCancelBooking = async () => {
+  const confirmCancelBooking = () => {
     if (!cancelNotes.trim()) {
       alert('Please provide a reason for cancellation.');
       return;
@@ -54,27 +72,26 @@ export default function BookingDetailPage() {
     if (!booking) return;
 
     try {
-      const response = await fetch(`/api/bookings/${booking["#"]}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          status: 'cancelled',
-          notes: cancelNotes
-        }),
+      // Update booking status in localStorage
+      const storedBookings = JSON.parse(localStorage.getItem('clientBookings') || '[]');
+      const updatedBookings = storedBookings.map((b: any) => {
+        if (b['#'] === booking['#']) {
+          return { ...b, status: 'cancelled', cancellationNotes: cancelNotes };
+        }
+        return b;
       });
+      localStorage.setItem('clientBookings', JSON.stringify(updatedBookings));
+      
+      // Dispatch event to notify other components
+      window.dispatchEvent(new CustomEvent('clientBookingUpdated', { 
+        detail: { bookings: updatedBookings, action: 'cancelled' } 
+      }));
 
-      if (response.ok) {
-        alert('Booking cancelled successfully!');
-        setShowCancelDialog(false);
-        setCancelNotes('');
-        // Update booking status in the mock data or refetch
-        booking.status = 'cancelled';
-      } else {
-        const errorData = await response.json();
-        alert(`Failed to cancel booking: ${errorData.error}`);
-      }
+      setShowCancelDialog(false);
+      setCancelNotes('');
+      
+      // Redirect to bookings list
+      router.push('/client/bookings');
     } catch (error) {
       console.error('Error cancelling booking:', error);
       alert('Failed to cancel booking. Please try again.');
@@ -85,45 +102,63 @@ export default function BookingDetailPage() {
     setShowCompleteDialog(true);
   };
 
-  const confirmMarkComplete = async () => {
-    if (!review.trim()) {
-      alert('Please provide a review before marking as complete.');
+  const confirmMarkComplete = () => {
+    if (rating === 0) {
+      alert('Please provide a rating before marking as complete.');
       return;
     }
 
     if (!booking) return;
 
     try {
-      const response = await fetch(`/api/bookings/${booking["#"]}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          status: 'completed',
-          rating: rating,
-          review: review
-        }),
+      // Update booking status in localStorage
+      const storedBookings = JSON.parse(localStorage.getItem('clientBookings') || '[]');
+      const updatedBookings = storedBookings.map((b: any) => {
+        if (b['#'] === booking['#']) {
+          return { 
+            ...b, 
+            status: 'completed',
+            clientRating: {
+              stars: rating,
+              feedback: review,
+              feedbackChips: selectedChips,
+              date: new Date().toISOString()
+            }
+          };
+        }
+        return b;
       });
+      localStorage.setItem('clientBookings', JSON.stringify(updatedBookings));
+      
+      // Dispatch event to notify other components
+      window.dispatchEvent(new CustomEvent('clientBookingUpdated', { 
+        detail: { bookings: updatedBookings, action: 'completed' } 
+      }));
 
-      if (response.ok) {
-        alert('Booking marked as complete!');
-        setShowCompleteDialog(false);
-        setReview('');
-        setRating(5);
-        // Update booking status in the mock data or refetch
-        booking.status = 'completed';
-      } else {
-        const errorData = await response.json();
-        alert(`Failed to complete booking: ${errorData.error}`);
-      }
+      setShowCompleteDialog(false);
+      setReview('');
+      setRating(0);
+      setSelectedChips([]);
+      
+      // Redirect to bookings list
+      router.push('/client/bookings');
     } catch (error) {
       console.error('Error completing booking:', error);
       alert('Failed to complete booking. Please try again.');
     }
   };
 
-  const booking = useMemo(() => bookings.find((entry) => entry["#"] === rawId), [rawId]);
+  const booking = useMemo(() => bookings.find((entry) => entry["#"] === rawId), [rawId, bookings]);
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-[#111111] to-[#050505] text-white/70">
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-500 mb-4"></div>
+        <div className="text-lg">Loading booking...</div>
+      </div>
+    );
+  }
 
   if (!booking) {
     return (
@@ -221,7 +256,7 @@ export default function BookingDetailPage() {
                 <Calendar className="w-4 h-4 text-purple-300" />
                 <span>Scheduled for</span>
               </div>
-              <p className="text-lg font-semibold text-white">{booking.date}</p>
+              <p className="text-lg font-semibold text-white">{formatBookingDate(booking.date)}</p>
               <p className="text-sm text-white/60">{booking.time}</p>
             </div>
 
@@ -243,6 +278,79 @@ export default function BookingDetailPage() {
               <p className="text-sm text-white/60">Indoor training facility</p>
             </div>
           </div>
+
+          {/* Services Booked */}
+          {booking.services && booking.services.length > 0 && (
+            <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl">
+              <h3 className="text-lg font-semibold text-white mb-4">Services Booked</h3>
+              <div className="space-y-3">
+                {booking.services.map((service, idx) => (
+                  <div key={idx} className="flex items-center justify-between py-2 border-b border-white/5 last:border-0">
+                    <div className="flex items-center gap-3">
+                      <div className="w-2 h-2 rounded-full bg-purple-500"></div>
+                      <span className="text-white/90">{service.title}</span>
+                      {service.quantity > 1 && (
+                        <span className="text-xs text-white/50">x{service.quantity}</span>
+                      )}
+                    </div>
+                    <span className="text-white font-medium">
+                      {typeof service.price === 'number' ? `₹${service.price.toLocaleString()}` : service.price}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              {booking.paymentMethod === 'cod' && (
+                <div className="mt-4 pt-4 border-t border-white/10 flex items-center justify-between">
+                  <span className="text-white/60 text-sm">Payment Method</span>
+                  <span className="text-xs font-medium px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                    Cash on Delivery
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* OTP Verification Card - Show for confirmed bookings */}
+          {booking.status === 'confirmed' && booking.otp && (
+            <div className="mt-8 rounded-2xl border border-purple-500/30 bg-gradient-to-br from-purple-500/10 via-blue-500/5 to-purple-500/10 p-6 backdrop-blur-xl">
+              <div className="text-center">
+                <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-purple-500/20 flex items-center justify-center">
+                  <svg className="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-white mb-2">Your Verification Code</h3>
+                <p className="text-sm text-white/60 mb-4">Share this code with your coach at the venue to start the session</p>
+                <div className="flex justify-center gap-3 mb-4">
+                  {booking.otp.split('').map((digit, idx) => (
+                    <div key={idx} className="w-14 h-14 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center shadow-lg">
+                      <span className="text-3xl font-bold text-white">{digit}</span>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-purple-300">
+                  ⚠️ Keep this code private until you meet your coach
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Client Notes */}
+          {booking.notes && (
+            <div className="mt-8 rounded-2xl border border-amber-500/20 bg-gradient-to-br from-amber-500/10 to-orange-500/5 p-6 backdrop-blur-xl">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center flex-shrink-0">
+                  <svg className="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-md font-semibold text-white mb-2">Your Notes</h3>
+                  <p className="text-sm text-white/70 leading-relaxed">{booking.notes}</p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Description */}
           <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl">
@@ -329,12 +437,12 @@ export default function BookingDetailPage() {
         {booking.status === 'confirmed' || booking.status === 'ongoing' ? (
           <div className="grid grid-cols-2 gap-3">
             <Button
-              variant="outline"
-              className="border-red-500/50 bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:border-red-500"
+              variant="ghost"
+              className="text-red-400 hover:text-red-300 hover:bg-transparent"
               onClick={handleCancelBooking}
             >
               <X className="mr-2 h-4 w-4" />
-              Cancel Booking
+              Cancel
             </Button>
             <Button className="bg-green-600 hover:bg-green-700" onClick={handleMarkComplete}>
               <CheckCircle className="mr-2 h-4 w-4" />
@@ -359,175 +467,315 @@ export default function BookingDetailPage() {
         )}
       </div>
 
-      {/* Cancel Booking Dialog */}
-      <Dialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
-        <DialogContent className="w-[320px] max-w-[320px] bg-[#111111] border-gray-800">
-          <DialogHeader>
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-full bg-red-500/20">
-                <X className="w-6 h-6 text-red-500" />
-              </div>
-              <DialogTitle className="text-white">Cancel Booking</DialogTitle>
-            </div>
-            <DialogDescription className="pt-2 text-gray-400">
-              Are you sure you want to cancel this booking? This action cannot be undone and may affect your rating.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="cancel-notes" className="text-sm font-medium text-white">
-                Reason for cancellation *
-              </Label>
-              <Textarea
-                id="cancel-notes"
-                value={cancelNotes}
-                onChange={(e) => setCancelNotes(e.target.value)}
-                placeholder="Please provide a reason for cancelling this booking..."
-                className="mt-2 min-h-[100px] bg-gray-900 border-gray-700 text-white"
-                required
-              />
-            </div>
-          </div>
-
-          <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full sm:w-auto border-gray-700 text-white hover:bg-gray-800"
+      {/* Cancel Booking Full Page */}
+      {showCancelDialog && (
+        <div className="fixed inset-0 z-50 bg-gradient-to-br from-[#111111] to-[#0a0a0a] overflow-y-auto">
+          {/* Header */}
+          <div className="fixed top-0 left-0 right-0 z-50 bg-[#111111]/95 backdrop-blur-sm border-b border-gray-800/80 p-4 flex items-center">
+            <button
               onClick={() => {
                 setShowCancelDialog(false);
                 setCancelNotes('');
               }}
+              className="p-2 rounded-full hover:bg-white/10 transition-colors"
             >
-              Go Back
-            </Button>
-            <Button
-              type="button"
-              variant="destructive"
-              className="w-full sm:w-auto bg-red-600 hover:bg-red-700"
-              onClick={confirmCancelBooking}
-              disabled={!cancelNotes.trim()}
-            >
-              Yes, Cancel Booking
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Mark Complete Dialog */}
-      <Dialog open={showCompleteDialog} onOpenChange={setShowCompleteDialog}>
-        <DialogContent className="w-[400px] max-w-[400px] bg-[#111111] border-gray-800">
-          <DialogHeader>
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-full bg-green-500/20">
-                <CheckCircle className="w-6 h-6 text-green-500" />
-              </div>
-              <DialogTitle className="text-white">Mark Booking as Complete</DialogTitle>
-            </div>
-            <DialogDescription className="pt-2 text-gray-400">
-              Please rate your experience with this coach and provide feedback before marking the booking as complete.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-6">
-            <div>
-              <Label className="text-sm font-medium text-white mb-3 block">
-                Rate your experience *
-              </Label>
-              <div className="flex items-center gap-1">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <button
-                    key={star}
-                    onClick={() => setRating(star)}
-                    className={`p-1 rounded transition-colors ${
-                      star <= rating ? 'text-yellow-400' : 'text-gray-600'
-                    }`}
-                  >
-                    <Star className="w-6 h-6 fill-current" />
-                  </button>
-                ))}
-                <span className="ml-2 text-sm text-white/70">
-                  {rating === 1 ? 'Poor' :
-                   rating === 2 ? 'Fair' :
-                   rating === 3 ? 'Good' :
-                   rating === 4 ? 'Very Good' : 'Excellent'}
-                </span>
-              </div>
-            </div>
-
-            <div>
-              <Label className="text-sm font-medium text-white mb-3 block">
-                What did you love about this experience? (Optional)
-              </Label>
-              <div className="grid grid-cols-2 gap-2 mb-4">
-                {[
-                  'Professional coaching',
-                  'Clear communication',
-                  'Punctual sessions',
-                  'Expert knowledge',
-                  'Friendly approach',
-                  'Good facilities',
-                  'Value for money',
-                  'Skill improvement'
-                ].map((chip) => (
-                  <button
-                    key={chip}
-                    onClick={() => {
-                      const currentReview = review;
-                      const phrase = currentReview.includes(chip)
-                        ? currentReview.replace(chip, '').trim()
-                        : `${currentReview} ${chip}`.trim();
-                      setReview(phrase);
-                    }}
-                    className={`px-3 py-2 text-sm rounded-full border transition-colors ${
-                      review.includes(chip)
-                        ? 'bg-purple-600 border-purple-600 text-white'
-                        : 'bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700'
-                    }`}
-                  >
-                    {chip}
-                  </button>
-                ))}
-              </div>
-
-              <Label htmlFor="review" className="text-sm font-medium text-white">
-                Additional feedback (optional)
-              </Label>
-              <Textarea
-                id="review"
-                value={review}
-                onChange={(e) => setReview(e.target.value)}
-                placeholder="Share more details about your experience..."
-                className="mt-2 min-h-[100px] bg-gray-900 border-gray-700 text-white"
-                rows={4}
-              />
+              <ArrowLeft className="w-5 h-5 text-white/80" />
+            </button>
+            <div className="ml-4">
+              <div className="text-sm font-medium text-white">Cancel Booking</div>
+              <div className="text-xs font-mono text-white/60">ID: {booking?.["#"]}</div>
             </div>
           </div>
 
-          <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full sm:w-auto border-gray-700 text-white hover:bg-gray-800"
+          {/* Main Content */}
+          <div className="min-h-[100dvh] w-full pt-20 pb-24">
+            <div className="max-w-3xl mx-auto p-4 md:p-6">
+              <div className="space-y-6">
+                {/* Header Section */}
+                <div className="text-center space-y-3">
+                  <div className="flex items-center justify-center">
+                    <div className="relative">
+                      <div className="absolute inset-0 bg-red-500/20 rounded-full blur-lg"></div>
+                      <div className="relative p-4 rounded-full bg-gradient-to-br from-red-500/10 to-red-600/20 border border-red-500/30">
+                        <AlertTriangle className="w-8 h-8 text-red-400" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <h1 className="text-xl font-bold text-white">Cancel Booking</h1>
+                    <p className="text-gray-400 text-sm leading-relaxed max-w-sm mx-auto">
+                      Are you sure you want to cancel this booking? This action cannot be undone.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Booking Summary */}
+                <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#111111] via-[#0f0f0f] to-[#111111] border border-gray-600/30 shadow-lg">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/5 rounded-full blur-2xl"></div>
+                  <div className="relative p-5">
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 className="text-sm font-semibold text-white/90">Booking Overview</h2>
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-500/15 text-purple-400 border border-purple-500/30">
+                        {booking?.status}
+                      </span>
+                    </div>
+                    <div className="text-center space-y-2">
+                      <p className="text-sm text-gray-400">Service</p>
+                      <p className="text-base font-medium text-white">{booking?.service}</p>
+                    </div>
+                    <div className="border-t border-gray-600/30 pt-3 mt-3">
+                      <div className="text-center space-y-1">
+                        <p className="text-sm text-gray-400">Coach</p>
+                        <p className="text-lg font-medium text-white">{booking?.provider}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Cancel Reason */}
+                <div className="space-y-3">
+                  <Label className="text-base font-medium text-white">
+                    Reason for cancellation <span className="text-red-400">*</span>
+                  </Label>
+                  <Textarea
+                    value={cancelNotes}
+                    onChange={(e) => setCancelNotes(e.target.value)}
+                    placeholder="Please provide a reason for cancelling this booking..."
+                    className="min-h-[120px] bg-[#111111] border-gray-600/50 text-white placeholder:text-gray-500 resize-none"
+                    maxLength={500}
+                  />
+                  <div className="flex justify-end">
+                    <span className="text-xs text-gray-500">{cancelNotes.length}/500</span>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-3 pt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="flex-1 h-12 border-gray-600/50 text-white/90 hover:bg-[#111111] hover:text-white transition-all duration-200 text-sm"
+                    onClick={() => {
+                      setShowCancelDialog(false);
+                      setCancelNotes('');
+                    }}
+                  >
+                    Go Back
+                  </Button>
+                  <Button
+                    type="button"
+                    className="flex-1 h-12 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-medium shadow-lg shadow-red-600/25 transition-all duration-200 text-sm whitespace-nowrap"
+                    onClick={confirmCancelBooking}
+                    disabled={!cancelNotes.trim()}
+                  >
+                    Cancel Booking
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Mark Complete Full Page */}
+      {showCompleteDialog && (
+        <div className="fixed inset-0 z-50 bg-gradient-to-br from-[#111111] to-[#0a0a0a] overflow-y-auto">
+          {/* Header */}
+          <div className="fixed top-0 left-0 right-0 z-50 bg-[#111111]/95 backdrop-blur-sm border-b border-gray-800/80 p-4 flex items-center">
+            <button
               onClick={() => {
                 setShowCompleteDialog(false);
                 setReview('');
-                setRating(5);
+                setRating(0);
+                setSelectedChips([]);
               }}
+              className="p-2 rounded-full hover:bg-white/10 transition-colors"
             >
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              className="w-full sm:w-auto bg-green-600 hover:bg-green-700"
-              onClick={confirmMarkComplete}
-            >
-              Mark Complete
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+              <ArrowLeft className="w-5 h-5 text-white/80" />
+            </button>
+            <div className="ml-4">
+              <div className="text-sm font-medium text-white">Mark Booking Complete</div>
+              <div className="text-xs font-mono text-white/60">ID: {booking?.["#"]}</div>
+            </div>
+          </div>
+
+          {/* Main Content */}
+          <div className="min-h-[100dvh] w-full pt-20 pb-24">
+            <div className="max-w-3xl mx-auto p-4 md:p-6">
+              <div className="space-y-6">
+                {/* Header Section */}
+                <div className="text-center space-y-3">
+                  <div className="flex items-center justify-center">
+                    <div className="relative">
+                      <div className="absolute inset-0 bg-green-500/20 rounded-full blur-lg"></div>
+                      <div className="relative p-4 rounded-full bg-gradient-to-br from-green-500/10 to-green-600/20 border border-green-500/30">
+                        <CheckCircle className="w-8 h-8 text-green-400" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <h1 className="text-xl font-bold text-white">Mark as Complete</h1>
+                    <p className="text-gray-400 text-sm leading-relaxed max-w-sm mx-auto">
+                      Please rate your experience with this coach and provide feedback.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Booking Summary */}
+                <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#111111] via-[#0f0f0f] to-[#111111] border border-gray-600/30 shadow-lg">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/5 rounded-full blur-2xl"></div>
+                  <div className="relative p-5">
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 className="text-sm font-semibold text-white/90">Booking Overview</h2>
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-500/15 text-green-400 border border-green-500/30">
+                        completing
+                      </span>
+                    </div>
+                    <div className="text-center space-y-2">
+                      <p className="text-sm text-gray-400">Service</p>
+                      <p className="text-base font-medium text-white">{booking?.service}</p>
+                    </div>
+                    <div className="border-t border-gray-600/30 pt-3 mt-3">
+                      <div className="text-center space-y-1">
+                        <p className="text-sm text-gray-400">Coach</p>
+                        <p className="text-lg font-medium text-white">{booking?.provider}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Rating Section */}
+                <div className="space-y-4">
+                  <Label className="text-lg font-semibold text-white">
+                    How would you rate your experience? <span className="text-red-400">*</span>
+                  </Label>
+                  <div className="flex flex-col items-center gap-4">
+                    <div className="flex items-center gap-2">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          key={star}
+                          onClick={() => setRating(star)}
+                          className={`transition-all duration-200 ${
+                            star <= rating
+                              ? 'text-yellow-400 scale-110 drop-shadow-sm'
+                              : 'hover:text-yellow-400/50 hover:scale-105'
+                          }`}
+                          style={star <= rating ? {} : { color: '#404040' }}
+                        >
+                          <Star className="w-12 h-12 fill-current" />
+                        </button>
+                      ))}
+                    </div>
+                    <div className="text-center">
+                      {rating > 0 ? (
+                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-bold tracking-wide ring-1 ring-gray-500/30">
+                          <span className="text-lg">
+                            {rating === 1 ? '😞' : rating === 2 ? '😐' : rating === 3 ? '😊' : rating === 4 ? '😄' : '🤩'}
+                          </span>
+                          <span className={`font-bold text-sm tracking-wider ${
+                            rating === 1 ? 'text-red-400' :
+                            rating === 2 ? 'text-orange-400' :
+                            rating === 3 ? 'text-yellow-400' :
+                            rating === 4 ? 'text-blue-400' : 'text-green-400'
+                          }`}>
+                            {rating === 1 ? 'Poor' :
+                             rating === 2 ? 'Fair' :
+                             rating === 3 ? 'Good' :
+                             rating === 4 ? 'Very Good' : 'Excellent'}
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="text-white/60 text-xs italic ring-1 ring-gray-500/30 px-2 py-0.5 rounded-full">
+                          Tap to rate
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Feedback Chips */}
+                <div className="space-y-3">
+                  <Label className="text-base font-medium text-white">
+                    What did you love? <span className="text-gray-400">(Optional)</span>
+                  </Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      'Professional coaching',
+                      'Clear communication',
+                      'Punctual sessions',
+                      'Expert knowledge',
+                      'Friendly approach',
+                      'Good facilities'
+                    ].map((chip) => (
+                      <button
+                        key={chip}
+                        onClick={() => {
+                          setSelectedChips(prev =>
+                            prev.includes(chip)
+                              ? prev.filter(c => c !== chip)
+                              : [...prev, chip]
+                          );
+                        }}
+                        className={`px-3 py-2 text-sm rounded-lg border transition-all duration-200 ${
+                          selectedChips.includes(chip)
+                            ? 'bg-purple-500/10 border-purple-500/50 text-purple-300'
+                            : 'bg-[#111111] border-gray-600/50 text-gray-300 hover:bg-[#1E1E1E]'
+                        }`}
+                      >
+                        {chip}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Review Text */}
+                <div className="space-y-3">
+                  <Label className="text-base font-medium text-white">
+                    Additional feedback <span className="text-gray-400">(Optional)</span>
+                  </Label>
+                  <Textarea
+                    value={review}
+                    onChange={(e) => setReview(e.target.value)}
+                    placeholder="Share your experience, what went well, and any suggestions..."
+                    className="min-h-[100px] bg-[#111111] border-gray-600/50 text-white placeholder:text-gray-500 resize-none"
+                    maxLength={500}
+                  />
+                  <div className="flex justify-end">
+                    <span className="text-xs text-gray-500">{review.length}/500</span>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-3 pt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="flex-1 h-12 border-gray-600/50 text-white/90 hover:bg-[#111111] hover:text-white transition-all duration-200 text-sm"
+                    onClick={() => {
+                      setShowCompleteDialog(false);
+                      setReview('');
+                      setRating(0);
+                      setSelectedChips([]);
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    className="flex-1 h-12 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-medium shadow-lg shadow-green-600/25 transition-all duration-200 text-sm whitespace-nowrap"
+                    onClick={confirmMarkComplete}
+                    disabled={rating === 0}
+                  >
+                    Complete
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

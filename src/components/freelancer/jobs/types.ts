@@ -143,6 +143,15 @@ export interface Job {
     acceptedDate?: string;
   };
   isProposal?: boolean; // Flag to identify jobs that originated from accepted proposals
+  // Direct hire specific fields
+  isDirectHire?: boolean; // Flag to identify jobs from client direct bookings
+  services?: { // Services booked by client
+    id: string;
+    title: string;
+    price: string | number;
+    quantity: number;
+  }[];
+  paymentMethod?: 'cod' | 'upi' | 'card' | 'wallet';
 }
 
 export interface Proposal {

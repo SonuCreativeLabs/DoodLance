@@ -80,7 +80,7 @@ export function HireBottomSheet({
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-            className="fixed bottom-0 left-0 right-0 z-[9999] bg-[#1E1E1E] rounded-t-3xl max-h-[80vh] overflow-hidden"
+            className="fixed bottom-0 left-0 right-0 z-[9999] bg-[#1E1E1E] rounded-t-3xl max-h-[80vh] overflow-hidden flex flex-col"
           >
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-white/10">
@@ -106,63 +106,69 @@ export function HireBottomSheet({
             </div>
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto p-6">
+            <div className="flex-1 overflow-y-auto p-6 min-h-0">
               <div className="space-y-4">
                 <h4 className="text-white font-medium mb-4">Available Services</h4>
 
-                {services.map((service) => {
-                  const isSelected = state.selectedServices.some(s => s.id === service.id);
+                {(!services || services.length === 0) ? (
+                  <div className="text-center py-8 text-white/60">
+                    <p>No services available for this freelancer.</p>
+                  </div>
+                ) : (
+                  services.map((service) => {
+                    const isSelected = state.selectedServices.some(s => s.id === service.id);
 
-                  return (
-                    <div
-                      key={service.id}
-                      role="button"
-                      tabIndex={0}
-                      className={`p-4 rounded-xl border transition-all cursor-pointer select-none ${
-                        isSelected
-                          ? 'border-purple-500/50 bg-purple-500/10'
-                          : 'border-white/10 bg-white/5 hover:border-white/20'
-                      }`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleServiceToggle(service);
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.preventDefault();
+                    return (
+                      <div
+                        key={service.id}
+                        role="button"
+                        tabIndex={0}
+                        className={`p-4 rounded-xl border transition-all cursor-pointer select-none ${
+                          isSelected
+                            ? 'border-purple-500/50 bg-purple-500/10'
+                            : 'border-white/10 bg-white/5 hover:border-white/20'
+                        }`}
+                        onClick={(e) => {
+                          e.stopPropagation();
                           handleServiceToggle(service);
-                        }
-                      }}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
-                            isSelected
-                              ? 'border-purple-500 bg-purple-500'
-                              : 'border-white/30'
-                          }`}>
-                            {isSelected && <Check className="w-3 h-3 text-white" />}
-                          </div>
-                          <div>
-                            <h5 className="font-medium text-white">{service.title}</h5>
-                            <div className="flex items-center gap-2 mt-1">
-                              <div className="text-sm font-semibold text-purple-400">
-                                ₹{typeof service.price === 'string'
-                                  ? parseFloat(service.price.replace(/[^\d.]/g, ''))
-                                  : service.price} / {service.deliveryTime}
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            handleServiceToggle(service);
+                          }
+                        }}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+                              isSelected
+                                ? 'border-purple-500 bg-purple-500'
+                                : 'border-white/30'
+                            }`}>
+                              {isSelected && <Check className="w-3 h-3 text-white" />}
+                            </div>
+                            <div>
+                              <h5 className="font-medium text-white">{service.title}</h5>
+                              <div className="flex items-center gap-2 mt-1">
+                                <div className="text-sm font-semibold text-purple-400">
+                                  ₹{typeof service.price === 'string'
+                                    ? parseFloat(service.price.replace(/[^\d.]/g, ''))
+                                    : service.price} / {service.deliveryTime}
+                                </div>
                               </div>
                             </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })
+                )}
               </div>
             </div>
 
             {/* Footer */}
-            <div className="p-6 border-t border-white/10 bg-[#1E1E1E]">
+            <div className="flex-shrink-0 p-6 border-t border-white/10 bg-[#1E1E1E]">
               <div className="flex items-center justify-between mb-4">
                 <div className="text-sm text-white/60">
                   {state.selectedServices.length} service{state.selectedServices.length !== 1 ? 's' : ''} selected

@@ -1076,7 +1076,7 @@ export default function FreelancerDetailPage() {
           />
 
           {/* Hire Bottom Sheet */}
-          {freelancer && freelancer.services && (
+          {freelancer && (
             <HireBottomSheet
               isOpen={isHireBottomSheetOpen}
               onClose={() => setIsHireBottomSheetOpen(false)}
@@ -1085,7 +1085,7 @@ export default function FreelancerDetailPage() {
               freelancerImage={freelancer.image}
               freelancerRating={freelancer.rating}
               freelancerReviewCount={freelancer.reviewCount}
-              services={freelancer.services}
+              services={freelancer.services || []}
             />
           )}
 

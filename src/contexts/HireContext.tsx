@@ -37,6 +37,7 @@ export interface HireState {
   selectedTime: string | undefined;
   selectedDuration: number | undefined;
   selectedLocation: string | undefined;
+  bookingNotes: string | undefined;
 }
 
 interface HireContextType {
@@ -46,7 +47,8 @@ interface HireContextType {
   removeService: (serviceId: string) => void;
   increaseSelectedServiceQuantity: (serviceId: string) => void;
   decreaseSelectedServiceQuantity: (serviceId: string) => void;
-  setBookingDetails: (date: string, time: string, duration: number, location: string) => void;
+  setBookingDetails: (date: string, time: string, duration: number, location: string, notes?: string) => void;
+  setBookingNotes: (notes: string) => void;
   addToCart: (service: ServiceItem, date?: string, time?: string, duration?: number) => void;
   removeFromCart: (serviceId: string) => void;
   increaseQuantity: (serviceId: string) => void;
@@ -69,6 +71,7 @@ const initialState: HireState = {
   selectedTime: undefined,
   selectedDuration: undefined,
   selectedLocation: undefined,
+  bookingNotes: undefined,
 };
 
 const HireContext = createContext<HireContextType | undefined>(undefined);
@@ -124,13 +127,21 @@ export function HireProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
-  const setBookingDetails = useCallback((date: string, time: string, duration: number, location: string) => {
+  const setBookingDetails = useCallback((date: string, time: string, duration: number, location: string, notes?: string) => {
     setState(prev => ({
       ...prev,
       selectedDate: date,
       selectedTime: time,
       selectedDuration: duration,
       selectedLocation: location,
+      bookingNotes: notes || prev.bookingNotes,
+    }));
+  }, []);
+
+  const setBookingNotes = useCallback((notes: string) => {
+    setState(prev => ({
+      ...prev,
+      bookingNotes: notes,
     }));
   }, []);
 
@@ -212,6 +223,7 @@ export function HireProvider({ children }: { children: ReactNode }) {
     increaseSelectedServiceQuantity,
     decreaseSelectedServiceQuantity,
     setBookingDetails,
+    setBookingNotes,
     addToCart,
     removeFromCart,
     increaseQuantity,
