@@ -122,19 +122,19 @@ export default function ServiceManagementPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white">Service Management</h1>
-          <p className="text-gray-400 mt-1">Manage and approve freelancer services</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white">Service Management</h1>
+          <p className="text-gray-400 mt-1 text-sm sm:text-base">Manage and approve freelancer services</p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" className="text-gray-300">
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <Button variant="outline" className="text-gray-300 w-full sm:w-auto">
             <Download className="w-4 h-4 mr-2" />
             Export
           </Button>
           <Button 
             onClick={() => setShowAddService(true)}
-            className="bg-purple-600 hover:bg-purple-700"
+            className="bg-purple-600 hover:bg-purple-700 w-full sm:w-auto"
           >
             <Plus className="w-4 h-4 mr-2" />
             Add Service
@@ -143,7 +143,7 @@ export default function ServiceManagementPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         <Card className="bg-[#1a1a1a] border-gray-800 p-4">
           <div className="flex items-center justify-between">
             <div>
@@ -578,21 +578,31 @@ export default function ServiceManagementPage() {
                 const serviceId = `SRV${String(services.length + 1).padStart(3, '0')}`;
                 const service = {
                   id: serviceId,
-                  ...newService,
-                  price: parseFloat(newService.price),
-                  duration: parseInt(newService.duration),
+                  title: newService.title,
+                  description: newService.description,
+                  category: newService.category,
+                  categoryId: newService.category.toLowerCase().replace(' ', '-'),
+                  price: parseFloat(newService.price) || 0,
+                  duration: parseInt(newService.duration) || 60,
+                  location: newService.location,
+                  providerName: newService.providerName,
+                  providerId: `PRV${Math.floor(Math.random() * 100)}`,
+                  providerRating: 0,
+                  providerVerified: false,
                   status: 'pending',
                   isActive: false,
+                  isFlagged: false,
+                  isFeatured: false,
                   rating: 0,
                   totalOrders: 0,
                   completionRate: 0,
                   responseTime: '0 mins',
-                  providerId: `PRV${Math.floor(Math.random() * 100)}`,
                   tags: [newService.category],
                   images: [],
+                  coords: [0, 0],
                   createdAt: new Date().toISOString(),
                   updatedAt: new Date().toISOString()
-                };
+                } as any;
                 setServices([service, ...services]);
                 setShowAddService(false);
                 setNewService({

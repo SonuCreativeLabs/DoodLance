@@ -44,12 +44,12 @@ export default function FreelancerHome() {
   };
 
   return (
-    <div className="min-h-screen bg-[#111111] pb-24">
+    <div className="min-h-screen bg-[#111111] pb-16 sm:pb-20 lg:pb-24">
       {/* Hero Banner */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative min-h-[150px] overflow-hidden rounded-b-3xl mx-3 -mt-1"
+        className="relative min-h-[120px] sm:min-h-[140px] md:min-h-[150px] overflow-hidden rounded-b-2xl sm:rounded-b-3xl mx-2 sm:mx-3 -mt-1"
       >
         {/* Background Elements */}
         <div className="absolute inset-0">
@@ -74,25 +74,25 @@ export default function FreelancerHome() {
         </div>
 
         {/* Hero Content */}
-        <div className="relative z-10 container mx-auto px-4 h-full flex flex-col justify-center py-4">
+        <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 h-full flex flex-col justify-center py-3 sm:py-4">
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="max-w-4xl space-y-3"
+            className="max-w-4xl space-y-2 sm:space-y-3"
           >
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 backdrop-blur-sm border border-white/10 hover:border-white/20 transition-colors">
-              <div className="relative w-2 h-2">
+            <div className="inline-flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full bg-white/5 backdrop-blur-sm border border-white/10 hover:border-white/20 transition-colors">
+              <div className="relative w-1.5 h-1.5 sm:w-2 sm:h-2">
                 <div className="absolute inset-0 bg-green-400 rounded-full opacity-75 animate-ping"></div>
                 <div className="absolute inset-0.5 bg-green-400 rounded-full"></div>
               </div>
-              <span className="text-xs font-medium text-white/90">
+              <span className="text-[10px] sm:text-xs font-medium text-white/90">
                 Online & Ready for Work
               </span>
             </div>
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-white leading-tight mb-1">Welcome back, <span className="text-white font-extrabold">Sonu</span>!</h1>
-              <p className="text-[15px] md:text-[16px] text-white/80 leading-tight">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white leading-tight mb-0.5 sm:mb-1">Welcome back, <span className="text-white font-extrabold">Sonu</span>!</h1>
+              <p className="text-sm sm:text-[15px] md:text-[16px] text-white/80 leading-tight">
                 You have{' '}
                 <a 
                   href="/freelancer/feed"
@@ -108,20 +108,20 @@ export default function FreelancerHome() {
         </div>
       </motion.div>
 
-      <div className="container mx-auto px-4 py-12 bg-[#111111] relative z-0">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 md:py-12 bg-[#111111] relative z-0">
         {/* Section Title */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="mb-6"
+          className="mb-4 sm:mb-6"
         >
-          <h2 className="text-2xl font-bold text-white mb-2">Your Dashboard</h2>
-          <p className="text-white/60">Overview of your freelancing activities and earnings</p>
+          <h2 className="text-xl sm:text-2xl font-bold text-white mb-1 sm:mb-2">Your Dashboard</h2>
+          <p className="text-sm sm:text-base text-white/60">Overview of your freelancing activities and earnings</p>
         </motion.div>
 
         {/* Earnings Cards Section */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

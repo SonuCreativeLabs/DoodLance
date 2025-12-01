@@ -345,13 +345,13 @@ export default function TransactionManagementPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white">Financial Management</h1>
-          <p className="text-gray-400 mt-1">Monitor transactions, wallets, and platform revenue</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white">Financial Management</h1>
+          <p className="text-gray-400 mt-1 text-sm sm:text-base">Monitor transactions, wallets, and platform revenue</p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" className="text-gray-300">
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <Button variant="outline" className="text-gray-300 w-full sm:w-auto">
             <Download className="w-4 h-4 mr-2" />
             Export Report
           </Button>
@@ -359,7 +359,7 @@ export default function TransactionManagementPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
         <Card className="bg-[#1a1a1a] border-gray-800 p-4">
           <div className="flex items-center justify-between">
             <div>

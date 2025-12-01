@@ -1,7 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// Extended transaction type - using Record to allow any additional properties
+interface ExtendedTransaction {
+  id: string;
+  walletId: string;
+  userName: string;
+  userRole: string;
+  amount: number;
+  type: string;
+  description: string;
+  reference?: string;
+  paymentMethod: string;
+  status: string;
+  createdAt: string;
+  paymentId?: string;
+  approvedAt?: string;
+  approvedBy?: string;
+  rejectedAt?: string;
+  rejectedReason?: string;
+  failureReason?: string;
+  processedAt?: string;
+  completedAt?: string;
+  holdReason?: string;
+  refundedAt?: string;
+  notes?: string;
+  retriedAt?: string;
+  [key: string]: any;
+}
+
 // Mock transaction data
-let mockTransactions = [
+let mockTransactions: ExtendedTransaction[] = [
   {
     id: 'TXN001',
     walletId: 'WAL001',
@@ -260,44 +288,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Transaction action error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
-
-// POST /api/admin/transactions/export - Export transactions
-export async function EXPORT(request: NextRequest) {
-  try {
-    const body = await request.json();
-    const { format, dateFrom, dateTo } = body;
-
-    let exportData = [...mockTransactions];
-    
-    if (dateFrom) {
-      exportData = exportData.filter(txn => 
-        new Date(txn.createdAt) >= new Date(dateFrom)
-      );
-    }
-    
-    if (dateTo) {
-      exportData = exportData.filter(txn => 
-        new Date(txn.createdAt) <= new Date(dateTo)
-      );
-    }
-
-    // In production, generate actual CSV/Excel file
-    const exportUrl = `/exports/transactions-${Date.now()}.${format}`;
-
-    return NextResponse.json({
-      success: true,
-      url: exportUrl,
-      count: exportData.length,
-      message: `Exported ${exportData.length} transactions`
-    });
-  } catch (error) {
-    console.error('Export transactions error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

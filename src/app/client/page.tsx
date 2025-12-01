@@ -132,7 +132,7 @@ export default function ClientHome() {
     <ClientLayout>
       {/* Fixed Header */}
       <div className="fixed top-0 left-0 w-full z-30 bg-gradient-to-br from-[#6B46C1] via-[#4C1D95] to-[#2D1B69]">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <div className="relative group">
               <div className="relative flex items-center justify-center">
@@ -160,7 +160,7 @@ export default function ClientHome() {
                   aria-label="Close sidebar"
                 />
                 {/* Sidebar */}
-                <div className={`fixed top-0 left-0 z-50 h-full w-72 bg-[#18181b] border-r border-white/10 shadow-2xl flex flex-col transition-transform duration-300 ${showSidebar ? 'translate-x-0' : '-translate-x-full'}`}>
+                <div className={`fixed top-0 left-0 z-50 h-full w-64 sm:w-72 bg-[#18181b] border-r border-white/10 shadow-2xl flex flex-col transition-transform duration-300 ${showSidebar ? 'translate-x-0' : '-translate-x-full'}`}>
                   <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
                     <div className="flex items-center gap-3">
                       <img src="/images/profile-sonu.jpg" alt="Profile" className="w-10 h-10 rounded-full object-cover border-2 border-purple-400" />
@@ -246,36 +246,6 @@ export default function ClientHome() {
                 </div>
               </div>
             </div>
-            <div className="flex flex-col gap-0.5">
-              <span className="text-lg font-medium text-white">Welcome back, Sonu!</span>
-              <div className="relative group">
-                <button
-                  className="flex items-center text-white/70 hover:text-white/90 transition-colors"
-                  onClick={() => setShowLocationPicker(prev => !prev)}
-                >
-                  <MapPin className="w-3 h-3 mr-1.5" />
-                  <span className="text-xs">Chennai, TN</span>
-                  <ChevronRight className="w-3 h-3 ml-1.5 group-hover:rotate-90 transition-transform duration-200" />
-                </button>
-                {showLocationPicker && (
-                  <div className="absolute top-6 left-0 bg-[#1a1a1a]/95 backdrop-blur-xl rounded-xl py-2 w-40 shadow-xl border border-white/10 z-50">
-                    {mockLocations.map((loc) => (
-                      <button
-                        key={`${loc.city}-${loc.state}`}
-                        className="w-full px-4 py-2.5 text-xs text-white/90 hover:bg-white/10 hover:text-white text-left flex items-center gap-2.5 transition-colors duration-200 first:rounded-t-xl last:rounded-b-xl"
-                        onClick={() => {
-                          // setCurrentLocation(loc);
-                          setShowLocationPicker(false);
-                        }}
-                      >
-                        <MapPin className="w-3.5 h-3.5 text-purple-400" />
-                        <span className="font-medium">{loc.city}, {loc.state}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
           </div>
           <div className="flex items-center space-x-4">
             <div className="relative">
@@ -311,27 +281,27 @@ export default function ClientHome() {
           </div>
 
           {/* Hero Content */}
-          <div className="relative container mx-auto px-4">
+          <div className="relative container mx-auto px-4 sm:px-6 lg:px-8">
             {/* Adjusted space for optimal position */}
-            <div className="pt-20 md:pt-28">
+            <div className="pt-16 sm:pt-20 md:pt-24 lg:pt-28">
               <div className="max-w-2xl mx-auto text-center">
-                <h1 className="text-[22px] md:text-4xl font-bold font-serif text-white mb-2 text-center drop-shadow-[0_4px_8px_rgba(0,0,0,0.3)]">
+                <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold font-serif text-white mb-2 text-center drop-shadow-[0_4px_8px_rgba(0,0,0,0.3)]">
                   Practice like a pro, with a pro
                 </h1>
-                <p className="text-base md:text-lg text-white/90 mb-4 drop-shadow-[0_2px_4px_rgba(0,0,0,0.2)]">
+                <p className="text-sm sm:text-base md:text-lg text-white/90 mb-3 sm:mb-4 drop-shadow-[0_2px_4px_rgba(0,0,0,0.2)]">
                   Your shortcut to better cricket starts here
                 </p>
               </div>
 
               {/* Modern Search Bar */}
-              <div className="max-w-3xl mx-auto mb-6">
+              <div className="max-w-3xl mx-auto mb-4 sm:mb-6 px-2 sm:px-0">
                 <div className="relative w-full">
                   <Input
                     type="text"
                     placeholder={searchQuery ? `Find services in Chennai...` : placeholder || `Find services in Chennai...`}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full bg-white/20 border border-white/40 text-white placeholder-white/80 rounded-2xl py-4 pl-12 pr-4 focus:outline-none focus:border-purple-400 transition-all shadow-lg drop-shadow-[0_4px_12px_rgba(0,0,0,0.15)]"
+                    className="w-full bg-white/20 border border-white/40 text-white placeholder-white/80 rounded-2xl py-3 sm:py-4 pl-10 sm:pl-12 pr-4 text-sm sm:text-base focus:outline-none focus:border-purple-400 transition-all shadow-lg drop-shadow-[0_4px_12px_rgba(0,0,0,0.15)]"
                   />
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/70">
                     <Sparkles className="w-5 h-5" />
@@ -676,5 +646,5 @@ export default function ClientHome() {
         </div>
       </div>
     </ClientLayout>
-  )
-} 
+  );
+}

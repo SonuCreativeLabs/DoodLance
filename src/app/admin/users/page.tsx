@@ -319,17 +319,17 @@ export default function UserManagementPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white">User Management</h1>
-          <p className="text-gray-400 mt-1">Manage all platform users and their profiles</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white">User Management</h1>
+          <p className="text-gray-400 mt-1 text-sm sm:text-base">Manage all platform users and their profiles</p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" className="text-gray-300">
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <Button variant="outline" className="text-gray-300 w-full sm:w-auto">
             <Download className="w-4 h-4 mr-2" />
             Export
           </Button>
-          <Button className="bg-purple-600 hover:bg-purple-700">
+          <Button className="bg-purple-600 hover:bg-purple-700 w-full sm:w-auto">
             <Users className="w-4 h-4 mr-2" />
             Add User
           </Button>
@@ -337,7 +337,7 @@ export default function UserManagementPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="bg-[#1a1a1a] border-gray-800 p-4">
           <div className="flex items-center justify-between">
             <div>
@@ -519,11 +519,11 @@ export default function UserManagementPage() {
                             <span className="text-sm text-white">{user.rating}</span>
                             <span className="text-xs text-gray-400">({user.completedJobs} jobs)</span>
                           </div>
-                          <p className="text-xs text-gray-400">₹{(user.totalEarnings / 1000).toFixed(1)}k earned</p>
+                          <p className="text-xs text-gray-400">₹{((user.totalEarnings || 0) / 1000).toFixed(1)}k earned</p>
                         </div>
                       ) : (
                         <div className="space-y-1">
-                          <p className="text-sm text-white">₹{(user.totalSpent / 1000).toFixed(1)}k spent</p>
+                          <p className="text-sm text-white">₹{((user.totalSpent || 0) / 1000).toFixed(1)}k spent</p>
                           <p className="text-xs text-gray-400">{user.projectsPosted} projects</p>
                         </div>
                       )}

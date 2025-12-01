@@ -216,28 +216,3 @@ export async function DELETE(request: NextRequest) {
     );
   }
 }
-
-// GET /api/admin/support/tickets/:id - Get single ticket
-export async function GET_SINGLE(request: NextRequest, { params }: { params: { id: string } }) {
-  try {
-    const ticket = tickets.find(t => t.id === params.id);
-    
-    if (!ticket) {
-      return NextResponse.json(
-        { error: 'Ticket not found' },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json({
-      success: true,
-      ticket
-    });
-  } catch (error) {
-    console.error('Get ticket error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}

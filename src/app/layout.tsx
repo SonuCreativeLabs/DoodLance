@@ -1,6 +1,8 @@
 import "./globals.css";
 import { Inter } from "next/font/google";
+import { Analytics } from '@vercel/analytics/react'
 import { Providers } from "@/components/Providers";
+import ErrorBoundary from '@/components/ErrorBoundary';
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -22,7 +24,10 @@ export default function RootLayout({
       </head>
       <body className={`${inter.className} antialiased dark`}>
         <Providers>
-          {children}
+          <ErrorBoundary>
+            {children}
+          </ErrorBoundary>
+          <Analytics />
         </Providers>
       </body>
     </html>

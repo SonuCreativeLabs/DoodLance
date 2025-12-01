@@ -1,8 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { mockBookings } from '@/lib/mock/admin-data';
 
-// Use mock bookings data
-let bookings = [...mockBookings];
+// Extended booking type with additional dynamic properties
+type ExtendedBooking = typeof mockBookings[number] & {
+  updatedAt?: string;
+  cancelledAt?: string;
+  cancellationReason?: string;
+  disputeResolvedAt?: string;
+  disputeResolution?: string;
+  resolutionNote?: string;
+  resolvedAt?: string;
+  refundedAt?: string;
+  refundAmount?: number;
+};
+
+// Use mock bookings data with extended type
+let bookings: ExtendedBooking[] = [...mockBookings];
 
 // GET /api/admin/bookings - Get all bookings with filtering
 export async function GET(request: NextRequest) {

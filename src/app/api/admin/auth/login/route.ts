@@ -10,7 +10,7 @@ const mockAdmins = [
     role: 'SUPER_ADMIN',
     permissions: [],
     avatar: null,
-    lastLoginAt: null,
+    lastLoginAt: null as string | null,
   },
   {
     id: 'admin-2',
@@ -20,7 +20,7 @@ const mockAdmins = [
     role: 'SUPPORT',
     permissions: ['users.view', 'bookings.view', 'support.view', 'support.manage'],
     avatar: null,
-    lastLoginAt: null,
+    lastLoginAt: null as string | null,
   },
   {
     id: 'admin-3',
@@ -30,13 +30,15 @@ const mockAdmins = [
     role: 'FINANCE',
     permissions: ['transactions.view', 'transactions.manage', 'reports.view', 'reports.export'],
     avatar: null,
-    lastLoginAt: null,
+    lastLoginAt: null as string | null,
   }
 ];
 
 export async function POST(req: NextRequest) {
   try {
     const { email, password } = await req.json();
+    
+    console.log('Login attempt:', { email, passwordProvided: !!password });
 
     if (!email || !password) {
       return NextResponse.json(
@@ -47,6 +49,7 @@ export async function POST(req: NextRequest) {
 
     // Find admin by email
     const admin = mockAdmins.find(a => a.email === email);
+    console.log('Found admin:', !!admin);
 
     if (!admin) {
       return NextResponse.json(
@@ -61,6 +64,9 @@ export async function POST(req: NextRequest) {
       'support@doodlance.com': 'support123',
       'finance@doodlance.com': 'finance123'
     };
+    
+    console.log('Expected password:', validPasswords[email]);
+    console.log('Password match:', validPasswords[email] === password);
 
     if (validPasswords[email] !== password) {
       return NextResponse.json(

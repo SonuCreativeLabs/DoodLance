@@ -367,19 +367,19 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white">Settings</h1>
-          <p className="text-gray-400 mt-1">Configure platform settings and preferences</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white">Settings</h1>
+          <p className="text-gray-400 mt-1 text-sm sm:text-base">Configure platform settings and preferences</p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" className="text-gray-300">
+        <div className="flex gap-2 w-full sm:w-auto">
+          <Button variant="outline" className="text-gray-300 flex-1 sm:flex-none">
             <RefreshCw className="w-4 h-4 mr-2" />
             Reset
           </Button>
           <Button 
             onClick={handleSave}
-            className="bg-purple-600 hover:bg-purple-700"
+            className="bg-purple-600 hover:bg-purple-700 flex-1 sm:flex-none"
             disabled={saved}
           >
             {saved ? (
@@ -426,8 +426,8 @@ export default function SettingsPage() {
         {renderSettingsContent()}
       </Card>
 
-      {/* System Status */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="bg-[#1a1a1a] border-gray-800 p-4">
           <div className="flex items-center justify-between">
             <div>

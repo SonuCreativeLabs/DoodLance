@@ -71,12 +71,12 @@ function MetricCard({ title, value, change, icon: Icon, color, prefix = '' }: Me
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
-      <Card className="bg-[#1a1a1a] border-gray-800 p-6">
-        <div className="flex items-start justify-between">
-          <div className="space-y-2">
-            <p className="text-sm text-gray-400">{title}</p>
-            <div className="flex items-baseline gap-2">
-              <h3 className="text-2xl font-bold text-white">
+      <Card className="bg-[#1a1a1a] border-gray-800">
+        <div className="flex items-center justify-between p-4 sm:p-6">
+          <div className="flex-1">
+            <p className="text-xs sm:text-sm text-gray-400">{title}</p>
+            <div className="flex items-center gap-2 mt-1">
+              <h3 className="text-xl sm:text-2xl font-bold text-white">
                 {prefix}{typeof value === 'number' ? value.toLocaleString() : value}
               </h3>
               {change !== undefined && (
@@ -89,8 +89,8 @@ function MetricCard({ title, value, change, icon: Icon, color, prefix = '' }: Me
               )}
             </div>
           </div>
-          <div className={`p-3 rounded-lg ${color}`}>
-            <Icon className="w-6 h-6 text-white" />
+          <div className={`p-2 sm:p-3 rounded-lg ${color}`}>
+            <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
           </div>
         </div>
       </Card>
@@ -102,9 +102,9 @@ function RevenueChart({ data }: { data: typeof revenueData }) {
   const maxRevenue = Math.max(...data.map(d => d.revenue));
   
   return (
-    <Card className="bg-[#1a1a1a] border-gray-800 p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-white">Revenue Overview</h3>
+    <Card className="bg-[#1a1a1a] border-gray-800 p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-2">
+        <h3 className="text-base sm:text-lg font-semibold text-white">Revenue Overview</h3>
         <div className="flex gap-2">
           <Button variant="ghost" size="sm" className="text-gray-400">
             <Filter className="w-4 h-4 mr-1" />
@@ -162,14 +162,14 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(false);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white">Dashboard</h1>
-          <p className="text-gray-400 mt-1">Welcome back! Here's what's happening today.</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white">Dashboard</h1>
+          <p className="text-gray-400 mt-1 text-sm sm:text-base">Welcome back! Here's what's happening today.</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <Button 
             variant={timeRange === 'day' ? 'default' : 'outline'}
             size="sm"
@@ -197,8 +197,8 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <MetricCard
           title="Total Users"
           value={mockMetrics.totalUsers}
@@ -231,8 +231,8 @@ export default function AdminDashboard() {
         />
       </div>
 
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
         {/* Revenue Chart */}
         <RevenueChart data={revenueData} />
 

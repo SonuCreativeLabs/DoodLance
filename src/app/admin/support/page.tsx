@@ -297,22 +297,24 @@ export default function SupportPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white">Support System</h1>
-          <p className="text-gray-400 mt-1">Manage support tickets and customer queries</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white">Support System</h1>
+          <p className="text-gray-400 mt-1 text-sm sm:text-base">Manage support tickets and customer queries</p>
         </div>
-        <Button 
-          onClick={() => setShowCreateTicket(true)}
-          className="bg-purple-600 hover:bg-purple-700"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Create Ticket
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <Button 
+            onClick={() => setShowCreateTicket(true)}
+            className="bg-purple-600 hover:bg-purple-700 w-full sm:w-auto"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Create Ticket
+          </Button>
+        </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         <Card className="bg-[#1a1a1a] border-gray-800 p-4">
           <div className="flex items-center justify-between">
             <div>

@@ -43,31 +43,46 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string) => {
     try {
+      console.log('Client login attempt:', { email, passwordProvided: !!password });
+      
       const response = await fetch('/api/admin/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
 
+      console.log('Response status:', response.status);
+      
       if (!response.ok) {
+        const errorText = await response.text();
+        console.log('Error response:', errorText);
         throw new Error('Invalid credentials');
       }
 
       const data = await response.json();
+      console.log('Login success:', data);
       setAdmin(data.admin);
       localStorage.setItem('admin_user', JSON.stringify(data.admin));
       localStorage.setItem('admin_token', data.token);
       
       // Log the login action
-      await fetch('/api/admin/audit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'LOGIN',
-          entityType: 'ADMIN_USER',
-          entityId: data.admin.id,
-        }),
-      });
+      try {
+        await fetch('/api/admin/audit', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'x-admin-token': data.token
+          },
+          body: JSON.stringify({
+            action: 'LOGIN',
+            entityType: 'ADMIN_USER',
+            entityId: data.admin.id,
+          }),
+        });
+      } catch (auditError) {
+        // Don't fail login if audit logging fails
+        console.warn('Audit logging failed:', auditError);
+      }
 
       router.push('/admin/dashboard');
     } catch (error) {
@@ -80,15 +95,24 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
     try {
       if (admin) {
         // Log the logout action
-        await fetch('/api/admin/audit', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: 'LOGOUT',
-            entityType: 'ADMIN_USER',
-            entityId: admin.id,
-          }),
-        });
+        try {
+          const token = localStorage.getItem('admin_token');
+          await fetch('/api/admin/audit', {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json',
+              'x-admin-token': token || ''
+            },
+            body: JSON.stringify({
+              action: 'LOGOUT',
+              entityType: 'ADMIN_USER',
+              entityId: admin.id,
+            }),
+          });
+        } catch (auditError) {
+          // Don't fail logout if audit logging fails
+          console.warn('Audit logging failed:', auditError);
+        }
       }
 
       setAdmin(null);

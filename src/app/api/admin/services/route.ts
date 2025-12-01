@@ -1,8 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { mockServices } from '@/lib/mock/services-data';
 
-// Use mock services data
-let services = [...mockServices];
+// Extended service type with additional dynamic properties
+type ExtendedService = typeof mockServices[number] & {
+  approvedAt?: string;
+  approvedBy?: string;
+  rejectionReason?: string;
+  rejectedAt?: string;
+  deactivatedReason?: string;
+  isFlagged?: boolean;
+  isFeatured?: boolean;
+  flagReason?: string;
+  flaggedAt?: string;
+  unflaggedAt?: string;
+  featuredAt?: string;
+  featuredUntil?: string;
+  unfeaturedAt?: string;
+};
+
+// Use mock services data with extended type
+let services: ExtendedService[] = [...mockServices];
 
 // GET /api/admin/services - Get all services with filtering
 export async function GET(request: NextRequest) {
@@ -232,31 +249,6 @@ export async function DELETE(request: NextRequest) {
     });
   } catch (error) {
     console.error('Delete service error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
-
-// GET /api/admin/services/:id - Get single service
-export async function GET_SINGLE(request: NextRequest, { params }: { params: { id: string } }) {
-  try {
-    const service = services.find(s => s.id === params.id);
-    
-    if (!service) {
-      return NextResponse.json(
-        { error: 'Service not found' },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json({
-      success: true,
-      service
-    });
-  } catch (error) {
-    console.error('Get service error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

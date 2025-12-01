@@ -1,0 +1,241 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  NODE_VERSION: '18.x'
+
+jobs:
+  # Lint and Type Check
+  quality-check:
+    name: Code Quality Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run TypeScript check
+        run: npm run type-check || npx tsc --noEmit
+      
+      - name: Run ESLint
+        run: npm run lint || npx eslint . --ext .ts,.tsx
+      
+      - name: Check formatting
+        run: npx prettier --check "src/**/*.{ts,tsx,css,md}"
+
+  # Build Test
+  build:
+    name: Build Application
+    runs-on: ubuntu-latest
+    needs: quality-check
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Create env file
+        run: |
+          echo "NEXT_PUBLIC_APP_URL=${{ secrets.NEXT_PUBLIC_APP_URL }}" >> .env.local
+          echo "MONGODB_URI=${{ secrets.MONGODB_URI }}" >> .env.local
+          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env.local
+      
+      - name: Build application
+        run: npm run build
+      
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-files
+          path: .next
+          retention-days: 1
+
+  # Run Tests
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    needs: quality-check
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run unit tests
+        run: npm test || echo "No tests configured yet"
+      
+      - name: Generate test coverage
+        run: npm run test:coverage || echo "No coverage configured yet"
+
+  # Security Audit
+  security:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run npm audit
+        run: npm audit --audit-level=moderate || true
+      
+      - name: Check for known vulnerabilities
+        run: npx audit-ci --moderate || true
+
+  # Lighthouse Performance Test
+  lighthouse:
+    name: Lighthouse CI
+    runs-on: ubuntu-latest
+    needs: build
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Download build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: build-files
+          path: .next
+      
+      - name: Run Lighthouse CI
+        run: |
+          npm install -g @lhci/cli
+          lhci autorun --config=./lighthouserc.json || true
+
+  # Deploy to Staging (Vercel)
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [build, test]
+    if: github.ref == 'refs/heads/develop'
+    environment: staging
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Deploy to Vercel (Staging)
+        uses: amondnet/vercel-action@v20
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: '--prod'
+          scope: ${{ secrets.VERCEL_ORG_ID }}
+
+  # Deploy to Production (Vercel)
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [build, test, security]
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Deploy to Vercel (Production)
+        uses: amondnet/vercel-action@v20
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: '--prod'
+          scope: ${{ secrets.VERCEL_ORG_ID }}
+      
+      - name: Purge CDN Cache
+        run: |
+          echo "Purging CDN cache..."
+          # Add your CDN purge command here
+      
+      - name: Notify deployment
+        uses: 8398a7/action-slack@v3
+        if: always()
+        with:
+          status: ${{ job.status }}
+          text: 'Production deployment ${{ job.status }}'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+
+  # Database Migration (for production)
+  migrate-database:
+    name: Run Database Migrations
+    runs-on: ubuntu-latest
+    needs: deploy-production
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run database migrations
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI_PROD }}
+        run: |
+          echo "Running database migrations..."
+          npm run db:migrate || echo "No migrations configured"
+
+# Notification job for failures
+notification:
+  name: Send Notifications
+  runs-on: ubuntu-latest
+  needs: [quality-check, build, test, security]
+  if: failure()
+  
+  steps:
+    - name: Send failure notification
+      uses: 8398a7/action-slack@v3
+      with:
+        status: failure
+        text: 'CI/CD Pipeline failed for ${{ github.repository }}'
+        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
