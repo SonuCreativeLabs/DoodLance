@@ -42,6 +42,17 @@ export function middleware(request: NextRequest, event: NextFetchEvent) {
     return response;
   }
 
+  // Skip auth middleware for IDE preview requests
+  const userAgent = request.headers.get('user-agent') || '';
+  const isIDEPreview = userAgent.includes('vscode') || 
+                      request.url.includes('vscodeBrowserReqId') ||
+                      request.headers.get('referer')?.includes('vscode') ||
+                      false;
+
+  if (isIDEPreview) {
+    return NextResponse.next();
+  }
+
   // Check if this is a protected API route
   const isProtectedApiRoute = protectedApiRoutes.some(route => pathname.startsWith(route));
   const isAdminRoute = adminOnlyRoutes.some(route => pathname.startsWith(route));

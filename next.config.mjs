@@ -201,6 +201,7 @@ const nextConfig = {
   // Headers configuration
   async headers() {
     const previewOrigins = "http://localhost:* http://127.0.0.1:*";
+    const idePreviewOrigins = "http://localhost:* http://127.0.0.1:* vscode-webview://*";
 
     return [
       {
@@ -212,7 +213,7 @@ const nextConfig = {
           },
           {
             key: 'Content-Security-Policy',
-            value: `frame-ancestors 'self' ${previewOrigins}`,
+            value: `frame-ancestors 'self' ${previewOrigins} ${idePreviewOrigins}`,
           },
           {
             key: 'X-XSS-Protection',
