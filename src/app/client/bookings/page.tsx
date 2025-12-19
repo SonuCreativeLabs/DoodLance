@@ -8,7 +8,9 @@ import { Button } from "@/components/ui/button"
 import { Clock, Calendar, Search, X, Briefcase } from "lucide-react"
 import { cn } from "@/lib/utils"
 import ClientLayout from "@/components/layouts/client-layout"
-import { bookings, applications, historyJobs, Booking, Application, HistoryJob } from "@/lib/mock/bookings"
+import { useBookings, Booking } from "@/contexts/BookingsContext"
+import { useApplications, Application } from "@/contexts/ApplicationsContext"
+import { useHistoryJobs, HistoryJob } from "@/contexts/HistoryJobsContext"
 
 interface BookingCardProps {
   booking: Booking;
@@ -45,6 +47,11 @@ const BookingCard = ({ booking, showActions = true }: BookingCardProps) => {
             }`}>
               {booking.status === 'ongoing' ? 'Ongoing' : booking.status === 'confirmed' ? 'Upcoming' : 'Completed'}
             </div>
+            {booking.paymentMethod === 'cod' && (
+              <div className="text-xs font-medium px-2 py-1 rounded-full border bg-blue-500/10 text-blue-400 border-blue-500/20">
+                COD
+              </div>
+            )}
           </div>
           <div className="flex items-center gap-1.5 text-sm text-white/60">
             <span className="font-mono text-xs">{booking["#"]}</span>
@@ -74,7 +81,18 @@ const BookingCard = ({ booking, showActions = true }: BookingCardProps) => {
             </div>
             <div className="min-w-0">
               <div className="text-xs text-white/40 mb-0.5">Date & Time</div>
-              <div className="text-sm text-white/90">{booking.date} at {booking.time}</div>
+              <div className="text-sm text-white/90">
+                {(() => {
+                  // Format date from YYYY-MM-DD to readable format
+                  const [year, month, day] = booking.date.split('-').map(Number);
+                  const date = new Date(year, month - 1, day);
+                  return date.toLocaleDateString('en-US', {
+                    weekday: 'short',
+                    month: 'short',
+                    day: 'numeric'
+                  });
+                })()} at {booking.time}
+              </div>
             </div>
           </div>
           
@@ -454,6 +472,10 @@ export default function BookingsPage() {
   const [applicationFilter, setApplicationFilter] = useState('new')
   const [historyFilter, setHistoryFilter] = useState('all')
   const [isSearchOpen, setIsSearchOpen] = useState(false)
+
+  const { bookings } = useBookings()
+  const { applications } = useApplications()
+  const { historyJobs } = useHistoryJobs()
 
 
   const filteredBookings = bookings.filter(booking => {

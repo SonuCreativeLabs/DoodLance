@@ -14,6 +14,7 @@ export interface Freelancer {
   expertise: string[];
   experience: string;
   description?: string;
+  cricketRole?: string;
 }
 
 export interface Category {

@@ -26,6 +26,7 @@ const getTimelineTooltipContent = (label: string): string => {
     '👀 Client Spotted Your Skills!': 'Client viewed your application',
     '🎉 Victory! You\'re In The Game!': 'Your application was accepted',
     '🏃 Game On - Work Started!': 'Job officially started',
+    'Job marked completed by freelancer': 'Freelancer submitted work for client approval',
     '🎯 Deal Secured - Job Completed!': 'Job completed and payment processed',
     '⏳ Waiting For The Umpire\'s Call': 'Waiting for client\'s decision',
     '❌ Strike Out - Keep Playing!': 'Your application was rejected',
@@ -46,10 +47,7 @@ export function CollapsibleTimeline({ items, title = "Timeline", defaultExpanded
   const displayedItems = isExpanded ? items : [latestItem];
 
   return (
-    <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#111111] via-[#0f0f0f] to-[#111111] border border-gray-600/30 shadow-lg">
-      {/* Background decoration */}
-      <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-2xl"></div>
-      <div className="absolute bottom-0 left-0 w-24 h-24 bg-blue-400/5 rounded-full blur-xl"></div>
+    <div className="relative overflow-hidden rounded-xl bg-[#111111] border border-gray-600/30 shadow-lg">
 
       {/* Card content */}
       <div className="relative p-5">
@@ -77,7 +75,7 @@ export function CollapsibleTimeline({ items, title = "Timeline", defaultExpanded
         {/* Timeline */}
         <div className="space-y-4">
           {displayedItems.map((item, index) => (
-            <div key={index} className="relative pl-10">
+            <div key={index} className="relative pl-4">
               {/* Tooltip positioned above timeline item */}
               <div className="absolute z-50 -top-12 left-1/2 transform -translate-x-1/2 px-3 py-2 bg-black border border-gray-600 rounded-lg shadow-xl hidden max-w-xs w-max"
                    style={{ pointerEvents: 'none' }}>
@@ -87,9 +85,7 @@ export function CollapsibleTimeline({ items, title = "Timeline", defaultExpanded
                 {/* Arrow pointing down to info icon */}
                 <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-2 h-2 bg-black border-r border-b border-gray-600 rotate-45"></div>
               </div>
-              <div className={`absolute left-0 top-0 w-8 h-8 rounded-full flex items-center justify-center ${item.color}`}>
-                <item.icon className="w-4 h-4 text-white" />
-              </div>
+              {/* No icon - clean timeline */}
               <div>
                 <div className="flex items-center gap-2">
                   <p className="text-sm font-medium text-white">{item.label}</p>
@@ -97,17 +93,17 @@ export function CollapsibleTimeline({ items, title = "Timeline", defaultExpanded
                     <Info
                       className="w-3 h-3 text-gray-400 hover:text-white transition-colors cursor-help"
                       onMouseEnter={(e) => {
-                        const timelineItem = e.currentTarget.closest('.relative.pl-10') as HTMLElement;
+                        const timelineItem = e.currentTarget.closest('.relative.pl-4') as HTMLElement;
                         const tooltip = timelineItem?.querySelector('div.absolute.z-50') as HTMLElement;
                         if (tooltip) tooltip.style.display = 'block';
                       }}
                       onMouseLeave={(e) => {
-                        const timelineItem = e.currentTarget.closest('.relative.pl-10') as HTMLElement;
+                        const timelineItem = e.currentTarget.closest('.relative.pl-4') as HTMLElement;
                         const tooltip = timelineItem?.querySelector('div.absolute.z-50') as HTMLElement;
                         if (tooltip) tooltip.style.display = 'none';
                       }}
                       onClick={(e) => {
-                        const timelineItem = e.currentTarget.closest('.relative.pl-10') as HTMLElement;
+                        const timelineItem = e.currentTarget.closest('.relative.pl-4') as HTMLElement;
                         const tooltip = timelineItem?.querySelector('div.absolute.z-50') as HTMLElement;
                         if (tooltip) {
                           const isVisible = tooltip.style.display === 'block';
@@ -331,6 +327,16 @@ export const createTimelineItems = (type: 'proposal' | 'job', item: any) => {
         icon: CheckCircle,
         color: 'bg-blue-500'
       });
+
+      // Add who marked job complete first (typically freelancer)
+      timelineItems.push({
+        label: 'Job marked completed by freelancer',
+        date: item.completedAt ? new Date(new Date(item.completedAt).getTime() - 3600000).toISOString() : new Date(Date.now() - 3600000).toISOString(),
+        completed: true,
+        icon: CheckCircle,
+        color: 'bg-orange-500'
+      });
+
       timelineItems.push({
         label: '🎯 Deal Secured - Job Completed!',
         date: item.completedAt || new Date().toISOString(),

@@ -1,0 +1,470 @@
+'use client';
+
+import { useState } from 'react';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Settings, Shield, Bell, Mail, Database, Globe,
+  Save, RefreshCw, AlertCircle, Check, Zap, Lock,
+  Server, CreditCard, Users, Activity
+} from 'lucide-react';
+import { motion } from 'framer-motion';
+
+const settingsCategories = [
+  {
+    id: 'general',
+    title: 'General Settings',
+    icon: Settings,
+    description: 'Basic platform configuration',
+  },
+  {
+    id: 'security',
+    title: 'Security',
+    icon: Shield,
+    description: 'Security and authentication settings',
+  },
+  {
+    id: 'notifications',
+    title: 'Notifications',
+    icon: Bell,
+    description: 'Email and push notification settings',
+  },
+  {
+    id: 'payments',
+    title: 'Payment Settings',
+    icon: CreditCard,
+    description: 'Payment gateway and commission settings',
+  },
+  {
+    id: 'performance',
+    title: 'Performance',
+    icon: Zap,
+    description: 'Cache and optimization settings',
+  },
+  {
+    id: 'database',
+    title: 'Database',
+    icon: Database,
+    description: 'Database backup and maintenance',
+  },
+];
+
+export default function SettingsPage() {
+  const [activeCategory, setActiveCategory] = useState('general');
+  const [settings, setSettings] = useState({
+    // General
+    platformName: 'DoodLance',
+    platformUrl: 'https://doodlance.com',
+    supportEmail: 'support@doodlance.com',
+    timezone: 'Asia/Kolkata',
+    language: 'en',
+    currency: 'INR',
+    
+    // Security
+    twoFactorAuth: true,
+    sessionTimeout: '30',
+    maxLoginAttempts: '5',
+    passwordMinLength: '8',
+    requireEmailVerification: true,
+    requireKyc: true,
+    
+    // Notifications
+    emailNotifications: true,
+    pushNotifications: true,
+    smsNotifications: false,
+    marketingEmails: false,
+    systemAlerts: true,
+    
+    // Payments
+    platformCommission: '15',
+    minWithdrawal: '500',
+    maxWithdrawal: '50000',
+    withdrawalFrequency: 'weekly',
+    paymentGateway: 'razorpay',
+    autoApproveWithdrawals: false,
+    
+    // Performance
+    enableCache: true,
+    cacheExpiry: '3600',
+    enableCdn: true,
+    compressionEnabled: true,
+    lazyLoading: true,
+    
+    // Database
+    autoBackup: true,
+    backupFrequency: 'daily',
+    backupRetention: '30',
+    maintenanceMode: false,
+  });
+
+  const [saved, setSaved] = useState(false);
+
+  const handleSave = () => {
+    console.log('Saving settings:', settings);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 3000);
+  };
+
+  const renderSettingsContent = () => {
+    switch (activeCategory) {
+      case 'general':
+        return (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label className="text-gray-300">Platform Name</Label>
+                <Input
+                  value={settings.platformName}
+                  onChange={(e) => setSettings({ ...settings, platformName: e.target.value })}
+                  className="bg-[#2a2a2a] border-gray-700 text-white mt-1"
+                />
+              </div>
+              <div>
+                <Label className="text-gray-300">Platform URL</Label>
+                <Input
+                  value={settings.platformUrl}
+                  onChange={(e) => setSettings({ ...settings, platformUrl: e.target.value })}
+                  className="bg-[#2a2a2a] border-gray-700 text-white mt-1"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label className="text-gray-300">Support Email</Label>
+                <Input
+                  type="email"
+                  value={settings.supportEmail}
+                  onChange={(e) => setSettings({ ...settings, supportEmail: e.target.value })}
+                  className="bg-[#2a2a2a] border-gray-700 text-white mt-1"
+                />
+              </div>
+              <div>
+                <Label className="text-gray-300">Timezone</Label>
+                <Select value={settings.timezone} onValueChange={(value) => setSettings({ ...settings, timezone: value })}>
+                  <SelectTrigger className="bg-[#2a2a2a] border-gray-700 text-white mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Asia/Kolkata">Asia/Kolkata</SelectItem>
+                    <SelectItem value="UTC">UTC</SelectItem>
+                    <SelectItem value="America/New_York">America/New_York</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label className="text-gray-300">Default Language</Label>
+                <Select value={settings.language} onValueChange={(value) => setSettings({ ...settings, language: value })}>
+                  <SelectTrigger className="bg-[#2a2a2a] border-gray-700 text-white mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="en">English</SelectItem>
+                    <SelectItem value="hi">Hindi</SelectItem>
+                    <SelectItem value="ta">Tamil</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-gray-300">Currency</Label>
+                <Select value={settings.currency} onValueChange={(value) => setSettings({ ...settings, currency: value })}>
+                  <SelectTrigger className="bg-[#2a2a2a] border-gray-700 text-white mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="INR">INR (₹)</SelectItem>
+                    <SelectItem value="USD">USD ($)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'security':
+        return (
+          <div className="space-y-4">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-gray-300">Two-Factor Authentication</Label>
+                  <p className="text-xs text-gray-400 mt-1">Require 2FA for admin accounts</p>
+                </div>
+                <Switch
+                  checked={settings.twoFactorAuth}
+                  onCheckedChange={(checked) => setSettings({ ...settings, twoFactorAuth: checked })}
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-gray-300">Email Verification</Label>
+                  <p className="text-xs text-gray-400 mt-1">Require email verification for new users</p>
+                </div>
+                <Switch
+                  checked={settings.requireEmailVerification}
+                  onCheckedChange={(checked) => setSettings({ ...settings, requireEmailVerification: checked })}
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-gray-300">KYC Requirement</Label>
+                  <p className="text-xs text-gray-400 mt-1">Require KYC for freelancers</p>
+                </div>
+                <Switch
+                  checked={settings.requireKyc}
+                  onCheckedChange={(checked) => setSettings({ ...settings, requireKyc: checked })}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label className="text-gray-300">Session Timeout (minutes)</Label>
+                <Input
+                  type="number"
+                  value={settings.sessionTimeout}
+                  onChange={(e) => setSettings({ ...settings, sessionTimeout: e.target.value })}
+                  className="bg-[#2a2a2a] border-gray-700 text-white mt-1"
+                />
+              </div>
+              <div>
+                <Label className="text-gray-300">Max Login Attempts</Label>
+                <Input
+                  type="number"
+                  value={settings.maxLoginAttempts}
+                  onChange={(e) => setSettings({ ...settings, maxLoginAttempts: e.target.value })}
+                  className="bg-[#2a2a2a] border-gray-700 text-white mt-1"
+                />
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'notifications':
+        return (
+          <div className="space-y-4">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-gray-300">Email Notifications</Label>
+                  <p className="text-xs text-gray-400 mt-1">Send email notifications to users</p>
+                </div>
+                <Switch
+                  checked={settings.emailNotifications}
+                  onCheckedChange={(checked) => setSettings({ ...settings, emailNotifications: checked })}
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-gray-300">Push Notifications</Label>
+                  <p className="text-xs text-gray-400 mt-1">Send push notifications to mobile apps</p>
+                </div>
+                <Switch
+                  checked={settings.pushNotifications}
+                  onCheckedChange={(checked) => setSettings({ ...settings, pushNotifications: checked })}
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-gray-300">SMS Notifications</Label>
+                  <p className="text-xs text-gray-400 mt-1">Send SMS for critical updates</p>
+                </div>
+                <Switch
+                  checked={settings.smsNotifications}
+                  onCheckedChange={(checked) => setSettings({ ...settings, smsNotifications: checked })}
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-gray-300">System Alerts</Label>
+                  <p className="text-xs text-gray-400 mt-1">Admin notifications for system events</p>
+                </div>
+                <Switch
+                  checked={settings.systemAlerts}
+                  onCheckedChange={(checked) => setSettings({ ...settings, systemAlerts: checked })}
+                />
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'payments':
+        return (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label className="text-gray-300">Platform Commission (%)</Label>
+                <Input
+                  type="number"
+                  value={settings.platformCommission}
+                  onChange={(e) => setSettings({ ...settings, platformCommission: e.target.value })}
+                  className="bg-[#2a2a2a] border-gray-700 text-white mt-1"
+                />
+              </div>
+              <div>
+                <Label className="text-gray-300">Payment Gateway</Label>
+                <Select value={settings.paymentGateway} onValueChange={(value) => setSettings({ ...settings, paymentGateway: value })}>
+                  <SelectTrigger className="bg-[#2a2a2a] border-gray-700 text-white mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="razorpay">Razorpay</SelectItem>
+                    <SelectItem value="stripe">Stripe</SelectItem>
+                    <SelectItem value="payu">PayU</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label className="text-gray-300">Min Withdrawal (₹)</Label>
+                <Input
+                  type="number"
+                  value={settings.minWithdrawal}
+                  onChange={(e) => setSettings({ ...settings, minWithdrawal: e.target.value })}
+                  className="bg-[#2a2a2a] border-gray-700 text-white mt-1"
+                />
+              </div>
+              <div>
+                <Label className="text-gray-300">Max Withdrawal (₹)</Label>
+                <Input
+                  type="number"
+                  value={settings.maxWithdrawal}
+                  onChange={(e) => setSettings({ ...settings, maxWithdrawal: e.target.value })}
+                  className="bg-[#2a2a2a] border-gray-700 text-white mt-1"
+                />
+              </div>
+            </div>
+            <div className="flex items-center justify-between">
+              <div>
+                <Label className="text-gray-300">Auto-approve Withdrawals</Label>
+                <p className="text-xs text-gray-400 mt-1">Automatically approve withdrawal requests</p>
+              </div>
+              <Switch
+                checked={settings.autoApproveWithdrawals}
+                onCheckedChange={(checked) => setSettings({ ...settings, autoApproveWithdrawals: checked })}
+              />
+            </div>
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white">Settings</h1>
+          <p className="text-gray-400 mt-1 text-sm sm:text-base">Configure platform settings and preferences</p>
+        </div>
+        <div className="flex gap-2 w-full sm:w-auto">
+          <Button variant="outline" className="text-gray-300 flex-1 sm:flex-none">
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Reset
+          </Button>
+          <Button 
+            onClick={handleSave}
+            className="bg-purple-600 hover:bg-purple-700 flex-1 sm:flex-none"
+            disabled={saved}
+          >
+            {saved ? (
+              <>
+                <Check className="w-4 h-4 mr-2" />
+                Saved
+              </>
+            ) : (
+              <>
+                <Save className="w-4 h-4 mr-2" />
+                Save Changes
+              </>
+            )}
+          </Button>
+        </div>
+      </div>
+
+      {/* Settings Categories */}
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        {settingsCategories.map((category) => (
+          <Card
+            key={category.id}
+            className={`bg-[#1a1a1a] border-gray-800 p-4 cursor-pointer transition-all ${
+              activeCategory === category.id ? 'border-purple-600 bg-purple-600/10' : 'hover:border-gray-700'
+            }`}
+            onClick={() => setActiveCategory(category.id)}
+          >
+            <category.icon className={`w-6 h-6 mb-2 ${
+              activeCategory === category.id ? 'text-purple-400' : 'text-gray-400'
+            }`} />
+            <h3 className="text-sm font-medium text-white">{category.title}</h3>
+          </Card>
+        ))}
+      </div>
+
+      {/* Settings Content */}
+      <Card className="bg-[#1a1a1a] border-gray-800 p-6">
+        <h2 className="text-xl font-semibold text-white mb-4">
+          {settingsCategories.find(c => c.id === activeCategory)?.title}
+        </h2>
+        <p className="text-sm text-gray-400 mb-6">
+          {settingsCategories.find(c => c.id === activeCategory)?.description}
+        </p>
+        {renderSettingsContent()}
+      </Card>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="bg-[#1a1a1a] border-gray-800 p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-400">API Status</p>
+              <p className="text-lg font-semibold text-green-400">Operational</p>
+            </div>
+            <Activity className="w-5 h-5 text-green-400" />
+          </div>
+        </Card>
+        <Card className="bg-[#1a1a1a] border-gray-800 p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-400">Database</p>
+              <p className="text-lg font-semibold text-green-400">Connected</p>
+            </div>
+            <Database className="w-5 h-5 text-green-400" />
+          </div>
+        </Card>
+        <Card className="bg-[#1a1a1a] border-gray-800 p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-400">Cache</p>
+              <p className="text-lg font-semibold text-green-400">Active</p>
+            </div>
+            <Server className="w-5 h-5 text-green-400" />
+          </div>
+        </Card>
+        <Card className="bg-[#1a1a1a] border-gray-800 p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-400">SSL</p>
+              <p className="text-lg font-semibold text-green-400">Secured</p>
+            </div>
+            <Lock className="w-5 h-5 text-green-400" />
+          </div>
+        </Card>
+      </div>
+    </div>
+  );
+}

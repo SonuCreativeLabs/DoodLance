@@ -9,6 +9,18 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Star, Edit2, Camera, Upload, Loader2, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
+import { usePersonalDetails } from '@/contexts/PersonalDetailsContext';
+import { useSkills } from '@/contexts/SkillsContext';
+import { useReviews } from '@/contexts/ReviewsContext';
+import { usePortfolio } from '@/contexts/PortfolioContext';
+import { useExperience } from '@/contexts/ExperienceContext';
+import { useServices } from '@/contexts/ServicesContext';
+import { useAvailability } from '@/contexts/AvailabilityContext';
+import { SkillInfoDialog } from '@/components/common/SkillInfoDialog';
+import { getSkillInfo, type SkillInfo } from '@/utils/skillUtils';
+import { calculateAge } from '@/utils/personalUtils';
+import { IdVerifiedBadge } from './IdVerifiedBadge';
+import { useRoleSwitch } from '@/contexts/RoleSwitchContext';
 
 // CoverImage component defined outside the ProfileHeader component
 const CoverImage = () => (
@@ -26,36 +38,46 @@ const CoverImage = () => (
 );
 
 interface ProfileHeaderProps {
-  name: string;
-  title: string;
-  rating: number;
-  reviewCount: number;
-  location: string;
-  online: boolean;
-  skills: string[];
+  isPreview?: boolean;
   avatarUrl?: string;
   coverImageUrl?: string;
-  isPreview?: boolean;
 }
 
 export function ProfileHeader({
-  name = "Sathish Sonu",
-  title = "All Rounder",
-  rating = 4.8,
-  reviewCount = 42,
-  location = "Chennai, India",
-  online = true,
-  skills = ["Top Order Batsman", "Sidearm Specialist", "Off Spin", "Coach", "Analyst", "Mystery Spinner"],
-  avatarUrl = "/images/profile-sonu.jpg",
-  coverImageUrl = "/images/cover-pic.JPG",
-  isPreview = false
+  isPreview = false,
+  avatarUrl,
+  coverImageUrl
 }: ProfileHeaderProps) {
+  const { personalDetails } = usePersonalDetails();
+  const { skills } = useSkills();
+  const { reviewsData } = useReviews();
+  const { portfolio } = usePortfolio();
+  const { experiences } = useExperience();
+  const { services } = useServices();
+  const { days: availabilityDays, getWorkingHoursText } = useAvailability();
   const [coverImage, setCoverImage] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [isSkillDialogOpen, setIsSkillDialogOpen] = useState(false);
+  const [selectedSkillInfo, setSelectedSkillInfo] = useState<SkillInfo | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
+  const { switchRole } = useRoleSwitch();
+  
+  // Calculate age from personal details
+  const age = (() => {
+    try {
+      if (personalDetails.dateOfBirth && typeof personalDetails.dateOfBirth === 'string') {
+        const calculatedAge = calculateAge(personalDetails.dateOfBirth);
+        return isNaN(calculatedAge) ? null : calculatedAge;
+      }
+      return null;
+    } catch (error) {
+      console.error('Error calculating age:', error);
+      return null;
+    }
+  })();
   
   // Check for #preview or section hash in URL on component mount and after navigation
   useEffect(() => {
@@ -110,6 +132,12 @@ export function ProfileHeader({
     }
   };
 
+  const handleSkillClick = (skillName: string) => {
+    const skillInfo = getSkillInfo(skillName);
+    setSelectedSkillInfo(skillInfo);
+    setIsSkillDialogOpen(true);
+  };
+
   const handleCoverImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -152,7 +180,7 @@ export function ProfileHeader({
             <Button 
               variant="default"
               size="sm"
-              onClick={() => router.push('/client')}
+              onClick={() => switchRole('client')}
               className="group relative h-8 px-3 text-xs rounded-full overflow-hidden bg-gradient-to-r from-[#1A1A1A] via-[#0F0F0F] to-[#1A1A1A] text-white flex items-center gap-1.5 font-medium transition-all duration-300 border border-white/10 hover:border-purple-500/50 hover:shadow-[0_0_15px_rgba(168,85,247,0.3)] hover:scale-[1.02]"
             >
               <RefreshCw className="h-3.5 w-3.5 text-purple-400 transition-transform duration-300 group-hover:rotate-180" />
@@ -195,13 +223,13 @@ export function ProfileHeader({
 
       {/* Profile Content */}
       <div className="max-w-6xl mx-auto px-4 relative">
-        <div className="flex flex-col items-center md:flex-row md:items-end md:justify-between -mt-16 mb-4">
+        <div className="flex flex-col items-center md:flex-row md:items-end md:justify-between -mt-16 mb-4 relative">
           {/* Profile Picture */}
           <div className="relative group">
             <div className="relative w-32 h-32 sm:w-40 sm:h-40 rounded-full border-4 border-[#1E1E1E] overflow-hidden bg-[#111111]">
               <Avatar className="w-full h-full">
-                <AvatarImage src={avatarUrl} alt={name} />
-                <AvatarFallback>{name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                <AvatarImage src={avatarUrl || personalDetails.avatarUrl} alt={personalDetails.name} />
+                <AvatarFallback>{personalDetails.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
               </Avatar>
               {!isPreview && (
                 <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -219,47 +247,76 @@ export function ProfileHeader({
                 </div>
               )}
             </div>
+            {/* ID Verified Badge - Mobile: left side of profile picture */}
+            <div className="md:hidden absolute top-[calc(50%+32px)] -translate-y-1/2 -left-28 ml-0">
+              <IdVerifiedBadge isVerified={true} />
+            </div>
+            {/* Online/Offline Badge - Mobile: right side of profile picture */}
+            <div className="md:hidden absolute top-[calc(50%+32px)] -translate-y-1/2 left-full ml-10">
+              <div className={`inline-flex items-center gap-1 px-2 py-1 text-[8px] font-bold border-2 shadow-lg whitespace-nowrap transform rotate-[-2deg] ${
+                personalDetails.online
+                  ? 'bg-gradient-to-br from-green-400 to-green-600 border-green-300 text-white shadow-green-500/50 border-dashed'
+                  : 'bg-gradient-to-br from-amber-400 to-orange-500 border-amber-300 text-white shadow-amber-500/50 border-dashed'
+              }`}>
+                <span className="tracking-widest font-black">{personalDetails.online ? 'GAME ON' : 'OFFLINE'}</span>
+              </div>
+            </div>
           </div>
           
-
+          {/* Online/Offline Badge - Desktop: top right corner */}
+          <div className="hidden md:block absolute top-8 right-3">
+            <div className={`inline-flex items-center gap-2 px-3 py-1.5 text-[10px] font-bold border-2 shadow-xl whitespace-nowrap transform rotate-[1deg] ${
+              personalDetails.online
+                ? 'bg-gradient-to-br from-green-400 to-green-600 border-green-300 text-white shadow-green-500/60 border-dashed'
+                : 'bg-gradient-to-br from-amber-400 to-orange-500 border-amber-300 text-white shadow-amber-500/60 border-dashed'
+            }`}>
+              <span className="tracking-widest font-black">{personalDetails.online ? 'GAME ON' : 'OFFLINE'}</span>
+            </div>
+          </div>
+          
+          {/* ID Verified Badge - Desktop: left corner of profile picture */}
+          <div className="hidden md:block absolute top-8 -left-28 transform rotate-[1deg]">
+            <IdVerifiedBadge isVerified={true} isDesktop={true} />
+          </div>
         </div>
 
-        {/* Profile Info */}
         <div className="text-center mb-4">
-          <h1 className="text-2xl font-bold text-white">{name}</h1>
-          <p className="text-purple-400 mt-0.5">{title}</p>
+          <div className="flex items-center justify-center gap-2">
+            <h1 className="text-2xl font-bold text-white">{personalDetails.name}</h1>
+            {age && (
+              <span className="text-lg font-semibold text-white/70">{age}</span>
+            )}
+          </div>
+          <p className="text-purple-400 mt-0.5">{personalDetails.cricketRole || 'All Rounder'}</p>
           
           <div className="mt-2 flex flex-col items-center gap-0.5 text-sm text-white/70">
-            <div>{location}</div>
+            <div className="flex items-center gap-2">
+              <span>{personalDetails.location}</span>
+            </div>
             <div className="flex items-center gap-1">
               {[...Array(5)].map((_, i) => (
                 <Star
                   key={i}
-                  className={`h-4 w-4 ${i < Math.floor(rating) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-500'}`}
+                  className={`h-4 w-4 ${i < Math.floor(reviewsData?.averageRating || 0) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-500'}`}
                 />
               ))}
-              <span className="ml-1 font-medium text-white">{rating.toFixed(1)}</span>
+              <span className="ml-1 font-medium text-white">{(reviewsData?.averageRating || 0).toFixed(1)}</span>
               <span className="mx-1">·</span>
-              <span>{reviewCount} reviews</span>
-              <span className="mx-1">·</span>
-              <span className="flex items-center">
-                <span className="h-2 w-2 rounded-full bg-green-500 mr-1.5"></span>
-                {online ? 'Online' : 'Offline'}
-              </span>
+              <span>{reviewsData?.totalReviews || 0} reviews</span>
             </div>
           </div>
         </div>
 
         {/* Skills */}
         <div className="flex flex-wrap justify-center gap-2 pb-2">
-          {skills.map((skill, i) => (
-            <Badge 
-              key={i} 
-              variant="secondary" 
-              className="bg-white/5 text-white/80 border-white/10 hover:bg-white/10 rounded-full"
+          {Array.isArray(skills) && skills.map((skill) => (
+            <button
+              key={skill.id}
+              onClick={() => handleSkillClick(skill.name)}
+              className="bg-white/5 text-white/80 border border-white/10 hover:bg-white/10 rounded-full px-2 py-0.5 text-xs transition-colors cursor-pointer"
             >
-              {skill}
-            </Badge>
+              {skill.name}
+            </button>
           ))}
         </div>
         
@@ -290,211 +347,73 @@ export function ProfileHeader({
         isOpen={isPreviewOpen}
         onClose={handlePreviewClose}
         profileData={{
-          name,
-          title,
-          rating: 4.9, // Average from reviews
-          reviewCount: 6, // Total number of reviews
-          location,
-          online,
-          skills,
-          about: 'Professional Cricketer and AI Engineer with a passion for both sports and technology. I bring the same dedication and strategic thinking from the cricket field to developing intelligent AI solutions.',
+          name: personalDetails.name,
+          title: personalDetails.cricketRole || 'All Rounder',
+          rating: reviewsData?.averageRating || 0,
+          reviewCount: reviewsData?.totalReviews || 0,
+          location: personalDetails.location,
+          online: personalDetails.online,
+          skills: Array.isArray(skills) ? skills.map((s: any) => s.name) : [],
+          about: personalDetails.about,
+          bio: personalDetails.bio,
+          cricketRole: personalDetails.cricketRole || 'All Rounder',
+          battingStyle: personalDetails.battingStyle || 'Right Handed',
+          bowlingStyle: personalDetails.bowlingStyle || 'Off Spin',
           responseTime: '1-2 hours',
           deliveryTime: '1-2 weeks',
           completionRate: 100,
-          completedJobs: 24, // Example number
-          activeJobs: 3, // Example number
-          experience: [
-            {
-              id: '1',
-              role: 'Cricketer (All-Rounder)',
-              company: 'Professional Cricket',
-              location: 'India',
-              startDate: '2015',
-              endDate: undefined,
-              isCurrent: true,
-              description: 'Professional cricketer specializing in top-order batting and off-spin bowling. Experienced in high-pressure matches with a focus on building strong team performances.'
-            },
-            {
-              id: '2',
-              role: 'AI Engineer & Developer',
-              company: 'Freelance',
-              location: 'Remote',
-              startDate: '2020',
-              endDate: undefined,
-              isCurrent: true,
-              description: 'Developing AI solutions and applications with a focus on machine learning, natural language processing, and automation. Specializing in creating intelligent systems that solve complex problems.'
-            },
-            {
-              id: '3',
-              role: 'Cricket Coach',
-              company: 'Local Academy',
-              location: 'India',
-              startDate: '2018',
-              endDate: '2020',
-              isCurrent: false,
-              description: 'Coached young cricketers in batting techniques, bowling skills, and match strategies. Helped develop the next generation of cricket talent with a focus on both technical skills and mental toughness.'
-            }
-          ],
-          services: [
-            {
-              id: '1',
-              title: 'AI Development Consultation',
-              description: 'Expert guidance on AI implementation for your business needs',
-              price: '₹25,000',
-              type: 'online',
-              deliveryTime: '1 week',
-              features: [
-                '1-hour consultation session',
-                'Technical requirements analysis',
-                'Solution architecture design',
-                'Implementation roadmap',
-                'Follow-up email support for 1 week'
-              ]
-            },
-            {
-              id: '2',
-              title: 'Custom AI Solution Development',
-              description: 'Tailored AI application development for your specific needs',
-              price: '₹1,50,000',
-              type: 'online',
-              deliveryTime: '4-6 weeks',
-              features: [
-                'Custom AI model development',
-                'API integration',
-                'Testing & deployment',
-                'Documentation',
-                '1 month of maintenance support'
-              ]
-            },
-            {
-              id: '3',
-              title: 'Cricket Coaching (Batting)',
-              description: 'Personalized batting coaching sessions',
-              price: '₹2,000',
-              type: 'in-person',
-              deliveryTime: '2 hours',
-              features: [
-                'Technical skill assessment',
-                'Personalized training plan',
-                'Video analysis',
-                'Match simulation drills',
-                'Mental conditioning tips'
-              ]
-            },
-            {
-              id: '4',
-              title: 'Cricket Coaching (Bowling)',
-              description: 'Professional off-spin bowling coaching',
-              price: '₹2,500',
-              type: 'in-person',
-              deliveryTime: '2 hours',
-              features: [
-                'Bowling action analysis',
-                'Variations coaching',
-                'Match situation practice',
-                'Fitness & conditioning advice',
-                'Video analysis session'
-              ]
-            }
-          ],
-          portfolio: [
-            {
-              id: '1',
-              title: '3x Division Cricket Champion',
-              category: 'Cricket Achievement',
-              image: 'https://images.unsplash.com/photo-1543351611-58f69d7c1784?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80'
-            },
-            {
-              id: '2',
-              title: 'State Level College Champion',
-              category: 'Cricket Achievement',
-              image: 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80'
-            },
-            {
-              id: '3',
-              title: 'Sports Quota Scholar',
-              category: 'Academic Achievement',
-              image: 'https://images.unsplash.com/photo-1543351611-58f69d7c1784?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80'
-            },
-            {
-              id: '4',
-              title: 'AI-Powered Cricket Analytics',
-              category: 'AI/ML Development',
-              image: 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80'
-            },
-            {
-              id: '5',
-              title: 'Vibe Code Framework',
-              category: 'Open Source AI',
-              image: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80'
-            }
-          ],
-          reviews: [
-            {
-              id: '1',
-              author: 'Rahul Sharma',
-              role: 'U-19 Cricket Team Captain',
-              rating: 5,
-              comment: 'Sonu transformed my batting technique completely. His one-on-one sessions helped me improve my average by 35% in just 3 months. His knowledge of the game is exceptional!',
-              date: '2024-05-10',
-              isVerified: true
-            },
-            {
-              id: '2',
-              author: 'Neha Patel',
-              role: 'Startup Founder',
-              rating: 5,
-              comment: 'The AI solution developed by Sonu automated our customer service, reducing response time by 80%. His technical expertise and problem-solving skills are top-notch!',
-              date: '2024-04-18',
-              isVerified: true
-            },
-            {
-              id: '3',
-              author: 'Vikram Singh',
-              role: 'Cricket Academy Director',
-              rating: 5,
-              comment: 'As a coach, Sonu has a unique ability to identify and correct technical flaws. Our academy players have shown remarkable improvement under his guidance.',
-              date: '2024-03-25',
-              isVerified: true
-            },
-            {
-              id: '4',
-              author: 'Ananya Gupta',
-              role: 'Tech Entrepreneur',
-              rating: 4.5,
-              comment: 'Worked with Sonu on a complex AI project. His understanding of machine learning models and their practical implementation is impressive. Delivered beyond expectations!',
-              date: '2024-02-15',
-              isVerified: true
-            },
-            {
-              id: '5',
-              author: 'Arjun Mehta',
-              role: 'Professional Cricketer',
-              rating: 5,
-              comment: 'The best off-spin coach I\'ve worked with. His insights into bowling variations and game situations have taken my bowling to the next level.',
-              date: '2024-01-30',
-              isVerified: true
-            },
-            {
-              id: '6',
-              author: 'Priya Desai',
-              role: 'Product Manager',
-              rating: 5,
-              comment: 'Sonu developed a custom AI tool that saved our team 20+ hours of work per week. His ability to understand business needs and translate them into technical solutions is remarkable.',
-              date: '2023-12-10',
-              isVerified: true
-            }
-          ],
-          availability: [
-            { day: 'Monday', available: true },
-            { day: 'Tuesday', available: true },
-            { day: 'Wednesday', available: true },
-            { day: 'Thursday', available: true },
-            { day: 'Friday', available: true },
-            { day: 'Saturday', available: false },
-            { day: 'Sunday', available: false }
-          ]
+          completedJobs: 24,
+          activeJobs: 3,
+          workingHours: getWorkingHoursText(),
+          experience: Array.isArray(experiences) ? experiences.map((exp: any) => ({
+            id: exp.id,
+            role: exp.role,
+            company: exp.company,
+            location: exp.location,
+            startDate: exp.startDate?.split('-')[0] || '',
+            endDate: exp.endDate ? exp.endDate.split('-')[0] : undefined,
+            isCurrent: exp.isCurrent,
+            description: exp.description
+          })) : [],
+          services: Array.isArray(services) ? services.map((svc: any) => ({
+            id: svc.id,
+            title: svc.title,
+            description: svc.description,
+            price: svc.price,
+            type: svc.type || 'online',
+            deliveryTime: svc.deliveryTime,
+            features: svc.features || [],
+            category: svc.category
+          })) : [],
+          portfolio: Array.isArray(portfolio) ? portfolio.map((item: any) => ({
+            id: item.id,
+            title: item.title,
+            category: item.category,
+            image: item.image,
+            description: item.description,
+            skills: item.skills
+          })) : [],
+          reviews: reviewsData?.reviews ? reviewsData.reviews.map((review: any) => ({
+            id: review.id,
+            author: review.author,
+            role: review.role,
+            rating: review.rating,
+            comment: review.comment,
+            date: review.date,
+            isVerified: review.isVerified
+          })) : [],
+          availability: availabilityDays.map(day => ({
+            day: day.name,
+            available: day.available
+          }))
         }}
+      />
+      
+      {/* Skill Info Dialog */}
+      <SkillInfoDialog
+        isOpen={isSkillDialogOpen}
+        onClose={() => setIsSkillDialogOpen(false)}
+        skillInfo={selectedSkillInfo}
       />
     </div>
   );

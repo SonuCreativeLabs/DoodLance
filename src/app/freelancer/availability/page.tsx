@@ -45,12 +45,10 @@ export default function AvailabilityPage() {
 
   const handleSave = () => {
     setSaving(true);
-    // TODO: Save logic (API call or local state update)
     setTimeout(() => setSaving(false), 1000);
   };
 
   const handleCreateNew = () => {
-    // TODO: Handle create new availability
     console.log("Create new availability");
   };
 

@@ -1,15 +1,13 @@
 "use client";
 
 import React, { useRef, useEffect, useState } from 'react';
-import { X, Search as SearchIcon, Clock, Calendar } from "lucide-react";
+import { X, Clock, Calendar } from "lucide-react";
 import { useNavbar } from "@/contexts/NavbarContext";
 import { areas, serviceTypes, availabilityOptions, timeOptions } from '../constants';
 
 interface SearchFiltersProps {
   showFilterModal: boolean;
   setShowFilterModal: (show: boolean) => void;
-  searchQuery: string;
-  setSearchQuery: (query: string) => void;
   selectedArea: string;
   setSelectedArea: (area: string) => void;
   selectedService: string;
@@ -33,8 +31,6 @@ interface SearchFiltersProps {
 export default function SearchFilters({
   showFilterModal,
   setShowFilterModal,
-  searchQuery,
-  setSearchQuery,
   selectedArea,
   setSelectedArea,
   selectedService,
@@ -78,7 +74,7 @@ export default function SearchFilters({
     <div className="fixed inset-0 z-[4] flex flex-col bg-[#111111] text-white overflow-y-auto pb-16">
       {/* Header */}
       <div className="sticky top-0 z-10 flex items-center justify-between p-4 border-b border-white/10 bg-[#111111]">
-        <h2 className="text-lg font-extrabold">Search & Filters</h2>
+        <h2 className="text-lg font-extrabold">Filter</h2>
         <button
           className="p-1.5 rounded-full bg-[#111111] hover:bg-[#111111]/80 text-white/60 hover:text-white"
           onClick={() => setShowFilterModal(false)}
@@ -90,20 +86,6 @@ export default function SearchFilters({
 
       {/* Content */}
       <div className="flex-1 p-4 max-w-2xl w-full mx-auto">
-        {/* Search input */}
-        <div className="mb-6">
-          <div className="flex items-center gap-2 bg-transparent rounded-xl px-4 py-3 border border-white/10">
-            <SearchIcon className="w-5 h-5 text-purple-400" />
-            <input
-              type="text"
-              placeholder="Search for services, professionals, or areas..."
-              className="flex-1 bg-transparent outline-none text-base text-white font-medium placeholder:text-white/60"
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-            />
-          </div>
-        </div>
-
         {/* Area Filter */}
         <div className="mb-6">
           <label className="block mb-2 text-sm text-white/90 font-medium">Area</label>
@@ -264,21 +246,20 @@ export default function SearchFilters({
         )}
       </div>
 
-      {/* Action Buttons - Enhanced Design */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 p-4 bg-gradient-to-t from-[#1a1a1a] via-[#1a1a1a]/95 to-transparent">
+      {/* Action Buttons - No Background Card */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 p-4">
         <div className="max-w-md mx-auto w-full">
-          <div className="bg-[#1a1a1a] rounded-xl p-1.5 flex shadow-lg border border-white/5">
+          <div className="flex gap-2.5">
             <button
               onClick={handleClearFilters}
-              className="flex-1 py-3 rounded-lg bg-[#111111] hover:bg-[#111111]/80 text-white/90 text-sm font-medium border border-white/5 transition-all duration-200 flex items-center justify-center gap-2 active:scale-[0.98]"
+              className="flex-1 py-3 rounded-xl bg-[#111111] hover:bg-[#111111]/80 text-white/90 text-sm font-medium border border-white/10 transition-all duration-200 flex items-center justify-center gap-2 active:scale-[0.98]"
             >
               <X className="w-4 h-4" />
               Clear All
             </button>
-            <div className="w-2.5"></div>
             <button
               onClick={handleSaveFilters}
-              className="flex-1 py-3 rounded-lg bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-600 hover:to-purple-500/90 text-white text-sm font-medium transition-all duration-200 active:scale-[0.98] shadow-lg shadow-purple-500/20"
+              className="flex-1 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-600 hover:to-purple-500/90 text-white text-sm font-medium transition-all duration-200 active:scale-[0.98] shadow-lg shadow-purple-500/20"
             >
               Show Results
             </button>

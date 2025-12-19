@@ -46,7 +46,7 @@ export default function ServiceCard({
         <img
           src={image}
           alt={title}
-          className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out z-[1]"
+          className={`absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out z-[1] ${title === 'Sidearm' ? 'object-right' : ''}`}
           onError={(e) => {
             const target = e.currentTarget as HTMLImageElement;
             if (target.src !== '/images/cover-placeholder.svg') {

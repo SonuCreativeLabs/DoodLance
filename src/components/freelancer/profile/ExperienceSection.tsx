@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { useExperience } from '@/contexts/ExperienceContext';
 
 export interface Experience {
   id: string;
@@ -15,17 +16,14 @@ export interface Experience {
   company: string;
   location: string;
   startDate: string;
-  endDate: string | null;
+  endDate?: string;
   description: string;
   isCurrent: boolean;
 }
 
-interface ExperienceSectionProps {
-  experiences: Experience[];
-}
+export function ExperienceSection() {
+  const { experiences, addExperience, updateExperience, removeExperience } = useExperience();
 
-export function ExperienceSection({ experiences: initialExperiences }: ExperienceSectionProps) {
-  const [experiences, setExperiences] = useState<Experience[]>(initialExperiences);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [experienceToDelete, setExperienceToDelete] = useState<Experience | null>(null);
@@ -36,7 +34,7 @@ export function ExperienceSection({ experiences: initialExperiences }: Experienc
     company: '',
     location: '',
     startDate: '',
-    endDate: '',
+    endDate: undefined,
     description: '',
     isCurrent: true
   });
@@ -48,7 +46,7 @@ export function ExperienceSection({ experiences: initialExperiences }: Experienc
     const formattedStartDate = new Date(newExperience.startDate).toISOString().split('T')[0];
     const formattedEndDate = !newExperience.isCurrent && newExperience.endDate 
       ? new Date(newExperience.endDate).toISOString().split('T')[0]
-      : null;
+      : undefined;
     
     const experienceToSave = {
       ...newExperience,
@@ -61,21 +59,29 @@ export function ExperienceSection({ experiences: initialExperiences }: Experienc
     }
     
     if (editingExperience) {
-      // Update existing experience
-      setExperiences(prev => 
-        prev.map(exp => 
-          exp.id === editingExperience.id 
-            ? { ...newExperience, id: editingExperience.id } 
-            : exp
-        )
-      );
+      // Update existing experience via context
+      updateExperience(editingExperience.id, {
+        role: experienceToSave.role,
+        company: experienceToSave.company,
+        location: experienceToSave.location,
+        startDate: experienceToSave.startDate,
+        endDate: experienceToSave.endDate || undefined,
+        isCurrent: experienceToSave.isCurrent,
+        description: experienceToSave.description,
+      });
     } else {
-      // Add new experience
-      const newExp: Experience = {
-        ...newExperience,
-        id: Date.now().toString(),
-      };
-      setExperiences(prev => [...prev, newExp]);
+      // Add new experience via context
+      const newExpId = Date.now().toString();
+      addExperience({
+        id: newExpId,
+        role: experienceToSave.role,
+        company: experienceToSave.company,
+        location: experienceToSave.location,
+        startDate: experienceToSave.startDate,
+        endDate: experienceToSave.endDate || undefined,
+        isCurrent: experienceToSave.isCurrent,
+        description: experienceToSave.description,
+      });
     }
     
     // Reset form
@@ -84,7 +90,7 @@ export function ExperienceSection({ experiences: initialExperiences }: Experienc
       company: '',
       location: '',
       startDate: '',
-      endDate: null,
+      endDate: undefined,
       description: '',
       isCurrent: true
     });
@@ -99,7 +105,7 @@ export function ExperienceSection({ experiences: initialExperiences }: Experienc
       company: exp.company,
       location: exp.location,
       startDate: exp.startDate,
-      endDate: exp.endDate || '',
+      endDate: exp.endDate || undefined,
       description: exp.description,
       isCurrent: exp.isCurrent
     });
@@ -113,7 +119,7 @@ export function ExperienceSection({ experiences: initialExperiences }: Experienc
 
   const confirmDelete = () => {
     if (experienceToDelete) {
-      setExperiences(prev => prev.filter(exp => exp.id !== experienceToDelete.id));
+      removeExperience(experienceToDelete.id);
       setIsDeleteDialogOpen(false);
       setExperienceToDelete(null);
     }
@@ -137,7 +143,7 @@ export function ExperienceSection({ experiences: initialExperiences }: Experienc
                 company: '',
                 location: '',
                 startDate: '',
-                endDate: null,
+                endDate: undefined,
                 description: '',
                 isCurrent: true
               });
@@ -150,7 +156,7 @@ export function ExperienceSection({ experiences: initialExperiences }: Experienc
           </Button>
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent className="sm:max-w-[500px] w-[calc(100%-2rem)] p-0 bg-[#1E1E1E] border-0 rounded-xl shadow-xl overflow-hidden">
+          <DialogContent aria-describedby={undefined} className="sm:max-w-[500px] w-[calc(100%-2rem)] p-0 bg-[#1E1E1E] border-0 rounded-xl shadow-xl overflow-hidden">
             {/* Header */}
             <div className="border-b border-white/10 bg-[#1E1E1E] px-5 py-3">
               <DialogHeader className="space-y-0.5">
@@ -175,7 +181,8 @@ export function ExperienceSection({ experiences: initialExperiences }: Experienc
                     value={newExperience.role}
                     onChange={(e) => setNewExperience({...newExperience, role: e.target.value})}
                     className="bg-white/5 border-white/10 text-white placeholder:text-white/40 focus-visible:ring-1 focus-visible:ring-purple-500"
-                    placeholder="e.g., Senior Developer"
+                    placeholder="Batting Coach"
+                    required
                   />
                 </div>
 
@@ -188,34 +195,37 @@ export function ExperienceSection({ experiences: initialExperiences }: Experienc
                     value={newExperience.company}
                     onChange={(e) => setNewExperience({...newExperience, company: e.target.value})}
                     className="bg-white/5 border-white/10 text-white placeholder:text-white/40 focus-visible:ring-1 focus-visible:ring-purple-500"
-                    placeholder="Company name"
+                    placeholder="Local Cricket Academy"
+                    required
                   />
                 </div>
 
                 <div>
                   <Label htmlFor="description" className="text-sm font-medium text-white/80 mb-1.5 block">
-                    Description
+                    Description <span className="text-red-500">*</span>
                   </Label>
                   <Textarea
                     id="description"
                     value={newExperience.description}
                     onChange={(e) => setNewExperience({...newExperience, description: e.target.value})}
                     className="bg-white/5 border-white/10 text-white placeholder:text-white/40 h-[100px] resize-none focus-visible:ring-1 focus-visible:ring-purple-500 overflow-y-auto"
-                    placeholder="Describe your role and responsibilities"
+                    placeholder="Conducted batting sessions, designed drills, analyzed match footage, and improved strike rotation."
                     style={{ scrollbarWidth: 'thin' }}
+                    required
                   />
                 </div>
 
                 <div>
                   <Label htmlFor="location" className="text-sm font-medium text-white/80 mb-1.5 block">
-                    Location
+                    Location <span className="text-red-500">*</span>
                   </Label>
                   <Input
                     id="location"
                     value={newExperience.location}
                     onChange={(e) => setNewExperience({...newExperience, location: e.target.value})}
                     className="w-full bg-white/5 border-white/10 text-white placeholder:text-white/40 focus-visible:ring-1 focus-visible:ring-purple-500"
-                    placeholder="e.g., City, Country"
+                    placeholder="Mumbai, India"
+                    required
                   />
                 </div>
 
@@ -307,7 +317,7 @@ export function ExperienceSection({ experiences: initialExperiences }: Experienc
 
         {/* Delete Confirmation Dialog */}
         <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-          <DialogContent className="sm:max-w-[400px] w-[calc(100%-2rem)] p-0 bg-[#1E1E1E] border-0 rounded-xl shadow-xl overflow-hidden">
+          <DialogContent aria-describedby={undefined} className="sm:max-w-[400px] w-[calc(100%-2rem)] p-0 bg-[#1E1E1E] border-0 rounded-xl shadow-xl overflow-hidden">
             <div className="p-5 text-center">
               <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-500/10 mb-3">
                 <Trash2 className="h-5 w-5 text-red-500" />

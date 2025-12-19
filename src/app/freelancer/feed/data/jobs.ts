@@ -1,4 +1,4 @@
-import { Job, ExperienceLevel } from '../types';
+import { Job, ExperienceLevel, JobDuration } from '../types';
 
 // Helper function to generate random coordinates near a point
 const generateNearbyCoords = (baseCoords: [number, number], radiusKm = 0.5): [number, number] => {
@@ -35,6 +35,17 @@ const areaCoords = {
 
 const areas = Object.keys(areaCoords) as (keyof typeof areaCoords)[];
 
+// Helper function to generate consistent image ID from client name
+const getClientImageId = (clientName: string): number => {
+  let hash = 0;
+  for (let i = 0; i < clientName.length; i++) {
+    const char = clientName.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32-bit integer
+  }
+  return Math.abs(hash) % 70 + 1; // Ensure it's between 1-70
+};
+
 // Common skills
 const clientNames = [
   'Priya Sharma',
@@ -49,21 +60,6 @@ const clientNames = [
   'Suresh Kumar'
 ];
 
-const devSkills = [
-  ['React', 'TypeScript', 'Redux', 'Frontend Development'],
-  ['Node.js', 'Express', 'MongoDB', 'Backend Development'],
-  ['React Native', 'Mobile Development', 'Firebase'],
-  ['Python', 'Django', 'REST APIs', 'AWS']
-];
-
-const cricketSkills = [
-  ['Cricket Coaching', 'Batting Coach', 'Bowling Coach', 'Fielding Coach'],
-  ['Fitness Training', 'Sports Nutrition', 'Injury Prevention'],
-  ['Team Management', 'Match Strategy', 'Video Analysis'],
-  ['Spin Bowling Specialist', 'Leg Spin', 'Off Spin', 'Googly'],
-  ['Wicket Keeping Coach', 'Glove Work', 'Stance', 'Reflex Training']
-];
-
 // Generate jobs
 const generateJobs = (): Job[] => {
   const jobs: Job[] = [];
@@ -72,8 +68,6 @@ const generateJobs = (): Job[] => {
     'Nungambakkam', 'Mylapore', 'Besant Nagar', 'Porur', 'Guindy',
     'Kodambakkam', 'Vadapalani', 'Chromepet', 'Tambaram', 'Pallavaram'
   ];
-  const workModes: Array<'remote' | 'onsite' | 'hybrid'> = ['remote', 'onsite', 'hybrid'];
-  const jobTypes: Array<'full-time' | 'part-time' | 'contract'> = ['full-time', 'part-time', 'contract'];
 
   // Helper function to get random area
   const getRandomArea = () => {
@@ -86,100 +80,10 @@ const generateJobs = (): Job[] => {
 
   // Define job categories with mixed pricing units (₹500-5,000)
   const categoryRates = {
-    // Tech jobs (higher value, specialized skills)
-    frontend: { 
-      min: 1000, 
-      max: 150000, 
-      unit: 'project',
-      periods: [
-        { type: 'project', min: 10000, max: 150000, multiplier: 1 },
-        { type: 'monthly', min: 30000, max: 150000, multiplier: 1 },
-        { type: 'hourly', min: 800, max: 3000, multiplier: 1 }
-      ]
-    },
-    backend: { 
-      min: 1500, 
-      max: 200000, 
-      unit: 'project',
-      periods: [
-        { type: 'project', min: 20000, max: 200000, multiplier: 1 },
-        { type: 'monthly', min: 40000, max: 200000, multiplier: 1 },
-        { type: 'hourly', min: 1000, max: 4000, multiplier: 1 }
-      ]
-    },
-    mobile: { 
-      min: 1500, 
-      max: 180000, 
-      unit: 'project',
-      periods: [
-        { type: 'project', min: 15000, max: 180000, multiplier: 1 },
-        { type: 'monthly', min: 35000, max: 180000, multiplier: 1 },
-        { type: 'hourly', min: 900, max: 3500, multiplier: 1 }
-      ]
-    },
-    
-    // Home services (moderate pricing, based on service complexity)
-    plumbing: { 
-      min: 200, 
-      max: 8000, 
-      unit: 'job',
-      periods: [
-        { type: 'fixed', min: 200, max: 5000, multiplier: 1 },
-        { type: 'emergency', min: 500, max: 10000, multiplier: 1.5 },
-        { type: 'visit', min: 200, max: 1000, multiplier: 1 }
-      ]
-    },
-    electrical: { 
-      min: 300, 
-      max: 10000, 
-      unit: 'visit',
-      periods: [
-        { type: 'visit', min: 300, max: 2000, multiplier: 1 },
-        { type: 'fixed', min: 500, max: 8000, multiplier: 1 },
-        { type: 'emergency', min: 1000, max: 15000, multiplier: 1.8 }
-      ]
-    },
-    
-    // Creative services (varies by project scope)
-    design: { 
-      min: 2000, 
-      max: 100000, 
-      unit: 'project',
-      periods: [
-        { type: 'project', min: 5000, max: 100000, multiplier: 1 },
-        { type: 'monthly', min: 20000, max: 100000, multiplier: 1 },
-        { type: 'hourly', min: 500, max: 2500, multiplier: 1 }
-      ]
-    },
-    
-    // Education (lower rates for tutoring, higher for specialized training)
-    tutoring: { 
-      min: 200, 
-      max: 10000, 
-      unit: 'session',
-      periods: [
-        { type: 'hourly', min: 200, max: 1500, multiplier: 1 },
-        { type: 'session', min: 500, max: 5000, multiplier: 1 },
-        { type: 'monthly', min: 3000, max: 10000, multiplier: 1 }
-      ]
-    },
-    
-    // Fitness and wellness (moderate pricing)
-    fitness: { 
-      min: 300, 
-      max: 20000, 
-      unit: 'session',
-      periods: [
-        { type: 'session', min: 300, max: 3000, multiplier: 1 },
-        { type: 'package', min: 2000, max: 10000, multiplier: 1 },
-        { type: 'monthly', min: 4000, max: 20000, multiplier: 1 }
-      ]
-    },
-    
-    // Sports coaching (varies by sport and level)
-    cricket: { 
-      min: 500, 
-      max: 15000, 
+    // Cricket coaching and training
+    cricket: {
+      min: 500,
+      max: 15000,
       unit: 'session',
       periods: [
         { type: 'session', min: 500, max: 5000, multiplier: 1 },
@@ -187,48 +91,14 @@ const generateJobs = (): Job[] => {
         { type: 'monthly', min: 8000, max: 30000, multiplier: 1 }
       ]
     },
-    sports: { 
-      min: 300, 
-      max: 10000, 
+    sports: {
+      min: 300,
+      max: 10000,
       unit: 'session',
       periods: [
         { type: 'session', min: 300, max: 3000, multiplier: 1 },
         { type: 'package', min: 2000, max: 10000, multiplier: 1 },
         { type: 'monthly', min: 5000, max: 20000, multiplier: 1 }
-      ]
-    },
-    
-    // Health and beauty (moderate to high end)
-    diet: { 
-      min: 500, 
-      max: 25000, 
-      unit: 'package',
-      periods: [
-        { type: 'session', min: 1000, max: 5000, multiplier: 1 },
-        { type: 'package', min: 3000, max: 15000, multiplier: 1 },
-        { type: 'monthly', min: 8000, max: 25000, multiplier: 1 }
-      ]
-    },
-    makeup: { 
-      min: 1000, 
-      max: 50000, 
-      unit: 'event',
-      periods: [
-        { type: 'session', min: 1000, max: 10000, multiplier: 1 },
-        { type: 'package', min: 5000, max: 30000, multiplier: 1 },
-        { type: 'event', min: 5000, max: 50000, multiplier: 1.5 }
-      ]
-    },
-    
-    // Business services (higher value)
-    marketing: { 
-      min: 5000, 
-      max: 300000, 
-      unit: 'project',
-      periods: [
-        { type: 'project', min: 10000, max: 300000, multiplier: 1 },
-        { type: 'monthly', min: 25000, max: 200000, multiplier: 1 },
-        { type: 'hourly', min: 1000, max: 5000, multiplier: 1 }
       ]
     }
   };
@@ -237,9 +107,16 @@ const generateJobs = (): Job[] => {
   const experienceLevels = ['Entry Level', 'Intermediate', 'Expert'] as const;
   const workModeMultipliers = {
     'onsite': 1,
-    'hybrid': 1.2,
     'remote': 1.5
   };
+
+  const cricketSkills = [
+    ['Cricket Coaching', 'Batting Coach', 'Bowling Coach', 'Fielding Coach'],
+    ['Fitness Training', 'Sports Nutrition', 'Injury Prevention'],
+    ['Team Management', 'Match Strategy', 'Video Analysis'],
+    ['Spin Bowling Specialist', 'Leg Spin', 'Off Spin', 'Googly'],
+    ['Wicket Keeping Coach', 'Glove Work', 'Stance', 'Reflex Training']
+  ];
 
   const createJob = ({
     id,
@@ -254,7 +131,7 @@ const generateJobs = (): Job[] => {
     description: string;
     category: string;
     skills: string[];
-    workMode: 'remote' | 'onsite' | 'hybrid';
+    workMode: 'remote' | 'onsite';
   }) => {
     // Determine category and get base rate
     const categoryKey = Object.keys(categoryRates).find(key => 
@@ -275,7 +152,7 @@ const generateJobs = (): Job[] => {
     const workModeMultiplier = workModeMultipliers[workMode] || 1;
     
     // Select a random pricing period for this job
-    const periods = rateInfo.periods || [
+    const periods = (rateInfo as any).periods || [
       { type: 'fixed', min: rateInfo.min, max: rateInfo.max, multiplier: 1 }
     ];
     const period = periods[Math.floor(Math.random() * periods.length)];
@@ -318,10 +195,43 @@ const generateJobs = (): Job[] => {
     budget = Math.min(Math.round(budget), maxBudget);
     const { name: location, coords: baseCoords } = getRandomArea();
     const coords = generateNearbyCoords(baseCoords);
-    const clientName = clientNames[Math.floor(Math.random() * clientNames.length)];
+    // Assign client consistently based on job ID for deterministic client-job assignment
+    const clientIndex = id.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0) % clientNames.length;
+    const clientName = clientNames[clientIndex];
     // Set default company info (simplified for demo)
     const company = 'DoodLance';
     const companyLogo = '/images/logo.png';
+    
+    // Determine specific duration based on job characteristics
+    let duration: JobDuration = 'hourly';
+    
+    // Check title for specific duration hints first
+    const titleLower = title.toLowerCase();
+    if (titleLower.includes('90-minute') || titleLower.includes('90 minute')) {
+      duration = 'hourly'; // Will be displayed as "90 minutes" by getJobDurationLabel
+    } else if (titleLower.includes('2-hour') || titleLower.includes('2 hour')) {
+      duration = 'hourly'; // Will be displayed as "2 hours"
+    } else if (titleLower.includes('1-hour') || titleLower.includes('1 hour')) {
+      duration = 'hourly'; // Will be displayed as "1 hour"
+    } else {
+      // Duration based on category
+      const categoryLower = category.toLowerCase();
+      if (categoryLower.includes('photography') || categoryLower.includes('videography') || categoryLower.includes('content creator')) {
+        duration = 'hourly'; // "3 hours", "4 hours" for events
+      } else if (categoryLower.includes('analyst') || categoryLower.includes('analysis')) {
+        duration = 'hourly'; // "2 hours", "per match"
+      } else if (categoryLower.includes('physio') || categoryLower.includes('conditioning') || categoryLower.includes('fitness')) {
+        duration = 'hourly'; // "1 hour", "1.5 hours"
+      } else if (categoryLower.includes('scorer') || categoryLower.includes('umpire')) {
+        duration = 'one-time'; // "per match", "full day"
+      } else if (categoryLower.includes('sidearm') || categoryLower.includes('net bowler')) {
+        duration = 'hourly'; // "1.5 hours", "90 minutes"
+      } else if (categoryLower.includes('coach') || categoryLower.includes('coaching')) {
+        duration = 'hourly'; // "1 hour", "2 hours", "per session"
+      } else {
+        duration = 'hourly'; // Default to hourly for most cricket services
+      }
+    }
     
     const job: Job = {
       id,
@@ -337,18 +247,19 @@ const generateJobs = (): Job[] => {
       workMode,
       type: 'freelance',
       postedAt: new Date(Date.now() - Math.floor(Math.random() * 7 * 24 * 60 * 60 * 1000)).toISOString(),
+      scheduledAt: new Date(Date.now() + Math.floor(Math.random() * 14 * 24 * 60 * 60 * 1000)).toISOString(), // 0-14 days from now
       company,
       companyLogo,
       clientName,
-      clientImage: `https://ui-avatars.com/api/?name=${encodeURIComponent(clientName)}&background=6B46C1&color=fff&bold=true`,
+      clientImage: `https://i.pravatar.cc/150?img=${getClientImageId(clientName)}`,
       clientRating: (Math.floor(Math.random() * 10) / 2 + 3).toFixed(1),
       clientJobs: Math.floor(Math.random() * 50) + 1,
       proposals: Math.floor(Math.random() * 30),
-      duration: 'one-time',
+      duration,
       experience: experience as ExperienceLevel,
       client: {
         name: clientName,
-        image: `https://ui-avatars.com/api/?name=${encodeURIComponent(clientName)}&background=6B46C1&color=fff&bold=true`,
+        image: `https://i.pravatar.cc/150?img=${getClientImageId(clientName)}`,
         memberSince: new Date(Date.now() - Math.floor(Math.random() * 3 * 365 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0],
         freelancerAvatars: Array(3).fill(0).map((_, i) => `https://i.pravatar.cc/150?img=${Math.floor(Math.random() * 70) + 1}`),
         freelancersWorked: Math.floor(Math.random() * 50) + 5,
@@ -364,11 +275,15 @@ const generateJobs = (): Job[] => {
 
   // Helper function to create a job with client info
   const createJobWithClient = (jobData: any) => {
-    const clientName = clientNames[Math.floor(Math.random() * clientNames.length)];
+    // Assign client consistently based on job ID for deterministic client-job assignment
+    const jobId = jobData.id || 'default';
+    const clientIndex = jobId.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0) % clientNames.length;
+    const clientName = clientNames[clientIndex];
+
     const job = createJob({
       ...jobData,
       clientName,
-      clientImage: `https://ui-avatars.com/api/?name=${encodeURIComponent(clientName)}&background=6B46C1&color=fff&bold=true`
+      clientImage: `https://i.pravatar.cc/150?img=${getClientImageId(clientName)}`
     });
     return job;
   };
@@ -384,7 +299,7 @@ const generateJobs = (): Job[] => {
       title,
       description,
       category: jobType as any,
-      skills: [...new Set([...skills, 'Cricket'])],
+      skills: Array.from(new Set([...skills, 'Cricket'])),
       workMode: 'onsite',
       minRate: 500,
       maxRate: 3000
@@ -478,9 +393,60 @@ const generateJobs = (): Job[] => {
       description: 'Analyze match footage and create heatmaps. Focus on shot selection, footwork, and decision-making. Post-session report.',
       category: 'Analyst',
       skills: ['Video Analysis', 'Performance Analysis', 'Heatmaps', 'Decision Making', 'analysis', 'Analyst'],
-      workMode: 'hybrid',
+      workMode: 'remote',
       minRate: 2500,
       maxRate: 6000
+    }),
+    // Additional jobs that match user skills
+    createJobWithClient({
+      id: 'crk-batting-2',
+      title: 'RH Batsman Training — Cover drive and off-side mastery',
+      description: 'Specialized right-handed batsman training focusing on off-side shots, cover drives, and classical technique. For intermediate players.',
+      category: 'Coach',
+      skills: ['Batting Technique', 'Cover Drive', 'Off-side Play', 'batting', 'coaching', 'Coach', 'RH Batsman'],
+      workMode: 'onsite',
+      minRate: 1800,
+      maxRate: 4500
+    }),
+    createJobWithClient({
+      id: 'crk-offspin-1',
+      title: 'Off Spin Coaching — Flight and turn variations',
+      description: 'Master the art of off spin with focus on flight, turn, and arm ball. Perfect for spinners looking to add variations.',
+      category: 'Coach',
+      skills: ['Off Spin', 'Flight Control', 'Arm Ball', 'Spin Bowling', 'coaching', 'Coach'],
+      workMode: 'onsite',
+      minRate: 2000,
+      maxRate: 5000
+    }),
+    createJobWithClient({
+      id: 'crk-analyst-2',
+      title: 'Performance Analysis — Batting metrics and insights',
+      description: 'Comprehensive batting analysis using video footage and metrics. Identify strengths, weaknesses, and improvement areas.',
+      category: 'Analyst',
+      skills: ['Performance Analysis', 'Batting Analysis', 'Video Analysis', 'Metrics', 'analysis', 'Analyst'],
+      workMode: 'remote',
+      minRate: 3000,
+      maxRate: 7000
+    }),
+    createJobWithClient({
+      id: 'crk-sidearm-2',
+      title: 'Sidearm Specialist — Death overs simulation',
+      description: 'Professional sidearm specialist for death overs practice. Simulate tournament pressure with yorkers and slower balls.',
+      category: 'Sidearm',
+      skills: ['Sidearm Specialist', 'Death Overs', 'Yorker Specialist', 'Pressure Bowling', 'Sidearm'],
+      workMode: 'onsite',
+      minRate: 2500,
+      maxRate: 6000
+    }),
+    createJobWithClient({
+      id: 'crk-coach-1',
+      title: 'Cricket Coach — All-round skill development',
+      description: 'Comprehensive cricket coaching for players aged 12-18. Covering batting, bowling, fielding, and match strategy.',
+      category: 'Coach',
+      skills: ['Cricket Coaching', 'Batting Technique', 'Bowling Technique', 'Fielding', 'Match Strategy', 'coaching', 'Coach'],
+      workMode: 'onsite',
+      minRate: 1500,
+      maxRate: 4000
     })
   ];
 

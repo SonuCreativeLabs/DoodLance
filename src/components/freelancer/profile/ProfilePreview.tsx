@@ -9,17 +9,19 @@ import {
   CheckCircle,
   ArrowRight,
   MessageSquare,
-  MessageCircle,
-  Award, 
   Briefcase, 
   MapPin, 
   Calendar, 
   Star,
-  User
+  ChevronDown,
+  Clock,
+  Award
 } from 'lucide-react';
-
-// Local Components
+import { SkillInfoDialog } from '@/components/common/SkillInfoDialog';
+import { getSkillInfo, type SkillInfo } from '@/utils/skillUtils';
+import { IconButton } from '@/components/ui/icon-button';
 import { ProfileHeader } from './ProfileHeader';
+import { PortfolioItemModal } from '@/components/common/PortfolioItemModal';
 
 // Types
 import type { 
@@ -50,6 +52,11 @@ const ProfilePreview = memo(({
   const activeTabRef = useRef('top');
   const isScrollingRef = useRef(false);
   const [activeTab, setActiveTab] = useState('top');
+  const [isPortfolioModalOpen, setIsPortfolioModalOpen] = useState(false);
+  const [selectedPortfolioItem, setSelectedPortfolioItem] = useState<any>(null);
+  const [isSkillDialogOpen, setIsSkillDialogOpen] = useState(false);
+  const [selectedSkillInfo, setSelectedSkillInfo] = useState<SkillInfo | null>(null);
+  const [isHoursDropdownOpen, setIsHoursDropdownOpen] = useState(false);
   
   // Define tabs with their corresponding section IDs
   const tabs = [
@@ -565,12 +572,11 @@ const ProfilePreview = memo(({
     [profileData.experience]
   );
 
-  // Handle backdrop click to close modal
-  const handleBackdropClick = useCallback((e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
-  }, [onClose]);
+  const handleSkillClick = (skillName: string) => {
+    const skillInfo = getSkillInfo(skillName);
+    setSelectedSkillInfo(skillInfo);
+    setIsSkillDialogOpen(true);
+  };
 
   if (!isOpen) return null;
 
@@ -587,7 +593,8 @@ const ProfilePreview = memo(({
           </div>
           <div className="flex items-center gap-2">
             <div className="relative">
-              <button
+              <IconButton
+                icon={Share2}
                 onClick={async () => {
                   try {
                     const shareData = {
@@ -633,57 +640,32 @@ const ProfilePreview = memo(({
                         }, 2000);
                       }
                   } catch (error) {
+                    // Handle share cancellation gracefully without logging
+                    if (error instanceof Error && error.name === 'AbortError') {
+                      // User canceled the share - no need to log this
+                      return;
+                    }
                     console.error('Error sharing profile:', error);
-                    // Optionally show an error message to the user
                   }
                 }}
                 id="share-button"
                 aria-label="Share profile preview"
-                className="group relative inline-flex items-center text-sm text-purple-400 hover:text-purple-300 transition-colors duration-200"
                 data-copied="false"
-              >
-                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/10 group-hover:bg-white/10 transition-colors duration-200">
-                  <Share2 className="h-4 w-4" />
-                </div>
-                <span className="share-tooltip">Share Profile</span>
-              </button>
+              />
               <style jsx>{`
-                .share-tooltip {
-                  position: absolute;
-                  top: -30px;
-                  left: 50%;
-                  transform: translateX(-50%);
-                  background: var(--card-background);
-                  color: var(--foreground);
-                  padding: 4px 8px;
-                  border-radius: 4px;
-                  font-size: 12px;
-                  white-space: nowrap;
-                  opacity: 0;
-                  pointer-events: none;
-                  transition: opacity 0.2s;
-                  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-                }
-                button:hover .share-tooltip {
-                  opacity: 1;
-                }
-                button[data-copied="true"] .share-tooltip::after {
+                button[data-copied="true"]:after {
                   content: '✓ Copied!';
                 }
-                button[data-copied="false"] .share-tooltip::after {
+                button[data-copied="false"]:after {
                   content: 'Share Profile';
                 }
               `}</style>
             </div>
-            <button 
+            <IconButton
+              icon={X}
               onClick={onClose}
               aria-label="Close preview"
-              className="inline-flex items-center text-sm text-purple-400 hover:text-purple-300 transition-colors duration-200"
-            >
-              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors duration-200">
-                <X className="h-4 w-4" />
-              </div>
-            </button>
+            />
           </div>
         </div>
       </div>
@@ -694,7 +676,7 @@ const ProfilePreview = memo(({
         {/* Profile Header */}
         <section id="top" data-section="top" className="scroll-mt-20">
           <div className="w-full bg-[#0f0f0f]">
-            <ProfileHeader {...profileData} isPreview={true} />
+            <ProfileHeader isPreview={true} />
           </div>
         </section>
         
@@ -745,10 +727,44 @@ const ProfilePreview = memo(({
           <div className="px-6 pb-8">
             <div className="space-y-8">
             {/* About Section */}
-            <section id="about" data-section="about" className="scroll-mt-20 pt-8">
-              <h2 className="text-xl font-semibold text-white mb-4">About Me</h2>
-              <p className="text-white/80 mb-6 whitespace-pre-line">{profileData.about}</p>
+            <section id="about" data-section="about" className="scroll-mt-20 pt-4">
+              <p className="text-white mb-6 whitespace-pre-line">{profileData.bio || profileData.about}</p>
               
+              {/* Cricket Information - Simple text below bio */}
+              <div className="space-y-2 mb-6">
+                {profileData.cricketRole && (
+                  <div className="text-white/80">
+                    <span className="text-white/50">Role:</span> <span className="text-white">{profileData.cricketRole}</span>
+                  </div>
+                )}
+                {profileData.battingStyle && (
+                  <div className="text-white/80">
+                    <span className="text-white/50">Batting Style:</span> <span className="text-white">{profileData.battingStyle}</span>
+                  </div>
+                )}
+                {profileData.bowlingStyle && (
+                  <div className="text-white/80">
+                    <span className="text-white/50">Bowling Style:</span> <span className="text-white">{profileData.bowlingStyle}</span>
+                  </div>
+                )}
+              </div>
+              
+              {/* Skills Section - Moved above response time */}
+              <div className="mb-6">
+                <h3 className="font-medium text-white mb-2">Skills</h3>
+                <div className="flex flex-wrap gap-1.5">
+                  {profileData.skills.map((skill, i) => (
+                    <button
+                      key={i}
+                      onClick={() => handleSkillClick(skill)}
+                      className="px-1.5 py-0.5 bg-white/10 text-white/80 border border-white/20 text-xs rounded-full transition-colors cursor-pointer hover:bg-white/20"
+                    >
+                      {skill}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <div className="flex items-center gap-6 mb-6 text-sm">
                 <div className="flex items-center gap-2">
                   <MessageSquare className="h-4 w-4 text-purple-400 flex-shrink-0" />
@@ -776,6 +792,7 @@ const ProfilePreview = memo(({
                       <span>Available</span>
                     </div>
                   </div>
+                  
                   <div className="grid grid-cols-7 gap-2">
                     {profileData.availability.map((day, i) => (
                       <div key={i} className="flex flex-col items-center">
@@ -791,21 +808,36 @@ const ProfilePreview = memo(({
                       </div>
                     ))}
                   </div>
-                </div>
-                
-                <div>
-                  <h3 className="font-medium text-white mb-3">Skills</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {profileData.skills.map((skill, i) => (
-                      <span 
-                        key={i}
-                        className="px-3 py-1 bg-white/5 text-white/80 text-sm rounded-full"
-                      >
-                        {skill}
-                      </span>
-                    ))}
+                  
+                  {/* Working Hours Dropdown */}
+                  <div className="mt-4">
+                    <button
+                      onClick={() => setIsHoursDropdownOpen(!isHoursDropdownOpen)}
+                      className="w-full flex items-center justify-between p-3 bg-[#1E1E1E] border border-white/10 rounded-lg hover:border-white/20 transition-colors"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-4 w-4 text-purple-400" />
+                        <span className="text-sm text-white font-medium">Working Hours</span>
+                      </div>
+                      <ChevronDown className={`h-4 w-4 text-white/60 transition-transform ${isHoursDropdownOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                    
+                    {isHoursDropdownOpen && (
+                      <div className="mt-2 p-3 bg-[#1E1E1E] border border-white/10 rounded-lg">
+                        {/* Detailed hours by day */}
+                        <div className="space-y-1">
+                          {profileData.availability.filter(day => day.available).map((day, index) => (
+                            <div key={index} className="flex justify-between items-center text-sm">
+                              <span className="text-white/60">{day.day}:</span>
+                              <span className="text-white/80">9 AM - 6 PM</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
+                
               </div>
             </section>
 
@@ -821,20 +853,16 @@ const ProfilePreview = memo(({
                 <div className="flex -mx-2 overflow-x-auto scrollbar-hide pb-2">
                   <div className="flex gap-4 px-2">
                     {profileData.services.map((service) => (
-                      <div key={service.id} className="w-80 flex-shrink-0 p-5 rounded-3xl border border-white/10 bg-white/5 hover:border-purple-500/30 transition-colors">
+                      <div key={service.id} className="w-80 flex-shrink-0 p-5 pt-8 rounded-3xl border border-white/10 bg-white/5 hover:border-purple-500/30 transition-colors flex flex-col h-full relative">
+                        {service.category && (
+                          <div className="absolute top-3 left-3 bg-white/10 text-white/80 border-white/20 px-2 py-0.5 text-xs rounded-full border">
+                            {service.category}
+                          </div>
+                        )}
                         <div className="flex flex-col h-full">
-                          <div className="flex-1">
+                          <div className="flex-1 mt-2">
                             <div className="flex items-start justify-between">
                               <h3 className="text-lg font-semibold text-white">{service.title}</h3>
-                              {service.type && (
-                                <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
-                                  service.type === 'online' 
-                                    ? 'bg-blue-500/10 text-blue-400' 
-                                    : 'bg-green-500/10 text-green-400'
-                                }`}>
-                                  {service.type === 'online' ? 'Online' : 'In-Person'}
-                                </span>
-                              )}
                             </div>
                             
                             <p className="text-white/70 mt-2 text-sm">{service.description}</p>
@@ -863,11 +891,8 @@ const ProfilePreview = memo(({
                                 </div>
                               </div>
                               <div className="flex items-center gap-2">
-                                <button className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-white/80 hover:text-white transition-colors">
-                                  <MessageCircle className="h-5 w-5" />
-                                </button>
                                 <button className="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-xl text-sm font-medium transition-colors">
-                                  Book Now
+                                  Hire Me
                                 </button>
                               </div>
                             </div>
@@ -907,25 +932,13 @@ const ProfilePreview = memo(({
                           tabIndex={0}
                           aria-label={`Open portfolio item: ${item.title}`}
                           onClick={() => {
-                            if (typeof window !== 'undefined') {
-                              try {
-                                const url = new URL(window.location.href);
-                                url.hash = '#portfolio';
-                                sessionStorage.setItem('returnToProfilePreview', url.toString());
-                              } catch {}
-                              window.location.href = `/freelancer/profile/preview/portfolio/${item.id}`;
-                            }
+                            setSelectedPortfolioItem(item);
+                            setIsPortfolioModalOpen(true);
                           }}
                           onKeyDown={e => {
                             if (e.key === 'Enter' || e.key === ' ') {
-                              if (typeof window !== 'undefined') {
-                                try {
-                                  const url = new URL(window.location.href);
-                                  url.hash = '#portfolio';
-                                  sessionStorage.setItem('returnToProfilePreview', url.toString());
-                                } catch {}
-                                window.location.href = `/freelancer/profile/preview/portfolio/${item.id}`;
-                              }
+                              setSelectedPortfolioItem(item);
+                              setIsPortfolioModalOpen(true);
                             }
                           }}
                         >
@@ -943,11 +956,13 @@ const ProfilePreview = memo(({
                               </div>
                             </div>
                             <div className="absolute inset-0 p-4 flex flex-col justify-end bg-gradient-to-t from-black/70 via-black/40 to-transparent rounded-xl">
-                              <div className="flex justify-between items-end">
-                                <div className="pr-2">
+                              <div className="flex justify-between items-end mb-8">
+                                <div className="pr-2 flex-1">
                                   <h3 className="font-medium text-white line-clamp-1 text-sm">{item.title}</h3>
-                                  <p className="text-xs text-white/80 mt-0.5">{item.category}</p>
                                 </div>
+                              </div>
+                              <div className="absolute bottom-3 left-3 bg-white/10 text-white/80 border-white/20 px-2 py-0.5 text-xs rounded-full border">
+                                {item.category}
                               </div>
                             </div>
                           </div>
@@ -1069,7 +1084,7 @@ const ProfilePreview = memo(({
                           <div className="flex justify-between items-start mb-3">
                             <div className="flex items-center gap-3">
                               <div className="w-10 h-10 rounded-2xl bg-white/5 flex items-center justify-center flex-shrink-0">
-                                <User className="h-4 w-4 text-white/60" />
+                                <div className="w-5 h-5 rounded-full bg-white/20"></div>
                               </div>
                               <div className="min-w-0">
                                 <h4 className="font-medium text-white text-sm truncate">{review.author}</h4>
@@ -1115,6 +1130,23 @@ const ProfilePreview = memo(({
         </div>
       </div>
       </div>
+
+      {/* Skill Info Dialog */}
+      <SkillInfoDialog
+        isOpen={isSkillDialogOpen}
+        onClose={() => setIsSkillDialogOpen(false)}
+        skillInfo={selectedSkillInfo}
+      />
+
+      {/* Portfolio Modal */}
+      <PortfolioItemModal
+        item={selectedPortfolioItem}
+        isOpen={isPortfolioModalOpen}
+        onClose={() => {
+          setIsPortfolioModalOpen(false);
+          setSelectedPortfolioItem(null);
+        }}
+      />
     </div>
   ), document.body);
 }, (prevProps, nextProps) => {

@@ -6,63 +6,93 @@ import { ServicePackages } from "@/components/freelancer/profile/ServicePackages
 const services = [
   {
     id: '1',
-    title: 'AI Development Consultation',
-    description: 'Expert guidance on AI implementation for your business needs',
-    price: '₹25,000',
+    title: 'Net Bowling Sessions',
+    description: 'Professional net bowling sessions with personalized coaching',
+    price: '₹500',
     type: 'online' as const,
-    deliveryTime: '1 week',
+    deliveryTime: '1 hour',
     features: [
-      '1-hour consultation session',
-      'Technical requirements analysis',
-      'Solution architecture design',
-      'Implementation roadmap',
-      'Follow-up email support for 1 week'
-    ]
+      '1-hour net session',
+      'Ball analysis',
+      'Technique improvement',
+      'Q&A session'
+    ],
+    category: 'Net Bowler'
   },
   {
     id: '2',
-    title: 'Custom AI Solution Development',
-    description: 'Tailored AI application development for your specific needs',
-    price: '₹1,50,000',
-    type: 'online' as const,
-    deliveryTime: '4-6 weeks',
+    title: 'Match Player',
+    description: 'Professional match player ready to play for your team per match',
+    price: '₹1,500',
+    type: 'in-person' as const,
+    deliveryTime: 'Per match',
     features: [
-      'Custom AI model development',
-      'API integration',
-      'Testing & deployment',
-      'Documentation',
-      '1 month of maintenance support'
-    ]
+      'Full match participation',
+      'Team contribution',
+      'Match commitment',
+      'Performance guarantee'
+    ],
+    category: 'Match Player'
   },
   {
     id: '3',
-    title: 'Cricket Coaching (Batting)',
-    description: 'Personalized batting coaching sessions',
-    price: '₹2,000',
+    title: 'Match Videography',
+    description: 'Professional match videography and reel content creation during games',
+    price: '₹800',
     type: 'in-person' as const,
-    deliveryTime: '2 hours',
+    deliveryTime: 'Same day',
     features: [
-      'Technical skill assessment',
-      'Personalized training plan',
-      'Video analysis',
-      'Match simulation drills',
-      'Mental conditioning tips'
-    ]
+      'Full match recording',
+      'Highlight reel creation',
+      'Social media content',
+      'Priority editing'
+    ],
+    category: 'Cricket Photo / Videography'
   },
   {
     id: '4',
-    title: 'Cricket Coaching (Bowling)',
-    description: 'Professional off-spin bowling coaching',
-    price: '₹2,500',
+    title: 'Sidearm Bowling',
+    description: 'Professional sidearm bowler delivering 140km/h+ speeds for practice sessions',
+    price: '₹1,500',
     type: 'in-person' as const,
-    deliveryTime: '2 hours',
+    deliveryTime: 'per hour',
     features: [
-      'Bowling action analysis',
-      'Variations coaching',
-      'Match situation practice',
-      'Fitness & conditioning advice',
-      'Video analysis session'
-    ]
+      '140km/h+ sidearm bowling',
+      'Practice session delivery',
+      'Consistent speed & accuracy',
+      'Training session support'
+    ],
+    category: 'Sidearm'
+  },
+  {
+    id: '5',
+    title: 'Batting Coaching',
+    description: 'Professional batting technique training and skill development',
+    price: '₹1,200',
+    type: 'in-person' as const,
+    deliveryTime: 'per hour',
+    features: [
+      'Batting technique analysis',
+      'Footwork drills',
+      'Shot selection training',
+      'Mental preparation coaching'
+    ],
+    category: 'Coach'
+  },
+  {
+    id: '6',
+    title: 'Performance Analysis',
+    description: 'Comprehensive cricket performance analysis and improvement recommendations',
+    price: '₹2,000',
+    type: 'online' as const,
+    deliveryTime: '2-3 weeks',
+    features: [
+      'Match statistics review',
+      'Strength/weakness analysis',
+      'Improvement recommendations',
+      'Progress tracking'
+    ],
+    category: 'Analyst'
   }
 ];
 

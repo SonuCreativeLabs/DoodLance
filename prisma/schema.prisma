@@ -7,13 +7,13 @@ generator client {
 }
 
 datasource db {
-  provider = "mongodb"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
 // User model for authentication
 model User {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  id        String   @id @default(cuid())
   email     String   @unique
   name      String?
   avatar    String?
@@ -25,7 +25,7 @@ model User {
   // Profile information
   phone     String?
   location  String?
-  coords    Float[]  // [longitude, latitude] for location
+  coords    String  // [longitude, latitude] for location
   bio       String?
   
   // User preferences
@@ -58,9 +58,9 @@ model User {
 
 // Session model for AuthKit sessions
 model Session {
-  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  id            String   @id @default(cuid())
   sessionToken  String   @unique
-  userId        String   @db.ObjectId
+  userId        String
   expires       DateTime
   
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -70,12 +70,12 @@ model Session {
 
 // Service categories
 model Category {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  id          String   @id @default(cuid())
   name        String   @unique
   slug        String   @unique // URL-friendly identifier
   description String?
   icon        String?
-  parentId    String?  @db.ObjectId // for subcategories
+  parentId    String?  // for subcategories
   isActive    Boolean  @default(true)
   sortOrder   Int      @default(0)
   
@@ -89,22 +89,22 @@ model Category {
 
 // Services offered by freelancers
 model Service {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  id          String   @id @default(cuid())
   title       String
   description String
   price       Float
   duration    Int      // in minutes
-  categoryId  String   @db.ObjectId
+  categoryId  String
   
   // Provider information
-  providerId  String   @db.ObjectId
+  providerId  String
   provider    User     @relation("UserServices", fields: [providerId], references: [id])
   
   // Service details
-  images      String[] // array of image URLs
-  tags        String[]
+  images      String // array of image URLs
+  tags        String
   location    String?
-  coords      Float[]  // [longitude, latitude]
+  coords      String  // [longitude, latitude]
   
   // Service type and delivery
   serviceType String   // "online", "in-person", "hybrid"
@@ -112,10 +112,10 @@ model Service {
   revisions   Int      @default(0) // number of revisions included
   
   // Pricing tiers (for service packages)
-  packages    Json?    // Different pricing tiers with features
+  packages    String?  // JSON string for different pricing tiers with features
   
   // Requirements
-  requirements String[] // what client needs to provide
+  requirements String // what client needs to provide
   
   // Status
   isActive    Boolean  @default(true)
@@ -136,14 +136,14 @@ model Service {
 
 // Bookings/Orders
 model Booking {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  id          String   @id @default(cuid())
   
   // Client information
-  clientId    String   @db.ObjectId
+  clientId    String
   client      User     @relation("UserBookings", fields: [clientId], references: [id])
   
   // Service information
-  serviceId   String   @db.ObjectId
+  serviceId   String
   service     Service  @relation(fields: [serviceId], references: [id])
   
   // Booking details
@@ -151,26 +151,26 @@ model Booking {
   duration    Int      // in minutes
   totalPrice  Float
   packageType String?  // which package was selected
-  status      BookingStatus @default(PENDING)
+  status      String @default("PENDING") // PENDING, CONFIRMED, IN_PROGRESS, COMPLETED, CANCELLED, REFUNDED, DISPUTED, REVISION_REQUESTED
   
   // Location details
   location    String?
-  coords      Float[]  // [longitude, latitude]
+  coords      String  // [longitude, latitude]
   
   // Progress tracking
   progress    Int      @default(0) // 0-100
-  milestones  Json?    // progress milestones
+  milestones  String?  // JSON string for progress milestones
   
   // Communication
-  conversationId String? @db.ObjectId
+  conversationId String?
   
   // Notes and special requests
   notes       String?
-  requirements Json?   // client requirements
+  requirements String? // JSON string for client requirements
   
   // Delivery
   deliveredAt DateTime?
-  deliverables String[] // files, links, etc.
+  deliverables String // files, links, etc.
   
   // Timestamps
   createdAt   DateTime @default(now())
@@ -179,22 +179,14 @@ model Booking {
   @@map("bookings")
 }
 
-// Enums
-enum BookingStatus {
-  PENDING
-  CONFIRMED
-  IN_PROGRESS
-  COMPLETED
-  CANCELLED
-  REFUNDED
-  DISPUTED
-  REVISION_REQUESTED
-}
+// Transaction Types and Status as String constants
+// TransactionType: CREDIT, DEBIT, REFUND, EARNING, WITHDRAWAL, COIN_PURCHASE, COIN_REDEMPTION, REFERRAL_BONUS
+// TransactionStatus: PENDING, COMPLETED, FAILED, CANCELLED
 
 // Wallet system
 model Wallet {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId      String   @unique @db.ObjectId
+  id          String   @id @default(cuid()) 
+  userId      String   @unique 
   user        User     @relation(fields: [userId], references: [id])
   
   // Balances
@@ -217,15 +209,15 @@ model Wallet {
 
 // Wallet/Transactions
 model Transaction {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  walletId    String   @db.ObjectId
+  id          String   @id @default(cuid()) 
+  walletId    String   
   wallet      Wallet   @relation(fields: [walletId], references: [id])
   
   amount      Float
-  type        TransactionType
+  type        String // CREDIT, DEBIT, REFUND, EARNING, WITHDRAWAL, COIN_PURCHASE, COIN_REDEMPTION, REFERRAL_BONUS
   description String
   reference   String?  // booking ID, job ID, etc.
-  status      TransactionStatus @default(COMPLETED)
+  status      String @default("COMPLETED") // PENDING, COMPLETED, FAILED, CANCELLED
   
   // Payment details
   paymentMethod String? // "card", "upi", "bank_transfer", etc.
@@ -236,27 +228,9 @@ model Transaction {
   @@map("transactions")
 }
 
-enum TransactionType {
-  CREDIT    // money added to wallet
-  DEBIT     // money deducted from wallet
-  REFUND    // refund to wallet
-  EARNING   // earning from completed job
-  WITHDRAWAL // withdrawal to bank
-  COIN_PURCHASE // buying app coins
-  COIN_REDEMPTION // using app coins
-  REFERRAL_BONUS // referral rewards
-}
-
-enum TransactionStatus {
-  PENDING
-  COMPLETED
-  FAILED
-  CANCELLED
-}
-
 // Job Postings
 model Job {
-  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  id              String   @id @default(cuid())
   title           String
   description     String
   category        String
@@ -264,29 +238,30 @@ model Job {
   budgetMin       Float?
   budgetMax       Float?
   location        String
-  coords          Float[]  // [longitude, latitude]
-  skills          String[]
+  coords          String  // [longitude, latitude]
+  skills          String
   workMode        String   // remote, onsite, hybrid
   type            String   // freelance, part-time, full-time, contract
   duration        String?
   experience      String   // Entry Level, Intermediate, Expert
+  scheduledAt     DateTime? // When the job is scheduled to start
   
   // Client info
-  clientId        String   @db.ObjectId
+  clientId        String
   client          User     @relation("ClientJobs", fields: [clientId], references: [id])
   
   // Freelancer info (once accepted)
-  freelancerId    String?  @db.ObjectId
+  freelancerId    String?
   freelancer      User?    @relation("FreelancerJobs", fields: [freelancerId], references: [id])
   
   // Status and progress
-  status          JobStatus @default(OPEN)
+  status          String @default("OPEN") // OPEN, IN_PROGRESS, COMPLETED, CANCELLED, ON_HOLD
   progress        Int      @default(0)
   notes           String?  // cancellation notes or other notes
   
   // Completion tracking
   completedAt     DateTime?
-  completedBy     String?  @db.ObjectId // user who marked as complete
+  completedBy     String?  // user who marked as complete
   
   // Status
   isActive        Boolean  @default(true)
@@ -302,33 +277,25 @@ model Job {
   @@map("jobs")
 }
 
-enum JobStatus {
-  OPEN
-  IN_PROGRESS
-  COMPLETED
-  CANCELLED
-  ON_HOLD
-}
-
 // Job Applications
 model Application {
-  id              String   @id @default(cuid())
+  id              String   @id @default(cuid()) 
   
   // Job and Freelancer
-  jobId           String   @db.ObjectId
+  jobId           String   
   job             Job      @relation(fields: [jobId], references: [id])
-  freelancerId    String   @db.ObjectId
+  freelancerId    String   
   freelancer      User     @relation("FreelancerApplications", fields: [freelancerId], references: [id])
   
   // Proposal details
   coverLetter     String
   proposedRate    Float
   estimatedDays   Int
-  skills          String[]
-  attachments     String[]
+  skills          String
+  attachments     String
   
   // Status
-  status          ApplicationStatus @default(PENDING)
+  status          String @default("PENDING") // PENDING, ACCEPTED, REJECTED, WITHDRAWN, INTERVIEW, HIRED, COMPLETED, CANCELLED, EXPIRED, ARCHIVED
   progress        Int      @default(0)
   
   // Timestamps
@@ -338,35 +305,22 @@ model Application {
   @@map("applications")
 }
 
-enum ApplicationStatus {
-  PENDING
-  ACCEPTED
-  REJECTED
-  WITHDRAWN
-  INTERVIEW
-  HIRED
-  COMPLETED
-  CANCELLED
-  EXPIRED
-  ARCHIVED
-}
-
 // Chat/Messages
 model Conversation {
-  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  id              String   @id @default(cuid()) 
   
   // Participants
-  clientId        String   @db.ObjectId
-  freelancerId    String   @db.ObjectId
+  clientId        String   
+  freelancerId    String   
   
   // Related job/booking
-  jobId           String?  @db.ObjectId
-  bookingId       String?  @db.ObjectId
+  jobId           String?  
+  bookingId       String?  
   
   // Last message info
   lastMessage     String?
   lastMessageAt   DateTime?
-  lastMessageType MessageType @default(TEXT)
+  lastMessageType String @default("TEXT") // TEXT, IMAGE, FILE, VOICE, VIDEO, LOCATION, BOOKING_OFFER, SYSTEM
   
   // Status
   clientUnreadCount    Int      @default(0)
@@ -391,19 +345,19 @@ model Conversation {
 }
 
 model Message {
-  id              String   @id @default(auto()) @map("_id") @db.ObjectId
-  conversationId  String   @db.ObjectId
+  id              String   @id @default(cuid()) 
+  conversationId  String   
   conversation    Conversation @relation(fields: [conversationId], references: [id])
   
-  senderId        String   @db.ObjectId
+  senderId        String   
   sender          User     @relation("MessageSender", fields: [senderId], references: [id])
   content         String
   
   // Message type
-  messageType     MessageType @default(TEXT)
+  messageType     String @default("TEXT") // TEXT, IMAGE, FILE, VOICE, VIDEO, LOCATION, BOOKING_OFFER, SYSTEM
   
   // Attachments
-  attachments     String[]
+  attachments     String
   
   // Status
   isRead          Boolean  @default(false)
@@ -416,7 +370,7 @@ model Message {
   editedAt        DateTime?
   
   // Reply/Thread
-  replyToId       String?  @db.ObjectId
+  replyToId       String?  
   
   // Timestamps
   createdAt       DateTime @default(now())
@@ -424,21 +378,10 @@ model Message {
   @@map("messages")
 }
 
-enum MessageType {
-  TEXT
-  IMAGE
-  FILE
-  VOICE
-  VIDEO
-  LOCATION
-  BOOKING_OFFER
-  SYSTEM
-}
-
 // Freelancer Profile Extensions
 model FreelancerProfile {
-  id              String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId          String   @unique @db.ObjectId
+  id              String   @id @default(cuid()) 
+  userId          String   @unique 
   user            User     @relation(fields: [userId], references: [id])
   
   // Professional info
@@ -447,9 +390,9 @@ model FreelancerProfile {
   hourlyRate      Float?
   
   // Skills and specializations
-  skills          String[] // cricket skills
-  specializations String[] // specific areas of expertise
-  languages       String[] @default(["English"])
+  skills          String // cricket skills
+  specializations String // specific areas of expertise
+  languages       String @default("English") // comma-separated list
   
   // Stats
   rating          Float    @default(0)
@@ -461,17 +404,17 @@ model FreelancerProfile {
   repeatClientRate Float   @default(0)
   
   // Location
-  coords          Float[]  // [longitude, latitude]
+  coords          String  // [longitude, latitude]
   serviceRadius   Float?   // service area radius in km
   
   // Availability
   isOnline        Boolean  @default(false)
-  availability    Json?    // Store availability schedule
+  availability    String?  // JSON string for availability schedule
   timeZone        String   @default("Asia/Kolkata")
   
   // Identity verification
   isVerified      Boolean  @default(false)
-  verificationDocs Json?   // KYC documents
+  verificationDocs String? // JSON string for KYC documents
   verifiedAt      DateTime?
   
   // Performance metrics
@@ -496,8 +439,8 @@ model FreelancerProfile {
 }
 
 model Experience {
-  id              String   @id @default(auto()) @map("_id") @db.ObjectId
-  profileId       String   @db.ObjectId
+  id              String   @id @default(cuid()) 
+  profileId       String   
   profile         FreelancerProfile @relation(fields: [profileId], references: [id])
   
   role            String
@@ -514,15 +457,15 @@ model Experience {
 }
 
 model Portfolio {
-  id              String   @id @default(auto()) @map("_id") @db.ObjectId
-  profileId       String   @db.ObjectId
+  id              String   @id @default(cuid()) 
+  profileId       String   
   profile         FreelancerProfile @relation(fields: [profileId], references: [id])
   
   title           String
   category        String
   description     String?
-  images          String[]
-  skills          String[]
+  images          String
+  skills          String
   clientName      String?
   completedAt     DateTime?
   
@@ -532,12 +475,12 @@ model Portfolio {
 }
 
 model Review {
-  id              String   @id @default(auto()) @map("_id") @db.ObjectId
-  profileId       String   @db.ObjectId
+  id              String   @id @default(cuid()) 
+  profileId       String   
   profile         FreelancerProfile @relation(fields: [profileId], references: [id])
   
   // Reviewer (client)
-  clientId        String   @db.ObjectId
+  clientId        String   
   clientName      String
   clientRole      String?
   clientAvatar    String?
@@ -553,8 +496,8 @@ model Review {
   timelinessRating Int?    // 1-5
   
   // Related booking/job
-  bookingId       String?  @db.ObjectId
-  jobId           String?  @db.ObjectId
+  bookingId       String?  
+  jobId           String?  
   
   // Response from freelancer
   response        String?
@@ -567,8 +510,8 @@ model Review {
 
 // Client Profile (minimal)
 model ClientProfile {
-  id              String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId          String   @unique @db.ObjectId
+  id              String   @id @default(cuid()) 
+  userId          String   @unique 
   user            User     @relation(fields: [userId], references: [id])
   
   // Basic info
@@ -583,12 +526,12 @@ model ClientProfile {
   avgRating       Float    @default(0)
   
   // Preferences
-  preferredBudget Json?    // budget ranges for different services
-  preferredSkills String[] // skills they frequently hire for
+  preferredBudget String?  // JSON string for budget ranges for different services
+  preferredSkills String // skills they frequently hire for
   
   // Verification
   isVerified      Boolean  @default(false)
-  verificationDocs Json?   // business verification docs
+  verificationDocs String? // JSON string for business verification docs
   verifiedAt      DateTime?
   
   // Timestamps
@@ -600,14 +543,14 @@ model ClientProfile {
 
 // Notifications
 model Notification {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId      String   @db.ObjectId
+  id          String   @id @default(cuid()) 
+  userId      String   
   user        User     @relation(fields: [userId], references: [id])
   
   // Notification content
   title       String
   message     String
-  type        NotificationType
+  type        String // BOOKING_REQUEST, BOOKING_ACCEPTED, BOOKING_REJECTED, BOOKING_COMPLETED, BOOKING_CANCELLED, JOB_APPLICATION, JOB_ACCEPTED, JOB_REJECTED, MESSAGE_RECEIVED, PAYMENT_RECEIVED, PAYMENT_FAILED, REVIEW_RECEIVED, PROFILE_VERIFIED, REFERRAL_BONUS, SYSTEM_UPDATE, PROMOTIONAL
   
   // Related entities
   entityId    String?  // ID of related booking, job, etc.
@@ -615,7 +558,7 @@ model Notification {
   
   // Action data
   actionUrl   String?  // deep link or URL to navigate to
-  actionData  Json?    // additional data for the action
+  actionData  String?  // JSON string for additional data for the action
   
   // Status
   isRead      Boolean  @default(false)
@@ -626,21 +569,162 @@ model Notification {
   @@map("notifications")
 }
 
-enum NotificationType {
-  BOOKING_REQUEST
-  BOOKING_ACCEPTED
-  BOOKING_REJECTED
-  BOOKING_COMPLETED
-  BOOKING_CANCELLED
-  JOB_APPLICATION
-  JOB_ACCEPTED
-  JOB_REJECTED
-  MESSAGE_RECEIVED
-  PAYMENT_RECEIVED
-  PAYMENT_FAILED
-  REVIEW_RECEIVED
-  PROFILE_VERIFIED
-  REFERRAL_BONUS
-  SYSTEM_UPDATE
-  PROMOTIONAL
+// OTP Verification
+model OTP {
+  id         String   @id @default(cuid())
+  identifier String   // email or phone
+  code       String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  verified   Boolean  @default(false)
+
+  @@map("otps")
+}
+
+// Admin User Management
+model AdminUser {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  name        String
+  password    String   // Hashed password
+  role        String   @default("SUPPORT") // SUPER_ADMIN, SUPPORT, FINANCE, MARKETING
+  permissions String   // JSON array of permissions
+  avatar      String?
+  isActive    Boolean  @default(true)
+  lastLoginAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  auditLogs   AuditLog[]
+  supportTickets SupportTicket[] @relation("AssignedTickets")
+  
+  @@map("admin_users")
+}
+
+// Support & Dispute Management
+model SupportTicket {
+  id          String   @id @default(cuid())
+  userId      String
+  ticketNumber String  @unique @default(cuid())
+  type        String   // BOOKING_DISPUTE, PAYMENT_ISSUE, ACCOUNT_ISSUE, SERVICE_COMPLAINT, OTHER
+  subject     String
+  description String
+  status      String   @default("OPEN") // OPEN, IN_PROGRESS, RESOLVED, CLOSED
+  priority    String   @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT
+  assignedToId String?
+  assignedTo  AdminUser? @relation("AssignedTickets", fields: [assignedToId], references: [id])
+  bookingId   String?
+  jobId       String?
+  resolution  String?
+  attachments String?  // JSON array of file URLs
+  messages    String?  // JSON array of conversation history
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  resolvedAt  DateTime?
+  
+  @@map("support_tickets")
+}
+
+// Promotional System
+model PromoCode {
+  id            String    @id @default(cuid())
+  code          String    @unique
+  description   String?
+  discountType  String    // PERCENTAGE, FIXED
+  discountValue Float
+  maxUses       Int?
+  usedCount     Int       @default(0)
+  minOrderValue Float?
+  maxDiscount   Float?
+  validFrom     DateTime
+  validUntil    DateTime
+  isActive      Boolean   @default(true)
+  categoryIds   String?   // JSON array - applicable categories
+  userIds       String?   // JSON array - specific users only
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  @@map("promo_codes")
+}
+
+// Platform Configuration
+model SystemConfig {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String   // JSON value
+  type      String   // STRING, NUMBER, BOOLEAN, JSON
+  category  String   // COMMISSION, PRICING, FEATURES, NOTIFICATIONS, etc.
+  description String?
+  updatedAt DateTime @updatedAt
+  
+  @@map("system_configs")
+}
+
+// Audit Logging
+model AuditLog {
+  id          String   @id @default(cuid())
+  adminId     String
+  admin       AdminUser @relation(fields: [adminId], references: [id])
+  action      String   // CREATE, UPDATE, DELETE, APPROVE, SUSPEND, LOGIN, LOGOUT
+  entityType  String   // USER, BOOKING, SERVICE, TRANSACTION, PROMO_CODE, etc.
+  entityId    String?
+  oldValue    String?  // JSON
+  newValue    String?  // JSON
+  metadata    String?  // Additional context
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+  
+  @@map("audit_logs")
+}
+
+// Featured Items Management
+model FeaturedItem {
+  id          String   @id @default(cuid())
+  type        String   // SERVICE, FREELANCER, CATEGORY
+  itemId      String
+  title       String
+  position    Int
+  imageUrl    String?
+  validFrom   DateTime
+  validUntil  DateTime
+  isActive    Boolean  @default(true)
+  clickCount  Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("featured_items")
+}
+
+// Platform Analytics
+model PlatformAnalytics {
+  id          String   @id @default(cuid())
+  date        DateTime @unique
+  
+  // User Metrics
+  totalUsers  Int      @default(0)
+  newUsers    Int      @default(0)
+  activeUsers Int      @default(0)
+  
+  // Booking Metrics
+  totalBookings Int    @default(0)
+  completedBookings Int @default(0)
+  cancelledBookings Int @default(0)
+  
+  // Financial Metrics
+  totalRevenue Float  @default(0)
+  platformFees Float  @default(0)
+  avgBookingValue Float @default(0)
+  
+  // Service Metrics
+  totalServices Int   @default(0)
+  activeServices Int  @default(0)
+  
+  // Performance Metrics by Category
+  categoryMetrics String? // JSON object with category-wise data
+  
+  createdAt   DateTime @default(now())
+  
+  @@map("platform_analytics")
 }

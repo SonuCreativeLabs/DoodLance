@@ -7,10 +7,13 @@ import { CheckCircle2, Clock, Trash2, Plus, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { useServices, type ServicePackage as CtxService } from '@/contexts/ServicesContext';
+import { CategorySelect } from "@/components/common/CategoryBadge";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
-type ServicePackage = {
+// Local form interface (different from context ServicePackage)
+interface ServicePackage {
   id: string;
   name: string;
   price: string;
@@ -19,19 +22,71 @@ type ServicePackage = {
   popular?: boolean;
   deliveryTime: string;
   revisions: string;
+  type?: 'online' | 'in-person' | 'hybrid';
+  category?: string;
+  skill?: string;
 };
+
+// Normalize various category labels to the fixed dropdown options
+function normalizeCategory(input?: string): string | undefined {
+  const c = (input || '').toLowerCase().trim();
+  if (!c) return undefined;
+  if (c.includes('match player')) return 'Match Player';
+  if (c.includes('net bowler')) return 'Net Bowler';
+  if (c.includes('net batsman')) return 'Net Batsman';
+  if (c.includes('sidearm')) return 'Sidearm';
+  if (c.includes('coach') || c.includes('batting')) return 'Coach';
+  if (c.includes('sports conditioning') || c.includes('fitness') || c.includes('trainer')) return 'Trainer';
+  if (c.includes('analyst')) return 'Analyst';
+  if (c.includes('physio')) return 'Physio';
+  if (c.includes('scorer')) return 'Scorer';
+  if (c.includes('umpire')) return 'Umpire';
+  if (c.includes('video') || c.includes('photo')) return 'Cricket Photo / Videography';
+  if (c.includes('content')) return 'Cricket Content Creator';
+  if (c.includes('commentator')) return 'Commentator';
+  return input;
+}
+
+// Mapping helpers between UI package and ServicesContext service
+const mapToCtx = (pkg: ServicePackage): CtxService => ({
+  id: pkg.id,
+  title: pkg.name,
+  description: pkg.description,
+  price: pkg.price.startsWith('₹') ? pkg.price : `₹${pkg.price}`,
+  deliveryTime: pkg.deliveryTime,
+  features: Array.isArray(pkg.features) ? pkg.features : [],
+  type: pkg.type,
+  category: pkg.category,
+  skill: pkg.skill,
+});
+
+const mapToUI = (svc: CtxService): ServicePackage => ({
+  id: svc.id,
+  name: svc.title,
+  price: (svc.price || '').replace(/^₹\s?/, '').replace(/,/g, ''),
+  description: svc.description,
+  features: Array.isArray(svc.features) ? svc.features : [],
+  deliveryTime: svc.deliveryTime,
+  revisions: '1 revision',
+  popular: false,
+  type: svc.type,
+  category: normalizeCategory((svc as any).category),
+  skill: (svc as any).skill,
+});
 
 // Package Form Component
 function PackageForm({
   initialData,
   onSave,
   onCancel,
-  hideActions = false,
+  hideActions,
+  onValidationChange,
 }: {
   initialData?: Partial<ServicePackage>;
   onSave: (pkg: Partial<ServicePackage>) => void;
   onCancel: () => void;
   hideActions?: boolean;
+  onValidationChange?: (isValid: boolean) => void;
 }) {
   const [formData, setFormData] = useState<Partial<ServicePackage>>(() => {
     const defaultData = {
@@ -42,7 +97,10 @@ function PackageForm({
       features: [''],
       deliveryTime: '',
       revisions: '1 revision',
-      popular: false
+      popular: false,
+      type: 'online' as const,
+      category: '',
+      skill: '', // Add skill field
     };
     
     return {
@@ -64,23 +122,40 @@ function PackageForm({
       }));
     }
   }, [initialData]);
+
+  // Form validation
+  useEffect(() => {
+    const isValid = Boolean(
+      formData.name?.trim() &&
+      formData.category?.trim() &&
+      formData.price?.trim() &&
+      formData.deliveryTime?.trim() &&
+      formData.description?.trim() &&
+      (!String(formData.category || '').toLowerCase().includes('analytic') || formData.type) &&
+      (!String(formData.category || '').toLowerCase().includes('match player') || formData.skill?.trim())
+    );
+    onValidationChange?.(isValid);
+  }, [formData, onValidationChange]);
   
 
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    // Enforce numeric price only
+    if (name === 'price') {
+      const numeric = value.replace(/[^0-9]/g, '');
+      setFormData(prev => ({ ...prev, price: numeric }));
+      return;
+    }
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleFeatureChange = (index: number, value: string) => {
+const handleFeatureChange = (index: number, value: string) => {
     const newFeatures = [...(formData.features || [''])];
     newFeatures[index] = value;
     setFormData(prev => ({
       ...prev,
-      features: newFeatures.filter(f => f.trim() !== '') // Remove empty features
+      features: newFeatures
     }));
   };
 
@@ -111,7 +186,10 @@ function PackageForm({
       revisions: formData.revisions || '1 revision',
       features: Array.isArray(formData.features) 
         ? formData.features.filter((f): f is string => Boolean(f && typeof f === 'string' && f.trim() !== ''))
-        : []
+        : [],
+      type: formData.type,
+      category: formData.category?.trim() || undefined,
+      skill: formData.skill?.trim() || undefined,
     };
     onSave(cleanedData);
   };
@@ -119,41 +197,110 @@ function PackageForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-4 text-white">
       <div className="space-y-2">
-        <Label className="text-sm font-medium text-white/80">Package Name</Label>
+        <Label className="text-sm font-medium text-white/80">Package Name <span className="text-red-500">*</span></Label>
         <Input
           name="name"
           value={formData.name || ''}
           onChange={handleChange}
-          placeholder="e.g., Basic Coaching, AC Service, Consultation"
+          placeholder="Cricket Coaching - Batting Basics"
           className="h-11 bg-[#2A2A2A] border-white/10 text-white placeholder-white/40 focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 transition-all focus:outline-none rounded-lg"
           required
         />
       </div>
 
+      {/* Category with dropdown */}
+      <div className="space-y-2">
+        <Label className="text-sm font-medium text-white/80">Category <span className="text-red-500">*</span></Label>
+        <CategorySelect
+          value={formData.category || ''}
+          onChange={(value) => setFormData(prev => ({ ...prev, category: value }))}
+          type="service"
+          placeholder="Select a category"
+          required
+        />
+      </div>
+
+      {/* Mode (only for analytics) */}
+      {String(formData.category || '').toLowerCase().includes('analytic') && (
+        <div className="space-y-2">
+          <Label className="text-sm font-medium text-white/80">Mode <span className="text-red-500">*</span></Label>
+          <div className="relative">
+            <select
+              name="type"
+              value={formData.type || 'online'}
+              onChange={handleChange}
+              className="flex h-11 w-full appearance-none rounded-lg border border-white/10 bg-[#2D2D2D] px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/30"
+              required
+            >
+              <option value="online">Online</option>
+              <option value="in-person">In-Person</option>
+              <option value="hybrid">Hybrid</option>
+            </select>
+          </div>
+        </div>
+      )}
+
+      {/* Player Skill (only for Match Player) */}
+      {String(formData.category || '').toLowerCase().includes('match player') && (
+        <div className="space-y-2">
+          <Label className="text-sm font-medium text-white/80">Player Skill <span className="text-red-500">*</span></Label>
+          <div className="relative">
+            <select
+              name="skill"
+              value={formData.skill || ''}
+              onChange={handleChange}
+              className="flex h-11 w-full appearance-none rounded-lg border border-white/10 bg-[#2D2D2D] px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/30 cursor-pointer"
+              required
+            >
+              <option value="" disabled>Select player skill</option>
+              <option value="All-rounder">All-rounder</option>
+              <option value="Batsman">Batsman</option>
+              <option value="Bowler">Bowler</option>
+              <option value="Wicket-keeper">Wicket-keeper</option>
+              <option value="Opening Batsman">Opening Batsman</option>
+              <option value="Middle-order Batsman">Middle-order Batsman</option>
+              <option value="Fast Bowler">Fast Bowler</option>
+              <option value="Spin Bowler">Spin Bowler</option>
+            </select>
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="m6 9 6 6 6-6"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label>Price</Label>
+          <Label>Price <span className="text-red-500">*</span></Label>
           <div className="relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/70">₹</span>
             <Input
               name="price"
-              type="text"
+              type="number"
               value={formData.price || ''}
               onChange={handleChange}
-              placeholder="2,500"
-              className="pl-8 bg-[#2D2D2D] border-white/10 text-white placeholder-white/40 focus:border-white/50 focus:ring-1 focus:ring-white/30 transition-all w-full"
+              onBlur={(e) => {
+                const numeric = e.target.value.replace(/[^0-9]/g, '');
+                setFormData(prev => ({ ...prev, price: numeric }));
+              }}
+              placeholder="2500"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              className="pl-8 bg-[#2D2D2D] border-white/10 text-white placeholder-white/40 focus:border-white/50 focus:ring-1 focus:ring-white/30 transition-all w-full [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               required
             />
           </div>
         </div>
 
         <div className="space-y-2">
-          <Label>Service Duration</Label>
+          <Label>Service Duration <span className="text-red-500">*</span></Label>
           <Input
             name="deliveryTime"
             value={formData.deliveryTime || ''}
             onChange={handleChange}
-            placeholder="e.g., 2 hours"
+            placeholder="2 hours"
             className="bg-[#2D2D2D] border-white/10 text-white placeholder-white/40 focus:border-white/50 focus:ring-1 focus:ring-white/30 transition-all w-full"
             required
           />
@@ -161,12 +308,12 @@ function PackageForm({
       </div>
 
       <div className="space-y-2">
-        <Label className="text-sm font-medium text-white/80">Description</Label>
+        <Label className="text-sm font-medium text-white/80">Description <span className="text-red-500">*</span></Label>
         <Textarea
           name="description"
           value={formData.description || ''}
           onChange={handleChange}
-          placeholder="Briefly describe what clients will receive in this package"
+          placeholder="Personalized cricket coaching with drills, footwork, and technique refinement"
           className="bg-[#2A2A2A] border-white/10 text-white placeholder-white/40 focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 transition-all min-h-[100px] rounded-lg"
           required
         />
@@ -183,9 +330,8 @@ function PackageForm({
               <Input
                 value={feature}
                 onChange={(e) => handleFeatureChange(index, e.target.value)}
-                placeholder={`Include key benefit or feature`}
+                placeholder={`Footwork drills`}
                 className="bg-[#2A2A2A] border-white/10 text-white placeholder-white/40 focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 transition-all rounded-lg h-10"
-                required
               />
               <Button
                 type="button"
@@ -261,91 +407,177 @@ interface ServicePackagesProps {
     title: string;
     description: string;
     price: string;
-    type: 'online' | 'in-person';
+    type: 'online' | 'in-person' | 'hybrid';
     deliveryTime: string;
     features: string[];
+    category?: string;
   }>;
 }
 
 export function ServicePackages({ services = [] }: ServicePackagesProps) {
+  const { services: ctxServices, addService, updateService, removeService } = useServices();
   // Convert services to the internal packages format
   const initialPackages = services.length > 0 
     ? services.map(service => ({
         id: service.id,
         name: service.title,
-        price: service.price,
+        // ensure numeric-only price for inputs (strip ₹ and commas)
+        price: (service.price || '').replace(/^₹\s?/, '').replace(/,/g, ''),
         description: service.description,
         features: service.features || [],
         deliveryTime: service.deliveryTime || '',
         popular: false,
-        revisions: '1 revision'
+        revisions: '1 revision',
+        // carry through type and category so dialog defaults are pre-selected
+        type: service.type,
+        category: normalizeCategory(service.category)
       }))
     : [];
 
-  const [packages, setPackages] = useState<ServicePackage[]>(initialPackages.length > 0 ? initialPackages : [
-    {
-      id: "1",
-      name: "AI Consultation",
-      price: "2,500",
-      description: "1-hour consultation to discuss your AI needs and solutions",
-      features: [
-        "Business process analysis",
-        "AI solution recommendations",
-        "Implementation roadmap",
-        "Q&A session"
-      ],
-      deliveryTime: "",
-      revisions: "1 revision"
-    },
-    {
-      id: "2",
-      name: "Process Automation",
-      price: "15,000",
-      description: "Automate repetitive business processes to save time and reduce errors",
-      features: [
-        "Process analysis & mapping",
-        "Automation workflow design",
-        "Basic automation setup",
-        "1 month support"
-      ],
-      popular: true,
-      deliveryTime: "1-2 weeks",
-      revisions: "2 revisions"
-    },
-    {
-      id: "3",
-      name: "Custom AI Agent",
-      price: "25,000",
-      description: "Custom AI agent development tailored to your specific needs",
-      features: [
-        "Requirement analysis",
-        "Custom development",
-        "Testing & deployment",
-        "1 month support"
-      ],
-      deliveryTime: "2-3 weeks",
-      revisions: "3 revisions"
-    },
-    {
-      id: "4",
-      name: "AI Maintenance",
-      price: "10,000/month",
-      description: "Ongoing maintenance and support for your AI solutions",
-      features: [
-        "Monthly system checks",
-        "Performance optimization",
-        "Bug fixes & updates",
-        "Priority support"
-      ],
-      deliveryTime: "Ongoing",
-      revisions: "Unlimited"
+  // Load packages from localStorage or use defaults
+  const [packages, setPackages] = useState<ServicePackage[]>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('userPackages');
+      if (saved) {
+        try {
+          const parsedPackages = JSON.parse(saved);
+          return parsedPackages;
+        } catch (error) {
+          console.error('Failed to parse saved packages:', error);
+        }
+      }
     }
-  ]);
+
+    // Fallback to initial packages or defaults
+    return initialPackages.length > 0 ? initialPackages : [
+      {
+        id: "1",
+        name: "Net Bowling Sessions",
+        price: "500",
+        description: "Professional net bowling sessions with personalized coaching",
+        features: [
+          "1-hour net session",
+          "Ball analysis",
+          "Technique improvement",
+          "Q&A session"
+        ],
+        deliveryTime: "1 hour",
+        revisions: "1 revision",
+        category: "Net Bowler"
+      },
+      {
+        id: "2",
+        name: "Match Player",
+        price: "1,500",
+        description: "Professional match player ready to play for your team per match",
+        features: [
+          "Full match participation",
+          "Team contribution",
+          "Match commitment",
+          "Performance guarantee"
+        ],
+        deliveryTime: "Per match",
+        revisions: "1 revision",
+        category: "Match Player"
+      },
+      {
+        id: "3",
+        name: "Match Videography",
+        price: "800",
+        description: "Professional match videography and reel content creation during games",
+        features: [
+          "Full match recording",
+          "Highlight reel creation",
+          "Social media content",
+          "Priority editing"
+        ],
+        deliveryTime: "Same day",
+        revisions: "Unlimited",
+        category: "Cricket Photo / Videography"
+      },
+      {
+        id: "4",
+        name: "Sidearm Bowling",
+        price: "1,500",
+        description: "Professional sidearm bowler delivering 140km/h+ speeds for practice sessions",
+        features: [
+          "140km/h+ sidearm bowling",
+          "Practice session delivery",
+          "Consistent speed & accuracy",
+          "Training session support"
+        ],
+        popular: true,
+        deliveryTime: "per hour",
+        revisions: "2 revisions",
+        category: "Sidearm"
+      },
+      {
+        id: "5",
+        name: "Batting Coaching",
+        price: "1,200",
+        description: "Professional batting technique training and skill development",
+        features: [
+          "Batting technique analysis",
+          "Footwork drills",
+          "Shot selection training",
+          "Mental preparation coaching"
+        ],
+        deliveryTime: "per hour",
+        revisions: "2 revisions",
+        category: "Coach"
+      },
+      {
+        id: "6",
+        name: "Performance Analysis",
+        price: "2,000",
+        description: "Comprehensive cricket performance analysis and improvement recommendations",
+        features: [
+          "Match statistics review",
+          "Strength/weakness analysis",
+          "Improvement recommendations",
+          "Progress tracking"
+        ],
+        deliveryTime: "2-3 weeks",
+        revisions: "3 revisions",
+        category: "Analyst"
+      }
+    ];
+  });
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [packageToDelete, setPackageToDelete] = useState<string | null>(null);
   const [editingPackage, setEditingPackage] = useState<ServicePackage | null>(null);
+  const [isFormValid, setIsFormValid] = useState(false);
+
+  // Save packages to localStorage whenever they change
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('userPackages', JSON.stringify(packages));
+    }
+  }, [packages]);
+
+  // Initialize UI packages from ServicesContext if local is empty
+  useEffect(() => {
+    if (packages.length === 0 && Array.isArray(ctxServices) && ctxServices.length > 0) {
+      setPackages(ctxServices.map(mapToUI));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ctxServices]);
+
+  // Propagate UI package changes into ServicesContext (upsert)
+  useEffect(() => {
+    if (!Array.isArray(packages)) return;
+    const mapped = packages.map(mapToCtx);
+    mapped.forEach(svc => {
+      const existing = ctxServices.find(s => s.id === svc.id);
+      if (!existing) {
+        addService(svc);
+      } else {
+        updateService(svc.id, svc);
+      }
+    });
+  }, [packages]);
 
   const handleSavePackage = (pkg: Partial<ServicePackage>) => {
     // Ensure features is always an array and filter out empty strings
@@ -381,7 +613,9 @@ export function ServicePackages({ services = [] }: ServicePackagesProps) {
           features: cleanFeatures,
           deliveryTime: pkg.deliveryTime?.trim() || '',
           popular: Boolean(pkg.popular),
-          revisions: '1 revision'
+          revisions: '1 revision',
+          type: (pkg.type as any) || 'online',
+          category: (pkg.category as any) || ''
         };
         return [...currentPackages, newPackage];
       }
@@ -399,6 +633,8 @@ export function ServicePackages({ services = [] }: ServicePackagesProps) {
   const confirmDelete = () => {
     if (packageToDelete) {
       setPackages(pkgs => pkgs.filter(p => p.id !== packageToDelete));
+      // Also remove from ServicesContext
+      removeService(packageToDelete);
     }
     setIsDeleteDialogOpen(false);
     setPackageToDelete(null);
@@ -438,7 +674,7 @@ export function ServicePackages({ services = [] }: ServicePackagesProps) {
         {packages.map((pkg) => (
           <div 
             key={pkg.id} 
-            className={`relative rounded-xl border ${pkg.popular ? 'border-purple-500/30 ring-1 ring-purple-500/20' : 'border-white/5'} bg-[#1E1E1E] p-6`}
+            className={`relative rounded-xl border ${pkg.popular ? 'border-purple-500/30 ring-1 ring-purple-500/20' : 'border-white/5'} bg-[#1E1E1E] pt-12 pb-6 px-6`}
           >
             <div className="absolute -top-3 right-3">
               <button
@@ -454,14 +690,13 @@ export function ServicePackages({ services = [] }: ServicePackagesProps) {
               </button>
             </div>
             
-            {pkg.popular && (
-              <div className="absolute -top-3 left-3">
-                <Badge className="bg-gradient-to-r from-purple-600 to-purple-800 text-white px-3 py-1 text-xs font-medium">
-                  <Star className="h-3 w-3 mr-1" />
-                  Most Popular
+            <div className="absolute top-3 left-3">
+              {pkg.category && (
+                <Badge className="bg-white/10 text-white/80 border-white/20 px-2 py-0.5 text-xs">
+                  {pkg.category}
                 </Badge>
-              </div>
-            )}
+              )}
+            </div>
             
             <div className="text-center">
               <h3 className="text-lg font-semibold text-white">{pkg.name}</h3>
@@ -470,11 +705,7 @@ export function ServicePackages({ services = [] }: ServicePackagesProps) {
                   <p className="text-2xl font-bold text-white">
                     ₹{pkg.price.replace(/^₹/, '')}
                   </p>
-                  <span className="text-sm font-normal text-white/60">/gig</span>
-                </div>
-                <div className="flex items-center justify-center text-xs text-white/60 mt-1.5">
-                  <Clock className="h-3 w-3 mr-1" />
-                  <span>{pkg.deliveryTime}</span>
+                  <span className="text-sm font-normal text-white/60">/ {pkg.deliveryTime}</span>
                 </div>
               </div>
               <p className="mt-2 text-sm text-white/60">{pkg.description}</p>
@@ -522,7 +753,7 @@ export function ServicePackages({ services = [] }: ServicePackagesProps) {
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent className="w-[320px] bg-[#1E1E1E] border-white/10 rounded-xl overflow-hidden p-0">
+        <DialogContent aria-describedby={undefined} className="w-[320px] bg-[#1E1E1E] border-white/10 rounded-xl overflow-hidden p-0">
           <div className="p-5 text-center">
             <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-red-500/10 mb-3">
               <Trash2 className="h-4 w-4 text-red-500" />
@@ -556,7 +787,7 @@ export function ServicePackages({ services = [] }: ServicePackagesProps) {
 
       {/* Add/Edit Package Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[600px] w-[calc(100%-2rem)] max-h-[90vh] flex flex-col p-0 bg-[#1E1E1E] border-0 rounded-xl shadow-xl overflow-hidden">
+        <DialogContent aria-describedby={undefined} className="sm:max-w-[600px] w-[calc(100%-2rem)] max-h-[90vh] flex flex-col p-0 bg-[#1E1E1E] border-0 rounded-xl shadow-xl overflow-hidden">
           {/* Header */}
           <div className="border-b border-white/10 bg-[#1E1E1E] px-5 py-3">
             <DialogHeader className="space-y-0.5">
@@ -575,6 +806,7 @@ export function ServicePackages({ services = [] }: ServicePackagesProps) {
               initialData={editingPackage || undefined}
               onSave={handleSavePackage}
               onCancel={() => setIsDialogOpen(false)}
+              onValidationChange={setIsFormValid}
               hideActions={true}
             />
           </div>
@@ -596,7 +828,8 @@ export function ServicePackages({ services = [] }: ServicePackagesProps) {
                   const form = document.querySelector('form');
                   if (form) form.requestSubmit();
                 }}
-                className="h-10 px-8 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-700 hover:to-purple-600 shadow-md hover:shadow-purple-500/30 transition-all"
+                disabled={!isFormValid}
+                className="h-10 px-8 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-700 hover:to-purple-600 shadow-md hover:shadow-purple-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {editingPackage ? 'Update Package' : 'Create Package'}
               </Button>

@@ -23,6 +23,11 @@ export const sidebarCategories = [
     id: 'media',
     name: ['Media &', 'Content'],
     icon: '📷'
+  },
+  {
+    id: 'other',
+    name: ['Other', 'Services'],
+    icon: '🔧'
   }
 ]
 
@@ -67,7 +72,7 @@ export const serviceItems = [
     description: 'Sidearm specialists for realistic bowling simulation'
   },
 
-  // Coaching & Training (3)
+  // Coaching & Training (2)
   {
     id: 'coach',
     name: 'Coach',
@@ -79,22 +84,13 @@ export const serviceItems = [
     description: 'Professional cricket coaches for all skill levels'
   },
   {
-    id: 'sports-conditioning-trainer',
-    name: 'Sports Conditioning Trainer',
+    id: 'trainer',
+    name: 'Trainer',
     category: 'coaching',
-    providerCount: 28,
-    image: '/images/Bowler & batsman.png',
+    providerCount: 60,
+    image: '/images/categories/sports-fitness.jpg',
     icon: '💪',
-    description: 'Specialized trainers for cricket-specific conditioning'
-  },
-  {
-    id: 'fitness-trainer',
-    name: 'Fitness Trainer',
-    category: 'coaching',
-    providerCount: 32,
-    image: '/images/Bowler & batsman.png',
-    icon: '🏃‍♂️',
-    description: 'General fitness trainers with cricket expertise'
+    description: 'Sports conditioning and fitness trainers specialized for cricket'
   },
 
   // Support Staff (4)
@@ -160,9 +156,18 @@ export const serviceItems = [
     name: 'Commentator',
     category: 'media',
     providerCount: 16,
-    image: '/images/Bowler & batsman.png',
+    image: '/images/live events.jpeg',
     icon: '🎤',
     description: 'Professional cricket commentators for matches and events'
+  },
+  {
+    id: 'other',
+    name: 'Other',
+    category: 'other',
+    providerCount: 5,
+    image: '/images/Bowler & batsman.png',
+    icon: '🔧',
+    description: 'Other cricket-related services and specializations'
   }
 ]
 

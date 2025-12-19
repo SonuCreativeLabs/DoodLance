@@ -5,6 +5,21 @@ import prisma from '@/lib/db'
 const generateMockJob = (jobId: string) => {
   // Map specific job IDs to their correct mock data
   const jobIdMap: {[key: string]: any} = {
+    'DLCS0001': {
+      title: 'Cricket Scorer for Local Tournament',
+      category: 'Scorer',
+      description: 'Need an experienced cricket scorer for our weekend local tournament. Must be familiar with digital scoring systems and cricket statistics.',
+      skills: ['Cricket Scorer', 'Digital Scoring', 'Cricket Statistics', 'Match Analysis'],
+      location: 'Chennai Cricket Ground, Chennai',
+      payment: 5000,
+      client: {
+        name: 'Chennai Local Cricket League',
+        image: '/images/LOGOS/local_league.jpg',
+        rating: 4.6,
+        jobsCompleted: 15,
+        seed: 'LocalLeague'
+      }
+    },
     'DLCP1357': {
       title: 'Sports Physiotherapy — Injury Prevention Program',
       category: 'OTHER',

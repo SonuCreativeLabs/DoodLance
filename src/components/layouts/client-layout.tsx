@@ -7,6 +7,7 @@ import { Home } from "lucide-react"
 import { useRouter, usePathname } from "next/navigation"
 import { ChatViewProvider } from "@/contexts/ChatViewContext"
 import { useNavbar } from "@/contexts/NavbarContext"
+import { useRoleSwitch } from "@/contexts/RoleSwitchContext"
 
 interface ClientLayoutProps {
   children: ReactNode
@@ -16,9 +17,10 @@ interface ClientLayoutProps {
 export default function ClientLayout({ children, className }: ClientLayoutProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const { switchRole } = useRoleSwitch();
 
   const handleSwitchToFreelancer = () => {
-    router.push('/freelancer');
+    switchRole('freelancer');
   };
 
   const { isNavbarVisible } = useNavbar();
@@ -67,7 +69,7 @@ export default function ClientLayout({ children, className }: ClientLayoutProps)
               </Link>
 
               <Link 
-                href="/client/nearby/integrated-explore" 
+                href="/client/nearby/hirefeed" 
                 className="flex flex-col items-center justify-center"
               >
                 <div className={cn(

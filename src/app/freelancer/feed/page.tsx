@@ -17,16 +17,19 @@ const MapView = dynamic(() => import('./components/MapViewComponent'), {
 
 import ProfessionalsFeed from './components/ProfessionalsFeed';
 import SearchFilters from './components/SearchFilters';
+import { useSkills } from '@/contexts/SkillsContext';
+import { useForYouJobs } from '@/contexts/ForYouJobsContext';
 
-
-
-import { jobs } from './data/jobs';
+// Re-import mock jobs for reference
+import { jobs as mockJobs } from './data/jobs';
 import type { Job, WorkMode } from './types';
 
 export default function FeedPage() {
   // Sheet and UI state
   const [isSheetCollapsed, setIsSheetCollapsed] = useState(false);
   const router = useRouter();
+  const { skills } = useSkills();
+  const { forYouJobs } = useForYouJobs();
   // UI State
   const [isDragging, setIsDragging] = useState(false);
   const [isDragTextVisible, setIsDragTextVisible] = useState(true);
@@ -36,6 +39,7 @@ export default function FeedPage() {
   
   // Data State
   const [selectedCategory, setSelectedCategory] = useState('For You');
+  const [allJobs, setAllJobs] = useState<Job[]>([]); // Store all jobs fetched from API
   // Define JobWithCoordinates type that matches the MapView component's expectations
   type JobWithCoordinates = {
     // Required properties from Job
@@ -48,7 +52,7 @@ export default function FeedPage() {
     priceUnit: string;
     location: string;
     skills: string[];
-    workMode: 'remote' | 'onsite' | 'hybrid';
+    workMode: 'remote' | 'onsite' | 'all';
     type: 'freelance' | 'part-time' | 'full-time' | 'contract';
     postedAt: string;
     company: string;
@@ -69,6 +73,22 @@ export default function FeedPage() {
     [key: string]: any;
   }
   const [filteredJobs, setFilteredJobs] = useState<JobWithCoordinates[]>([]);
+  const [appliedJobIds, setAppliedJobIds] = useState<Set<string>>(new Set());
+  
+  // Fetch applied job IDs
+  const fetchAppliedStatus = async () => {
+    const { getAppliedJobIds } = await import('@/components/freelancer/jobs/mock-data');
+    const ids = await getAppliedJobIds();
+    setAppliedJobIds(new Set(ids));
+  };
+
+  useEffect(() => {
+    fetchAppliedStatus();
+    
+    const handleAppCreated = () => fetchAppliedStatus();
+    window.addEventListener('applicationCreated', handleAppCreated);
+    return () => window.removeEventListener('applicationCreated', handleAppCreated);
+  }, []);
   
   // State for filters
   const [location, setLocation] = useState<string>('Chennai, Tamil Nadu, India');
@@ -77,7 +97,6 @@ export default function FeedPage() {
   // Price range in INR per hour (aligned with job.rate values)
   const [priceRange, setPriceRange] = useState<[number, number]>([500, 2500]);
   const [distance, setDistance] = useState<number>(50);
-  const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [currentLocation, setCurrentLocation] = useState('Getting location...');
 
   // Function to reverse geocode coordinates to address
@@ -183,21 +202,17 @@ export default function FeedPage() {
     setLocation('Current Location');
     setServiceCategory('all');
     setWorkMode('');
-    setPriceRange([0, 1000]);
+    setPriceRange([0, 10000]);
     setDistance(50);
-    setSelectedSkills([]);
     setFiltersApplied(false);
   };
-
-  // User's skills for personalized job matching - from profile data
-  const userSkills = ['RH Batsman', 'Sidearm Specialist', 'Off Spin', 'Coach', 'Analyst', 'Mystery Spin'];
 
   // Filter jobs based on selected tab and filters
   const filterJobs = async (): Promise<JobWithCoordinates[]> => {
     console.log('\n=== Starting job filtering ===');
     
     // Start with all jobs and ensure they have coordinates
-    let filtered = jobs.map(job => {
+    let filtered = allJobs.map(job => {
       // Check if job has coordinates in any form
       let coords: [number, number];
       
@@ -227,7 +242,7 @@ export default function FeedPage() {
         priceUnit: job.priceUnit ?? 'project',
         location: job.location ?? 'Chennai, India',
         skills: Array.isArray(job.skills) ? job.skills : [],
-        workMode: (job.workMode === 'remote' || job.workMode === 'onsite' || job.workMode === 'hybrid') 
+        workMode: (job.workMode === 'remote' || job.workMode === 'onsite') 
           ? job.workMode 
           : 'onsite',
         type: (job.type === 'freelance' || job.type === 'part-time' || job.type === 'full-time' || job.type === 'contract')
@@ -243,10 +258,7 @@ export default function FeedPage() {
           : 0,
         clientJobs: typeof job.clientJobs === 'number' ? job.clientJobs : 0,
         proposals: typeof job.proposals === 'number' ? job.proposals : 0,
-        duration: (job.duration === 'hourly' || job.duration === 'daily' || job.duration === 'weekly' || 
-                 job.duration === 'monthly' || job.duration === 'one-time')
-          ? job.duration
-          : 'one-time',
+        duration: job.duration || 'one-time',
         experience: (job.experience === 'Entry Level' || job.experience === 'Intermediate' || job.experience === 'Expert')
           ? job.experience
           : 'Intermediate',
@@ -256,154 +268,176 @@ export default function FeedPage() {
       return jobWithCoords;
     });
     
-    // For "For You" tab - filter jobs based on user's skills
+    // For "For You" tab - use the shared forYouJobs from context
     if (selectedCategory === 'For You') {
       console.log('SELECTED CATEGORY:', selectedCategory);
-      console.log('Filtering jobs for user skills:', userSkills);
-    console.log('Total jobs before filtering:', filtered.length);
-    console.log('First job skills:', filtered[0]?.skills);
-      
-      filtered = filtered.filter(job => {
-        // Combine job title, description, category, and skills into a single searchable string
-        const jobText = [
-          job.title || '',
-          job.description || '',
-          job.category || '',
-          ...(job.skills || [])
-        ].join(' ').toLowerCase();
+      console.log('Using shared forYouJobs from context:', forYouJobs.length);
+
+      // Convert forYouJobs to JobWithCoordinates format
+      const forYouJobsWithCoords = forYouJobs.map(job => {
+        // Check if job has coordinates in any form
+        let coords: [number, number];
         
-        // Check if any of the user's skills match the job
-        const hasMatchingSkill = userSkills.some(skill => 
-          jobText.includes(skill.toLowerCase())
-        );
-        
-        if (!hasMatchingSkill) {
-          console.log(`Filtered out job - no matching skills: ${job.title}`);
-          return false;
+        // First check for coords array
+        if (Array.isArray(job.coords) && job.coords.length === 2) {
+          coords = [job.coords[0], job.coords[1]] as [number, number];
+        } 
+        // If no coordinates found, use default (Chennai)
+        else {
+          coords = [80.2707, 13.0827];
         }
         
-        console.log(`Including job - matched user skill: ${job.title}`);
-        return true;
-        
-        // Shouldn't reach here if our category filtering is working
-        console.log(`Unexpected job category: ${job.category} - ${job.title}`);
-        return false;
+        return {
+          ...job,
+          coordinates: coords,
+          coords: coords,
+        } as JobWithCoordinates;
       });
-      
-      console.log(`For You tab: Found ${filtered.length} jobs matching your skills (${userSkills.join(', ')})`);
-      
+
+      filtered = forYouJobsWithCoords;
+      console.log(`For You tab: Found ${filtered.length} jobs from shared context`);
+
       // Apply search query if one exists
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
-        filtered = filtered.filter(job => 
+        filtered = filtered.filter(job =>
           job.title.toLowerCase().includes(query) ||
           job.description.toLowerCase().includes(query) ||
           job.category.toLowerCase().includes(query) ||
-          (job.skills && job.skills.some(skill => 
+          (job.skills && job.skills.some(skill =>
             skill.toLowerCase().includes(query)
           ))
         );
         console.log(`After search (${searchQuery}): ${filtered.length} jobs remaining`);
       }
-      
-      // Filter out jobs user has already applied to
-      const { hasUserAppliedToJob } = await import('@/components/freelancer/jobs/mock-data');
-      filtered = filtered.filter(job => !hasUserAppliedToJob(job.id));
-      
-      // If no jobs found, suggest searching in the Explore tab
-      if (filtered.length === 0) {
-        console.log('No jobs found matching your criteria. Try adjusting your search or check the Explore tab for more options.');
-      }
+
+      return filtered;
     }
     
     // For Explore tab - show all jobs by default, apply filters only if explicitly set
     if (selectedCategory === 'Explore') {
       console.log('SELECTED CATEGORY: Explore - showing all jobs');
-      let filtersApplied = false;
-      const appliedFilters: Record<string, string> = {};
+      console.log(`Total jobs shown: ${filtered.length}`);
+    
+      // Apply filters if any are set
+      if (filtersApplied) {
+        console.log('Applying filters to Explore tab...');
+        
+        // Filter by service category
+        if (serviceCategory && serviceCategory !== 'all') {
+          const categoryKey = serviceCategory.toLowerCase().replace(/\s*\/\s*/g, '-').replace(/\s+/g, '-');
+          filtered = filtered.filter(job => {
+            const jobCategoryKey = job.category.toLowerCase().replace(/\s*\/\s*/g, '-').replace(/\s+/g, '-');
+            return jobCategoryKey === categoryKey || job.category.toLowerCase().includes(serviceCategory.toLowerCase());
+          });
+          console.log(`After category filter (${serviceCategory}): ${filtered.length} jobs`);
+        }
+        
+        // Filter by work mode (skip if 'all' is selected)
+        if (workMode && workMode !== 'all') {
+          filtered = filtered.filter(job => job.workMode === workMode);
+          console.log(`After work mode filter (${workMode}): ${filtered.length} jobs`);
+        }
+        
+        // Filter by price range
+        if (priceRange && priceRange[0] !== 0 && priceRange[1] !== 10000) {
+          filtered = filtered.filter(job => {
+            const jobPrice = job.rate || job.budget || 0;
+            return jobPrice >= priceRange[0] && jobPrice <= priceRange[1];
+          });
+          console.log(`After price range filter (₹${priceRange[0]} - ₹${priceRange[1]}): ${filtered.length} jobs`);
+        }
+        
+        // Filter by location (basic text match for now)
+        if (location && location !== 'Current Location' && location !== 'Chennai, India') {
+          const locationQuery = location.toLowerCase();
+          filtered = filtered.filter(job => 
+            job.location.toLowerCase().includes(locationQuery) ||
+            job.title.toLowerCase().includes(locationQuery) ||
+            job.description.toLowerCase().includes(locationQuery)
+          );
+          console.log(`After location filter (${location}): ${filtered.length} jobs`);
+        }
+        
+        // Filter by distance (basic implementation - could be improved with actual distance calculation)
+        if (distance && distance < 100) {
+          // For now, just keep all jobs since we don't have proper distance calculation
+          // This could be enhanced with actual geographic distance calculations
+          console.log(`Distance filter (${distance}km) - not implemented yet`);
+        }
+        
+        console.log(`Explore tab with filters applied: ${filtered.length} jobs`);
+      } else {
+        console.log(`Explore tab without filters: ${filtered.length} jobs`);
+      }
 
-      // Only apply search if user has typed something
+      // Apply search query if one exists (same logic as For You tab)
       if (searchQuery) {
-        filtersApplied = true;
-        appliedFilters.searchQuery = searchQuery;
         const query = searchQuery.toLowerCase();
-        filtered = filtered.filter(job => 
+        filtered = filtered.filter(job =>
           job.title.toLowerCase().includes(query) ||
           job.description.toLowerCase().includes(query) ||
           job.category.toLowerCase().includes(query) ||
-          (job.skills && job.skills.some(skill => 
+          (job.skills && job.skills.some(skill =>
             skill.toLowerCase().includes(query)
           ))
         );
+        console.log(`After search (${searchQuery}): ${filtered.length} jobs remaining`);
       }
-      
-      // Only apply location filter if user has selected a location other than Chennai
-      if (location && !location.toLowerCase().includes('chennai')) {
-        filtersApplied = true;
-        appliedFilters.location = location;
-        const locality = location.split(',')[0].trim().toLowerCase();
-        filtered = filtered.filter(job => {
-          if (!job.location) return false; // Don't show jobs without location when filtering by location
-          return job.location.toLowerCase().includes(locality);
-        });
-      }
-      
-      // Only apply category filter if user has selected a specific category
-      if (serviceCategory !== 'all') {
-        filtersApplied = true;
-        appliedFilters.category = serviceCategory;
-        filtered = filtered.filter(job => job.category === serviceCategory);
-      }
-      
-      // Only apply work mode filter if user has selected one
-      if (workMode) {
-        filtersApplied = true;
-        appliedFilters.workMode = workMode;
-        filtered = filtered.filter(job => job.workMode === workMode);
-      }
-      
-      // Only apply skills filter if user has selected skills
-      if (selectedSkills.length > 0) {
-        filtersApplied = true;
-        appliedFilters.skills = selectedSkills.join(', ');
-        filtered = filtered.filter(job =>
-          selectedSkills.every(skill => 
-            job.skills.some(jobSkill => 
-              jobSkill.toLowerCase().includes(skill.toLowerCase())
-            )
-          )
-        );
-      }
-      
-      // Only apply price range filter if user has changed it
-      if (priceRange[0] !== 500 || priceRange[1] !== 2500) {
-        filtersApplied = true;
-        appliedFilters.priceRange = `₹${priceRange[0]}-₹${priceRange[1]}`;
-        filtered = filtered.filter(job => 
-          job.rate >= priceRange[0] && job.rate <= priceRange[1]
-        );
-      }
-      
-      if (filtersApplied) {
-        console.log('Explore tab: Filters applied:', appliedFilters);
-      } else {
-        console.log('Explore tab: Showing all jobs (no filters applied)');
-      }
-      console.log(`Total jobs shown: ${filtered.length}`);
-    }
     
-    // Filter out jobs user has already applied to (applies to all tabs)
+      // Filter out jobs user has already applied to (applies to all tabs)
+      const { hasUserAppliedToJob } = await import('@/components/freelancer/jobs/mock-data');
+      filtered = filtered.filter(job => !hasUserAppliedToJob(job.id));
+    
+      return filtered;
+    }
+
+    // Default case - filter out applied jobs and return
     const { hasUserAppliedToJob } = await import('@/components/freelancer/jobs/mock-data');
     filtered = filtered.filter(job => !hasUserAppliedToJob(job.id));
     
     return filtered;
   };
 
-  // Initialize with all jobs on mount
+  // Fetch all jobs from API on component mount
+  useEffect(() => {
+    const fetchJobs = async () => {
+      try {
+        const response = await fetch('/api/jobs');
+        let apiJobs: Job[] = [];
+        
+        if (response.ok) {
+          apiJobs = await response.json();
+        } else {
+          console.error('Failed to fetch API jobs:', response.statusText);
+        }
+
+        // Combine API jobs with mock jobs, avoiding duplicates by ID
+        const combinedJobs = [...mockJobs];
+        
+        // Add API jobs that don't already exist in mock jobs
+        apiJobs.forEach(apiJob => {
+          if (!combinedJobs.some(mockJob => mockJob.id === apiJob.id)) {
+            combinedJobs.push(apiJob);
+          }
+        });
+
+        console.log(`Loaded ${apiJobs.length} API jobs and ${mockJobs.length} mock jobs, total: ${combinedJobs.length}`);
+        setAllJobs(combinedJobs);
+      } catch (error) {
+        console.error('Error fetching jobs:', error);
+        // Fallback to mock jobs only
+        setAllJobs(mockJobs);
+      }
+    };
+
+    fetchJobs();
+  }, []);
+
   useEffect(() => {
     const initializeJobs = async () => {
       // Ensure all jobs have coordinates before setting the state
-      const jobsWithCoords = jobs.map(job => {
+      const jobsWithCoords = allJobs.map((job: Job) => {
         // Check if job has coordinates in any form
         let coords: [number, number];
         
@@ -433,7 +467,7 @@ export default function FeedPage() {
           priceUnit: job.priceUnit ?? 'project',
           location: job.location ?? 'Chennai, India',
           skills: Array.isArray(job.skills) ? job.skills : [],
-          workMode: (job.workMode === 'remote' || job.workMode === 'onsite' || job.workMode === 'hybrid') 
+          workMode: (job.workMode === 'remote' || job.workMode === 'onsite') 
             ? job.workMode 
             : 'onsite',
           type: (job.type === 'freelance' || job.type === 'part-time' || job.type === 'full-time' || job.type === 'contract')
@@ -449,10 +483,7 @@ export default function FeedPage() {
             : 0,
           clientJobs: typeof job.clientJobs === 'number' ? job.clientJobs : 0,
           proposals: typeof job.proposals === 'number' ? job.proposals : 0,
-          duration: (job.duration === 'hourly' || job.duration === 'daily' || job.duration === 'weekly' || 
-                   job.duration === 'monthly' || job.duration === 'one-time')
-            ? job.duration
-            : 'one-time',
+          duration: job.duration || 'one-time',
           experience: (job.experience === 'Entry Level' || job.experience === 'Intermediate' || job.experience === 'Expert')
             ? job.experience
             : 'Intermediate',
@@ -468,7 +499,28 @@ export default function FeedPage() {
     };
 
     initializeJobs();
-  }, [jobs]);
+  }, [allJobs]);
+
+  // Re-filter jobs when category changes or forYouJobs updates
+  useEffect(() => {
+    const reFilterJobs = async () => {
+      const filtered = await filterJobs();
+      setFilteredJobs(filtered);
+    };
+
+    reFilterJobs();
+  }, [selectedCategory, searchQuery, forYouJobs]);
+
+  // Re-filter jobs when filters are applied or filter values change
+  useEffect(() => {
+    if (filtersApplied || selectedCategory === 'Explore') {
+      const reFilterJobs = async () => {
+        const filtered = await filterJobs();
+        setFilteredJobs(filtered);
+      };
+      reFilterJobs();
+    }
+  }, [filtersApplied, serviceCategory, workMode, priceRange, location, distance]);
 
   const handleApply = async (jobId: string, proposal: string, rate: string, rateType: string, attachments: File[]) => {
     try {
@@ -480,9 +532,8 @@ export default function FeedPage() {
       if (newApplication) {
         console.log('Application submitted successfully:', newApplication["#"]);
 
-        // Debug: Check current applications count
-        const { mockApplications } = await import('@/components/freelancer/jobs/mock-data');
-        console.log('Total applications after creation:', mockApplications.length);
+        // Dispatch event to refresh ForYouJobs context
+        window.dispatchEvent(new CustomEvent('applicationCreated', { detail: { jobId } }));
 
         // Show success message
         alert('Application submitted successfully!');
@@ -516,30 +567,33 @@ export default function FeedPage() {
         setDistance={setDistance}
         filtersApplied={filtersApplied}
         currentLocation={currentLocation}
-        selectedSkills={selectedSkills}
-        setSelectedSkills={setSelectedSkills}
         clearFilters={clearAllFilters}
         applyFilters={applyFilters}
       />
 
       {/* Map View */}
       <div className="absolute inset-0 z-0">
-        <MapView jobs={filteredJobs} selectedCategory={selectedCategory} />
+        <MapView 
+          jobs={filteredJobs} 
+          selectedCategory={selectedCategory} 
+          onApply={handleApply} 
+          appliedJobIds={appliedJobIds}
+        />
       </div>
 
       {/* Header - Fixed height to account for search and tabs */}
-      <div className={`fixed top-0 left-0 right-0 z-10 px-4 pt-4 pb-0 transition-all duration-300 h-[120px] flex flex-col justify-between bg-[#121212] ${
+      <div className={`fixed top-0 left-0 right-0 z-10 px-4 pt-4 pb-0 transition-all duration-300 h-[120px] flex flex-col justify-start bg-[#121212] ${
         isSheetCollapsed ? 'bg-transparent' : 'bg-[#121212]'
       }`}>
         {/* Search Bar */}
-        <div className="flex items-center mb-3">
+        <div className="flex items-center mb-1">
           <div className="relative w-full">
             <input
               type="text"
               placeholder="Search jobs..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-black/60 backdrop-blur-md text-white text-sm px-4 py-2.5 pl-10 pr-4 rounded-full border border-white/10 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className="w-full bg-black/30 backdrop-blur-md text-white text-sm px-4 py-2.5 pl-10 pr-4 rounded-full border border-white/10 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent placeholder-white/70"
             />
             <svg className="w-3.5 h-3.5 text-white/60 absolute left-3 top-1/2 transform -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -555,30 +609,30 @@ export default function FeedPage() {
             <div className="flex items-center space-x-3">
               {/* For You Tab */}
               <button
-                className={`px-5 py-2 text-sm font-medium rounded whitespace-nowrap transition-all duration-200 flex items-center space-x-2 h-10
-                  backdrop-blur-sm border transform ${
+                className={`px-4 py-1.5 text-sm font-medium rounded whitespace-nowrap transition-all duration-200 flex items-center space-x-2 h-8
+                  backdrop-blur-sm border transform scale-100 ${
                     selectedCategory === 'For You'
-                      ? 'bg-gradient-to-r from-purple-600/90 to-purple-500/90 text-white border-purple-500/30 shadow-lg shadow-purple-500/20 scale-100'
-                      : 'bg-black/30 text-white/90 border-white/5 scale-95'
+                      ? 'bg-gradient-to-r from-purple-600/90 to-purple-500/90 text-white border-purple-500/30 shadow-lg shadow-purple-500/20'
+                      : 'bg-black/30 text-white/90 border-white/5'
                   }`}
                 onClick={() => setSelectedCategory('For You')}
               >
-                <Sparkles className="w-3.5 h-3.5" />
+                <Sparkles className="w-3 h-3" />
                 <span className="font-medium">For You</span>
               </button>
               
               {/* Explore All Tab */}
               <div className="relative flex items-center">
                 <button
-                  className={`px-5 py-2 text-sm font-medium rounded whitespace-nowrap transition-all duration-200 flex items-center space-x-2 h-10
-                    backdrop-blur-sm border transform ${
+                  className={`px-4 py-1.5 text-sm font-medium rounded whitespace-nowrap transition-all duration-200 flex items-center space-x-2 h-8
+                    backdrop-blur-sm border transform scale-100 ${
                       selectedCategory === 'Explore'
-                        ? 'bg-gradient-to-r from-purple-600/90 to-purple-500/90 text-white border-purple-500/30 shadow-lg shadow-purple-500/20 scale-100'
-                        : 'bg-black/30 text-white/90 border-white/5 scale-95'
+                        ? 'bg-gradient-to-r from-purple-600/90 to-purple-500/90 text-white border-purple-500/30 shadow-lg shadow-purple-500/20'
+                        : 'bg-black/30 text-white/90 border-white/5'
                     }`}
                   onClick={() => setSelectedCategory('Explore')}
                 >
-                  <Compass className="w-3.5 h-3.5" strokeWidth={1.5} />
+                  <Compass className="w-3 h-3" strokeWidth={1.5} />
                   <span className="font-medium">Explore All</span>
                 </button>
                 
@@ -598,14 +652,14 @@ export default function FeedPage() {
                       e.stopPropagation();
                       setShowFilterModal(true);
                     }}
-                    className={`w-9 h-9 flex items-center justify-center rounded-full backdrop-blur-sm transition-all duration-300 border ${
+                    className={`w-8 h-8 flex items-center justify-center rounded-full backdrop-blur-sm transition-all duration-300 border ${
                       filtersApplied 
                         ? 'bg-gradient-to-r from-purple-600/90 to-purple-500/90 border-purple-500/30 shadow-lg shadow-purple-500/10'
                         : 'bg-black/30 border-white/10 hover:border-white/20'
                     }`}
                   >
                     <svg 
-                      className={`w-5 h-5 ${filtersApplied ? 'text-white' : 'text-white/90'}`} 
+                      className={`w-4 h-4 ${filtersApplied ? 'text-white' : 'text-white/90'}`} 
                       fill="none" 
                       viewBox="0 0 24 24" 
                       stroke="currentColor"
@@ -684,7 +738,7 @@ export default function FeedPage() {
       >
         {/* Drag handle */}
         <div 
-          className="flex flex-col items-center pt-3 pb-2 cursor-grab active:cursor-grabbing touch-none select-none bg-[#121212]"
+          className="flex flex-col items-center pt-1 pb-2 cursor-grab active:cursor-grabbing touch-none select-none bg-[#121212]"
           style={{ touchAction: 'none' }}
           onPointerDown={() => setIsDragTextVisible(false)}
           onPointerUp={() => resetDragTextVisibility()}
@@ -705,7 +759,11 @@ export default function FeedPage() {
           <div className="container max-w-2xl mx-auto px-0 pb-6">
             {/* Jobs list */}
             <div className="space-y-2 px-4">
-              <ProfessionalsFeed jobs={filteredJobs} onApply={handleApply} />
+              <ProfessionalsFeed 
+                jobs={filteredJobs} 
+                onApply={handleApply} 
+                appliedJobIds={appliedJobIds}
+              />
             </div>
           </div>
         </div>

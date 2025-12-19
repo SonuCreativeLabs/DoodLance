@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, forwardRef, useImperativeHandle } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
@@ -10,9 +10,39 @@ interface MapViewProps {
   professionals?: any[];
 }
 
-export default function MapView({ professionals: propProfessionals }: MapViewProps) {
+interface MapViewRef {
+  openPin: (pinId: string) => void;
+}
+
+const MapView = forwardRef<MapViewRef, MapViewProps>(({ professionals: propProfessionals }, ref) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
+  const markersRef = useRef<Map<string, { marker: mapboxgl.Marker; popup: mapboxgl.Popup }>>(new Map());
+
+  useImperativeHandle(ref, () => ({
+    openPin: (pinId: string) => {
+      const markerData = markersRef.current.get(pinId);
+      if (markerData) {
+        // Close all other popups
+        markersRef.current.forEach((data, id) => {
+          if (id !== pinId) {
+            data.popup.remove();
+          }
+        });
+        
+        // Open the specific popup
+        markerData.popup.addTo((markerData.marker as any).getMap()!);
+        
+        // Center map on the marker
+        const map = (markerData.marker as any).getMap()!;
+        map.flyTo({
+          center: markerData.marker.getLngLat(),
+          zoom: 15,
+          duration: 1000
+        });
+      }
+    }
+  }));
 
   // Function to calculate center of professionals
   const calculateCenter = (professionals: any[]) => {
@@ -192,8 +222,19 @@ export default function MapView({ professionals: propProfessionals }: MapViewPro
       });
     });
 
+    // Clear existing markers
+    markersRef.current.forEach((markerData) => {
+      markerData.marker.remove();
+      markerData.popup.remove();
+    });
+    markersRef.current.clear();
+
     // Add markers for each professional
-    professionals.forEach((pro: any) => {
+    professionals.forEach((pro: any, index: number) => {
+      const currentIndex = index;
+      const hasNext = currentIndex < professionals.length - 1;
+      const hasPrev = currentIndex > 0;
+      
       // Create a popup with more information
       const popup = new mapboxgl.Popup({
         offset: [0, -2], // Moved 5% down (from -5 to -2)
@@ -203,76 +244,82 @@ export default function MapView({ professionals: propProfessionals }: MapViewPro
         className: 'custom-popup animate-popup',
         anchor: 'bottom'
       }).setHTML(`
-        <div class="bg-[#111111] shadow-lg rounded-xl p-4 border border-white/10 relative backdrop-blur-xl bg-black/80 before:absolute before:inset-0 before:bg-gradient-to-b before:from-purple-500/10 before:to-transparent before:rounded-xl before:pointer-events-none">
-          <!-- Custom Close Button -->
-          <button 
-            class="custom-close-btn absolute top-3 right-3 z-10 w-7 h-7 bg-black/30 hover:bg-white/20 border border-white/10 rounded-full flex items-center justify-center text-white/80 hover:text-white transition-all duration-200 hover:scale-110"
-            onclick="this.closest('.mapboxgl-popup').remove()"
-          >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-          <div class="flex items-start gap-4">
-            <div class="relative flex flex-col items-center w-20">
-              <div class="relative mt-2">
+        <div class="bg-gradient-to-br from-[#111111]/95 to-[#000000]/95 backdrop-blur-sm shadow-lg rounded-2xl p-4 border border-white/10 hover:border-white/20 relative cursor-pointer" style="width: 340px;" onclick="window.location.href='/client/freelancer/${pro.id}?source=map&pinId=${pro.id}'">
+          <!-- Minimal Navigation Arrows -->
+          <div class="flex justify-between items-center mb-2">
+            <button class="nav-btn prev-btn flex items-center justify-center w-6 h-6 rounded-full bg-black/20 hover:bg-black/30 transition-colors text-white/60 hover:text-white ${!hasPrev ? 'opacity-50 cursor-not-allowed' : ''}"
+                    ${!hasPrev ? 'disabled' : ''} data-index="${currentIndex - 1}">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <div class="text-xs font-medium text-white/50">${currentIndex + 1} / ${professionals.length}</div>
+            <button class="nav-btn next-btn flex items-center justify-center w-6 h-6 rounded-full bg-black/20 hover:bg-black/30 transition-colors text-white/60 hover:text-white ${!hasNext ? 'opacity-50 cursor-not-allowed' : ''}"
+                    ${!hasNext ? 'disabled' : ''} data-index="${currentIndex + 1}">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+
+          <!-- Profile Section - List View Style -->
+          <div class="flex items-start gap-4 mb-3">
+            <!-- Left: Avatar with Rating Below -->
+            <div class="flex flex-col items-center">
+              <div class="relative mb-1">
                 <div class="absolute inset-0 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full opacity-20 blur-md"></div>
-                <div class="absolute inset-0 bg-gradient-to-br from-purple-400/50 to-purple-600/50 rounded-full animate-pulse" style="animation-duration: 3s;"></div>
                 <img
                   src="${pro.image}"
                   alt="${pro.name}"
-                  class="w-16 h-16 rounded-full border-2 border-purple-200/50 relative z-10 object-cover shadow-xl ring-2 ring-purple-500/20 ring-offset-2 ring-offset-black/50"
+                  class="relative w-16 h-16 rounded-full border-2 border-purple-200/50 object-cover"
                 />
               </div>
-              <div class="flex flex-col items-center mt-3">
-                <div class="flex items-center gap-1 bg-white/10 rounded-full px-3 py-1 shadow-lg border border-white/5 backdrop-blur-sm">
-                  <svg class="w-3.5 h-3.5 text-yellow-400 fill-current drop-shadow" viewBox="0 0 24 24">
-                    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
-                  </svg>
-                  <span class="text-sm font-bold text-white drop-shadow">${pro.rating}</span>
-                </div>
-                <span class="text-xs text-white/70 mt-1 font-medium drop-shadow">(${pro.reviews} reviews)</span>
+              <div class="flex items-center gap-1 bg-yellow-500/20 rounded px-1.5 py-0.5">
+                <svg class="w-3 h-3 text-yellow-400 fill-current" viewBox="0 0 24 24">
+                  <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                </svg>
+                <span class="text-xs font-bold text-white">${pro.rating}</span>
+              </div>
+              <span class="text-xs text-white/70 mt-0.5">(${pro.reviews} reviews)</span>
+            </div>
+
+            <!-- Right: Info -->
+            <div class="flex-1 space-y-1">
+              <h3 class="text-lg font-bold text-white leading-tight">${pro.name}</h3>
+
+              <div class="flex items-center gap-2 text-white/80">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                <span class="text-sm">${pro.cricketRole || pro.service}</span>
+              </div>
+
+              <div class="flex items-center gap-2 text-white/60">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <span class="text-sm truncate">${pro.location}${pro.distance ? `<span style="opacity: 0.3; margin: 0 4px; font-size: 10px;">|</span>${pro.distance < 1 ? `${(pro.distance * 1000).toFixed(0)}m` : `${pro.distance.toFixed(1)}km`} away` : ''}</span>
+              </div>
+
+              <div class="flex items-center gap-2 text-white/60">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span class="text-sm">${pro.responseTime}</span>
               </div>
             </div>
-            <div class="flex-1">
-              <div class="flex items-center justify-between">
-                <h3 class="font-bold text-lg text-white leading-tight mb-1 drop-shadow-sm">${pro.name}</h3>
-              </div>
-              <div class="flex items-center text-sm text-white/80 mt-1 font-medium">
-                <div class="p-1 rounded-lg bg-purple-500/10 mr-2">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                <span class="drop-shadow-sm">${pro.service}</span>
-              </div>
-              <div class="flex items-center text-sm text-white/60 mt-1">
-                <div class="p-1 rounded-lg bg-purple-500/10 mr-2">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                </div>
-                <span class="drop-shadow-sm">${pro.location}</span>
-              </div>
-              <div class="flex items-center text-sm text-white/60 mt-1">
-                <div class="p-1 rounded-lg bg-purple-500/10 mr-2">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <span class="drop-shadow-sm">${pro.responseTime}</span>
-              </div>
-              <div class="mt-4 flex gap-2">
-                <button class="flex-1 bg-gradient-to-r from-purple-600 via-purple-500 to-purple-400 text-white py-1 px-3 rounded-full text-xs font-medium transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/25 hover:from-purple-700 hover:to-purple-500 relative overflow-hidden group">
-                  <span class="relative z-10">Book Now</span>
-                  <div class="absolute inset-0 bg-gradient-to-r from-purple-400/0 via-purple-400/30 to-purple-400/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
-                </button>
-                <button class="flex-1 bg-gradient-to-r from-purple-600/20 to-purple-400/20 hover:from-purple-600/30 hover:to-purple-400/30 text-purple-100 py-1 px-3 rounded-full text-xs font-medium transition-all duration-300 border border-white/10 hover:border-purple-500/30 hover:shadow-lg hover:shadow-purple-500/10">
-                  View Profile
-                </button>
-              </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="flex items-center justify-between pt-2 border-t border-white/5">
+            <div class="flex items-baseline gap-1">
+              <span class="text-sm text-white/70">From</span>
+              <span class="text-xl font-bold text-white">₹${pro.price}</span>
             </div>
+            <button class="px-4 py-1.5 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white rounded-lg text-xs font-medium transition-all duration-200 shadow-lg" onclick="event.stopPropagation(); window.location.href='/client/freelancer/${pro.id}?source=map&pinId=${pro.id}'">
+              Hire Now
+            </button>
           </div>
         </div>
       `);
@@ -285,6 +332,9 @@ export default function MapView({ professionals: propProfessionals }: MapViewPro
       })
         .setLngLat(pro.coords)
         .addTo(map);
+
+      // Store marker and popup in ref for later access
+      markersRef.current.set(pro.id.toString(), { marker, popup });
 
       // Add click event to show popup
       marker.getElement().addEventListener('click', (e) => {
@@ -300,6 +350,44 @@ export default function MapView({ professionals: propProfessionals }: MapViewPro
         
         // Show new popup
         popup.setLngLat(pro.coords).addTo(map);
+        
+        // Add navigation button event listeners
+        setTimeout(() => {
+          const prevBtn = document.querySelector('.custom-popup .prev-btn');
+          const nextBtn = document.querySelector('.custom-popup .next-btn');
+          
+          if (prevBtn && !prevBtn.hasAttribute('disabled')) {
+            prevBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              const targetIndex = parseInt(prevBtn.getAttribute('data-index') || '0');
+              if (targetIndex >= 0 && targetIndex < professionals.length) {
+                // Remove current popup
+                popup.remove();
+                // Trigger click on the previous marker
+                const markers = document.querySelectorAll('.mapboxgl-marker');
+                if (markers[targetIndex]) {
+                  (markers[targetIndex] as HTMLElement).click();
+                }
+              }
+            });
+          }
+          
+          if (nextBtn && !nextBtn.hasAttribute('disabled')) {
+            nextBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              const targetIndex = parseInt(nextBtn.getAttribute('data-index') || '0');
+              if (targetIndex >= 0 && targetIndex < professionals.length) {
+                // Remove current popup
+                popup.remove();
+                // Trigger click on the next marker
+                const markers = document.querySelectorAll('.mapboxgl-marker');
+                if (markers[targetIndex]) {
+                  (markers[targetIndex] as HTMLElement).click();
+                }
+              }
+            });
+          }
+        }, 100);
         
         // Move map to center on marker
         moveToMarker(pro.coords);
@@ -486,4 +574,8 @@ export default function MapView({ professionals: propProfessionals }: MapViewPro
       style={{ width: '100%', height: '100%', position: 'absolute', top: 0, left: 0, zIndex: 0 }}
     />
   );
-} 
+});
+
+MapView.displayName = 'MapView';
+
+export default MapView; 

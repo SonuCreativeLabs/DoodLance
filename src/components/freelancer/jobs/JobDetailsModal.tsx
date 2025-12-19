@@ -11,11 +11,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 import { calculateJobEarnings, getCategoryDisplayName } from './utils';
 import { Job } from './types';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
 import { ClientProfile } from './ClientProfile';
 import { SuccessMessage } from '@/components/ui/success-message';
 import { CollapsibleTimeline, createTimelineItems } from './CollapsibleTimeline';
+import { getJobDurationLabel, getWorkModeLabel } from '@/app/freelancer/feed/types';
 
 // Experience level mapping for display
 const getExperienceLevelDisplayName = (level: string) => {
@@ -87,11 +86,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
   const [selectedChips, setSelectedChips] = useState<string[]>([]);
   const [isEarningsExpanded, setIsEarningsExpanded] = useState(false);
   const [isClientProfileExpanded, setIsClientProfileExpanded] = useState(false);
-  const [showMap, setShowMap] = useState(false);
-  const mapRef = useRef<HTMLDivElement | null>(null);
-  const mapInstance = useRef<mapboxgl.Map | null>(null);
-  const [mapError, setMapError] = useState<string | null>(null);
-  const [mapLoading, setMapLoading] = useState(false);
+  const [showFreelancerRating, setShowFreelancerRating] = useState(false);
 
   // Success message states
   const [successMessage, setSuccessMessage] = useState<{
@@ -141,85 +136,6 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
       setJobStarted(true);
     }
   }, [job]);
-
-  // Initialize map when showMap changes
-  useEffect(() => {
-    if (!showMap || mapInstance.current || !mapRef.current) return;
-    const token = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
-    if (!token) {
-      setMapError('Mapbox access token is not configured');
-      return;
-    }
-    mapboxgl.accessToken = token;
-    setMapLoading(true);
-    const map = new mapboxgl.Map({
-      container: mapRef.current,
-      style: 'mapbox://styles/mapbox/streets-v11',
-      center: [80.2707, 13.0827],
-      zoom: 12,
-      attributionControl: false
-    });
-    mapInstance.current = map;
-    const onLoad = async () => {
-      try {
-        // Add common map controls
-        const nav = new mapboxgl.NavigationControl({ showCompass: false, visualizePitch: false });
-        map.addControl(nav, 'top-right');
-
-        const fullscreen = new mapboxgl.FullscreenControl();
-        map.addControl(fullscreen, 'top-right');
-
-        const geolocate = new mapboxgl.GeolocateControl({
-          positionOptions: { enableHighAccuracy: true },
-          trackUserLocation: true,
-          showUserHeading: true,
-          showUserLocation: true,
-          fitBoundsOptions: { maxZoom: 15 }
-        });
-        map.addControl(geolocate, 'top-right');
-        
-        // Request geolocation when map loads
-        geolocate.on('geolocate', (e: any) => {
-          const { longitude, latitude } = e.coords;
-          map.flyTo({
-            center: [longitude, latitude],
-            zoom: 14,
-            essential: true
-          });
-        });
-
-        const scale = new mapboxgl.ScaleControl({ maxWidth: 120, unit: 'metric' });
-        map.addControl(scale, 'bottom-left');
-      } catch (e) {
-        // Controls are non-critical; ignore control init errors
-      }
-      try {
-        const resp = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(job.location)}.json?access_token=${token}&limit=1`);
-        const data = await resp.json();
-        const feature = data?.features?.[0];
-        if (feature?.center && Array.isArray(feature.center)) {
-          const [lng, lat] = feature.center;
-          map.flyTo({ center: [lng, lat], zoom: 13, essential: true });
-          new mapboxgl.Marker({ color: '#1d59eb' }).setLngLat([lng, lat]).addTo(map);
-        }
-      } catch (e) {
-        setMapError('Failed to locate the address on the map');
-      } finally {
-        setMapLoading(false);
-      }
-    };
-    map.on('load', onLoad);
-    const onError = () => setMapLoading(false);
-    map.on('error', onError);
-    return () => {
-      map.off('load', onLoad);
-      map.off('error', onError);
-      if (mapInstance.current) {
-        mapInstance.current.remove();
-        mapInstance.current = null;
-      }
-    };
-  }, [showMap, job.location]);
 
   const handleOtpDigitChange = (index: number, value: string) => {
     if (value.length > 1) return; // Only allow single digit
@@ -397,6 +313,25 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
         setOtpInput('');
         setOtpDigits(['', '', '', '']);
 
+        // Update client booking status from 'confirmed' to 'ongoing' in localStorage
+        try {
+          const clientBookings = JSON.parse(localStorage.getItem('clientBookings') || '[]');
+          const updatedBookings = clientBookings.map((booking: any) => {
+            if (booking['#'] === job.id) {
+              return { ...booking, status: 'ongoing' };
+            }
+            return booking;
+          });
+          localStorage.setItem('clientBookings', JSON.stringify(updatedBookings));
+          
+          // Dispatch event to notify client side about booking update
+          window.dispatchEvent(new CustomEvent('clientBookingUpdated', { 
+            detail: { bookings: updatedBookings, action: 'started', jobId: job.id } 
+          }));
+        } catch (e) {
+          console.error('Error updating client booking status:', e);
+        }
+
         // Save job status update to localStorage and update dashboard
         if (onJobUpdate) {
           onJobUpdate(job.id, 'started');
@@ -499,48 +434,60 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
   return (
     <div className="fixed inset-0 bg-[#0A0A0A] z-[9999] w-screen h-screen overflow-y-auto">
       {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-50 h-16 bg-[#0a0a0a]/95 backdrop-blur-sm border-b border-white/10 px-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <button 
-            onClick={handleBack}
-            className="p-2 rounded-full hover:bg-white/10 transition-colors"
-            aria-label="Go back"
-          >
-            <ArrowLeft className="w-5 h-5 text-white/80" />
-          </button>
-          <div className="flex flex-col gap-0.5">
-            <h2 className="text-base font-medium text-white">
-              {jobStarted || job.status === 'started'
-                ? 'Ongoing Job'
-                : job.status === 'upcoming' || job.status === 'confirmed' || job.status === 'pending'
-                  ? 'Upcoming Job'
-                  : job.status === 'completed'
-                    ? 'Completed Job'
-                    : 'Cancelled Job'}
-            </h2>
-            <span className="text-xs font-medium text-white/60">
-              {getCategoryDisplayName(job.category)}
-            </span>
+      <div className="fixed top-0 left-0 right-0 z-50 bg-[#0F0F0F] border-b border-white/5">
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <button 
+                onClick={handleBack}
+                className="inline-flex items-center text-sm text-purple-400 hover:text-purple-300 transition-colors duration-200"
+                aria-label="Go back"
+              >
+                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors duration-200">
+                  <ArrowLeft className="h-4 w-4" />
+                </div>
+              </button>
+              <div className="ml-3">
+                <h1 className="text-lg font-semibold text-white">
+                  {jobStarted || job.status === 'started'
+                    ? 'Ongoing Job'
+                    : job.status === 'upcoming' || job.status === 'pending'
+                      ? 'Upcoming Job'
+                      : job.status === 'completed'
+                        ? 'Completed Job'
+                        : 'Cancelled Job'}
+                </h1>
+                <p className="text-white/50 text-xs">
+                  {getCategoryDisplayName(job.category)}
+                </p>
+              </div>
+            </div>
+            <div className="text-xs font-mono text-white/60">{job.id}</div>
           </div>
         </div>
-        <div className="text-xs font-mono text-white/60">{job.id}</div>
       </div>
 
       {/* Main Content */}
       <main className="pt-20 pb-32 px-4 w-full max-w-4xl mx-auto">
-        {/* Job Rating and Review - Moved above job header */}
-        {job.status === 'completed' && job.freelancerRating && (
+        {/* Client Rating Section - Show prominently at top */}
+        {job.status === 'completed' && job.clientRating && (
           <div className="mb-6">
+            {/* Rating Header */}
+            <div className="text-center mb-4">
+              <h2 className="text-lg font-semibold text-white">Client's Rating</h2>
+              <p className="text-sm text-gray-400">What the client thought about your work</p>
+            </div>
+
             {/* Stars in full width */}
             <div className="flex justify-center mb-2">
               <div className="flex items-center gap-2">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <svg
                     key={star}
-                    className={`w-14 h-14 ${star <= (job.freelancerRating?.stars || 0) ? 'text-yellow-400 fill-current' : ''}`}
+                    className={`w-14 h-14 ${star <= (job.clientRating?.stars || 0) ? 'text-yellow-400 fill-current' : ''}`}
                     fill="currentColor"
                     viewBox="0 0 20 20"
-                    style={star <= (job.freelancerRating?.stars || 0) ? {} : { color: '#404040' }}
+                    style={star <= (job.clientRating?.stars || 0) ? {} : { color: '#404040' }}
                   >
                     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                   </svg>
@@ -550,30 +497,27 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
 
             {/* Star count below */}
             <p className="text-center text-lg font-bold text-white mb-4">
-              {job.freelancerRating?.stars} stars
+              {job.clientRating?.stars} stars
             </p>
 
-            {/* Review in small font */}
-            {job.freelancerRating?.review && (
-              <p className="text-center text-sm text-gray-300 mb-6 leading-relaxed max-w-2xl mx-auto">
-                "{job.freelancerRating.review}"
+            {/* Client feedback */}
+            {job.clientRating?.feedback && (
+              <p className="text-center text-sm text-gray-300 mb-4 leading-relaxed max-w-2xl mx-auto">
+                "{job.clientRating.feedback}"
               </p>
             )}
 
-            {/* Feedback Chips with title */}
-            {job.freelancerRating?.feedbackChips && job.freelancerRating.feedbackChips.length > 0 && (
-              <div className="text-center">
-                <h3 className="text-sm font-medium text-gray-500 mb-3">What the client appreciated most</h3>
-                <div className="flex flex-wrap justify-center gap-2">
-                  {job.freelancerRating.feedbackChips.map((chip: string, index: number) => (
-                    <span
-                      key={index}
-                      className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-purple-900/30 text-purple-300 border border-purple-500/30"
-                    >
-                      {chip}
-                    </span>
-                  ))}
-                </div>
+            {/* Client feedback chips */}
+            {job.clientRating?.feedbackChips && job.clientRating.feedbackChips.length > 0 && (
+              <div className="flex flex-wrap justify-center gap-1.5 mb-4">
+                {job.clientRating.feedbackChips.map((chip: string, index: number) => (
+                  <span
+                    key={index}
+                    className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-purple-900/30 text-purple-300 border border-purple-500/30"
+                  >
+                    {chip}
+                  </span>
+                ))}
               </div>
             )}
           </div>
@@ -609,41 +553,42 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
           </div>
         )}
 
-        {/* Enhanced Separator - Between rating and earnings */}
-        {job.status === 'completed' && job.freelancerRating && (
+        {/* Enhanced Separator - Between freelancer and client ratings */}
+        {job.status === 'completed' && job.freelancerRating && job.clientRating && (
           <div className="relative flex items-center justify-center py-4 mb-4">
             {/* Gradient Background */}
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-green-500/10 to-transparent"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-500/10 to-transparent"></div>
 
             {/* Decorative Elements */}
             <div className="absolute left-0 right-0 top-1/2 transform -translate-y-1/2">
               <div className="flex justify-center">
-                <div className="w-32 h-px bg-gradient-to-r from-transparent via-green-500/50 to-transparent"></div>
+                <div className="w-32 h-px bg-gradient-to-r from-transparent via-blue-500/50 to-transparent"></div>
               </div>
             </div>
 
             {/* Cricket Ball Icon */}
             <div className="relative z-10">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-500/20 to-green-600/30 border border-green-500/40 flex items-center justify-center shadow-lg shadow-green-500/20">
-                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-green-400 to-green-500 border-2 border-white/20 flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">🏏</span>
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500/20 to-blue-600/30 border border-blue-500/40 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-400 to-blue-500 border-2 border-white/20 flex items-center justify-center">
+                  <span className="text-white text-xs font-bold">🤝</span>
                 </div>
               </div>
             </div>
 
             {/* Side Decorations */}
             <div className="absolute left-1/4 top-1/2 transform -translate-y-1/2">
-              <div className="w-2 h-2 bg-green-400/30 rounded-full animate-pulse"></div>
+              <div className="w-2 h-2 bg-blue-400/30 rounded-full animate-pulse"></div>
             </div>
             <div className="absolute right-1/4 top-1/2 transform -translate-y-1/2">
-              <div className="w-2 h-2 bg-green-400/30 rounded-full animate-pulse" style={{ animationDelay: '0.5s' }}></div>
+              <div className="w-2 h-2 bg-blue-400/30 rounded-full animate-pulse" style={{ animationDelay: '0.5s' }}></div>
             </div>
           </div>
         )}
 
+
         {/* Earnings Section - Moved above Job Title and Location */}
         {job.status === 'completed' && (
-          <div className="mb-6">
+          <div className="mt-2 mb-2">
             {/* Calculate earnings preview for the job */}
             {(() => {
               const earningsPreview = calculateJobEarnings(job);
@@ -653,7 +598,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                   {/* Total Earnings */}
                   <div className="rounded-xl border border-white/10 overflow-hidden">
                     {/* Title Section - Black Background */}
-                    <div className="bg-[#111111] p-4 border-b border-white/10 group">
+                    <div className="bg-[#111111] p-3 border-b border-white/10 group">
                       <div className="flex items-center justify-between">
                         <div>
                           <h2 className="text-lg font-semibold text-white" aria-label="Click the toggle button to see detailed earnings breakdown">Total Earnings</h2>
@@ -669,14 +614,14 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                     </div>
 
                     {/* Content Section - Green Background */}
-                    <div className="bg-gradient-to-br from-green-900/20 via-green-800/10 to-emerald-900/20 p-4 relative">
+                    <div className="bg-gradient-to-br from-green-900/20 via-green-800/10 to-emerald-900/20 p-3 relative">
                       <div className="absolute top-0 right-0 w-16 h-16 bg-green-500/10 rounded-full blur-xl"></div>
                       <div className="absolute bottom-0 left-0 w-12 h-12 bg-emerald-500/10 rounded-full blur-lg"></div>
 
                       <div className="relative">
                         {!isEarningsExpanded ? (
                           /* Collapsed Mode - Only Total */
-                          <div className="text-center py-4">
+                          <div className="text-center py-3">
                             <div className="text-4xl font-bold text-green-400 mb-2">
                               ₹{earningsPreview.totalEarnings.toLocaleString('en-IN')}
                             </div>
@@ -685,9 +630,9 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                           </div>
                         ) : (
                           /* Expanded Mode - Simple List with Descriptions */
-                          <div className="space-y-3">
+                          <div className="space-y-2">
                             {/* Base Payment */}
-                            <div className="flex items-center justify-between py-2 border-b border-gray-800 group">
+                            <div className="flex items-center justify-between py-1.5 border-b border-gray-800 group">
                                 <div className="flex items-center gap-2">
                                   <span className="text-gray-300 font-medium">Base Payment</span>
                                   <div className="relative inline-block">
@@ -719,7 +664,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
 
                             {/* Add-on Services */}
                             {earningsPreview.breakdown.addOnServices.length > 0 ? (
-                              <div className="py-2 border-b border-gray-800">
+                              <div className="py-1.5 border-b border-gray-800">
                                   <div className="mb-2 flex items-center gap-2">
                                     <span className="text-gray-300 font-medium">Add-on Services</span>
                                     <div className="relative inline-block">
@@ -756,7 +701,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                                 </div>
                               </div>
                             ) : (
-                              <div className="flex items-center justify-between py-2 border-b border-gray-800 group">
+                              <div className="flex items-center justify-between py-1.5 border-b border-gray-800 group">
                                 <div className="flex items-center gap-2">
                                   <span className="text-gray-300 font-medium">Add-on Services</span>
                                   <div className="relative inline-block">
@@ -788,7 +733,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                             )}
 
                             {/* Tips */}
-                            <div className="flex items-center justify-between py-2 border-b border-gray-800 group">
+                            <div className="flex items-center justify-between py-1.5 border-b border-gray-800 group">
                               <div className="flex items-center gap-2">
                                 <span className="text-gray-300 font-medium">Client Tips</span>
                                 <div className="relative inline-block">
@@ -821,7 +766,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                             </div>
 
                             {/* Platform Fee */}
-                            <div className="flex items-center justify-between py-2 border-b border-gray-800 group">
+                            <div className="flex items-center justify-between py-1.5 border-b border-gray-800 group">
                               <div className="flex items-center gap-2">
                                 <span className="text-gray-300 font-medium">Platform Fee</span>
                                 <div className="relative inline-block">
@@ -852,7 +797,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                             </div>
 
                             {/* GST */}
-                            <div className="flex items-center justify-between py-2 group">
+                            <div className="flex items-center justify-between py-1.5 group">
                               <div className="flex items-center gap-2">
                                 <span className="text-gray-300 font-medium">GST</span>
                                 <div className="relative inline-block">
@@ -883,7 +828,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                             </div>
 
                             {/* Total Earnings */}
-                            <div className="flex items-center justify-between py-3 border-t-2 border-gray-700 mt-4 group">
+                            <div className="flex items-center justify-between py-2 border-t-2 border-gray-700 mt-3 group">
                               <div className="flex items-center gap-2">
                                 <span className="text-white font-semibold">Total Earnings</span>
                                 <div className="relative inline-block">
@@ -914,7 +859,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                             </div>
 
                             {/* Processing Info */}
-                            <div className="mt-4 p-3 rounded-xl bg-[#111111] border border-white/10">
+                            <div className="mt-3 p-2 rounded-xl bg-[#111111] border border-white/10">
                               <div className="text-xs text-gray-300">
                                 <p className="font-medium text-gray-200">💳 Payment Processing</p>
                                 <p>Earnings will be available in your wallet within 24 hours after job completion.</p>
@@ -931,8 +876,8 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
           </div>
         )}
 
-        {/* Simple Separator Line - Below Earnings Section */}
-        {job.status === 'completed' && (
+        {/* Simple Separator Line - Below Ratings Section */}
+        {job.status === 'completed' && (job.freelancerRating || job.clientRating) && (
           <div className="flex items-center justify-center py-6">
             <div className="w-full max-w-xs h-px bg-gradient-to-r from-transparent via-gray-600/50 to-transparent"></div>
           </div>
@@ -1013,10 +958,17 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
 
           {/* Job Title and Details */}
           <div className="space-y-4">
-            <h1 className="text-3xl md:text-4xl font-bold text-white leading-tight">{job.title}</h1>
+            <h1 className="text-3xl md:text-4xl font-bold text-white leading-tight">
+              {job.title}
+              {job.workMode && (
+                <span className="inline-flex items-center px-1.5 py-0.5 text-xs font-medium text-white/80 bg-white/10 border border-white/20 rounded-full whitespace-nowrap ml-2 align-middle">
+                  {getWorkModeLabel(job.workMode)}
+                </span>
+              )}
+            </h1>
             <button
               type="button"
-              onClick={() => setShowMap(true)}
+              onClick={() => window.open(`https://maps.google.com/maps?q=${encodeURIComponent(job.location)}`, '_blank')}
               className="inline-flex items-center gap-2 px-3 py-1.5 text-sm text-white/80 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-purple-500/30 rounded-lg transition-all duration-200 backdrop-blur-sm"
             >
               <MapPin className="w-4 h-4 text-purple-400" />
@@ -1027,7 +979,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
 
         {/* Job Highlights */}
         <div className="mb-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className={`grid ${job.isDirectHire ? 'grid-cols-2 md:grid-cols-3' : 'grid-cols-2 md:grid-cols-4'} gap-4`}>
             <div className="flex items-start gap-3">
               <div className="w-5 h-5 flex items-center justify-center mt-0.5 flex-shrink-0">
                 <span className="text-gray-400 text-lg leading-none">₹</span>
@@ -1036,9 +988,11 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                 <div className="text-sm text-gray-400 mb-0.5">Payment</div>
                 <div className="text-white font-medium leading-tight">
                   <span className="whitespace-nowrap">
-                    ₹{job.payment ? job.payment.toLocaleString('en-IN') : '0'}
-                    <span className="text-gray-400 text-sm font-normal ml-1">/ job</span>
+                    ₹{job.payment ? (typeof job.payment === 'number' ? job.payment.toLocaleString('en-IN') : job.payment) : '0'}
                   </span>
+                  {job.paymentMethod === 'cod' && (
+                    <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">COD</span>
+                  )}
                 </div>
               </div>
             </div>
@@ -1046,7 +1000,9 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
               <ClockIcon className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
               <div>
                 <div className="text-sm text-gray-400">Duration</div>
-                <div className="text-white font-medium capitalize">{job.duration || 'Not specified'}</div>
+                <div className="text-white font-medium capitalize break-words whitespace-normal leading-tight">
+                  {job.isDirectHire ? 'As per booking' : getJobDurationLabel(job as any)}
+                </div>
               </div>
             </div>
             <div className="flex items-start gap-3">
@@ -1054,21 +1010,79 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
               <div>
                 <div className="text-sm text-gray-400">Scheduled</div>
                 <div className="text-white font-medium">
-                  {new Date(job.jobDate || job.date).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric'
-                  })}
+                  {(() => {
+                    // For direct hire jobs, use jobDate and jobTime
+                    if (job.isDirectHire && job.jobDate) {
+                      const [year, month, day] = job.jobDate.split('-').map(Number);
+                      const date = new Date(year, month - 1, day);
+                      const monthStr = date.toLocaleDateString('en-US', { month: 'short' });
+                      return (
+                        <>
+                          {`${monthStr} ${day}, ${year}`}
+                          <br />
+                          at {job.jobTime || job.time || '10:00 AM'}
+                        </>
+                      );
+                    }
+                    // For regular jobs, use scheduledAt
+                    if (job.scheduledAt) {
+                      const scheduled = new Date(job.scheduledAt);
+                      if (!isNaN(scheduled.getTime())) {
+                        const monthStr = scheduled.toLocaleDateString('en-US', { month: 'short' });
+                        const dayNum = scheduled.getDate();
+                        const yearNum = scheduled.getFullYear();
+                        const time = scheduled.toLocaleTimeString('en-US', { 
+                          hour: 'numeric', 
+                          minute: '2-digit',
+                          hour12: true
+                        });
+                        return (
+                          <>
+                            {`${monthStr} ${dayNum}, ${yearNum}`}
+                            <br />
+                            at {time}
+                          </>
+                        );
+                      }
+                    }
+                    // Fallback to date + time fields
+                    if (job.date) {
+                      // Check if date is in YYYY-MM-DD format
+                      if (job.date.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                        const [year, month, day] = job.date.split('-').map(Number);
+                        const date = new Date(year, month - 1, day);
+                        const monthStr = date.toLocaleDateString('en-US', { month: 'short' });
+                        return (
+                          <>
+                            {`${monthStr} ${day}, ${year}`}
+                            <br />
+                            at {job.time || '10:00 AM'}
+                          </>
+                        );
+                      }
+                      return (
+                        <>
+                          {job.date}
+                          <br />
+                          at {job.time || '10:00 AM'}
+                        </>
+                      );
+                    }
+                    return 'Date not set';
+                  })()}
                 </div>
               </div>
             </div>
-            <div className="flex items-start gap-3">
-              <User className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
-              <div>
-                <div className="text-sm text-gray-400">Experience</div>
-                <div className="text-white font-medium">{getExperienceLevelDisplayName(job.experienceLevel || 'Expert')}</div>
+            {/* Only show experience for non-direct hire jobs */}
+            {!job.isDirectHire && (
+              <div className="flex items-start gap-3">
+                <User className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
+                <div>
+                  <div className="text-sm text-gray-400">Experience</div>
+                  <div className="text-white font-medium">{getExperienceLevelDisplayName(job.experienceLevel || job.experience || 'Expert')}</div>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
 
@@ -1076,25 +1090,102 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
-            {/* About the Job with Skills */}
-            <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#111111] via-[#0f0f0f] to-[#111111] border border-gray-600/30 shadow-lg">
-              {/* Background decoration */}
-              <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/5 rounded-full blur-2xl"></div>
-              <div className="absolute bottom-0 left-0 w-24 h-24 bg-purple-400/5 rounded-full blur-xl"></div>
-
+            {/* About the Job / Booking Details */}
+            <div className="relative overflow-hidden rounded-xl bg-[#111111] border border-gray-600/30 shadow-lg">
               {/* Card content */}
               <div className="relative p-5">
+                {/* Show posting time for regular jobs only */}
+                {!job.isDirectHire && job.postedAt && (
+                  <div className="text-left mb-2">
+                    <div className="text-white/60 font-medium text-xs">
+                      {(() => {
+                        const posted = new Date(job.postedAt);
+                        const now = new Date();
+                        const diffTime = Math.abs(now.getTime() - posted.getTime());
+                        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                        const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+                        const diffMinutes = Math.floor(diffTime / (1000 * 60));
+
+                        if (diffMinutes < 60) {
+                          return `${diffMinutes}m ago`;
+                        } else if (diffHours < 24) {
+                          return `${diffHours}h ago`;
+                        } else if (diffDays < 7) {
+                          return `${diffDays}d ago`;
+                        } else if (diffDays < 30) {
+                          const weeks = Math.floor(diffDays / 7);
+                          return `${weeks}w ago`;
+                        } else if (diffDays < 365) {
+                          const months = Math.floor(diffDays / 30);
+                          return `${months}mo ago`;
+                        } else {
+                          const years = Math.floor(diffDays / 365);
+                          return `${years}y ago`;
+                        }
+                      })()}
+                    </div>
+                  </div>
+                )}
+
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold text-white">About the Job</h2>
+                  <h2 className="text-lg font-semibold text-white">
+                    {job.isDirectHire ? 'Booking Details' : 'About the Job'}
+                  </h2>
+                  {job.isDirectHire && (
+                    <span className="text-xs px-2 py-1 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                      Direct Hire
+                    </span>
+                  )}
                 </div>
+
                 <div className="prose prose-invert max-w-none">
-                  {job.description && (
-                    <p className="text-white/80 leading-relaxed mb-6">
+                  {/* For direct hire - show services list */}
+                  {job.isDirectHire && job.services && job.services.length > 0 && (
+                    <div className="mb-6">
+                      <h3 className="text-md font-semibold text-white mb-3">Services Booked</h3>
+                      <div className="space-y-2">
+                        {job.services.map((service, idx) => (
+                          <div key={idx} className="flex items-center justify-between py-2 px-3 rounded-lg bg-white/5 border border-white/5">
+                            <div className="flex items-center gap-3">
+                              <div className="w-2 h-2 rounded-full bg-purple-500"></div>
+                              <span className="text-white/90">{service.title}</span>
+                              {service.quantity > 1 && (
+                                <span className="text-xs text-white/50">x{service.quantity}</span>
+                              )}
+                            </div>
+                            <span className="text-white font-medium">
+                              {typeof service.price === 'number' ? `₹${service.price.toLocaleString('en-IN')}` : service.price}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Notes section for direct hire */}
+                  {job.isDirectHire && job.notes && (
+                    <div className="mb-6 p-4 rounded-xl bg-gradient-to-br from-amber-500/10 to-orange-500/10 border border-amber-500/20">
+                      <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center flex-shrink-0">
+                          <MessageSquare className="w-4 h-4 text-amber-400" />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="text-sm font-medium text-amber-400 mb-2">Client Notes</h3>
+                          <p className="text-white/80 text-sm leading-relaxed">{job.notes}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Description for non-direct hire jobs only */}
+                  {!job.isDirectHire && job.description && (
+                    <p className="text-white/80 leading-relaxed break-words whitespace-normal">
                       {job.description}
                     </p>
                   )}
 
-                  {job.skills && job.skills.length > 0 && (
+                  {/* Skills for non-direct hire jobs only */}
+                  {!job.isDirectHire && job.skills && job.skills.length > 0 && (
                     <div className="mt-6 pt-6 border-t border-white/5">
                       <h3 className="text-md font-semibold text-white mb-3">Required Skills</h3>
                       <div className="flex flex-wrap gap-2">
@@ -1109,6 +1200,11 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                       </div>
                     </div>
                   )}
+
+                  {/* Empty state for direct hire without notes */}
+                  {job.isDirectHire && !job.notes && (!job.services || job.services.length === 0) && (
+                    <p className="text-white/60 text-sm italic">No additional notes provided by the client.</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -1121,10 +1217,90 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
 
           {/* Sidebar */}
           <div className="space-y-6">
+            {/* Freelancer Rating Dropdown - Above Client Profile */}
+            {job.status === 'completed' && job.freelancerRating && (
+              <div className="relative overflow-hidden rounded-xl bg-[#111111] border border-gray-600/30 shadow-lg">
+
+                {/* Dropdown Arrow */}
+                <button
+                  onClick={() => setShowFreelancerRating(!showFreelancerRating)}
+                  className="absolute top-3 right-3 z-10 p-1 rounded-full hover:bg-white/10 transition-colors"
+                  aria-label={showFreelancerRating ? "Collapse rating details" : "Expand rating details"}
+                >
+                  <svg
+                    className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${showFreelancerRating ? 'rotate-180' : ''}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                {/* Card content */}
+                <div className="relative p-4">
+                  {/* Header with toggle */}
+                  <button
+                    onClick={() => setShowFreelancerRating(!showFreelancerRating)}
+                    className="w-full text-center mb-3 group"
+                  >
+                    <div className="text-center text-sm text-white/70 font-medium mb-2">You rated the client</div>
+                    <div className="flex items-center justify-center gap-2">
+                      <div className="flex items-center gap-2">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <svg
+                            key={star}
+                            className={`w-8 h-8 ${star <= (job.freelancerRating?.stars || 0) ? 'text-yellow-400 fill-current' : ''}`}
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                            style={star <= (job.freelancerRating?.stars || 0) ? {} : { color: '#404040' }}
+                          >
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                          </svg>
+                        ))}
+                      </div>
+                    </div>
+                  </button>
+
+                  {/* Collapsible Content */}
+                  {showFreelancerRating && (
+                    <div className="animate-in slide-in-from-top-2 duration-300">
+                      {/* Star count */}
+                      <p className="text-center text-sm font-bold text-white mb-3">
+                        {job.freelancerRating?.stars} stars
+                      </p>
+
+                      {/* Review */}
+                      {job.freelancerRating?.review && (
+                        <p className="text-center text-sm text-gray-300 mb-3 leading-relaxed">
+                          "{job.freelancerRating.review}"
+                        </p>
+                      )}
+
+                      {/* Feedback Chips */}
+                      {job.freelancerRating?.feedbackChips && job.freelancerRating.feedbackChips.length > 0 && (
+                        <div className="flex flex-wrap justify-center gap-1.5">
+                          {job.freelancerRating.feedbackChips.map((chip: string, index: number) => (
+                            <span
+                              key={index}
+                              className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-purple-900/30 text-purple-300 border border-purple-500/30"
+                            >
+                              {chip}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* About the Client */}
             <ClientProfile
               client={job.client ? {
                 name: job.client.name,
+                image: job.client.image,
                 rating: job.client.rating,
                 moneySpent: undefined,
                 jobsCompleted: job.client.jobsCompleted,
@@ -1140,7 +1316,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
             />
 
             {/* Safety Tips */}
-            <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#111111] via-[#0f0f0f] to-[#111111] border border-gray-600/30 shadow-lg">
+            <div className="relative overflow-hidden rounded-xl bg-[#111111] border border-gray-600/30 shadow-lg">
               {/* Card content */}
               <div className="relative p-5">
                 <h2 className="text-lg font-semibold text-white mb-4">Safety Tips</h2>
@@ -1180,31 +1356,42 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
               defaultExpanded={false}
             />
 
-            {/* Action Buttons - Moved below safety tips */}
-            {(job.status === 'upcoming' || job.status === 'pending' || job.status === 'confirmed') && !jobStarted && (
-              <>
-                <div className="text-xs text-white/50 text-center mb-3">
-                  Get verification code from client on the field (💡 Test: 1234), then click "Start Job"
+            {/* Action Buttons - Modern Design */}
+            {(job.status === 'upcoming' || job.status === 'pending') && !jobStarted && (
+              <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#111111] to-[#0a0a0a] border border-gray-600/30 shadow-lg">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-2xl"></div>
+                <div className="relative p-5">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center">
+                      <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-sm font-semibold text-white">Ready to Start?</h3>
+                  </div>
+                  <p className="text-xs text-white/50 mb-4">
+                    Get the 4-digit verification code from your client at the venue to begin the session.
+                  </p>
+                  <div className="space-y-3">
+                    <button
+                      onClick={handleStartJob}
+                      className="w-full py-3 px-6 rounded-xl font-semibold bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-500 hover:to-blue-600 shadow-lg shadow-blue-600/20 hover:shadow-blue-500/30 transition-all duration-300 flex items-center justify-center gap-2 group"
+                    >
+                      <svg className="w-5 h-5 group-hover:animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                      Enter OTP & Start Job
+                    </button>
+                    <button
+                      onClick={handleCancelJob}
+                      className="w-full py-3 px-6 rounded-xl font-medium bg-transparent text-red-400 border border-red-500/20 hover:bg-red-500/10 hover:border-red-400/40 transition-all duration-300 flex items-center justify-center gap-2"
+                    >
+                      <X className="w-4 h-4" />
+                      Cancel Booking
+                    </button>
+                  </div>
                 </div>
-                <div className="space-y-3">
-                  <button
-                    onClick={handleStartJob}
-                    className="w-full py-3 px-6 rounded-lg font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
-                    Start Job
-                  </button>
-                  <button
-                    onClick={handleCancelJob}
-                    className="w-full py-3 px-6 rounded-lg font-medium bg-transparent text-red-400 border border-red-500/30 hover:bg-red-500/10 hover:border-red-400/50 transition-all duration-200 flex items-center justify-center gap-2"
-                  >
-                    <X className="w-4 h-4" />
-                    Cancel Job
-                  </button>
-                </div>
-              </>
+              </div>
             )}
 
           {/* Support Info for Started Jobs */}
@@ -1215,6 +1402,36 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
               </p>
             </div>
           )}
+
+          {/* Cricket Icon Separator - Below Main Content */}
+          <div className="relative flex items-center justify-center py-6 mt-0 mb-6">
+            {/* Gradient Background */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-green-500/10 to-transparent"></div>
+
+            {/* Decorative Elements */}
+            <div className="absolute left-0 right-0 top-1/2 transform -translate-y-1/2">
+              <div className="flex justify-center">
+                <div className="w-32 h-px bg-gradient-to-r from-transparent via-green-500/50 to-transparent"></div>
+              </div>
+            </div>
+
+            {/* Cricket Ball Icon */}
+            <div className="relative z-10">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-500/20 to-green-600/30 border border-green-500/40 flex items-center justify-center shadow-lg shadow-green-500/20">
+                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-green-400 to-green-500 border-2 border-white/20 flex items-center justify-center">
+                  <span className="text-white text-xs font-bold">🏏</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Side Decorations */}
+            <div className="absolute left-1/4 top-1/2 transform -translate-y-1/2">
+              <div className="w-2 h-2 bg-green-400/30 rounded-full animate-pulse"></div>
+            </div>
+            <div className="absolute right-1/4 top-1/2 transform -translate-y-1/2">
+              <div className="w-2 h-2 bg-green-400/30 rounded-full animate-pulse" style={{ animationDelay: '0.5s' }}></div>
+            </div>
+          </div>
           </div>
         </div>
       </main>
@@ -1551,7 +1768,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                   <div className="space-y-1">
                     <h1 className="text-xl font-bold text-white">Mark Job as Complete</h1>
                     <p className="text-gray-400 text-sm leading-relaxed max-w-sm mx-auto">
-                      Please rate your experience and provide feedback before marking the job as complete.
+                      Please rate your experience with the client and provide feedback before marking the job as complete.
                     </p>
                   </div>
                 </div>
@@ -1598,7 +1815,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                 {/* Rating Section */}
                 <div className="space-y-4">
                   <Label className="text-lg font-semibold text-white">
-                    How would you rate this experience? <span className="text-red-400">*</span>
+                    How would you rate the client? <span className="text-red-400">*</span>
                   </Label>
                   <div className="flex flex-col items-center gap-4">
                     <div className="flex items-center gap-2">
@@ -1649,7 +1866,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                   <Label className="text-base font-medium text-white">
                     What did you appreciate about the client? <span className="text-gray-400">(Optional)</span>
                   </Label>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-3 gap-2">
                     {[
                       'Professional cricketer',
                       'Clear communication',
@@ -1667,7 +1884,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                               : [...prev, chip]
                           );
                         }}
-                        className={`px-3 py-2 text-sm rounded-lg border transition-all duration-200 ${
+                        className={`px-1.5 py-0.5 text-xs rounded-lg border transition-all duration-200 ${
                           selectedChips.includes(chip)
                             ? 'bg-purple-500/10 border-gray-500/50 text-purple-300'
                             : 'bg-[#111111] border-gray-500/50 text-gray-300 hover:bg-[#1E1E1E] hover:border-gray-400/50'
@@ -1727,117 +1944,6 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
               </div>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* Map Modal - Full Page */}
-      {showMap && (
-        <div className="fixed inset-0 z-[9999] bg-[#0a0a0a] w-screen h-screen overflow-hidden flex flex-col dl-map-modal">
-          {/* Header (common style) */}
-          <div className="fixed top-0 left-0 right-0 border-b border-white/10 bg-[#111111]/95 backdrop-blur-xl z-[100]">
-            <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="truncate">
-                  <h2 className="text-base md:text-lg font-semibold text-white truncate">Job Location</h2>
-                  <p className="text-xs md:text-sm text-white/60 truncate">{job.location}</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setShowMap(false)}
-                className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-all"
-                aria-label="Close map"
-              >
-                <X className="w-4 h-4 text-white" />
-              </button>
-            </div>
-          </div>
-
-          {/* Map Container - Full Page */}
-          <div className="absolute top-16 left-0 right-0 bottom-0" style={{ perspective: '1000px' }}>
-            {mapLoading && (
-              <div className="absolute inset-0 flex items-center justify-center bg-[#111111] z-10">
-                <div className="flex flex-col items-center gap-3">
-                  <div className="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
-                  <p className="text-sm text-gray-400">Loading map...</p>
-                </div>
-              </div>
-            )}
-            
-            {mapError && (
-              <div className="absolute inset-0 flex items-center justify-center bg-[#111111] z-10">
-                <div className="p-6 max-w-md w-full bg-[#1E1E1E] rounded-lg border border-red-500/20">
-                  <div className="flex items-center gap-3 mb-3">
-                    <AlertCircle className="w-5 h-5 text-red-400" />
-                    <h3 className="text-sm font-semibold text-red-400">Error Loading Map</h3>
-                  </div>
-                  <p className="text-sm text-gray-300 mb-4">{mapError}</p>
-                  <button
-                    onClick={() => {
-                      setMapError(null);
-                      setShowMap(false);
-                    }}
-                    className="w-full px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors text-sm font-medium"
-                  >
-                    Close
-                  </button>
-                </div>
-              </div>
-            )}
-            
-            <div
-              ref={mapRef}
-              className="w-full h-full"
-              style={{ display: mapError ? 'none' : 'block' }}
-            />
-          </div>
-
-          
-          {/* Hide Mapbox attribution/logo and style controls within this modal only */}
-          <style jsx global>{`
-            .dl-map-modal .mapboxgl-ctrl-logo,
-            .dl-map-modal .mapboxgl-ctrl-attrib,
-            .dl-map-modal .mapbox-improve-map {
-              display: none !important;
-            }
-
-            /* Control sizes adjusted smaller */
-            .dl-map-modal .mapboxgl-ctrl button {
-              width: 28px !important;
-              height: 28px !important;
-              font-size: 10px !important;
-            }
-
-            .dl-map-modal .mapboxgl-ctrl-group button {
-              width: 28px !important;
-              height: 28px !important;
-              font-size: 10px !important;
-            }
-
-            /* Icon sizing for controls */
-            .dl-map-modal .mapboxgl-ctrl button .mapboxgl-ctrl-icon,
-            .dl-map-modal .mapboxgl-ctrl-group button .mapboxgl-ctrl-icon {
-              width: 10px !important;
-              height: 10px !important;
-            }
-
-            /* Increase zoom in/out icon sizes */
-            .dl-map-modal .mapboxgl-ctrl-group button:nth-child(1) .mapboxgl-ctrl-icon,
-            .dl-map-modal .mapboxgl-ctrl-group button:nth-child(2) .mapboxgl-ctrl-icon {
-              width: 14px !important;
-              height: 14px !important;
-            }
-
-            /* Push controls down by 5% */
-            .dl-map-modal .mapboxgl-ctrl-top-right {
-              top: 80px !important;
-              right: 10px !important;
-            }
-
-            .dl-map-modal .mapboxgl-ctrl-bottom-left {
-              bottom: 10px !important;
-              left: 10px !important;
-            }
-          `}</style>
         </div>
       )}
 

@@ -1,14 +1,91 @@
 'use client';
 
 import { calculateJobEarnings } from '@/components/freelancer/jobs/utils';
-import { mockUpcomingJobs } from '@/components/freelancer/jobs/mock-data';
+import { mockUpcomingJobs, mockApplications } from '@/components/freelancer/jobs/mock-data';
 import { useState, useMemo } from 'react';
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { JobDetailsModal } from '@/components/freelancer/jobs/JobDetailsModal';
+import { JobCategory } from '@/components/freelancer/jobs/types';
+
+// LocalStorage key for client bookings
+const CLIENT_BOOKINGS_KEY = 'clientBookings';
+
+// Convert client booking to job format
+const convertBookingToJob = (booking: any) => {
+  let jobDate = booking.date;
+  if (booking.date && !booking.date.includes('-')) {
+    const parsedDate = new Date(booking.date);
+    if (!isNaN(parsedDate.getTime())) {
+      jobDate = parsedDate.toISOString().split('T')[0];
+    }
+  }
+
+  let jobStatus: 'pending' | 'started' | 'completed' | 'cancelled' = 'pending';
+  if (booking.status === 'ongoing') {
+    jobStatus = 'started';
+  } else if (booking.status === 'completed') {
+    jobStatus = 'completed';
+  } else if (booking.status === 'cancelled') {
+    jobStatus = 'cancelled';
+  }
+
+  // Get OTP from localStorage or booking
+  let storedOtp = booking.otp || '1234';
+  try {
+    const otpStore = JSON.parse(localStorage.getItem('bookingOtps') || '{}');
+    if (otpStore[booking['#']]) {
+      storedOtp = otpStore[booking['#']];
+    }
+  } catch (e) {
+    console.error('Error getting OTP:', e);
+  }
+
+  return {
+    id: booking['#'] || `booking_${Date.now()}`,
+    title: booking.service || 'Service Booking',
+    category: (booking.category as JobCategory) || 'OTHER',
+    date: jobDate,
+    time: booking.time || '10:00 AM',
+    jobDate: jobDate,
+    jobTime: booking.time || '10:00 AM',
+    status: jobStatus,
+    payment: typeof booking.price === 'string' 
+      ? parseInt(booking.price.replace(/[₹,]/g, '')) || 0 
+      : booking.price || 0,
+    location: booking.location || 'Location TBD',
+    description: booking.notes || '', // Use notes for direct hire
+    skills: [],
+    duration: 'As per booking',
+    experienceLevel: undefined,
+    otp: storedOtp,
+    // Direct hire specific fields
+    isDirectHire: true,
+    notes: booking.notes || '',
+    services: booking.services || [],
+    paymentMethod: booking.paymentMethod || 'cod',
+    client: {
+      name: 'Client',
+      rating: 4.5,
+      jobsCompleted: 10,
+      memberSince: new Date().toISOString().split('T')[0],
+      phoneNumber: '+91 9876543210',
+      image: '',
+      moneySpent: 50000,
+      location: booking.location || 'Location TBD',
+      joinedDate: new Date().toISOString().split('T')[0],
+      freelancersWorked: 5,
+      freelancerAvatars: []
+    },
+    isProposal: false
+  };
+};
 
 export default function JobDetailsPage({ params }: { params: { id: string } }) {
   const router = useRouter();
+  
+  // Decode the URL-encoded job ID (handles # and other special characters)
+  const jobId = decodeURIComponent(params.id);
   
   // Initialize updatedJobs with data from localStorage
   const [updatedJobs, setUpdatedJobs] = useState<{[key: string]: any}>(() => {
@@ -68,10 +145,77 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
     }
   }, []);
 
-  // Find the job with the matching ID from mock data
-  const job = mockUpcomingJobs.find(job => job.id === params.id);
+  // Find the job with the matching ID from mock data, or check if it's an accepted application
+  const job = mockUpcomingJobs.find(job => job.id === jobId);
+  const acceptedApplication = mockApplications.find(app => app["#"] === jobId && app.status === 'accepted');
+  
+  // Also check client bookings from localStorage - do this synchronously for initial render
+  const getClientBookingJob = () => {
+    try {
+      if (typeof window === 'undefined') return null;
+      const storedBookings = localStorage.getItem(CLIENT_BOOKINGS_KEY);
+      if (storedBookings) {
+        const bookings = JSON.parse(storedBookings);
+        const matchingBooking = bookings.find((b: any) => b['#'] === jobId);
+        if (matchingBooking) {
+          console.log('📦 Found matching client booking:', matchingBooking);
+          return convertBookingToJob(matchingBooking);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading client booking:', error);
+    }
+    return null;
+  };
+  
+  const [clientBookingJob, setClientBookingJob] = useState<any>(() => getClientBookingJob());
+  
+  // Re-check client booking if params change
+  React.useEffect(() => {
+    const bookingJob = getClientBookingJob();
+    if (bookingJob) {
+      setClientBookingJob(bookingJob);
+    }
+  }, [jobId]);
 
-  if (!job) {
+  // If it's an accepted application, transform it into a job-like object
+  const transformedApplicationJob = acceptedApplication ? {
+    id: acceptedApplication["#"],
+    title: acceptedApplication.jobTitle,
+    category: acceptedApplication.category as any,
+    date: acceptedApplication.appliedDate,
+    time: 'TBD',
+    status: 'upcoming' as const,
+    payment: acceptedApplication.proposal.proposedRate,
+    location: acceptedApplication.location,
+    description: acceptedApplication.description,
+    skills: acceptedApplication.proposal.skills,
+    duration: `${acceptedApplication.proposal.estimatedDays} days`,
+    experienceLevel: 'Expert' as const,
+    client: {
+      name: acceptedApplication.clientName,
+      rating: acceptedApplication.clientRating,
+      jobsCompleted: acceptedApplication.projectsCompleted,
+      memberSince: acceptedApplication.clientSince,
+      phoneNumber: '+91 9876543210',
+      image: acceptedApplication.clientImage,
+      moneySpent: acceptedApplication.moneySpent,
+      freelancersWorked: acceptedApplication.freelancersWorked,
+      freelancerAvatars: acceptedApplication.freelancerAvatars,
+      experienceLevel: acceptedApplication.experienceLevel
+    },
+    // Add proposal history for timeline continuity
+    proposalHistory: {
+      postedAt: acceptedApplication.postedDate,
+      appliedDate: acceptedApplication.appliedDate,
+      clientSpottedDate: new Date(new Date(acceptedApplication.appliedDate).getTime() + 3600000).toISOString(),
+      acceptedDate: new Date().toISOString()
+    }
+  } : null;
+
+  const baseJob = job || transformedApplicationJob || clientBookingJob;
+
+  if (!baseJob) {
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-[#0a0a0a] text-white p-4">
         <h1 className="text-2xl font-bold mb-4">Job Not Found</h1>
@@ -96,25 +240,25 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
     }
   }, []);
 
-  // Check if job has been updated, otherwise use original job (prioritize original data)
+  // Check if job has been updated, otherwise use original job data (prioritize original data)
   const currentJob = useMemo(() => {
     // First, try to get original job data from mock data
-    const originalJobData = mockUpcomingJobs.find(j => j.id === job.id);
+    const originalJobData = mockUpcomingJobs.find(j => j.id === baseJob.id);
 
     // If we have stored updates, merge them with original data but prioritize original
-    if (updatedJobs[job.id]) {
+    if (updatedJobs[baseJob.id]) {
       const mergedJob = {
         // Start with original job data to ensure correct title and core info
         ...(originalJobData || {}),
         // Override with stored status updates only
-        ...updatedJobs[job.id],
+        ...updatedJobs[baseJob.id],
         // Ensure ID is preserved
-        id: job.id,
+        id: baseJob.id,
       };
 
       console.log('🔄 Using merged job data:', {
         originalTitle: originalJobData?.title,
-        storedTitle: updatedJobs[job.id]?.title,
+        storedTitle: updatedJobs[baseJob.id]?.title,
         finalTitle: mergedJob.title,
         rating: mergedJob.freelancerRating,
         review: mergedJob.review,
@@ -126,8 +270,8 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
 
     // If no stored updates, use original job data
     console.log('📋 Using original job data:', originalJobData?.title);
-    return originalJobData || job;
-  }, [updatedJobs, job.id, job]);
+    return originalJobData || baseJob;
+  }, [updatedJobs, baseJob.id, baseJob]);
 
   // Ensure job has all required properties with default values
   const jobWithDefaults = useMemo(() => ({
@@ -140,7 +284,10 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
     payment: currentJob.payment || 0,
     duration: currentJob.duration || 'Not specified',
     category: currentJob.category || 'Other',
-    experienceLevel: currentJob.experienceLevel || 'Any',
+    experienceLevel: currentJob.experienceLevel || (currentJob.experience === 'Entry Level' ? 'Beginner' : currentJob.experience) || 'Any',
+    workMode: currentJob.workMode || 'onsite',
+    postedAt: currentJob.postedAt || currentJob.proposalHistory?.postedAt || new Date().toISOString(),
+    scheduledAt: currentJob.scheduledAt || (currentJob.date && currentJob.time ? `${currentJob.date}T${currentJob.time}:00.000Z` : new Date().toISOString()),
     skills: currentJob.skills || [],
     status: currentJob.status || 'pending',
     client: {
@@ -288,7 +435,7 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
             review: completionData?.review || '',
             feedbackChips: completionData?.feedbackChips || [],
             // Pass the original job data so API can use it
-            originalJobData: job
+            originalJobData: baseJob
           }),
         });
 
@@ -297,7 +444,7 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
           console.log('✅ Fetched updated job data from API:', updatedJobData);
 
           // Calculate earnings for the completed job
-          const earningsData = calculateJobEarnings(job);
+          const earningsData = calculateJobEarnings(baseJob);
           console.log('💰 Calculated earnings for completed job:', earningsData);
 
           // Update local state with complete job data
@@ -372,12 +519,12 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
         ...prev,
         [jobId]: {
           // Use the updated job data if available from API, otherwise use original job data
-          ...(prev[jobId] || job),
+          ...(prev[jobId] || baseJob),
           status: newStatus,
           // Add timestamp for completed jobs
           ...(newStatus === 'completed' && {
             completedAt: new Date().toISOString(),
-            ...calculateJobEarnings(prev[jobId] || job)
+            ...calculateJobEarnings(prev[jobId] || baseJob)
           }),
           // Add cancellation details for cancelled jobs
           ...(newStatus === 'cancelled' && {
@@ -402,35 +549,26 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
       // Force modal re-render by updating the key
       setModalKey(prev => prev + 1);
 
-      // Persist to localStorage so JobDashboard can pick up the changes
+      // Update localStorage for fallback case
       const existingUpdates = JSON.parse(localStorage.getItem('jobStatusUpdates') || '{}');
-      const currentJobData = existingUpdates[jobId] || job;
+      const currentJobData = existingUpdates[jobId];
 
-      // Get the original job data from mock data to preserve all fields
+      // Get the original job data from mock data to ensure correct info
       const originalJobData = mockUpcomingJobs.find(j => j.id === jobId);
 
       // Calculate earnings for completed jobs
-      const earningsData = newStatus === 'completed' ? calculateJobEarnings(originalJobData || currentJobData) : null;
+      const earningsData = newStatus === 'completed' ? calculateJobEarnings(originalJobData || currentJobData || baseJob) : null;
 
       const updatedData = {
         ...existingUpdates,
         [jobId]: {
-          // Always preserve the complete original job data
+          // Use original job data as base to ensure correct title and core info
           ...(originalJobData || {}),
-          // Override with current job data
+          // Override with current job data (which should have status updates)
           ...currentJobData,
           // Update status and timestamp
           status: newStatus,
           updatedAt: new Date().toISOString(),
-          // Include rating/review data from completion
-          ...(completionData && newStatus === 'completed' && {
-            freelancerRating: {
-              stars: completionData.rating,
-              review: completionData.review,
-              feedbackChips: completionData.feedbackChips,
-              date: new Date().toISOString()
-            }
-          }),
           // Include calculated earnings for completed jobs
           ...(earningsData && {
             earnings: earningsData,
@@ -456,9 +594,8 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
       };
       localStorage.setItem('jobStatusUpdates', JSON.stringify(updatedData));
 
-      console.log('💾 Fallback: Job data saved to localStorage:', updatedData[jobId]);
-      console.log('💰 Earnings data included:', earningsData);
-      console.log('⭐ FreelancerRating data included:', updatedData[jobId]?.freelancerRating);
+      console.log('💾 Final fallback: Job data saved to localStorage:', updatedData[jobId]);
+      console.log('💰 Final fallback earnings included:', earningsData);
 
       // Force dashboard refresh by dispatching a custom event
       window.dispatchEvent(new CustomEvent('jobStatusUpdated', {
@@ -473,7 +610,7 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
       console.error('❌ Error updating job status:', error);
       // Fallback to local state update if API fails
       setUpdatedJobs(prev => {
-        const currentJobData = prev[jobId] || job;
+        const currentJobData = prev[jobId] || baseJob;
         const originalJobData = mockUpcomingJobs.find(j => j.id === jobId);
 
         // Calculate earnings for completed jobs
@@ -525,7 +662,7 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
       const originalJobData = mockUpcomingJobs.find(j => j.id === jobId);
 
       // Calculate earnings for completed jobs
-      const earningsData = newStatus === 'completed' ? calculateJobEarnings(originalJobData || currentJobData || job) : null;
+      const earningsData = newStatus === 'completed' ? calculateJobEarnings(originalJobData || currentJobData || baseJob) : null;
 
       const updatedData = {
         ...existingUpdates,

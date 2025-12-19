@@ -27,8 +27,10 @@ export function RoleProvider({ children }: { children: ReactNode }) {
 
 export function useRole() {
   const context = useContext(RoleContext)
+  // Fallback to a safe default to avoid runtime crashes when the provider
+  // isn't mounted yet (e.g., in dev during fast refresh or isolated renders)
   if (context === undefined) {
-    throw new Error("useRole must be used within a RoleProvider")
+    return { role: "client", switchRole: () => {} }
   }
   return context
 } 

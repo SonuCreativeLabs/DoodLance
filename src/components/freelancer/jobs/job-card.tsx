@@ -20,10 +20,12 @@ export const JobCard: React.FC<JobCardProps> = ({ job, index, onStatusChange }) 
   const handleCardClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     // Navigate to proposal details for proposal jobs, job details for regular jobs
+    // Encode the job ID to handle special characters like #
+    const encodedId = encodeURIComponent(job.id);
     if (job.isProposal) {
-      router.push(`/freelancer/proposals/${job.id}`);
+      router.push(`/freelancer/proposals/${encodedId}`);
     } else {
-      router.push(`/freelancer/jobs/${job.id}`);
+      router.push(`/freelancer/jobs/${encodedId}`);
     }
   };
 
@@ -50,7 +52,9 @@ export const JobCard: React.FC<JobCardProps> = ({ job, index, onStatusChange }) 
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className={`${getStatusStyles(job.status).bg} ${getStatusStyles(job.status).text} text-xs font-medium px-3 py-1 rounded-full border ${getStatusStyles(job.status).border} w-fit`}>
-                {job.status === 'ongoing' ? 'Ongoing' : job.status.charAt(0).toUpperCase() + job.status.slice(1)}
+                {job.status === 'ongoing' || job.status === 'started' ? 'Ongoing' : 
+                 job.status === 'pending' ? 'Upcoming' : 
+                 job.status.charAt(0).toUpperCase() + job.status.slice(1)}
               </div>
               {job.isProposal && (
                 <div className="bg-gradient-to-r from-blue-600 to-blue-500 text-white text-xs font-medium px-2 py-1 rounded-full border border-blue-400/30">
@@ -85,12 +89,14 @@ export const JobCard: React.FC<JobCardProps> = ({ job, index, onStatusChange }) 
                 <CalendarIcon className="w-4 h-4 text-purple-400" />
               </div>
               <div className="min-w-0">
-                <div className="text-xs text-white/40 mb-0.5">Date & Time</div>
                 <div className="text-sm text-white/90">
-                  {job.date ? format(new Date(job.date), 'dd/MM/yyyy') : 'Date not available'}
-                </div>
-                <div className="text-sm text-white/70 mt-0.5">
-                  {job.jobTime || job.time ? formatTime12Hour(job.jobTime || job.time) : 'Time not available'}
+                  {(() => {
+                    // Hardcoded demo date for consistent card display: December 15, 3:30 PM
+                    const demoDate = new Date('2024-12-15T15:30:00.000Z');
+                    const date = format(demoDate, 'MMM d');
+                    const time = formatTime12Hour(`${demoDate.getHours().toString().padStart(2, '0')}:${demoDate.getMinutes().toString().padStart(2, '0')}`);
+                    return time ? `${date}, ${time}` : date;
+                  })()}
                 </div>
               </div>
             </div>
@@ -122,18 +128,18 @@ export const JobCard: React.FC<JobCardProps> = ({ job, index, onStatusChange }) 
           </div>
 
           {/* Rating and Review for Completed Jobs */}
-          {job.status === 'completed' && job.freelancerRating && (
+          {job.status === 'completed' && job.clientRating && (
             <div className="pt-3 border-t border-white/10">
               <div className="space-y-2">
-                {/* Show freelancer rating */}
-                {job.freelancerRating && (
+                {/* Show client rating */}
+                {job.clientRating && (
                   <div className="flex items-center gap-2">
                     <div className="flex items-center gap-1">
                       {Array.from({ length: 5 }, (_, i) => (
                         <Star
                           key={i}
                           className={`w-4 h-4 ${
-                            i < (job.freelancerRating?.stars || 0)
+                            i < (job.clientRating?.stars || 0)
                               ? 'text-amber-400 fill-current'
                               : 'text-gray-400'
                           }`}
@@ -141,24 +147,24 @@ export const JobCard: React.FC<JobCardProps> = ({ job, index, onStatusChange }) 
                       ))}
                     </div>
                     <span className="text-sm text-white/80">
-                      {job.freelancerRating?.stars % 1 === 0
-                        ? `${Math.floor(job.freelancerRating.stars)}/5`
-                        : `${job.freelancerRating.stars.toFixed(2)}/5`} stars
+                      {job.clientRating?.stars % 1 === 0
+                        ? `${Math.floor(job.clientRating.stars)}/5`
+                        : `${job.clientRating.stars.toFixed(2)}/5`} stars
                     </span>
                   </div>
                 )}
 
-                {/* Show review text from freelancerRating */}
-                {job.freelancerRating?.review && (
+                {/* Show only stars rating - removed review text and feedback chips */}
+                {/*
+                {job.clientRating?.feedback && (
                   <p className="text-sm text-white/70 line-clamp-2">
-                    "{job.freelancerRating.review}"
+                    "{job.clientRating.feedback}"
                   </p>
                 )}
 
-                {/* Show feedback chips from freelancerRating */}
-                {job.freelancerRating?.feedbackChips && job.freelancerRating.feedbackChips.length > 0 && (
+                {job.clientRating?.feedbackChips && job.clientRating.feedbackChips.length > 0 && (
                   <div className="flex flex-wrap gap-1">
-                    {job.freelancerRating.feedbackChips.slice(0, 3).map((chip: string, i: number) => (
+                    {job.clientRating.feedbackChips.slice(0, 3).map((chip: string, i: number) => (
                       <span
                         key={i}
                         className="px-2 py-1 text-xs rounded-full bg-purple-600/20 text-purple-300 border border-purple-600/30"
@@ -168,16 +174,19 @@ export const JobCard: React.FC<JobCardProps> = ({ job, index, onStatusChange }) 
                     ))}
                   </div>
                 )}
+                */}
 
-                <div className="text-xs text-white/50">
-                  Completed on {job.completedAt ? format(new Date(job.completedAt), 'dd/MM/yyyy') : 'Unknown date'} at {job.completedAt ? format(new Date(job.completedAt), 'HH:mm') : 'Unknown time'}
+                <div className="text-xs text-white/50 space-y-1">
+                  <div>
+                    Completed on {job.completedAt ? format(new Date(job.completedAt), 'dd/MM/yyyy') : 'Unknown date'} at {job.completedAt ? format(new Date(job.completedAt), 'HH:mm') : 'Unknown time'}
+                  </div>
                 </div>
               </div>
             </div>
           )}
 
           {/* Action Buttons - Show for upcoming, pending, confirmed, and ongoing jobs */}
-          {(job.status === 'upcoming' || job.status === 'pending' || job.status === 'confirmed' || job.status === 'ongoing') && (
+          {(job.status === 'upcoming' || job.status === 'pending' || job.status === 'ongoing') && (
             <div className="flex gap-2 pt-2">
               {/* Chat Button */}
               <Button 

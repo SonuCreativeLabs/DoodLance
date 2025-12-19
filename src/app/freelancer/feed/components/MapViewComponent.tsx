@@ -72,6 +72,8 @@ interface MapViewProps {
   jobs: JobWithCoordinates[];
   selectedCategory: string | null;
   style?: React.CSSProperties;
+  onApply?: (jobId: string, proposal: string, rate: string, rateType: string, attachments: File[]) => void;
+  appliedJobIds?: Set<string>;
 }
 
 declare global {
@@ -80,7 +82,7 @@ declare global {
   }
 }
 
-const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, style = {} }) => {
+const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, style = {}, onApply, appliedJobIds = new Set() }) => {
   // Error boundary fallback component
   const ErrorFallback = ({ error, resetErrorBoundary }: { error: Error; resetErrorBoundary: () => void }) => (
     <div className="flex items-center justify-center h-full bg-gray-50">
@@ -151,7 +153,7 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
         budget: typeof jobInput.budget === 'number' ? jobInput.budget : 0,
         location: jobInput.location || 'Remote',
         skills: Array.isArray(jobInput.skills) ? jobInput.skills : [],
-        workMode: ['remote', 'onsite', 'hybrid'].includes(jobInput.workMode || '') 
+        workMode: ['remote', 'onsite', 'all'].includes(jobInput.workMode || '') 
           ? jobInput.workMode as WorkMode 
           : 'onsite',
         type: ['freelance', 'part-time', 'full-time', 'contract'].includes(jobInput.type || '')
@@ -222,7 +224,8 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
         container: mapContainer.current,
         style: 'mapbox://styles/mapbox/streets-v11',
         center: [0, 0],
-        zoom: 2
+        zoom: 2,
+        attributionControl: false
       });
 
       // Add controls after map has loaded
@@ -376,21 +379,7 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
     if (!map.current) return;
 
     // Filter jobs based on selected category
-    const filteredJobs = selectedCategory === 'For You'
-      ? processedJobs.filter((job) => {
-          const jobText = [
-            job.title,
-            job.description,
-            job.category,
-            ...job.skills,
-          ].join(' ').toLowerCase();
-
-          const isCricketJob = /cricket|coach|training|sports|player/i.test(jobText);
-          const isDeveloperJob = /developer|programming|code|software|frontend|backend|fullstack|web|app|mobile/i.test(jobText);
-
-          return isCricketJob || isDeveloperJob;
-        })
-      : processedJobs;
+    const filteredJobs = processedJobs;
 
     // Clear existing markers
     markersRef.current.forEach((marker) => marker.remove());
@@ -456,90 +445,210 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
         const hasPrev = currentIndex > 0;
         
         return `
-          <div class="bg-[#111111] border border-white/5 shadow-2xl rounded-2xl w-[320px] text-white overflow-hidden flex flex-col" 
-               style="backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);">
+          <div class="group bg-gradient-to-br from-[#111111] to-[#000000] opacity-95 backdrop-blur-sm rounded-2xl px-6 py-4 shadow-xl hover:shadow-purple-500/20 transition-all duration-300 w-[360px] border border-white/10 hover:border-white/20">
             
             <!-- Navigation Buttons -->
-            <div class="flex justify-between items-center px-4 py-2.5 bg-[#111111]">
-              <button class="nav-btn prev-btn flex items-center justify-center w-8 h-8 rounded-full bg-gray-800/50 hover:bg-gray-700/70 transition-colors ${!hasPrev ? 'opacity-50 cursor-not-allowed' : 'text-white'}" 
+            <div class="flex justify-between items-center mb-3">
+              <button class="nav-btn prev-btn flex items-center justify-center w-8 h-8 rounded-full bg-black/30 hover:bg-black/50 transition-colors ${!hasPrev ? 'opacity-50 cursor-not-allowed' : 'text-white'}" 
                       ${!hasPrev ? 'disabled' : ''}>
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                 </svg>
               </button>
               <div class="flex-1 text-center">
-                <span class="text-xs font-medium text-white">${currentIndex + 1} / ${processedJobs.length}</span>
+                <span class="text-xs font-medium text-white/60">${currentIndex + 1} / ${processedJobs.length}</span>
               </div>
-              <button class="nav-btn next-btn flex items-center justify-center w-8 h-8 rounded-full bg-gray-800/50 hover:bg-gray-700/70 transition-colors ${!hasNext ? 'opacity-50 cursor-not-allowed' : 'text-white'}" 
+              <button class="nav-btn next-btn flex items-center justify-center w-8 h-8 rounded-full bg-black/30 hover:bg-black/50 transition-colors ${!hasNext ? 'opacity-50 cursor-not-allowed' : 'text-white'}" 
                       ${!hasNext ? 'disabled' : ''}>
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                 </svg>
               </button>
             </div>
-            <!-- Header with Title -->
-            <div class="px-4 pt-2 pb-2">
-              <h3 class="text-base font-bold text-white line-clamp-1">${job.title}</h3>
-              <p class="text-xs text-gray-300 mt-1 line-clamp-2">${job.description}</p>
-            </div>
-            
-            <!-- Job Details -->
-            <div class="px-3 pb-3 pt-1 space-y-2">
-              <div class="flex items-center gap-3 text-xs text-gray-400">
-                <div class="flex items-center gap-1.5">
-                  <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                  </svg>
-                  <span>${job.location || 'Location not specified'}</span>
-                </div>
-                <span class="text-gray-500">•</span>
-                <div class="flex items-center gap-1.5">
-                  <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                  </svg>
-                  <span>${job.postedAt ? new Date(job.postedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Date not specified'}</span>
+
+            <!-- Job header with client profile -->
+            <div class="flex items-center gap-3 mb-2">
+              <div class="relative flex-shrink-0">
+                <div class="relative w-12 h-12 rounded-xl overflow-hidden ring-2 ring-white/20">
+                  <img
+                    src="${job.clientImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(job.clientName || 'Client')}&background=6B46C1&color=fff&bold=true`}"
+                    alt="Client"
+                    class="w-full h-full object-cover"
+                  />
                 </div>
               </div>
-              
-              <!-- Skills -->
-              ${job.skills && job.skills.length > 0 ? `
-                <div class="flex flex-wrap gap-1.5 mt-2">
-                  ${job.skills.slice(0, 3).map(skill => `
-                    <span class="px-2 py-0.5 text-[10px] font-medium bg-gray-700/50 text-gray-200 rounded-full border border-gray-600/50">
-                      ${skill}
+              <div class="flex flex-col gap-1 flex-1 min-w-0">
+                <h3 class="text-[15px] font-semibold text-white leading-tight line-clamp-2 break-words">
+                  ${job.title}
+                </h3>
+                <div class="flex items-center gap-2">
+                  <span class="text-[12px] font-medium text-white/80 bg-white/10 px-2 py-0.5 rounded whitespace-nowrap">
+                    ${job.category}
+                  </span>
+                  ${job.workMode ? `
+                    <span class="text-[12px] font-medium text-white/80 bg-white/10 px-2 py-0.5 rounded whitespace-nowrap">
+                      ${job.workMode === 'remote' ? 'Remote' : job.workMode === 'onsite' ? 'On-site' : 'All'}
                     </span>
-                  `).join('')}
+                  ` : ''}
                 </div>
-              ` : ''}
-            </div>
-            
-            <!-- Apply Button with Price -->
-            <div class="p-4 pt-2">
-              <div class="flex items-center justify-between gap-3">
-                <div class="flex flex-col">
-                  <span class="text-xs text-white/60">Budget</span>
-                  <div class="flex items-baseline gap-1.5">
-                    <span class="text-xl font-bold text-white">
-                      ₹${job.budget.toLocaleString('en-IN')}
-                    </span>
-                    <span class="text-sm text-white/70">
-                      ${job.category === 'Sports' ? '/ session' :
-                        job.category?.toLowerCase().includes('tutoring') ? '/ session' :
-                        job.category?.toLowerCase().includes('coach') ? '/ session' :
-                        job.category?.toLowerCase().includes('fitness') ? '/ session' :
-                        job.category?.toLowerCase().includes('makeup') ? '/ session' :
-                        job.category?.toLowerCase().includes('diet') ? '/ plan' :
-                        '/ project'}
-                    </span>
-                  </div>
-                </div>
-                <button class="apply-now-btn px-4 h-8 text-xs font-semibold text-white bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 rounded-md transition-all duration-200 shadow-sm hover:shadow whitespace-nowrap flex items-center justify-center"
-                        data-job-id="${job.id}"
-                        onclick="event.stopPropagation(); document.querySelector('.apply-now-btn[data-job-id=\'${job.id}\']').click();">
-                  Apply Now
-                </button>
               </div>
+            </div>
+
+            <!-- Description -->
+            <p class="text-[13px] text-white/80 line-clamp-2 leading-relaxed mb-2">
+              ${job.description}
+            </p>
+
+            <!-- Location and Date -->
+            <div class="flex items-center justify-between text-[12px] text-white/60 mb-2">
+              <div class="flex items-center gap-1 min-w-0 flex-1">
+                <svg class="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                </svg>
+                <span class="truncate" title="${job.location}">${job.location}</span>
+              </div>
+              <div class="flex items-center gap-1 flex-shrink-0 ml-2">
+                <svg class="w-3 h-3 flex-shrink-0 text-white/50" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <span class="text-white/60 text-[11px] whitespace-nowrap">
+                  ${(() => {
+                    const scheduledAt = job.scheduledAt ? new Date(job.scheduledAt) : new Date();
+                    const date = scheduledAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                    const time = scheduledAt.toLocaleTimeString('en-US', { 
+                      hour: 'numeric', 
+                      minute: '2-digit',
+                      hour12: true
+                    });
+                    return `${date}, ${time}`;
+                  })()}
+                </span>
+              </div>
+            </div>
+
+            <!-- Skills -->
+            ${job.skills && job.skills.length > 0 ? `
+              <div class="flex flex-wrap gap-2 mb-3">
+                ${job.skills.slice(0, 2).map(skill => `
+                  <span class="px-2.5 py-1 h-6 flex items-center text-[11px] rounded-full bg-white/5 text-white/70 backdrop-blur-sm whitespace-nowrap">
+                    ${skill}
+                  </span>
+                `).join('')}
+                ${job.skills.length > 2 ? `
+                  <span class="px-2.5 py-1 h-6 flex items-center text-[11px] rounded-full bg-white/5 text-white/50 whitespace-nowrap">
+                    +${job.skills.length - 2} more
+                  </span>
+                ` : ''}
+              </div>
+            ` : ''}
+
+            <!-- Footer -->
+            <div class="flex items-center justify-between pt-3 border-t border-white/5">
+              <div class="flex items-baseline gap-1">
+                <span class="text-[17px] font-semibold text-white">
+                  ₹${job.budget.toLocaleString('en-IN')}
+                </span>
+                <span class="text-[13px] text-white/60">
+                  / ${(() => {
+                    const { category, title, duration } = job;
+                    
+                    // Check for specific title hints first (overrides category logic)
+                    const titleLower = title?.toLowerCase() || '';
+                    if (titleLower.includes('90-minute') || titleLower.includes('90 minute')) {
+                      return '90 minutes';
+                    }
+                    if (titleLower.includes('2-hour') || titleLower.includes('2 hour')) {
+                      return '2 hours';
+                    }
+                    if (titleLower.includes('1-hour') || titleLower.includes('1 hour')) {
+                      return '1 hour';
+                    }
+
+                    // If duration is already a formatted string (not an enum), return it directly
+                    if (typeof duration === 'string' && !['hourly', 'daily', 'weekly', 'monthly', 'one-time'].includes(duration)) {
+                      return duration;
+                    }
+
+                    // If job has a specific duration field, use that to determine the label
+                    if (duration) {
+                      const categoryLower = category?.toLowerCase() || '';
+                      const durationValue = typeof duration === 'string' ? duration : duration;
+
+                      // Duration labels based on category and duration type
+                      switch (durationValue) {
+                        case 'hourly':
+                          if (categoryLower.includes('coach') || categoryLower.includes('coaching')) {
+                            return '1 hour'; // Default for coaching
+                          } else if (categoryLower.includes('bowling') || categoryLower.includes('net bowler') || categoryLower.includes('sidearm')) {
+                            return '1.5 hours'; // Bowling sessions
+                          } else if (categoryLower.includes('batting')) {
+                            return '1 hour'; // Batting sessions
+                          } else if (categoryLower.includes('analyst') || categoryLower.includes('analysis')) {
+                            return '2 hours'; // Analysis sessions
+                          } else if (categoryLower.includes('photo') || categoryLower.includes('videography')) {
+                            return '3 hours'; // Event photography
+                          } else if (categoryLower.includes('content creator')) {
+                            return '3 hours'; // Content creation
+                          } else if (categoryLower.includes('physio')) {
+                            return '1 hour'; // Physio sessions
+                          } else if (categoryLower.includes('conditioning') || categoryLower.includes('fitness')) {
+                            return '1.5 hours'; // Conditioning sessions
+                          }
+                          return '1 hour'; // Default hourly
+
+                        case 'daily':
+                          if (categoryLower.includes('scorer')) {
+                            return 'per match';
+                          }
+                          return 'per day';
+
+                        case 'weekly':
+                          return 'per week';
+
+                        case 'monthly':
+                          return 'per month';
+
+                        case 'one-time':
+                          if (categoryLower.includes('scorer') || categoryLower.includes('umpire')) {
+                            return 'per match';
+                          } else if (categoryLower.includes('photo') || categoryLower.includes('video')) {
+                            return 'per event';
+                          }
+                          return 'one-time';
+
+                        default:
+                          return 'per session'; // Fallback
+                      }
+                    }
+
+                    // Fallback if no duration field (shouldn't happen with updated jobs)
+                    return '1 hour';
+                  })()}
+                </span>
+              </div>
+              ${(() => {
+                const isApplied = appliedJobIds?.has(String(job.id));
+                if (isApplied) {
+                  return `
+                    <button class="px-4 py-2 text-xs font-medium text-green-400 bg-green-600/20 border border-green-600/50 rounded-xl transition-all duration-300 shadow-lg cursor-default flex items-center justify-center gap-1.5" disabled>
+                      <span>Applied</span>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                      </svg>
+                    </button>
+                  `;
+                }
+                return `
+                  <button class="apply-now-btn px-4 py-2 text-xs font-medium text-white bg-gradient-to-r from-[#6B46C1] to-[#4C1D95] hover:from-[#5B35B0] hover:to-[#3D1B7A] rounded-xl transition-all duration-300 shadow-lg shadow-purple-600/20 hover:shadow-purple-600/30 flex items-center justify-center gap-1.5"
+                          data-job-id="${job.id}">
+                    <span>Apply Now</span>
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                    </svg>
+                  </button>
+                `;
+              })()}
             </div>
           </div>
         `;
@@ -569,8 +678,8 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
           return;
         }
         
-        // Don't trigger if clicking on the apply button or navigation
-        if (!target.closest('.apply-now-btn')) {
+        // Handle apply button clicks and other card clicks
+        if (target.closest('.apply-now-btn') || !target.closest('.nav-btn')) {
           setSelectedJob(job);
           setIsJobDetailsOpen(true);
         }
@@ -602,10 +711,10 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
 
       // Create popup with connecting line to pin
       const popup = new mapboxgl.Popup({
-        offset: [0, 20], // Position popup lower below the pin
+        offset: [0, 60], // Position popup lower below the pin (moved down 5%)
         closeButton: false,
         closeOnClick: false,
-        maxWidth: '340px',
+        maxWidth: '380px',
         className: 'custom-popup',
         anchor: 'bottom'
       }).setDOMContent(popupContent);
@@ -703,7 +812,7 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
         zoom: 12
       });
     }
-  }, [processedJobs, selectedCategory]);
+  }, [processedJobs, selectedCategory, appliedJobIds]);
 
   // Handle closing job details
   const handleCloseJobDetails = useCallback(() => {
@@ -780,34 +889,6 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
     setIsJobDetailsOpen(true);
   }, [processedJobs]);
   
-  const handleApplyToJob = useCallback(async (jobId: string, proposal: string, rate: string, rateType: string, attachments: File[]) => {
-    try {
-      // Import the createApplication function
-      const { createApplication } = await import('@/components/freelancer/jobs/mock-data');
-
-      // Create the application
-      const newApplication = await createApplication(jobId, proposal, rate, rateType, attachments);
-
-      if (newApplication) {
-        console.log('Successfully created application:', newApplication["#"]);
-
-        // Close the job details modal
-        setIsJobDetailsOpen(false);
-
-        // Show success message
-        alert('Application submitted successfully!');
-
-        // Navigate to proposals page
-        window.location.href = '/freelancer/jobs?tab=applications&status=pending';
-      } else {
-        console.error('Failed to create application');
-        alert('Failed to submit application. Please try again.');
-      }
-    } catch (error) {
-      console.error('Error applying to job:', error);
-      alert('Error submitting application. Please try again.');
-    }
-  }, []);
 
   // If there's an error, show error message
   if (error) {
@@ -860,17 +941,16 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
           <JobDetailsFull
             job={selectedJob}
             onBack={handleCloseJobDetails}
-            onApply={(jobId: string, proposal: string, rate: string, rateType: string, attachments: File[]) => {
-              handleApplyToJob(jobId, proposal, rate, rateType, attachments);
-            }}
+            onApply={onApply || (() => {})}
+            isApplied={appliedJobIds?.has(String(selectedJob.id))}
           />
         </OverlayPortal>
       )}
       
       <style jsx global>{`
         /* Map controls */
-        .mapboxgl-ctrl-top-right {
-          top: 20px !important;
+        .mapboxgl-ctrl-bottom-right {
+          bottom: 80px !important;
           right: 10px !important;
           z-index: 10 !important;
         }
@@ -882,8 +962,8 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
         }
         
         .mapboxgl-ctrl button {
-          width: 40px !important;
-          height: 40px !important;
+          width: 32px !important;
+          height: 32px !important;
           background-color: white !important;
           border: none !important;
           border-bottom: 1px solid #eee !important;
@@ -902,7 +982,7 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
         
         .mapboxgl-ctrl-icon {
           opacity: 1 !important;
-          background-size: 20px 20px !important;
+          background-size: 16px 16px !important;
           background-position: center !important;
           background-repeat: no-repeat !important;
         }
@@ -930,8 +1010,8 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
           overflow: hidden;
         }
         .mapboxgl-ctrl button {
-          width: 36px;
-          height: 36px;
+          width: 32px;
+          height: 32px;
         }
         .mapboxgl-ctrl button + button {
           border-top: 1px solid #eee;
@@ -940,7 +1020,7 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
           background-color: #f5f5f5;
         }
         .mapboxgl-ctrl-icon {
-          background-size: 20px 20px;
+          background-size: 16px 16px;
         }
 
         .marker {

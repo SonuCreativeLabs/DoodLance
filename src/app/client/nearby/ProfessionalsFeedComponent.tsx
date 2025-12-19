@@ -3,10 +3,10 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Star, MapPin, Clock, Briefcase } from 'lucide-react';
-import { professionals } from './mockData';
+import { useNearbyProfessionals } from '@/contexts/NearbyProfessionalsContext';
 import type { Freelancer } from './types';
 
-// Define BaseProfessional interface to match what we receive from integrated-explore
+// Define BaseProfessional interface to match what we receive from hirefeed
 interface BaseProfessional {
   id: string | number;
   name?: string;
@@ -25,6 +25,7 @@ interface BaseProfessional {
   expertise?: string[];
   experience?: string;
   description?: string;
+  cricketRole?: string;
 }
 
 interface ProfessionalsFeedProps {
@@ -34,6 +35,7 @@ interface ProfessionalsFeedProps {
 export default function ProfessionalsFeed({ filteredProfessionals }: ProfessionalsFeedProps) {
   const router = useRouter();
   const [favoriteIds, setFavoriteIds] = useState<number[]>([]);
+  const { professionals } = useNearbyProfessionals();
   const displayProfessionals = filteredProfessionals || professionals;
 
   const getNumericId = (id: string | number): number => {
@@ -48,12 +50,25 @@ export default function ProfessionalsFeed({ filteredProfessionals }: Professiona
   };
 
   const handleProfessionalClick = (freelancer: BaseProfessional) => {
-    router.push(`/client/freelancer/${freelancer.id}`);
+    if (freelancer && freelancer.id) {
+      router.push(`/client/freelancer/${freelancer.id}?source=list`);
+    }
   };
+
+  if (!displayProfessionals || displayProfessionals.length === 0) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-white/60">No professionals available</p>
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      {displayProfessionals.map(freelancer => (
+      {displayProfessionals.map(freelancer => {
+        if (!freelancer || !freelancer.id) return null;
+        
+        return (
         <div
           key={freelancer.id}
           className="group bg-gradient-to-br from-[#1E1E1E] to-[#1A1A1A] rounded-2xl p-6 shadow-xl hover:shadow-purple-500/20 transition-all duration-300 w-full border border-white/5 hover:border-white/10 min-h-[220px] h-full relative cursor-pointer"
@@ -79,9 +94,13 @@ export default function ProfessionalsFeed({ filteredProfessionals }: Professiona
               <div className="relative">
                 <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full opacity-20 blur-md"></div>
                 <img
-                  src={freelancer.image}
-                  alt={freelancer.name}
+                  src={freelancer.avatar || freelancer.image || 'https://via.placeholder.com/64x64?text=No+Image'}
+                  alt={freelancer.name || 'Professional'}
                   className="relative w-16 h-16 rounded-full border-2 border-purple-200/50 object-cover"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = 'https://via.placeholder.com/64x64?text=No+Image';
+                  }}
                 />
               </div>
             </div>
@@ -98,7 +117,7 @@ export default function ProfessionalsFeed({ filteredProfessionals }: Professiona
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-[12px] font-medium text-white/80 bg-white/10 px-2 py-0.5 rounded-full whitespace-nowrap">{freelancer.service || 'Service'}</span>
+                    <span className="text-[12px] font-medium text-white/80 whitespace-nowrap">{freelancer.cricketRole || 'All Rounder'}</span>
                   </div>
                 </div>
               </div>
@@ -106,9 +125,9 @@ export default function ProfessionalsFeed({ filteredProfessionals }: Professiona
               <div className="flex items-center gap-4 text-[12px] text-white/60">
                 <div className="flex items-center gap-1.5">
                   <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
-                  <span className="truncate max-w-[120px]" title={freelancer.location}>{freelancer.location}</span>
+                  <span className="truncate max-w-[120px]" title={`${freelancer.location}${freelancer.distance ? ` | ${freelancer.distance < 1 ? `${(freelancer.distance * 1000).toFixed(0)}m` : `${freelancer.distance.toFixed(1)}km`} away` : ''}`}>{freelancer.location}{freelancer.distance ? <><span className="text-white/30 mx-1 text-[10px]">|</span>{freelancer.distance < 1 ? `${(freelancer.distance * 1000).toFixed(0)}m` : `${freelancer.distance.toFixed(1)}km`} away</> : ''}</span>
                 </div>
-                <div className="flex items-center gap-1.5 bg-green-500/10 px-2 py-0.5 rounded-full">
+                <div className="flex items-center gap-1.5">
                   <Clock className="w-3.5 h-3.5 flex-shrink-0 text-green-400" />
                   <span className="text-green-400 font-medium">{freelancer.responseTime}</span>
                 </div>
@@ -155,7 +174,8 @@ export default function ProfessionalsFeed({ filteredProfessionals }: Professiona
             </div>
           </div>
         </div>
-      ))}
+        );
+      })}
     </div>
   );
 } 

@@ -57,7 +57,19 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    return NextResponse.json(jobs)
+    // Parse string fields back to arrays for backwards compatibility
+    const jobsWithParsedFields = jobs.map((job: any) => ({
+      ...job,
+      coords: job.coords ? JSON.parse(job.coords) : [],
+      skills: job.skills ? job.skills.split(',').map((s: string) => s.trim()).filter(Boolean) : [],
+      duration: job.duration || 'hourly',
+      experience: job.experience || 'Intermediate',
+      workMode: job.workMode || 'remote',
+      type: job.type || 'freelance',
+      scheduledAt: job.scheduledAt, // Preserve the stored scheduledAt date
+    }))
+
+    return NextResponse.json(jobsWithParsedFields)
   } catch (error) {
     console.error('Error fetching jobs:', error)
     return NextResponse.json(
@@ -115,6 +127,7 @@ export async function POST(request: NextRequest) {
       type,
       duration,
       experience,
+      startDate,
     } = body
 
     // Validate required fields
@@ -126,6 +139,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Update or create client profile
+    // Temporarily disabled to isolate issue
+    /*
     await prisma.clientProfile.upsert({
       where: { userId: user.id },
       update: {
@@ -136,6 +151,7 @@ export async function POST(request: NextRequest) {
         projectsPosted: 1,
       }
     })
+    */
 
     // Create the job
     const job = await prisma.job.create({
@@ -147,15 +163,16 @@ export async function POST(request: NextRequest) {
         budgetMin: budgetMin ? parseFloat(budgetMin) : null,
         budgetMax: budgetMax ? parseFloat(budgetMax) : null,
         location,
-        coords: coords || [],
-        skills: skills || [],
+        coords: coords ? JSON.stringify(coords) : JSON.stringify([]),
+        skills: Array.isArray(skills) ? skills.join(',') : (skills || ''),
         workMode: workMode || 'remote',
         type: type || 'freelance',
-        duration,
-        experience: experience || 'Intermediate',
+        duration: duration || 'hourly', // Store the actual duration text from form
+        experience: experience || 'Intermediate', // Store as is, will be mapped on frontend
         clientId: user.id,
         isActive: true,
         proposals: 0,
+        scheduledAt: startDate ? new Date(startDate).toISOString() : null, // Store startDate as scheduledAt
       },
       include: {
         client: {

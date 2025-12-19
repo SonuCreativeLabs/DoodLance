@@ -17,6 +17,7 @@ export interface Service {
   type?: 'online' | 'in-person';
   deliveryTime: string;
   features?: string[];
+  category?: string;
 }
 
 export interface PortfolioItem {
@@ -45,6 +46,7 @@ export interface ProfileData {
   name: string;
   title: string;
   about: string;
+  bio?: string;
   rating: number;
   reviewCount: number;
   responseTime: string;
@@ -58,8 +60,12 @@ export interface ProfileData {
   portfolio: PortfolioItem[];
   reviews: Review[];
   availability: Availability[];
+  workingHours?: string;
   completedJobs?: number;
   activeJobs?: number;
+  cricketRole?: string;
+  battingStyle?: string;
+  bowlingStyle?: string;
 }
 
 export interface ProfilePreviewProps {

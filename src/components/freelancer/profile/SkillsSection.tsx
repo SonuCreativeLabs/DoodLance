@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, memo } from 'react';
+import { useState, memo, useEffect } from 'react';
 import { Plus, GripVertical, Pencil, ChevronDown, Clock, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
 import { cn } from "@/lib/utils";
+import { useSkills } from '@/contexts/SkillsContext';
 
 interface SkillItemType {
   id: string;
@@ -105,7 +106,14 @@ const SkillItem = memo(function SkillItem({ id, skill, description = '', experie
                     min="0"
                     value={editedExperience}
                     onChange={(e) => setEditedExperience(e.target.value)}
-                    onBlur={(e) => setEditedExperience(e.target.value ? formatExperience(e.target.value) : '')}
+                    onBlur={(e) => {
+                      const numValue = e.target.value.replace(/\D/g, '');
+                      if (numValue) {
+                        setEditedExperience(formatExperience(numValue));
+                      } else {
+                        setEditedExperience('');
+                      }
+                    }}
                     placeholder="e.g., 5"
                     className="h-10 bg-[#2A2A2A] border border-gray-700 text-white placeholder-gray-400 pr-12 appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
@@ -252,7 +260,7 @@ const SkillItem = memo(function SkillItem({ id, skill, description = '', experie
       
       {/* Skill Details Dialog */}
       <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
-        <DialogContent className="w-[90vw] max-w-[400px] bg-[#1E1E1E] border border-white/10 rounded-xl overflow-hidden p-0">
+        <DialogContent aria-describedby={undefined} className="w-[90vw] max-w-[400px] bg-[#1E1E1E] border border-white/10 rounded-xl overflow-hidden p-0">
           <div className="relative">
             {/* Header */}
             <div className="border-b border-white/10 bg-[#1E1E1E] px-5 py-3">
@@ -324,23 +332,44 @@ SkillItem.displayName = 'SkillItem';
 const defaultSkills: SkillItemType[] = [
   {
     id: '1',
-    name: "Batting",
-    description: "Specialized in top-order batting with solid technique and aggressive stroke play.",
+    name: "RH Batsman",
+    description: "Right-handed batsman specializing in top-order batting with solid technique and aggressive stroke play.",
     experience: "5 years",
-    level: "Intermediate"
+    level: "Expert"
   },
   {
     id: '2',
-    name: "Off Spin",
-    description: "Skilled off-spin bowler with excellent control and variation.",
-    experience: "3 years",
+    name: "Sidearm Specialist",
+    description: "Expert sidearm bowler with unique delivery angles and deceptive variations.",
+    experience: "4 years",
     level: "Expert"
   },
   {
     id: '3',
-    name: "AI Development",
-    description: "Expert in developing machine learning models and AI solutions.",
+    name: "Off Spin",
+    description: "Skilled off-spin bowler with excellent control, flight, and mystery variations.",
+    experience: "3 years",
+    level: "Expert"
+  },
+  {
+    id: '4',
+    name: "Batting Coach",
+    description: "Professional batting coach with expertise in technique, mental approach, and match situations.",
+    experience: "6 years",
+    level: "Expert"
+  },
+  {
+    id: '5',
+    name: "Analyst",
+    description: "Cricket performance analyst specializing in match statistics, player metrics, and strategic insights.",
     experience: "2 years",
+    level: "Intermediate"
+  },
+  {
+    id: '6',
+    name: "Mystery Spin",
+    description: "Specialist in mystery spin variations including doosra, carrom ball, and other deceptive deliveries.",
+    experience: "3 years",
     level: "Expert"
   }
 ];
@@ -349,21 +378,46 @@ export function SkillsSection({
   initialSkills = defaultSkills,
   className 
 }: { initialSkills?: Array<string | SkillItemType>; className?: string }) {
-  const [skills, setSkills] = useState<SkillItemType[]>(
-    initialSkills.map(skill => ({
-      id: Math.random().toString(36).substr(2, 9),
-      name: typeof skill === 'string' ? skill : skill.name,
-      description: typeof skill === 'object' ? skill.description : undefined,
-      experience: typeof skill === 'object' ? skill.experience : undefined,
-      level: (typeof skill === 'object' ? skill.level : 'Intermediate') as 'Beginner' | 'Intermediate' | 'Expert'
-    }))
-  );
+  const { skills: contextSkills, updateSkills } = useSkills();
+  
+  // Use context skills if available and not empty, otherwise use initialSkills or defaultSkills
+  const [skills, setSkills] = useState<SkillItemType[]>(() => {
+    if (contextSkills && contextSkills.length > 0) {
+      return contextSkills as SkillItemType[];
+    }
+    if (Array.isArray(initialSkills) && initialSkills.length > 0) {
+      // Handle both string array and SkillItemType array
+      if (typeof initialSkills[0] === 'string') {
+        return (initialSkills as string[]).map((name, index) => ({
+          id: `${index + 1}`,
+          name,
+          description: undefined,
+          experience: undefined,
+          level: 'Intermediate' as const
+        }));
+      }
+      return initialSkills as SkillItemType[];
+    }
+    return defaultSkills;
+  });
+  
+  // Keep local state in sync with context when it hydrates/changes, but only if context has detailed skills
+  useEffect(() => {
+    if (contextSkills && contextSkills.length > 0 && contextSkills[0].description) {
+      setSkills(contextSkills as SkillItemType[]);
+    }
+  }, [contextSkills]);
   
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newSkill, setNewSkill] = useState('');
   const [newExperience, setNewExperience] = useState('');
   const [newDescription, setNewDescription] = useState('');
   const [newLevel, setNewLevel] = useState<'Beginner' | 'Intermediate' | 'Expert'>('Intermediate');
+
+  // Sync skills with SkillsContext whenever skills change
+  useEffect(() => {
+    updateSkills(skills);
+  }, [skills, updateSkills]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -437,7 +491,7 @@ export function SkillsSection({
           </Button>
         </DialogTrigger>
         
-        <DialogContent className="sm:max-w-[600px] w-[calc(100%-2rem)] max-h-[90vh] flex flex-col p-0 bg-[#1E1E1E] border-0 rounded-xl shadow-xl overflow-hidden">
+        <DialogContent aria-describedby={undefined} className="sm:max-w-[600px] w-[calc(100%-2rem)] max-h-[90vh] flex flex-col p-0 bg-[#1E1E1E] border-0 rounded-xl shadow-xl overflow-hidden">
           {/* Header */}
           <div className="border-b border-white/10 bg-[#1E1E1E] px-5 py-3">
             <DialogHeader className="space-y-0.5">
@@ -455,23 +509,24 @@ export function SkillsSection({
             <div className="space-y-4">
               <div>
                 <Label htmlFor="new-skill" className="text-xs font-medium text-foreground/80 mb-1.5 block">
-                  Skill Name
+                  Skill Name <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="new-skill"
-                  placeholder="e.g., Pet Care"
+                  placeholder="Off-Spin Bowling"
                   value={newSkill}
                   onChange={(e) => setNewSkill(e.target.value)}
                   className="h-10 bg-[#2A2A2A] border border-gray-700 text-white placeholder-gray-400"
                   autoFocus
                   onKeyDown={(e) => e.key === 'Enter' && handleAddSkill()}
+                  required
                 />
               </div>
               
               <div className="grid grid-cols-5 gap-4">
                 <div className="col-span-2">
                   <Label htmlFor="experience" className="text-xs font-medium text-foreground/80 mb-1.5 block">
-                    Experience
+                    Experience <span className="text-red-500">*</span>
                   </Label>
                   <div className="relative">
                     <Input
@@ -480,9 +535,13 @@ export function SkillsSection({
                       min="0"
                       value={newExperience}
                       onChange={(e) => setNewExperience(e.target.value)}
-                      onBlur={(e) => setNewExperience(e.target.value ? formatExperience(e.target.value) : '')}
-                      placeholder="e.g., 3"
+                      onBlur={(e) => {
+                        const numValue = e.target.value.replace(/\D/g, '');
+                        setNewExperience(numValue);
+                      }}
+                      placeholder="3"
                       className="h-10 bg-[#2A2A2A] border border-gray-700 text-white placeholder-gray-400 pr-12 appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      required
                     />
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground pointer-events-none">
                       {newExperience === '1' ? 'year' : 'years'}
@@ -492,7 +551,7 @@ export function SkillsSection({
                 
                 <div className="col-span-3">
                   <Label htmlFor="level" className="text-xs font-medium text-foreground/80 mb-1.5 block">
-                    Skill Level
+                    Skill Level <span className="text-red-500">*</span>
                   </Label>
                   <div className="relative">
                     <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
@@ -505,6 +564,7 @@ export function SkillsSection({
                       value={newLevel}
                       onChange={(e) => setNewLevel(e.target.value as 'Beginner' | 'Intermediate' | 'Expert')}
                       className="flex h-10 w-full rounded-md border border-gray-700 bg-[#2A2A2A] pl-10 pr-3 py-2 text-sm text-white ring-offset-background appearance-none cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      required
                     >
                       <option value="Beginner">Beginner</option>
                       <option value="Intermediate">Intermediate</option>
@@ -516,14 +576,15 @@ export function SkillsSection({
               
               <div>
                 <Label htmlFor="description" className="text-xs font-medium text-foreground/80 mb-1.5 block">
-                  Description <span className="text-muted-foreground">(optional)</span>
+                  Description <span className="text-red-500">*</span>
                 </Label>
                 <Textarea
                   id="description"
                   value={newDescription}
                   onChange={(e) => setNewDescription(e.target.value)}
                   className="min-h-[120px] bg-[#2A2A2A] border border-gray-700 text-white placeholder-gray-400"
-                  placeholder="Describe your skills and experience (e.g., 'Certified pet care specialist with 5+ years of experience in dog walking, pet sitting, and basic grooming')"
+                  placeholder="Specialist in off-spin with doosra and carrom ball; focus on line-length discipline and match awareness."
+                  required
                 />
               </div>
             </div>
@@ -543,7 +604,7 @@ export function SkillsSection({
               <Button
                 type="button"
                 onClick={handleAddSkill}
-                disabled={!newSkill.trim()}
+                disabled={!newSkill.trim() || !newExperience.trim() || !newDescription.trim()}
                 className="h-10 px-8 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-700 hover:to-purple-600 shadow-md hover:shadow-purple-500/30 transition-all"
               >
                 Add Skill

@@ -1,6 +1,6 @@
 "use client"
 
-import { Briefcase, Code, Award, Star, FileText, Calendar, MessageSquare, Settings, User, Mail, Phone, Globe, MapPin, GraduationCap, Languages, Edit2, CheckCircle, CircleDollarSign, ChevronRight, BarChart2, Clock, Users, Target, Dumbbell, Trophy } from 'lucide-react';
+import { Briefcase, Code, Award, Star, FileText, Calendar, MessageSquare, Settings, User, Mail, Phone, Globe, MapPin, GraduationCap, Languages, Edit2, CheckCircle, CircleDollarSign, ChevronRight, BarChart2, Clock, Users, Target, Dumbbell, Trophy, CreditCard, Settings as SettingsIcon } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,9 +10,10 @@ import { ProfileHeader } from '@/components/freelancer/profile/ProfileHeader';
 import { ProfileStatsCard } from '@/components/freelancer/profile/ProfileStatsCard';
 import { MonthlyActivities } from '@/components/freelancer/profile/MonthlyActivities';
 import { ProfileSectionCard } from '@/components/freelancer/profile/ProfileSectionCard';
+import { SkillsSection } from '@/components/freelancer/profile/SkillsSection';
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useRef } from 'react';
-import { PortfolioItem } from './preview/portfolio/page';
+import { type PortfolioItem } from '@/contexts/PortfolioContext';
 import { getSessionFlag, removeSessionItem } from '@/utils/sessionStorage';
 
 // Types
@@ -76,23 +77,23 @@ type FreelancerData = {
 const experiences: Experience[] = [
   {
     id: '1',
-    role: 'Senior UI/UX Designer',
-    company: 'TechCorp',
-    location: 'San Francisco, CA',
+    role: 'Senior Cricket Coach',
+    company: 'Chennai Cricket Academy',
+    location: 'Chennai, India',
     startDate: '2020-01-01',
     endDate: '2023-12-31',
     isCurrent: false,
-    description: 'Led a team of 5 designers to create user-centered designs for web and mobile applications.'
+    description: 'Led coaching programs for 50+ players, specializing in batting and bowling techniques. Coached teams that won multiple district-level tournaments.'
   },
   {
     id: '2',
-    role: 'Product Designer',
-    company: 'DesignHub',
-    location: 'Remote',
+    role: 'Professional Cricket Player',
+    company: 'Tamil Nadu Cricket Association',
+    location: 'Chennai, India',
     startDate: '2023-01-01',
     endDate: undefined,
     isCurrent: true,
-    description: 'Designing intuitive user experiences for enterprise SaaS products.'
+    description: 'Competitive cricketer playing in state-level tournaments. Right-handed batsman and off-spin bowler with championship-level experience.'
   }
 ];
 
@@ -114,8 +115,8 @@ export default function ProfilePage() {
 
   const scrollToSection = (ref: React.RefObject<HTMLElement>) => {
     if (ref.current) {
-      // Get the header height (adjust this value based on your actual header height)
-      const headerHeight = 72; // Approximate height of the header in pixels
+      // ProfileHeader is not fixed, so no header height offset needed
+      const headerHeight = 0;
       
       // Get the element's position relative to the viewport
       const elementRect = ref.current.getBoundingClientRect();
@@ -126,7 +127,7 @@ export default function ProfilePage() {
       // Scroll to the calculated position
       window.scrollTo({
         top: scrollPosition,
-        behavior: 'smooth'
+        behavior: 'instant' // Use instant for immediate scrolling
       });
       
       // Remove the hash without page reload
@@ -150,12 +151,15 @@ export default function ProfilePage() {
       const hash = window.location.hash;
       const isFromPortfolio = getSessionFlag('scrollToPortfolio');
       
+      console.log('Hash change detected:', hash, 'isFromPortfolio:', isFromPortfolio);
+      
       // Small delay to ensure the DOM is fully rendered
       const timer = setTimeout(() => {
         // Check for section hashes first
         if (hash === '#personal-details') {
           scrollToSectionIfNeeded('personal-details', personalDetailsRef);
         } else if (hash === '#portfolio' || isFromPortfolio) {
+          console.log('Scrolling to portfolio section');
           if (isFromPortfolio) {
             removeSessionItem('scrollToPortfolio');
           }
@@ -163,7 +167,7 @@ export default function ProfilePage() {
         } else if (hash === '#skills') {
           scrollToSectionIfNeeded('skills', skillsRef);
         }
-      }, 50); // Reduced delay for better UX
+      }, 200); // Increased delay for better reliability
       
       return () => clearTimeout(timer);
     };
@@ -178,18 +182,10 @@ export default function ProfilePage() {
     return () => {
       window.removeEventListener('hashchange', handleHashChange, false);
     };
-  }, [searchParams]);
+  }, []); // Remove searchParams dependency to ensure it always runs
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-white pb-20 md:pb-24">
-      <ProfileHeader 
-        name={freelancerData.name}
-        title={freelancerData.title}
-        rating={freelancerData.rating}
-        reviewCount={freelancerData.reviewCount}
-        online={freelancerData.online}
-        location={freelancerData.location}
-        skills={freelancerData.skills}
-      />
+      <ProfileHeader />
 
       {/* Gradient separation line */}
       <div className="relative py-1">
@@ -277,10 +273,24 @@ export default function ProfilePage() {
           />
           
           <ProfileSectionCard
+            title="Bank Account"
+            description="Manage your bank account details for payments"
+            href="/freelancer/profile/bank-account"
+            icon={<CreditCard className="h-4 w-4" />}
+          />
+          
+          <ProfileSectionCard
             title="Identity Verification"
             description="Complete your KYC verification to unlock all features"
             href="/freelancer/profile/verification"
             icon={<CheckCircle className="h-4 w-4" />}
+          />
+
+          <ProfileSectionCard
+            title="Settings"
+            description="Manage your account, notifications and preferences"
+            href="/freelancer/profile/settings"
+            icon={<SettingsIcon className="h-4 w-4" />}
           />
           
           <Link 
@@ -315,6 +325,11 @@ export default function ProfilePage() {
             </svg>
           </Link>
         </div>
+      </div>
+
+      {/* Hidden SkillsSection to sync skills immediately on page load */}
+      <div className="hidden">
+        <SkillsSection />
       </div>
     </div>
   );

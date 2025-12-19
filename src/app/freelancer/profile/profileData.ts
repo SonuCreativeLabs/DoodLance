@@ -62,7 +62,7 @@ export const freelancerData: ExtendedFreelancerData = {
   completionRate: 100,
   online: true,
   location: "Chennai, India",
-  skills: ["RH Batsman", "Sidearm Specialist", "Off Spin", "Coach", "Analyst", "Mystery Spin"],
+  skills: ["RH Batsman", "Sidearm Specialist", "Off Spin", "Batting coach", "Analyst", "Mystery Spin"],
   services: [
     {
       id: "1",
@@ -106,19 +106,19 @@ export const freelancerData: ExtendedFreelancerData = {
     },
     {
       id: '4',
-      title: 'AI-Powered Cricket Analytics',
-      category: 'AI/ML Development',
+      title: 'Cricket Performance Analytics',
+      category: 'Analyst',
       image: 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
-      description: 'Developed a machine learning model to analyze cricket match data and predict outcomes with 85% accuracy. The system processes player statistics, pitch conditions, and historical match data to provide actionable insights for coaches and players.',
-      skills: ['Machine Learning', 'Data Analysis', 'Python', 'Cricket']
+      description: 'Developed comprehensive cricket performance analytics tracking player statistics, match data, and performance metrics. Created detailed reports for coaches and players to improve game strategies.',
+      skills: ['Cricket Analytics', 'Performance Metrics', 'Data Analysis', 'Strategy']
     },
     {
       id: '5',
-      title: 'Cricket Analytics Dashboard',
-      category: 'Cricket Technology',
+      title: 'Live Cricket Scoring System',
+      category: 'Cricket Content Creator',
       image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
-      description: 'Built a comprehensive cricket analytics platform that tracks player performance, match statistics, and provides predictive insights for coaches and teams. Features real-time data visualization and performance metrics.',
-      skills: ['Cricket Analytics', 'Data Visualization', 'Performance Metrics', 'Cricket Tech']
+      description: 'Built a real-time cricket scoring platform that tracks live match statistics, player performance, and generates comprehensive match reports. Used by local cricket clubs for tournament management.',
+      skills: ['Cricket Scoring', 'Live Analytics', 'Match Management', 'Data Visualization']
     }
   ],
   clientReviews: [

@@ -9,8 +9,95 @@ import { Search, X } from 'lucide-react';
 
 // Import components, types, utils, and mock data from our modular files
 import { JobCard, ApplicationCard } from './index';
-import { Application, JobCategory } from './types';
+import { Job, Application, EarningsData, JobCategory } from './types';
 import { mockUpcomingJobs } from './mock-data';
+
+// LocalStorage key for client bookings
+const CLIENT_BOOKINGS_KEY = 'clientBookings';
+
+// Convert client booking to freelancer job format
+const convertBookingToJob = (booking: any): Job => {
+  // Parse the date - handle both YYYY-MM-DD and formatted dates
+  let jobDate = booking.date;
+  if (booking.date && !booking.date.includes('-')) {
+    // It's a formatted date, try to parse it
+    const parsedDate = new Date(booking.date);
+    if (!isNaN(parsedDate.getTime())) {
+      jobDate = parsedDate.toISOString().split('T')[0];
+    }
+  }
+
+  // Map booking status to job status
+  // 'confirmed' bookings should show as 'pending' (upcoming) jobs
+  // 'ongoing' bookings should show as 'started' jobs
+  let jobStatus: 'pending' | 'started' | 'completed' | 'cancelled' = 'pending';
+  if (booking.status === 'ongoing') {
+    jobStatus = 'started';
+  } else if (booking.status === 'completed') {
+    jobStatus = 'completed';
+  } else if (booking.status === 'cancelled') {
+    jobStatus = 'cancelled';
+  }
+
+  // Generate a unique 4-digit OTP for this booking
+  const generateOtp = () => {
+    return Math.floor(1000 + Math.random() * 9000).toString();
+  };
+  
+  // Check if we already have an OTP stored for this booking
+  let storedOtp = '1234'; // Default for testing
+  try {
+    const otpStore = JSON.parse(localStorage.getItem('bookingOtps') || '{}');
+    if (otpStore[booking['#']]) {
+      storedOtp = otpStore[booking['#']];
+    } else {
+      storedOtp = generateOtp();
+      otpStore[booking['#']] = storedOtp;
+      localStorage.setItem('bookingOtps', JSON.stringify(otpStore));
+    }
+  } catch (e) {
+    console.error('Error managing OTP:', e);
+  }
+
+  return {
+    id: booking['#'] || `booking_${Date.now()}`,
+    title: booking.service || 'Service Booking',
+    category: (booking.category as JobCategory) || 'OTHER',
+    date: jobDate,
+    time: booking.time || '10:00 AM',
+    jobDate: jobDate,
+    jobTime: booking.time || '10:00 AM',
+    status: jobStatus,
+    payment: typeof booking.price === 'string' 
+      ? parseInt(booking.price.replace(/[₹,]/g, '')) || 0 
+      : booking.price || 0,
+    location: booking.location || 'Location TBD',
+    description: booking.notes || '', // Use notes as description for direct hire
+    skills: [],
+    duration: 'As per booking',
+    experienceLevel: undefined,
+    otp: storedOtp,
+    // Direct hire specific fields
+    isDirectHire: true,
+    notes: booking.notes || '',
+    services: booking.services || [],
+    paymentMethod: booking.paymentMethod || 'cod',
+    client: {
+      name: 'Client', // In real app, this would come from client profile
+      rating: 4.5,
+      jobsCompleted: 10,
+      memberSince: new Date().toISOString().split('T')[0],
+      phoneNumber: '+91 9876543210',
+      image: '',
+      moneySpent: 50000,
+      location: booking.location || 'Location TBD',
+      joinedDate: new Date().toISOString().split('T')[0],
+      freelancersWorked: 5,
+      freelancerAvatars: []
+    },
+    isProposal: false
+  };
+};
 
 interface JobDashboardProps {
   searchParams?: {
@@ -23,7 +110,7 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
   // State management
   const router = useRouter();
   const initialTab = searchParams?.tab === 'applications' ? 'applications' : 'upcoming';
-  const initialStatus = searchParams?.status || (initialTab === 'upcoming' ? 'ongoing' : 'pending');
+  const initialStatus = searchParams?.status || (initialTab === 'upcoming' ? 'upcoming' : 'pending');
 
   const [activeTab, setActiveTab] = useState(initialTab);
   const [searchQuery, setSearchQuery] = useState('');
@@ -187,13 +274,40 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
     }
   };
 
-  // Initialize with mock data instead of API calls
+  // Load client bookings from localStorage and convert to jobs
+  const loadClientBookings = (): Job[] => {
+    try {
+      const storedBookings = localStorage.getItem(CLIENT_BOOKINGS_KEY);
+      if (storedBookings) {
+        const bookings = JSON.parse(storedBookings);
+        // Only include confirmed/upcoming bookings
+        return bookings
+          .filter((b: any) => b.status === 'confirmed' || b.status === 'ongoing')
+          .map(convertBookingToJob);
+      }
+    } catch (error) {
+      console.error('Error loading client bookings:', error);
+    }
+    return [];
+  };
+
+  // Initialize with mock data and client bookings
   useEffect(() => {
     // Clean up any duplicate entries in localStorage first
     cleanupDuplicateJobs();
 
     const jobsWithUpdates = applyStoredJobUpdates();
-    setJobs(jobsWithUpdates);
+    const clientBookingJobs = loadClientBookings();
+    
+    // Merge jobs, avoiding duplicates by ID
+    const allJobs = [...jobsWithUpdates];
+    clientBookingJobs.forEach(bookingJob => {
+      if (!allJobs.some(j => j.id === bookingJob.id)) {
+        allJobs.push(bookingJob);
+      }
+    });
+    
+    setJobs(allJobs);
 
     // Dynamically import applications to get latest data
     const loadApplications = async () => {
@@ -215,7 +329,17 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
         cleanupDuplicateJobs();
 
         const jobsWithUpdates = applyStoredJobUpdates();
-        setJobs(jobsWithUpdates);
+        const clientBookingJobs = loadClientBookings();
+        
+        // Merge jobs
+        const allJobs = [...jobsWithUpdates];
+        clientBookingJobs.forEach(bookingJob => {
+          if (!allJobs.some(j => j.id === bookingJob.id)) {
+            allJobs.push(bookingJob);
+          }
+        });
+        
+        setJobs(allJobs);
       }
     };
 
@@ -226,7 +350,17 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
       cleanupDuplicateJobs();
 
       const jobsWithUpdates = applyStoredJobUpdates();
-      setJobs(jobsWithUpdates);
+      const clientBookingJobs = loadClientBookings();
+      
+      // Merge jobs
+      const allJobs = [...jobsWithUpdates];
+      clientBookingJobs.forEach(bookingJob => {
+        if (!allJobs.some(j => j.id === bookingJob.id)) {
+          allJobs.push(bookingJob);
+        }
+      });
+      
+      setJobs(allJobs);
 
       // Auto-switch to appropriate tab if job was completed/cancelled, but delay to avoid race conditions
       setTimeout(() => {
@@ -240,11 +374,31 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
       }, 50);
     };
 
+    // Listen for client booking updates
+    const handleClientBookingUpdate = (e: CustomEvent) => {
+      console.log('Client booking update received:', e.detail);
+      
+      const jobsWithUpdates = applyStoredJobUpdates();
+      const clientBookingJobs = loadClientBookings();
+      
+      // Merge jobs
+      const allJobs = [...jobsWithUpdates];
+      clientBookingJobs.forEach(bookingJob => {
+        if (!allJobs.some(j => j.id === bookingJob.id)) {
+          allJobs.push(bookingJob);
+        }
+      });
+      
+      setJobs(allJobs);
+    };
+
     window.addEventListener('storage', handleStorageChange);
     window.addEventListener('jobStatusUpdated', handleCustomEvent as EventListener);
+    window.addEventListener('clientBookingUpdated', handleClientBookingUpdate as EventListener);
     return () => {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('jobStatusUpdated', handleCustomEvent as EventListener);
+      window.removeEventListener('clientBookingUpdated', handleClientBookingUpdate as EventListener);
     };
   }, []);
 
@@ -290,7 +444,7 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
     }
 
     // Extract status from URL parameters with defaults
-    let statusFromUrl = searchParams?.status || (tabFromUrl === 'upcoming' ? 'ongoing' : 'pending');
+    let statusFromUrl = searchParams?.status || (tabFromUrl === 'upcoming' ? 'upcoming' : 'pending');
 
     // Validate status based on current tab
     if (tabFromUrl === 'upcoming' && !['upcoming', 'ongoing', 'completed', 'cancelled'].includes(statusFromUrl)) {
@@ -310,12 +464,15 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
       id: application["#"],
       title: application.jobTitle,
       category: application.category as JobCategory,
-      date: application.appliedDate,
-      time: 'TBD',
-      status: 'upcoming' as const,
-      payment: `${application.budget.min} - ${application.budget.max}`,
+      date: application.scheduledAt || application.postedDate, // Use scheduled date if available, otherwise posted date
+      time: '09:00', // Default time for upcoming jobs
+      status: 'upcoming' as const, // Accepted applications become upcoming jobs
+      payment: application.proposal.proposedRate, // Use the agreed rate instead of budget range
       location: application.location,
       description: application.description,
+      skills: application.proposal.skills,
+      duration: `${application.proposal.estimatedDays} days`,
+      experienceLevel: application.experienceLevel as 'Beginner' | 'Intermediate' | 'Expert' | undefined,
       client: {
         name: application.clientName,
         rating: application.clientRating,
@@ -325,10 +482,15 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
         memberSince: application.clientSince,
         freelancersWorked: application.freelancersWorked,
         freelancerAvatars: application.freelancerAvatars,
-        experienceLevel: application.experienceLevel
+        experienceLevel: application.experienceLevel as 'Beginner' | 'Intermediate' | 'Expert' | undefined
       },
-      // Flag to identify this as a proposal/accepted application
-      isProposal: true
+      // Add proposal history for timeline continuity
+      proposalHistory: {
+        postedAt: application.postedDate,
+        appliedDate: application.appliedDate,
+        clientSpottedDate: new Date(new Date(application.appliedDate).getTime() + 3600000).toISOString(),
+        acceptedDate: new Date().toISOString()
+      }
     };
   };
 
@@ -397,7 +559,6 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
     if (!searchLower) {
       return applications.filter(app => {
         if (statusFilter === 'pending') return app.status === 'pending';
-        if (statusFilter === 'accepted') return app.status === 'accepted';
         if (statusFilter === 'rejected') return app.status === 'rejected';
         if (statusFilter === 'withdrawn') return app.status === 'withdrawn';
         return true;
@@ -415,7 +576,6 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
       if (!matchesSearch) return false;
 
       if (statusFilter === 'pending') return app.status === 'pending';
-      if (statusFilter === 'accepted') return app.status === 'accepted';
       if (statusFilter === 'rejected') return app.status === 'rejected';
       if (statusFilter === 'withdrawn') return app.status === 'withdrawn';
 
@@ -425,7 +585,7 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
 
   // Calculate counts for each tab and status
   const tabCounts = useMemo(() => {
-    const upcomingJobs = jobs.filter(job => job.status === 'confirmed' || job.status === 'pending');
+    const upcomingJobs = jobs.filter(job => job.status === 'upcoming' || job.status === 'pending');
     const ongoingJobs = jobs.filter(job => job.status === 'started');
     const completedJobs = jobs.filter(job => job.status === 'completed');
     const cancelledJobs = jobs.filter(job => job.status === 'cancelled');
@@ -452,15 +612,14 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
   const statusOptions = useMemo(() => {
     if (activeTab === 'upcoming') {
       return [
-        { value: 'ongoing', label: 'Ongoing', count: tabCounts.ongoing },
         { value: 'upcoming', label: 'Upcoming', count: tabCounts.upcoming },
+        { value: 'ongoing', label: 'Ongoing', count: tabCounts.ongoing },
         { value: 'completed', label: 'Completed', count: tabCounts.completed },
         { value: 'cancelled', label: 'Cancelled', count: tabCounts.cancelled }
       ] as const;
     } else if (activeTab === 'applications') {
       return [
         { value: 'pending', label: 'Pending', count: tabCounts.pending },
-        { value: 'accepted', label: 'Accepted', count: tabCounts.accepted },
         { value: 'rejected', label: 'Rejected', count: tabCounts.rejected },
         { value: 'withdrawn', label: 'Withdrawn', count: tabCounts.withdrawn }
       ] as const;
@@ -515,40 +674,6 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
       params.set('tab', 'applications');
       params.set('status', 'withdrawn');
       router.push(`/freelancer/jobs?${params.toString()}`);
-    } else if (newStatus === 'accepted') {
-      // Handle acceptance: move to accepted status and create job
-      setApplications(prevApplications =>
-        prevApplications.map(app =>
-          app["#"] === applicationId ? { ...app, status: newStatus } : app
-        )
-      );
-
-      // Import and use acceptProposalAndCreateJob function
-      import('./mock-data').then(({ acceptProposalAndCreateJob }) => {
-        const newJob = acceptProposalAndCreateJob(applicationId);
-
-        if (newJob) {
-          // Add the new job to the jobs state
-          setJobs(prevJobs => [...prevJobs, newJob]);
-
-          // Switch to My Jobs tab and upcoming status
-          setActiveTab('upcoming');
-          setStatusFilter('upcoming');
-
-          // Update URL
-          const params = new URLSearchParams();
-          params.set('tab', 'upcoming');
-          params.set('status', 'upcoming');
-          router.push(`/freelancer/jobs?${params.toString()}`);
-
-          alert('Proposal accepted! Job has been added to My Jobs.');
-        } else {
-          alert('Failed to accept proposal. Please try again.');
-        }
-      }).catch(error => {
-        console.error('Error accepting proposal:', error);
-        alert('Error accepting proposal. Please try again.');
-      });
     }
   };
 

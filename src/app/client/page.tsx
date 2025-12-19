@@ -6,11 +6,10 @@ import { Input } from '@/components/ui/input'
 import ClientLayout from '@/components/layouts/client-layout'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { professionals } from './nearby/mockData'
 import ServiceCard from '@/components/client/services/service-card'
-import { popularServices } from '@/data/services'
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react'
+import { useNearbyProfessionals } from '@/contexts/NearbyProfessionalsContext'
+import { usePopularServices } from '@/contexts/PopularServicesContext'
 
 const searchExamples = [
   "Bowler for cricket practice in Chepauk",
@@ -42,6 +41,8 @@ const mockNotifications = [
 
 export default function ClientHome() {
   const router = useRouter();
+  const { professionals } = useNearbyProfessionals();
+  const { popularServices } = usePopularServices();
   const [searchQuery, setSearchQuery] = useState("");
   const [currentExample, setCurrentExample] = useState(0);
   const [placeholder, setPlaceholder] = useState("");
@@ -131,7 +132,7 @@ export default function ClientHome() {
     <ClientLayout>
       {/* Fixed Header */}
       <div className="fixed top-0 left-0 w-full z-30 bg-gradient-to-br from-[#6B46C1] via-[#4C1D95] to-[#2D1B69]">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <div className="relative group">
               <div className="relative flex items-center justify-center">
@@ -159,14 +160,14 @@ export default function ClientHome() {
                   aria-label="Close sidebar"
                 />
                 {/* Sidebar */}
-                <div className={`fixed top-0 left-0 z-50 h-full w-72 bg-white border-r border-neutral-200 shadow-2xl flex flex-col transition-transform duration-300 ${showSidebar ? 'translate-x-0' : '-translate-x-full'}`}>
-                  <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-100">
+                <div className={`fixed top-0 left-0 z-50 h-full w-64 sm:w-72 bg-[#18181b] border-r border-white/10 shadow-2xl flex flex-col transition-transform duration-300 ${showSidebar ? 'translate-x-0' : '-translate-x-full'}`}>
+                  <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
                     <div className="flex items-center gap-3">
                       <img src="/images/profile-sonu.jpg" alt="Profile" className="w-10 h-10 rounded-full object-cover border-2 border-purple-400" />
-                      <span className="text-neutral-900 font-medium">Sonu</span>
+                      <span className="text-white font-medium">Sonu</span>
                     </div>
                     <button
-                      className="p-2 rounded-full hover:bg-neutral-100 text-neutral-700"
+                      className="p-2 rounded-full hover:bg-white/10 text-white/70 hover:text-white transition-colors"
                       onClick={() => setShowSidebar(false)}
                       aria-label="Close sidebar"
                     >
@@ -176,40 +177,43 @@ export default function ClientHome() {
                   <div className="flex flex-col py-4 flex-1 gap-1">
                     {/* My Profile */}
                     <button
-                      className="flex items-center gap-3 px-6 py-3 text-left text-neutral-800 hover:bg-neutral-100 transition-colors"
+                      className="flex items-center gap-3 px-6 py-3 text-left text-white/90 hover:bg-white/10 hover:text-white transition-colors"
                       onClick={() => router.push('/client/profile')}
                     >
-                      <svg className="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a8.38 8.38 0 0 1 13 0"/></svg>
+                      <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a8.38 8.38 0 0 1 13 0"/></svg>
                       My Profile
                     </button>
                     {/* Skill Coins */}
-                    <div className="flex items-center gap-3 px-6 py-2 text-left">
-                      <svg className="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 2"/></svg>
-                      <span className="text-neutral-800">Skill Coins</span>
-                      <span className="ml-auto text-xs text-yellow-600 font-semibold">2,500</span>
-                    </div>
+                    <button
+                      className="flex items-center gap-3 px-6 py-2 text-left text-white/90 hover:bg-white/10 hover:text-white transition-colors"
+                      onClick={() => router.push('/client/wallet')}
+                    >
+                      <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="7.5,4.27 12,6.11 16.5,4.27"/><polyline points="7.5,9.73 12,11.57 16.5,9.73"/><polyline points="12,2.27 12,11.57"/></svg>
+                      <span className="text-white/90">Skill Coins</span>
+                      <span className="ml-auto text-xs text-purple-400 font-semibold">2,500</span>
+                    </button>
                     {/* My Bookings */}
                     <button
-                      className="flex items-center gap-3 px-6 py-3 text-left text-neutral-800 hover:bg-neutral-100 transition-colors"
+                      className="flex items-center gap-3 px-6 py-3 text-left text-white/90 hover:bg-white/10 hover:text-white transition-colors"
                       onClick={() => router.push('/client/bookings')}
                     >
-                      <svg className="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg>
+                      <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg>
                       My Bookings
                     </button>
                     {/* My Referrals */}
                     <button
-                      className="flex items-center gap-3 px-6 py-3 text-left text-neutral-800 hover:bg-neutral-100 transition-colors"
+                      className="flex items-center gap-3 px-6 py-3 text-left text-white/90 hover:bg-white/10 hover:text-white transition-colors"
                       onClick={() => router.push('/client/referrals')}
                     >
-                      <svg className="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                      <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                       My Referrals
                     </button>
                     {/* Notifications */}
                     <button
-                      className="flex items-center gap-3 px-6 py-3 text-left text-neutral-800 hover:bg-neutral-100 transition-colors"
+                      className="flex items-center gap-3 px-6 py-3 text-left text-white/90 hover:bg-white/10 hover:text-white transition-colors"
                       onClick={() => router.push('/client/notifications')}
                     >
-                      <svg className="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                      <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
                       Notifications
                       <span className="ml-auto inline-flex items-center justify-center w-5 h-5 text-xs bg-purple-500 text-white rounded-full text-center font-semibold">
                         4
@@ -217,16 +221,16 @@ export default function ClientHome() {
                     </button>
                     {/* Support */}
                     <button
-                      className="flex items-center gap-3 px-6 py-3 text-left text-neutral-800 hover:bg-neutral-100 transition-colors"
+                      className="flex items-center gap-3 px-6 py-3 text-left text-white/90 hover:bg-white/10 hover:text-white transition-colors"
                       onClick={() => router.push('/client/support')}
                     >
-                      <svg className="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 2"/></svg>
+                      <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 2"/></svg>
                       Support
                     </button>
 
-                    <div className="border-t border-neutral-200 my-2" />
+                    <div className="border-t border-white/10 my-2" />
                     {/* Logout at the bottom */}
-                    <button className="flex items-center gap-3 px-6 py-3 text-left text-red-500 hover:bg-neutral-100 transition-colors">
+                    <button className="flex items-center gap-3 px-6 py-3 text-left text-red-400 hover:bg-white/10 hover:text-red-300 transition-colors">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7"/><path d="M3 21V3"/></svg>
                       Logout
                     </button>
@@ -234,42 +238,12 @@ export default function ClientHome() {
                   {/* Hamburger icon at bottom - now darker for visibility */}
                   <div className="flex justify-center pb-6">
                     <div className="flex flex-col items-center gap-1">
-                      <span className="block w-7 h-1 bg-neutral-700 rounded"></span>
-                      <span className="block w-7 h-1 bg-neutral-700 rounded"></span>
-                      <span className="block w-7 h-1 bg-neutral-700 rounded"></span>
+                      <span className="block w-7 h-1 bg-white/60 rounded"></span>
+                      <span className="block w-7 h-1 bg-white/60 rounded"></span>
+                      <span className="block w-7 h-1 bg-white/60 rounded"></span>
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
-            <div className="flex flex-col gap-0.5">
-              <span className="text-lg font-medium text-white">Welcome back, Sonu!</span>
-              <div className="relative group">
-                <button
-                  className="flex items-center text-white/70 hover:text-white/90 transition-colors"
-                  onClick={() => setShowLocationPicker(prev => !prev)}
-                >
-                  <MapPin className="w-3 h-3 mr-1.5" />
-                  <span className="text-xs">Chennai, TN</span>
-                  <ChevronRight className="w-3 h-3 ml-1.5 group-hover:rotate-90 transition-transform duration-200" />
-                </button>
-                {showLocationPicker && (
-                  <div className="absolute top-6 left-0 bg-[#1a1a1a]/95 backdrop-blur-xl rounded-xl py-2 w-40 shadow-xl border border-white/10 z-50">
-                    {mockLocations.map((loc) => (
-                      <button
-                        key={`${loc.city}-${loc.state}`}
-                        className="w-full px-4 py-2.5 text-xs text-white/90 hover:bg-white/10 hover:text-white text-left flex items-center gap-2.5 transition-colors duration-200 first:rounded-t-xl last:rounded-b-xl"
-                        onClick={() => {
-                          // setCurrentLocation(loc);
-                          setShowLocationPicker(false);
-                        }}
-                      >
-                        <MapPin className="w-3.5 h-3.5 text-purple-400" />
-                        <span className="font-medium">{loc.city}, {loc.state}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
               </div>
             </div>
           </div>
@@ -303,82 +277,35 @@ export default function ClientHome() {
         <div className="relative pb-4 h-auto overflow-hidden rounded-b-[2.5rem] shadow-xl" style={{ minHeight: 'auto' }}>
           {/* Background Elements */}
           <div className="absolute inset-0 bg-gradient-to-br from-[#6B46C1] via-[#4C1D95] to-[#2D1B69] rounded-b-[2.5rem] overflow-hidden">
-            {/* Cover Image */}
-            <div className="absolute inset-0 w-full h-full">
-              <img
-                src="/images/Purple ground.png"
-                alt="Cover"
-                className="w-full h-full object-cover opacity-[35%] transform translate-y-[10%]"
-              />
-            </div>
+            {/* Cover Image - Removed */}
           </div>
 
           {/* Hero Content */}
-          <div className="relative container mx-auto px-4">
+          <div className="relative container mx-auto px-4 sm:px-6 lg:px-8">
             {/* Adjusted space for optimal position */}
-            <div className="pt-24 md:pt-28">
+            <div className="pt-16 sm:pt-20 md:pt-24 lg:pt-28">
               <div className="max-w-2xl mx-auto text-center">
-                <h1 className="text-[22px] md:text-4xl font-bold font-serif text-white mb-2 text-center drop-shadow-[0_4px_8px_rgba(0,0,0,0.3)]">
+                <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold font-serif text-white mb-2 text-center drop-shadow-[0_4px_8px_rgba(0,0,0,0.3)]">
                   Practice like a pro, with a pro
                 </h1>
-                <p className="text-base md:text-lg text-white/90 mb-4 drop-shadow-[0_2px_4px_rgba(0,0,0,0.2)]">
+                <p className="text-sm sm:text-base md:text-lg text-white/90 mb-3 sm:mb-4 drop-shadow-[0_2px_4px_rgba(0,0,0,0.2)]">
                   Your shortcut to better cricket starts here
                 </p>
               </div>
 
               {/* Modern Search Bar */}
-              <div className="max-w-3xl mx-auto">
+              <div className="max-w-3xl mx-auto mb-4 sm:mb-6 px-2 sm:px-0">
                 <div className="relative w-full">
                   <Input
                     type="text"
                     placeholder={searchQuery ? `Find services in Chennai...` : placeholder || `Find services in Chennai...`}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full bg-white/20 border border-white/40 text-white placeholder-white/80 rounded-2xl py-4 pl-12 pr-4 focus:outline-none focus:border-purple-400 transition-all shadow-lg drop-shadow-[0_4px_12px_rgba(0,0,0,0.15)]"
+                    className="w-full bg-white/20 border border-white/40 text-white placeholder-white/80 rounded-2xl py-3 sm:py-4 pl-10 sm:pl-12 pr-4 text-sm sm:text-base focus:outline-none focus:border-purple-400 transition-all shadow-lg drop-shadow-[0_4px_12px_rgba(0,0,0,0.15)]"
                   />
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/70">
                     <Sparkles className="w-5 h-5" />
                   </span>
-                </div>
-              </div>
-
-              {/* Why DoodLance Section */}
-              <div className="mt-4 max-w-3xl mx-auto">
-                <div className="mb-1">
-                  <h2 className="text-sm font-semibold text-white tracking-wide text-left drop-shadow-[0_2px_4px_rgba(0,0,0,0.25)]" data-component-name="ClientHome">WHY DOODLANCE?</h2>
-                </div>
-                <div className="flex flex-row justify-center gap-2 md:gap-3">
-                  {/* Local Delivery */}
-                  <div className="flex flex-col items-center w-24 md:w-28 py-2">
-                    <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center mb-2">
-                      <MapPin className="w-5 h-5 text-purple-500" />
-                    </div>
-                    <div className="text-center">
-                      <div className="font-bold text-sm md:text-base text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)]">Fast Service</div>
-                      <div className="text-[10px] md:text-xs text-white/80 leading-tight drop-shadow-[0_1px_2px_rgba(0,0,0,0.2)]">In Your<br />Neighborhood</div>
-                    </div>
-                  </div>
-                  {/* Smart Matching */}
-                  <div className="flex flex-col items-center w-24 md:w-28 py-2">
-                    <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center mb-2">
-                      {/* AI-related icon - Sparkles */}
-                      <Sparkles className="w-5 h-5 text-purple-500" />
-                    </div>
-                    <div className="text-center">
-                      <div className="font-bold text-sm md:text-base text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)]">AI-Powered</div>
-                      <div className="text-[10px] md:text-xs text-white/80 leading-tight drop-shadow-[0_1px_2px_rgba(0,0,0,0.2)]">Find the<br />Right Expert</div>
-                    </div>
-                  </div>
-                  {/* Instant Booking */}
-                  <div className="flex flex-col items-center w-24 md:w-28 py-2">
-                    <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center mb-2">
-                      <Clock className="w-5 h-5 text-purple-500" />
-                    </div>
-                    <div className="text-center">
-                      <div className="font-bold text-sm md:text-base text-white whitespace-nowrap drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)]">Book Instantly</div>
-                      <div className="text-[10px] md:text-xs text-white/80 leading-tight whitespace-nowrap drop-shadow-[0_1px_2px_rgba(0,0,0,0.2)]">Real-Time<br />Availability</div>
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
@@ -388,16 +315,16 @@ export default function ClientHome() {
         <div className="container mx-auto px-4 py-4 bg-[#111111] mb-8 relative z-0">
           {/* Service Categories */}
           <section className="mb-4 relative z-0">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-base font-medium text-white/90">Popular Services in your area</h2>
-              <Link href="/client/services" className="text-white/80 hover:text-white text-sm font-medium flex items-center transition-colors">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-base font-semibold text-white tracking-wide text-left">Popular Services in your area</h2>
+              <Link href="/client/services" className="text-white/80 hover:text-white text-xs font-medium flex items-center transition-colors">
                 View All
-                <ChevronRight className="w-4 h-4 ml-1" />
+                <ChevronRight className="w-3 h-3 ml-1" />
               </Link>
             </div>
             <div className="relative -mx-4">
-              <div className="overflow-x-auto scrollbar-hide px-4">
-                <div className="flex space-x-4 pb-4">
+              <div className="overflow-x-auto scrollbar-hide px-4 pr-8">
+                <div className="flex space-x-4 pb-2">
                   {popularServices.map((service) => (
                     <ServiceCard
                       key={service.id}
@@ -406,7 +333,7 @@ export default function ClientHome() {
                       image={service.image}
                       icon={service.icon}
                       providerCount={service.providerCount}
-                      className="w-[150px] flex-shrink-0"
+                      className="w-[140px] flex-shrink-0"
                     />
                   ))}
                 </div>
@@ -426,20 +353,20 @@ export default function ClientHome() {
           `}</style>
 
           {/* Top Rated Experts Section */}
-          <section className="mb-8 relative z-0">
+          <section className="mb-4 relative z-0">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-white">
+              <h2 className="text-base font-semibold text-white tracking-wide text-left">
                 <span className="bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 text-transparent bg-clip-text">Top Rated</span>
                 {" "}Experts
               </h2>
-              <Link href="/client/nearby" className="text-white/80 hover:text-white text-sm font-medium flex items-center transition-colors">
+              <Link href="/client/nearby" className="text-white/80 hover:text-white text-xs font-medium flex items-center transition-colors">
                 View All
-                <ChevronRight className="w-4 h-4 ml-1" />
+                <ChevronRight className="w-3 h-3 ml-1" />
               </Link>
             </div>
             <div className="relative">
-              <div className="overflow-x-auto scrollbar-hide -mx-4 px-4">
-                <div className="flex gap-3 pb-4">
+              <div className="overflow-x-auto scrollbar-hide -mx-4 px-4 pr-8">
+                <div className="flex gap-3 pb-2">
                   {professionals
                     .sort((a, b) => {
                       // First sort by rating
@@ -451,23 +378,26 @@ export default function ClientHome() {
                     })
                     .slice(0, 5) // Only take top 5
                     .map((expert) => (
-                    <div
+                    <button
                       key={expert.id}
-                      className="flex-shrink-0 w-[130px]"
+                      onClick={() => router.push(`/client/freelancer/${expert.id}`)}
+                      className="flex-shrink-0 w-[130px] cursor-pointer"
                     >
                       {/* Outer Layer Card */}
                       <div className="relative group">
                         {/* Card Background */}
                         <div className="absolute inset-0 rounded-2xl border border-purple-400/10 transition-all duration-300 group-hover:border-purple-400/20"></div>
                         
+                        {/* Rating Badge - positioned at top corner of card */}
+                        <div className="absolute top-2 left-2 z-30 bg-gradient-to-r from-yellow-400 to-yellow-600 px-2 py-0.5 rounded-full flex items-center gap-1 shadow-lg">
+                          <Star className="w-2.5 h-2.5 text-black fill-current" />
+                          <span className="text-black text-[10px] font-bold">{expert.rating}</span>
+                        </div>
+                        
                         {/* Card Content */}
                         <div className="relative p-2.5">
                           <div className="relative group">
-                            {/* Rating Badge */}
-                            <div className="absolute top-2 left-2 z-20 bg-gradient-to-r from-yellow-400 to-yellow-600 px-2 py-0.5 rounded-full flex items-center gap-1 shadow-lg">
-                              <Star className="w-2.5 h-2.5 text-black fill-current" />
-                              <span className="text-black text-[10px] font-bold">{expert.rating}</span>
-                            </div>
+                            {/* Rating Badge - moved to outer card */}
                             
                             {/* Profile Picture */}
                             <div className="relative w-[80px] h-[80px] mx-auto">
@@ -481,19 +411,65 @@ export default function ClientHome() {
                             {/* Expert Info with Reduced Spacing */}
                             <div className="mt-1.5 text-center">
                               <h3 className="font-semibold text-white text-xs leading-tight truncate">{expert.name}</h3>
-                              <p className="text-purple-400 text-[10px] font-medium truncate mt-0.5">{expert.service}</p>
-                              <div className="flex items-center justify-center gap-1 mt-0.5">
-                                <p className="text-white/70 text-[9px]">{expert.reviews} reviews</p>
-                                <span className="text-white/30">•</span>
-                                <p className="text-white/70 text-[9px]">{expert.completedJobs} jobs</p>
-                              </div>
-                              <p className="text-white/50 text-[9px] font-medium mt-0.5">{expert.location}</p>
+                              <p className="text-purple-400 text-[10px] font-medium truncate mt-0.5">{expert.cricketRole || expert.service}</p>
+                              <p className="text-white/70 text-[9px] mt-0.5 truncate">
+                                {expert.location}
+                              </p>
+                              <p className="text-white/50 text-[9px] font-medium mt-0.5 truncate">
+                                {expert.distance ? (
+                                  <>
+                                    {expert.distance < 1 
+                                      ? `${(expert.distance * 1000).toFixed(0)}m` 
+                                      : `${expert.distance.toFixed(1)}km`} away
+                                  </>
+                                ) : ''}
+                              </p>
                             </div>
                           </div>
                         </div>
                       </div>
-                    </div>
+                    </button>
                   ))}
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Why DoodLance Section */}
+          <section className="mb-4 relative z-0">
+            <div className="mb-4">
+              <h2 className="text-base font-semibold text-white tracking-wide text-left">Why DoodLance?</h2>
+            </div>
+            <div className="flex flex-row justify-center gap-2 md:gap-3 pb-4">
+              {/* Local Delivery */}
+              <div className="flex flex-col items-center w-24 md:w-28 py-2">
+                <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center mb-2">
+                  <MapPin className="w-5 h-5 text-purple-500" />
+                </div>
+                <div className="text-center">
+                  <div className="font-bold text-sm md:text-base text-white">Fast Service</div>
+                  <div className="text-[10px] md:text-xs text-white/80 leading-tight">In Your<br />Neighborhood</div>
+                </div>
+              </div>
+              {/* Smart Matching */}
+              <div className="flex flex-col items-center w-24 md:w-28 py-2">
+                <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center mb-2">
+                  {/* AI-related icon - Sparkles */}
+                  <Sparkles className="w-5 h-5 text-purple-500" />
+                </div>
+                <div className="text-center">
+                  <div className="font-bold text-sm md:text-base text-white">AI-Powered</div>
+                  <div className="text-[10px] md:text-xs text-white/80 leading-tight">Find the<br />Right Expert</div>
+                </div>
+              </div>
+              {/* Instant Booking */}
+              <div className="flex flex-col items-center w-24 md:w-28 py-2">
+                <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center mb-2">
+                  <Clock className="w-5 h-5 text-purple-500" />
+                </div>
+                <div className="text-center">
+                  <div className="font-bold text-sm md:text-base text-white whitespace-nowrap">Book Instantly</div>
+                  <div className="text-[10px] md:text-xs text-white/80 leading-tight whitespace-nowrap">Real-Time<br />Availability</div>
                 </div>
               </div>
             </div>
@@ -504,13 +480,13 @@ export default function ClientHome() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
-            className="mt-4 mb-2 relative z-0"
+            className="mb-4 relative z-0"
           >
             <div className="mb-4">
-              <h2 className="text-sm font-semibold text-white tracking-wide text-left" data-component-name="ClientHome">EXCLUSIVE OFFERS</h2>
+              <h2 className="text-base font-semibold text-white tracking-wide text-left" data-component-name="ClientHome">Exclusive Offers</h2>
             </div>
             <div className="relative -mx-4">
-              <div className="overflow-x-auto scrollbar-hide px-4">
+              <div className="overflow-x-auto scrollbar-hide px-4 pr-8">
                 <div className="flex gap-3">
                   {/* First Coupon */}
                   <div className="flex-shrink-0 w-[300px] min-h-[140px] rounded-2xl p-3 border border-dashed border-white/15 bg-white/5 backdrop-blur-sm relative overflow-hidden flex flex-col justify-between">
@@ -670,5 +646,5 @@ export default function ClientHome() {
         </div>
       </div>
     </ClientLayout>
-  )
-} 
+  );
+}

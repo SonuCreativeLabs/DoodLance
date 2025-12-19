@@ -1,11 +1,10 @@
 'use client';
 
-'use client';
-
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Check, MessageCircle } from 'lucide-react';
+import { ArrowLeft, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useRole } from '@/contexts/role-context';
 
 interface Service {
   id: string;
@@ -15,6 +14,7 @@ interface Service {
   type?: 'online' | 'in-person';
   deliveryTime: string;
   features?: string[];
+  category?: string;
 }
 
 interface ServicesPageProps {
@@ -29,7 +29,9 @@ export default function ServicesPage() {
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
   const [freelancerName, setFreelancerName] = useState('Freelancer');
+  const [showFreelancerMessage, setShowFreelancerMessage] = useState(false);
   const params = useSearchParams();
+  const { role } = useRole();
   
   // Back button handler
   const handleBack = () => {
@@ -42,8 +44,13 @@ export default function ServicesPage() {
       console.log('Navigating back to profile preview');
       // Clear the stored URL
       sessionStorage.removeItem('returnToProfilePreview');
-      // Navigate back to the profile preview with the stored URL
-      window.location.href = returnToPreview;
+      try {
+        const u = new URL(returnToPreview);
+        const relative = `${u.pathname}${u.search}${u.hash}`;
+        router.push(relative);
+      } catch {
+        router.push('/freelancer/profile');
+      }
       return; // Prevent further execution
     }
     
@@ -130,7 +137,7 @@ export default function ServicesPage() {
   return (
     <div className="min-h-screen bg-[#0F0F0F] text-white flex flex-col">
       {/* Header */}
-      <div className="px-2 py-3 border-b border-white/5">
+      <div className="sticky top-0 z-50 px-4 py-2 border-b border-white/5 bg-[#0f0f0f]/95 backdrop-blur-sm">
         <div className="flex items-center">
           <button 
             onClick={handleBack}
@@ -165,19 +172,17 @@ export default function ServicesPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
             {services.map((service) => (
-              <div key={service.id} className="flex-shrink-0 p-5 rounded-3xl border border-white/10 bg-white/5 hover:border-purple-500/30 transition-colors flex flex-col h-full">
+              <div key={service.id} className="flex-shrink-0 p-5 pt-8 rounded-3xl border border-white/10 bg-white/5 hover:border-purple-500/30 transition-colors flex flex-col h-full relative">
+                {service.category && (
+                  <div className="absolute top-3 left-3">
+                    <span className="bg-white/10 text-white/80 border-white/20 px-2 py-0.5 text-xs rounded">
+                      {service.category}
+                    </span>
+                  </div>
+                )}
                 <div className="flex-1">
-                  <div className="flex items-start justify-between">
+                  <div className="flex items-start justify-between mt-2">
                     <h3 className="text-lg font-semibold text-white">{service.title}</h3>
-                    {service.type && (
-                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
-                        service.type === 'online' 
-                          ? 'bg-blue-500/10 text-blue-400' 
-                          : 'bg-green-500/10 text-green-400'
-                      }`}>
-                        {service.type === 'online' ? 'Online' : 'In-Person'}
-                      </span>
-                    )}
                   </div>
                   
                   <p className="text-white/70 mt-2 text-sm">{service.description}</p>
@@ -206,16 +211,18 @@ export default function ServicesPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <button className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-white/80 hover:text-white transition-colors">
-                        <MessageCircle className="h-5 w-5" />
-                      </button>
                       <button 
                         className="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-xl text-sm font-medium transition-colors"
                         onClick={() => {
-                          // Handle order now
+                          if (role === 'freelancer') {
+                            setShowFreelancerMessage(true);
+                          } else {
+                            // Handle client hire functionality
+                            console.log('Client wants to hire freelancer for service:', service.title);
+                          }
                         }}
                       >
-                        Order Now
+                        Hire Me
                       </button>
                     </div>
                   </div>
@@ -225,6 +232,24 @@ export default function ServicesPage() {
           </div>
         )}
       </div>
+
+      {/* Freelancer Preview Message Dialog */}
+      {showFreelancerMessage && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-[#1E1E1E] border border-white/10 rounded-xl p-6 max-w-sm w-full text-center">
+            <h3 className="text-lg font-semibold text-white mb-2">Can't Hire Yourself</h3>
+            <p className="text-white/70 text-sm mb-4">
+              You can't hire yourself for your own services. This button is for clients to hire you.
+            </p>
+            <button
+              onClick={() => setShowFreelancerMessage(false)}
+              className="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-xl text-sm font-medium transition-colors"
+            >
+              Got it
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

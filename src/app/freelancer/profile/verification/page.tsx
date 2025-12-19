@@ -404,11 +404,11 @@ export default function IdUploadPage() {
         </div>
       </div>
 
-      <div className="flex justify-end pt-2">
+      <div className="pt-2">
         <Button 
           type="submit" 
           disabled={!selectedFile || !selectedIdType || !idNumber}
-          className="h-10 px-6 rounded-xl text-sm bg-primary hover:bg-primary/90 text-white transition-all duration-200 font-medium"
+          className="w-full h-10 rounded-xl text-sm bg-primary hover:bg-primary/90 text-white transition-all duration-200 font-medium"
         >
           Continue to Selfie
           <ArrowRight className="h-4 w-4 ml-2" />
@@ -441,7 +441,7 @@ export default function IdUploadPage() {
           type="button"
           onClick={() => setCurrentStep('review')}
           disabled={!selfieImage}
-          className="h-9 px-5 rounded-xl text-sm bg-primary hover:bg-primary/90 text-white transition-all duration-200 font-medium"
+          className="flex-1 ml-4 h-9 rounded-xl text-sm bg-primary hover:bg-primary/90 text-white transition-all duration-200 font-medium"
         >
           Continue to Review
           <ArrowRight className="h-4 w-4 ml-1.5" />
