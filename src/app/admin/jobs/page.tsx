@@ -65,7 +65,10 @@ const mockJobs = [
   }
 ];
 
-const statusColors = {
+// Define job status type
+type JobStatus = 'active' | 'closed' | 'draft';
+
+const statusColors: Record<JobStatus, string> = {
   active: 'bg-green-500',
   closed: 'bg-gray-500',
   draft: 'bg-yellow-500',
@@ -235,7 +238,7 @@ export default function JobsPage() {
                       </div>
                       <div className="text-right">
                         <p className="text-2xl font-bold text-white">₹{(job.budget / 1000).toFixed(0)}k</p>
-                        <Badge className={`${statusColors[job.status]} text-white mt-2`}>
+                        <Badge className={`${statusColors[job.status as JobStatus]} text-white mt-2`}>
                           {job.status}
                         </Badge>
                       </div>
