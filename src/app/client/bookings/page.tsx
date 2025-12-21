@@ -14,6 +14,7 @@ import { useHistoryJobs, HistoryJob } from "@/contexts/HistoryJobsContext"
 import { usePostedJobs } from "@/contexts/PostedJobsContext"
 import { useBookAgain } from "@/hooks/useBookAgain"
 
+
 interface BookingCardProps {
   booking: Booking;
   showActions?: boolean;
@@ -162,230 +163,7 @@ const BookingCard = ({ booking, showActions = true }: BookingCardProps) => {
   );
 };
 
-const ApplicationCard = ({ application }: { application: Application }) => {
-  const router = useRouter()
-  const { acceptApplication, rejectApplication } = useApplications()
-  const [isProcessing, setIsProcessing] = useState(false)
 
-  const handleOpenDetails = () => {
-    router.push(`/client/bookings/applications/${encodeURIComponent(application["#"])}`)
-  }
-
-  const handleAccept = async (event: React.MouseEvent) => {
-    event.stopPropagation()
-    setIsProcessing(true)
-    try {
-      await acceptApplication(application["#"])
-    } catch (error) {
-      console.error("Failed to accept application:", error)
-    } finally {
-      setIsProcessing(false)
-    }
-  }
-
-  const handleReject = async (event: React.MouseEvent) => {
-    event.stopPropagation()
-    setIsProcessing(true)
-    try {
-      await rejectApplication(application["#"])
-    } catch (error) {
-      console.error("Failed to reject application:", error)
-    } finally {
-      setIsProcessing(false)
-    }
-  }
-
-  return (
-    <motion.div
-      initial={{ scale: 0.95, opacity: 0 }}
-      animate={{ scale: 1, opacity: 1 }}
-      exit={{ scale: 0.95, opacity: 0 }}
-      role="button"
-      tabIndex={0}
-      onClick={handleOpenDetails}
-      onKeyDown={(event) => {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault()
-          handleOpenDetails()
-        }
-      }}
-      className="p-5 rounded-xl bg-[#1E1E1E] border border-white/5 w-full shadow-lg cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-500/40 focus:ring-offset-2 focus:ring-offset-[#111111]"
-    >
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            {application.status === 'new' && (
-              <div className="bg-blue-500/10 text-blue-400 text-xs font-medium px-3 py-1 rounded-full border border-blue-500/20 w-fit">
-                New
-              </div>
-            )}
-            {application.status === 'accepted' && (
-              <div className="bg-green-500/10 text-green-400 text-xs font-medium px-3 py-1 rounded-full border border-green-500/20 w-fit">
-                Accepted
-              </div>
-            )}
-            {application.status === 'rejected' && (
-              <div className="bg-red-500/10 text-red-400 text-xs font-medium px-3 py-1 rounded-full border border-red-500/20 w-fit">
-                Rejected
-              </div>
-            )}
-          </div>
-          <div className="flex items-center gap-1.5 text-sm text-white/60">
-            <span className="font-mono text-xs">{application["#"]}</span>
-          </div>
-        </div>
-
-        <div>
-          <h3 className="text-base font-medium text-white line-clamp-2 mb-1">{application.jobTitle}</h3>
-          <div className="flex items-center gap-2 text-sm text-white/60">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-user w-3.5 h-3.5 text-purple-400">
-              <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
-              <circle cx="12" cy="7" r="4"></circle>
-            </svg>
-            <span>{application.freelancer.name}</span>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3 text-sm">
-          <div className="flex items-start gap-2 text-white/60">
-            <div className="flex-shrink-0 mt-0.5 flex flex-col items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-star w-4 h-4 text-purple-400">
-                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-              </svg>
-            </div>
-            <div className="min-w-0">
-              <div className="text-xs text-white/40 mb-0.5">Rating</div>
-              <div className="text-sm text-white/90">
-                <div className="flex items-center gap-1">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                    className="w-3 h-3 text-yellow-400"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-                  </svg>
-                  <span className="text-white/80 font-medium">{application.freelancer.rating}</span>
-                  <span className="text-white/50">•</span>
-                  <span className="text-white/60">{application.freelancer.completedJobs} jobs</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-start gap-2 text-white/60">
-            <div className="flex-shrink-0 mt-0.5 flex flex-col items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-map-pin w-4 h-4 text-purple-400">
-                <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
-                <circle cx="12" cy="10" r="3"></circle>
-              </svg>
-            </div>
-            <div className="min-w-0">
-              <div className="text-xs text-white/40 mb-0.5">Location</div>
-              <div className="text-sm text-white/90">{application.freelancer.location}</div>
-            </div>
-          </div>
-        </div>
-
-        <div className="p-3 bg-white/5 rounded-lg border border-white/10">
-          <div className="text-xs text-white/40 mb-1">Proposal</div>
-          <p className="text-sm text-white/70">{application.proposal}</p>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          <div className="text-white/80">
-            <div className="text-xs text-white/40 mb-0.5">Price</div>
-            <div className="text-sm font-medium text-white">{application.price}</div>
-          </div>
-          <div className="text-white/80">
-            <div className="text-xs text-white/40 mb-0.5">Availability</div>
-            <div className="text-sm text-white">{application.availability}</div>
-          </div>
-        </div>
-
-        <div className="flex gap-2">
-          {application.status === 'new' && (
-            <>
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={isProcessing}
-                className="flex-1 border-white/20 text-white/70 hover:bg-red-500/20 hover:border-red-500/50 hover:text-red-100 transition-all duration-300 !rounded-lg"
-                onClick={handleReject}
-              >
-                Decline
-              </Button>
-              <Button
-                size="sm"
-                disabled={isProcessing}
-                className="flex-1 bg-gradient-to-r from-purple-600 via-purple-500 to-purple-400 text-white border-0 hover:shadow-lg hover:from-purple-700 hover:to-purple-500 transition-all duration-300 !rounded-lg"
-                onClick={handleAccept}
-              >
-                Accept
-              </Button>
-            </>
-          )}
-
-          {application.status === 'accepted' && (
-            <>
-              <Button
-                size="sm"
-                variant="outline"
-                className="flex-1 border-white/20 text-white/70 hover:bg-white/10 hover:border-white/30 hover:text-white transition-all duration-300 !rounded-lg"
-                onClick={(event) => {
-                  event.stopPropagation()
-                  router.push(`/client/chat/${encodeURIComponent(application.freelancer.name)}`)
-                }}
-              >
-                Message
-              </Button>
-              <Button
-                size="sm"
-                className="flex-1 bg-gradient-to-r from-green-600 to-green-400 text-white border-0 hover:shadow-lg hover:from-green-700 hover:to-green-500 transition-all duration-300 !rounded-lg"
-                onClick={(event) => {
-                  event.stopPropagation()
-                  handleOpenDetails()
-                }}
-              >
-                View Details
-              </Button>
-            </>
-          )}
-
-          {application.status === 'rejected' && (
-            <>
-              <Button
-                size="sm"
-                variant="outline"
-                className="flex-1 border-white/20 text-white/70 hover:bg-white/10 hover:border-white/30 hover:text-white transition-all duration-300 !rounded-lg"
-                onClick={(event) => {
-                  event.stopPropagation()
-                  handleOpenDetails()
-                }}
-              >
-                View Profile
-              </Button>
-              <Button
-                size="sm"
-                disabled={isProcessing}
-                className="flex-1 bg-gradient-to-r from-blue-600 to-blue-400 text-white border-0 hover:shadow-lg hover:from-blue-700 hover:to-blue-500 transition-all duration-300 !rounded-lg"
-                onClick={handleAccept}
-              >
-                Reconsider
-              </Button>
-            </>
-          )}
-        </div>
-      </div>
-    </motion.div>
-  )
-}
 
 // Card for accepted proposals - shows in Active tab
 const AcceptedProposalCard = ({ application }: { application: Application }) => {
@@ -618,7 +396,7 @@ const HistoryCard = ({ job }: { job: HistoryJob }) => {
 }
 
 // Card for posted jobs in My Jobs filter
-const PostedJobCard = ({ job }: { job: any }) => {
+const PostedJobCard = ({ job, showUpcoming = false }: { job: any; showUpcoming?: boolean }) => {
   const router = useRouter()
 
   const handleOpenDetails = () => {
@@ -637,17 +415,28 @@ const PostedJobCard = ({ job }: { job: any }) => {
           handleOpenDetails()
         }
       }}
-      className="p-5 rounded-xl bg-[#1E1E1E] border border-white/5 w-full shadow-lg cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-500/40 focus:ring-offset-2 focus:ring-offset-[#111111]"
+      className="p-5 rounded-xl bg-[#1E1E1E] border border-white/5 w-full shadow-lg cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-500/40 focus:ring-offset-2 focus:ring-offset-[#111111] relative overflow-hidden"
     >
-      <div className="space-y-4">
+      {/* Purple left stripe for active job indicator */}
+      <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-purple-500 to-purple-700" />
+
+      <div className="space-y-4 pl-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className={`text-xs font-medium px-3 py-1 rounded-full border w-fit ${job.status === 'open'
-              ? 'bg-green-500/10 text-green-400 border-green-500/20'
-              : 'bg-gray-500/10 text-gray-400 border-gray-500/20'
-              }`}>
-              {job.status === 'open' ? 'Open' : 'Closed'}
-            </div>
+            {showUpcoming ? (
+              <div className="bg-amber-500/10 text-amber-400 text-xs font-medium px-3 py-1 rounded-full border border-amber-500/20 w-fit">
+                Upcoming
+              </div>
+            ) : (
+              <div className={`text-xs font-medium px-3 py-1 rounded-full border w-fit ${job.status === 'open'
+                ? 'bg-green-500/10 text-green-400 border-green-500/20'
+                : job.status === 'deleted'
+                  ? 'bg-red-500/10 text-red-400 border-red-500/20'
+                  : 'bg-gray-500/10 text-gray-400 border-gray-500/20'
+                }`}>
+                {job.status === 'open' ? 'Open' : job.status === 'deleted' ? 'Deleted' : 'Closed'}
+              </div>
+            )}
             {job.applicationCount > 0 && (
               <div className="bg-purple-500/20 text-purple-300 text-xs font-medium px-2 py-1 rounded-full border border-purple-500/30">
                 {job.applicationCount} {job.applicationCount === 1 ? 'Application' : 'Applications'}
@@ -661,18 +450,45 @@ const PostedJobCard = ({ job }: { job: any }) => {
 
         <div>
           <h3 className="text-base font-medium text-white line-clamp-2 mb-1">{job.title}</h3>
-          <div className="flex items-center gap-2 text-sm text-white/60">
-            <Briefcase className="w-3.5 h-3.5 text-purple-400" />
-            <span>{job.category}</span>
-          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-3 text-sm">
           <div className="flex items-start gap-2 text-white/60">
+            <Briefcase className="w-4 h-4 text-purple-400 mt-0.5" />
+            <div className="min-w-0">
+              <div className="text-xs text-white/40 mb-0.5">Category</div>
+              <div className="text-sm text-white/90 truncate">{job.category}</div>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-2 text-white/60">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-purple-400 mt-0.5">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+            <div className="min-w-0">
+              <div className="text-xs text-white/40 mb-0.5">People</div>
+              <div className="text-sm text-white/90">{job.acceptedCount || 0}/{job.peopleNeeded || 1}</div>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-2 text-white/60">
             <Calendar className="w-4 h-4 text-purple-400 mt-0.5" />
             <div className="min-w-0">
-              <div className="text-xs text-white/40 mb-0.5">Posted</div>
-              <div className="text-sm text-white/90 truncate">{new Date(job.datePosted).toLocaleDateString()}</div>
+              <div className="text-xs text-white/40 mb-0.5">Date & Time</div>
+              <div className="text-sm text-white/90">
+                {job.scheduledAt
+                  ? new Date(job.scheduledAt).toLocaleString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })
+                  : 'Not set'}
+              </div>
             </div>
           </div>
 
@@ -693,6 +509,23 @@ const PostedJobCard = ({ job }: { job: any }) => {
         <div className="font-bold text-white">
           {job.budget}
         </div>
+
+        {/* Posted time ago */}
+        <div className="text-xs text-white/40 mt-2">
+          Posted {(() => {
+            const now = new Date();
+            const posted = new Date(job.datePosted);
+            const diffMs = now.getTime() - posted.getTime();
+            const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+            const diffWeeks = Math.floor(diffDays / 7);
+            const diffMonths = Math.floor(diffDays / 30);
+
+            if (diffMonths > 0) return `${diffMonths} month${diffMonths > 1 ? 's' : ''} ago`;
+            if (diffWeeks > 0) return `${diffWeeks} week${diffWeeks > 1 ? 's' : ''} ago`;
+            if (diffDays > 0) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+            return 'today';
+          })()}
+        </div>
       </div>
     </div>
   )
@@ -707,14 +540,15 @@ export default function BookingsPage() {
   const [currentTab, setCurrentTab] = useState(initialTab)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedFilter, setSelectedFilter] = useState(initialFilter)
-  const [applicationFilter, setApplicationFilter] = useState(initialAppFilter)
+  const [applicationFilter, setApplicationFilter] = useState('all')
   const [historyFilter, setHistoryFilter] = useState(initialHistoryFilter)
+
   const [isSearchOpen, setIsSearchOpen] = useState(false)
 
   const { bookings } = useBookings()
   const { applications } = useApplications()
   const { historyJobs } = useHistoryJobs()
-  const { postedJobs } = usePostedJobs()
+  const { postedJobs, loading: jobsLoading } = usePostedJobs()
 
 
   const filteredBookings = bookings.filter(booking => {
@@ -785,21 +619,7 @@ export default function BookingsPage() {
     return dateA.getTime() - dateB.getTime()
   })
 
-  const filteredApplications = applications.filter(application => {
-    const applicationMatchesSearch = application.freelancer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      application.jobTitle.toLowerCase().includes(searchQuery.toLowerCase())
 
-    if (!applicationFilter) return applicationMatchesSearch
-    return applicationMatchesSearch && application.status === applicationFilter
-  }).sort((a, b) => {
-    // Sort by status priority: new -> accepted -> rejected
-    const statusPriority = { 'new': 0, 'accepted': 1, 'rejected': 2 }
-    if (statusPriority[a.status] !== statusPriority[b.status]) {
-      return statusPriority[a.status] - statusPriority[b.status]
-    }
-    // If same status, sort by rating
-    return b.freelancer.rating - a.freelancer.rating
-  })
 
   const filteredHistory = historyJobs.filter(job => {
     const historyMatchesSearch = job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -957,13 +777,14 @@ export default function BookingsPage() {
                       </div>
                     ) : (
                       <>
-                        {/* Accepted Proposals */}
-                        {applications
-                          .filter(app => app.status === 'accepted')
-                          .map((application) => (
-                            <AcceptedProposalCard
-                              key={application["#"]}
-                              application={application}
+                        {/* Active Job Posts */}
+                        {postedJobs
+                          .filter(job => job.status === 'open')
+                          .map((job) => (
+                            <PostedJobCard
+                              key={job["#"]}
+                              job={job}
+                              showUpcoming={true}
                             />
                           ))
                         }
@@ -984,9 +805,9 @@ export default function BookingsPage() {
                 </TabsContent>
 
                 <TabsContent value="applications" className="mt-2 focus-visible:outline-none focus-visible:ring-0">
-                  {/* Applications Tab Filters */}
+                  {/* Applications Tab Filters - Showing Posted Jobs */}
                   <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-                    {['new', 'accepted', 'rejected', 'myJobs'].map((filter) => (
+                    {['all', 'open', 'closed', 'deleted'].map((filter) => (
                       <button
                         key={filter}
                         onClick={() => setApplicationFilter(filter)}
@@ -997,51 +818,41 @@ export default function BookingsPage() {
                             : "bg-white/5 text-white/60 border border-white/10 hover:bg-white/10"
                         )}
                       >
-                        {filter === 'myJobs' ? 'My Jobs' : filter.charAt(0).toUpperCase() + filter.slice(1)}
+                        {filter.charAt(0).toUpperCase() + filter.slice(1)}
                       </button>
                     ))}
                   </div>
                   <div className="space-y-4">
-                    {applicationFilter === 'myJobs' ? (
-                      // Show posted jobs
-                      postedJobs.length === 0 ? (
-                        <div className="text-center py-12">
-                          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-white/5 flex items-center justify-center">
-                            <Briefcase className="w-8 h-8 text-white/40" />
-                          </div>
-                          <h3 className="text-lg font-medium text-white/90 mb-2">No posted jobs yet</h3>
-                          <p className="text-white/60 text-sm">
-                            Post a job to find the perfect cricket professional
-                          </p>
+                    {jobsLoading ? (
+                      <div className="text-center py-12">
+                        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-white/5 flex items-center justify-center">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
                         </div>
-                      ) : (
-                        postedJobs.map((job) => (
+                        <h3 className="text-lg font-medium text-white/90 mb-2">Loading jobs...</h3>
+                      </div>
+                    ) : postedJobs
+                      .filter(job => applicationFilter === 'all' || job.status === applicationFilter)
+                      .length === 0 ? (
+                      <div className="text-center py-12">
+                        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-white/5 flex items-center justify-center">
+                          <Briefcase className="w-8 h-8 text-white/40" />
+                        </div>
+                        <h3 className="text-lg font-medium text-white/90 mb-2">No {applicationFilter === 'all' ? '' : applicationFilter} jobs found</h3>
+                        <p className="text-white/60 text-sm">
+                          {applicationFilter === 'all'
+                            ? "You haven't posted any jobs yet"
+                            : `No jobs found with status '${applicationFilter}'`}
+                        </p>
+                      </div>
+                    ) : (
+                      postedJobs
+                        .filter(job => applicationFilter === 'all' || job.status === applicationFilter)
+                        .map((job) => (
                           <PostedJobCard
                             key={job["#"]}
                             job={job}
                           />
                         ))
-                      )
-                    ) : (
-                      // Show applications
-                      filteredApplications.length === 0 ? (
-                        <div className="text-center py-12">
-                          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-white/5 flex items-center justify-center">
-                            <Briefcase className="w-8 h-8 text-white/40" />
-                          </div>
-                          <h3 className="text-lg font-medium text-white/90 mb-2">No applications yet</h3>
-                          <p className="text-white/60 text-sm">
-                            You haven&apos;t received any job applications
-                          </p>
-                        </div>
-                      ) : (
-                        filteredApplications.map((application) => (
-                          <ApplicationCard
-                            key={application["#"]}
-                            application={application}
-                          />
-                        ))
-                      )
                     )}
                   </div>
                 </TabsContent>

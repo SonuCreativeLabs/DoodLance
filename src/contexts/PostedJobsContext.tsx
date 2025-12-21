@@ -10,7 +10,7 @@ export interface PostedJob {
     budget: string;
     location: string;
     datePosted: string;
-    status: 'open' | 'closed';
+    status: 'open' | 'closed' | 'deleted';
     applicationCount: number;
     viewCount: number;
     // Extended fields
@@ -21,6 +21,7 @@ export interface PostedJob {
     scheduledAt: string | null;
     type: string;
     acceptedCount: number;
+    peopleNeeded: number;
 }
 
 
@@ -32,6 +33,8 @@ interface PostedJobsContextType {
     refreshPostedJobs: () => void;
     closeJob: (id: string) => Promise<void>;
     reopenJob: (id: string) => Promise<void>;
+    deleteJob: (id: string) => Promise<void>;
+    updateJob: (id: string, data: Partial<PostedJob>) => Promise<void>;
 }
 
 const PostedJobsContext = createContext<PostedJobsContextType | undefined>(undefined);
@@ -65,18 +68,22 @@ export function PostedJobsProvider({ children }: { children: ReactNode }) {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(postedJobs));
     }, [postedJobs]);
 
-    // Listen for job posted events
+    // Listen for job posted and application updated events
     useEffect(() => {
         const handleJobPosted = (event: CustomEvent) => {
             console.log('🔔 JOB POSTED EVENT RECEIVED', event.detail);
-            const { jobId } = event.detail;
-            // Refresh posted jobs when a new job is posted
+            refreshPostedJobs();
+        };
+
+        const handleAppUpdated = () => {
             refreshPostedJobs();
         };
 
         window.addEventListener('jobPosted', handleJobPosted as EventListener);
+        window.addEventListener('applicationUpdated', handleAppUpdated as EventListener);
         return () => {
             window.removeEventListener('jobPosted', handleJobPosted as EventListener);
+            window.removeEventListener('applicationUpdated', handleAppUpdated as EventListener);
         };
     }, []);
 
@@ -109,7 +116,7 @@ export function PostedJobsProvider({ children }: { children: ReactNode }) {
                 budget: `₹${job.budget}`, // Format budget
                 location: job.location,
                 datePosted: job.createdAt,
-                status: job.status === 'OPEN' ? 'open' : 'closed',
+                status: job.status === 'OPEN' ? 'open' : job.status === 'DELETED' ? 'deleted' : 'closed',
                 applicationCount: job._count?.applications || 0,
                 viewCount: job.proposals || 0,
                 // Map extended fields
@@ -119,7 +126,8 @@ export function PostedJobsProvider({ children }: { children: ReactNode }) {
                 experience: job.experience || 'Intermediate',
                 scheduledAt: job.scheduledAt,
                 type: job.type || 'freelance',
-                acceptedCount: job.applications?.filter((a: any) => a.status === 'accepted' || a.status === 'hired').length || 0,
+                acceptedCount: job.applications?.filter((a: any) => a.status?.toLowerCase() === 'accepted' || a.status?.toLowerCase() === 'hired').length || 0,
+                peopleNeeded: job.peopleNeeded || 1,
             }));
 
             setPostedJobs(mappedJobs);
@@ -138,8 +146,13 @@ export function PostedJobsProvider({ children }: { children: ReactNode }) {
                 job["#"] === id ? { ...job, status: 'closed' as const } : job
             ));
 
-            // TODO: API call to update job status
-            // await fetch(`/api/jobs/${id}`, { method: 'PATCH', body: JSON.stringify({ status: 'CLOSED' }) });
+
+            // API call to update job status
+            await fetch(`/api/jobs/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: 'CLOSED' })
+            });
         } catch (err) {
             // Revert on failure
             refreshPostedJobs();
@@ -163,6 +176,41 @@ export function PostedJobsProvider({ children }: { children: ReactNode }) {
         }
     };
 
+    const deleteJob = async (id: string) => {
+        try {
+            // Optimistic update - Soft Delete
+            setPostedJobs(prev => prev.map(job =>
+                job["#"] === id ? { ...job, status: 'deleted' as const } : job
+            ));
+
+            // TODO: API call to delete job (soft delete)
+            // await fetch(`/api/jobs/${id}`, { method: 'PATCH', body: JSON.stringify({ status: 'DELETED' }) });
+        } catch (err) {
+            // Revert on failure
+            refreshPostedJobs();
+            throw new Error('Failed to delete job');
+        }
+    };
+
+    const updateJob = async (id: string, data: Partial<PostedJob>) => {
+        try {
+            // Optimistic update
+            setPostedJobs(prev => prev.map(job =>
+                job["#"] === id ? { ...job, ...data } : job
+            ));
+
+            // API call
+            await fetch(`/api/jobs/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+        } catch (err) {
+            refreshPostedJobs();
+            throw new Error('Failed to update job');
+        }
+    };
+
     return (
         <PostedJobsContext.Provider
             value={{
@@ -172,6 +220,8 @@ export function PostedJobsProvider({ children }: { children: ReactNode }) {
                 refreshPostedJobs,
                 closeJob,
                 reopenJob,
+                deleteJob,
+                updateJob,
             }}
         >
             {children}

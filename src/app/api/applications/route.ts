@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/db'
 
+
+export const dynamic = 'force-dynamic'
+
 // GET /api/applications - Get applications (for freelancers or clients)
 export async function GET(request: NextRequest) {
   try {
@@ -157,9 +160,19 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create the application
+    // Generate hierarchical application ID
+    // Format: P-{city}{area}{number}-app### (e.g., P-tnche001-app001)
+    const applicationCount = await prisma.application.count({
+      where: { jobId }
+    })
+    const appNumber = String(applicationCount + 1).padStart(3, '0')
+    // Replace J- with P- for applications
+    const applicationId = `${jobId.replace('J-', 'P-')}-app${appNumber}`
+
+    // Create the application with custom ID
     const application = await prisma.application.create({
       data: {
+        id: applicationId,
         jobId,
         freelancerId,
         coverLetter,

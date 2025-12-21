@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -19,6 +19,16 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useApplications } from "@/contexts/ApplicationsContext";
 import { useNavbar } from "@/contexts/NavbarContext";
+import { usePostedJobs } from "@/contexts/PostedJobsContext";
+import { RescheduleModal } from "@/components/client/bookings/RescheduleModal";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const statusCopy: Record<string, string> = {
   new: "New Application",
@@ -30,7 +40,16 @@ export default function ApplicationDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { setNavbarVisibility } = useNavbar();
-  const { applications } = useApplications();
+  const { applications, acceptApplication, rejectApplication, reconsiderApplication } = useApplications();
+  const { postedJobs, closeJob } = usePostedJobs();
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [showReconsiderDialog, setShowReconsiderDialog] = useState(false);
+  const [showRejectDialog, setShowRejectDialog] = useState(false);
+  const [showAcceptDialog, setShowAcceptDialog] = useState(false);
+  const [showDeclineDialog, setShowDeclineDialog] = useState(false);
+
+  const [showReschedule, setShowReschedule] = useState(false);
+
 
   useEffect(() => {
     setNavbarVisibility(false);
@@ -45,8 +64,79 @@ export default function ApplicationDetailPage() {
 
   const application = useMemo(
     () => applications.find((entry) => entry["#"] === rawId),
-    [rawId]
+    [rawId, applications]
   );
+
+  const mockBooking: any = useMemo(() => {
+    if (!application) return null;
+    return {
+      "#": application["#"],
+      provider: application.freelancer.name,
+      service: application.jobTitle,
+      date: "2024-01-01",
+      time: "10:00 AM",
+      location: application.freelancer.location,
+      status: 'upcoming'
+    };
+  }, [application]);
+
+  const handleAccept = () => setShowAcceptDialog(true);
+
+  const handleAcceptConfirm = async () => {
+    setIsProcessing(true)
+    try {
+      if (application) {
+        await acceptApplication(application["#"])
+
+        // Check vacancy and close job if needed
+        const job = postedJobs.find(j => j["#"] === application.jobId)
+        if (job && job.acceptedCount + 1 >= job.peopleNeeded) {
+          await closeJob(job["#"])
+        }
+
+        setShowAcceptDialog(false)
+      }
+    } catch (error) {
+      console.error("Failed to accept application:", error)
+    } finally {
+      setIsProcessing(false)
+    }
+  }
+
+  const handleReject = () => setShowDeclineDialog(true);
+
+  const handleRejectConfirm = async () => {
+    setIsProcessing(true)
+    try {
+      if (application) {
+        await rejectApplication(application["#"])
+        if (application.status === 'new') setShowDeclineDialog(false)
+        else setShowRejectDialog(false)
+      }
+    } catch (error) {
+      console.error("Failed to reject application:", error)
+    } finally {
+      setIsProcessing(false)
+    }
+  }
+
+  const handleReconsider = async () => {
+    setIsProcessing(true)
+    try {
+      if (application) {
+        await reconsiderApplication(application["#"])
+        setShowReconsiderDialog(false)
+      }
+    } catch (error) {
+      console.error("Failed to reconsider application:", error)
+    } finally {
+      setIsProcessing(false)
+    }
+  }
+
+  const handleRescheduleConfirm = async (id: string, newDate: string, newTime: string) => {
+    console.log("Rescheduling application", id, newDate, newTime)
+  }
 
   if (!application) {
     return (
@@ -84,8 +174,10 @@ export default function ApplicationDetailPage() {
               </Button>
 
               <div className="ml-3">
-                <h1 className="text-lg font-semibold text-white">{application["#"]}</h1>
-                <p className="text-white/50 text-xs">{statusLabel}</p>
+                <h1 className="text-lg font-semibold text-white">
+                  {application.status === 'accepted' ? 'Upcoming' : 'Ongoing'} Application Job
+                </h1>
+                <p className="text-white/50 text-xs">{application.jobId}</p>
               </div>
             </div>
 
@@ -276,37 +368,171 @@ export default function ApplicationDetailPage() {
               <Button
                 variant="outline"
                 className="flex-1 border-white/20 bg-white/5 text-white hover:bg-red-500/20 hover:text-red-100"
+                onClick={handleReject}
+                disabled={isProcessing}
               >
                 Decline
               </Button>
-              <Button className="flex-1 bg-purple-600 hover:bg-purple-700">
+              <Button
+                className="flex-1 bg-purple-600 hover:bg-purple-700"
+                onClick={handleAccept}
+                disabled={isProcessing}
+              >
                 Accept
               </Button>
             </div>
           ) : application.status === "accepted" ? (
             <div className="flex flex-1 gap-3">
               <Button
+                className="flex-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20"
                 variant="outline"
-                className="flex-1 border-white/20 bg-white/5 text-white hover:bg-white/10"
-                onClick={() => router.push(`/client/chat/${encodeURIComponent(application.freelancer.name)}`)}
+                onClick={() => setShowRejectDialog(true)}
+                disabled={isProcessing}
               >
-                <MessageSquare className="w-4 h-4 mr-2" />
-                Message
+                Reject
               </Button>
-              <Button className="flex-1 bg-purple-600 hover:bg-purple-700">
-                Proceed to Booking
+              <Button
+                className="flex-1 bg-purple-600 hover:bg-purple-700 text-white"
+                onClick={() => setShowReschedule(true)}
+                disabled={isProcessing}
+              >
+                Reschedule
               </Button>
             </div>
           ) : (
-            <Button
-              className="flex-1 bg-blue-600 hover:bg-blue-700"
-              onClick={() => router.push(`/client/bookings?tab=applications&appFilter=new`)}
-            >
-              View Other Applications
-            </Button>
+            <div className="flex flex-1 gap-3">
+              <Button
+                className="flex-1 bg-white/5 hover:bg-white/10 text-white border border-white/10"
+                variant="outline"
+                onClick={() => setShowReconsiderDialog(true)}
+                disabled={isProcessing}
+              >
+                Reconsider
+              </Button>
+            </div>
           )}
         </div>
       </div>
+
+      {/* Accept Dialog */}
+      <Dialog open={showAcceptDialog} onOpenChange={setShowAcceptDialog}>
+        <DialogContent className="bg-[#1A1A1A] border-white/10 text-white w-[95vw] max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-white">Accept Application</DialogTitle>
+            <DialogDescription className="text-white/60">
+              Are you sure you want to hire this freelancer? This will mark the application as accepted.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="ghost"
+              onClick={() => setShowAcceptDialog(false)}
+              className="bg-white/5 hover:bg-white/10 text-white border border-white/10"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleAcceptConfirm}
+              className="bg-purple-600 hover:bg-purple-700 text-white"
+            >
+              Confirm Acceptance
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Decline Dialog (for New) */}
+      <Dialog open={showDeclineDialog} onOpenChange={setShowDeclineDialog}>
+        <DialogContent className="bg-[#1A1A1A] border-white/10 text-white w-[95vw] max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-white">Decline Application</DialogTitle>
+            <DialogDescription className="text-white/60">
+              Are you sure you want to decline this application? It will be moved to Rejected status.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="ghost"
+              onClick={() => setShowDeclineDialog(false)}
+              className="bg-white/5 hover:bg-white/10 text-white border border-white/10"
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleRejectConfirm}
+              className="bg-red-500 hover:bg-red-600 text-white"
+            >
+              Decline Application
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reconsider Dialog */}
+      <Dialog open={showReconsiderDialog} onOpenChange={setShowReconsiderDialog}>
+        <DialogContent className="bg-[#1A1A1A] border-white/10 text-white w-[95vw] max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-white">Reconsider Application</DialogTitle>
+            <DialogDescription className="text-white/60">
+              Are you sure you want to reconsider this application? It will be moved back to New status.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="ghost"
+              onClick={() => setShowReconsiderDialog(false)}
+              className="bg-white/5 hover:bg-white/10 text-white border border-white/10"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleReconsider}
+              className="bg-purple-600 hover:bg-purple-700 text-white"
+            >
+              Reconsider
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reject Dialog (for Accepted) */}
+      <Dialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
+        <DialogContent className="bg-[#1A1A1A] border-white/10 text-white w-[95vw] max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-white">Reject Application</DialogTitle>
+            <DialogDescription className="text-white/60">
+              Are you sure you want to reject this previously accepted application?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="ghost"
+              onClick={() => setShowRejectDialog(false)}
+              className="bg-white/5 hover:bg-white/10 text-white border border-white/10"
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleRejectConfirm}
+              className="bg-red-500 hover:bg-red-600 text-white"
+            >
+              Reject Application
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <RescheduleModal
+        isOpen={showReschedule}
+        onClose={() => setShowReschedule(false)}
+        booking={mockBooking}
+        onReschedule={handleRescheduleConfirm}
+      />
+
+
+
     </div>
   );
 }

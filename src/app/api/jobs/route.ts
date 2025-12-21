@@ -67,16 +67,27 @@ export async function GET(request: NextRequest) {
     })
 
     // Parse string fields back to arrays for backwards compatibility
-    const jobsWithParsedFields = jobs.map((job: any) => ({
-      ...job,
-      coords: job.coords ? JSON.parse(job.coords) : [],
-      skills: job.skills ? job.skills.split(',').map((s: string) => s.trim()).filter(Boolean) : [],
-      duration: job.duration || 'hourly',
-      experience: job.experience || 'Intermediate',
-      workMode: job.workMode || 'remote',
-      type: job.type || 'freelance',
-      scheduledAt: job.scheduledAt, // Preserve the stored scheduledAt date
-    }))
+    const jobsWithParsedFields = jobs.map((job: any) => {
+      let peopleNeeded = 1;
+      try {
+        if (job.notes) {
+          const parsed = JSON.parse(job.notes);
+          if (parsed.peopleNeeded) peopleNeeded = parsed.peopleNeeded;
+        }
+      } catch (e) { }
+
+      return {
+        ...job,
+        coords: job.coords ? JSON.parse(job.coords) : [],
+        skills: job.skills ? job.skills.split(',').map((s: string) => s.trim()).filter(Boolean) : [],
+        duration: job.duration || 'hourly',
+        experience: job.experience || 'Intermediate',
+        workMode: job.workMode || 'remote',
+        type: job.type || 'freelance',
+        scheduledAt: job.scheduledAt, // Preserve the stored scheduledAt date
+        peopleNeeded,
+      }
+    })
 
     return NextResponse.json(jobsWithParsedFields)
   } catch (error) {
@@ -132,6 +143,7 @@ export async function POST(request: NextRequest) {
       duration,
       experience,
       startDate,
+      peopleNeeded,
     } = body
 
     // Ensure user exists in database to prevent foreign key errors
@@ -171,9 +183,28 @@ export async function POST(request: NextRequest) {
     })
     */
 
-    // Create the job
+    // Generate custom job ID
+    // Format: J-{city}{area}{number} (e.g., J-tnche001)
+    const generateJobId = async (location: string): Promise<string> => {
+      // Extract city/area codes from location
+      // Simple approach: take first 2 chars of first word + first 3 chars of second word
+      const locationParts = location.toLowerCase().replace(/[^a-z\s]/g, '').split(' ')
+      const cityCode = (locationParts[0] || 'xx').substring(0, 2)
+      const areaCode = (locationParts[1] || locationParts[0] || 'xxx').substring(0, 3)
+
+      // Count existing jobs to get serial number
+      const jobCount = await prisma.job.count()
+      const serialNumber = String(jobCount + 1).padStart(3, '0')
+
+      return `J-${cityCode}${areaCode}${serialNumber}`
+    }
+
+    const jobId = await generateJobId(location)
+
+    // Create the job with custom ID
     const job = await prisma.job.create({
       data: {
+        id: jobId,
         title,
         description,
         category,
@@ -191,6 +222,7 @@ export async function POST(request: NextRequest) {
         isActive: true,
         proposals: 0,
         scheduledAt: startDate ? new Date(startDate).toISOString() : null,
+        notes: JSON.stringify({ peopleNeeded: peopleNeeded || 1 }),
       },
     })
 
