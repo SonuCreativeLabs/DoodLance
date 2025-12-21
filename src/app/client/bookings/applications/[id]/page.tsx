@@ -17,7 +17,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { applications } from "@/lib/mock/bookings";
+import { useApplications } from "@/contexts/ApplicationsContext";
 import { useNavbar } from "@/contexts/NavbarContext";
 
 const statusCopy: Record<string, string> = {
@@ -30,6 +30,7 @@ export default function ApplicationDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { setNavbarVisibility } = useNavbar();
+  const { applications } = useApplications();
 
   useEffect(() => {
     setNavbarVisibility(false);
@@ -66,14 +67,14 @@ export default function ApplicationDetailPage() {
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-[#111111] via-[#0b0b0b] to-[#050505] text-white">
       {/* Header */}
-      <div className="sticky top-0 z-30 bg-[#0F0F0F] border-b border-white/5">
+      <div className="fixed top-0 left-0 right-0 z-30 bg-[#0F0F0F]/95 backdrop-blur-md border-b border-white/5">
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => router.back()}
+                onClick={() => router.push(`/client/bookings?tab=applications&appFilter=${application?.status || 'new'}`)}
                 className="inline-flex items-center p-0 hover:bg-transparent text-sm text-purple-400 hover:text-purple-300 transition-colors duration-200"
                 aria-label="Back"
               >
@@ -88,20 +89,31 @@ export default function ApplicationDetailPage() {
               </div>
             </div>
 
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 w-8 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 p-0 transition-all duration-200"
-              aria-label="Call"
-            >
-              <Phone className="h-4 w-4 text-purple-400" />
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 p-0 transition-all duration-200"
+                onClick={() => router.push(`/client/chat/${encodeURIComponent(application.freelancer.name)}`)}
+                aria-label="Message"
+              >
+                <MessageSquare className="h-4 w-4 text-purple-400" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 p-0 transition-all duration-200"
+                aria-label="Call"
+              >
+                <Phone className="h-4 w-4 text-purple-400" />
+              </Button>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto pt-[64px] pb-[88px]">
         <div className="relative bg-gradient-to-br from-purple-500/10 via-purple-500/5 to-transparent">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(168,85,247,0.25),transparent_60%)]" />
           <div className="relative px-4 py-10">
@@ -257,16 +269,8 @@ export default function ApplicationDetailPage() {
       </div>
 
       {/* Action Bar */}
-      <div className="sticky bottom-0 z-20 border-t border-white/10 bg-gradient-to-t from-[#111111] via-[#0b0b0b] to-transparent px-4 py-4 backdrop-blur-xl">
-        <div className="flex flex-col gap-3 sm:flex-row">
-          <Button
-            variant="outline"
-            className="flex-1 border-white/20 bg-white/5 text-white hover:bg-white/10"
-            onClick={() => router.push(`/client/inbox?application=${encodeURIComponent(application["#"])}`)}
-          >
-            <MessageSquare className="mr-2 h-4 w-4" />
-            Message applicant
-          </Button>
+      <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-white/10 bg-[#111111]/95 backdrop-blur-md px-4 py-4">
+        <div className="flex gap-3">
           {application.status === "new" ? (
             <div className="flex flex-1 gap-3">
               <Button
@@ -279,9 +283,26 @@ export default function ApplicationDetailPage() {
                 Accept
               </Button>
             </div>
+          ) : application.status === "accepted" ? (
+            <div className="flex flex-1 gap-3">
+              <Button
+                variant="outline"
+                className="flex-1 border-white/20 bg-white/5 text-white hover:bg-white/10"
+                onClick={() => router.push(`/client/chat/${encodeURIComponent(application.freelancer.name)}`)}
+              >
+                <MessageSquare className="w-4 h-4 mr-2" />
+                Message
+              </Button>
+              <Button className="flex-1 bg-purple-600 hover:bg-purple-700">
+                Proceed to Booking
+              </Button>
+            </div>
           ) : (
-            <Button className="flex-1 bg-purple-600 hover:bg-purple-700">
-              View booking history
+            <Button
+              className="flex-1 bg-blue-600 hover:bg-blue-700"
+              onClick={() => router.push(`/client/bookings?tab=applications&appFilter=new`)}
+            >
+              View Other Applications
             </Button>
           )}
         </div>

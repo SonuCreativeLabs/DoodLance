@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Filter, ChevronDown, Check, MessageSquare } from 'lucide-react';
@@ -13,7 +14,7 @@ const ChatList = dynamic(
   () => import('@/components/client/inbox/chat-list').then(mod => ({
     default: mod.ChatList
   })),
-  { 
+  {
     ssr: false,
     loading: () => <div className="p-4 text-gray-400">Loading chats...</div>
   }
@@ -23,7 +24,7 @@ const ChatView = dynamic(
   () => import('@/components/client/inbox/chat-view').then(mod => ({
     default: mod.ChatView
   })),
-  { 
+  {
     ssr: false,
     loading: () => <div className="p-4 text-gray-400">Loading chat...</div>
   }
@@ -53,7 +54,7 @@ const generateMockMessages = (proId: string, jobTitle: string): Message[] => {
   // Generate a seed based on proId for consistent randomness
   const seed = proId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
   const random = (max: number) => (seed * 9301 + 49297) % 233280 / 233280 * max;
-  
+
   // Common greetings
   const greetings = [
     `Hi there! I'm interested in your ${jobTitle} service.`,
@@ -133,7 +134,7 @@ const generateMockMessages = (proId: string, jobTitle: string): Message[] => {
   };
 
   // Get appropriate templates based on job title
-  const templates = Object.entries(jobTemplates).find(([key]) => 
+  const templates = Object.entries(jobTemplates).find(([key]) =>
     key !== 'default' && jobTitle.toLowerCase().includes(key.toLowerCase())
   )?.[1] || jobTemplates.default;
 
@@ -217,7 +218,7 @@ const professionalChats = professionals.map((pro, index) => {
       break;
     }
   }
-  
+
   return {
     id: chatId,
     recipientName: pro.name,
@@ -234,24 +235,42 @@ const professionalChats = professionals.map((pro, index) => {
 function InboxPage() {
   // Client-side state
   const [isClient, setIsClient] = useState(false);
-  
+
   // Chat state
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
-  
+
   // Refs and context
   const filterButtonRef = useRef<HTMLButtonElement>(null);
   const filterRef = useRef<HTMLDivElement>(null);
   const { setFullChatView } = useChatView();
   const statusOptions = ['All', 'Upcoming', 'Ongoing', 'Completed', 'Cancelled'];
-  
+
   // Set client-side flag
   useEffect(() => {
     setIsClient(true);
   }, []);
-  
+
+  // Get URL search params
+  const searchParams = useSearchParams();
+  const chatParam = searchParams.get('chat');
+
+  // Auto-select chat based on URL parameter
+  useEffect(() => {
+    if (chatParam && isClient) {
+      // Find chat by freelancer/provider name
+      const matchingChat = professionalChats.find(
+        chat => chat.recipientName.toLowerCase() === chatParam.toLowerCase()
+      );
+      if (matchingChat) {
+        setSelectedChatId(matchingChat.id);
+        setFullChatView(true);
+      }
+    }
+  }, [chatParam, isClient, setFullChatView]);
+
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -259,17 +278,17 @@ function InboxPage() {
         setShowFilterDropdown(false);
       }
     };
-    
+
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-  
+
   // Handle chat selection
   const handleSelectChat = (chatId: string) => {
     setSelectedChatId(chatId);
     setFullChatView(true);
   };
-  
+
   // Show loading state on server
   if (!isClient) {
     return (
@@ -280,10 +299,10 @@ function InboxPage() {
   }
 
 
-  
+
   // Toggle filter dropdown
   const toggleFilter = () => setShowFilterDropdown(!showFilterDropdown);
-  
+
   // Handle status filter change
   const handleStatusFilter = (status: string) => {
     setStatusFilter(status === 'All' ? undefined : status);
@@ -291,17 +310,17 @@ function InboxPage() {
   };
 
   const selectedChat = professionalChats.find(chat => chat.id === selectedChatId) || null;
-  
+
   // Filter chats based on search query and status
   const filteredChats = professionalChats.filter(chat => {
-    const matchesSearch = !searchQuery.trim() || 
+    const matchesSearch = !searchQuery.trim() ||
       chat.recipientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       chat.lastMessage.toLowerCase().includes(searchQuery.toLowerCase()) ||
       chat.recipientJobTitle.toLowerCase().includes(searchQuery.toLowerCase());
-    
+
     // If status filter is active, only show chats that match the status
     const matchesStatus = !statusFilter || statusFilter === 'All' || chat.status === statusFilter;
-    
+
     return matchesSearch && matchesStatus;
   });
 
@@ -320,7 +339,7 @@ function InboxPage() {
               <h1 className="text-lg font-bold bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent">Messages</h1>
             </div>
             <div className="relative" ref={filterRef}>
-              <button 
+              <button
                 ref={filterButtonRef}
                 className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 transition-all duration-300 text-xs border border-white/5 hover:border-white/10 backdrop-blur-sm group"
                 onClick={toggleFilter}
@@ -329,7 +348,7 @@ function InboxPage() {
                 <span className="text-white/80 group-hover:text-white transition-colors">{statusFilter || 'Filter'}</span>
                 <ChevronDown className={`w-3.5 h-3.5 text-white/60 group-hover:text-white/80 transition-all duration-300 ${showFilterDropdown ? 'rotate-180' : ''}`} />
               </button>
-              
+
               <AnimatePresence>
                 {showFilterDropdown && (
                   <motion.div
@@ -360,7 +379,7 @@ function InboxPage() {
               </AnimatePresence>
             </div>
           </div>
-          
+
           {/* Search Bar */}
           <div className="mt-3 relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-white/60 backdrop-blur-none z-20" />
@@ -372,7 +391,7 @@ function InboxPage() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
             {searchQuery && (
-              <button 
+              <button
                 onClick={() => setSearchQuery('')}
                 className="absolute right-2 top-1/2 transform -translate-y-1/2 text-white/40 hover:text-white/60 transition-colors"
               >
@@ -383,19 +402,19 @@ function InboxPage() {
             )}
           </div>
         </div>
-        
+
         {/* Chat List */}
         <div className="flex-1 overflow-y-auto">
           {filteredChats && (
-            <ChatList 
-              chats={filteredChats} 
-              selectedChatId={selectedChatId || undefined} 
-              onSelectChat={handleSelectChat} 
+            <ChatList
+              chats={filteredChats}
+              selectedChatId={selectedChatId || undefined}
+              onSelectChat={handleSelectChat}
             />
           )}
         </div>
       </div>
-      
+
       {/* Chat View - Only show when a chat is selected */}
       <div className="flex-1 flex flex-col bg-[#1a1a1a] border-l border-white/10">
         {selectedChat && (

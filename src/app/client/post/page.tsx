@@ -22,9 +22,9 @@ export default function PostPage() {
   }, [setNavbarVisibility]);
 
   return (
-    <div className="min-h-screen bg-[#0F0F0F] text-white flex flex-col">
-      {/* Sticky Header - Matching Profile Page Style */}
-      <div className="sticky top-0 z-10 bg-[#0F0F0F] border-b border-white/5 pt-2">
+    <div className="min-h-screen bg-[#0F0F0F] text-white flex flex-col h-screen overflow-hidden">
+      {/* Fixed Header - Matching Profile Page Style */}
+      <div className="fixed top-0 left-0 right-0 z-20 bg-[#0F0F0F] border-b border-white/5 pt-2">
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center">
             <button
@@ -45,12 +45,12 @@ export default function PostPage() {
       </div>
 
       {/* Gradient separation line */}
-      <div className="relative py-1">
+      <div className="fixed top-[60px] left-0 right-0 z-10 py-1">
         <div className="absolute inset-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
       </div>
 
       {/* Scrollable Content */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto pt-[72px] pb-[88px]">
         <div className="container mx-auto px-4 py-6">
           <div className="max-w-4xl mx-auto">
             <PostJobForm />

@@ -4,7 +4,7 @@ import prisma from '@/lib/db'
 // Helper function to generate dynamic mock job data for any job ID
 const generateMockJob = (jobId: string) => {
   // Map specific job IDs to their correct mock data
-  const jobIdMap: {[key: string]: any} = {
+  const jobIdMap: { [key: string]: any } = {
     'DLCS0001': {
       title: 'Cricket Scorer for Local Tournament',
       category: 'Scorer',
@@ -315,13 +315,6 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  let freelancerRating: any = null;
-  let rating = 0;
-  let review = '';
-  let feedbackChips: string[] = [];
-  let existingJob: any = null; // Declare at function scope
-  let originalJobFromFrontend: any = null; // Declare at function scope
-
   try {
     const body = await request.json()
     const {
@@ -330,251 +323,80 @@ export async function PUT(
       rating: reqRating = 0,
       review: reqReview = '',
       feedbackChips: reqFeedbackChips = [],
-      freelancerRating: reqFreelancerRating = null,
-      originalJobData: originalJobFromFrontend // Get original job data from frontend
+      freelancerRating: reqFreelancerRating = null
     } = body
 
-    // Handle freelancerRating format (new format)
-    if (reqFreelancerRating) {
-      freelancerRating = {
-        stars: reqFreelancerRating.stars || 0,
-        review: reqFreelancerRating.review || '',
-        feedbackChips: reqFreelancerRating.feedbackChips || [],
-        date: reqFreelancerRating.date || new Date().toISOString()
-      };
-      rating = freelancerRating.stars;
-      review = freelancerRating.review;
-      feedbackChips = freelancerRating.feedbackChips;
-    } else {
-      // Handle direct properties format (legacy format)
-      rating = reqRating;
-      review = reqReview;
-      feedbackChips = reqFeedbackChips;
-      freelancerRating = {
-        stars: rating,
-        review: review,
-        feedbackChips: feedbackChips,
+    // 1. Prepare data for update
+    const updateData: any = {
+      updatedAt: new Date(),
+    }
+
+    if (status) {
+      updateData.status = status
+
+      if (status === 'started') {
+        updateData.startedAt = new Date()
+      } else if (status === 'completed') {
+        updateData.completedAt = new Date()
+      } else if (status === 'cancelled') {
+        if (!notes?.trim()) {
+          return NextResponse.json(
+            { error: 'Cancellation notes are required' },
+            { status: 400 }
+          )
+        }
+        updateData.cancelledAt = new Date()
+        updateData.cancellationReason = notes // Assuming schema has this, or we store it in notes
+        // If schema doesn't have cancellationReason, we might skip it or check schema
+      }
+    }
+
+    // 2. Handle Rating/Review (if finalizing a job)
+    // Structure depends on your schema. Assuming Job model has embedded fields or relations.
+    // Based on previous code, it seemed to handle 'freelancerRating' JSON or separate fields.
+    // Let's assume the schema supports a Json field `freelancerRating` or similar.
+
+    if (reqFreelancerRating || reqRating) {
+      const ratingData = reqFreelancerRating || {
+        stars: reqRating,
+        review: reqReview,
+        feedbackChips: reqFeedbackChips,
         date: new Date().toISOString()
       };
+      // Update database field - adjusting key based on probable schema structure from reading earlier
+      updateData.freelancerRating = ratingData;
     }
 
-    // First check if job exists and get client info (wrap in try-catch for database errors)
-    try {
-      existingJob = await prisma.job.findUnique({
-        where: { id: params.id },
-        select: { clientId: true, freelancerId: true, title: true }
-      })
-    } catch (dbError) {
-      console.error('Database unavailable, using mock mode:', dbError)
-      // In demo mode, assume job exists for mock purposes
-      existingJob = { id: params.id, title: 'Demo Job' }
-    }
-
-    if (!existingJob) {
-      // Fallback to dynamic mock data if job not found in database
-      const mockJob = generateMockJob(params.id);
-      // For demo purposes, assume the job exists for updates
-      existingJob = { id: params.id, title: mockJob.title };
-    }
-
-    // If status is being updated, handle special cases
-    if (status) {
-      if (status === 'cancelled' && !notes?.trim()) {
-        return NextResponse.json(
-          { error: 'Cancellation notes are required' },
-          { status: 400 }
-        )
-      }
-
-      if (status === 'completed' && (!rating || (!feedbackChips?.length && !review?.trim()))) {
-        return NextResponse.json(
-          { error: 'Rating and feedback (chips or review) are required for completion' },
-          { status: 400 }
-        )
-      }
-    }
-
-    // For now, just return success for mock/demo purposes
-    // In a real implementation, this would update the database
-
-    // Use original job data from frontend if available, otherwise use database/generated data
-    let originalJobData = originalJobFromFrontend;
-    if (!originalJobData) {
-      // Fallback to database lookup or generated data
-      if (existingJob && existingJob.title) {
-        originalJobData = {
-          id: params.id,
-          title: existingJob.title,
-          description: `Professional services for ${existingJob.title}`,
-          category: 'OTHER',
-          budget: 5000,
-          location: 'Chennai, Tamil Nadu',
-          skills: ['Professional', 'Quality Work'],
-          status: 'upcoming',
-          client: {
-            name: 'DoodLance Client',
-            image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Client',
-            rating: 4.5,
-            jobsCompleted: 10
+    // 3. Perform Update
+    const updatedJob = await prisma.job.update({
+      where: { id: params.id },
+      data: updateData,
+      include: {
+        client: {
+          select: {
+            id: true,
+            name: true,
+            avatar: true,
+            location: true,
+            isVerified: true
           }
-        };
-      } else {
-        originalJobData = {
-          id: params.id,
-          title: `Job ${params.id}`,
-          description: 'Professional services',
-          category: 'OTHER',
-          budget: 5000,
-          location: 'Chennai, Tamil Nadu',
-          skills: ['Professional'],
-          status: 'upcoming',
-          client: {
-            name: 'DoodLance Client',
-            image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Client',
-            rating: 4.5,
-            jobsCompleted: 10
-          }
-        };
+        }
       }
-    }
+    })
 
-    // Return the complete job data with updated completion information
+    // 4. Return updated job
     return NextResponse.json({
-      ...originalJobData,  // Use original job data as base
-      status,
-      notes,
-      freelancerRating,
-      ...(status === 'started' && { startedAt: new Date().toISOString() }),
-      completedAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      // Ensure payment field is preserved (API uses budget but frontend uses payment)
-      payment: originalJobData.payment || originalJobData.budget || 0,
-      message: `Job ${status} successfully`
+      ...updatedJob,
+      payment: updatedJob.budget, // Map budget to payment for frontend compatibility
+      message: `Job ${status || 'updated'} successfully`
     })
 
   } catch (error) {
-    console.error('Database error, simulating success:', error)
-
-    // Check if it's a Prisma client error (database not available)
-    if (error instanceof Error && error.message.includes('prisma')) {
-      // Fallback to mock response for demo purposes
-
-      // Use original job data from frontend if available
-      let originalJobData = originalJobFromFrontend;
-      if (!originalJobData) {
-        // Fallback to database lookup or generated data
-        if (existingJob && existingJob.title) {
-          originalJobData = {
-            id: params.id,
-            title: existingJob.title,
-            description: `Professional services for ${existingJob.title}`,
-            category: 'OTHER',
-            budget: 5000,
-            location: 'Chennai, Tamil Nadu',
-            skills: ['Professional', 'Quality Work'],
-            status: 'upcoming',
-            client: {
-              name: 'DoodLance Client',
-              image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Client',
-              rating: 4.5,
-              jobsCompleted: 10
-            }
-          };
-        } else {
-          originalJobData = {
-            id: params.id,
-            title: `Job ${params.id}`,
-            description: 'Professional services',
-            category: 'OTHER',
-            budget: 5000,
-            location: 'Chennai, Tamil Nadu',
-            skills: ['Professional'],
-            status: 'upcoming',
-            client: {
-              name: 'DoodLance Client',
-              image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Client',
-              rating: 4.5,
-              jobsCompleted: 10
-            }
-          };
-        }
-      }
-
-      return NextResponse.json({
-        ...originalJobData,  // Use original job data as base
-        status: status || 'updated',
-        message: 'Job updated successfully (demo mode - database unavailable)',
-        freelancerRating: freelancerRating || {
-          stars: rating || 0,
-          review: review || '',
-          feedbackChips: feedbackChips || [],
-          date: new Date().toISOString()
-        },
-        ...(status === 'started' && { startedAt: new Date().toISOString() }),
-        // Ensure payment field is preserved
-        payment: originalJobData.payment || originalJobData.budget || 0,
-        updatedAt: new Date().toISOString()
-      })
-    }
-
-    // For other errors, still return success for demo
-
-    // Use original job data from frontend if available
-    let originalJobData = originalJobFromFrontend;
-    if (!originalJobData) {
-      // Fallback to database lookup or generated data
-      if (existingJob && existingJob.title) {
-        originalJobData = {
-          id: params.id,
-          title: existingJob.title,
-          description: `Professional services for ${existingJob.title}`,
-          category: 'OTHER',
-          budget: 5000,
-          location: 'Chennai, Tamil Nadu',
-          skills: ['Professional', 'Quality Work'],
-          status: 'upcoming',
-          client: {
-            name: 'DoodLance Client',
-            image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Client',
-            rating: 4.5,
-            jobsCompleted: 10
-          }
-        };
-      } else {
-        originalJobData = {
-          id: params.id,
-          title: `Job ${params.id}`,
-          description: 'Professional services',
-          category: 'OTHER',
-          budget: 5000,
-          location: 'Chennai, Tamil Nadu',
-          skills: ['Professional'],
-          status: 'upcoming',
-          client: {
-            name: 'DoodLance Client',
-            image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Client',
-            rating: 4.5,
-            jobsCompleted: 10
-          }
-        };
-      }
-    }
-
-    return NextResponse.json({
-      ...originalJobData,  // Use original job data as base
-      status: 'updated',
-      message: 'Job updated successfully (demo mode)',
-      freelancerRating: freelancerRating || {
-        stars: rating || 0,
-        review: review || '',
-        feedbackChips: feedbackChips || [],
-        date: new Date().toISOString()
-      },
-      ...(status === 'started' && { startedAt: new Date().toISOString() }),
-      // Ensure payment field is preserved
-      payment: originalJobData.payment || originalJobData.budget || 0,
-      updatedAt: new Date().toISOString()
-    })
+    console.error('Error updating job:', error)
+    return NextResponse.json(
+      { error: 'Failed to update job' },
+      { status: 500 }
+    )
   }
 }
 

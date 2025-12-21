@@ -24,6 +24,8 @@ interface ApplicationsContextType {
   loading: boolean;
   error: string | null;
   refreshApplications: () => void;
+  acceptApplication: (id: string) => Promise<void>;
+  rejectApplication: (id: string) => Promise<void>;
 }
 
 const ApplicationsContext = createContext<ApplicationsContextType | undefined>(undefined);
@@ -89,13 +91,44 @@ export function ApplicationsProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     setError(null);
     try {
-      // In a real app, this would fetch from an API
-      // For now, we'll just reset to initial data
-      setApplications(initialApplications);
+      // Try to load from localStorage first
+      const saved = localStorage.getItem('clientApplications');
+      if (saved) {
+        setApplications(JSON.parse(saved));
+      } else {
+        setApplications(initialApplications);
+        localStorage.setItem('clientApplications', JSON.stringify(initialApplications));
+      }
     } catch (err) {
       setError('Failed to load applications');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const acceptApplication = async (id: string): Promise<void> => {
+    try {
+      const updatedApplications = applications.map(app =>
+        app["#"] === id ? { ...app, status: 'accepted' as const } : app
+      );
+      setApplications(updatedApplications);
+      localStorage.setItem('clientApplications', JSON.stringify(updatedApplications));
+    } catch (err) {
+      setError('Failed to accept application');
+      throw err;
+    }
+  };
+
+  const rejectApplication = async (id: string): Promise<void> => {
+    try {
+      const updatedApplications = applications.map(app =>
+        app["#"] === id ? { ...app, status: 'rejected' as const } : app
+      );
+      setApplications(updatedApplications);
+      localStorage.setItem('clientApplications', JSON.stringify(updatedApplications));
+    } catch (err) {
+      setError('Failed to reject application');
+      throw err;
     }
   };
 
@@ -108,7 +141,9 @@ export function ApplicationsProvider({ children }: { children: ReactNode }) {
     applications,
     loading,
     error,
-    refreshApplications
+    refreshApplications,
+    acceptApplication,
+    rejectApplication
   };
 
   return (

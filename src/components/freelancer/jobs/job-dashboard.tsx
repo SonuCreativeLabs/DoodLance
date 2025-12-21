@@ -43,7 +43,7 @@ const convertBookingToJob = (booking: any): Job => {
   const generateOtp = () => {
     return Math.floor(1000 + Math.random() * 9000).toString();
   };
-  
+
   // Check if we already have an OTP stored for this booking
   let storedOtp = '1234'; // Default for testing
   try {
@@ -68,8 +68,8 @@ const convertBookingToJob = (booking: any): Job => {
     jobDate: jobDate,
     jobTime: booking.time || '10:00 AM',
     status: jobStatus,
-    payment: typeof booking.price === 'string' 
-      ? parseInt(booking.price.replace(/[₹,]/g, '')) || 0 
+    payment: typeof booking.price === 'string'
+      ? parseInt(booking.price.replace(/[₹,]/g, '')) || 0
       : booking.price || 0,
     location: booking.location || 'Location TBD',
     description: booking.notes || '', // Use notes as description for direct hire
@@ -298,7 +298,7 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
 
     const jobsWithUpdates = applyStoredJobUpdates();
     const clientBookingJobs = loadClientBookings();
-    
+
     // Merge jobs, avoiding duplicates by ID
     const allJobs = [...jobsWithUpdates];
     clientBookingJobs.forEach(bookingJob => {
@@ -306,17 +306,43 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
         allJobs.push(bookingJob);
       }
     });
-    
+
     setJobs(allJobs);
 
-    // Dynamically import applications to get latest data
-    const loadApplications = async () => {
-      const { mockApplications } = await import('./mock-data');
-      setApplications(mockApplications);
-    };
-    loadApplications();
+    // Fetch real applications
+    const fetchRealData = async () => {
+      try {
+        // Don't set loading true here as it's already true on mount, 
+        // and we want to allow existing jobs to show if needed, but 
+        // actually we should probably wait.
 
-    setLoading(false);
+        const sessionRes = await fetch('/api/auth/session');
+        const session = await sessionRes.json();
+        const userId = session?.id;
+
+        if (userId) {
+          const appsRes = await fetch(`/api/applications?myApplications=true&userId=${userId}`);
+          if (appsRes.ok) {
+            const realApplications = await appsRes.json();
+            if (Array.isArray(realApplications)) {
+              setApplications(realApplications);
+            }
+          }
+        } else {
+          // Fallback
+          const { mockApplications } = await import('./mock-data');
+          setApplications(mockApplications);
+        }
+      } catch (e) {
+        console.error(e);
+        // Fallback
+        const { mockApplications } = await import('./mock-data');
+        setApplications(mockApplications);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchRealData();
   }, []);
 
   // Listen for localStorage changes to refresh jobs
@@ -330,7 +356,7 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
 
         const jobsWithUpdates = applyStoredJobUpdates();
         const clientBookingJobs = loadClientBookings();
-        
+
         // Merge jobs
         const allJobs = [...jobsWithUpdates];
         clientBookingJobs.forEach(bookingJob => {
@@ -338,7 +364,7 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
             allJobs.push(bookingJob);
           }
         });
-        
+
         setJobs(allJobs);
       }
     };
@@ -351,7 +377,7 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
 
       const jobsWithUpdates = applyStoredJobUpdates();
       const clientBookingJobs = loadClientBookings();
-      
+
       // Merge jobs
       const allJobs = [...jobsWithUpdates];
       clientBookingJobs.forEach(bookingJob => {
@@ -359,7 +385,7 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
           allJobs.push(bookingJob);
         }
       });
-      
+
       setJobs(allJobs);
 
       // Auto-switch to appropriate tab if job was completed/cancelled, but delay to avoid race conditions
@@ -377,10 +403,10 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
     // Listen for client booking updates
     const handleClientBookingUpdate = (e: CustomEvent) => {
       console.log('Client booking update received:', e.detail);
-      
+
       const jobsWithUpdates = applyStoredJobUpdates();
       const clientBookingJobs = loadClientBookings();
-      
+
       // Merge jobs
       const allJobs = [...jobsWithUpdates];
       clientBookingJobs.forEach(bookingJob => {
@@ -388,7 +414,7 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
           allJobs.push(bookingJob);
         }
       });
-      
+
       setJobs(allJobs);
     };
 
@@ -410,7 +436,7 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
       // Find and remove duplicate entries for the same job ID
       const jobIds = Object.keys(storedUpdates);
       const seenIds = new Set();
-      const cleanedUpdates: {[key: string]: any} = {};
+      const cleanedUpdates: { [key: string]: any } = {};
 
       jobIds.forEach(jobId => {
         if (!seenIds.has(jobId)) {
@@ -677,14 +703,75 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
     }
   };
 
-  const handleJobStatusChange = (jobId: string, newStatus: 'completed' | 'cancelled' | 'started', notes?: string) => {
+  const handleJobStatusChange = async (jobId: string, newStatus: 'completed' | 'cancelled' | 'started', notes?: string) => {
     console.log(`Updating job ${jobId} status to ${newStatus}`);
 
-    // Update the jobs array with complete data from localStorage
-    const jobsWithUpdates = applyStoredJobUpdates();
-    setJobs(jobsWithUpdates);
+    // Create optimistic update data
+    const optimisticUpdate = {
+      status: newStatus,
+      updatedAt: new Date().toISOString(),
+      ...(newStatus === 'started' && { startedAt: new Date().toISOString() }),
+      ...(newStatus === 'cancelled' && {
+        cancellationDetails: {
+          cancelledAt: new Date().toISOString(),
+          cancelledBy: 'freelancer',
+          notes: notes || 'Cancelled by freelancer'
+        }
+      }),
+      ...(newStatus === 'completed' && {
+        completedAt: new Date().toISOString()
+      })
+    };
 
-    // Save the status update to localStorage (in case it wasn't saved properly)
+    // 1. Optimistic Update in State
+    // We update 'applications' if it's an application-based job, or 'jobs' if it's a direct booking
+    // Actually, 'jobs' contains everything for the 'upcoming' tab logic in this component, except applications are separate array
+    // but filteredJobs combines them.
+    // If we update status, we need to update the source.
+
+    // If it's an application (converted to job card), we need to update the application status in state
+    setApplications(prevApps => prevApps.map(app =>
+      app["#"] === jobId || app.id === jobId ? { ...app, status: newStatus === 'started' ? 'accepted' : newStatus } : app
+    ));
+
+    // Also update 'jobs' state for direct bookings or legacy mock jobs
+    setJobs(prevJobs => prevJobs.map(job =>
+      job.id === jobId ? { ...job, ...optimisticUpdate } : job
+    ));
+
+    // 2. Call API
+    try {
+      const response = await fetch(`/api/jobs/${jobId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          status: newStatus,
+          notes,
+          freelancerRating: null // We might want to pass rating if completing
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update job status');
+      }
+
+      const updatedJob = await response.json();
+      console.log('Job updated via API:', updatedJob);
+
+      // Update state with server response to be sure
+      // (This might be redundant if optimistic update was accurate, but good for consistency)
+
+      // Refresh data to ensure everything is synced
+      // In a real app we might use SWR or React Query invalidation
+      // Here we might just rely on the optimistic update unless we want to refetch
+
+    } catch (error) {
+      console.error('Error updating job status via API:', error);
+      // Revert optimistic update if needed? 
+      // For now, we'll keep the localStorage fallback as "offline support" logic
+    }
+
+    // 3. Update LocalStorage (Legacy/Offline Support)
     try {
       // Clean up duplicates first
       cleanupDuplicateJobs();
@@ -693,40 +780,16 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
 
       // Check if this job already exists in stored updates
       const existingJobData = storedUpdates[jobId];
-      if (!existingJobData || existingJobData.status !== newStatus) {
-        // Get the original job data from mock data as fallback
-        const originalJobData = mockUpcomingJobs.find(j => j.id === jobId) || jobs.find(j => j.id === jobId);
+      // Get the original job data from state
+      const originalJobData = jobs.find(j => j.id === jobId) || mockUpcomingJobs.find(j => j.id === jobId);
 
-        if (originalJobData) {
-          storedUpdates[jobId] = {
-            ...originalJobData,  // Use original data as base
-            status: newStatus,
-            updatedAt: new Date().toISOString(),
-            startedAt: newStatus === 'started' ? new Date().toISOString() : originalJobData.startedAt,
-            ...(newStatus === 'cancelled' && {
-              cancellationDetails: {
-                cancelledAt: new Date().toISOString(),
-                cancelledBy: 'freelancer',
-                notes: notes || 'Cancelled by freelancer'
-              }
-            }),
-            ...(newStatus === 'completed' && {
-              completedAt: new Date().toISOString(),
-              // Don't override freelancerRating if it already exists
-              ...(originalJobData.freelancerRating === undefined && {
-                freelancerRating: {
-                  stars: 0,
-                  review: '',
-                  feedbackChips: [],
-                  date: new Date().toISOString()
-                }
-              })
-            })
-          };
-        }
-
+      // Only save to localStorage if we have the base data or it's already there
+      if (originalJobData || existingJobData) {
+        storedUpdates[jobId] = {
+          ...(existingJobData || originalJobData),
+          ...optimisticUpdate
+        };
         localStorage.setItem('jobStatusUpdates', JSON.stringify(storedUpdates));
-        console.log(`Updated job ${jobId} status to ${newStatus} in localStorage`);
       }
     } catch (error) {
       console.error('Error saving job status update to localStorage:', error);
@@ -738,7 +801,6 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
       setStatusFilter('completed');
       setActiveTab('upcoming');
 
-      // Delay URL update to avoid race conditions
       setTimeout(() => {
         const params = new URLSearchParams();
         params.set('tab', 'upcoming');
@@ -746,11 +808,8 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
         router.push(`/freelancer/jobs?${params.toString()}`);
       }, 100);
     } else if (newStatus === 'cancelled') {
-      // Update filter but don't immediately change URL to avoid navigation issues
       setStatusFilter('cancelled');
       setActiveTab('upcoming');
-
-      // Delay URL update to avoid race conditions
       setTimeout(() => {
         const params = new URLSearchParams();
         params.set('tab', 'upcoming');
@@ -758,11 +817,8 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
         router.push(`/freelancer/jobs?${params.toString()}`);
       }, 100);
     } else if (newStatus === 'started') {
-      // Update filter to ongoing and switch to My Jobs tab
       setStatusFilter('ongoing');
       setActiveTab('upcoming');
-
-      // Delay URL update to avoid race conditions
       setTimeout(() => {
         const params = new URLSearchParams();
         params.set('tab', 'upcoming');
@@ -829,9 +885,9 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
       {/* Fixed Header */}
       <div className="fixed-header w-full bg-[#111111] fixed top-0 left-0 right-0 z-40 border-b border-gray-800">
         <div className="w-full px-2">
-          <Tabs 
-            value={activeTab} 
-            onValueChange={handleTabChange} 
+          <Tabs
+            value={activeTab}
+            onValueChange={handleTabChange}
             className="w-full pt-2"
           >
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-2 py-2">
@@ -849,7 +905,7 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
                   My Proposals
                 </TabsTrigger>
               </TabsList>
-              
+
               <div className={`flex items-center gap-3 ${showSearch ? 'w-full' : 'min-w-0'}`}>
                 <div className={`transition-all duration-300 ${showSearch ? 'ease-out' : 'ease-in'} ${showSearch ? 'flex-1' : 'w-10'}`}>
                   {showSearch ? (
@@ -896,18 +952,16 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
                           key={option.value}
                           data-value={option.value}
                           onClick={() => handleFilterChange(option.value)}
-                          className={`px-1.5 py-0.5 text-xs rounded-full border transition-colors flex items-center gap-1 flex-shrink-0 ${
-                            statusFilter === option.value
-                              ? 'bg-[#8B66D1]/20 border-[#8B66D1]/40 text-white'
-                              : 'bg-transparent border-[var(--border)] text-[var(--foreground)]/70 hover:bg-[var(--card-background)]/50'
-                          }`}
+                          className={`px-1.5 py-0.5 text-xs rounded-full border transition-colors flex items-center gap-1 flex-shrink-0 ${statusFilter === option.value
+                            ? 'bg-[#8B66D1]/20 border-[#8B66D1]/40 text-white'
+                            : 'bg-transparent border-[var(--border)] text-[var(--foreground)]/70 hover:bg-[var(--card-background)]/50'
+                            }`}
                         >
                           {option.label}
-                          <span className={`text-xs px-0.5 py-0.5 rounded-full ${
-                            statusFilter === option.value
-                              ? 'text-gray-300'
-                              : 'text-gray-500'
-                          }`}>
+                          <span className={`text-xs px-0.5 py-0.5 rounded-full ${statusFilter === option.value
+                            ? 'text-gray-300'
+                            : 'text-gray-500'
+                            }`}>
                             {option.count}
                           </span>
                         </button>

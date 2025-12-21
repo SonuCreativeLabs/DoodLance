@@ -4,6 +4,7 @@ import { useEffect, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   ArrowLeft,
+  Phone,
   MessageSquare,
   Calendar,
   Star,
@@ -19,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { historyJobs } from "@/lib/mock/bookings";
 import { useNavbar } from "@/contexts/NavbarContext";
+import { useBookAgain } from "@/hooks/useBookAgain";
 
 export default function BookingHistoryDetailPage() {
   const params = useParams();
@@ -41,6 +43,12 @@ export default function BookingHistoryDetailPage() {
     [rawId]
   );
 
+  // Use the shared Book Again hook with replace navigation
+  const { showBookAgain, setShowBookAgain, BookAgainModal } = useBookAgain(
+    historyItem || null,
+    { useReplace: true }
+  );
+
   if (!historyItem) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-[#111111] to-[#050505] text-white/70">
@@ -60,31 +68,59 @@ export default function BookingHistoryDetailPage() {
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-[#111111] via-[#0b0b0b] to-[#050505] text-white">
       {/* Header */}
-      <div className="sticky top-0 z-30 bg-[#0F0F0F] border-b border-white/5">
+      <div className="fixed top-0 left-0 right-0 z-30 bg-[#0F0F0F]/95 backdrop-blur-md border-b border-white/5">
         <div className="container mx-auto px-4 py-3">
-          <div className="flex items-center">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => router.back()}
-              className="inline-flex items-center p-0 hover:bg-transparent text-sm text-purple-400 hover:text-purple-300 transition-colors duration-200"
-              aria-label="Back"
-            >
-              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors duration-200">
-                <ArrowLeft className="h-4 w-4" />
-              </div>
-            </Button>
+          <div className="flex items-center justify-between w-full">
+            <div className="flex items-center">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => router.push('/client/bookings?tab=history')}
+                className="inline-flex items-center p-0 hover:bg-transparent text-sm text-purple-400 hover:text-purple-300 transition-colors duration-200"
+                aria-label="Back"
+              >
+                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors duration-200">
+                  <ArrowLeft className="h-4 w-4" />
+                </div>
+              </Button>
 
-            <div className="ml-3">
-              <h1 className="text-lg font-semibold text-white">{historyItem["#"]}</h1>
-              <p className="text-white/50 text-xs">{historyItem.status.toUpperCase()} • {historyItem.title}</p>
+              <div className="ml-3">
+                <h1 className="text-lg font-semibold text-white">{historyItem["#"]}</h1>
+                <p className="text-white/50 text-xs">{historyItem.status.toUpperCase()} • {historyItem.title}</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 p-0 transition-all duration-200"
+                onClick={() => router.push(`/client/chat/${encodeURIComponent(historyItem.freelancer.name)}`)}
+                aria-label="Message"
+              >
+                <MessageSquare className="h-4 w-4 text-purple-400" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 p-0 transition-all duration-200"
+                aria-label="Call"
+                onClick={() => {
+                  // Generate a mock phone for history items
+                  const phone = '+91 8608305394';
+                  window.location.href = `tel:${phone.replace(/\s/g, '')}`;
+                }}
+              >
+                <Phone className="h-4 w-4 text-purple-400" />
+              </Button>
             </div>
           </div>
         </div>
       </div>
 
+
       {/* Content */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto pt-[64px] pb-[88px]">
         <div className="relative bg-gradient-to-br from-purple-500/10 via-purple-500/5 to-transparent">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(168,85,247,0.25),transparent_60%)]" />
           <div className="relative px-4 py-10">
@@ -230,21 +266,17 @@ export default function BookingHistoryDetailPage() {
       </div>
 
       {/* Action Bar */}
-      <div className="sticky bottom-0 z-20 border-t border-white/10 bg-gradient-to-t from-[#111111] via-[#0b0b0b] to-transparent px-4 py-4 backdrop-blur-xl">
-        <div className="flex flex-col gap-3 sm:flex-row">
-          <Button
-            variant="outline"
-            className="flex-1 border-white/20 bg-white/5 text-white hover:bg-white/10"
-            onClick={() => router.push(`/client/inbox?history=${encodeURIComponent(historyItem["#"])}`)}
-          >
-            <MessageSquare className="mr-2 h-4 w-4" />
-            Message coach
-          </Button>
-          <Button className="flex-1 bg-purple-600 hover:bg-purple-700">
-            Book again with {historyItem.freelancer.name}
-          </Button>
-        </div>
+      <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-white/10 bg-[#111111]/95 backdrop-blur-md px-4 py-4">
+        <Button
+          className="w-full bg-purple-600 hover:bg-purple-700"
+          onClick={() => setShowBookAgain(true)}
+        >
+          Book again with {historyItem.freelancer.name}
+        </Button>
       </div>
-    </div>
+
+      {/* Book Again Modal - using shared hook */}
+      <BookAgainModal />
+    </div >
   );
 }

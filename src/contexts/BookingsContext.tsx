@@ -16,6 +16,7 @@ export interface Booking {
   completedJobs: number;
   description: string;
   category: string;
+  providerPhone?: string;
   paymentMethod?: 'cod' | 'upi' | 'card' | 'wallet';
   notes?: string; // Client notes for the freelancer
   otp?: string; // 4-digit OTP for job verification
@@ -33,6 +34,7 @@ interface BookingsContextType {
   error: string | null;
   refreshBookings: () => void;
   addBooking: (booking: Omit<Booking, '#'>) => string;
+  rescheduleBooking: (id: string, newDate: string, newTime: string) => Promise<void>;
 }
 
 const BookingsContext = createContext<BookingsContextType | undefined>(undefined);
@@ -52,7 +54,8 @@ const initialBookings: Booking[] = [
     rating: 4.8,
     completedJobs: 342,
     description: "Advanced batting technique and shot selection coaching",
-    category: "cricket"
+    category: "cricket",
+    providerPhone: "+91 8608305394"
   },
   {
     "#": "#TNCHE002",
@@ -67,7 +70,8 @@ const initialBookings: Booking[] = [
     rating: 4.9,
     completedJobs: 234,
     description: "Fast bowling technique and pace bowling mastery",
-    category: "cricket"
+    category: "cricket",
+    providerPhone: "+91 8608305394"
   },
   {
     "#": "#TNCHE003",
@@ -82,7 +86,8 @@ const initialBookings: Booking[] = [
     rating: 4.6,
     completedJobs: 145,
     description: "Advanced fielding drills and catching techniques",
-    category: "cricket"
+    category: "cricket",
+    providerPhone: "+91 8608305394"
   },
   {
     "#": "#TNALWA001",
@@ -97,7 +102,8 @@ const initialBookings: Booking[] = [
     rating: 5.0,
     completedJobs: 312,
     description: "Cricket-specific fitness and endurance training",
-    category: "cricket"
+    category: "cricket",
+    providerPhone: "+91 8608305394"
   }
 ];
 
@@ -121,15 +127,7 @@ export function BookingsProvider({ children }: { children: ReactNode }) {
     try {
       const storedBookings = localStorage.getItem(CLIENT_BOOKINGS_KEY);
       if (storedBookings) {
-        const parsedBookings = JSON.parse(storedBookings) as Booking[];
-        // Merge stored bookings with initial bookings, avoiding duplicates
-        const mergedBookings = [...parsedBookings];
-        initialBookings.forEach(initial => {
-          if (!mergedBookings.some(b => b['#'] === initial['#'])) {
-            mergedBookings.push(initial);
-          }
-        });
-        setBookings(mergedBookings);
+        setBookings(JSON.parse(storedBookings));
       }
     } catch (err) {
       console.error('Error loading bookings from localStorage:', err);
@@ -139,15 +137,11 @@ export function BookingsProvider({ children }: { children: ReactNode }) {
   // Save bookings to localStorage whenever they change
   useEffect(() => {
     try {
-      // Only save non-initial bookings (user-created ones)
-      const userBookings = bookings.filter(b => 
-        !initialBookings.some(initial => initial['#'] === b['#'])
-      );
-      localStorage.setItem(CLIENT_BOOKINGS_KEY, JSON.stringify(userBookings));
-      
+      localStorage.setItem(CLIENT_BOOKINGS_KEY, JSON.stringify(bookings));
+
       // Dispatch custom event so freelancer side can listen
-      window.dispatchEvent(new CustomEvent('clientBookingUpdated', { 
-        detail: { bookings: userBookings } 
+      window.dispatchEvent(new CustomEvent('clientBookingUpdated', {
+        detail: { bookings }
       }));
     } catch (err) {
       console.error('Error saving bookings to localStorage:', err);
@@ -186,26 +180,43 @@ export function BookingsProvider({ children }: { children: ReactNode }) {
       '#': bookingId,
       ...bookingData
     };
-    
+
     // Add to the beginning of the list so it shows first
     setBookings(prev => [newBooking, ...prev]);
-    
+
     // Immediately save to localStorage so freelancer side can access it
     try {
       const storedBookings = localStorage.getItem(CLIENT_BOOKINGS_KEY);
       const existingBookings = storedBookings ? JSON.parse(storedBookings) : [];
       const updatedBookings = [newBooking, ...existingBookings];
       localStorage.setItem(CLIENT_BOOKINGS_KEY, JSON.stringify(updatedBookings));
-      
+
       // Dispatch event to notify freelancer side immediately
-      window.dispatchEvent(new CustomEvent('clientBookingUpdated', { 
-        detail: { bookings: updatedBookings, action: 'added', newBooking } 
+      window.dispatchEvent(new CustomEvent('clientBookingUpdated', {
+        detail: { bookings: updatedBookings, action: 'added', newBooking }
       }));
     } catch (err) {
       console.error('Error saving new booking to localStorage:', err);
     }
-    
+
     return bookingId;
+  };
+
+  // Reschedule an existing booking
+  const rescheduleBooking = async (id: string, newDate: string, newTime: string) => {
+    setBookings(prev => prev.map(booking => {
+      if (booking['#'] === id) {
+        return {
+          ...booking,
+          date: newDate,
+          time: newTime,
+          status: 'confirmed' // Reset status to confirmed if it was something else? Or keep it? Usually rescheduling implies re-confirmation.
+        };
+      }
+      return booking;
+    }));
+
+    // Local storage update is handled by the useEffect
   };
 
   const value = {
@@ -213,7 +224,8 @@ export function BookingsProvider({ children }: { children: ReactNode }) {
     loading,
     error,
     refreshBookings,
-    addBooking
+    addBooking,
+    rescheduleBooking
   };
 
   return (

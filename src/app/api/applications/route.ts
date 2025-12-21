@@ -45,6 +45,8 @@ export async function GET(request: NextRequest) {
                 id: true,
                 name: true,
                 avatar: true,
+                location: true,
+                isVerified: true
               }
             }
           }
@@ -64,7 +66,38 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    return NextResponse.json(applications)
+    // Parse string fields and structure for frontend
+    const parsedApplications = applications.map((app: any) => ({
+      ...app,
+      "#": app.id, // Map ID to '#' for frontend table component compatibility
+      jobTitle: app.job?.title || 'Unknown Job',
+      category: app.job?.category || 'Other',
+      location: app.job?.location || app.freelancer?.location || '',
+      clientName: app.job?.client?.name || 'Unknown Client',
+      clientImage: app.job?.client?.avatar || '',
+      clientId: app.job?.clientId,
+      description: app.job?.description || '',
+      postedDate: app.job?.createdAt,
+      appliedDate: app.createdAt,
+      status: app.status.toLowerCase(), // Normalize status to lowercase
+      budget: {
+        min: app.job?.budgetMin || 0,
+        max: app.job?.budgetMax || 0
+      },
+      skills: typeof app.skills === 'string' ? JSON.parse(app.skills) : (app.skills || []),
+      attachments: typeof app.attachments === 'string' ? JSON.parse(app.attachments) : (app.attachments || []),
+
+      // Add 'proposal' object alias providing backward compatibility
+      proposal: {
+        proposedRate: app.proposedRate,
+        estimatedDays: app.estimatedDays,
+        coverLetter: app.coverLetter,
+        skills: typeof app.skills === 'string' ? JSON.parse(app.skills) : (app.skills || []),
+        attachments: typeof app.attachments === 'string' ? JSON.parse(app.attachments) : (app.attachments || [])
+      }
+    }))
+
+    return NextResponse.json(parsedApplications)
   } catch (error) {
     console.error('Error fetching applications:', error)
     return NextResponse.json(

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/db'
 
+export const dynamic = 'force-dynamic'
+
 // GET /api/jobs - Get all active jobs
 export async function GET(request: NextRequest) {
   try {
@@ -11,12 +13,14 @@ export async function GET(request: NextRequest) {
     const budgetMin = searchParams.get('budgetMin')
     const budgetMax = searchParams.get('budgetMax')
     const experience = searchParams.get('experience')
+    const clientId = searchParams.get('clientId')
 
     const where: any = {
       isActive: true,
     }
 
     // Add filters
+    if (clientId) where.clientId = clientId
     if (category) where.category = category
     if (experience) where.experience = experience
     if (budgetMin || budgetMax) {
@@ -49,6 +53,11 @@ export async function GET(request: NextRequest) {
         _count: {
           select: {
             applications: true
+          }
+        },
+        applications: {
+          select: {
+            status: true
           }
         }
       },
@@ -99,13 +108,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check if user is a client
-    const dbUser = await prisma.user.findUnique({
-      where: { id: user.id },
-      select: { role: true, currentRole: true }
-    })
-
-    if (dbUser?.currentRole !== 'client' && dbUser?.role !== 'client') {
+    // Check if user is a client (use session role directly since it's already set correctly)
+    if (user.currentRole !== 'client' && user.role !== 'client') {
       return NextResponse.json(
         { error: 'Only clients can create job posts' },
         { status: 403 }
@@ -130,7 +134,21 @@ export async function POST(request: NextRequest) {
       startDate,
     } = body
 
-    // Validate required fields
+    // Ensure user exists in database to prevent foreign key errors
+    await prisma.user.upsert({
+      where: { id: user.id },
+      update: {},
+      create: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        currentRole: user.currentRole,
+        coords: '[]', // Default empty coords
+      }
+    });
+
+    // Validated required fields
     if (!title || !description || !category || !budget || !location) {
       return NextResponse.json(
         { error: 'Missing required fields' },
@@ -167,27 +185,18 @@ export async function POST(request: NextRequest) {
         skills: Array.isArray(skills) ? skills.join(',') : (skills || ''),
         workMode: workMode || 'remote',
         type: type || 'freelance',
-        duration: duration || 'hourly', // Store the actual duration text from form
-        experience: experience || 'Intermediate', // Store as is, will be mapped on frontend
+        duration: duration || 'hourly',
+        experience: experience || 'Intermediate',
         clientId: user.id,
         isActive: true,
         proposals: 0,
-        scheduledAt: startDate ? new Date(startDate).toISOString() : null, // Store startDate as scheduledAt
+        scheduledAt: startDate ? new Date(startDate).toISOString() : null,
       },
-      include: {
-        client: {
-          select: {
-            id: true,
-            name: true,
-            avatar: true,
-            location: true,
-            isVerified: true,
-          }
-        }
-      }
     })
 
     // Create notification for job posting
+    // Temporarily disabled - may be causing 500 error
+    /*
     await prisma.notification.create({
       data: {
         userId: user.id,
@@ -199,12 +208,21 @@ export async function POST(request: NextRequest) {
         actionUrl: `/client/jobs/${job.id}`,
       }
     })
+    */
 
     return NextResponse.json(job, { status: 201 })
   } catch (error) {
     console.error('Error creating job:', error)
+    // Log the detailed error for debugging
+    if (error instanceof Error) {
+      console.error('Error message:', error.message)
+      console.error('Error stack:', error.stack)
+    }
     return NextResponse.json(
-      { error: 'Failed to create job' },
+      {
+        error: 'Failed to create job',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     )
   }
