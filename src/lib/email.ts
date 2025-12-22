@@ -42,3 +42,86 @@ export async function sendEmail({ to, subject, text, html }: SendEmailParams) {
     return false;
   }
 }
+
+/**
+ * Sends an OTP code via email
+ * @param email - Recipient email address
+ * @param code - 6-digit OTP code
+ * @returns true if sent successfully, false otherwise
+ */
+export async function sendOTPEmail(email: string, code: string): Promise<boolean> {
+  const subject = 'Your DoodLance Login Code';
+  const text = `Your verification code is: ${code}\n\nThis code expires in 10 minutes.\n\nIf you didn't request this code, please ignore this email.`;
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <style>
+          body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+          }
+          .container {
+            background: #ffffff;
+            border-radius: 8px;
+            padding: 40px;
+          }
+          .code-box {
+            background: #f8f9fa;
+            border: 2px solid #6B46C1;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            margin: 30px 0;
+          }
+          .code {
+            font-size: 32px;
+            font-weight: bold;
+            letter-spacing: 8px;
+            color: #6B46C1;
+          }
+          .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e9ecef;
+            text-align: center;
+            color: #6c757d;
+            font-size: 14px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <h1 style="color: #6B46C1;">DoodLance</h1>
+          <h2>Your Verification Code</h2>
+          <p>You requested a login code for your DoodLance account. Use the code below:</p>
+          <div class="code-box">
+            <div class="code">${code}</div>
+          </div>
+          <p><strong>This code expires in 10 minutes.</strong></p>
+          <p>If you didn't request this code, you can safely ignore this email.</p>
+          <div class="footer">
+            <p>© 2024 DoodLance. All rights reserved.</p>
+          </div>
+        </div>
+      </body>
+    </html>
+  `;
+
+  return await sendEmail({ to: email, subject, text, html });
+}
+
+/**
+ * Validates email format
+ * @param email - Email address to validate
+ * @returns true if valid, false otherwise
+ */
+export function isValidEmail(email: string): boolean {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+}

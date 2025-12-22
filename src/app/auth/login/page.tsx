@@ -4,36 +4,35 @@ import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Smartphone, ArrowRight, ShieldCheck } from 'lucide-react'
+import { ArrowLeft, Mail, ArrowRight, ShieldCheck, Smartphone } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { CricketLoader } from '@/components/ui/cricket-loader'
+import { isValidEmail } from '@/lib/validation'
 
 export default function Login() {
   const router = useRouter()
   const { sendOTP } = useAuth()
-  
-  const [phone, setPhone] = useState('')
+
+  const [email, setEmail] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-
-  const isValidPhone = (val: string) => /^\+?[1-9]\d{1,14}$/.test(val)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
-    
-    if (!isValidPhone(phone)) {
-      setError('Please enter a valid phone number (e.g., +919876543210)')
+
+    if (!isValidEmail(email)) {
+      setError('Please enter a valid email address')
       return
     }
 
     setIsLoading(true)
     try {
       // Send OTP via API
-      await sendOTP(phone, 'phone')
-      
-      router.push(`/auth/otp?phone=${encodeURIComponent(phone)}`)
+      await sendOTP(email, 'email')
+
+      router.push(`/auth/otp?email=${encodeURIComponent(email)}`)
     } catch (err) {
       setError('Failed to send verification code. Please try again.')
       setIsLoading(false)
@@ -62,7 +61,7 @@ export default function Login() {
 
       {/* Main Content */}
       <main className="flex-1 relative z-10 flex flex-col items-center px-4 sm:px-6 pt-2 pb-12">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -71,7 +70,7 @@ export default function Login() {
           {/* Logo & Title */}
           <div className="text-center space-y-2">
             <div className="relative w-32 h-32 mx-auto mb-0 overflow-hidden">
-               <Image
+              <Image
                 src="/images/LOGOS/Doodlance Logo.svg"
                 alt="DoodLance"
                 fill
@@ -83,7 +82,7 @@ export default function Login() {
               Welcome to DoodLance
             </h1>
             <p className="text-white/50 text-sm">
-              Enter your mobile number to get started
+              Enter your email to get started
             </p>
           </div>
 
@@ -91,7 +90,7 @@ export default function Login() {
           <div className="bg-[#111111]/80 backdrop-blur-xl border border-white/10 rounded-2xl p-6 shadow-2xl shadow-purple-900/20">
             <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-3 flex items-center gap-2"
@@ -101,18 +100,18 @@ export default function Login() {
                 </motion.div>
               )}
 
-              {/* Phone Input */}
+              {/* Email Input */}
               <div className="space-y-2">
-                <label className="text-xs font-medium text-white/70 ml-1">Mobile Number</label>
+                <label className="text-xs font-medium text-white/70 ml-1">Email Address</label>
                 <div className="relative group">
-                  <Smartphone className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-white/40 group-focus-within:text-purple-400 transition-colors" />
+                  <Mail className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-white/40 group-focus-within:text-purple-400 transition-colors" />
                   <input
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="+91 98765 43210"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="your@email.com"
                     className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-base text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500/50 transition-all"
-                    autoComplete="tel"
+                    autoComplete="email"
                     autoFocus
                   />
                 </div>
@@ -124,7 +123,7 @@ export default function Login() {
               {/* Submit Button */}
               <button
                 type="submit"
-                disabled={isLoading || !phone}
+                disabled={isLoading || !email}
                 className="w-full py-3 rounded-xl text-sm font-bold bg-gradient-to-r from-[#6B46C1] via-[#4C1D95] to-[#2D1B69] text-white hover:opacity-90 shadow-lg hover:shadow-md hover:shadow-[#4C1D95]/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none transform active:scale-[0.98] flex items-center justify-center gap-2"
               >
                 {isLoading ? (
@@ -138,6 +137,25 @@ export default function Login() {
                 )}
               </button>
             </form>
+
+            {/* Divider */}
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-white/10"></div>
+              </div>
+              <div className="relative flex justify-center text-xs">
+                <span className="bg-[#111111] px-3 text-white/40">OR</span>
+              </div>
+            </div>
+
+            {/* Phone Login Link */}
+            <Link
+              href="/auth/phone-login"
+              className="flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-medium bg-white/5 border border-white/10 text-white/70 hover:bg-white/10 hover:text-white hover:border-white/20 transition-all"
+            >
+              <Smartphone className="w-4 h-4" />
+              Sign in with Phone
+            </Link>
 
             <div className="mt-6 pt-6 border-t border-white/5 text-center">
               <div className="flex items-center justify-center gap-2 text-xs text-white/30">

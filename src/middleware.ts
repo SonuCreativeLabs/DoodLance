@@ -32,7 +32,7 @@ const publicAuthRoutes = [
 
 export function middleware(request: NextRequest, event: NextFetchEvent) {
   const pathname = request.nextUrl.pathname;
-  
+
   // Handle /post redirect
   if (pathname === '/post') {
     const response = NextResponse.redirect(new URL('/client/post', request.url));
@@ -44,10 +44,10 @@ export function middleware(request: NextRequest, event: NextFetchEvent) {
 
   // Skip auth middleware for IDE preview requests
   const userAgent = request.headers.get('user-agent') || '';
-  const isIDEPreview = userAgent.includes('vscode') || 
-                      request.url.includes('vscodeBrowserReqId') ||
-                      request.headers.get('referer')?.includes('vscode') ||
-                      false;
+  const isIDEPreview = userAgent.includes('vscode') ||
+    request.url.includes('vscodeBrowserReqId') ||
+    request.headers.get('referer')?.includes('vscode') ||
+    false;
 
   if (isIDEPreview) {
     return NextResponse.next();
@@ -66,8 +66,8 @@ export function middleware(request: NextRequest, event: NextFetchEvent) {
   if (isProtectedApiRoute) {
     // Get token from Authorization header or cookies
     const authHeader = request.headers.get('authorization');
-    const token = authHeader?.startsWith('Bearer ') 
-      ? authHeader.slice(7) 
+    const token = authHeader?.startsWith('Bearer ')
+      ? authHeader.slice(7)
       : request.cookies.get('access_token')?.value;
 
     if (!token) {
@@ -80,7 +80,7 @@ export function middleware(request: NextRequest, event: NextFetchEvent) {
     try {
       // Verify JWT token
       const decoded = jwt.verify(token, JWT_SECRET) as any;
-      
+
       // Check admin permission for admin routes
       if (isAdminRoute && decoded.role !== 'admin' && decoded.role !== 'super_admin') {
         return NextResponse.json(

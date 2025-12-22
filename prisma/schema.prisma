@@ -21,9 +21,12 @@ model User {
   
   // AuthKit integration
   workosId  String?  @unique // WorkOS user ID
+  workosFactorId String? // WorkOS MFA factor ID for SMS
   
   // Profile information
   phone     String?
+  phoneVerified Boolean @default(false) // Phone verification status
+  phoneVerifiedAt DateTime? // When phone was verified
   location  String?
   coords    String  // [longitude, latitude] for location
   bio       String?
@@ -577,6 +580,8 @@ model OTP {
   expiresAt  DateTime
   createdAt  DateTime @default(now())
   verified   Boolean  @default(false)
+  challengeId String? // WorkOS challenge ID for SMS verification
+  attempts   Int      @default(0) // Number of verification attempts for rate limiting
 
   @@map("otps")
 }

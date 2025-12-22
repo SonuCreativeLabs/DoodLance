@@ -12,14 +12,16 @@ function OTPContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const phone = searchParams?.get('phone') || ''
+  const email = searchParams?.get('email') || ''
+  const identifier = email || phone // Use email first, then phone
   const { verifyOTP, sendOTP } = useAuth()
-  
+
   const [otp, setOtp] = useState(['', '', '', '', '', ''])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [timer, setTimer] = useState(30)
   const [showDemoHint, setShowDemoHint] = useState(false)
-  
+
   const inputRefs = useRef<(HTMLInputElement | null)[]>([])
 
   useEffect(() => {
@@ -78,13 +80,19 @@ function OTPContent() {
       return
     }
 
+    if (!identifier) {
+      setError('Email/Phone and code are required')
+      return
+    }
+
     setIsLoading(true)
     setError(null)
 
     try {
-      // Verify phone OTP
-      await verifyOTP(phone, code, 'phone')
-      
+      // Determine type based on identifier
+      const type = email ? 'email' : 'phone'
+      await verifyOTP(identifier, code, type)
+
       // Redirect to main app
       router.push('/client')
     } catch (err: any) {
@@ -99,7 +107,8 @@ function OTPContent() {
     setError(null)
     inputRefs.current[0]?.focus()
     try {
-      await sendOTP(phone, 'phone')
+      const type = email ? 'email' : 'phone'
+      await sendOTP(identifier, type)
       setShowDemoHint(true)
     } catch (err) {
       setError('Failed to resend code')
@@ -128,7 +137,7 @@ function OTPContent() {
 
       {/* Main Content */}
       <main className="flex-1 relative z-10 flex flex-col items-center px-4 sm:px-6 pt-2 pb-12">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -137,7 +146,7 @@ function OTPContent() {
           {/* Logo & Title */}
           <div className="text-center space-y-2">
             <div className="relative w-32 h-32 mx-auto mb-0 overflow-hidden">
-               <Image
+              <Image
                 src="/images/LOGOS/Doodlance Logo.svg"
                 alt="DoodLance"
                 fill

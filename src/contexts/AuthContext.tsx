@@ -7,6 +7,9 @@ interface User {
   email?: string
   name?: string
   avatar?: string
+  phone?: string
+  phoneVerified?: boolean
+  role?: string
 }
 
 interface AuthContextType {
@@ -53,7 +56,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const sendOTP = async (identifier: string, type: 'email' | 'phone' = 'email') => {
     const payload = type === 'email' ? { email: identifier } : { phone: identifier }
-    
+
     const response = await fetch('/api/auth/otp/send', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -67,7 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const verifyOTP = async (identifier: string, code: string, type: 'email' | 'phone' = 'email') => {
     const payload = type === 'email' ? { email: identifier, code } : { phone: identifier, code }
-    
+
     const response = await fetch('/api/auth/otp/verify', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -91,7 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       // Clear mock session
       localStorage.removeItem('doodlance_mock_user')
-      
+
       // Call AuthKit logout and redirect to home
       await fetch('/api/auth/logout?returnTo=/', { method: 'POST' })
       setUser(null)
