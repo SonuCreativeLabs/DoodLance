@@ -324,19 +324,32 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
           const appsRes = await fetch(`/api/applications?myApplications=true&userId=${userId}`);
           if (appsRes.ok) {
             const realApplications = await appsRes.json();
-            if (Array.isArray(realApplications)) {
+            if (Array.isArray(realApplications) && realApplications.length > 0) {
+              console.log('✅ Loaded real applications from API:', realApplications.length);
               setApplications(realApplications);
+            } else {
+              // Fall back to mock data if API returns empty array
+              console.log('No applications in database, using mock data');
+              const { mockApplications } = await import('./mock-data');
+              console.log('📋 Mock applications loaded:', mockApplications.length);
+              console.log('📋 Accepted applications:', mockApplications.filter(app => app.status === 'accepted'));
+              setApplications(mockApplications);
             }
           }
         } else {
-          // Fallback
+          // Fallback when no session
+          console.log('No user session, using mock data');
           const { mockApplications } = await import('./mock-data');
+          console.log('📋 Mock applications loaded:', mockApplications.length);
+          console.log('📋 Accepted applications:', mockApplications.filter(app => app.status === 'accepted'));
           setApplications(mockApplications);
         }
       } catch (e) {
         console.error(e);
-        // Fallback
+        // Fallback on error
         const { mockApplications } = await import('./mock-data');
+        console.log('📋 Mock applications loaded (error fallback):', mockApplications.length);
+        console.log('📋 Accepted applications:', mockApplications.filter(app => app.status === 'accepted'));
         setApplications(mockApplications);
       } finally {
         setLoading(false);
@@ -516,7 +529,9 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
         appliedDate: application.appliedDate,
         clientSpottedDate: new Date(new Date(application.appliedDate).getTime() + 3600000).toISOString(),
         acceptedDate: new Date().toISOString()
-      }
+      },
+      // Mark this as a proposal-based job
+      isProposal: true
     };
   };
 
@@ -535,6 +550,14 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
       // Default to upcoming (includes confirmed, pending jobs AND accepted applications)
       const regularJobs = jobs.filter(job => job.status === 'confirmed' || job.status === 'pending').map(transformJobForCard);
       const acceptedApplications = applications.filter(app => app.status === 'accepted').map(transformApplicationForCard);
+
+      console.log('🔍 Filtering for upcoming jobs:');
+      console.log('  - Regular jobs:', regularJobs.length);
+      console.log('  - Total applications:', applications.length);
+      console.log('  - Accepted applications:', acceptedApplications.length);
+      if (applications.length > 0) {
+        console.log('  - Applications data:', applications.map(app => ({ id: app['#'], status: app.status })));
+      }
 
       return [...regularJobs, ...acceptedApplications];
     }

@@ -45,22 +45,20 @@ export const JobCard: React.FC<JobCardProps> = ({ job, index, onStatusChange }) 
       onClick={handleCardClick}
     >
       <motion.div
-        className="p-5 rounded-xl bg-[#1E1E1E] border border-white/5 w-full shadow-lg"
+        className={`p-5 rounded-xl bg-[#1E1E1E] border w-full shadow-lg ${job.isProposal
+            ? 'border-l-4 border-l-blue-500 border-t-white/5 border-r-white/5 border-b-white/5'
+            : 'border-white/5'
+          }`}
       >
         <div className="space-y-4">
           {/* Status and Time */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className={`${getStatusStyles(job.status).bg} ${getStatusStyles(job.status).text} text-xs font-medium px-3 py-1 rounded-full border ${getStatusStyles(job.status).border} w-fit`}>
-                {job.status === 'ongoing' || job.status === 'started' ? 'Ongoing' : 
-                 job.status === 'pending' ? 'Upcoming' : 
-                 job.status.charAt(0).toUpperCase() + job.status.slice(1)}
+                {job.status === 'ongoing' || job.status === 'started' ? 'Ongoing' :
+                  job.status === 'pending' ? 'Upcoming' :
+                    job.status.charAt(0).toUpperCase() + job.status.slice(1)}
               </div>
-              {job.isProposal && (
-                <div className="bg-gradient-to-r from-blue-600 to-blue-500 text-white text-xs font-medium px-2 py-1 rounded-full border border-blue-400/30">
-                  Proposal
-                </div>
-              )}
             </div>
             <div className="flex items-center gap-1.5 text-sm text-white/60">
               <span className="font-mono text-xs">
@@ -138,11 +136,10 @@ export const JobCard: React.FC<JobCardProps> = ({ job, index, onStatusChange }) 
                       {Array.from({ length: 5 }, (_, i) => (
                         <Star
                           key={i}
-                          className={`w-4 h-4 ${
-                            i < (job.clientRating?.stars || 0)
+                          className={`w-4 h-4 ${i < (job.clientRating?.stars || 0)
                               ? 'text-amber-400 fill-current'
                               : 'text-gray-400'
-                          }`}
+                            }`}
                         />
                       ))}
                     </div>
@@ -189,7 +186,7 @@ export const JobCard: React.FC<JobCardProps> = ({ job, index, onStatusChange }) 
           {(job.status === 'upcoming' || job.status === 'pending' || job.status === 'ongoing') && (
             <div className="flex gap-2 pt-2">
               {/* Chat Button */}
-              <Button 
+              <Button
                 variant="default"
                 size="sm"
                 className="flex-1 bg-gradient-to-r from-[#643cb5] to-[#4a1c91] hover:from-[#5a36a3] hover:to-[#3a1773] text-white h-9 text-xs font-medium shadow-md shadow-purple-900/20 transition-all duration-200 flex items-center justify-center gap-1.5"
@@ -198,9 +195,9 @@ export const JobCard: React.FC<JobCardProps> = ({ job, index, onStatusChange }) 
                 <MessageCircle className="w-3.5 h-3.5" />
                 <span>Chat</span>
               </Button>
-              
+
               {/* Call Button */}
-              <Button 
+              <Button
                 variant="default"
                 size="sm"
                 className="flex-1 text-white h-9 text-xs font-medium shadow-md transition-all duration-200 flex items-center justify-center gap-1.5"

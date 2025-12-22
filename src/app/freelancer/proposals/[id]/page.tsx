@@ -4,12 +4,12 @@ import { useEffect, useState, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { 
-  X, 
-  MessageCircle, 
-  MapPin, 
-  Calendar as CalendarIcon, 
-  Clock as ClockIcon, 
+import {
+  X,
+  MessageCircle,
+  MapPin,
+  Calendar as CalendarIcon,
+  Clock as ClockIcon,
   FileText,
   Trash2,
   AlertCircle,
@@ -86,7 +86,7 @@ export default function ProposalDetailsPage() {
             applicationData.clientViewedAt = new Date().toISOString();
             console.log(`📖 Client viewed application ${applicationData["#"]} at ${applicationData.clientViewedAt}`);
           }
-          
+
           setProposal(applicationData);
 
           // Check if we should auto-enable edit mode (from card edit button)
@@ -310,512 +310,436 @@ export default function ProposalDetailsPage() {
   return (
     <>
       <div className="fixed inset-0 z-[9999] bg-gradient-to-br from-[#111111] to-[#0a0a0a] overflow-y-auto">
-      {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-[#111111]/95 backdrop-blur-sm border-b border-gray-800/80 p-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <button 
-            onClick={handleBack}
-            className="p-2 rounded-full hover:bg-white/10 transition-colors"
-            aria-label="Go back"
-          >
-            <ArrowLeft className="w-5 h-5 text-white/80" />
-          </button>
-          <div className="flex flex-col gap-0.5">
-            <h2 className="text-base font-medium text-white">
-              {proposal.status === 'accepted' ? 'Accepted Proposal' :
-               proposal.status === 'rejected' ? 'Rejected Proposal' :
-               proposal.status === 'completed' ? 'Completed Job' :
-               proposal.status === 'cancelled' ? 'Cancelled Job' :
-               proposal.status === 'withdrawn' ? 'Withdrawn Proposal' :
-               'Pending Proposal'}
-            </h2>
-            <span className="text-xs font-medium text-white/60">
-              {proposal.category ? getCategoryDisplayName(proposal.category) : 'Category not specified'}
-            </span>
+        {/* Header */}
+        <div className="fixed top-0 left-0 right-0 z-50 bg-[#0F0F0F] border-b border-white/5">
+          <div className="container mx-auto px-4 py-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <button
+                  onClick={handleBack}
+                  className="inline-flex items-center text-sm text-purple-400 hover:text-purple-300 transition-colors duration-200"
+                  aria-label="Go back"
+                >
+                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors duration-200">
+                    <ArrowLeft className="h-4 w-4" />
+                  </div>
+                </button>
+                <div className="ml-3">
+                  <h1 className="text-lg font-semibold text-white">
+                    {proposal.status === 'accepted' ? 'Accepted Proposal' :
+                      proposal.status === 'rejected' ? 'Rejected Proposal' :
+                        proposal.status === 'completed' ? 'Completed Job' :
+                          proposal.status === 'cancelled' ? 'Cancelled Job' :
+                            proposal.status === 'withdrawn' ? 'Withdrawn Proposal' :
+                              'Pending Proposal'}
+                  </h1>
+                  <p className="text-white/50 text-xs">
+                    {proposal.category ? getCategoryDisplayName(proposal.category) : 'Category not specified'}
+                  </p>
+                </div>
+              </div>
+              <div className="text-xs font-mono text-white/60">{proposal["#"]}</div>
+            </div>
           </div>
         </div>
-        <div className="text-xs font-mono text-white/60">{proposal["#"]}</div>
-      </div>
 
-      {/* Main Content */}
-      <div className="min-h-[100dvh] w-full pt-20 pb-24">
-        <div className="max-w-3xl mx-auto p-4 md:p-6">
-          <div className="space-y-6">
+        {/* Main Content */}
+        <div className="min-h-[100dvh] w-full pt-20 pb-24">
+          <div className="max-w-3xl mx-auto p-4 md:p-6">
+            <div className="space-y-6">
 
-            {/* Withdrawal Info - Show at very top of page for withdrawn proposals */}
-            {proposal.status === 'withdrawn' && (
-              <div className="rounded-xl bg-gray-500/10 border border-gray-500/20 p-4">
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-full bg-gray-500/20 flex items-center justify-center flex-shrink-0">
-                    <XCircle className="w-4 h-4 text-gray-400" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-sm font-medium text-gray-400 mb-1">Proposal Withdrawn</h3>
-                    <p className="text-sm text-gray-300/80 mb-2">
-                      This proposal has been withdrawn and is no longer active. You can create a new proposal for this job if it's still available.
-                    </p>
-                    {proposal.category && (
-                      <p className="text-xs text-gray-200/60">
-                        Category: {getCategoryDisplayName(proposal.category)}
+              {/* Withdrawal Info - Show at very top of page for withdrawn proposals */}
+              {proposal.status === 'withdrawn' && (
+                <div className="rounded-xl bg-gray-500/10 border border-gray-500/20 p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-full bg-gray-500/20 flex items-center justify-center flex-shrink-0">
+                      <XCircle className="w-4 h-4 text-gray-400" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-sm font-medium text-gray-400 mb-1">Proposal Withdrawn</h3>
+                      <p className="text-sm text-gray-300/80 mb-2">
+                        This proposal has been withdrawn and is no longer active. You can create a new proposal for this job if it's still available.
                       </p>
-                    )}
+                      {proposal.category && (
+                        <p className="text-xs text-gray-200/60">
+                          Category: {getCategoryDisplayName(proposal.category)}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* Rejection Info - Show at very top of page for rejected proposals */}
-            {proposal.status === 'rejected' && (
-              <div className="rounded-xl bg-red-500/10 border border-red-500/20 p-4">
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-full bg-red-500/20 flex items-center justify-center flex-shrink-0">
-                    <XCircle className="w-4 h-4 text-red-400" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-sm font-medium text-red-400 mb-1">Proposal Rejected</h3>
-                    <p className="text-sm text-red-300/80 mb-2">
-                      Unfortunately, your proposal was not selected for this job. You can improve your proposal and try again for similar opportunities.
-                    </p>
-                    {proposal.category && (
-                      <p className="text-xs text-red-200/60">
-                        Category: {getCategoryDisplayName(proposal.category)}
+              {/* Rejection Info - Show at very top of page for rejected proposals */}
+              {proposal.status === 'rejected' && (
+                <div className="rounded-xl bg-red-500/10 border border-red-500/20 p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-full bg-red-500/20 flex items-center justify-center flex-shrink-0">
+                      <XCircle className="w-4 h-4 text-red-400" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-sm font-medium text-red-400 mb-1">Proposal Rejected</h3>
+                      <p className="text-sm text-red-300/80 mb-2">
+                        Unfortunately, your proposal was not selected for this job. You can improve your proposal and try again for similar opportunities.
                       </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Header Section */}
-            <div className="text-center space-y-3">
-              <div className="flex items-center justify-center">
-                <div className="relative">
-                  <div className="absolute inset-0 bg-purple-500/20 rounded-full blur-lg"></div>
-                  <div className="relative p-4 rounded-full bg-gradient-to-br from-purple-500/10 to-purple-600/20 border border-purple-500/30">
-                    <FileText className="w-8 h-8 text-purple-400" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <h1 className="text-xl font-bold text-white">Proposal Details</h1>
-                <p className="text-gray-400 text-sm leading-relaxed max-w-sm mx-auto">
-                  Review your proposal submission and track its progress.
-                </p>
-              </div>
-            </div>
-
-            {/* Timeline */}
-            <CollapsibleTimeline
-              items={createTimelineItems('proposal', proposal)}
-              title="Application Timeline"
-              defaultExpanded={false}
-            />
-
-            {/* Job Title & Location */}
-            <div className="mb-8">
-              <div className="space-y-4">
-                <h1 className="text-3xl md:text-4xl font-bold text-white leading-tight">
-                  {proposal.jobTitle}
-                  <span className="inline-flex items-center px-1.5 py-0.5 text-xs font-medium text-white/80 bg-white/10 border border-white/20 rounded-full whitespace-nowrap ml-2 align-middle">
-                    On field
-                  </span>
-                </h1>
-                <button
-                  type="button"
-                  onClick={() => window.open(`https://maps.google.com/maps?q=${encodeURIComponent(proposal.location)}`, '_blank')}
-                  className="inline-flex items-center gap-2 px-3 py-1.5 text-sm text-white/80 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-purple-500/30 rounded-lg transition-all duration-200 backdrop-blur-sm"
-                >
-                  <MapPin className="w-4 h-4 text-purple-400" />
-                  <span className="font-medium">{proposal.location}</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Job Highlights */}
-            <div className="mb-8">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="flex items-start gap-3">
-                  <div className="w-5 h-5 flex items-center justify-center mt-0.5 flex-shrink-0">
-                    <span className="text-gray-400 text-lg leading-none">₹</span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm text-gray-400 mb-0.5">Budget</div>
-                    <div className="text-white font-medium leading-tight">
-                      <span className="whitespace-nowrap">
-                        {['pending', 'rejected', 'withdrawn'].includes(proposal.status) 
-                          ? `₹${proposal.budget.max.toLocaleString('en-IN')}`
-                          : `₹${proposal.budget.min.toLocaleString('en-IN')} - ₹${proposal.budget.max.toLocaleString('en-IN')}`
-                        }
-                      </span>
+                      {proposal.category && (
+                        <p className="text-xs text-red-200/60">
+                          Category: {getCategoryDisplayName(proposal.category)}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
-                <div className="flex items-start gap-3">
-                  <ClockIcon className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <div className="text-sm text-gray-400">Duration</div>
-                    <div className="text-white font-medium capitalize">{getJobDurationLabel(proposal as any)}</div>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <Calendar className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <div className="text-sm text-gray-400">Scheduled</div>
-                    <div className="text-white font-medium">
-                      {proposal.scheduledAt ? (() => {
-                        const scheduled = new Date(proposal.scheduledAt);
-                        const month = scheduled.toLocaleDateString('en-US', { month: 'short' });
-                        const day = scheduled.getDate();
-                        const year = scheduled.getFullYear();
-                        const time = scheduled.toLocaleTimeString('en-US', { 
-                          hour: 'numeric', 
-                          minute: '2-digit',
-                          hour12: true
-                        });
-                        return (
-                          <>
-                            {`${month} ${day}, ${year}`}
-                            <br />
-                            at {time}
-                          </>
-                        );
-                      })() : 'Date TBD'}
+              )}
+
+              {/* Header Section */}
+              <div className="text-center space-y-3">
+                <div className="flex items-center justify-center">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-purple-500/20 rounded-full blur-lg"></div>
+                    <div className="relative p-4 rounded-full bg-gradient-to-br from-purple-500/10 to-purple-600/20 border border-purple-500/30">
+                      <FileText className="w-8 h-8 text-purple-400" />
                     </div>
                   </div>
                 </div>
-                <div className="flex items-start gap-3">
-                  <User className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <div className="text-sm text-gray-400">Experience</div>
-                    <div className="text-white font-medium">{proposal.experienceLevel || 'Not specified'}</div>
-                  </div>
+
+                <div className="space-y-1">
+                  <h1 className="text-xl font-bold text-white">Proposal Details</h1>
+                  <p className="text-gray-400 text-sm leading-relaxed max-w-sm mx-auto">
+                    Review your proposal submission and track its progress.
+                  </p>
                 </div>
               </div>
-            </div>
 
-            {/* About the Job */}
-            <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#111111] via-[#0f0f0f] to-[#111111] border border-gray-600/30 shadow-lg mb-6">
-              {/* Background decoration */}
-              <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/5 rounded-full blur-2xl"></div>
-              <div className="absolute bottom-0 left-0 w-24 h-24 bg-purple-400/5 rounded-full blur-xl"></div>
+              {/* Timeline */}
+              <CollapsibleTimeline
+                items={createTimelineItems('proposal', proposal)}
+                title="Application Timeline"
+                defaultExpanded={false}
+              />
 
-              {/* Card content */}
-              <div className="relative p-5">
-                <div className="text-left mb-2">
-                  <div className="text-white/60 font-medium text-xs">
-                  {proposal.postedDate ? (() => {
-                    const posted = new Date(proposal.postedDate);
-                    const now = new Date();
-                    const diffTime = Math.abs(now.getTime() - posted.getTime());
-                    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-                    const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
-                    const diffMinutes = Math.floor(diffTime / (1000 * 60));
-
-                    if (diffMinutes < 60) {
-                      return `${diffMinutes}m ago`;
-                    } else if (diffHours < 24) {
-                      return `${diffHours}h ago`;
-                    } else if (diffDays < 7) {
-                      return `${diffDays}d ago`;
-                    } else if (diffDays < 30) {
-                      const weeks = Math.floor(diffDays / 7);
-                      return `${weeks}w ago`;
-                    } else if (diffDays < 365) {
-                      const months = Math.floor(diffDays / 30);
-                      return `${months}mo ago`;
-                    } else {
-                      const years = Math.floor(diffDays / 365);
-                      return `${years}y ago`;
-                    }
-                  })() : 'Date not specified'}
+              {/* Job Title & Location */}
+              <div className="mb-8">
+                <div className="space-y-4">
+                  <h1 className="text-3xl md:text-4xl font-bold text-white leading-tight">
+                    {proposal.jobTitle}
+                    <span className="inline-flex items-center px-1.5 py-0.5 text-xs font-medium text-white/80 bg-white/10 border border-white/20 rounded-full whitespace-nowrap ml-2 align-middle">
+                      On field
+                    </span>
+                  </h1>
+                  <button
+                    type="button"
+                    onClick={() => window.open(`https://maps.google.com/maps?q=${encodeURIComponent(proposal.location)}`, '_blank')}
+                    className="inline-flex items-center gap-2 px-3 py-1.5 text-sm text-white/80 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-purple-500/30 rounded-lg transition-all duration-200 backdrop-blur-sm"
+                  >
+                    <MapPin className="w-4 h-4 text-purple-400" />
+                    <span className="font-medium">{proposal.location}</span>
+                  </button>
                 </div>
-                </div>
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold text-white">About the Job</h2>
-                </div>
-                <div className="prose prose-invert max-w-none">
-                  {proposal.description && (
-                    <p className="text-white/80 leading-relaxed mb-6">
-                      {proposal.description}
-                    </p>
-                  )}
+              </div>
 
-                  {proposal.proposal.skills && proposal.proposal.skills.length > 0 && (
-                    <div className="mt-6 pt-6 border-t border-white/5">
-                      <h3 className="text-md font-semibold text-white mb-3">Required Skills</h3>
-                      <div className="flex flex-wrap gap-2">
-                        {proposal.proposal.skills.map((skill: string, i: number) => (
-                          <span
-                            key={i}
-                            className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-[#2D2D2D] text-white/90 border border-white/5 hover:bg-[#3D3D3D] transition-colors"
-                          >
-                            {skill}
-                          </span>
-                        ))}
-                      </div>
+              {/* Job Highlights */}
+              <div className="mb-8">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="flex items-start gap-3">
+                    <div className="w-5 h-5 flex items-center justify-center mt-0.5 flex-shrink-0">
+                      <span className="text-gray-400 text-lg leading-none">₹</span>
                     </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Client Profile */}
-            <ClientProfile
-              client={{
-                name: proposal.clientName,
-                image: proposal.clientImage,
-                location: proposal.location,
-                memberSince: proposal.clientSince,
-                rating: proposal.clientRating,
-                moneySpent: proposal.moneySpent,
-                jobsCompleted: proposal.projectsCompleted,
-                freelancersWorked: proposal.freelancersWorked,
-                freelancerAvatars: proposal.freelancerAvatars,
-                experienceLevel: proposal.experienceLevel
-              }}
-              location={proposal.location}
-              showCommunicationButtons={proposal.status === 'accepted'}
-              onChat={handleChat}
-              onCall={handleCall}
-            />
-
-            {/* Your Proposal */}
-            <div ref={yourProposalRef} className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#111111] via-[#0f0f0f] to-[#111111] border border-gray-600/30 shadow-lg">
-              {/* Background decoration */}
-              <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/5 rounded-full blur-2xl"></div>
-              <div className="absolute bottom-0 left-0 w-24 h-24 bg-green-400/5 rounded-full blur-xl"></div>
-
-              {/* Card content */}
-              <div className="relative p-5">
-
-                {/* Header with status */}
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-sm font-semibold text-white/90">
-                      {proposal.status === 'withdrawn' ? 'Withdrawn Proposal' : 'Your Proposal'}
-                    </h2>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {proposal.rating && (
-                      <div className="flex items-center">
-                        <div className="flex">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <Star
-                              key={star}
-                              className={`w-4 h-4 ${proposal.rating && star <= Math.round(proposal.rating) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-600'}`}
-                            />
-                          ))}
-                        </div>
-                        <span className="ml-2 text-sm text-gray-400">
-                          {proposal.rating ? `${proposal.rating.toFixed(1)}/5.0` : 'Not rated'}
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm text-gray-400 mb-0.5">Budget</div>
+                      <div className="text-white font-medium leading-tight">
+                        <span className="whitespace-nowrap">
+                          {['pending', 'rejected', 'withdrawn'].includes(proposal.status)
+                            ? `₹${proposal.budget.max.toLocaleString('en-IN')}`
+                            : `₹${proposal.budget.min.toLocaleString('en-IN')} - ₹${proposal.budget.max.toLocaleString('en-IN')}`
+                          }
                         </span>
                       </div>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <ClockIcon className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <div className="text-sm text-gray-400">Duration</div>
+                      <div className="text-white font-medium capitalize">{getJobDurationLabel(proposal as any)}</div>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <Calendar className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <div className="text-sm text-gray-400">Scheduled</div>
+                      <div className="text-white font-medium">
+                        {proposal.scheduledAt ? (() => {
+                          const scheduled = new Date(proposal.scheduledAt);
+                          const month = scheduled.toLocaleDateString('en-US', { month: 'short' });
+                          const day = scheduled.getDate();
+                          const year = scheduled.getFullYear();
+                          const time = scheduled.toLocaleTimeString('en-US', {
+                            hour: 'numeric',
+                            minute: '2-digit',
+                            hour12: true
+                          });
+                          return (
+                            <>
+                              {`${month} ${day}, ${year}`}
+                              <br />
+                              at {time}
+                            </>
+                          );
+                        })() : 'Date TBD'}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <User className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <div className="text-sm text-gray-400">Experience</div>
+                      <div className="text-white font-medium">{proposal.experienceLevel || 'Not specified'}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* About the Job */}
+              <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#111111] via-[#0f0f0f] to-[#111111] border border-gray-600/30 shadow-lg mb-6">
+                {/* Background decoration */}
+                <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/5 rounded-full blur-2xl"></div>
+                <div className="absolute bottom-0 left-0 w-24 h-24 bg-purple-400/5 rounded-full blur-xl"></div>
+
+                {/* Card content */}
+                <div className="relative p-5">
+                  <div className="text-left mb-2">
+                    <div className="text-white/60 font-medium text-xs">
+                      {proposal.postedDate ? (() => {
+                        const posted = new Date(proposal.postedDate);
+                        const now = new Date();
+                        const diffTime = Math.abs(now.getTime() - posted.getTime());
+                        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                        const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+                        const diffMinutes = Math.floor(diffTime / (1000 * 60));
+
+                        if (diffMinutes < 60) {
+                          return `${diffMinutes}m ago`;
+                        } else if (diffHours < 24) {
+                          return `${diffHours}h ago`;
+                        } else if (diffDays < 7) {
+                          return `${diffDays}d ago`;
+                        } else if (diffDays < 30) {
+                          const weeks = Math.floor(diffDays / 7);
+                          return `${weeks}w ago`;
+                        } else if (diffDays < 365) {
+                          const months = Math.floor(diffDays / 30);
+                          return `${months}mo ago`;
+                        } else {
+                          const years = Math.floor(diffDays / 365);
+                          return `${years}y ago`;
+                        }
+                      })() : 'Date not specified'}
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-semibold text-white">About the Job</h2>
+                  </div>
+                  <div className="prose prose-invert max-w-none">
+                    {proposal.description && (
+                      <p className="text-white/80 leading-relaxed mb-6">
+                        {proposal.description}
+                      </p>
                     )}
-                    {proposal.status === 'pending' && !isEditing && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="h-8 px-3 text-xs border-blue-500/30 text-blue-400 hover:bg-blue-500/10 hover:border-blue-400/50 transition-all"
-                        onClick={handleEdit}
-                      >
-                        Edit Proposal
-                      </Button>
+
+                    {proposal.proposal.skills && proposal.proposal.skills.length > 0 && (
+                      <div className="mt-6 pt-6 border-t border-white/5">
+                        <h3 className="text-md font-semibold text-white mb-3">Required Skills</h3>
+                        <div className="flex flex-wrap gap-2">
+                          {proposal.proposal.skills.map((skill: string, i: number) => (
+                            <span
+                              key={i}
+                              className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-[#2D2D2D] text-white/90 border border-white/5 hover:bg-[#3D3D3D] transition-colors"
+                            >
+                              {skill}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
                     )}
                   </div>
                 </div>
+              </div>
 
-                <div className="space-y-4">
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-400 mb-2">Cover Letter</h3>
-                    {isEditing ? (
-                      <textarea
-                        value={editedProposal?.proposal.coverLetter || ''}
-                        onChange={(e) => setEditedProposal(prev => prev ? {
-                          ...prev,
-                          proposal: { ...prev.proposal, coverLetter: e.target.value }
-                        } : null)}
-                        className="w-full p-3 bg-[#111111] border border-gray-600 rounded-xl text-white resize-none text-sm"
-                        rows={4}
-                        placeholder="Write your cover letter..."
-                      />
-                    ) : (
-                      <p className="text-gray-300 text-sm">{proposal.proposal.coverLetter}</p>
-                    )}
+              {/* Client Profile */}
+              <ClientProfile
+                client={{
+                  name: proposal.clientName,
+                  image: proposal.clientImage,
+                  location: proposal.location,
+                  memberSince: proposal.clientSince,
+                  rating: proposal.clientRating,
+                  moneySpent: proposal.moneySpent,
+                  jobsCompleted: proposal.projectsCompleted,
+                  freelancersWorked: proposal.freelancersWorked,
+                  freelancerAvatars: proposal.freelancerAvatars,
+                  experienceLevel: proposal.experienceLevel
+                }}
+                location={proposal.location}
+                showCommunicationButtons={proposal.status === 'accepted'}
+                onChat={handleChat}
+                onCall={handleCall}
+              />
+
+              {/* Your Proposal */}
+              <div ref={yourProposalRef} className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#111111] via-[#0f0f0f] to-[#111111] border border-gray-600/30 shadow-lg">
+                {/* Background decoration */}
+                <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/5 rounded-full blur-2xl"></div>
+                <div className="absolute bottom-0 left-0 w-24 h-24 bg-green-400/5 rounded-full blur-xl"></div>
+
+                {/* Card content */}
+                <div className="relative p-5">
+
+                  {/* Header with status */}
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <h2 className="text-sm font-semibold text-white/90">
+                        {proposal.status === 'withdrawn' ? 'Withdrawn Proposal' : 'Your Proposal'}
+                      </h2>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {proposal.rating && (
+                        <div className="flex items-center">
+                          <div className="flex">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <Star
+                                key={star}
+                                className={`w-4 h-4 ${proposal.rating && star <= Math.round(proposal.rating) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-600'}`}
+                              />
+                            ))}
+                          </div>
+                          <span className="ml-2 text-sm text-gray-400">
+                            {proposal.rating ? `${proposal.rating.toFixed(1)}/5.0` : 'Not rated'}
+                          </span>
+                        </div>
+                      )}
+                      {proposal.status === 'pending' && !isEditing && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-8 px-3 text-xs border-blue-500/30 text-blue-400 hover:bg-blue-500/10 hover:border-blue-400/50 transition-all"
+                          onClick={handleEdit}
+                        >
+                          Edit Proposal
+                        </Button>
+                      )}
+                    </div>
                   </div>
 
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-400 mb-2">Your Rate</h3>
-                    <div className="flex items-center space-x-2">
+                  <div className="space-y-4">
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-400 mb-2">Cover Letter</h3>
                       {isEditing ? (
-                        <input
-                          type="number"
-                          value={editedProposal?.proposal.proposedRate || ''}
+                        <textarea
+                          value={editedProposal?.proposal.coverLetter || ''}
                           onChange={(e) => setEditedProposal(prev => prev ? {
                             ...prev,
-                            proposal: { ...prev.proposal, proposedRate: parseInt(e.target.value) || 0 }
+                            proposal: { ...prev.proposal, coverLetter: e.target.value }
                           } : null)}
-                          className="bg-[#111111] border border-gray-600 rounded px-2 py-1 text-white w-20 text-sm"
-                          placeholder="Rate"
+                          className="w-full p-3 bg-[#111111] border border-gray-600 rounded-xl text-white resize-none text-sm"
+                          rows={6}
+                          placeholder="Explain why you're the best fit for this job..."
                         />
                       ) : (
-                        <span className="text-lg font-medium text-purple-400">₹{proposal.proposal.proposedRate}</span>
-                      )}
-                      <span className="text-sm text-gray-400">/ project</span>
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="text-sm font-medium text-gray-400">Attachments</h3>
-                      {proposal.status === 'pending' && isEditing && (
-                        <label className="p-1.5 text-gray-400 hover:text-purple-400 rounded-full hover:bg-purple-500/10 transition-colors cursor-pointer" title="Upload attachment">
-                          <PlusCircle className="w-4 h-4" />
-                          <input
-                            type="file"
-                            className="hidden"
-                            onChange={(e) => handleFileSelect(e.target.files)}
-                            multiple
-                            accept=".pdf,.jpg,.jpeg"
-                          />
-                        </label>
+                        <p className="text-gray-300 text-sm leading-relaxed">{proposal.proposal.coverLetter}</p>
                       )}
                     </div>
-                    <div className="space-y-2">
-                      {(() => {
-                        const attachments = isEditing ? editedProposal?.proposal.attachments : proposal?.proposal.attachments;
-                        return attachments && attachments.length > 0 ? (
-                          attachments.map((file, index) => (
-                            <div key={index} className="group flex items-center justify-between p-3 bg-[#1e1e1e] rounded-lg hover:bg-gray-500/30 transition-colors">
-                              <div className="flex items-center space-x-3">
-                                <div className="p-1.5 bg-purple-500/10 rounded-md">
-                                  <FileText className="w-4 h-4 text-purple-400" />
-                                </div>
-                                <span className="text-sm text-gray-300 font-medium truncate max-w-[200px]">
-                                  {file || `Attachment ${index + 1}`}
-                                </span>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <a
-                                  href={`/attachments/${file}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="p-1 text-gray-400 hover:text-purple-400 rounded-full hover:bg-gray-700 transition-colors"
-                                  title="View file"
-                                >
-                                  <Eye className="w-3.5 h-3.5" />
-                                </a>
-                                {isEditing && (
-                                  <button
-                                    className="p-1 text-gray-400 hover:text-red-400 rounded-full hover:bg-red-500/10 transition-colors"
-                                    onClick={() => handleRemoveFile(file)}
-                                    title="Remove file"
-                                  >
-                                    <X className="w-3.5 h-3.5" />
-                                  </button>
-                                )}
-                              </div>
-                            </div>
-                          ))
-                        ) : (
-                          <div className="flex flex-col items-center justify-center py-6 border-2 border-dashed border-gray-700 rounded-lg bg-gray-800/30">
-                            <UploadCloud className="w-8 h-8 text-gray-500 mb-2" />
-                            <p className="text-sm text-gray-400">No attachments yet</p>
-                            <p className="text-xs text-gray-500 mt-1">Upload files to support your proposal</p>
-                          </div>
-                        );
-                      })()}
-                    </div>
-                  </div>
 
+
+
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Action Buttons */}
-            {isEditing ? (
-              <div className="flex gap-3 pt-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="flex-1 h-10 border-gray-600/50 text-white/90 hover:bg-[#111111] hover:text-white hover:border-gray-500/50 transition-all duration-200"
-                  onClick={handleCancelEdit}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="button"
-                  className="flex-1 h-10 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-medium shadow-lg shadow-purple-600/25 hover:shadow-purple-600/40 transition-all duration-200"
-                  onClick={handleSaveEdit}
-                  disabled={isWithdrawing}
-                >
-                  {isWithdrawing ? 'Saving...' : 'Save Changes'}
-                </Button>
-              </div>
-            ) : proposal.status === 'pending' ? (
-              <div className="flex gap-3 pt-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full h-10 border-red-500/30 text-red-400 hover:bg-red-500/10 hover:border-red-400/50 transition-all hover:shadow-lg hover:shadow-red-500/10"
-                  onClick={() => setShowWithdrawConfirm(true)}
-                >
-                  Withdraw Proposal
-                </Button>
-              </div>
-            ) : null}
-        </div>
-        </div>
-        </div>
-      {showWithdrawConfirm && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#111111] via-[#0f0f0f] to-[#111111] border border-gray-600/30 shadow-lg p-6 max-w-md w-full"
-          >
-            <div className="text-center">
-              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-500/10">
-                <Trash2 className="h-6 w-6 text-red-500" />
-              </div>
-              <h3 className="mt-3 text-lg font-medium text-white">Withdraw Proposal</h3>
-              <p className="mt-2 text-sm text-gray-400">
-                Are you sure you want to withdraw your proposal? This action cannot be undone.
-              </p>
-              <div className="mt-6 flex justify-center space-x-3">
-                <Button
-                  variant="outline"
-                  className="border-gray-600 text-gray-300 hover:bg-[#1e1e1e] hover:text-gray-200"
-                  onClick={() => setShowWithdrawConfirm(false)}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  variant="outline"
-                  className="text-red-500 border-red-500 hover:bg-red-500/10 hover:text-red-400"
-                  onClick={handleWithdraw}
-                  disabled={isWithdrawing}
-                >
-                  {isWithdrawing ? 'Withdrawing...' : 'Withdraw'}
-                </Button>
-              </div>
+              {/* Action Buttons */}
+              {isEditing ? (
+                <div className="flex gap-3 pt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="flex-1 h-10 border-gray-600/50 text-white/90 hover:bg-[#111111] hover:text-white hover:border-gray-500/50 transition-all duration-200"
+                    onClick={handleCancelEdit}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    className="flex-1 h-10 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-medium shadow-lg shadow-purple-600/25 hover:shadow-purple-600/40 transition-all duration-200"
+                    onClick={handleSaveEdit}
+                    disabled={isWithdrawing}
+                  >
+                    {isWithdrawing ? 'Saving...' : 'Save Changes'}
+                  </Button>
+                </div>
+              ) : proposal.status === 'pending' ? (
+                <div className="flex gap-3 pt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full h-10 border-red-500/30 text-red-400 hover:bg-red-500/10 hover:border-red-400/50 transition-all hover:shadow-lg hover:shadow-red-500/10"
+                    onClick={() => setShowWithdrawConfirm(true)}
+                  >
+                    Withdraw Proposal
+                  </Button>
+                </div>
+              ) : null}
             </div>
-          </motion.div>
+          </div>
         </div>
-      )}
+        {showWithdrawConfirm && (
+          <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#111111] via-[#0f0f0f] to-[#111111] border border-gray-600/30 shadow-lg p-6 max-w-md w-full"
+            >
+              <div className="text-center">
+                <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-500/10">
+                  <Trash2 className="h-6 w-6 text-red-500" />
+                </div>
+                <h3 className="mt-3 text-lg font-medium text-white">Withdraw Proposal</h3>
+                <p className="mt-2 text-sm text-gray-400">
+                  Are you sure you want to withdraw your proposal? This action cannot be undone.
+                </p>
+                <div className="mt-6 flex justify-center space-x-3">
+                  <Button
+                    variant="outline"
+                    className="border-gray-600 text-gray-300 hover:bg-[#1e1e1e] hover:text-gray-200"
+                    onClick={() => setShowWithdrawConfirm(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="text-red-500 border-red-500 hover:bg-red-500/10 hover:text-red-400"
+                    onClick={handleWithdraw}
+                    disabled={isWithdrawing}
+                  >
+                    {isWithdrawing ? 'Withdrawing...' : 'Withdraw'}
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
 
-      {/* Success Message */}
-      <SuccessMessage
-        message={successMessage.message}
-        description={successMessage.description}
-        isVisible={successMessage.isVisible}
-        variant={successMessage.variant}
-        position="center"
-        onClose={() => setSuccessMessage(prev => ({ ...prev, isVisible: false }))}
-      />
-    </div>
+        {/* Success Message */}
+        <SuccessMessage
+          message={successMessage.message}
+          description={successMessage.description}
+          isVisible={successMessage.isVisible}
+          variant={successMessage.variant}
+          position="center"
+          onClose={() => setSuccessMessage(prev => ({ ...prev, isVisible: false }))}
+        />
+      </div>
     </>
   );
 }

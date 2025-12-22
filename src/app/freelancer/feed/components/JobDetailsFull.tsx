@@ -36,7 +36,7 @@ export default function JobDetailsFull({ job, onBack, onApply, isApplied = false
         try {
           const { getApplicationForJob } = await import('@/components/freelancer/jobs/mock-data');
           const application = await getApplicationForJob(job.id);
-          
+
           if (application && application.proposal) {
             setProposal(application.proposal.coverLetter || '');
             setRate(application.proposal.proposedRate ? application.proposal.proposedRate.toString() : '');
@@ -49,7 +49,7 @@ export default function JobDetailsFull({ job, onBack, onApply, isApplied = false
           setLoading(false);
         }
       };
-      
+
       fetchApplication();
     }
   }, [isApplied, job.id]);
@@ -78,7 +78,7 @@ export default function JobDetailsFull({ job, onBack, onApply, isApplied = false
 
     return `DL${code}${jobNum}`;
   }, [job.category, job.id]);
-  
+
   return (
     <div className="fixed inset-0 bg-[#0A0A0A] z-[9999] w-screen h-screen overflow-y-auto">
       {/* Header with back button */}
@@ -182,8 +182,8 @@ export default function JobDetailsFull({ job, onBack, onApply, isApplied = false
                     const month = scheduled.toLocaleDateString('en-US', { month: 'short' });
                     const day = scheduled.getDate();
                     const year = scheduled.getFullYear();
-                    const time = scheduled.toLocaleTimeString('en-US', { 
-                      hour: 'numeric', 
+                    const time = scheduled.toLocaleTimeString('en-US', {
+                      hour: 'numeric',
                       minute: '2-digit',
                       hour12: true
                     });
@@ -200,8 +200,8 @@ export default function JobDetailsFull({ job, onBack, onApply, isApplied = false
                     const month = demoDate.toLocaleDateString('en-US', { month: 'short' });
                     const day = demoDate.getDate();
                     const year = demoDate.getFullYear();
-                    const time = demoDate.toLocaleTimeString('en-US', { 
-                      hour: 'numeric', 
+                    const time = demoDate.toLocaleTimeString('en-US', {
+                      hour: 'numeric',
                       minute: '2-digit',
                       hour12: true
                     });
@@ -224,6 +224,19 @@ export default function JobDetailsFull({ job, onBack, onApply, isApplied = false
               </div>
             </div>
           </div>
+
+          {/* People Needed - Second Row */}
+          {(job as any).peopleNeeded && (job as any).peopleNeeded > 1 && (
+            <div className="mt-4 flex items-start gap-3 bg-purple-500/10 border border-purple-500/20 rounded-lg p-3">
+              <svg className="w-5 h-5 text-purple-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+              <div>
+                <div className="text-sm text-purple-300 font-medium">Hiring Multiple Freelancers</div>
+                <div className="text-white font-semibold">{(job as any).peopleNeeded} people needed for this job</div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Job Details */}
@@ -236,32 +249,32 @@ export default function JobDetailsFull({ job, onBack, onApply, isApplied = false
           <div className="relative p-5">
             <div className="text-left mb-2">
               <div className="text-white/60 font-medium text-xs">
-              {job.postedAt ? (() => {
-                const posted = new Date(job.postedAt);
-                const now = new Date();
-                const diffTime = Math.abs(now.getTime() - posted.getTime());
-                const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-                const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
-                const diffMinutes = Math.floor(diffTime / (1000 * 60));
+                {job.postedAt ? (() => {
+                  const posted = new Date(job.postedAt);
+                  const now = new Date();
+                  const diffTime = Math.abs(now.getTime() - posted.getTime());
+                  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                  const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+                  const diffMinutes = Math.floor(diffTime / (1000 * 60));
 
-                if (diffMinutes < 60) {
-                  return `${diffMinutes}m ago`;
-                } else if (diffHours < 24) {
-                  return `${diffHours}h ago`;
-                } else if (diffDays < 7) {
-                  return `${diffDays}d ago`;
-                } else if (diffDays < 30) {
-                  const weeks = Math.floor(diffDays / 7);
-                  return `${weeks}w ago`;
-                } else if (diffDays < 365) {
-                  const months = Math.floor(diffDays / 30);
-                  return `${months}mo ago`;
-                } else {
-                  const years = Math.floor(diffDays / 365);
-                  return `${years}y ago`;
-                }
-              })() : 'Date not specified'}
-            </div>
+                  if (diffMinutes < 60) {
+                    return `${diffMinutes}m ago`;
+                  } else if (diffHours < 24) {
+                    return `${diffHours}h ago`;
+                  } else if (diffDays < 7) {
+                    return `${diffDays}d ago`;
+                  } else if (diffDays < 30) {
+                    const weeks = Math.floor(diffDays / 7);
+                    return `${weeks}w ago`;
+                  } else if (diffDays < 365) {
+                    const months = Math.floor(diffDays / 30);
+                    return `${months}mo ago`;
+                  } else {
+                    const years = Math.floor(diffDays / 365);
+                    return `${years}y ago`;
+                  }
+                })() : 'Date not specified'}
+              </div>
             </div>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-white">About the Job</h2>
@@ -323,20 +336,20 @@ export default function JobDetailsFull({ job, onBack, onApply, isApplied = false
 
             <div className="space-y-4">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-white">Your Proposal</h2>
+                <h2 className="text-lg font-semibold text-white">Apply for this Job</h2>
                 {isApplied && (
                   <span className="px-3 py-1 rounded-full bg-green-500/20 text-green-400 text-xs font-medium border border-green-500/30 flex items-center gap-1.5">
                     <CheckCircle className="w-3 h-3" />
-                    Submitted
+                    Applied
                   </span>
                 )}
               </div>
+
               <div>
-                <h3 className="text-sm font-medium text-gray-400 mb-2">Cover Letter <span className="text-red-500">*</span></h3>
                 <textarea
                   value={proposal}
                   onChange={(e) => setProposal(e.target.value)}
-                  placeholder="Explain why you're the best fit for this job, your relevant experience, and how you plan to deliver exceptional results."
+                  placeholder="Explain why you're the best fit for this job. Mention your relevant experience, skills, and how you plan to deliver exceptional results."
                   className={`w-full p-3 bg-[#111111] border border-gray-600 rounded-xl text-white resize-none text-sm ${isApplied ? 'opacity-70 cursor-not-allowed' : ''}`}
                   rows={6}
                   maxLength={1500}
@@ -350,102 +363,15 @@ export default function JobDetailsFull({ job, onBack, onApply, isApplied = false
                 )}
               </div>
 
-              <div>
-                <h3 className="text-sm font-medium text-gray-400 mb-2">Your Rate <span className="text-red-500">*</span></h3>
-                <div className="flex items-center space-x-3">
-                  <input
-                    id="rate"
-                    type="number"
-                    value={rate}
-                    onChange={(e) => setRate(e.target.value)}
-                    placeholder="₹400"
-                    className={`bg-[#111111] border border-gray-600 rounded px-3 py-2 text-white w-32 text-sm flex-1 max-w-[120px] placeholder:text-gray-500 ${isApplied ? 'opacity-70 cursor-not-allowed' : ''}`}
-                    min="0"
-                    readOnly={isApplied}
-                  />
-                  <span className="text-sm text-gray-400">/ project</span>
-                </div>
-              </div>
 
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-sm font-medium text-gray-400">Attachments</h3>
-                  {!isApplied && (
-                    <label className="p-1.5 text-gray-400 hover:text-purple-400 rounded-full hover:bg-purple-500/10 transition-colors cursor-pointer" title="Add attachment">
-                      <PlusCircle className="w-4 h-4" />
-                      <input
-                        type="file"
-                        className="hidden"
-                        multiple
-                        accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
-                        onChange={(e) => {
-                          const files = Array.from(e.target.files || []);
-                          setAttachments(prev => [...prev, ...files]);
-                          // Reset input
-                          e.target.value = '';
-                        }}
-                      />
-                    </label>
-                  )}
-                </div>
-                <div 
-                  className={`space-y-2 ${!isApplied ? 'cursor-pointer' : ''}`}
-                  onClick={() => {
-                    if (!isApplied) {
-                      // Find the hidden input and trigger click
-                      const input = document.querySelector('input[type="file"][accept*=".pdf"]') as HTMLInputElement;
-                      input?.click();
-                    }
-                  }}
-                >
-                  {attachments.length > 0 ? (
-                    attachments.map((file, index) => (
-                      <div key={index} className="group flex items-center justify-between p-3 bg-[#1e1e1e] rounded-lg hover:bg-gray-500/30 transition-colors">
-                        <div className="flex items-center space-x-3">
-                          <div className="p-1.5 bg-purple-500/10 rounded-md">
-                            <svg className="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                          </div>
-                          <span className="text-sm text-gray-300 font-medium truncate max-w-[200px]">
-                            {file.name}
-                          </span>
-                        </div>
-                        {!isApplied && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              const newAttachments = attachments.filter((_, i) => i !== index);
-                              setAttachments(newAttachments);
-                            }}
-                            className="p-1 text-gray-400 hover:text-red-400 rounded-full hover:bg-red-500/10 transition-colors"
-                            title="Remove file"
-                          >
-                            ×
-                          </button>
-                        )}
-                      </div>
-                    ))
-                  ) : (
-                    <div className={`flex flex-col items-center justify-center py-6 border-2 border-dashed border-gray-700 rounded-lg bg-gray-800/30 ${isApplied ? 'opacity-50' : ''}`}>
-                      <svg className="w-8 h-8 text-gray-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                      </svg>
-                      <p className="text-sm text-gray-400">No attachments</p>
-                      {!isApplied && <p className="text-xs text-gray-500 mt-1">Upload files to support your proposal</p>}
-                    </div>
-                  )}
-                </div>
-              </div>
 
               <button
-                onClick={() => onApply(job.id, proposal, rate, "project", attachments)}
+                onClick={() => onApply(job.id, proposal, job.budget.toString(), "project", [])}
                 disabled={!proposal.trim() || isApplied}
-                className={`w-full h-10 font-medium rounded-lg shadow-lg transition-all duration-200 flex items-center justify-center gap-2 ${
-                  isApplied 
-                    ? 'bg-green-600/20 text-green-400 border border-green-600/50 cursor-default' 
-                    : 'bg-purple-600 hover:bg-purple-700 text-white disabled:cursor-not-allowed disabled:opacity-50'
-                }`}
+                className={`w-full h-10 font-medium rounded-lg shadow-lg transition-all duration-200 flex items-center justify-center gap-2 ${isApplied
+                  ? 'bg-green-600/20 text-green-400 border border-green-600/50 cursor-default'
+                  : 'bg-purple-600 hover:bg-purple-700 text-white disabled:cursor-not-allowed disabled:opacity-50'
+                  }`}
               >
                 {isApplied ? (
                   <>
@@ -453,7 +379,7 @@ export default function JobDetailsFull({ job, onBack, onApply, isApplied = false
                     <CheckCircle className="w-4 h-4" />
                   </>
                 ) : (
-                  'Send Proposal'
+                  'Apply Now'
                 )}
               </button>
             </div>

@@ -78,3 +78,41 @@ export async function PUT(
 ) {
   return PATCH(request, { params })
 }
+
+// DELETE /api/applications/[id] - Withdraw application
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const id = params.id
+
+    // Update the application status to WITHDRAWN instead of deleting
+    const application = await prisma.application.update({
+      where: { id },
+      data: {
+        status: 'WITHDRAWN'
+      },
+      include: {
+        job: {
+          include: {
+            client: true
+          }
+        },
+        freelancer: true
+      }
+    })
+
+    return NextResponse.json({
+      success: true,
+      message: 'Application withdrawn successfully',
+      application
+    })
+  } catch (error) {
+    console.error('Error withdrawing application:', error)
+    return NextResponse.json(
+      { error: 'Failed to withdraw application' },
+      { status: 500 }
+    )
+  }
+}
