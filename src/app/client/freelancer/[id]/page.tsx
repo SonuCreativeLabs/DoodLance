@@ -5,18 +5,18 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from "@/components/ui/badge";
-import { 
-  ArrowLeft, 
-  Star, 
-  MapPin, 
-  Clock, 
-  Briefcase, 
-  Award, 
-  Check, 
-  ChevronDown, 
-  Share2, 
-  X, 
-  CheckCircle, 
+import {
+  ArrowLeft,
+  Star,
+  MapPin,
+  Clock,
+  Briefcase,
+  Award,
+  Check,
+  ChevronDown,
+  Share2,
+  X,
+  CheckCircle,
   ArrowRight,
   UserPlus
 } from 'lucide-react';
@@ -152,7 +152,7 @@ export default function FreelancerDetailPage() {
       // Sort services based on category parameter
       let sortedServices = foundFreelancer.services ? [...foundFreelancer.services] : [];
       const categoryParam = searchParams.get('category');
-      
+
       if (categoryParam && sortedServices.length > 0) {
         const categoryKeywords: { [key: string]: string[] } = {
           'Players': ['match player', 'net bowler', 'net batsman', 'sidearm', 'bowler', 'batsman', 'player'],
@@ -160,17 +160,17 @@ export default function FreelancerDetailPage() {
           'Support Staff & Others': ['analyst', 'analysis', 'physio', 'scorer', 'umpire', 'groundsman'],
           'Media & Content': ['photo', 'video', 'videography', 'content', 'commentator', 'media']
         };
-        
+
         const keywords = categoryKeywords[decodeURIComponent(categoryParam)] || [];
         if (keywords.length > 0) {
           sortedServices.sort((a, b) => {
-            const aMatches = keywords.some(k => 
+            const aMatches = keywords.some(k =>
               (a.category || '').toLowerCase().includes(k) || (a.title || '').toLowerCase().includes(k)
             );
-            const bMatches = keywords.some(k => 
+            const bMatches = keywords.some(k =>
               (b.category || '').toLowerCase().includes(k) || (b.title || '').toLowerCase().includes(k)
             );
-            
+
             if (aMatches && !bMatches) return -1;
             if (!aMatches && bMatches) return 1;
             return 0;
@@ -284,13 +284,13 @@ export default function FreelancerDetailPage() {
       sessionStorage.removeItem('fromReviews');
       sessionStorage.setItem('fromServices', 'true');
       sessionStorage.setItem('lastVisitedSection', 'services');
-      
+
       const url = new URL(window.location.href);
       url.hash = '#services';
       const currentUrl = url.toString();
-      
+
       sessionStorage.setItem('returnToProfilePreview', currentUrl);
-      
+
       // Pass freelancer ID to show this freelancer's services
       router.push(`/freelancer/profile/preview/services?freelancerId=${freelancerId}#fromPreview`);
     }
@@ -301,13 +301,13 @@ export default function FreelancerDetailPage() {
       sessionStorage.removeItem('fromServices');
       sessionStorage.removeItem('fromPortfolio');
       sessionStorage.setItem('fromReviews', 'true');
-      
+
       const url = new URL(window.location.href);
       url.hash = '#reviews';
       const currentUrl = url.toString();
-      
+
       sessionStorage.setItem('returnToProfilePreview', currentUrl);
-      
+
       // Pass freelancer ID to show this freelancer's reviews
       router.push(`/freelancer/profile/preview/reviews?freelancerId=${freelancerId}`);
     }
@@ -346,7 +346,7 @@ export default function FreelancerDetailPage() {
   const handleTabClick = (tabId: string, e: React.MouseEvent) => {
     e.preventDefault();
     setActiveTab(tabId);
-    
+
     if (tabId === 'top') {
       // Special handling for profile (top) tab
       // Scroll the scrollable content container instead of window
@@ -364,7 +364,7 @@ export default function FreelancerDetailPage() {
       }
       return;
     }
-    
+
     const element = document.getElementById(tabId);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -510,27 +510,25 @@ export default function FreelancerDetailPage() {
                       </div>
                       {/* Online Badge - Mobile: right side of profile picture */}
                       <div className="md:hidden absolute top-[calc(50%+32px)] -translate-y-1/2 left-full ml-10">
-                        <div className={`inline-flex items-center gap-1 px-2 py-1 text-[8px] font-bold border-2 shadow-lg whitespace-nowrap transform rotate-[-2deg] ${
-                          freelancer.online
+                        <div className={`inline-flex items-center gap-1 px-2 py-1 text-[8px] font-bold border-2 shadow-lg whitespace-nowrap transform rotate-[-2deg] ${freelancer.online
                             ? 'bg-gradient-to-br from-green-400 to-green-600 border-green-300 text-white shadow-green-500/50 border-dashed'
                             : 'bg-gradient-to-br from-amber-400 to-orange-500 border-amber-300 text-white shadow-amber-500/50 border-dashed'
-                        }`}>
+                          }`}>
                           <span className="tracking-widest font-black">{freelancer.online ? 'GAME ON' : 'OFFLINE'}</span>
                         </div>
                       </div>
                     </div>
-                    
+
                     {/* Online Badge - Desktop: top right corner */}
                     <div className="hidden md:block absolute top-8 right-3">
-                      <div className={`inline-flex items-center gap-2 px-3 py-1.5 text-[10px] font-bold border-2 shadow-xl whitespace-nowrap transform rotate-[1deg] ${
-                        freelancer.online
+                      <div className={`inline-flex items-center gap-2 px-3 py-1.5 text-[10px] font-bold border-2 shadow-xl whitespace-nowrap transform rotate-[1deg] ${freelancer.online
                           ? 'bg-gradient-to-br from-green-400 to-green-600 border-green-300 text-white shadow-green-500/60 border-dashed'
                           : 'bg-gradient-to-br from-amber-400 to-orange-500 border-amber-300 text-white shadow-amber-500/60 border-dashed'
-                      }`}>
+                        }`}>
                         <span className="tracking-widest font-black">{freelancer.online ? 'GAME ON' : 'OFFLINE'}</span>
                       </div>
                     </div>
-                    
+
                     {/* ID Verified Badge - Desktop: left corner of profile picture */}
                     <div className="hidden md:block absolute top-8 -left-28 transform rotate-[1deg]">
                       <IdVerifiedBadge isVerified={true} isDesktop={true} />
@@ -542,7 +540,7 @@ export default function FreelancerDetailPage() {
                       <h1 className="text-2xl font-bold text-white">{freelancer.name}</h1>
                     </div>
                     <p className="text-purple-400 mt-0.5">{freelancer.cricketRole || 'All Rounder'}</p>
-                    
+
                     <div className="mt-2 flex flex-col items-center gap-0.5 text-sm text-white/70">
                       <div className="flex items-center gap-2">
                         <span>{freelancer.location}{freelancer.distance ? <><span className="text-white/40 mx-1 text-xs">|</span>{freelancer.distance < 1 ? `${(freelancer.distance * 1000).toFixed(0)}m` : `${freelancer.distance.toFixed(1)}km`} away</> : ''}</span>
@@ -577,7 +575,7 @@ export default function FreelancerDetailPage() {
                 </div>
               </div>
             </section>
-            
+
             {/* Sticky Tab Navigation with Back/Share Header */}
             <div className={`sticky top-0 z-[100] ${isScrolledPastCover ? 'bg-[#0f0f0f]/95 backdrop-blur-sm' : 'bg-transparent'} mt-1`}>
               {/* Back/Share Header - Only render when scrolled past cover */}
@@ -624,11 +622,10 @@ export default function FreelancerDetailPage() {
                           key={tab.id}
                           data-tab-id={tab.id}
                           onClick={(e) => handleTabClick(tab.id, e)}
-                          className={`px-4 py-3 text-xs font-medium whitespace-nowrap transition-all duration-200 relative ${
-                            isActive
+                          className={`px-4 py-3 text-xs font-medium whitespace-nowrap transition-all duration-200 relative ${isActive
                               ? 'text-white font-semibold'
                               : 'text-white/60 hover:text-white/90'
-                          }`}
+                            }`}
                           style={{
                             position: 'relative',
                             zIndex: isActive ? 2 : 1,
@@ -735,11 +732,10 @@ export default function FreelancerDetailPage() {
                           {freelancer.availability.map((day, i) => (
                             <div key={i} className="flex flex-col items-center">
                               <div
-                                className={`w-8 h-8 flex items-center justify-center rounded-full text-sm font-medium ${
-                                  day.available
+                                className={`w-8 h-8 flex items-center justify-center rounded-full text-sm font-medium ${day.available
                                     ? 'bg-green-500/10 text-green-400'
                                     : 'bg-white/5 text-white/40'
-                                }`}
+                                  }`}
                               >
                                 {day.day.substring(0, 1)}
                               </div>
@@ -840,7 +836,7 @@ export default function FreelancerDetailPage() {
                           </div>
                         </div>
                       </div>
-                      <button 
+                      <button
                         onClick={handleViewAllServices}
                         className="w-full mt-4 py-3 px-4 border border-white/30 hover:bg-white/5 transition-colors text-sm font-medium flex items-center justify-center gap-2 text-white rounded-[6px]"
                       >
@@ -907,20 +903,20 @@ export default function FreelancerDetailPage() {
                           </div>
                         </div>
                       </div>
-                      <button 
+                      <button
                         onClick={() => {
                           if (typeof window !== 'undefined') {
                             sessionStorage.removeItem('fromServices');
                             sessionStorage.removeItem('fromReviews');
                             sessionStorage.setItem('fromPortfolio', 'true');
                             sessionStorage.setItem('lastVisitedSection', 'portfolio');
-                            
+
                             const url = new URL(window.location.href);
                             url.hash = '#portfolio';
                             const currentUrl = url.toString();
-                            
+
                             sessionStorage.setItem('returnToProfilePreview', currentUrl);
-                            
+
                             // Use router.push instead of window.location.href for better navigation
                             router.push(`/freelancer/profile/preview/portfolio?freelancerId=${freelancerId}#fromPreview`);
                           }
@@ -1044,7 +1040,7 @@ export default function FreelancerDetailPage() {
                           </div>
                         </div>
                       </div>
-                      <button 
+                      <button
                         onClick={handleViewAllReviews}
                         className="w-full mt-3 py-2.5 px-4 border border-white/30 hover:bg-white/5 transition-colors text-sm font-medium flex items-center justify-center gap-2 text-white rounded-[6px]"
                       >

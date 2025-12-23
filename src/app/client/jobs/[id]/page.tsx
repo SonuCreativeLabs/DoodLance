@@ -23,6 +23,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { usePostedJobs } from '@/contexts/PostedJobsContext';
 import { useNavbar } from "@/contexts/NavbarContext";
 import { useApplications } from "@/contexts/ApplicationsContext";
@@ -216,28 +217,67 @@ export default function JobDetailsPage() {
 
             <div className="flex-1 overflow-y-auto pt-[90px] pb-[20px] px-4 space-y-6">
 
-                {/* Stats Grid */}
-                <div className="grid grid-cols-2 gap-3">
-                    <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/5 space-y-1">
-                        <div className="flex items-center gap-2 text-purple-400 text-sm font-medium mb-2">
-                            <Users className="w-4 h-4" />
-                            <span>Applicants</span>
+                {/* Job Hero Section - Split Cards */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+                    {/* Left Card: Job Info */}
+                    <div className="lg:col-span-2 relative rounded-3xl overflow-hidden border border-white/10 bg-white/5 backdrop-blur-xl">
+                        <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 via-purple-500/5 to-transparent" />
+                        <div className="relative p-6 h-full flex flex-col justify-center">
+                            <div className="flex items-center gap-2 mb-2">
+                                <p className="text-sm text-white/60">Posted Job</p>
+                                <span className={cn("text-[10px] px-2 py-0.5 rounded-full border",
+                                    job.status === 'open' ? "bg-green-500/10 text-green-400 border-green-500/20" : "bg-white/5 text-white/50 border-white/10"
+                                )}>
+                                    {job.status.toUpperCase()}
+                                </span>
+                            </div>
+                            <h2 className="text-2xl font-bold text-white tracking-tight mb-4 line-clamp-2">
+                                {job.title}
+                            </h2>
+                            <div className="flex flex-wrap items-center gap-5 text-xs text-white/60">
+                                <div className="flex items-center gap-1.5">
+                                    <Users className="w-3.5 h-3.5 text-blue-400" />
+                                    <span className="font-medium text-white/80">
+                                        {jobApplications.length}
+                                    </span>
+                                    <span>Applicants</span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                    <Eye className="w-3.5 h-3.5 text-purple-400" />
+                                    <span className="font-medium text-white/80">
+                                        {job.viewCount || 124}
+                                    </span>
+                                    <span>Views</span>
+                                </div>
+                                <div className="flex items-center gap-1.5 hover:text-purple-300 transition-colors cursor-pointer">
+                                    <MapPin className="w-3.5 h-3.5 text-pink-400" />
+                                    <span>{job.location}</span>
+                                </div>
+                            </div>
                         </div>
-                        <div className="text-2xl font-bold">{jobApplications.length}</div>
-                        <div className="text-xs text-white/40">Total proposals</div>
                     </div>
-                    <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/5 space-y-1">
-                        <div className="flex items-center gap-2 text-purple-400 text-sm font-medium mb-2">
-                            <Eye className="w-4 h-4" />
-                            <span>Views</span>
+
+                    {/* Right Card: Package Info */}
+                    <div className="relative rounded-3xl overflow-hidden border border-white/10 bg-white/5 backdrop-blur-xl">
+                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(168,85,247,0.2),transparent_70%)]" />
+                        <div className="relative p-6 h-full flex flex-col justify-center items-end text-right">
+                            <p className="text-xs text-white/50 mb-1 uppercase tracking-wider">Session Package</p>
+                            <p className="text-3xl font-bold text-white tracking-tight">{job.budget}</p>
+                            <div className="flex flex-col items-end gap-1 mt-2">
+                                <p className="text-sm font-medium text-white/70">
+                                    ₹{Math.round(parseInt(job.budget.replace(/[^0-9]/g, '') || '0') / (job.peopleNeeded || 1)).toLocaleString()} / person
+                                </p>
+                                <p className="text-xs text-white/40 flex justify-end items-center gap-1.5 mt-1">
+                                    <Calendar className="w-3 h-3" />
+                                    Posted {new Date(job.datePosted || Date.now()).toLocaleDateString()}
+                                </p>
+                            </div>
                         </div>
-                        <div className="text-2xl font-bold">{job.viewCount || 124}</div>
-                        <div className="text-xs text-white/40">Total impressions</div>
                     </div>
                 </div>
 
                 {/* Key Details Card */}
-                <div className="p-5 rounded-2xl bg-white/[0.03] border border-white/5">
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
                     <div className="flex items-center justify-between mb-4">
                         <h3 className="text-sm font-semibold text-white/90">Key Details</h3>
                         <Button
@@ -292,7 +332,7 @@ export default function JobDetailsPage() {
                 </div>
 
                 {/* Location Card */}
-                <div className="p-5 rounded-2xl bg-white/[0.03] border border-white/5">
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
                     <div className="space-y-3">
                         <div className="text-white/40 text-xs uppercase tracking-wider">Location</div>
                         <a
@@ -309,7 +349,7 @@ export default function JobDetailsPage() {
 
 
                 {/* Job Details Card - Merged Requirements and About Role */}
-                <div className="p-5 rounded-2xl bg-white/[0.03] border border-white/5">
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
                     <div className="flex items-center justify-between mb-4">
                         <h3 className="text-sm font-semibold text-white/90">Job Details</h3>
                         <Button

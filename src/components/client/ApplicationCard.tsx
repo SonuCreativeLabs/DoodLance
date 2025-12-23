@@ -93,6 +93,17 @@ export const ApplicationCard = ({ application }: { application: Application }) =
         console.log("Rescheduling application", id, newDate, newTime)
     }
 
+    // Determine status badge color
+    const getStatusColor = (status: string) => {
+        switch (status) {
+            case 'accepted': return 'text-green-400 border-green-500/20 bg-green-500/10';
+            case 'rejected': return 'text-red-400 border-red-500/20 bg-red-500/10';
+            case 'new': return 'text-blue-400 border-blue-500/20 bg-blue-500/10';
+            case 'pending': return 'text-amber-400 border-amber-500/20 bg-amber-500/10';
+            default: return 'text-white/60 border-white/10 bg-white/5';
+        }
+    }
+
     return (
         <>
             <motion.div
@@ -102,158 +113,104 @@ export const ApplicationCard = ({ application }: { application: Application }) =
                 role="button"
                 tabIndex={0}
                 onClick={handleOpenDetails}
-                onKeyDown={(event) => {
-                    if (event.key === "Enter" || event.key === " ") {
-                        event.preventDefault()
-                        handleOpenDetails()
-                    }
-                }}
-                className="p-5 rounded-xl bg-[#1E1E1E] border border-white/5 w-full shadow-lg cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-500/40 focus:ring-offset-2 focus:ring-offset-[#111111]"
+                className="group bg-gradient-to-br from-[#1E1E1E] to-[#1A1A1A] rounded-2xl p-6 shadow-xl hover:shadow-purple-500/20 transition-all duration-300 w-full border border-white/5 hover:border-white/10 relative cursor-pointer"
             >
-                <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            {application.status === 'new' && (
-                                <div className="bg-blue-500/10 text-blue-400 text-xs font-medium px-3 py-1 rounded-full border border-blue-500/20 w-fit">
-                                    New
-                                </div>
-                            )}
-                            {application.status === 'accepted' && (
-                                <div className="bg-green-500/10 text-green-400 text-xs font-medium px-3 py-1 rounded-full border border-green-500/20 w-fit">
-                                    Accepted
-                                </div>
-                            )}
-                            {application.status === 'rejected' && (
-                                <div className="bg-red-500/10 text-red-400 text-xs font-medium px-3 py-1 rounded-full border border-red-500/20 w-fit">
-                                    Rejected
-                                </div>
-                            )}
-                            {application.status === 'pending' && (
-                                <div className="bg-blue-500/10 text-blue-400 text-xs font-medium px-3 py-1 rounded-full border border-blue-500/20 w-fit">
-                                    New
-                                </div>
-                            )}
-                        </div>
-                        <div className="flex items-center gap-1.5 text-sm text-white/60">
-                            <span className="font-mono text-xs">{application["#"]}</span>
+                {/* Status Badge */}
+                <div className={`absolute top-3 right-3 z-20 px-2 py-0.5 rounded-full border text-[10px] uppercase font-medium tracking-wide ${getStatusColor(application.status)}`}>
+                    {application.status}
+                </div>
+
+                {/* Profile Picture Section */}
+                <div className="flex items-start gap-4 mb-4">
+                    <div className="relative flex-shrink-0">
+                        <div className="relative">
+                            <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full opacity-20 blur-md"></div>
+                            <img
+                                src={application.freelancer.image || 'https://via.placeholder.com/64x64?text=No+Image'}
+                                alt={application.freelancer.name}
+                                className="relative w-16 h-16 rounded-full border-2 border-purple-200/50 object-cover"
+                                onError={(e) => {
+                                    const target = e.target as HTMLImageElement;
+                                    target.src = 'https://via.placeholder.com/64x64?text=No+Image';
+                                }}
+                            />
                         </div>
                     </div>
 
-                    <div>
-                        <h3 className="text-base font-medium text-white line-clamp-2 mb-1">{application.jobTitle}</h3>
-                        <div className="flex items-center gap-2 text-sm text-white/60">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-user w-3.5 h-3.5 text-purple-400">
-                                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
-                                <circle cx="12" cy="7" r="4"></circle>
-                            </svg>
-                            <span>{application.freelancer.name}</span>
+                    <div className="flex-1 space-y-3">
+                        <div className="flex items-start justify-between">
+                            <div className="flex flex-col gap-2 flex-1">
+                                <h3 className="text-[15px] font-semibold text-white leading-tight line-clamp-2 break-words">
+                                    {application.freelancer.name}
+                                </h3>
+                                <div className="flex items-center gap-1 bg-yellow-400/10 rounded-full px-2 py-0.5 flex-shrink-0 w-fit">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-star w-3.5 h-3.5 text-yellow-400">
+                                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                                    </svg>
+                                    <span className="text-xs font-bold text-yellow-400">{application.freelancer.rating}</span>
+                                    <span className="text-[10px] text-yellow-300/80">(24)</span>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3 text-sm">
-                        <div className="flex items-start gap-2 text-white/60">
-                            <div className="flex-shrink-0 mt-0.5 flex flex-col items-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-star w-4 h-4 text-purple-400">
-                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                        <p className="text-[13px] text-white/80 line-clamp-2 leading-relaxed">
+                            {application.proposal}
+                        </p>
+                        <div className="flex items-center gap-4 text-[12px] text-white/60">
+                            <div className="flex items-center gap-1.5">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-map-pin w-3.5 h-3.5 flex-shrink-0">
+                                    <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
+                                    <circle cx="12" cy="10" r="3"></circle>
                                 </svg>
-                            </div>
-                            <div className="min-w-0">
-                                <div className="text-xs text-white/40 mb-0.5">Rating</div>
-                                <div className="text-sm text-white/90">
-                                    <div className="flex items-center gap-1">
-                                        <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            width="24"
-                                            height="24"
-                                            viewBox="0 0 24 24"
-                                            fill="currentColor"
-                                            className="w-3 h-3 text-yellow-400"
-                                            stroke="currentColor"
-                                            strokeWidth="2"
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                        >
-                                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-                                        </svg>
-                                        <span className="text-white/80 font-medium">{application.freelancer.rating}</span>
-                                        <span className="text-white/50">•</span>
-                                        <span className="text-white/60">{application.freelancer.completedJobs} jobs</span>
-                                    </div>
-                                </div>
+                                <span>{application.freelancer.location}</span>
                             </div>
                         </div>
 
-                        <div className="flex items-start gap-2 text-white/60">
-                            <div className="flex-shrink-0 mt-0.5">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-clock w-4 h-4 text-purple-400">
-                                    <circle cx="12" cy="12" r="10"></circle>
-                                    <polyline points="12 6 12 12 16 14"></polyline>
-                                </svg>
-                            </div>
-                            <div className="min-w-0">
-                                <div className="text-xs text-white/40 mb-0.5">Response Time</div>
-                                <div className="text-sm text-white/90 truncate">{application.freelancer.responseTime}</div>
-                            </div>
-                        </div>
                     </div>
+                </div>
 
-                    {application.status === 'new' && (
-                        <div className="flex gap-2 pt-2">
+                <div className="flex items-center justify-end pt-3 border-t border-white/5 mt-3">
+                    <div className="flex gap-2 w-full">
+                        {application.status === 'new' && (
+                            <>
+                                <Button
+                                    className="flex-1 px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg text-xs font-medium transition-all duration-200 border border-red-500/20"
+                                    onClick={(e) => { e.stopPropagation(); setShowDeclineDialog(true); }}
+                                >
+                                    Decline
+                                </Button>
+                                <Button
+                                    className="flex-1 px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white rounded-lg text-xs font-medium transition-all duration-200 shadow-lg"
+                                    onClick={(e) => { e.stopPropagation(); setShowAcceptDialog(true); }}
+                                >
+                                    Accept
+                                </Button>
+                            </>
+                        )}
+                        {application.status === 'accepted' && (
+                            <>
+                                <Button
+                                    className="flex-1 px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg text-xs font-medium transition-all duration-200 border border-red-500/20"
+                                    onClick={(e) => { e.stopPropagation(); setShowRejectDialog(true); }}
+                                >
+                                    Reject
+                                </Button>
+                                <Button
+                                    className="flex-1 px-4 py-2 bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 rounded-lg text-xs font-medium transition-all duration-200 border border-purple-500/20"
+                                    onClick={(e) => { e.stopPropagation(); setShowReschedule(true); }}
+                                >
+                                    Reschedule
+                                </Button>
+                            </>
+                        )}
+                        {application.status === 'rejected' && (
                             <Button
-                                className="flex-1 bg-white/5 hover:bg-white/10 text-white border border-white/10"
-                                size="sm"
-                                variant="outline"
-                                disabled={isProcessing}
-                                onClick={(e) => { e.stopPropagation(); setShowDeclineDialog(true); }}
-                            >
-                                Decline
-                            </Button>
-                            <Button
-                                className="flex-1 bg-purple-600 hover:bg-purple-700 text-white"
-                                size="sm"
-                                disabled={isProcessing}
-                                onClick={(e) => { e.stopPropagation(); setShowAcceptDialog(true); }}
-                            >
-                                Accept
-                            </Button>
-                        </div>
-                    )}
-
-                    {application.status === 'rejected' && (
-                        <div className="flex gap-2 pt-2">
-                            <Button
-                                className="flex-1 bg-white/5 hover:bg-white/10 text-white border border-white/10"
-                                size="sm"
-                                variant="outline"
-                                disabled={isProcessing}
+                                className="w-full px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg text-xs font-medium transition-all duration-200 border border-white/10"
                                 onClick={(e) => { e.stopPropagation(); setShowReconsiderDialog(true); }}
                             >
                                 Reconsider
                             </Button>
-                        </div>
-                    )}
-
-                    {application.status === 'accepted' && (
-                        <div className="flex gap-2 pt-2">
-                            <Button
-                                className="flex-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20"
-                                size="sm"
-                                variant="outline"
-                                disabled={isProcessing}
-                                onClick={(e) => { e.stopPropagation(); setShowRejectDialog(true); }}
-                            >
-                                Reject
-                            </Button>
-                            <Button
-                                className="flex-1 bg-purple-600 hover:bg-purple-700 text-white"
-                                size="sm"
-                                disabled={isProcessing}
-                                onClick={(e) => { e.stopPropagation(); setShowReschedule(true); }}
-                            >
-                                Reschedule
-                            </Button>
-                        </div>
-                    )}
+                        )}
+                    </div>
                 </div>
             </motion.div>
 
