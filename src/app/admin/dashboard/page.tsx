@@ -3,41 +3,23 @@
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { 
-  Users, Calendar, CreditCard, TrendingUp, 
+import {
+  Users, Calendar, CreditCard, TrendingUp,
   ArrowUp, ArrowDown, Activity, DollarSign,
   Package, UserCheck, Clock, AlertCircle,
   ChevronRight, Download, Filter
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-// Mock data - Replace with API calls
-const mockMetrics = {
-  totalUsers: 12543,
-  userGrowth: 12.5,
-  activeUsers: 3421,
-  activeGrowth: 8.2,
-  totalBookings: 8934,
-  bookingGrowth: 15.3,
-  totalRevenue: 485670,
-  revenueGrowth: 22.8,
-  platformFees: 72850,
-  avgBookingValue: 54.32,
-  totalServices: 456,
-  activeServices: 423,
-  completionRate: 92.3,
-  avgResponseTime: '2.3 hrs'
-};
-
-const revenueData = [
-  { date: 'Mon', revenue: 12500, bookings: 45 },
-  { date: 'Tue', revenue: 18900, bookings: 67 },
-  { date: 'Wed', revenue: 15600, bookings: 52 },
-  { date: 'Thu', revenue: 22300, bookings: 78 },
-  { date: 'Fri', revenue: 19800, bookings: 71 },
-  { date: 'Sat', revenue: 28400, bookings: 96 },
-  { date: 'Sun', revenue: 31200, bookings: 102 }
-];
+// Skeleton component for loading states
+function MetricSkeleton() {
+  return (
+    <Card className="bg-[#1a1a1a] border-gray-800 p-4 sm:p-6 h-[120px] animate-pulse">
+      <div className="h-4 bg-gray-700/50 rounded w-1/2 mb-4"></div>
+      <div className="h-8 bg-gray-700/50 rounded w-3/4"></div>
+    </Card>
+  );
+}
 
 const categoryPerformance = [
   { name: 'Net Bowler', bookings: 234, revenue: 45600, growth: 12.3 },
@@ -45,14 +27,6 @@ const categoryPerformance = [
   { name: 'Match Player', bookings: 167, revenue: 34500, growth: -5.2 },
   { name: 'Sidearm', bookings: 145, revenue: 28900, growth: 8.9 },
   { name: 'Trainer', bookings: 98, revenue: 19800, growth: 22.1 }
-];
-
-const recentActivity = [
-  { id: 1, type: 'booking', message: 'New booking for Net Bowler service', time: '5 min ago', status: 'new' },
-  { id: 2, type: 'user', message: 'New freelancer registration', time: '12 min ago', status: 'pending' },
-  { id: 3, type: 'payment', message: 'Payment received ₹2,500', time: '25 min ago', status: 'success' },
-  { id: 4, type: 'dispute', message: 'Dispute raised for booking #8234', time: '1 hour ago', status: 'urgent' },
-  { id: 5, type: 'verification', message: 'KYC verification pending (3)', time: '2 hours ago', status: 'pending' }
 ];
 
 interface MetricCardProps {
@@ -80,9 +54,8 @@ function MetricCard({ title, value, change, icon: Icon, color, prefix = '' }: Me
                 {prefix}{typeof value === 'number' ? value.toLocaleString() : value}
               </h3>
               {change !== undefined && (
-                <div className={`flex items-center gap-1 text-sm ${
-                  change >= 0 ? 'text-green-500' : 'text-red-500'
-                }`}>
+                <div className={`flex items-center gap-1 text-sm ${change >= 0 ? 'text-green-500' : 'text-red-500'
+                  }`}>
                   {change >= 0 ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />}
                   {Math.abs(change)}%
                 </div>
@@ -98,9 +71,9 @@ function MetricCard({ title, value, change, icon: Icon, color, prefix = '' }: Me
   );
 }
 
-function RevenueChart({ data }: { data: typeof revenueData }) {
-  const maxRevenue = Math.max(...data.map(d => d.revenue));
-  
+function RevenueChart({ data }: { data: any[] }) {
+  const maxRevenue = data.length > 0 ? Math.max(...data.map(d => d.revenue)) : 1000;
+
   return (
     <Card className="bg-[#1a1a1a] border-gray-800 p-4 sm:p-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-2">
@@ -116,7 +89,7 @@ function RevenueChart({ data }: { data: typeof revenueData }) {
           </Button>
         </div>
       </div>
-      
+
       <div className="space-y-4">
         <div className="flex items-end justify-between gap-2 h-48">
           {data.map((item, index) => (
@@ -124,7 +97,7 @@ function RevenueChart({ data }: { data: typeof revenueData }) {
               <div className="w-full bg-[#2a2a2a] rounded-t-lg relative flex items-end justify-center">
                 <motion.div
                   initial={{ height: 0 }}
-                  animate={{ height: `${(item.revenue / maxRevenue) * 100}%` }}
+                  animate={{ height: `${maxRevenue > 0 ? (item.revenue / maxRevenue) * 100 : 0}%` }}
                   transition={{ delay: index * 0.1, duration: 0.5 }}
                   className="w-full bg-gradient-to-t from-purple-600 to-purple-400 rounded-t-lg"
                   style={{ minHeight: '2px' }}
@@ -137,7 +110,7 @@ function RevenueChart({ data }: { data: typeof revenueData }) {
             </div>
           ))}
         </div>
-        
+
         <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-800">
           <div>
             <p className="text-sm text-gray-400">Total Revenue</p>
@@ -159,7 +132,44 @@ function RevenueChart({ data }: { data: typeof revenueData }) {
 
 export default function AdminDashboard() {
   const [timeRange, setTimeRange] = useState('week');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await fetch('/api/admin/stats');
+        if (res.ok) {
+          const data = await res.json();
+          // Data from API comes formatted as needed, but verify chart order
+          data.revenueData = data.revenueData.reverse();
+          setStats(data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch admin stats', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStats();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="space-y-4 sm:space-y-6 p-4 sm:p-6 text-white">
+        <h1 className="text-2xl font-bold mb-4">Dashboard</h1>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <MetricSkeleton />
+          <MetricSkeleton />
+          <MetricSkeleton />
+          <MetricSkeleton />
+        </div>
+        <div className="text-gray-400">Loading dashboard data...</div>
+      </div>
+    );
+  }
+
+  if (!stats) return <div className="p-6 text-white">Failed to load payload.</div>;
 
   return (
     <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
@@ -170,7 +180,7 @@ export default function AdminDashboard() {
           <p className="text-gray-400 mt-1 text-sm sm:text-base">Welcome back! Here's what's happening today.</p>
         </div>
         <div className="flex gap-2 flex-wrap">
-          <Button 
+          <Button
             variant={timeRange === 'day' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setTimeRange('day')}
@@ -178,7 +188,7 @@ export default function AdminDashboard() {
           >
             Today
           </Button>
-          <Button 
+          <Button
             variant={timeRange === 'week' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setTimeRange('week')}
@@ -186,7 +196,7 @@ export default function AdminDashboard() {
           >
             Week
           </Button>
-          <Button 
+          <Button
             variant={timeRange === 'month' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setTimeRange('month')}
@@ -201,29 +211,29 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <MetricCard
           title="Total Users"
-          value={mockMetrics.totalUsers}
-          change={mockMetrics.userGrowth}
+          value={stats.totalUsers}
+          change={stats.userGrowth}
           icon={Users}
           color="bg-blue-600"
         />
         <MetricCard
           title="Active Bookings"
-          value={mockMetrics.totalBookings}
-          change={mockMetrics.bookingGrowth}
+          value={stats.activeBookings}
+          change={stats.bookingGrowth}
           icon={Calendar}
           color="bg-green-600"
         />
         <MetricCard
           title="Revenue"
-          value={mockMetrics.totalRevenue}
-          change={mockMetrics.revenueGrowth}
+          value={stats.totalRevenue}
+          change={stats.revenueGrowth}
           icon={DollarSign}
           color="bg-purple-600"
           prefix="₹"
         />
         <MetricCard
           title="Platform Fees"
-          value={mockMetrics.platformFees}
+          value={stats.platformFees}
           change={15.2}
           icon={CreditCard}
           color="bg-orange-600"
@@ -234,7 +244,7 @@ export default function AdminDashboard() {
       {/* Charts Section */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
         {/* Revenue Chart */}
-        <RevenueChart data={revenueData} />
+        <RevenueChart data={stats.revenueData || []} />
 
         {/* Category Performance */}
         <Card className="bg-[#1a1a1a] border-gray-800 p-6">
@@ -255,9 +265,8 @@ export default function AdminDashboard() {
                     <span className="text-xs text-gray-400">₹{category.revenue.toLocaleString()}</span>
                   </div>
                 </div>
-                <div className={`flex items-center gap-1 text-sm ${
-                  category.growth >= 0 ? 'text-green-500' : 'text-red-500'
-                }`}>
+                <div className={`flex items-center gap-1 text-sm ${category.growth >= 0 ? 'text-green-500' : 'text-red-500'
+                  }`}>
                   {category.growth >= 0 ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />}
                   {Math.abs(category.growth)}%
                 </div>
@@ -276,7 +285,7 @@ export default function AdminDashboard() {
             </div>
             <div>
               <p className="text-sm text-gray-400">Active Freelancers</p>
-              <p className="text-2xl font-bold text-white">{mockMetrics.activeUsers.toLocaleString()}</p>
+              <p className="text-2xl font-bold text-white">{stats.activeUsers.toLocaleString()}</p>
             </div>
           </div>
         </Card>
@@ -288,7 +297,7 @@ export default function AdminDashboard() {
             </div>
             <div>
               <p className="text-sm text-gray-400">Completion Rate</p>
-              <p className="text-2xl font-bold text-white">{mockMetrics.completionRate}%</p>
+              <p className="text-2xl font-bold text-white">{stats.completionRate.toFixed(1)}%</p>
             </div>
           </div>
         </Card>
@@ -300,7 +309,7 @@ export default function AdminDashboard() {
             </div>
             <div>
               <p className="text-sm text-gray-400">Avg Response Time</p>
-              <p className="text-2xl font-bold text-white">{mockMetrics.avgResponseTime}</p>
+              <p className="text-2xl font-bold text-white">{stats.avgResponseTime}</p>
             </div>
           </div>
         </Card>
@@ -316,7 +325,7 @@ export default function AdminDashboard() {
           </Button>
         </div>
         <div className="space-y-3">
-          {recentActivity.map((activity) => (
+          {stats.recentActivity && stats.recentActivity.map((activity: any) => (
             <motion.div
               key={activity.id}
               initial={{ opacity: 0 }}
@@ -324,12 +333,11 @@ export default function AdminDashboard() {
               className="flex items-center justify-between p-3 bg-[#2a2a2a] rounded-lg"
             >
               <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-lg ${
-                  activity.status === 'urgent' ? 'bg-red-600/20' :
-                  activity.status === 'pending' ? 'bg-yellow-600/20' :
-                  activity.status === 'success' ? 'bg-green-600/20' :
-                  'bg-blue-600/20'
-                }`}>
+                <div className={`p-2 rounded-lg ${activity.status === 'urgent' ? 'bg-red-600/20' :
+                    activity.status === 'pending' ? 'bg-yellow-600/20' :
+                      activity.status === 'success' ? 'bg-green-600/20' :
+                        'bg-blue-600/20'
+                  }`}>
                   {activity.status === 'urgent' && <AlertCircle className="w-4 h-4 text-red-400" />}
                   {activity.status === 'pending' && <Clock className="w-4 h-4 text-yellow-400" />}
                   {activity.status === 'success' && <Activity className="w-4 h-4 text-green-400" />}
@@ -337,7 +345,7 @@ export default function AdminDashboard() {
                 </div>
                 <div>
                   <p className="text-sm text-white">{activity.message}</p>
-                  <p className="text-xs text-gray-400">{activity.time}</p>
+                  <p className="text-xs text-gray-400">{new Date(activity.time).toLocaleTimeString()}</p>
                 </div>
               </div>
               <Button variant="ghost" size="sm" className="text-gray-400">
@@ -345,6 +353,9 @@ export default function AdminDashboard() {
               </Button>
             </motion.div>
           ))}
+          {(!stats.recentActivity || stats.recentActivity.length === 0) && (
+            <p className="text-gray-500 text-sm">No recent activity.</p>
+          )}
         </div>
       </Card>
     </div>

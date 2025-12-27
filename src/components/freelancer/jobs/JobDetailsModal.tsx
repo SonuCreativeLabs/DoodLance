@@ -50,7 +50,7 @@ interface ClientInfo {
 interface JobDetailsModalProps {
   job: Job;
   onClose?: () => void;
-  onJobUpdate?: (jobId: string, newStatus: 'completed' | 'cancelled' | 'started', notes?: string, completionData?: {rating: number, review: string, feedbackChips: string[]}) => void;
+  onJobUpdate?: (jobId: string, newStatus: 'completed' | 'cancelled' | 'started', notes?: string, completionData?: { rating: number, review: string, feedbackChips: string[] }) => void;
   initialShowComplete?: boolean;
 }
 
@@ -231,9 +231,9 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
 
     try {
       console.log('Attempting to cancel job:', job.id);
-      console.log('API URL:', `http://localhost:3000/api/jobs/${job.id}`);
+      console.log('API URL:', `/api/jobs/${job.id}`);
 
-      const response = await fetch(`http://localhost:3000/api/jobs/${job.id}`, {
+      const response = await fetch(`/api/jobs/${job.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -292,7 +292,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
     try {
       console.log('Starting job:', job.id);
 
-      const response = await fetch(`http://localhost:3000/api/jobs/${job.id}`, {
+      const response = await fetch(`/api/jobs/${job.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -323,10 +323,10 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
             return booking;
           });
           localStorage.setItem('clientBookings', JSON.stringify(updatedBookings));
-          
+
           // Dispatch event to notify client side about booking update
-          window.dispatchEvent(new CustomEvent('clientBookingUpdated', { 
-            detail: { bookings: updatedBookings, action: 'started', jobId: job.id } 
+          window.dispatchEvent(new CustomEvent('clientBookingUpdated', {
+            detail: { bookings: updatedBookings, action: 'started', jobId: job.id }
           }));
         } catch (e) {
           console.error('Error updating client booking status:', e);
@@ -371,9 +371,9 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
 
     try {
       console.log('Attempting to complete job:', job.id);
-      console.log('API URL:', `http://localhost:3000/api/jobs/${job.id}`);
+      console.log('API URL:', `/api/jobs/${job.id}`);
 
-      const response = await fetch(`http://localhost:3000/api/jobs/${job.id}`, {
+      const response = await fetch(`/api/jobs/${job.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -438,7 +438,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
-              <button 
+              <button
                 onClick={handleBack}
                 className="inline-flex items-center text-sm text-purple-400 hover:text-purple-300 transition-colors duration-200"
                 aria-label="Go back"
@@ -633,8 +633,40 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                           <div className="space-y-2">
                             {/* Base Payment */}
                             <div className="flex items-center justify-between py-1.5 border-b border-gray-800 group">
-                                <div className="flex items-center gap-2">
-                                  <span className="text-gray-300 font-medium">Base Payment</span>
+                              <div className="flex items-center gap-2">
+                                <span className="text-gray-300 font-medium">Base Payment</span>
+                                <div className="relative inline-block">
+                                  <Info
+                                    className="w-3 h-3 text-gray-400 hover:text-white transition-colors"
+                                    onMouseEnter={(e) => {
+                                      const tooltip = e.currentTarget.nextElementSibling as HTMLElement;
+                                      if (tooltip) tooltip.style.display = 'block';
+                                    }}
+                                    onMouseLeave={(e) => {
+                                      const tooltip = e.currentTarget.nextElementSibling as HTMLElement;
+                                      if (tooltip) tooltip.style.display = 'none';
+                                    }}
+                                    aria-label="Information about base payment"
+                                    role="button"
+                                    tabIndex={0}
+                                  />
+                                  <div className="absolute z-50 bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-[#111111] border border-gray-600 rounded-lg shadow-xl hidden tooltip-container"
+                                    style={{ left: '50%', transform: 'translateX(-50%)' }}>
+                                    <div className="text-xs text-gray-300 leading-relaxed text-center whitespace-nowrap">
+                                      The agreed payment amount<br />for this job
+                                    </div>
+                                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-2 h-2 bg-[#111111] border-r border-b border-gray-600 rotate-45 tooltip-arrow"></div>
+                                  </div>
+                                </div>
+                              </div>
+                              <span className="text-white font-semibold">₹{job.payment?.toLocaleString('en-IN') || '0'}</span>
+                            </div>
+
+                            {/* Add-on Services */}
+                            {earningsPreview.breakdown.addOnServices.length > 0 ? (
+                              <div className="py-1.5 border-b border-gray-800">
+                                <div className="mb-2 flex items-center gap-2">
+                                  <span className="text-gray-300 font-medium">Add-on Services</span>
                                   <div className="relative inline-block">
                                     <Info
                                       className="w-3 h-3 text-gray-400 hover:text-white transition-colors"
@@ -646,51 +678,19 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                                         const tooltip = e.currentTarget.nextElementSibling as HTMLElement;
                                         if (tooltip) tooltip.style.display = 'none';
                                       }}
-                                      aria-label="Information about base payment"
+                                      aria-label="Information about add-on services"
                                       role="button"
                                       tabIndex={0}
                                     />
                                     <div className="absolute z-50 bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-[#111111] border border-gray-600 rounded-lg shadow-xl hidden tooltip-container"
-                                         style={{ left: '50%', transform: 'translateX(-50%)' }}>
+                                      style={{ left: '50%', transform: 'translateX(-50%)' }}>
                                       <div className="text-xs text-gray-300 leading-relaxed text-center whitespace-nowrap">
-                                        The agreed payment amount<br />for this job
+                                        Additional services requested<br />by the client beyond the original scope
                                       </div>
                                       <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-2 h-2 bg-[#111111] border-r border-b border-gray-600 rotate-45 tooltip-arrow"></div>
                                     </div>
                                   </div>
                                 </div>
-                                <span className="text-white font-semibold">₹{job.payment?.toLocaleString('en-IN') || '0'}</span>
-                              </div>
-
-                            {/* Add-on Services */}
-                            {earningsPreview.breakdown.addOnServices.length > 0 ? (
-                              <div className="py-1.5 border-b border-gray-800">
-                                  <div className="mb-2 flex items-center gap-2">
-                                    <span className="text-gray-300 font-medium">Add-on Services</span>
-                                    <div className="relative inline-block">
-                                      <Info
-                                        className="w-3 h-3 text-gray-400 hover:text-white transition-colors"
-                                        onMouseEnter={(e) => {
-                                          const tooltip = e.currentTarget.nextElementSibling as HTMLElement;
-                                          if (tooltip) tooltip.style.display = 'block';
-                                        }}
-                                        onMouseLeave={(e) => {
-                                          const tooltip = e.currentTarget.nextElementSibling as HTMLElement;
-                                          if (tooltip) tooltip.style.display = 'none';
-                                        }}
-                                        aria-label="Information about add-on services"
-                                        role="button"
-                                        tabIndex={0}
-                                      />
-                                      <div className="absolute z-50 bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-[#111111] border border-gray-600 rounded-lg shadow-xl hidden tooltip-container"
-                                           style={{ left: '50%', transform: 'translateX(-50%)' }}>
-                                        <div className="text-xs text-gray-300 leading-relaxed text-center whitespace-nowrap">
-                                          Additional services requested<br />by the client beyond the original scope
-                                        </div>
-                                        <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-2 h-2 bg-[#111111] border-r border-b border-gray-600 rotate-45 tooltip-arrow"></div>
-                                      </div>
-                                    </div>
-                                  </div>
                                 <div className="space-y-1 ml-4">
                                   {earningsPreview.breakdown.addOnServices.map((addon: any, index: number) => (
                                     <div key={index} className="flex items-center justify-between py-1">
@@ -720,7 +720,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                                       tabIndex={0}
                                     />
                                     <div className="absolute z-50 bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-[#111111] border border-gray-600 rounded-lg shadow-xl hidden tooltip-container"
-                                         style={{ left: '50%', transform: 'translateX(-50%)' }}>
+                                      style={{ left: '50%', transform: 'translateX(-50%)' }}>
                                       <div className="text-xs text-gray-300 leading-relaxed text-center whitespace-nowrap">
                                         Additional services requested<br />by the client beyond the original scope
                                       </div>
@@ -752,7 +752,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                                     tabIndex={0}
                                   />
                                   <div className="absolute z-50 bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-[#111111] border border-gray-600 rounded-lg shadow-xl hidden tooltip-container"
-                                       style={{ left: '50%', transform: 'translateX(-50%)' }}>
+                                    style={{ left: '50%', transform: 'translateX(-50%)' }}>
                                     <div className="text-xs text-gray-300 leading-relaxed text-center whitespace-nowrap">
                                       Bonus payment for excellent<br />service beyond the agreed amount
                                     </div>
@@ -785,7 +785,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                                     tabIndex={0}
                                   />
                                   <div className="absolute z-50 bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-[#111111] border border-gray-600 rounded-lg shadow-xl hidden tooltip-container"
-                                       style={{ left: '50%', transform: 'translateX(-50%)' }}>
+                                    style={{ left: '50%', transform: 'translateX(-50%)' }}>
                                     <div className="text-xs text-gray-300 leading-relaxed text-center whitespace-nowrap">
                                       Service charge deducted by<br />DoodLance platform (10% of earnings)
                                     </div>
@@ -816,7 +816,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                                     tabIndex={0}
                                   />
                                   <div className="absolute z-50 bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-[#111111] border border-gray-600 rounded-lg shadow-xl hidden tooltip-container"
-                                       style={{ left: '50%', transform: 'translateX(-50%)' }}>
+                                    style={{ left: '50%', transform: 'translateX(-50%)' }}>
                                     <div className="text-xs text-gray-300 leading-relaxed text-center whitespace-nowrap">
                                       Government service tax<br />(18% on earnings)
                                     </div>
@@ -847,7 +847,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                                     tabIndex={0}
                                   />
                                   <div className="absolute z-50 bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-[#111111] border border-gray-600 rounded-lg shadow-xl hidden tooltip-container"
-                                       style={{ left: '50%', transform: 'translateX(-50%)' }}>
+                                    style={{ left: '50%', transform: 'translateX(-50%)' }}>
                                     <div className="text-xs text-gray-300 leading-relaxed text-center whitespace-nowrap">
                                       Final amount after all fees<br />and taxes have been deducted
                                     </div>
@@ -1031,8 +1031,8 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                         const monthStr = scheduled.toLocaleDateString('en-US', { month: 'short' });
                         const dayNum = scheduled.getDate();
                         const yearNum = scheduled.getFullYear();
-                        const time = scheduled.toLocaleTimeString('en-US', { 
-                          hour: 'numeric', 
+                        const time = scheduled.toLocaleTimeString('en-US', {
+                          hour: 'numeric',
                           minute: '2-digit',
                           hour12: true
                         });
@@ -1394,44 +1394,44 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
               </div>
             )}
 
-          {/* Support Info for Started Jobs */}
-          {jobStarted && (
-            <div className="text-center mb-4">
-              <p className="text-xs text-amber-400/80">
-                If you encounter any issues during the job, please contact our support team immediately.
-              </p>
-            </div>
-          )}
-
-          {/* Cricket Icon Separator - Below Main Content */}
-          <div className="relative flex items-center justify-center py-6 mt-0 mb-6">
-            {/* Gradient Background */}
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-green-500/10 to-transparent"></div>
-
-            {/* Decorative Elements */}
-            <div className="absolute left-0 right-0 top-1/2 transform -translate-y-1/2">
-              <div className="flex justify-center">
-                <div className="w-32 h-px bg-gradient-to-r from-transparent via-green-500/50 to-transparent"></div>
+            {/* Support Info for Started Jobs */}
+            {jobStarted && (
+              <div className="text-center mb-4">
+                <p className="text-xs text-amber-400/80">
+                  If you encounter any issues during the job, please contact our support team immediately.
+                </p>
               </div>
-            </div>
+            )}
 
-            {/* Cricket Ball Icon */}
-            <div className="relative z-10">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-500/20 to-green-600/30 border border-green-500/40 flex items-center justify-center shadow-lg shadow-green-500/20">
-                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-green-400 to-green-500 border-2 border-white/20 flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">🏏</span>
+            {/* Cricket Icon Separator - Below Main Content */}
+            <div className="relative flex items-center justify-center py-6 mt-0 mb-6">
+              {/* Gradient Background */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-green-500/10 to-transparent"></div>
+
+              {/* Decorative Elements */}
+              <div className="absolute left-0 right-0 top-1/2 transform -translate-y-1/2">
+                <div className="flex justify-center">
+                  <div className="w-32 h-px bg-gradient-to-r from-transparent via-green-500/50 to-transparent"></div>
                 </div>
               </div>
-            </div>
 
-            {/* Side Decorations */}
-            <div className="absolute left-1/4 top-1/2 transform -translate-y-1/2">
-              <div className="w-2 h-2 bg-green-400/30 rounded-full animate-pulse"></div>
+              {/* Cricket Ball Icon */}
+              <div className="relative z-10">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-500/20 to-green-600/30 border border-green-500/40 flex items-center justify-center shadow-lg shadow-green-500/20">
+                  <div className="w-6 h-6 rounded-full bg-gradient-to-br from-green-400 to-green-500 border-2 border-white/20 flex items-center justify-center">
+                    <span className="text-white text-xs font-bold">🏏</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Side Decorations */}
+              <div className="absolute left-1/4 top-1/2 transform -translate-y-1/2">
+                <div className="w-2 h-2 bg-green-400/30 rounded-full animate-pulse"></div>
+              </div>
+              <div className="absolute right-1/4 top-1/2 transform -translate-y-1/2">
+                <div className="w-2 h-2 bg-green-400/30 rounded-full animate-pulse" style={{ animationDelay: '0.5s' }}></div>
+              </div>
             </div>
-            <div className="absolute right-1/4 top-1/2 transform -translate-y-1/2">
-              <div className="w-2 h-2 bg-green-400/30 rounded-full animate-pulse" style={{ animationDelay: '0.5s' }}></div>
-            </div>
-          </div>
           </div>
         </div>
       </main>
@@ -1668,13 +1668,12 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                           onFocus={() => handleOtpFocus(index)}
                           onBlur={handleOtpBlur}
                           onPaste={index === 0 ? handlePaste : undefined}
-                          className={`w-12 h-12 text-center text-xl font-mono font-bold bg-[#111111] border text-white rounded-2xl focus:outline-none transition-all duration-200 ${
-                            activeDigitIndex === index
+                          className={`w-12 h-12 text-center text-xl font-mono font-bold bg-[#111111] border text-white rounded-2xl focus:outline-none transition-all duration-200 ${activeDigitIndex === index
                               ? 'border-blue-500/70 ring-2 ring-blue-500/20'
                               : digit
                                 ? 'border-gray-500/50'
                                 : 'border-gray-600/50 hover:border-gray-500/50'
-                          }`}
+                            }`}
                           maxLength={1}
                           autoComplete="off"
                         />
@@ -1823,11 +1822,10 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                         <button
                           key={star}
                           onClick={() => setRating(star)}
-                          className={`transition-all duration-200 ${
-                            star <= rating
+                          className={`transition-all duration-200 ${star <= rating
                               ? 'text-yellow-400 scale-110 drop-shadow-sm'
                               : 'hover:text-yellow-400/50 hover:scale-105'
-                          }`}
+                            }`}
                           style={star <= rating ? {} : { color: '#404040' }}
                         >
                           <Star className="w-12 h-12 fill-current" />
@@ -1840,16 +1838,15 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                           <span className="text-lg">
                             {rating === 1 ? '😞' : rating === 2 ? '😐' : rating === 3 ? '😊' : rating === 4 ? '😄' : '🤩'}
                           </span>
-                          <span className={`font-bold text-sm tracking-wider ${
-                            rating === 1 ? 'text-red-400' :
-                            rating === 2 ? 'text-orange-400' :
-                            rating === 3 ? 'text-yellow-400' :
-                            rating === 4 ? 'text-blue-400' : 'text-green-400'
-                          }`}>
+                          <span className={`font-bold text-sm tracking-wider ${rating === 1 ? 'text-red-400' :
+                              rating === 2 ? 'text-orange-400' :
+                                rating === 3 ? 'text-yellow-400' :
+                                  rating === 4 ? 'text-blue-400' : 'text-green-400'
+                            }`}>
                             {rating === 1 ? 'Poor' :
-                             rating === 2 ? 'Fair' :
-                             rating === 3 ? 'Good' :
-                             rating === 4 ? 'Very Good' : 'Excellent'}
+                              rating === 2 ? 'Fair' :
+                                rating === 3 ? 'Good' :
+                                  rating === 4 ? 'Very Good' : 'Excellent'}
                           </span>
                         </div>
                       ) : (
@@ -1884,11 +1881,10 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                               : [...prev, chip]
                           );
                         }}
-                        className={`px-1.5 py-0.5 text-xs rounded-lg border transition-all duration-200 ${
-                          selectedChips.includes(chip)
+                        className={`px-1.5 py-0.5 text-xs rounded-lg border transition-all duration-200 ${selectedChips.includes(chip)
                             ? 'bg-purple-500/10 border-gray-500/50 text-purple-300'
                             : 'bg-[#111111] border-gray-500/50 text-gray-300 hover:bg-[#1E1E1E] hover:border-gray-400/50'
-                        }`}
+                          }`}
                       >
                         {chip}
                       </button>

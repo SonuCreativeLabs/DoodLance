@@ -2,6 +2,7 @@
 
 import { ReactNode } from 'react';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { RealtimeProvider } from '@/providers/RealtimeProvider';
 import { NavbarProvider } from '@/contexts/NavbarContext';
 import { LayoutProvider } from '@/contexts/LayoutContext';
 import { ChatViewProvider } from '@/contexts/ChatViewContext';
@@ -28,39 +29,41 @@ export function Providers({ children }: ProvidersProps) {
   return (
     <AuthProvider>
       <RoleProvider>
-        <NavbarProvider>
-          <LayoutProvider>
-            <ChatViewProvider>
-              <DateRangeProvider>
-                <ModalProvider>
-                  <AvailabilityProvider>
-                    <CombinedProfileProvider>
-                      <NearbyProfessionalsProvider>
-                        <PopularServicesProvider>
-                          <ClientServicesProvider>
-                            <BookingsProvider>
-                              <ApplicationsProvider>
-                                <HistoryJobsProvider>
-                                  <PostedJobsProvider>
-                                    <HireProvider>
-                                      <RoleSwitchProvider>
-                                        {children}
-                                      </RoleSwitchProvider>
-                                    </HireProvider>
-                                  </PostedJobsProvider>
-                                </HistoryJobsProvider>
-                              </ApplicationsProvider>
-                            </BookingsProvider>
-                          </ClientServicesProvider>
-                        </PopularServicesProvider>
-                      </NearbyProfessionalsProvider>
-                    </CombinedProfileProvider>
-                  </AvailabilityProvider>
-                </ModalProvider>
-              </DateRangeProvider>
-            </ChatViewProvider>
-          </LayoutProvider>
-        </NavbarProvider>
+        <RealtimeProvider>
+          <NavbarProvider>
+            <LayoutProvider>
+              <ChatViewProvider>
+                <DateRangeProvider>
+                  <ModalProvider>
+                    <AvailabilityProvider>
+                      <CombinedProfileProvider>
+                        <NearbyProfessionalsProvider>
+                          <PopularServicesProvider>
+                            <ClientServicesProvider>
+                              <BookingsProvider>
+                                <ApplicationsProvider>
+                                  <HistoryJobsProvider>
+                                    <PostedJobsProvider>
+                                      <HireProvider>
+                                        <RoleSwitchProvider>
+                                          {children}
+                                        </RoleSwitchProvider>
+                                      </HireProvider>
+                                    </PostedJobsProvider>
+                                  </HistoryJobsProvider>
+                                </ApplicationsProvider>
+                              </BookingsProvider>
+                            </ClientServicesProvider>
+                          </PopularServicesProvider>
+                        </NearbyProfessionalsProvider>
+                      </CombinedProfileProvider>
+                    </AvailabilityProvider>
+                  </ModalProvider>
+                </DateRangeProvider>
+              </ChatViewProvider>
+            </LayoutProvider>
+          </NavbarProvider>
+        </RealtimeProvider>
       </RoleProvider>
     </AuthProvider>
   );

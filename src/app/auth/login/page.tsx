@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Mail, ArrowRight, ShieldCheck, Smartphone } from 'lucide-react'
+import { ArrowLeft, Mail, ArrowRight, ShieldCheck } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { motion } from 'framer-motion'
 import { CricketLoader } from '@/components/ui/cricket-loader'
@@ -138,24 +138,9 @@ export default function Login() {
               </button>
             </form>
 
-            {/* Divider */}
-            <div className="relative my-6">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-white/10"></div>
-              </div>
-              <div className="relative flex justify-center text-xs">
-                <span className="bg-[#111111] px-3 text-white/40">OR</span>
-              </div>
-            </div>
 
-            {/* Phone Login Link */}
-            <Link
-              href="/auth/phone-login"
-              className="flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-medium bg-white/5 border border-white/10 text-white/70 hover:bg-white/10 hover:text-white hover:border-white/20 transition-all"
-            >
-              <Smartphone className="w-4 h-4" />
-              Sign in with Phone
-            </Link>
+
+
 
             <div className="mt-6 pt-6 border-t border-white/5 text-center">
               <div className="flex items-center justify-center gap-2 text-xs text-white/30">

@@ -1,6 +1,8 @@
 'use client'
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { createClient } from '@/lib/supabase/client'
+import { useRouter } from 'next/navigation'
 
 interface User {
   id: string
@@ -17,7 +19,7 @@ interface AuthContextType {
   isLoading: boolean
   isAuthenticated: boolean
   signIn: (provider?: string) => void
-  signOut: () => void
+  signOut: () => Promise<void>
   verifyOTP: (identifier: string, code: string, type?: 'email' | 'phone') => Promise<void>
   sendOTP: (identifier: string, type?: 'email' | 'phone') => Promise<void>
 }
@@ -27,84 +29,79 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const supabase = createClient()
+  const router = useRouter()
 
-  // Check for existing session on mount
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        // Check for mock session in localStorage for dev flow
-        const storedUser = localStorage.getItem('doodlance_mock_user')
-        if (storedUser) {
-          setUser(JSON.parse(storedUser))
-        }
-        // TODO: Check AuthKit session state
-      } catch (error) {
-        console.error('Auth check failed:', error)
-      } finally {
-        setIsLoading(false)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session?.user) {
+        setUser({
+          id: session.user.id,
+          email: session.user.email,
+          phone: session.user.phone,
+          role: session.user.user_metadata?.role || 'client' // fallback to client
+        })
+      } else {
+        setUser(null)
       }
+      setIsLoading(false)
+    })
+
+    return () => {
+      subscription.unsubscribe()
     }
+  }, [supabase])
 
-    checkAuth()
-  }, [])
-
-  const signIn = (provider?: string) => {
-    // Redirect to AuthKit login (will redirect to client home after auth)
-    const url = provider ? `/api/auth/login?provider=${provider}&returnTo=/client` : '/api/auth/login?returnTo=/client'
-    window.location.href = url
+  const signIn = async (provider?: string) => {
+    // Legacy support or OAuth
+    if (provider === 'google') {
+      await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${location.origin}/auth/callback`,
+        },
+      })
+    }
   }
 
   const sendOTP = async (identifier: string, type: 'email' | 'phone' = 'email') => {
-    const payload = type === 'email' ? { email: identifier } : { phone: identifier }
-
-    const response = await fetch('/api/auth/otp/send', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    })
-
-    if (!response.ok) {
-      throw new Error('Failed to send OTP')
+    if (type === 'email') {
+      const { error } = await supabase.auth.signInWithOtp({
+        email: identifier,
+        options: {
+          shouldCreateUser: true,
+        }
+      })
+      if (error) throw error
+    } else {
+      const { error } = await supabase.auth.signInWithOtp({ phone: identifier })
+      if (error) throw error
     }
   }
 
   const verifyOTP = async (identifier: string, code: string, type: 'email' | 'phone' = 'email') => {
-    const payload = type === 'email' ? { email: identifier, code } : { phone: identifier, code }
-
-    const response = await fetch('/api/auth/otp/verify', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    })
-
-    if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || 'Verification failed')
+    if (type === 'email') {
+      const { error } = await supabase.auth.verifyOtp({
+        email: identifier,
+        token: code,
+        type: 'email'
+      })
+      if (error) throw error
+    } else {
+      const { error } = await supabase.auth.verifyOtp({
+        phone: identifier,
+        token: code,
+        type: 'sms'
+      })
+      if (error) throw error
     }
 
-    const data = await response.json()
-    const verifiedUser = data.user
-
-    // Set user session
-    setUser(verifiedUser)
-    localStorage.setItem('doodlance_mock_user', JSON.stringify(verifiedUser))
+    // User is set automatically by onAuthStateChange
   }
 
   const signOut = async () => {
-    try {
-      // Clear mock session
-      localStorage.removeItem('doodlance_mock_user')
-
-      // Call AuthKit logout and redirect to home
-      await fetch('/api/auth/logout?returnTo=/', { method: 'POST' })
-      setUser(null)
-      // Redirect to home page
-      window.location.href = '/'
-    } catch (error) {
-      console.error('Sign out failed:', error)
-      // Fallback redirect
-      window.location.href = '/'
-    }
+    await supabase.auth.signOut()
+    router.push('/')
   }
 
   const value = {
@@ -131,7 +128,7 @@ export function useAuth() {
 // Legacy export for backward compatibility
 export const signUp = async () => ({
   error: {
-    message: 'Use AuthKit for authentication.',
+    message: 'Use Supabase for authentication.',
     status: 501,
   },
   data: null,

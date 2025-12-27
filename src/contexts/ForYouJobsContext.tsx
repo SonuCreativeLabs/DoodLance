@@ -1,7 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo } from 'react';
 import { useSkills } from './SkillsContext';
-// Re-import mock jobs for reference
-import { jobs as mockJobs } from '@/app/freelancer/feed/data/jobs';
 import type { Job } from '@/app/freelancer/feed/types';
 
 interface ForYouJobsContextType {
@@ -35,7 +33,7 @@ export function ForYouJobsProvider({ children }: { children: ReactNode }) {
         setForYouJobs([]);
         return;
       }
-      
+
       // Fetch jobs from API
       let apiJobs: Job[] = [];
       try {
@@ -44,19 +42,12 @@ export function ForYouJobsProvider({ children }: { children: ReactNode }) {
           apiJobs = await response.json();
         }
       } catch (apiError) {
-        console.warn('Failed to fetch API jobs, using mock jobs only:', apiError);
+        console.warn('Failed to fetch API jobs:', apiError);
       }
 
-      // Combine API jobs with mock jobs, avoiding duplicates by ID
-      const combinedJobs = [...mockJobs];
-      
-      // Add API jobs that don't already exist in mock jobs
-      apiJobs.forEach(apiJob => {
-        if (!combinedJobs.some(mockJob => mockJob.id === apiJob.id)) {
-          combinedJobs.push(apiJob);
-        }
-      });
-      
+      // Use API jobs only
+      const combinedJobs = [...apiJobs];
+
       // Get user skills
       const userSkills = skills.map(skill => skill.name);
 
@@ -66,63 +57,7 @@ export function ForYouJobsProvider({ children }: { children: ReactNode }) {
         const userSkills = skills.map(skill => skill.name.toLowerCase());
 
         // Cricket skill hierarchy and interchangeability rules - expanded for all 14 categories
-        const cricketSkillHierarchy = {
-          // Base skills (anyone can do these)
-          base: ['net bowler', 'coach', 'analyst', 'scorer', 'umpire', 'physio', 'trainer'],
-
-          // Playing Services
-          playing: {
-            batsman: ['rh batsman', 'lh batsman', 'opener', 'middle order', 'wicketkeeper batsman'],
-            bowler: ['fast bowler', 'pace bowler', 'seam bowler', 'medium pacer', 'swing bowler'],
-            allrounder: ['all-rounder', 'batting all-rounder', 'bowling all-rounder'],
-            specialist: ['wicket keeper', 'wicketkeeping', 'slip fielder', 'cover fielder']
-          },
-
-          // Coaching & Training (expanded)
-          coaching: ['coach', 'batting coach', 'bowling coach', 'fielding coach', 'wicket-keeping coach',
-                    'all-round coach', 'youth coach', 'junior coach', 'senior coach', 'mental skills coach',
-                    'tactical coach', 'strategy coach', 'cricket coach', 'fitness trainer', 'sports conditioning trainer'],
-
-          // Bowling skills hierarchy
-          bowling: {
-            fast: ['fast bowler', 'pace bowler', 'seam bowler', 'left-arm seam'],
-            medium: ['medium pacer', 'swing bowler', 'hard length'],
-            spin: {
-              basic: ['spin bowler', 'off spin', 'leg spin', 'left-arm orthodox', 'right-arm leg spin'],
-              advanced: ['mystery spin', 'doosra', 'carrom ball', 'teesra', 'googly', 'slider', 'top spinner']
-            },
-            specialty: ['sidearm specialist', 'sidearm', 'chinese cutter', 'slower ball specialist']
-          },
-
-          // Batting skills
-          batting: ['rh batsman', 'lh batsman', 'opener', 'middle order batsman', 'finisher', 'power hitter'],
-
-          // Support Staff
-          support: ['physio', 'sports physio', 'masseur', 'trainer', 'strength coach', 'nutritionist'],
-
-          // Media & Content
-          media: ['commentator', 'cricket commentator', 'content creator', 'video editor', 'photographer', 'sports photographer'],
-
-          // Administration
-          admin: ['scorer', 'umpire', 'match referee', 'ground staff', 'ball boy', 'groundsman'],
-
-          // Cricket Support Roles (expanded for Other category)
-          cricketSupport: ['groundsman', 'ground staff', 'ball boy', 'ball girl', 'equipment manager',
-                          'kit manager', 'team manager', 'cricket administrator', 'cricket journalist',
-                          'cricket statistician', 'cricket historian', 'cricket curator', 'pitch curator',
-                          'cricket psychologist', 'sports psychologist', 'cricket nutritionist',
-                          'cricket equipment supplier', 'venue manager', 'stadium manager',
-                          'event coordinator', 'tournament coordinator', 'cricket event manager',
-                          'cricket academy manager', 'cricket club secretary', 'match secretary',
-                          'cricket scorer assistant', 'umpire assistant', 'third umpire assistant',
-                          'cricket photographer assistant', 'video technician', 'broadcast assistant',
-                          'cricket content assistant', 'social media manager', 'cricket marketing',
-                          'sponsorship coordinator', 'cricket merchandise', 'fan engagement officer'],
-
-          // Analysis
-          analysis: ['analyst', 'performance analyst', 'video analyst', 'stats analyst', 'scouting']
-        };
-
+        // ... (Using same logic as before, just removed mock data dependency)
         // Function to check if user has compatible skill for job requirements
         const hasCompatibleSkill = (jobCategory: string, jobTitle: string, jobDescription: string, jobSkills: string[]): boolean => {
           const jobCatLower = jobCategory.toLowerCase();
@@ -142,7 +77,7 @@ export function ForYouJobsProvider({ children }: { children: ReactNode }) {
             // 1. MATCH PLAYER - Playing services
             if (jobCatLower.includes('match player')) {
               if (userSkill.includes('batsman') || userSkill.includes('bowler') || userSkill.includes('all-rounder') ||
-                  userSkill.includes('wicket') || userSkill.includes('fielder') || userSkill.includes('keeper')) {
+                userSkill.includes('wicket') || userSkill.includes('fielder') || userSkill.includes('keeper')) {
                 return true;
               }
             }
@@ -150,8 +85,8 @@ export function ForYouJobsProvider({ children }: { children: ReactNode }) {
             // 2. NET BOWLER - Any bowling skill
             if (jobCatLower.includes('net bowler')) {
               if (userSkill.includes('spin') || userSkill.includes('fast') || userSkill.includes('pace') ||
-                  userSkill.includes('medium') || userSkill.includes('seam') || userSkill.includes('bowling') ||
-                  userSkill.includes('sidearm') || userSkill.includes('mystery')) {
+                userSkill.includes('medium') || userSkill.includes('seam') || userSkill.includes('bowling') ||
+                userSkill.includes('sidearm') || userSkill.includes('mystery')) {
                 return true;
               }
             }
@@ -159,7 +94,7 @@ export function ForYouJobsProvider({ children }: { children: ReactNode }) {
             // 3. NET BATSMAN - Batting skills
             if (jobCatLower.includes('net batsman')) {
               if (userSkill.includes('batsman') || userSkill.includes('batting') || userSkill.includes('rh') ||
-                  userSkill.includes('lh') || userSkill.includes('opener') || userSkill.includes('middle order')) {
+                userSkill.includes('lh') || userSkill.includes('opener') || userSkill.includes('middle order')) {
                 return true;
               }
             }
@@ -167,7 +102,7 @@ export function ForYouJobsProvider({ children }: { children: ReactNode }) {
             // 4. SIDEARM - Sidearm specialty
             if (jobCatLower.includes('sidearm')) {
               if (userSkill.includes('sidearm') || userSkill.includes('yorker') || userSkill.includes('death over') ||
-                  userSkill.includes('powerplay')) {
+                userSkill.includes('powerplay')) {
                 return true;
               }
             }
@@ -175,13 +110,13 @@ export function ForYouJobsProvider({ children }: { children: ReactNode }) {
             // 5. COACH - Comprehensive coaching skills (expanded)
             if (jobCatLower.includes('coach')) {
               if (userSkill.includes('coach') || userSkill.includes('training') || userSkill.includes('analyst') ||
-                  userSkill.includes('batting coach') || userSkill.includes('bowling coach') ||
-                  userSkill.includes('fielding coach') || userSkill.includes('wicket-keeping coach') ||
-                  userSkill.includes('wicketkeeping coach') || userSkill.includes('all-round coach') ||
-                  userSkill.includes('youth coach') || userSkill.includes('junior coach') ||
-                  userSkill.includes('senior coach') || userSkill.includes('mental skills coach') ||
-                  userSkill.includes('tactical coach') || userSkill.includes('strategy coach') ||
-                  userSkill.includes('cricket coach') || userSkill.includes('coaching')) {
+                userSkill.includes('batting coach') || userSkill.includes('bowling coach') ||
+                userSkill.includes('fielding coach') || userSkill.includes('wicket-keeping coach') ||
+                userSkill.includes('wicketkeeping coach') || userSkill.includes('all-round coach') ||
+                userSkill.includes('youth coach') || userSkill.includes('junior coach') ||
+                userSkill.includes('senior coach') || userSkill.includes('mental skills coach') ||
+                userSkill.includes('tactical coach') || userSkill.includes('strategy coach') ||
+                userSkill.includes('cricket coach') || userSkill.includes('coaching')) {
                 return true;
               }
             }
@@ -189,7 +124,7 @@ export function ForYouJobsProvider({ children }: { children: ReactNode }) {
             // 6. TRAINER - Training and conditioning
             if (jobCatLower.includes('trainer')) {
               if (userSkill.includes('trainer') || userSkill.includes('conditioning') || userSkill.includes('fitness') ||
-                  userSkill.includes('strength') || userSkill.includes('physio') || userSkill.includes('nutrition')) {
+                userSkill.includes('strength') || userSkill.includes('physio') || userSkill.includes('nutrition')) {
                 return true;
               }
             }
@@ -197,7 +132,7 @@ export function ForYouJobsProvider({ children }: { children: ReactNode }) {
             // 7. ANALYST - Analysis skills
             if (jobCatLower.includes('analyst')) {
               if (userSkill.includes('analyst') || userSkill.includes('analysis') || userSkill.includes('video') ||
-                  userSkill.includes('stats') || userSkill.includes('performance') || userSkill.includes('scouting')) {
+                userSkill.includes('stats') || userSkill.includes('performance') || userSkill.includes('scouting')) {
                 return true;
               }
             }
@@ -205,7 +140,7 @@ export function ForYouJobsProvider({ children }: { children: ReactNode }) {
             // 8. PHYSIO - Physiotherapy and medical
             if (jobCatLower.includes('physio')) {
               if (userSkill.includes('physio') || userSkill.includes('sports physio') || userSkill.includes('masseur') ||
-                  userSkill.includes('injury') || userSkill.includes('recovery') || userSkill.includes('conditioning')) {
+                userSkill.includes('injury') || userSkill.includes('recovery') || userSkill.includes('conditioning')) {
                 return true;
               }
             }
@@ -213,7 +148,7 @@ export function ForYouJobsProvider({ children }: { children: ReactNode }) {
             // 9. SCORER - Scoring and administration
             if (jobCatLower.includes('scorer')) {
               if (userSkill.includes('scorer') || userSkill.includes('scoring') || userSkill.includes('stats') ||
-                  userSkill.includes('record') || userSkill.includes('match admin')) {
+                userSkill.includes('record') || userSkill.includes('match admin')) {
                 return true;
               }
             }
@@ -221,7 +156,7 @@ export function ForYouJobsProvider({ children }: { children: ReactNode }) {
             // 10. UMPIRE - Umpiring and officiating
             if (jobCatLower.includes('umpire')) {
               if (userSkill.includes('umpire') || userSkill.includes('umpiring') || userSkill.includes('referee') ||
-                  userSkill.includes('officiating') || userSkill.includes('rules')) {
+                userSkill.includes('officiating') || userSkill.includes('rules')) {
                 return true;
               }
             }
@@ -229,7 +164,7 @@ export function ForYouJobsProvider({ children }: { children: ReactNode }) {
             // 11. COMMENTATOR - Broadcasting and commentary
             if (jobCatLower.includes('commentator')) {
               if (userSkill.includes('commentator') || userSkill.includes('commentary') || userSkill.includes('broadcasting') ||
-                  userSkill.includes('presentation') || userSkill.includes('voice over')) {
+                userSkill.includes('presentation') || userSkill.includes('voice over')) {
                 return true;
               }
             }
@@ -237,7 +172,7 @@ export function ForYouJobsProvider({ children }: { children: ReactNode }) {
             // 12. CRICKET CONTENT CREATOR - Content creation
             if (jobCatLower.includes('content creator')) {
               if (userSkill.includes('content creator') || userSkill.includes('video editing') || userSkill.includes('social media') ||
-                  userSkill.includes('content') || userSkill.includes('creator') || userSkill.includes('editing')) {
+                userSkill.includes('content') || userSkill.includes('creator') || userSkill.includes('editing')) {
                 return true;
               }
             }
@@ -245,7 +180,7 @@ export function ForYouJobsProvider({ children }: { children: ReactNode }) {
             // 13. CRICKET PHOTO / VIDEOGRAPHY - Photography and videography
             if (jobCatLower.includes('photo') || jobCatLower.includes('videography')) {
               if (userSkill.includes('photographer') || userSkill.includes('videography') || userSkill.includes('camera') ||
-                  userSkill.includes('sports photography') || userSkill.includes('video') || userSkill.includes('content')) {
+                userSkill.includes('sports photography') || userSkill.includes('video') || userSkill.includes('content')) {
                 return true;
               }
             }
@@ -288,19 +223,19 @@ export function ForYouJobsProvider({ children }: { children: ReactNode }) {
 
             // Mystery spin can do off spin jobs, but not vice versa
             if (userSkill === 'mystery spin' &&
-                (jobCatLower.includes('off spin') || jobCatLower.includes('spin') || jobCatLower.includes('bowling') || jobCatLower.includes('net bowler'))) {
+              (jobCatLower.includes('off spin') || jobCatLower.includes('spin') || jobCatLower.includes('bowling') || jobCatLower.includes('net bowler'))) {
               return true;
             }
 
             // Sidearm specialist can do general bowling jobs
             if (userSkill === 'sidearm specialist' &&
-                (jobCatLower.includes('bowling') || jobCatLower.includes('net bowler') || jobCatLower.includes('sidearm'))) {
+              (jobCatLower.includes('bowling') || jobCatLower.includes('net bowler') || jobCatLower.includes('sidearm'))) {
               return true;
             }
 
             // Batting coach can do batting-related jobs
             if (userSkill === 'batting coach' &&
-                (jobTitleLower.includes('batting') || jobDescLower.includes('batting') || jobCatLower.includes('net batsman'))) {
+              (jobTitleLower.includes('batting') || jobDescLower.includes('batting') || jobCatLower.includes('net batsman'))) {
               return true;
             }
 
@@ -361,13 +296,10 @@ export function ForYouJobsProvider({ children }: { children: ReactNode }) {
         return hasCompatibleSkill(job.category, job.title, job.description, job.skills || []);
       });
 
-      // Filter out jobs user has already applied to (same as feed page)
-      // const { hasUserAppliedToJob } = await import('@/components/freelancer/jobs/mock-data');
-      const finalJobs = filteredJobs; // .filter(job => !hasUserAppliedToJob(job.id));
+      const finalJobs = filteredJobs;
 
       console.log(`📊 For You Jobs: Found ${finalJobs.length} jobs after filtering ${combinedJobs.length} total jobs`);
       console.log(`   User skills: ${userSkills.join(', ')}`);
-      console.log(`   Combined jobs:`, combinedJobs.map(j => ({ id: j.id, title: j.title, skills: j.skills, category: j.category })));
 
       setForYouJobs(finalJobs);
     } catch (error) {

@@ -74,28 +74,7 @@ type FreelancerData = {
 
 
 
-const experiences: Experience[] = [
-  {
-    id: '1',
-    role: 'Senior Cricket Coach',
-    company: 'Chennai Cricket Academy',
-    location: 'Chennai, India',
-    startDate: '2020-01-01',
-    endDate: '2023-12-31',
-    isCurrent: false,
-    description: 'Led coaching programs for 50+ players, specializing in batting and bowling techniques. Coached teams that won multiple district-level tournaments.'
-  },
-  {
-    id: '2',
-    role: 'Professional Cricket Player',
-    company: 'Tamil Nadu Cricket Association',
-    location: 'Chennai, India',
-    startDate: '2023-01-01',
-    endDate: undefined,
-    isCurrent: true,
-    description: 'Competitive cricketer playing in state-level tournaments. Right-handed batsman and off-spin bowler with championship-level experience.'
-  }
-];
+const experiences: Experience[] = [];
 
 // Extend FreelancerData interface to include missing properties
 type ExtendedFreelancerData = FreelancerData & {
@@ -104,7 +83,8 @@ type ExtendedFreelancerData = FreelancerData & {
   responseTime: string;
 };
 
-import { freelancerData } from './profileData';
+import { createClient } from '@/lib/supabase/client';
+import { useState } from 'react';
 
 // Main Profile Page Component
 export default function ProfilePage() {
@@ -113,23 +93,57 @@ export default function ProfilePage() {
   const portfolioRef = useRef<HTMLDivElement>(null);
   const skillsRef = useRef<HTMLDivElement>(null);
 
+  const [loading, setLoading] = useState(true);
+  const [profileData, setProfileData] = useState<any>(null);
+  const supabase = createClient();
+
+  useEffect(() => {
+    async function fetchProfile() {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          setLoading(false);
+          return;
+        }
+
+        // Fetch essential profile data from Supabase
+        const { data: profile, error } = await supabase
+          .from('freelancer_profiles')
+          .select('*')
+          .eq('userId', user.id)
+          .single();
+
+        if (error && error.code !== 'PGRST116') { // Ignore not found error if profile doesn't exist yet
+          console.error('Error fetching profile:', error);
+        }
+
+        setProfileData(profile);
+      } catch (err) {
+        console.error('Unexpected error fetching profile:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchProfile();
+  }, [supabase]);
+
   const scrollToSection = (ref: React.RefObject<HTMLElement>) => {
     if (ref.current) {
       // ProfileHeader is not fixed, so no header height offset needed
       const headerHeight = 0;
-      
+
       // Get the element's position relative to the viewport
       const elementRect = ref.current.getBoundingClientRect();
-      
+
       // Calculate the scroll position to place the element just below the header
       const scrollPosition = window.scrollY + elementRect.top - headerHeight - 16; // 16px extra spacing
-      
+
       // Scroll to the calculated position
       window.scrollTo({
         top: scrollPosition,
         behavior: 'instant' // Use instant for immediate scrolling
       });
-      
+
       // Remove the hash without page reload
       window.history.replaceState(null, '', window.location.pathname);
     }
@@ -138,7 +152,7 @@ export default function ProfilePage() {
   // Helper function to handle section scrolling
   const scrollToSectionIfNeeded = (sectionId: string, ref: React.RefObject<HTMLElement>) => {
     if (!ref.current) return false;
-    
+
     // Force a reflow to ensure the element is in the DOM
     void ref.current.offsetHeight;
     scrollToSection(ref);
@@ -150,9 +164,9 @@ export default function ProfilePage() {
     const handleHashChange = () => {
       const hash = window.location.hash;
       const isFromPortfolio = getSessionFlag('scrollToPortfolio');
-      
+
       console.log('Hash change detected:', hash, 'isFromPortfolio:', isFromPortfolio);
-      
+
       // Small delay to ensure the DOM is fully rendered
       const timer = setTimeout(() => {
         // Check for section hashes first
@@ -168,21 +182,30 @@ export default function ProfilePage() {
           scrollToSectionIfNeeded('skills', skillsRef);
         }
       }, 200); // Increased delay for better reliability
-      
+
       return () => clearTimeout(timer);
     };
-    
+
     // Initial check
     handleHashChange();
-    
+
     // Listen for hash changes
     window.addEventListener('hashchange', handleHashChange, false);
-    
+
     // Clean up
     return () => {
       window.removeEventListener('hashchange', handleHashChange, false);
     };
   }, []); // Remove searchParams dependency to ensure it always runs
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#0f0f0f] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-500"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-white pb-20 md:pb-24">
       <ProfileHeader />
@@ -197,22 +220,22 @@ export default function ProfilePage() {
           <h2 className="text-xl font-semibold text-white mb-1">My Profile</h2>
           <p className="text-sm text-white/60">Manage your professional profile and settings</p>
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div 
-              id="personal-details" 
-              ref={personalDetailsRef}
-              className="scroll-mt-24" // Add scroll margin to account for fixed header
-            >
-              <ProfileSectionCard
-                title="Personal Details"
-                description="Manage your profile and contact information"
-                href="/freelancer/profile/personal?from=profile#personal-details"
-                icon={<User className="h-4 w-4" />}
-              />
-            </div>
-          <div 
-            id="portfolio" 
+          <div
+            id="personal-details"
+            ref={personalDetailsRef}
+            className="scroll-mt-24" // Add scroll margin to account for fixed header
+          >
+            <ProfileSectionCard
+              title="Personal Details"
+              description="Manage your profile and contact information"
+              href="/freelancer/profile/personal?from=profile#personal-details"
+              icon={<User className="h-4 w-4" />}
+            />
+          </div>
+          <div
+            id="portfolio"
             ref={portfolioRef}
             className="scroll-mt-24" // Add scroll margin to account for fixed header
           >
@@ -224,8 +247,8 @@ export default function ProfilePage() {
             />
           </div>
 
-          <div 
-            id="skills" 
+          <div
+            id="skills"
             ref={skillsRef}
             className="scroll-mt-24" // Add scroll margin to account for fixed header
           >
@@ -271,14 +294,14 @@ export default function ProfilePage() {
             href="/freelancer/profile/availability"
             icon={<Calendar className="h-4 w-4" />}
           />
-          
+
           <ProfileSectionCard
             title="Bank Account"
             description="Manage your bank account details for payments"
             href="/freelancer/profile/bank-account"
             icon={<CreditCard className="h-4 w-4" />}
           />
-          
+
           <ProfileSectionCard
             title="Identity Verification"
             description="Complete your KYC verification to unlock all features"
@@ -292,9 +315,9 @@ export default function ProfilePage() {
             href="/freelancer/profile/settings"
             icon={<SettingsIcon className="h-4 w-4" />}
           />
-          
-          <Link 
-            href="/client" 
+
+          <Link
+            href="/client"
             className="w-full h-full flex items-center justify-between p-4 bg-gradient-to-l from-[var(--purple)] to-[var(--purple-hover)] hover:opacity-90 rounded-xl transition-all duration-200 group shadow-md shadow-purple-500/20 hover:shadow-purple-500/30"
           >
             <div className="flex items-center gap-3">
@@ -309,19 +332,19 @@ export default function ProfilePage() {
                 <div className="text-xs text-white/80">Access client dashboard</div>
               </div>
             </div>
-            <svg 
-              xmlns="http://www.w3.org/2000/svg" 
-              width="18" 
-              height="18" 
-              viewBox="0 0 24 24" 
-              fill="none" 
-              stroke="currentColor" 
-              strokeWidth="2.5" 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
               className="h-4 w-4 text-white/80 group-hover:translate-x-0.5 transition-transform"
             >
-              <path d="m9 18 6-6-6-6"/>
+              <path d="m9 18 6-6-6-6" />
             </svg>
           </Link>
         </div>

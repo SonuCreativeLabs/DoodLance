@@ -79,64 +79,9 @@ export function ApplicationsProvider({ children }: { children: ReactNode }) {
         status: app.status === 'pending' ? 'new' : (app.status as any),
       }));
 
-      // Fallback to mock data if empty (for UI testing)
+      // Fallback to mock data if empty (for UI testing) -> REMOVED for production
       if (mappedApps.length === 0) {
-        mappedApps = [
-          {
-            "#": "#TNADYR001",
-            jobId: "J-cscsd017", // Use real job ID
-            jobTitle: "Spin Bowling Coach",
-            freelancer: {
-              id: "4", // Kavita Reddy - Spin Bowler
-              name: "Kavita Reddy",
-              image: "https://randomuser.me/api/portraits/women/4.jpg",
-              rating: 4.9,
-              completedJobs: 210,
-              responseTime: "Usually responds in 2 hours",
-              location: "1.8 km away - Kodambakkam",
-            },
-            proposal: "I have 9 years of experience in professional spin bowling coaching. I specialize in off-spin, doosra, and carrom ball techniques.",
-            price: "₹900/session",
-            availability: "Available this weekend",
-            status: "new"
-          },
-          {
-            "#": "#TNTNAG001",
-            jobId: "J-cscsd017", // Use real job ID
-            jobTitle: "Batting Coach",
-            freelancer: {
-              id: "2", // Priya Sharma - Batting Coach
-              name: "Priya Sharma",
-              image: "https://randomuser.me/api/portraits/women/2.jpg",
-              rating: 5.0,
-              completedJobs: 450,
-              responseTime: "Usually responds in 1 hour",
-              location: "2.1 km away - T. Nagar",
-            },
-            proposal: "Elite batting coach with 10+ years of experience. Specialized in technique refinement, footwork drills, and mental training for competitive players.",
-            price: "₹1,200/session",
-            availability: "Available tomorrow",
-            status: "accepted"
-          },
-          {
-            "#": "#TNMYLA001",
-            jobId: "J-cscsd017", // Use real job ID
-            jobTitle: "Cricket Analyst",
-            freelancer: {
-              id: "5", // Vikram Patel - Cricket Analyst
-              name: "Vikram Patel",
-              image: "https://randomuser.me/api/portraits/men/5.jpg",
-              rating: 4.8,
-              completedJobs: 380,
-              responseTime: "Usually responds in 1 hour",
-              location: "2.7 km away - Velachery",
-            },
-            proposal: "Professional cricket analyst with 6+ years of experience in performance analysis, video breakdown, and strategic planning.",
-            price: "₹1,500/analysis",
-            availability: "Available today",
-            status: "rejected"
-          }
-        ];
+        console.log('No applications found.');
       }
 
       setApplications(mappedApps);
@@ -285,9 +230,10 @@ export function ApplicationsProvider({ children }: { children: ReactNode }) {
       console.log('📬 New application detected, refreshing...');
       refreshApplications();
     };
-    
+
     window.addEventListener('applicationsUpdated', handleApplicationsUpdated);
-    return () => window.removeEventListener('applicationsUpdated', handleApplicationsUpdated);  }, []);
+    return () => window.removeEventListener('applicationsUpdated', handleApplicationsUpdated);
+  }, []);
 
   const value = {
     applications,

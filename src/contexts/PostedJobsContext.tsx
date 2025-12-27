@@ -167,8 +167,12 @@ export function PostedJobsProvider({ children }: { children: ReactNode }) {
                 job["#"] === id ? { ...job, status: 'open' as const } : job
             ));
 
-            // TODO: API call to update job status
-            // await fetch(`/api/jobs/${id}`, { method: 'PATCH', body: JSON.stringify({ status: 'OPEN' }) });
+            // API call to update job status
+            await fetch(`/api/jobs/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: 'OPEN' })
+            });
         } catch (err) {
             // Revert on failure
             refreshPostedJobs();
@@ -183,8 +187,12 @@ export function PostedJobsProvider({ children }: { children: ReactNode }) {
                 job["#"] === id ? { ...job, status: 'deleted' as const } : job
             ));
 
-            // TODO: API call to delete job (soft delete)
-            // await fetch(`/api/jobs/${id}`, { method: 'PATCH', body: JSON.stringify({ status: 'DELETED' }) });
+            // API call to delete job (soft delete)
+            await fetch(`/api/jobs/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: 'DELETED' })
+            });
         } catch (err) {
             // Revert on failure
             refreshPostedJobs();

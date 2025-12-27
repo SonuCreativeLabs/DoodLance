@@ -26,8 +26,6 @@ import {
   Calendar
 } from 'lucide-react';
 import { Application } from '@/components/freelancer/jobs/types';
-import { mySkills } from '@/components/freelancer/jobs/mock-data';
-import { updateApplicationStatus } from '@/components/freelancer/jobs/mock-data';
 import { ClientProfile } from '@/components/freelancer/jobs/ClientProfile';
 import { SuccessMessage } from '@/components/ui/success-message';
 import { getCategoryDisplayName } from '@/components/freelancer/jobs/utils';
@@ -36,7 +34,9 @@ import { getJobDurationLabel } from '@/app/freelancer/feed/types';
 
 export default function ProposalDetailsPage() {
   const router = useRouter();
-  const { id } = useParams();
+  const params = useParams();
+  const id = params?.id as string;
+
   const [proposal, setProposal] = useState<Application | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showWithdrawConfirm, setShowWithdrawConfirm] = useState(false);
@@ -74,42 +74,75 @@ export default function ProposalDetailsPage() {
 
   useEffect(() => {
     const loadApplication = async () => {
+      if (!id) return;
+
       setIsLoading(true);
       try {
-        // Use mock data instead of API calls
-        const { mockApplications } = await import('@/components/freelancer/jobs/mock-data');
-        const applicationData = mockApplications.find(app => app["#"] === id);
+        const res = await fetch(`/api/applications/${id}`);
+        if (!res.ok) {
+          throw new Error('Failed to load application');
+        }
 
-        if (applicationData) {
-          // Track client view (like read receipt)
-          if (!applicationData.clientViewedAt) {
-            applicationData.clientViewedAt = new Date().toISOString();
-            console.log(`📖 Client viewed application ${applicationData["#"]} at ${applicationData.clientViewedAt}`);
+        const data = await res.json();
+
+        // Map API response to Application type
+        const mappedProposal: Application = {
+          "#": data.id,
+          jobId: data.jobId,
+          jobTitle: data.job?.title || 'Unknown Job',
+          appliedDate: data.createdAt,
+          status: data.status === 'WITHDRAWN' ? 'withdrawn' : (data.status.toLowerCase() as any),
+          clientName: data.job?.client?.name || 'Unknown Client',
+          budget: {
+            min: data.job?.budget || 0,
+            max: data.job?.budget || 0
+          },
+          progress: 0,
+          location: data.job?.location || 'Remote',
+          postedDate: data.job?.createdAt || new Date().toISOString(),
+          scheduledAt: data.job?.scheduledAt,
+          description: data.job?.description || '',
+          clientId: data.job?.clientId || '',
+          category: data.job?.category || 'OTHER',
+          // Client stats
+          rating: data.job?.client?.rating || 0,
+          projectsCompleted: data.job?.client?.jobsCompleted || 0,
+          clientSince: data.job?.client?.createdAt,
+          clientImage: data.job?.client?.avatar || data.job?.client?.image,
+          clientRating: data.job?.client?.rating,
+          // Proposal details
+          proposal: {
+            coverLetter: data.coverLetter || '',
+            proposedRate: data.proposedRate || 0,
+            estimatedDays: data.estimatedDays || 1,
+            skills: data.featuredSkills || [],
+            attachments: data.attachments || []
+          },
+          // Extra mock-like fields
+          clientViewedAt: data.clientViewedAt,
+          moneySpent: 0,
+          freelancersWorked: 0,
+        };
+
+        setProposal(mappedProposal);
+
+        // Check if we should auto-enable edit mode (from card edit button)
+        if (typeof window !== 'undefined') {
+          const urlParams = new URLSearchParams(window.location.search);
+          if (urlParams.get('edit') === 'true') {
+            setIsEditing(true);
+            setEditedProposal(mappedProposal);
+
+            // Auto-scroll to Your Proposal section after a short delay to ensure DOM is updated
+            setTimeout(() => {
+              if (yourProposalRef.current) {
+                yourProposalRef.current.scrollIntoView({
+                  behavior: 'smooth',
+                  block: 'start'
+                });
+              }
+            }, 500);
           }
-
-          setProposal(applicationData);
-
-          // Check if we should auto-enable edit mode (from card edit button)
-          if (typeof window !== 'undefined') {
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('edit') === 'true') {
-              setIsEditing(true);
-              setEditedProposal(applicationData);
-
-              // Auto-scroll to Your Proposal section after a short delay to ensure DOM is updated
-              setTimeout(() => {
-                if (yourProposalRef.current) {
-                  yourProposalRef.current.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                  });
-                }
-              }, 500);
-            }
-          }
-        } else {
-          console.error('Proposal not found in mock data');
-          setProposal(null);
         }
       } catch (error) {
         console.error('Error loading application:', error);
@@ -146,17 +179,26 @@ export default function ProposalDetailsPage() {
   };
 
   const handleSaveEdit = async () => {
-    if (!editedProposal) return;
+    if (!editedProposal || !proposal) return;
 
     setIsWithdrawing(true);
     try {
-      // Use mock data update instead of API call
-      updateApplicationStatus(proposal?.["#"] || '', editedProposal.status, {
-        coverLetter: editedProposal.proposal.coverLetter,
-        proposedRate: editedProposal.proposal.proposedRate,
+      const response = await fetch(`/api/applications/${proposal["#"]}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          coverLetter: editedProposal.proposal.coverLetter,
+          proposedRate: editedProposal.proposal.proposedRate,
+        }),
       });
 
-      alert('Proposal updated successfully!');
+      if (!response.ok) {
+        throw new Error('Failed to update proposal');
+      }
+
+      showSuccessMessage('Proposal updated successfully!');
 
       // Update local state
       setProposal(editedProposal);
@@ -171,11 +213,19 @@ export default function ProposalDetailsPage() {
   };
 
   const handleChat = () => {
-    alert('Chat functionality will be implemented soon!');
+    if (proposal?.jobId) {
+      // Navigate to inbox with specific job chat selection
+      router.push(`/freelancer/inbox?jobId=${proposal.jobId}&role=freelancer`);
+    } else {
+      alert('Chat functionality will be implemented soon!');
+    }
   };
 
   const handleCall = () => {
-    alert('Call functionality will be implemented soon!');
+    if (proposal?.jobId) {
+      // Ideally we would trigger a call action or show phone number
+      alert('Call functionality will be implemented soon!');
+    }
   };
 
   const handleFileSelect = (files: FileList | null) => {
@@ -250,21 +300,22 @@ export default function ProposalDetailsPage() {
     try {
       console.log('Withdrawing proposal:', proposal?.["#"]);
 
-      // Use mock data update instead of API call
-      updateApplicationStatus(proposal?.["#"] || '', 'withdrawn');
+      const response = await fetch(`/api/applications/${proposal?.["#"]}`, {
+        method: 'DELETE',
+      });
 
-      // Update local state by reloading from mock data to ensure all fields are preserved
-      const { mockApplications } = await import('@/components/freelancer/jobs/mock-data');
-      const updatedApplicationData = mockApplications.find(app => app["#"] === proposal?.["#"]);
-      if (updatedApplicationData) {
-        setProposal(updatedApplicationData);
+      if (!response.ok) {
+        throw new Error('Failed to withdraw proposal');
       }
 
       // Close modal
       setShowWithdrawConfirm(false);
 
       // Show success message
-      alert('Proposal withdrawn successfully!');
+      showSuccessMessage('Proposal withdrawn successfully!', undefined, 'warning');
+
+      // Update local state
+      setProposal(prev => prev ? { ...prev, status: 'withdrawn' } : null);
 
       // Navigate back to proposals page after a short delay
       setTimeout(() => {
@@ -348,7 +399,7 @@ export default function ProposalDetailsPage() {
           <div className="max-w-3xl mx-auto p-4 md:p-6">
             <div className="space-y-6">
 
-              {/* Withdrawal Info - Show at very top of page for withdrawn proposals */}
+              {/* Withdrawal Info */}
               {proposal.status === 'withdrawn' && (
                 <div className="rounded-xl bg-gray-500/10 border border-gray-500/20 p-4">
                   <div className="flex items-start gap-3">
@@ -358,19 +409,14 @@ export default function ProposalDetailsPage() {
                     <div className="flex-1">
                       <h3 className="text-sm font-medium text-gray-400 mb-1">Proposal Withdrawn</h3>
                       <p className="text-sm text-gray-300/80 mb-2">
-                        This proposal has been withdrawn and is no longer active. You can create a new proposal for this job if it's still available.
+                        This proposal has been withdrawn.
                       </p>
-                      {proposal.category && (
-                        <p className="text-xs text-gray-200/60">
-                          Category: {getCategoryDisplayName(proposal.category)}
-                        </p>
-                      )}
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* Rejection Info - Show at very top of page for rejected proposals */}
+              {/* Rejection Info */}
               {proposal.status === 'rejected' && (
                 <div className="rounded-xl bg-red-500/10 border border-red-500/20 p-4">
                   <div className="flex items-start gap-3">
@@ -380,13 +426,8 @@ export default function ProposalDetailsPage() {
                     <div className="flex-1">
                       <h3 className="text-sm font-medium text-red-400 mb-1">Proposal Rejected</h3>
                       <p className="text-sm text-red-300/80 mb-2">
-                        Unfortunately, your proposal was not selected for this job. You can improve your proposal and try again for similar opportunities.
+                        Unfortunately, your proposal was not selected.
                       </p>
-                      {proposal.category && (
-                        <p className="text-xs text-red-200/60">
-                          Category: {getCategoryDisplayName(proposal.category)}
-                        </p>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -469,24 +510,7 @@ export default function ProposalDetailsPage() {
                     <div>
                       <div className="text-sm text-gray-400">Scheduled</div>
                       <div className="text-white font-medium">
-                        {proposal.scheduledAt ? (() => {
-                          const scheduled = new Date(proposal.scheduledAt);
-                          const month = scheduled.toLocaleDateString('en-US', { month: 'short' });
-                          const day = scheduled.getDate();
-                          const year = scheduled.getFullYear();
-                          const time = scheduled.toLocaleTimeString('en-US', {
-                            hour: 'numeric',
-                            minute: '2-digit',
-                            hour12: true
-                          });
-                          return (
-                            <>
-                              {`${month} ${day}, ${year}`}
-                              <br />
-                              at {time}
-                            </>
-                          );
-                        })() : 'Date TBD'}
+                        {proposal.scheduledAt ? new Date(proposal.scheduledAt).toLocaleDateString() : 'Date TBD'}
                       </div>
                     </div>
                   </div>
@@ -502,41 +526,7 @@ export default function ProposalDetailsPage() {
 
               {/* About the Job */}
               <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#111111] via-[#0f0f0f] to-[#111111] border border-gray-600/30 shadow-lg mb-6">
-                {/* Background decoration */}
-                <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/5 rounded-full blur-2xl"></div>
-                <div className="absolute bottom-0 left-0 w-24 h-24 bg-purple-400/5 rounded-full blur-xl"></div>
-
-                {/* Card content */}
                 <div className="relative p-5">
-                  <div className="text-left mb-2">
-                    <div className="text-white/60 font-medium text-xs">
-                      {proposal.postedDate ? (() => {
-                        const posted = new Date(proposal.postedDate);
-                        const now = new Date();
-                        const diffTime = Math.abs(now.getTime() - posted.getTime());
-                        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-                        const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
-                        const diffMinutes = Math.floor(diffTime / (1000 * 60));
-
-                        if (diffMinutes < 60) {
-                          return `${diffMinutes}m ago`;
-                        } else if (diffHours < 24) {
-                          return `${diffHours}h ago`;
-                        } else if (diffDays < 7) {
-                          return `${diffDays}d ago`;
-                        } else if (diffDays < 30) {
-                          const weeks = Math.floor(diffDays / 7);
-                          return `${weeks}w ago`;
-                        } else if (diffDays < 365) {
-                          const months = Math.floor(diffDays / 30);
-                          return `${months}mo ago`;
-                        } else {
-                          const years = Math.floor(diffDays / 365);
-                          return `${years}y ago`;
-                        }
-                      })() : 'Date not specified'}
-                    </div>
-                  </div>
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="text-lg font-semibold text-white">About the Job</h2>
                   </div>
@@ -588,14 +578,7 @@ export default function ProposalDetailsPage() {
 
               {/* Your Proposal */}
               <div ref={yourProposalRef} className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#111111] via-[#0f0f0f] to-[#111111] border border-gray-600/30 shadow-lg">
-                {/* Background decoration */}
-                <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/5 rounded-full blur-2xl"></div>
-                <div className="absolute bottom-0 left-0 w-24 h-24 bg-green-400/5 rounded-full blur-xl"></div>
-
-                {/* Card content */}
                 <div className="relative p-5">
-
-                  {/* Header with status */}
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
                       <h2 className="text-sm font-semibold text-white/90">
@@ -603,21 +586,6 @@ export default function ProposalDetailsPage() {
                       </h2>
                     </div>
                     <div className="flex items-center gap-2">
-                      {proposal.rating && (
-                        <div className="flex items-center">
-                          <div className="flex">
-                            {[1, 2, 3, 4, 5].map((star) => (
-                              <Star
-                                key={star}
-                                className={`w-4 h-4 ${proposal.rating && star <= Math.round(proposal.rating) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-600'}`}
-                              />
-                            ))}
-                          </div>
-                          <span className="ml-2 text-sm text-gray-400">
-                            {proposal.rating ? `${proposal.rating.toFixed(1)}/5.0` : 'Not rated'}
-                          </span>
-                        </div>
-                      )}
                       {proposal.status === 'pending' && !isEditing && (
                         <Button
                           type="button"
@@ -650,9 +618,6 @@ export default function ProposalDetailsPage() {
                         <p className="text-gray-300 text-sm leading-relaxed">{proposal.proposal.coverLetter}</p>
                       )}
                     </div>
-
-
-
                   </div>
                 </div>
               </div>

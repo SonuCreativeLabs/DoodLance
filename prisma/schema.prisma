@@ -7,8 +7,8 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 // User model for authentication
@@ -19,9 +19,8 @@ model User {
   avatar    String?
   role      String   @default("client") // client, freelancer, admin
   
-  // AuthKit integration
-  workosId  String?  @unique // WorkOS user ID
-  workosFactorId String? // WorkOS MFA factor ID for SMS
+  // Supabase Auth integration
+  supabaseUid String? @unique // Link to Supabase Auth User ID
   
   // Profile information
   phone     String?
@@ -44,7 +43,7 @@ model User {
   updatedAt DateTime @updatedAt
   
   // Relations
-  sessions              Session[]
+
   bookings              Booking[] @relation("UserBookings")
   services              Service[] @relation("UserServices")
   clientJobs            Job[] @relation("ClientJobs")
@@ -59,17 +58,7 @@ model User {
   @@map("users")
 }
 
-// Session model for AuthKit sessions
-model Session {
-  id            String   @id @default(cuid())
-  sessionToken  String   @unique
-  userId        String
-  expires       DateTime
-  
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  @@map("sessions")
-}
+
 
 // Service categories
 model Category {
@@ -572,19 +561,7 @@ model Notification {
   @@map("notifications")
 }
 
-// OTP Verification
-model OTP {
-  id         String   @id @default(cuid())
-  identifier String   // email or phone
-  code       String
-  expiresAt  DateTime
-  createdAt  DateTime @default(now())
-  verified   Boolean  @default(false)
-  challengeId String? // WorkOS challenge ID for SMS verification
-  attempts   Int      @default(0) // Number of verification attempts for rate limiting
 
-  @@map("otps")
-}
 
 // Admin User Management
 model AdminUser {

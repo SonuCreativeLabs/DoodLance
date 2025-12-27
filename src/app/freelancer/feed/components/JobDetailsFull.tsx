@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { Job, getJobDurationLabel, getWorkModeLabel } from '../types';
 import { ClientProfile } from '@/components/freelancer/jobs/ClientProfile';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface JobDetailsFullProps {
   job: Job;
@@ -23,6 +24,7 @@ interface JobDetailsFullProps {
 }
 
 export default function JobDetailsFull({ job, onBack, onApply, isApplied = false }: JobDetailsFullProps) {
+  const { user } = useAuth();
   const [proposal, setProposal] = useState('');
   const [rate, setRate] = useState(job.budget ? job.budget.toString() : '');
   const [attachments, setAttachments] = useState<File[]>([]);
@@ -30,18 +32,18 @@ export default function JobDetailsFull({ job, onBack, onApply, isApplied = false
 
   // Fetch application details if already applied
   useEffect(() => {
-    if (isApplied) {
+    if (isApplied && user?.id) {
       const fetchApplication = async () => {
         setLoading(true);
         try {
-          const { getApplicationForJob } = await import('@/components/freelancer/jobs/mock-data');
-          const application = await getApplicationForJob(job.id);
-
-          if (application && application.proposal) {
-            setProposal(application.proposal.coverLetter || '');
-            setRate(application.proposal.proposedRate ? application.proposal.proposedRate.toString() : '');
-            // Note: We can't easily restore File objects from strings/URLs in mock data
-            // allowing attachments to remain empty for now in read-only mode
+          const res = await fetch(`/api/applications?myApplications=true&userId=${user.id}&jobId=${job.id}`);
+          if (res.ok) {
+            const data = await res.json();
+            if (data && data.length > 0) {
+              const application = data[0];
+              setProposal(application.coverLetter || '');
+              setRate(application.proposedRate ? application.proposedRate.toString() : '');
+            }
           }
         } catch (error) {
           console.error('Error fetching application details:', error);
@@ -52,7 +54,7 @@ export default function JobDetailsFull({ job, onBack, onApply, isApplied = false
 
       fetchApplication();
     }
-  }, [isApplied, job.id]);
+  }, [isApplied, job.id, user?.id]);
 
   // Generate stable job ID based on category and job ID
   const jobId = useMemo(() => {
@@ -160,7 +162,7 @@ export default function JobDetailsFull({ job, onBack, onApply, isApplied = false
                 <div className="text-sm text-gray-400 mb-0.5">Budget</div>
                 <div className="text-white font-medium leading-tight">
                   <span className="whitespace-nowrap">
-                    ₹{job.budget.toLocaleString('en-IN')}
+                    ₹{job.budget?.toLocaleString('en-IN') || 0}
                   </span>
                 </div>
               </div>
@@ -366,7 +368,7 @@ export default function JobDetailsFull({ job, onBack, onApply, isApplied = false
 
 
               <button
-                onClick={() => onApply(job.id, proposal, job.budget.toString(), "project", [])}
+                onClick={() => onApply(job.id, proposal, job.budget?.toString() || '0', "project", [])}
                 disabled={!proposal.trim() || isApplied}
                 className={`w-full h-10 font-medium rounded-lg shadow-lg transition-all duration-200 flex items-center justify-center gap-2 ${isApplied
                   ? 'bg-green-600/20 text-green-400 border border-green-600/50 cursor-default'

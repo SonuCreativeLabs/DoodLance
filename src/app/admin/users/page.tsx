@@ -37,79 +37,13 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// Mock user data
-const mockUsers = [
-  {
-    id: '1',
-    name: 'Rohit Sharma',
-    email: 'rohit@example.com',
-    phone: '+91 98765 43210',
-    role: 'freelancer',
-    currentRole: 'freelancer',
-    location: 'Mumbai',
-    isVerified: true,
-    rating: 4.8,
-    completedJobs: 156,
-    totalEarnings: 234500,
-    joinedAt: '2024-01-15',
-    lastActive: '2 hours ago',
-    status: 'active',
-    avatar: null,
-    services: ['Net Bowler', 'Coach'],
-  },
-  {
-    id: '2',
-    name: 'Priya Patel',
-    email: 'priya@example.com',
-    phone: '+91 87654 32109',
-    role: 'client',
-    currentRole: 'client',
-    location: 'Delhi',
-    isVerified: false,
-    totalSpent: 45600,
-    projectsPosted: 12,
-    joinedAt: '2024-02-20',
-    lastActive: '1 day ago',
-    status: 'active',
-    avatar: null,
-  },
-  {
-    id: '3',
-    name: 'Virat Singh',
-    email: 'virat@example.com',
-    phone: '+91 76543 21098',
-    role: 'freelancer',
-    currentRole: 'client',
-    location: 'Bangalore',
-    isVerified: true,
-    rating: 4.5,
-    completedJobs: 89,
-    totalEarnings: 156780,
-    joinedAt: '2023-12-10',
-    lastActive: '5 minutes ago',
-    status: 'active',
-    avatar: null,
-    services: ['Match Player', 'Trainer'],
-  },
-  {
-    id: '4',
-    name: 'Ananya Reddy',
-    email: 'ananya@example.com',
-    phone: '+91 65432 10987',
-    role: 'freelancer',
-    currentRole: 'freelancer',
-    location: 'Hyderabad',
-    isVerified: false,
-    rating: 3.9,
-    completedJobs: 23,
-    totalEarnings: 34500,
-    joinedAt: '2024-03-01',
-    lastActive: '1 week ago',
-    status: 'suspended',
-    avatar: null,
-    services: ['Physio'],
-  },
-];
+// Mock stats for now (could be fetched from API)
+const initialStats = {
+  totalUsers: 0,
+  activeUsers: 0,
+  verifiedUsers: 0,
+  freelancers: 0,
+};
 
 interface UserDetailsModalProps {
   user: any;
@@ -265,7 +199,8 @@ function UserDetailsModal({ user, open, onClose }: UserDetailsModalProps) {
 }
 
 export default function UserManagementPage() {
-  const [users, setUsers] = useState(mockUsers);
+  const [users, setUsers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -273,47 +208,75 @@ export default function UserManagementPage() {
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [stats, setStats] = useState(initialStats);
   const itemsPerPage = 10;
 
-  // Filter users
-  const filteredUsers = users.filter(user => {
-    const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.phone.includes(searchTerm);
-    const matchesRole = roleFilter === 'all' || user.role === roleFilter;
-    const matchesStatus = statusFilter === 'all' || user.status === statusFilter;
-    const matchesVerification = verificationFilter === 'all' ||
-                               (verificationFilter === 'verified' && user.isVerified) ||
-                               (verificationFilter === 'unverified' && !user.isVerified);
-    
-    return matchesSearch && matchesRole && matchesStatus && matchesVerification;
-  });
+  // Debounce search term
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+      setCurrentPage(1); // Reset to page 1 on search change
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
-  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
-  const paginatedUsers = filteredUsers.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  const fetchUsers = async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams({
+        page: currentPage.toString(),
+        limit: itemsPerPage.toString(),
+        role: roleFilter,
+        status: statusFilter,
+        verification: verificationFilter,
+        search: debouncedSearch
+      });
 
-  const handleUserAction = async (userId: string, action: string) => {
-    // Mock API call
-    console.log(`Performing ${action} on user ${userId}`);
-    
-    if (action === 'suspend') {
-      setUsers(users.map(u => u.id === userId ? { ...u, status: 'suspended' } : u));
-    } else if (action === 'activate') {
-      setUsers(users.map(u => u.id === userId ? { ...u, status: 'active' } : u));
-    } else if (action === 'verify') {
-      setUsers(users.map(u => u.id === userId ? { ...u, isVerified: true } : u));
+      const res = await fetch(`/api/admin/users?${params}`);
+      if (res.ok) {
+        const data = await res.json();
+        setUsers(data.users);
+        setTotalPages(data.totalPages);
+
+        // Should ideally get stats from API response, 
+        // but if not, we can calculate based on current view or fetch separately
+        // For now, let's keep stats simple or mock
+        // setStats(data.stats);
+      }
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Stats
-  const stats = {
-    totalUsers: users.length,
-    activeUsers: users.filter(u => u.status === 'active').length,
-    verifiedUsers: users.filter(u => u.isVerified).length,
-    freelancers: users.filter(u => u.role === 'freelancer').length,
+  useEffect(() => {
+    fetchUsers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, debouncedSearch, roleFilter, statusFilter, verificationFilter]);
+
+  const handleUserAction = async (userId: string, action: string) => {
+    console.log(`Performing ${action} on user ${userId}`);
+
+    try {
+      const res = await fetch(`/api/admin/users/${userId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action })
+      });
+
+      if (res.ok) {
+        // Refresh list
+        fetchUsers();
+        // TODO: Show success toast
+      } else {
+        // TODO: Show error toast
+      }
+    } catch (e) {
+      console.error('Action failed:', e);
+    }
   };
 
   return (
@@ -336,7 +299,7 @@ export default function UserManagementPage() {
         </div>
       </div>
 
-      {/* Stats Cards */}
+      {/* Stats Cards - Static for now or fetch if needed */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="bg-[#1a1a1a] border-gray-800 p-4">
           <div className="flex items-center justify-between">
@@ -390,7 +353,7 @@ export default function UserManagementPage() {
               />
             </div>
           </div>
-          
+
           <Select value={roleFilter} onValueChange={setRoleFilter}>
             <SelectTrigger className="w-[150px] bg-[#2a2a2a] border-gray-700 text-white">
               <SelectValue placeholder="Role" />
@@ -456,145 +419,157 @@ export default function UserManagementPage() {
               </tr>
             </thead>
             <tbody>
-              <AnimatePresence>
-                {paginatedUsers.map((user, index) => (
-                  <motion.tr
-                    key={user.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ delay: index * 0.05 }}
-                    className="border-b border-gray-800 hover:bg-[#2a2a2a] transition-colors"
-                  >
-                    <td className="p-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-purple-800 rounded-full flex items-center justify-center">
-                          <span className="text-white font-semibold">
-                            {user.name.charAt(0).toUpperCase()}
-                          </span>
-                        </div>
-                        <div>
-                          <p className="text-white font-medium">{user.name}</p>
-                          <p className="text-xs text-gray-400">{user.location}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="p-4">
-                      <div className="space-y-1">
-                        <p className="text-sm text-gray-300">{user.email}</p>
-                        <p className="text-sm text-gray-400">{user.phone}</p>
-                      </div>
-                    </td>
-                    <td className="p-4">
-                      <div className="space-y-1">
-                        <Badge variant="secondary" className="capitalize">
-                          {user.role}
-                        </Badge>
-                        {user.role !== user.currentRole && (
-                          <p className="text-xs text-gray-400">as {user.currentRole}</p>
-                        )}
-                      </div>
-                    </td>
-                    <td className="p-4">
-                      <div className="flex items-center gap-2">
-                        <Badge
-                          variant={user.status === 'active' ? 'default' : 'destructive'}
-                          className={user.status === 'active' ? 'bg-green-600' : ''}
-                        >
-                          {user.status}
-                        </Badge>
-                        {user.isVerified && (
-                          <Badge variant="outline" className="border-purple-600 text-purple-400">
-                            <Shield className="w-3 h-3 mr-1" />
-                            Verified
-                          </Badge>
-                        )}
-                      </div>
-                    </td>
-                    <td className="p-4">
-                      {user.role === 'freelancer' ? (
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-1">
-                            <Star className="w-4 h-4 text-yellow-500" />
-                            <span className="text-sm text-white">{user.rating}</span>
-                            <span className="text-xs text-gray-400">({user.completedJobs} jobs)</span>
+              {loading ? (
+                <tr>
+                  <td colSpan={7} className="p-8 text-center text-gray-400">Loading users...</td>
+                </tr>
+              ) : (
+                <AnimatePresence>
+                  {users.length > 0 ? (
+                    users.map((user, index) => (
+                      <motion.tr
+                        key={user.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ delay: index * 0.05 }}
+                        className="border-b border-gray-800 hover:bg-[#2a2a2a] transition-colors"
+                      >
+                        <td className="p-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-purple-800 rounded-full flex items-center justify-center">
+                              <span className="text-white font-semibold">
+                                {user.name.charAt(0).toUpperCase()}
+                              </span>
+                            </div>
+                            <div>
+                              <p className="text-white font-medium">{user.name}</p>
+                              <p className="text-xs text-gray-400">{user.location}</p>
+                            </div>
                           </div>
-                          <p className="text-xs text-gray-400">₹{((user.totalEarnings || 0) / 1000).toFixed(1)}k earned</p>
-                        </div>
-                      ) : (
-                        <div className="space-y-1">
-                          <p className="text-sm text-white">₹{((user.totalSpent || 0) / 1000).toFixed(1)}k spent</p>
-                          <p className="text-xs text-gray-400">{user.projectsPosted} projects</p>
-                        </div>
-                      )}
-                    </td>
-                    <td className="p-4">
-                      <div className="flex items-center gap-1 text-sm text-gray-400">
-                        <Clock className="w-4 h-4" />
-                        {user.lastActive}
-                      </div>
-                    </td>
-                    <td className="p-4">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm">
-                            <MoreVertical className="w-4 h-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="bg-[#1a1a1a] border-gray-800">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            onClick={() => {
-                              setSelectedUser(user);
-                              setDetailsModalOpen(true);
-                            }}
-                            className="cursor-pointer"
-                          >
-                            <Eye className="w-4 h-4 mr-2" />
-                            View Details
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="cursor-pointer">
-                            <Edit className="w-4 h-4 mr-2" />
-                            Edit Profile
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="cursor-pointer">
-                            <Mail className="w-4 h-4 mr-2" />
-                            Send Message
-                          </DropdownMenuItem>
-                          {!user.isVerified && (
-                            <DropdownMenuItem
-                              onClick={() => handleUserAction(user.id, 'verify')}
-                              className="cursor-pointer"
+                        </td>
+                        <td className="p-4">
+                          <div className="space-y-1">
+                            <p className="text-sm text-gray-300">{user.email}</p>
+                            <p className="text-sm text-gray-400">{user.phone}</p>
+                          </div>
+                        </td>
+                        <td className="p-4">
+                          <div className="space-y-1">
+                            <Badge variant="secondary" className="capitalize">
+                              {user.role}
+                            </Badge>
+                            {user.role !== user.currentRole && (
+                              <p className="text-xs text-gray-400">as {user.currentRole}</p>
+                            )}
+                          </div>
+                        </td>
+                        <td className="p-4">
+                          <div className="flex items-center gap-2">
+                            <Badge
+                              variant={user.status === 'active' ? 'default' : 'destructive'}
+                              className={user.status === 'active' ? 'bg-green-600' : ''}
                             >
-                              <CheckCircle className="w-4 h-4 mr-2" />
-                              Verify User
-                            </DropdownMenuItem>
-                          )}
-                          <DropdownMenuSeparator />
-                          {user.status === 'active' ? (
-                            <DropdownMenuItem
-                              onClick={() => handleUserAction(user.id, 'suspend')}
-                              className="cursor-pointer text-red-400"
-                            >
-                              <Ban className="w-4 h-4 mr-2" />
-                              Suspend User
-                            </DropdownMenuItem>
+                              {user.status}
+                            </Badge>
+                            {user.isVerified && (
+                              <Badge variant="outline" className="border-purple-600 text-purple-400">
+                                <Shield className="w-3 h-3 mr-1" />
+                                Verified
+                              </Badge>
+                            )}
+                          </div>
+                        </td>
+                        <td className="p-4">
+                          {user.role === 'freelancer' ? (
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-1">
+                                <Star className="w-4 h-4 text-yellow-500" />
+                                <span className="text-sm text-white">{user.rating?.toFixed(1) || 0}</span>
+                                <span className="text-xs text-gray-400">({user.completedJobs || 0} jobs)</span>
+                              </div>
+                              <p className="text-xs text-gray-400">₹{((user.totalEarnings || 0) / 1000).toFixed(1)}k earned</p>
+                            </div>
                           ) : (
-                            <DropdownMenuItem
-                              onClick={() => handleUserAction(user.id, 'activate')}
-                              className="cursor-pointer text-green-400"
-                            >
-                              <CheckCircle className="w-4 h-4 mr-2" />
-                              Activate User
-                            </DropdownMenuItem>
+                            <div className="space-y-1">
+                              <p className="text-sm text-white">₹{((user.totalSpent || 0) / 1000).toFixed(1)}k spent</p>
+                              <p className="text-xs text-gray-400">{user.projectsPosted || 0} projects</p>
+                            </div>
                           )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </td>
-                  </motion.tr>
-                ))}
-              </AnimatePresence>
+                        </td>
+                        <td className="p-4">
+                          <div className="flex items-center gap-1 text-sm text-gray-400">
+                            <Clock className="w-4 h-4" />
+                            {user.lastActive}
+                          </div>
+                        </td>
+                        <td className="p-4">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm">
+                                <MoreVertical className="w-4 h-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="bg-[#1a1a1a] border-gray-800">
+                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  setSelectedUser(user);
+                                  setDetailsModalOpen(true);
+                                }}
+                                className="cursor-pointer"
+                              >
+                                <Eye className="w-4 h-4 mr-2" />
+                                View Details
+                              </DropdownMenuItem>
+                              <DropdownMenuItem className="cursor-pointer">
+                                <Edit className="w-4 h-4 mr-2" />
+                                Edit Profile
+                              </DropdownMenuItem>
+                              <DropdownMenuItem className="cursor-pointer">
+                                <Mail className="w-4 h-4 mr-2" />
+                                Send Message
+                              </DropdownMenuItem>
+                              {!user.isVerified && (
+                                <DropdownMenuItem
+                                  onClick={() => handleUserAction(user.id, 'verify')}
+                                  className="cursor-pointer"
+                                >
+                                  <CheckCircle className="w-4 h-4 mr-2" />
+                                  Verify User
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuSeparator />
+                              {user.status === 'active' ? (
+                                <DropdownMenuItem
+                                  onClick={() => handleUserAction(user.id, 'suspend')}
+                                  className="cursor-pointer text-red-400"
+                                >
+                                  <Ban className="w-4 h-4 mr-2" />
+                                  Suspend User
+                                </DropdownMenuItem>
+                              ) : (
+                                <DropdownMenuItem
+                                  onClick={() => handleUserAction(user.id, 'activate')}
+                                  className="cursor-pointer text-green-400"
+                                >
+                                  <CheckCircle className="w-4 h-4 mr-2" />
+                                  Activate User
+                                </DropdownMenuItem>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </td>
+                      </motion.tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={7} className="p-8 text-center text-gray-400">No users found.</td>
+                    </tr>
+                  )}
+                </AnimatePresence>
+              )}
             </tbody>
           </table>
         </div>
@@ -602,7 +577,7 @@ export default function UserManagementPage() {
         {/* Pagination */}
         <div className="flex items-center justify-between p-4 border-t border-gray-800">
           <p className="text-sm text-gray-400">
-            Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredUsers.length)} of {filteredUsers.length} users
+            Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, users.length > 0 ? currentPage * itemsPerPage : 0)} of {users.length > 0 ? 'many' : 0} page results
           </p>
           <div className="flex items-center gap-2">
             <Button
@@ -614,17 +589,9 @@ export default function UserManagementPage() {
             >
               <ChevronLeft className="w-4 h-4" />
             </Button>
-            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => i + 1).map(page => (
-              <Button
-                key={page}
-                variant={currentPage === page ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setCurrentPage(page)}
-                className={currentPage === page ? 'bg-purple-600' : 'text-gray-300'}
-              >
-                {page}
-              </Button>
-            ))}
+
+            <span className="text-gray-400 text-sm">Page {currentPage} of {totalPages}</span>
+
             <Button
               variant="outline"
               size="sm"

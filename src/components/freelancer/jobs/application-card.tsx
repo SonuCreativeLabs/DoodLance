@@ -9,7 +9,6 @@ import { getJobDurationLabel } from '@/app/freelancer/feed/types';
 import { Application, ApplicationStatus } from './types';
 import { getStatusStyles } from './utils';
 import { cn } from '@/lib/utils';
-import { updateApplicationStatus } from './mock-data';
 import { SuccessMessage } from '@/components/ui/success-message';
 
 interface ApplicationCardProps {
@@ -58,8 +57,13 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, i
     try {
       console.log('Withdrawing application:', application["#"]);
 
-      // Update the shared mock data so other components see the change
-      updateApplicationStatus(application["#"], 'withdrawn');
+      const response = await fetch(`/api/applications/${application["#"]}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to withdraw application');
+      }
 
       // Update local state
       application.status = 'withdrawn';

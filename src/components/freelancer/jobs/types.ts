@@ -164,6 +164,7 @@ export interface Proposal {
 
 export interface Application {
   "#": string;
+  jobId?: string;
   jobTitle: string;
   appliedDate: string;
   status: 'pending' | 'accepted' | 'rejected' | 'withdrawn' | 'interview' | 'hired' | 'completed' | 'cancelled' | 'expired' | 'archived';

@@ -22,12 +22,11 @@ import ProfessionalsFeed from './components/ProfessionalsFeed';
 import SearchFilters from './components/SearchFilters';
 import { useSkills } from '@/contexts/SkillsContext';
 import { useForYouJobs } from '@/contexts/ForYouJobsContext';
-
-// Re-import mock jobs for reference
-import { jobs as mockJobs } from './data/jobs';
-import type { Job, WorkMode } from './types';
+import { useAuth } from '@/contexts/AuthContext';
+import { Job, WorkMode } from './types';
 
 export default function FeedPage() {
+  const { user } = useAuth();
   // Sheet and UI state
   const [isSheetCollapsed, setIsSheetCollapsed] = useState(false);
   const router = useRouter();
@@ -82,9 +81,18 @@ export default function FeedPage() {
 
   // Fetch applied job IDs
   const fetchAppliedStatus = async () => {
-    const { getAppliedJobIds } = await import('@/components/freelancer/jobs/mock-data');
-    const ids = await getAppliedJobIds();
-    setAppliedJobIds(new Set(ids));
+    if (!user?.id) return;
+
+    try {
+      const res = await fetch(`/api/applications?myApplications=true&userId=${user.id}`);
+      if (res.ok) {
+        const applications = await res.json();
+        const ids = applications.map((app: any) => app.jobId || (app.job ? app.job.id : null)).filter(Boolean);
+        setAppliedJobIds(new Set(ids));
+      }
+    } catch (error) {
+      console.error('Error fetching applied jobs:', error);
+    }
   };
 
   useEffect(() => {
@@ -93,7 +101,7 @@ export default function FeedPage() {
     const handleAppCreated = () => fetchAppliedStatus();
     window.addEventListener('applicationCreated', handleAppCreated);
     return () => window.removeEventListener('applicationCreated', handleAppCreated);
-  }, []);
+  }, [user?.id]);
 
   // State for filters
   const [location, setLocation] = useState<string>('Chennai, Tamil Nadu, India');
@@ -176,15 +184,7 @@ export default function FeedPage() {
   const COLLAPSED_HEIGHT = 180;
   const HEADER_HEIGHT = 104;
 
-  // Set initial sheet position to collapsed state (70vh)
-  const initialSheetY = typeof window !== 'undefined' ? window.innerHeight * 0.7 : 0;
-
   const resetDragTextVisibility = () => {
-    setTimeout(() => setIsDragTextVisible(true), 1000);
-  };
-
-  const handleDragEnd = () => {
-    setIsDragging(false);
     setTimeout(() => setIsDragTextVisible(true), 1000);
   };
 
@@ -214,8 +214,6 @@ export default function FeedPage() {
 
   // Filter jobs based on selected tab and filters
   const filterJobs = async (): Promise<JobWithCoordinates[]> => {
-    console.log('\n=== Starting job filtering ===');
-
     // Start with all jobs and ensure they have coordinates
     let filtered = allJobs.map(job => {
       // Check if job has coordinates in any form
@@ -275,9 +273,6 @@ export default function FeedPage() {
 
     // For "For You" tab - use the shared forYouJobs from context
     if (selectedCategory === 'For You') {
-      console.log('SELECTED CATEGORY:', selectedCategory);
-      console.log('Using shared forYouJobs from context:', forYouJobs.length);
-
       // Convert forYouJobs to JobWithCoordinates format
       const forYouJobsWithCoords = forYouJobs.map(job => {
         // Check if job has coordinates in any form
@@ -300,7 +295,6 @@ export default function FeedPage() {
       });
 
       filtered = forYouJobsWithCoords;
-      console.log(`For You tab: Found ${filtered.length} jobs from shared context`);
 
       // Apply search query if one exists
       if (searchQuery) {
@@ -313,20 +307,18 @@ export default function FeedPage() {
             skill.toLowerCase().includes(query)
           ))
         );
-        console.log(`After search (${searchQuery}): ${filtered.length} jobs remaining`);
       }
+
+      // Filter out jobs user has already applied to
+      filtered = filtered.filter(job => !appliedJobIds.has(job.id));
 
       return filtered;
     }
 
     // For Explore tab - show all jobs by default, apply filters only if explicitly set
     if (selectedCategory === 'Explore') {
-      console.log('SELECTED CATEGORY: Explore - showing all jobs');
-      console.log(`Total jobs shown: ${filtered.length}`);
-
       // Apply filters if any are set
       if (filtersApplied) {
-        console.log('Applying filters to Explore tab...');
 
         // Filter by service category
         if (serviceCategory && serviceCategory !== 'all') {
@@ -335,13 +327,11 @@ export default function FeedPage() {
             const jobCategoryKey = job.category.toLowerCase().replace(/\s*\/\s*/g, '-').replace(/\s+/g, '-');
             return jobCategoryKey === categoryKey || job.category.toLowerCase().includes(serviceCategory.toLowerCase());
           });
-          console.log(`After category filter (${serviceCategory}): ${filtered.length} jobs`);
         }
 
-        // Filter by work mode (skip if 'all' is selected)
+        // Filter by workMode
         if (workMode && workMode !== 'all') {
           filtered = filtered.filter(job => job.workMode === workMode);
-          console.log(`After work mode filter (${workMode}): ${filtered.length} jobs`);
         }
 
         // Filter by price range
@@ -350,7 +340,6 @@ export default function FeedPage() {
             const jobPrice = job.rate || job.budget || 0;
             return jobPrice >= priceRange[0] && jobPrice <= priceRange[1];
           });
-          console.log(`After price range filter (₹${priceRange[0]} - ₹${priceRange[1]}): ${filtered.length} jobs`);
         }
 
         // Filter by location (basic text match for now)
@@ -361,19 +350,13 @@ export default function FeedPage() {
             job.title.toLowerCase().includes(locationQuery) ||
             job.description.toLowerCase().includes(locationQuery)
           );
-          console.log(`After location filter (${location}): ${filtered.length} jobs`);
         }
 
         // Filter by distance (basic implementation - could be improved with actual distance calculation)
         if (distance && distance < 100) {
           // For now, just keep all jobs since we don't have proper distance calculation
           // This could be enhanced with actual geographic distance calculations
-          console.log(`Distance filter (${distance}km) - not implemented yet`);
         }
-
-        console.log(`Explore tab with filters applied: ${filtered.length} jobs`);
-      } else {
-        console.log(`Explore tab without filters: ${filtered.length} jobs`);
       }
 
       // Apply search query if one exists (same logic as For You tab)
@@ -387,19 +370,16 @@ export default function FeedPage() {
             skill.toLowerCase().includes(query)
           ))
         );
-        console.log(`After search (${searchQuery}): ${filtered.length} jobs remaining`);
       }
 
-      // Filter out jobs user has already applied to (applies to all tabs)
-      const { hasUserAppliedToJob } = await import('@/components/freelancer/jobs/mock-data');
-      filtered = filtered.filter(job => !hasUserAppliedToJob(job.id));
+      // Filter out jobs user has already applied to
+      filtered = filtered.filter(job => !appliedJobIds.has(job.id));
 
       return filtered;
     }
 
     // Default case - filter out applied jobs and return
-    const { hasUserAppliedToJob } = await import('@/components/freelancer/jobs/mock-data');
-    filtered = filtered.filter(job => !hasUserAppliedToJob(job.id));
+    filtered = filtered.filter(job => !appliedJobIds.has(job.id));
 
     return filtered;
   };
@@ -413,26 +393,12 @@ export default function FeedPage() {
 
         if (response.ok) {
           apiJobs = await response.json();
+          setAllJobs(apiJobs);
         } else {
           console.error('Failed to fetch API jobs:', response.statusText);
         }
-
-        // Combine API jobs with mock jobs, avoiding duplicates by ID
-        const combinedJobs = [...mockJobs];
-
-        // Add API jobs that don't already exist in mock jobs
-        apiJobs.forEach(apiJob => {
-          if (!combinedJobs.some(mockJob => mockJob.id === apiJob.id)) {
-            combinedJobs.push(apiJob);
-          }
-        });
-
-        console.log(`Loaded ${apiJobs.length} API jobs and ${mockJobs.length} mock jobs, total: ${combinedJobs.length}`);
-        setAllJobs(combinedJobs);
       } catch (error) {
         console.error('Error fetching jobs:', error);
-        // Fallback to mock jobs only
-        setAllJobs(mockJobs);
       }
     };
 
@@ -441,70 +407,13 @@ export default function FeedPage() {
 
   useEffect(() => {
     const initializeJobs = async () => {
-      // Ensure all jobs have coordinates before setting the state
-      const jobsWithCoords = allJobs.map((job: Job) => {
-        // Check if job has coordinates in any form
-        let coords: [number, number];
-
-        // First check for coords array
-        if (Array.isArray(job.coords) && job.coords.length === 2) {
-          coords = [job.coords[0], job.coords[1]] as [number, number];
-        }
-        // If no coordinates found, use default (Chennai)
-        else {
-          coords = [80.2707, 13.0827];
-        }
-
-        // Create a new job object with the required properties
-        const jobWithCoords: JobWithCoordinates = {
-          // Spread all existing job properties
-          ...job,
-          // Ensure coordinates are set
-          coordinates: coords,
-          coords: coords,
-          // Ensure all required properties have default values
-          id: job.id ?? '',
-          title: job.title ?? '',
-          description: job.description ?? '',
-          category: job.category ?? '',
-          rate: job.rate ?? 0,
-          budget: job.budget ?? 0,
-          priceUnit: job.priceUnit ?? 'project',
-          location: job.location ?? 'Chennai, India',
-          skills: Array.isArray(job.skills) ? job.skills : [],
-          workMode: (job.workMode === 'remote' || job.workMode === 'onsite')
-            ? job.workMode
-            : 'onsite',
-          type: (job.type === 'freelance' || job.type === 'part-time' || job.type === 'full-time' || job.type === 'contract')
-            ? job.type
-            : 'freelance',
-          postedAt: job.postedAt ?? new Date().toISOString(),
-          company: job.company ?? 'Unknown',
-          companyLogo: job.companyLogo ?? '',
-          clientName: job.clientName ?? 'Anonymous',
-          clientImage: job.clientImage,
-          clientRating: typeof job.clientRating === 'number' || typeof job.clientRating === 'string'
-            ? job.clientRating
-            : 0,
-          clientJobs: typeof job.clientJobs === 'number' ? job.clientJobs : 0,
-          proposals: typeof job.proposals === 'number' ? job.proposals : 0,
-          duration: job.duration || 'one-time',
-          experience: (job.experience === 'Entry Level' || job.experience === 'Intermediate' || job.experience === 'Expert')
-            ? job.experience
-            : 'Intermediate',
-          client: job.client
-        };
-
-        return jobWithCoords;
-      });
-
       // Apply initial filtering to remove applied jobs
       const filtered = await filterJobs();
       setFilteredJobs(filtered);
     };
 
     initializeJobs();
-  }, [allJobs]);
+  }, [allJobs, appliedJobIds]);
 
   // Re-filter jobs when category changes or forYouJobs updates
   useEffect(() => {
@@ -528,17 +437,34 @@ export default function FeedPage() {
   }, [filtersApplied, serviceCategory, workMode, priceRange, location, distance]);
 
   const handleApply = async (jobId: string, proposal: string, rate: string, rateType: string, attachments: File[]) => {
+    if (!user?.id) {
+      alert('Please sign in to apply');
+      return;
+    }
+
     try {
       // Find the job to get its title
       const job = allJobs.find(j => j.id === jobId);
 
-      // Import the createApplication function
-      const { createApplication } = await import('@/components/freelancer/jobs/mock-data');
+      const response = await fetch('/api/applications', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          jobId,
+          freelancerId: user.id,
+          coverLetter: proposal || 'I am interested in this job and believe I can deliver quality work.',
+          proposedRate: parseFloat(rate) || 2500,
+          estimatedDays: 7, // Default to 7 if not provided
+          skills: [], // Pass skills if available
+          attachments: attachments.map(f => f.name) // Currently only passing filenames. Real app would upload files first.
+        })
+      });
 
-      const newApplication = await createApplication(jobId, proposal || 'I am interested in this job and believe I can deliver quality work.', rate || '2500', rateType || 'project', attachments);
-
-      if (newApplication) {
-        console.log('Application submitted successfully:', newApplication["#"]);
+      if (response.ok) {
+        const newApplication = await response.json();
+        console.log('Application submitted successfully:', newApplication.id);
 
         // Dispatch event to refresh ForYouJobs context
         window.dispatchEvent(new CustomEvent('applicationCreated', { detail: { jobId } }));
@@ -553,7 +479,8 @@ export default function FeedPage() {
         setAppliedJobTitle(job?.title || 'this job');
         setShowSuccessModal(true);
       } else {
-        alert('Failed to submit application. Please try again.');
+        const err = await response.json();
+        alert(`Failed to submit application: ${err.error || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('Error submitting application:', error);
@@ -801,69 +728,52 @@ export default function FeedPage() {
         >
           {isSheetCollapsed ? (
             <>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-              <span className="text-sm font-medium ml-2">List</span>
+              <Map className="w-4 h-4 mr-2" />
+              <span>Show Map</span>
             </>
           ) : (
             <>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-              </svg>
-              <span className="text-sm font-medium ml-2">Map</span>
+              <ChevronDown className="w-4 h-4 mr-2" />
+              <span>Show List</span>
             </>
           )}
         </button>
       </motion.div>
 
-
-      {/* Success Toast Notification */}
-      {showSuccessModal && (
-        <motion.div
-          initial={{ y: -100, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: -100, opacity: 0 }}
-          className="fixed top-20 left-1/2 transform -translate-x-1/2 z-[100] w-full max-w-md px-4"
-        >
-          <div className="bg-gradient-to-r from-green-500/90 to-emerald-600/90 backdrop-blur-lg rounded-2xl p-4 shadow-2xl border border-green-400/20">
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                <Check className="w-5 h-5 text-white" />
-              </div>
-              <div className="flex-1 pr-8">
-                <h3 className="text-base font-semibold text-white mb-1">Application Submitted</h3>
-                <p className="text-sm text-white/90 leading-snug">
-                  Your application for <span className="font-medium">{appliedJobTitle}</span> has been sent to the client
+      {/* Success Modal */}
+      <AnimatePresence>
+        {showSuccessModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm px-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="bg-[#1e1e1e] rounded-2xl p-6 md:p-8 max-w-sm w-full border border-white/10 shadow-2xl relative"
+            >
+              <div className="flex flex-col items-center text-center">
+                <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mb-4">
+                  <Check className="w-8 h-8 text-green-500" />
+                </div>
+                <h3 className="text-xl font-bold text-white mb-2">Application Sent!</h3>
+                <p className="text-gray-400 text-sm mb-6">
+                  Your application for <span className="text-white font-medium">{appliedJobTitle}</span> has been submitted successfully to the coach.
                 </p>
+                <button
+                  onClick={() => setShowSuccessModal(false)}
+                  className="w-full py-3 bg-white text-black font-semibold rounded-xl hover:bg-gray-200 transition-colors"
+                >
+                  Continuue Browsing
+                </button>
               </div>
-              <button
-                onClick={() => setShowSuccessModal(false)}
-                className="absolute top-3 right-3 w-6 h-6 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors"
-              >
-                <X className="w-4 h-4 text-white" />
-              </button>
-            </div>
-            <div className="flex gap-2 mt-4">
-              <button
-                onClick={() => {
-                  setShowSuccessModal(false);
-                  router.push("/freelancer/jobs?tab=applications&status=pending");
-                }}
-                className="flex-1 bg-white/20 hover:bg-white/30 text-white text-sm py-2 px-3 rounded-lg font-medium transition-all duration-200 backdrop-blur-sm"
-              >
-                View Applications
-              </button>
-              <button
-                onClick={() => setShowSuccessModal(false)}
-                className="flex-1 bg-white/10 hover:bg-white/20 text-white text-sm py-2 px-3 rounded-lg font-medium transition-all duration-200 backdrop-blur-sm"
-              >
-                Continue
-              </button>
-            </div>
-          </div>
-        </motion.div>
-      )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
