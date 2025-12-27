@@ -1275,7 +1275,7 @@ export const createApplication = async (jobId: string, proposalText: string, rat
     // Create the application object
     const newApplication: Application = {
       "#": applicationId,
-      jobId: job.id,      jobTitle: job.title,
+      jobTitle: job.title,
       appliedDate: new Date().toISOString().split('T')[0], // YYYY-MM-DD format
       status: 'pending',
       clientName: job.clientName,
@@ -1300,42 +1300,6 @@ export const createApplication = async (jobId: string, proposalText: string, rat
 
     // Add to mock applications array
     mockApplications.push(newApplication);
-
-    // Submit to API so it appears on client's job page
-    // Submit to API so it appears on client's job page
-    try {
-      // Get current user session for freelancerId
-      const sessionRes = await fetch('/api/auth/session');
-      let freelancerId = 'user_123';
-      if (sessionRes.ok) {
-        const session = await sessionRes.json();
-        if (session.id) freelancerId = session.id;
-      }
-
-      const response = await fetch('/api/applications', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          jobId: job.id,
-          coverLetter: proposalText,
-          proposedRate: parseInt(rate),
-          estimatedDays: 7,
-          freelancerId,
-          skills: job.skills || [],
-          attachments: attachments.map(file => file.name),
-        }),
-      });
-
-      if (response.ok) {
-        const apiApplication = await response.json();
-        console.log(`Application submitted to API for job: ${job.title}`, apiApplication);
-      } else {
-        const errorData = await response.json();
-        console.warn('Application saved locally but failed to sync with API:', errorData);
-      }
-    } catch (apiError) {
-      console.error('Error submitting application to API:', apiError);
-    }
 
     console.log(`Created new application ${applicationId} for job: ${job.title}`);
 

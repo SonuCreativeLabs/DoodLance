@@ -135,6 +135,14 @@ export const ApplicationCard = ({ application }: { application: Application }) =
                                 }}
                             />
                         </div>
+                        {/* Rating Badge - Below Avatar */}
+                        <div className="flex items-center justify-center gap-1 bg-yellow-400/10 rounded-full px-2 py-0.5 mt-2 w-fit mx-auto">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-star w-3.5 h-3.5 text-yellow-400">
+                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                            </svg>
+                            <span className="text-xs font-bold text-yellow-400">{application.freelancer.rating}</span>
+                            <span className="text-[10px] text-yellow-300/80">(24)</span>
+                        </div>
                     </div>
 
                     <div className="flex-1 space-y-3">
@@ -143,13 +151,6 @@ export const ApplicationCard = ({ application }: { application: Application }) =
                                 <h3 className="text-[15px] font-semibold text-white leading-tight line-clamp-2 break-words">
                                     {application.freelancer.name}
                                 </h3>
-                                <div className="flex items-center gap-1 bg-yellow-400/10 rounded-full px-2 py-0.5 flex-shrink-0 w-fit">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-star w-3.5 h-3.5 text-yellow-400">
-                                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-                                    </svg>
-                                    <span className="text-xs font-bold text-yellow-400">{application.freelancer.rating}</span>
-                                    <span className="text-[10px] text-yellow-300/80">(24)</span>
-                                </div>
                             </div>
                         </div>
                         <p className="text-[13px] text-white/80 line-clamp-2 leading-relaxed">

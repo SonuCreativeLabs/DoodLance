@@ -31,8 +31,10 @@ export const JobCard: React.FC<JobCardProps> = ({ job, index, onStatusChange }) 
 
   const handleMessageClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    // Handle message button click
-    console.log('Message button clicked for job:', job.id);
+    // Navigate to freelancer inbox with jobId query param to auto-select the chat
+    // We encode the job ID to handle any special characters
+    const encodedId = encodeURIComponent(job.id);
+    router.push(`/freelancer/inbox?jobId=${encodedId}`);
   };
 
   return (
@@ -46,8 +48,8 @@ export const JobCard: React.FC<JobCardProps> = ({ job, index, onStatusChange }) 
     >
       <motion.div
         className={`p-5 rounded-xl bg-[#1E1E1E] border w-full shadow-lg ${job.isProposal
-            ? 'border-l-4 border-l-blue-500 border-t-white/5 border-r-white/5 border-b-white/5'
-            : 'border-white/5'
+          ? 'border-l-4 border-l-blue-500 border-t-white/5 border-r-white/5 border-b-white/5'
+          : 'border-white/5'
           }`}
       >
         <div className="space-y-4">
@@ -137,8 +139,8 @@ export const JobCard: React.FC<JobCardProps> = ({ job, index, onStatusChange }) 
                         <Star
                           key={i}
                           className={`w-4 h-4 ${i < (job.clientRating?.stars || 0)
-                              ? 'text-amber-400 fill-current'
-                              : 'text-gray-400'
+                            ? 'text-amber-400 fill-current'
+                            : 'text-gray-400'
                             }`}
                         />
                       ))}
@@ -213,7 +215,13 @@ export const JobCard: React.FC<JobCardProps> = ({ job, index, onStatusChange }) 
                 }}
                 onClick={(e) => {
                   e.stopPropagation();
-                  console.log('Call button clicked for job:', job.id);
+                  if (job.client?.phoneNumber) {
+                    window.location.href = `tel:${job.client.phoneNumber}`;
+                  } else {
+                    console.log('No phone number available for this client');
+                    // Optionally alert the user
+                    // alert('No phone number available for this client');
+                  }
                 }}
               >
                 <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

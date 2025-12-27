@@ -279,15 +279,7 @@ export function ApplicationsProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     refreshApplications();
-
-    // Listen for new applications
-    const handleApplicationsUpdated = () => {
-      console.log('📬 New application detected, refreshing...');
-      refreshApplications();
-    };
-    
-    window.addEventListener('applicationsUpdated', handleApplicationsUpdated);
-    return () => window.removeEventListener('applicationsUpdated', handleApplicationsUpdated);  }, []);
+  }, []);
 
   const value = {
     applications,

@@ -26,7 +26,7 @@ interface PersonalDetailsContextType {
 }
 
 const initialPersonalDetails: PersonalDetails = {
-  name: "Sathishraj",
+  name: "Sathish Sonu",
   title: "All rounder",
   location: "Chennai, India",
   about: "Professional Cricketer & AI Engineer with a passion for technology and sports. I bring the same dedication and strategic thinking from the cricket field to developing intelligent AI solutions.",
@@ -69,7 +69,7 @@ export function PersonalDetailsProvider({ children }: { children: ReactNode }) {
       if (saved) {
         setPersonalDetails(JSON.parse(saved));
       }
-      
+
       // Also sync with personalInfo data from personal details page
       const personalInfo = localStorage.getItem('personalInfo');
       if (personalInfo) {

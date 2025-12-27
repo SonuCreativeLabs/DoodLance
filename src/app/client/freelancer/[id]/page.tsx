@@ -511,8 +511,8 @@ export default function FreelancerDetailPage() {
                       {/* Online Badge - Mobile: right side of profile picture */}
                       <div className="md:hidden absolute top-[calc(50%+32px)] -translate-y-1/2 left-full ml-10">
                         <div className={`inline-flex items-center gap-1 px-2 py-1 text-[8px] font-bold border-2 shadow-lg whitespace-nowrap transform rotate-[-2deg] ${freelancer.online
-                            ? 'bg-gradient-to-br from-green-400 to-green-600 border-green-300 text-white shadow-green-500/50 border-dashed'
-                            : 'bg-gradient-to-br from-amber-400 to-orange-500 border-amber-300 text-white shadow-amber-500/50 border-dashed'
+                          ? 'bg-gradient-to-br from-green-400 to-green-600 border-green-300 text-white shadow-green-500/50 border-dashed'
+                          : 'bg-gradient-to-br from-amber-400 to-orange-500 border-amber-300 text-white shadow-amber-500/50 border-dashed'
                           }`}>
                           <span className="tracking-widest font-black">{freelancer.online ? 'GAME ON' : 'OFFLINE'}</span>
                         </div>
@@ -522,8 +522,8 @@ export default function FreelancerDetailPage() {
                     {/* Online Badge - Desktop: top right corner */}
                     <div className="hidden md:block absolute top-8 right-3">
                       <div className={`inline-flex items-center gap-2 px-3 py-1.5 text-[10px] font-bold border-2 shadow-xl whitespace-nowrap transform rotate-[1deg] ${freelancer.online
-                          ? 'bg-gradient-to-br from-green-400 to-green-600 border-green-300 text-white shadow-green-500/60 border-dashed'
-                          : 'bg-gradient-to-br from-amber-400 to-orange-500 border-amber-300 text-white shadow-amber-500/60 border-dashed'
+                        ? 'bg-gradient-to-br from-green-400 to-green-600 border-green-300 text-white shadow-green-500/60 border-dashed'
+                        : 'bg-gradient-to-br from-amber-400 to-orange-500 border-amber-300 text-white shadow-amber-500/60 border-dashed'
                         }`}>
                         <span className="tracking-widest font-black">{freelancer.online ? 'GAME ON' : 'OFFLINE'}</span>
                       </div>
@@ -623,8 +623,8 @@ export default function FreelancerDetailPage() {
                           data-tab-id={tab.id}
                           onClick={(e) => handleTabClick(tab.id, e)}
                           className={`px-4 py-3 text-xs font-medium whitespace-nowrap transition-all duration-200 relative ${isActive
-                              ? 'text-white font-semibold'
-                              : 'text-white/60 hover:text-white/90'
+                            ? 'text-white font-semibold'
+                            : 'text-white/60 hover:text-white/90'
                             }`}
                           style={{
                             position: 'relative',
@@ -668,11 +668,6 @@ export default function FreelancerDetailPage() {
                       {freelancer.bowlingStyle && (
                         <div className="text-white/80">
                           <span className="text-white/50">Bowling Style:</span> <span className="text-white">{freelancer.bowlingStyle}</span>
-                        </div>
-                      )}
-                      {freelancer.languages && (
-                        <div className="text-white/80">
-                          <span className="text-white/50">Languages:</span> <span className="text-white">{freelancer.languages}</span>
                         </div>
                       )}
                     </div>
@@ -733,8 +728,8 @@ export default function FreelancerDetailPage() {
                             <div key={i} className="flex flex-col items-center">
                               <div
                                 className={`w-8 h-8 flex items-center justify-center rounded-full text-sm font-medium ${day.available
-                                    ? 'bg-green-500/10 text-green-400'
-                                    : 'bg-white/5 text-white/40'
+                                  ? 'bg-green-500/10 text-green-400'
+                                  : 'bg-white/5 text-white/40'
                                   }`}
                               >
                                 {day.day.substring(0, 1)}

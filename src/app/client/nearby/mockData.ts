@@ -84,6 +84,135 @@ interface Professional {
 }
 
 export const professionals: Professional[] = [
+  // Actual logged-in user - Sathish Sonu
+  {
+    id: 'user_sonu' as any,
+    name: "Sathish Sonu",
+    service: "Cricket All-Rounder",
+    rating: 4.9,
+    reviews: 42,
+    reviewCount: 42,
+    completedJobs: 124,
+    location: "Chennai, India",
+    responseTime: "Usually responds in 1 hour",
+    image: "/images/profile-sonu.jpg",
+    avatar: "/images/profile-sonu.jpg",
+    distance: 0,
+    price: 2500,
+    budget: 2500,
+    priceUnit: "session",
+    coords: [80.2707, 13.0827], // Chennai coordinates
+    expertise: ["RH Batsman", "Sidearm Specialist", "Off Spin", "Batting Coach", "Analyst", "Mystery Spin"],
+    experience: "5+ years",
+    description: "I'm a dedicated cricket professional with expertise in batting, bowling, coaching, and match analysis. As a right-handed batsman and off-spin bowler, I bring championship-level experience to every training session and analytical project.",
+    coverImage: "https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=1200&h=400&fit=crop",
+
+    // Additional profile fields
+    bio: "I'm a dedicated cricket professional with expertise in batting, bowling, coaching, and match analysis. As a right-handed batsman and off-spin bowler, I bring championship-level experience to every training session and analytical project.",
+    about: "I'm a dedicated cricket professional with expertise in batting, bowling, coaching, and match analysis. As a right-handed batsman and off-spin bowler, I bring championship-level experience to every training session and analytical project.",
+    cricketRole: "Cricket All-Rounder",
+    battingStyle: "Right-handed",
+    bowlingStyle: "Right-arm Off Spin",
+    languages: "English, Tamil",
+    completionRate: 100,
+    skills: ["RH Batsman", "Sidearm Specialist", "Off Spin", "Batting Coach", "Analyst", "Mystery Spin"],
+
+    // Availability data
+    availability: [
+      { day: "Mon", available: true },
+      { day: "Tue", available: true },
+      { day: "Wed", available: true },
+      { day: "Thu", available: true },
+      { day: "Fri", available: true },
+      { day: "Sat", available: false },
+      { day: "Sun", available: false }
+    ],
+
+    // Services data
+    services: [
+      {
+        id: "1",
+        title: "Batting Coaching",
+        description: "Personalized batting technique training focusing on footwork, shot selection, and match situations.",
+        price: "₹2,500",
+        deliveryTime: "1 session",
+        features: ["Technique Analysis", "Shot Selection", "Match Situations", "Footwork Drills"],
+        category: "Coach"
+      },
+      {
+        id: "2",
+        title: "Spin Bowling Workshop",
+        description: "Off-spin and mystery spin techniques including doosra, carrom ball, and flight variations.",
+        price: "₹3,000",
+        deliveryTime: "2 hours",
+        features: ["Off Spin", "Mystery Spin", "Doosra", "Carrom Ball", "Flight Variations"],
+        category: "Net Bowler"
+      }
+    ],
+
+    // Portfolio data
+    portfolio: [
+      {
+        id: "1",
+        title: "3x Division Cricket Champion",
+        image: "https://images.unsplash.com/photo-1543351611-58f69d7c1784?w=400&h=300&fit=crop",
+        category: "Cricket Achievement",
+        description: "Won the Division Level Cricket Tournament three consecutive years (2020, 2021, 2022) as a top-order batsman and off-spin bowler.",
+        skills: ["Cricket", "Leadership", "Teamwork"]
+      },
+      {
+        id: "2",
+        title: "State Level College Champion",
+        image: "https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=400&h=300&fit=crop",
+        category: "Cricket Achievement",
+        description: "Led college team to victory in the State Level Inter-College Cricket Tournament. Scored 3 consecutive half-centuries.",
+        skills: ["Cricket", "Strategy", "Batting", "Bowling"]
+      }
+    ],
+
+    // Experience data
+    experienceDetails: [
+      {
+        id: "1",
+        role: "Professional Cricket Player",
+        company: "Tamil Nadu Cricket Association",
+        location: "Chennai, India",
+        startDate: "2023",
+        isCurrent: true,
+        description: "Competitive cricketer playing in state-level tournaments. Right-handed batsman and off-spin bowler with championship-level experience."
+      },
+      {
+        id: "2",
+        role: "Senior Cricket Coach",
+        company: "Chennai Cricket Academy",
+        location: "Chennai, India",
+        startDate: "2020",
+        endDate: "2023",
+        isCurrent: false,
+        description: "Led coaching programs for 50+ players, specializing in batting and bowling techniques."
+      }
+    ],
+
+    // Reviews data
+    reviewsData: [
+      {
+        id: "1",
+        author: "Sarah Johnson",
+        role: "Club Player",
+        rating: 5,
+        comment: "Amazing work! Exceeded my expectations with the batting coaching session.",
+        date: "2 weeks ago"
+      },
+      {
+        id: "2",
+        author: "Mike Chen",
+        role: "Amateur Player",
+        rating: 5,
+        comment: "Great communication and delivered excellent spin bowling training.",
+        date: "1 month ago"
+      }
+    ]
+  },
   {
     id: 1,
     name: "Rajesh Kumar",

@@ -50,7 +50,7 @@ export default function PostPage() {
       </div>
 
       {/* Scrollable Content */}
-      <div className="flex-1 overflow-y-auto pt-[72px] pb-[88px]">
+      <div className="flex-1 overflow-y-auto pt-[72px] pb-[24px]">
         <div className="container mx-auto px-4 py-6">
           <div className="max-w-4xl mx-auto">
             <PostJobForm />

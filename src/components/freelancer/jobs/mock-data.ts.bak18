@@ -1275,7 +1275,7 @@ export const createApplication = async (jobId: string, proposalText: string, rat
     // Create the application object
     const newApplication: Application = {
       "#": applicationId,
-      jobId: job.id,      jobTitle: job.title,
+      jobTitle: job.title,
       appliedDate: new Date().toISOString().split('T')[0], // YYYY-MM-DD format
       status: 'pending',
       clientName: job.clientName,

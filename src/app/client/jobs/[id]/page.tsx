@@ -158,11 +158,22 @@ export default function JobDetailsPage() {
         }
     };
 
-    if (!job) {
+    if (!job && postedJobs.length === 0) {
+        // Only show loading if we truly have no data yet (first load)
         return (
             <div className="flex flex-col items-center justify-center min-h-screen bg-[#050505] text-white">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-4" />
                 <p className="text-white/60">Loading job details...</p>
+            </div>
+        );
+    }
+
+    if (!job) {
+        // Job not found, but we have data
+        return (
+            <div className="flex flex-col items-center justify-center min-h-screen bg-[#050505] text-white">
+                <p className="text-white/60">Job not found</p>
+                <Button onClick={() => router.back()} className="mt-4">Go Back</Button>
             </div>
         );
     }
