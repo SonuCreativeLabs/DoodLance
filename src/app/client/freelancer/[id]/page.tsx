@@ -21,7 +21,7 @@ import {
   UserPlus
 } from 'lucide-react';
 import { useNavbar } from '@/contexts/NavbarContext';
-import { professionals } from '@/app/client/nearby/mockData';
+
 import { IdVerifiedBadge } from '@/components/freelancer/profile/IdVerifiedBadge';
 import { SkillInfoDialog } from '@/components/common/SkillInfoDialog';
 import { getSkillInfo, type SkillInfo } from '@/utils/skillUtils';
@@ -147,77 +147,95 @@ export default function FreelancerDetailPage() {
 
   // Load freelancer data
   useEffect(() => {
-    const foundFreelancer = professionals.find((p: typeof professionals[0]) => p.id.toString() === freelancerId);
-    if (foundFreelancer) {
-      // Sort services based on category parameter
-      let sortedServices = foundFreelancer.services ? [...foundFreelancer.services] : [];
-      const categoryParam = searchParams.get('category');
+    async function loadFreelancer() {
+      setLoading(true);
+      try {
+        const res = await fetch(`/api/freelancers/${freelancerId}`);
+        if (!res.ok) {
+          setFreelancer(null);
+          setLoading(false);
+          return;
+        }
 
-      if (categoryParam && sortedServices.length > 0) {
-        const categoryKeywords: { [key: string]: string[] } = {
-          'Players': ['match player', 'net bowler', 'net batsman', 'sidearm', 'bowler', 'batsman', 'player'],
-          'Coaching & Training': ['coach', 'coaching', 'training', 'trainer', 'conditioning'],
-          'Support Staff & Others': ['analyst', 'analysis', 'physio', 'scorer', 'umpire', 'groundsman'],
-          'Media & Content': ['photo', 'video', 'videography', 'content', 'commentator', 'media']
+        const data = await res.json();
+        const profile = data.freelancerProfile || {};
+
+        // Parse skills/coords safely
+        let skills: string[] = [];
+        try {
+          if (profile.skills) {
+            skills = JSON.parse(profile.skills);
+            if (!Array.isArray(skills)) skills = [profile.skills];
+          }
+        } catch (e) { skills = [profile.skills || '']; }
+
+        // Coords
+        let coords = [80.2707, 13.0827];
+        try {
+          if (profile.coords) coords = JSON.parse(profile.coords);
+        } catch (e) { }
+
+        const mappedFreelancer: FreelancerDetail = {
+          id: data.id,
+          name: data.name || 'Anonymous',
+          service: data.services?.[0]?.title || profile.title || 'Freelancer',
+          experience: 'Entry Level', // Not explicitly in API response root?
+          location: data.location || profile.location || 'Remote',
+          distance: 5, // Mock distance since API doesn't calc it yet relative to user
+          price: data.services?.[0]?.price || profile.hourlyRate || 0,
+          priceUnit: 'hr',
+          rating: data.averageRating || 0,
+          reviews: profile.reviews?.length || 0,
+          reviewCount: profile.reviews?.length || 0,
+          completedJobs: profile.completedJobs || 0,
+          responseTime: profile.responseTime || '1 hour',
+          image: data.profileImage || '/placeholder-user.jpg',
+          expertise: skills,
+          description: profile.about || profile.bio || '',
+          availability: profile.availability ? JSON.parse(profile.availability) : [],
+          online: profile.isOnline || false,
+
+          bio: profile.bio,
+          about: profile.about,
+          cricketRole: '', // Specific fields might need schema check
+          battingStyle: '',
+          bowlingStyle: '',
+          languages: profile.languages,
+          completionRate: profile.completionRate || 0,
+          skills: skills,
+          coverImage: '', // If user model has coverImage?
+
+          services: data.services?.map((s: any) => ({
+            id: s.id,
+            title: s.title,
+            description: s.description,
+            price: s.price,
+            category: s.category?.name || s.categoryId,
+            deliveryTime: s.deliveryTime
+          })) || [],
+
+          reviewsData: profile.reviews?.map((r: any) => ({
+            id: r.id,
+            author: r.clientName,
+            rating: r.rating,
+            comment: r.comment,
+            date: r.createdAt
+          })) || []
         };
 
-        const keywords = categoryKeywords[decodeURIComponent(categoryParam)] || [];
-        if (keywords.length > 0) {
-          sortedServices.sort((a, b) => {
-            const aMatches = keywords.some(k =>
-              (a.category || '').toLowerCase().includes(k) || (a.title || '').toLowerCase().includes(k)
-            );
-            const bMatches = keywords.some(k =>
-              (b.category || '').toLowerCase().includes(k) || (b.title || '').toLowerCase().includes(k)
-            );
+        setFreelancer(mappedFreelancer);
 
-            if (aMatches && !bMatches) return -1;
-            if (!aMatches && bMatches) return 1;
-            return 0;
-          });
-        }
+      } catch (error) {
+        console.error("Failed to load freelancer", error);
+        setFreelancer(null);
+      } finally {
+        setLoading(false);
       }
-
-      const onlineStatus = Math.random() > 0.5;
-      setFreelancer({
-        id: foundFreelancer.id.toString(),
-        name: foundFreelancer.name,
-        service: foundFreelancer.service,
-        experience: foundFreelancer.experience,
-        location: foundFreelancer.location,
-        distance: foundFreelancer.distance,
-        price: foundFreelancer.price,
-        priceUnit: foundFreelancer.priceUnit,
-        rating: foundFreelancer.rating,
-        reviews: foundFreelancer.reviews,
-        reviewCount: foundFreelancer.reviewCount || foundFreelancer.reviews,
-        completedJobs: foundFreelancer.completedJobs,
-        responseTime: foundFreelancer.responseTime,
-        image: foundFreelancer.image,
-        expertise: foundFreelancer.expertise,
-        description: freelancer?.description || `${foundFreelancer.name} is a ${foundFreelancer.experience} cricket professional specializing in ${foundFreelancer.service.toLowerCase()} with expertise in ${foundFreelancer.expertise?.slice(0, 3).join(', ')}${foundFreelancer.expertise && foundFreelancer.expertise.length > 3 ? ' & more' : ''}.`,
-        availability: foundFreelancer.availability || [],
-        online: onlineStatus,
-
-        // Additional profile fields
-        bio: foundFreelancer.bio,
-        about: foundFreelancer.about,
-        cricketRole: foundFreelancer.cricketRole,
-        battingStyle: foundFreelancer.battingStyle,
-        bowlingStyle: foundFreelancer.bowlingStyle,
-        languages: foundFreelancer.languages,
-        completionRate: foundFreelancer.completionRate,
-        skills: foundFreelancer.skills,
-        coverImage: foundFreelancer.coverImage,
-
-        // Services, portfolio, experience, and reviews data
-        services: sortedServices,
-        portfolio: foundFreelancer.portfolio,
-        experienceDetails: foundFreelancer.experienceDetails,
-        reviewsData: foundFreelancer.reviewsData
-      });
     }
-    setLoading(false);
+
+    if (freelancerId) {
+      loadFreelancer();
+    }
   }, [freelancerId, searchParams]);
 
   // Handle scroll to specific section when returning from preview pages

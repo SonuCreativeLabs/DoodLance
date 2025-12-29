@@ -8,5 +8,4 @@ export * from './types';
 // Export utils
 export * from './utils';
 
-// Export mock data
-export * from './mock-data';
+

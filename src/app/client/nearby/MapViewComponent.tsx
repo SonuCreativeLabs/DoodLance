@@ -29,10 +29,10 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({ professionals: propProfe
             data.popup.remove();
           }
         });
-        
+
         // Open the specific popup
         markerData.popup.addTo((markerData.marker as any).getMap()!);
-        
+
         // Center map on the marker
         const map = (markerData.marker as any).getMap()!;
         map.flyTo({
@@ -82,9 +82,8 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({ professionals: propProfe
   useEffect(() => {
     if (!mapContainer.current) return;
 
-    // Import default professionals as fallback
-    const { professionals: defaultProfessionals } = require('./mockData');
-    const professionals = propProfessionals || defaultProfessionals;
+    // Mock data removed
+    const professionals = propProfessionals || [];
 
     if (!professionals) return;
 
@@ -234,7 +233,7 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({ professionals: propProfe
       const currentIndex = index;
       const hasNext = currentIndex < professionals.length - 1;
       const hasPrev = currentIndex > 0;
-      
+
       // Create a popup with more information
       const popup = new mapboxgl.Popup({
         offset: [0, -2], // Moved 5% down (from -5 to -2)
@@ -339,7 +338,7 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({ professionals: propProfe
       // Add click event to show popup
       marker.getElement().addEventListener('click', (e) => {
         e.stopPropagation();
-        
+
         // Remove any existing popups with fade out
         const existingPopups = document.getElementsByClassName('mapboxgl-popup');
         Array.from(existingPopups).forEach(popup => {
@@ -347,15 +346,15 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({ professionals: propProfe
           (popup as HTMLElement).style.transform = 'translateY(5px) scale(0.98)';
           setTimeout(() => popup.remove(), 200);
         });
-        
+
         // Show new popup
         popup.setLngLat(pro.coords).addTo(map);
-        
+
         // Add navigation button event listeners
         setTimeout(() => {
           const prevBtn = document.querySelector('.custom-popup .prev-btn');
           const nextBtn = document.querySelector('.custom-popup .next-btn');
-          
+
           if (prevBtn && !prevBtn.hasAttribute('disabled')) {
             prevBtn.addEventListener('click', (e) => {
               e.stopPropagation();
@@ -371,7 +370,7 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({ professionals: propProfe
               }
             });
           }
-          
+
           if (nextBtn && !nextBtn.hasAttribute('disabled')) {
             nextBtn.addEventListener('click', (e) => {
               e.stopPropagation();
@@ -388,7 +387,7 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({ professionals: propProfe
             });
           }
         }, 100);
-        
+
         // Move map to center on marker
         moveToMarker(pro.coords);
       });

@@ -73,20 +73,10 @@ export function MapView({ filters }: MapViewProps) {
     );
 
     // TODO: Fetch jobs from API based on filters
-    // This is a mock implementation
-    const mockJobs: Job[] = [
-      {
-        id: '1',
-        title: 'Plumbing Repair',
-        price: 150,
-        location: [37.7749, -122.4194],
-        category: 'plumbing',
-        rating: 4.5,
-      },
-      // Add more mock jobs here
-    ];
+    // TODO: Fetch jobs from API based on filters
+    setJobs([]);
 
-    setJobs(mockJobs);
+
   }, [filters]);
 
   if (!userLocation) {
@@ -118,7 +108,7 @@ export function MapView({ filters }: MapViewProps) {
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        
+
         {/* User location marker */}
         <Marker position={[userLocation[0], userLocation[1]]} icon={icon}>
           <Popup>Your Location</Popup>

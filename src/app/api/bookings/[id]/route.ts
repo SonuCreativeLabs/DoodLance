@@ -1,22 +1,74 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/db'
 
-// Mock data for fallback when database is not available
-const mockBookings = {
-  '#TNCHE001': {
-    "#": "#TNCHE001",
-    service: "Batting Coaching",
-    provider: "Rahul Sharma",
-    image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Rahul",
-    date: new Date().toISOString().split('T')[0],
-    time: "11:00 AM",
-    status: "ongoing",
-    location: "Chepauk Stadium, Chennai",
-    price: "₹1,200/session",
-    rating: 4.8,
-    completedJobs: 342,
-    description: "Advanced batting technique and shot selection coaching",
-    category: "cricket"
+// GET /api/bookings/[id] - Get booking details
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const booking = await prisma.booking.findUnique({
+      where: { id: params.id },
+      include: {
+        service: {
+          include: {
+            provider: {
+              include: {
+                freelancerProfile: true
+              }
+            }
+          }
+        },
+        client: true
+      }
+    })
+
+    if (!booking) {
+      return NextResponse.json(
+        { error: 'Booking not found' },
+        { status: 404 }
+      )
+    }
+
+    // Map to frontend expected format
+    const provider = booking.service.provider;
+    const profile = provider.freelancerProfile;
+
+    const mappedBooking = {
+      "#": booking.id, // Keep hashtag ID or just ID? Frontend uses # currently.
+      service: booking.service.title,
+      title: booking.service.title,
+      provider: provider.name,
+      freelancer: {
+        name: provider.name,
+        image: provider.image,
+        rating: profile?.rating || 0,
+        location: profile?.location || 'Remote'
+      },
+      image: provider.image || "/images/avatar-placeholder.png",
+      date: booking.scheduledAt ? new Date(booking.scheduledAt).toISOString().split('T')[0] : '',
+      time: booking.scheduledAt ? new Date(booking.scheduledAt).toLocaleTimeString() : '',
+      status: booking.status.toLowerCase(),
+      location: booking.location || "Remote",
+      price: `₹${booking.totalPrice}`,
+      totalPrice: booking.totalPrice,
+      rating: 0, // Need to implement Review relation fetching if exists
+      completedJobs: profile?.completedJobs || 0,
+      description: booking.service.description,
+      category: booking.service.category || "General",
+      earnedMoney: `₹${booking.totalPrice}`, // Mapping totalPrice to earnedMoney for compatibility
+      completedDate: booking.scheduledAt ? new Date(booking.scheduledAt).toLocaleDateString() : '',
+      yourRating: 0 // Placeholder
+    }
+
+    return NextResponse.json(mappedBooking)
+
+  } catch (error) {
+    console.error('Fetch booking error:', error)
+    return NextResponse.json(
+      { error: 'Failed to fetch booking' },
+      { status: 500 }
+    )
   }
 }
 
@@ -50,12 +102,22 @@ export async function PUT(
       )
     }
 
-    // For now, just return success for mock/demo purposes
-    // In a real implementation, this would update the database
+    const updatedBooking = await prisma.booking.update({
+      where: { id: params.id },
+      data: {
+        status: status.toUpperCase(), // Primsma enum is uppercase usually? Schema said String. I'll use uppercase to be safe or consistency.
+        notes: notes,
+        // For rating/review, we typically create a Review record, but Booking might not have direct rating field.
+        // Schema checks: Review model exists.
+        // If completed, creating review would be separate call usually.
+        // But if PUT handles it:
+      }
+    })
+
     return NextResponse.json({
-      id: params.id,
-      status,
-      notes,
+      id: updatedBooking.id,
+      status: updatedBooking.status,
+      notes: updatedBooking.notes,
       rating,
       review,
       updatedAt: new Date().toISOString(),
@@ -63,13 +125,10 @@ export async function PUT(
     })
 
   } catch (error) {
-    console.error('Database error, simulating success:', error)
-
-    // Simulate success for demo purposes when database fails
-    return NextResponse.json({
-      id: params.id,
-      status: 'updated',
-      message: 'Booking updated successfully (demo mode)'
-    })
+    console.error('Update booking error:', error)
+    return NextResponse.json(
+      { error: 'Failed to update booking' },
+      { status: 500 }
+    )
   }
 }

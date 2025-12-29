@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,57 +15,10 @@ import {
 import {
   Briefcase, Search, Filter, Download, Calendar,
   DollarSign, MapPin, Clock, Users, TrendingUp,
-  AlertCircle, CheckCircle, XCircle
+  AlertCircle, CheckCircle, XCircle, ChevronLeft, ChevronRight, RefreshCw
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-// Mock job data
-const mockJobs = [
-  {
-    id: '1',
-    title: 'Full Stack Web Developer',
-    client: 'John Doe',
-    category: 'Development',
-    budget: 50000,
-    status: 'active',
-    applications: 12,
-    postedDate: '2024-03-15',
-    deadline: '2024-04-15',
-    location: 'Remote',
-    experience: 'Senior',
-    skills: ['React', 'Node.js', 'MongoDB']
-  },
-  {
-    id: '2', 
-    title: 'Mobile App Designer',
-    client: 'Jane Smith',
-    category: 'Design',
-    budget: 30000,
-    status: 'active',
-    applications: 8,
-    postedDate: '2024-03-14',
-    deadline: '2024-04-10',
-    location: 'Hybrid',
-    experience: 'Intermediate',
-    skills: ['Figma', 'UI/UX', 'Mobile']
-  },
-  {
-    id: '3',
-    title: 'Content Writer',
-    client: 'Mike Johnson',
-    category: 'Writing',
-    budget: 15000,
-    status: 'closed',
-    applications: 15,
-    postedDate: '2024-03-10',
-    deadline: '2024-03-30',
-    location: 'Remote',
-    experience: 'Junior',
-    skills: ['SEO', 'Blog', 'Technical']
-  }
-];
-
-// Define job status type
 type JobStatus = 'active' | 'closed' | 'draft';
 
 const statusColors: Record<JobStatus, string> = {
@@ -75,25 +28,58 @@ const statusColors: Record<JobStatus, string> = {
 };
 
 export default function JobsPage() {
-  const [jobs] = useState(mockJobs);
+  const [jobs, setJobs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const itemsPerPage = 10;
 
-  const filteredJobs = jobs.filter(job => {
-    const matchesSearch = job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         job.client.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || job.status === statusFilter;
-    const matchesCategory = categoryFilter === 'all' || job.category === categoryFilter;
-    
-    return matchesSearch && matchesStatus && matchesCategory;
-  });
+  // Debounce search
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+      setCurrentPage(1);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  const fetchJobs = async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams({
+        page: currentPage.toString(),
+        limit: itemsPerPage.toString(),
+        search: debouncedSearch,
+        status: statusFilter,
+        category: categoryFilter
+      });
+      const res = await fetch(`/api/admin/jobs?${params}`);
+      if (res.ok) {
+        const data = await res.json();
+        setJobs(data.jobs);
+        setTotalPages(data.totalPages);
+      }
+    } catch (error) {
+      console.error('Error fetching jobs:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchJobs();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, debouncedSearch, statusFilter, categoryFilter]);
 
   const stats = {
     totalJobs: jobs.length,
     activeJobs: jobs.filter(j => j.status === 'active').length,
-    totalApplications: jobs.reduce((sum, j) => sum + j.applications, 0),
-    avgBudget: Math.round(jobs.reduce((sum, j) => sum + j.budget, 0) / jobs.length)
+    totalApplications: jobs.reduce((sum, j) => sum + (j.applications || 0), 0),
+    avgBudget: jobs.length > 0 ? Math.round(jobs.reduce((sum, j) => sum + (j.budget || 0), 0) / jobs.length) : 0
   };
 
   return (
@@ -108,10 +94,6 @@ export default function JobsPage() {
           <Button variant="outline" className="text-gray-300 w-full sm:w-auto">
             <Download className="w-4 h-4 mr-2" />
             Export
-          </Button>
-          <Button className="bg-purple-600 hover:bg-purple-700 w-full sm:w-auto">
-            <Briefcase className="w-4 h-4 mr-2" />
-            Post Job
           </Button>
         </div>
       </div>
@@ -181,17 +163,18 @@ export default function JobsPage() {
               <SelectItem value="draft">Draft</SelectItem>
             </SelectContent>
           </Select>
-          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger className="w-full lg:w-48 bg-[#2a2a2a] border-gray-700 text-white">
-              <SelectValue placeholder="Category" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Categories</SelectItem>
-              <SelectItem value="Development">Development</SelectItem>
-              <SelectItem value="Design">Design</SelectItem>
-              <SelectItem value="Writing">Writing</SelectItem>
-            </SelectContent>
-          </Select>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setSearchTerm('');
+              setStatusFilter('all');
+              setCategoryFilter('all');
+            }}
+            className="text-gray-300"
+          >
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Reset
+          </Button>
         </div>
       </Card>
 
@@ -200,7 +183,9 @@ export default function JobsPage() {
         <div className="p-6">
           <h2 className="text-lg font-semibold text-white mb-4">Job Listings</h2>
           <div className="space-y-4">
-            {filteredJobs.map((job, index) => (
+            {loading ? (
+              <p className="text-gray-400 text-center py-8">Loading jobs...</p>
+            ) : jobs.map((job, index) => (
               <motion.div
                 key={job.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -229,7 +214,7 @@ export default function JobsPage() {
                           </div>
                         </div>
                         <div className="flex flex-wrap gap-2 mt-3">
-                          {job.skills.map((skill, idx) => (
+                          {job.skills && job.skills.map((skill: string, idx: number) => (
                             <Badge key={idx} variant="secondary" className="text-xs">
                               {skill}
                             </Badge>
@@ -255,8 +240,34 @@ export default function JobsPage() {
                 </div>
               </motion.div>
             ))}
+            {!loading && jobs.length === 0 && (
+              <p className="text-gray-400 text-center py-8">No jobs found.</p>
+            )}
           </div>
         </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-center gap-2 p-4 border-t border-gray-800">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+              disabled={currentPage === 1}
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+            <span className="text-gray-400">Page {currentPage} of {totalPages}</span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+              disabled={currentPage === totalPages}
+            >
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          </div>
+        )}
       </Card>
     </div>
   );

@@ -111,7 +111,7 @@ export default function ProfilePage() {
           .from('freelancer_profiles')
           .select('*')
           .eq('userId', user.id)
-          .single();
+          .maybeSingle();
 
         if (error && error.code !== 'PGRST116') { // Ignore not found error if profile doesn't exist yet
           console.error('Error fetching profile:', error);

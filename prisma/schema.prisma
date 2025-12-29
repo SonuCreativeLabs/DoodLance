@@ -563,26 +563,7 @@ model Notification {
 
 
 
-// Admin User Management
-model AdminUser {
-  id          String   @id @default(cuid())
-  email       String   @unique
-  name        String
-  password    String   // Hashed password
-  role        String   @default("SUPPORT") // SUPER_ADMIN, SUPPORT, FINANCE, MARKETING
-  permissions String   // JSON array of permissions
-  avatar      String?
-  isActive    Boolean  @default(true)
-  lastLoginAt DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  // Relations
-  auditLogs   AuditLog[]
-  supportTickets SupportTicket[] @relation("AssignedTickets")
-  
-  @@map("admin_users")
-}
+// PromoCode moved safely, AdminUser and AuditLog removed.
 
 // Support & Dispute Management
 model SupportTicket {
@@ -594,8 +575,7 @@ model SupportTicket {
   description String
   status      String   @default("OPEN") // OPEN, IN_PROGRESS, RESOLVED, CLOSED
   priority    String   @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT
-  assignedToId String?
-  assignedTo  AdminUser? @relation("AssignedTickets", fields: [assignedToId], references: [id])
+  assignedToId String? // Kept as string for potential future mapping to User(admin) without relation constraint for now
   bookingId   String?
   jobId       String?
   resolution  String?
@@ -606,59 +586,6 @@ model SupportTicket {
   resolvedAt  DateTime?
   
   @@map("support_tickets")
-}
-
-// Promotional System
-model PromoCode {
-  id            String    @id @default(cuid())
-  code          String    @unique
-  description   String?
-  discountType  String    // PERCENTAGE, FIXED
-  discountValue Float
-  maxUses       Int?
-  usedCount     Int       @default(0)
-  minOrderValue Float?
-  maxDiscount   Float?
-  validFrom     DateTime
-  validUntil    DateTime
-  isActive      Boolean   @default(true)
-  categoryIds   String?   // JSON array - applicable categories
-  userIds       String?   // JSON array - specific users only
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  
-  @@map("promo_codes")
-}
-
-// Platform Configuration
-model SystemConfig {
-  id        String   @id @default(cuid())
-  key       String   @unique
-  value     String   // JSON value
-  type      String   // STRING, NUMBER, BOOLEAN, JSON
-  category  String   // COMMISSION, PRICING, FEATURES, NOTIFICATIONS, etc.
-  description String?
-  updatedAt DateTime @updatedAt
-  
-  @@map("system_configs")
-}
-
-// Audit Logging
-model AuditLog {
-  id          String   @id @default(cuid())
-  adminId     String
-  admin       AdminUser @relation(fields: [adminId], references: [id])
-  action      String   // CREATE, UPDATE, DELETE, APPROVE, SUSPEND, LOGIN, LOGOUT
-  entityType  String   // USER, BOOKING, SERVICE, TRANSACTION, PROMO_CODE, etc.
-  entityId    String?
-  oldValue    String?  // JSON
-  newValue    String?  // JSON
-  metadata    String?  // Additional context
-  ipAddress   String?
-  userAgent   String?
-  createdAt   DateTime @default(now())
-  
-  @@map("audit_logs")
 }
 
 // Featured Items Management
@@ -709,4 +636,43 @@ model PlatformAnalytics {
   createdAt   DateTime @default(now())
   
   @@map("platform_analytics")
+}
+
+// Admin Activity Logging
+model AdminLog {
+  id          String   @id @default(cuid())
+  adminId     String
+  adminEmail  String
+  action      String   // CREATE, UPDATE, DELETE, APPROVE, REJECT, etc.
+  resource    String   // USER, SERVICE, BOOKING, PROMO, etc.
+  resourceId  String?  // ID of the affected resource
+  details     String?  // JSON string with additional details
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+  
+  @@map("admin_logs")
+  @@index([adminId])
+  @@index([resource])
+  @@index([createdAt])
+}
+
+// Promo Codes
+model PromoCode {
+  id              String    @id @default(cuid())
+  code            String    @unique
+  description     String?
+  discountType    String    // 'PERCENTAGE' or 'FIXED'
+  discountValue   Float
+  minOrderValue   Float?
+  maxDiscount     Float?    // Max discount amount for percentage based
+  validFrom       DateTime
+  validUntil      DateTime
+  maxUses         Int?
+  usedCount       Int       @default(0)
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@map("promo_codes")
 }

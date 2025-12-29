@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef } from 'react';
+import { createClient } from '@/lib/supabase/client';
 
 export interface PortfolioItem {
   id: string;
@@ -21,48 +22,7 @@ interface PortfolioContextType {
   updatePortfolioItem: (itemId: string, updates: Partial<PortfolioItem>) => void;
 }
 
-const initialPortfolio: PortfolioItem[] = [
-  {
-    id: '1',
-    title: '3x Division Cricket Champion',
-    category: 'Cricket Achievement',
-    description: 'Won the Division Level Cricket Tournament three consecutive years (2020, 2021, 2022) as a top-order batsman and off-spin bowler. Demonstrated exceptional leadership and performance under pressure.',
-    image: '/images/purple nets.png',
-    skills: ['Cricket', 'Leadership', 'Batting', 'Off-Spin Bowling', 'Team Player']
-  },
-  {
-    id: '2',
-    title: 'State Level College Champion',
-    category: 'Cricket Achievement',
-    image: 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
-    description: 'Led college team to victory in the State Level Inter-College Cricket Tournament. Scored 3 consecutive half-centuries in the knockout stages and took crucial wickets in the final match.',
-    skills: ['Cricket', 'Strategy', 'Batting', 'Bowling']
-  },
-  {
-    id: '3',
-    title: 'Sports Quota Scholar',
-    category: 'Academic Achievement',
-    image: '/images/Purple ground.png',
-    description: 'Awarded sports scholarship for outstanding cricket performance at the state level. Balanced academic responsibilities with rigorous training schedules while maintaining excellent performance in both areas.',
-    skills: ['Cricket', 'Time Management', 'Academics']
-  },
-  {
-    id: '4',
-    title: 'Cricket Performance Analytics',
-    category: 'Cricket Analytics',
-    image: 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
-    description: 'Developed comprehensive cricket performance analytics tracking player statistics, match data, and performance metrics. Created detailed reports for coaches and players to improve game strategies.',
-    skills: ['Cricket Analytics', 'Performance Metrics', 'Data Analysis', 'Strategy']
-  },
-  {
-    id: '5',
-    title: 'Live Cricket Scoring System',
-    category: 'Cricket Technology',
-    image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
-    description: 'Built a real-time cricket scoring platform that tracks live match statistics, player performance, and generates comprehensive match reports. Used by local cricket clubs for tournament management.',
-    skills: ['Cricket Scoring', 'Live Analytics', 'Match Management', 'Data Visualization']
-  }
-];
+const initialPortfolio: PortfolioItem[] = [];
 
 const PortfolioContext = createContext<PortfolioContextType | undefined>(undefined);
 
@@ -83,38 +43,50 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const updatePortfolioItem = useCallback((itemId: string, updates: Partial<PortfolioItem>) => {
-    setPortfolio(prev => prev.map(item => 
+    setPortfolio(prev => prev.map(item =>
       item.id === itemId ? { ...item, ...updates } : item
     ));
   }, []);
 
-  // Load from localStorage on mount
+  // Load from localStorage on mount and fetch from Supabase
   useEffect(() => {
-    try {
-      // Version check - clear old data if version doesn't match
-      const PORTFOLIO_VERSION = '2.2'; // Increment this when you want to reset portfolio data
-      const savedVersion = localStorage.getItem('portfolioVersion');
-      
-      if (savedVersion !== PORTFOLIO_VERSION) {
-        // Clear old data and use new initial portfolio
-        console.log('Portfolio version mismatch, resetting to defaults');
-        localStorage.setItem('portfolioVersion', PORTFOLIO_VERSION);
-        localStorage.setItem('portfolioItems', JSON.stringify(initialPortfolio));
-        setPortfolio(initialPortfolio);
-      } else {
-        // Load saved data
+    const fetchPortfolio = async () => {
+      try {
         const saved = localStorage.getItem('portfolioItems');
         if (saved) {
           setPortfolio(JSON.parse(saved));
         }
+
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+
+        if (user) {
+          const { data: profile } = await supabase
+            .from('freelancer_profiles')
+            .select('portfolio')
+            .eq('userId', user.id)
+            .maybeSingle();
+
+          if (profile && profile.portfolio) {
+            // Parse if stored as string, or use directly if JSON
+            let dbPortfolio = profile.portfolio;
+            if (typeof dbPortfolio === 'string') {
+              try { dbPortfolio = JSON.parse(dbPortfolio); } catch (e) { }
+            }
+            if (Array.isArray(dbPortfolio)) {
+              setPortfolio(dbPortfolio);
+              localStorage.setItem('portfolioItems', JSON.stringify(dbPortfolio));
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load portfolio:', error);
+      } finally {
+        setIsHydrated(true);
       }
-    } catch (error) {
-      console.error('Failed to parse portfolio:', error);
-      // On error, use initial portfolio
-      setPortfolio(initialPortfolio);
-    } finally {
-      setIsHydrated(true);
-    }
+    };
+
+    fetchPortfolio();
   }, []);
 
   // Save to localStorage whenever it changes (skip first paint to avoid overwriting saved data)

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -16,44 +16,51 @@ import {
   Calendar, Clock, ArrowUp, ArrowDown, Minus
 } from 'lucide-react';
 import {
-  LineChart as RechartsLineChart, Line, BarChart, Bar, PieChart as RechartsPieChart, 
-  Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, 
+  LineChart as RechartsLineChart, Line, BarChart, Bar, PieChart as RechartsPieChart,
+  Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   Area, AreaChart, RadialBarChart, RadialBar, ComposedChart
 } from 'recharts';
 
 export default function AnalyticsPage() {
   const [timeRange, setTimeRange] = useState('7days');
   const [metric, setMetric] = useState('revenue');
+  const [loading, setLoading] = useState(true);
 
-  // Performance metrics
-  const performanceData = [
-    { name: 'Mon', users: 420, revenue: 24000, bookings: 45 },
-    { name: 'Tue', users: 480, revenue: 28000, bookings: 52 },
-    { name: 'Wed', users: 520, revenue: 32000, bookings: 61 },
-    { name: 'Thu', users: 390, revenue: 21000, bookings: 38 },
-    { name: 'Fri', users: 590, revenue: 35000, bookings: 68 },
-    { name: 'Sat', users: 680, revenue: 42000, bookings: 78 },
-    { name: 'Sun', users: 720, revenue: 45000, bookings: 82 },
-  ];
+  // State for API data
+  const [performanceData, setPerformanceData] = useState<any[]>([]);
+  const [userMetrics, setUserMetrics] = useState<any[]>([]);
+  const [serviceDistribution, setServiceDistribution] = useState<any[]>([]);
+  const [stats, setStats] = useState<any>({});
 
-  // User metrics
-  const userMetrics = [
-    { name: 'Active Users', value: 1234, change: 12.5, trending: 'up' },
-    { name: 'New Signups', value: 89, change: -5.2, trending: 'down' },
-    { name: 'Retention Rate', value: 78.5, change: 3.1, trending: 'up' },
-    { name: 'Engagement Rate', value: 65.2, change: 0, trending: 'neutral' },
-  ];
+  useEffect(() => {
+    fetchAnalytics();
+  }, [timeRange]);
 
-  // Service distribution
-  const serviceDistribution = [
-    { name: 'Net Bowler', value: 35, fill: '#8B5CF6' },
-    { name: 'Coach', value: 28, fill: '#EC4899' },
-    { name: 'Match Player', value: 20, fill: '#10B981' },
-    { name: 'Physio', value: 10, fill: '#F59E0B' },
-    { name: 'Others', value: 7, fill: '#6B7280' },
-  ];
+  const fetchAnalytics = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/admin/analytics?timeRange=${timeRange}`);
+      if (res.ok) {
+        const data = await res.json();
+        setPerformanceData(data.performanceData || []);
+        setServiceDistribution(data.serviceDistribution || []);
+        setStats(data.stats || {});
 
-  // Conversion funnel
+        // Format user metrics
+        setUserMetrics([
+          { name: 'Active Users', value: data.userMetrics.activeUsers || 0, change: 12.5, trending: 'up' },
+          { name: 'New Signups', value: data.userMetrics.newSignups || 0, change: -5.2, trending: 'down' },
+          { name: 'Retention Rate', value: parseFloat(data.userMetrics.retentionRate) || 0, change: 3.1, trending: 'up' },
+          { name: 'Engagement Rate', value: parseFloat(data.userMetrics.engagementRate) || 0, change: 0, trending: 'neutral' },
+        ]);
+      }
+    } catch (error) {
+      console.error('Error fetching analytics:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const conversionData = [
     { name: 'Page Views', value: 5000, fill: '#8B5CF6' },
     { name: 'Sign Ups', value: 1200, fill: '#A78BFA' },
@@ -101,8 +108,8 @@ export default function AnalyticsPage() {
               <div>
                 <p className="text-sm text-gray-400">{metric.name}</p>
                 <p className="text-2xl font-bold text-white mt-1">
-                  {typeof metric.value === 'number' && metric.value % 1 !== 0 
-                    ? `${metric.value}%` 
+                  {typeof metric.value === 'number' && metric.value % 1 !== 0
+                    ? `${metric.value}%`
                     : metric.value.toLocaleString()}
                 </p>
                 <div className="flex items-center gap-1 mt-2">
@@ -113,10 +120,9 @@ export default function AnalyticsPage() {
                   ) : (
                     <Minus className="w-4 h-4 text-gray-400" />
                   )}
-                  <span className={`text-sm ${
-                    metric.trending === 'up' ? 'text-green-400' : 
-                    metric.trending === 'down' ? 'text-red-400' : 'text-gray-400'
-                  }`}>
+                  <span className={`text-sm ${metric.trending === 'up' ? 'text-green-400' :
+                      metric.trending === 'down' ? 'text-red-400' : 'text-gray-400'
+                    }`}>
                     {Math.abs(metric.change)}%
                   </span>
                 </div>
@@ -148,14 +154,14 @@ export default function AnalyticsPage() {
             <AreaChart data={performanceData}>
               <defs>
                 <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.8}/>
-                  <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0}/>
+                  <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.8} />
+                  <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#2a2a2a" />
               <XAxis dataKey="name" stroke="#6b7280" />
               <YAxis stroke="#6b7280" />
-              <Tooltip 
+              <Tooltip
                 contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #2a2a2a' }}
                 labelStyle={{ color: '#fff' }}
               />
@@ -202,7 +208,7 @@ export default function AnalyticsPage() {
               <CartesianGrid strokeDasharray="3 3" stroke="#2a2a2a" />
               <XAxis type="number" stroke="#6b7280" />
               <YAxis dataKey="name" type="category" stroke="#6b7280" />
-              <Tooltip 
+              <Tooltip
                 contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #2a2a2a' }}
                 labelStyle={{ color: '#fff' }}
               />
@@ -219,7 +225,7 @@ export default function AnalyticsPage() {
               <CartesianGrid strokeDasharray="3 3" stroke="#2a2a2a" />
               <XAxis dataKey="name" stroke="#6b7280" />
               <YAxis stroke="#6b7280" />
-              <Tooltip 
+              <Tooltip
                 contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #2a2a2a' }}
                 labelStyle={{ color: '#fff' }}
               />

@@ -26,23 +26,26 @@ interface PersonalDetailsContextType {
 }
 
 const initialPersonalDetails: PersonalDetails = {
-  name: "Sathish Sonu",
-  title: "All rounder",
-  location: "Chennai, India",
-  about: "Professional Cricketer & AI Engineer with a passion for technology and sports. I bring the same dedication and strategic thinking from the cricket field to developing intelligent AI solutions.",
-  bio: "Professional Cricketer & AI Engineer with a passion for technology and sports.",
-  avatarUrl: '/images/profile-sonu.jpg',
-  coverImageUrl: '/images/cover-pic.JPG',
+  name: "",
+  title: "",
+  location: "",
+  about: "",
+  bio: "",
+  avatarUrl: "",
+  coverImageUrl: "",
   online: true,
   readyToWork: true,
-  dateOfBirth: "2000-01-14",
+  dateOfBirth: "",
 };
 
 const PersonalDetailsContext = createContext<PersonalDetailsContextType | undefined>(undefined);
 
+import { createClient } from '@/lib/supabase/client';
+
 export function PersonalDetailsProvider({ children }: { children: ReactNode }) {
   const [personalDetails, setPersonalDetails] = useState<PersonalDetails>(initialPersonalDetails);
   const hasHydrated = useRef(false);
+  const supabase = createClient();
 
   const updatePersonalDetails = useCallback((updates: Partial<PersonalDetails>) => {
     setPersonalDetails(prev => ({
@@ -62,48 +65,69 @@ export function PersonalDetailsProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  // Load from localStorage on mount
+  // Load from localStorage on mount and fetch from Supabase
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem('personalDetails');
-      if (saved) {
-        setPersonalDetails(JSON.parse(saved));
-      }
+    const initializeData = async () => {
+      try {
+        // 1. Try to load from localStorage first for immediate UI
+        const saved = localStorage.getItem('personalDetails');
+        if (saved) {
+          setPersonalDetails(JSON.parse(saved));
+        }
 
-      // Also sync with personalInfo data from personal details page
-      const personalInfo = localStorage.getItem('personalInfo');
-      if (personalInfo) {
-        const parsedPersonalInfo = JSON.parse(personalInfo);
-        setPersonalDetails(prev => ({
-          ...prev,
-          name: parsedPersonalInfo.fullName || prev.name,
-          title: parsedPersonalInfo.cricketRole || prev.title,
-          bio: parsedPersonalInfo.bio || prev.bio,
-          dateOfBirth: parsedPersonalInfo.dateOfBirth || prev.dateOfBirth,
-          languages: parsedPersonalInfo.languages || prev.languages,
-          cricketRole: parsedPersonalInfo.cricketRole || prev.cricketRole,
-          battingStyle: parsedPersonalInfo.battingStyle || prev.battingStyle,
-          bowlingStyle: parsedPersonalInfo.bowlingStyle || prev.bowlingStyle,
-        }));
-      }
+        // 2. Fetch fresh data from Supabase
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          // Fetch profile data
+          const { data: profile } = await supabase
+            .from('freelancer_profiles')
+            .select('*')
+            .eq('userId', user.id)
+            .maybeSingle();
 
-      // Also sync with cricketInfo data from cricket section
-      const cricketInfo = localStorage.getItem('cricketInfo');
-      if (cricketInfo) {
-        const parsedCricketInfo = JSON.parse(cricketInfo);
-        setPersonalDetails(prev => ({
-          ...prev,
-          cricketRole: parsedCricketInfo.cricketRole || prev.cricketRole,
-          battingStyle: parsedCricketInfo.battingStyle || prev.battingStyle,
-          bowlingStyle: parsedCricketInfo.bowlingStyle || prev.bowlingStyle,
-        }));
+          if (profile) {
+            const newDetails = {
+              name: profile.name || user.user_metadata?.full_name || "",
+              title: profile.title || "",
+              location: profile.location || "",
+              about: profile.about || "",
+              bio: profile.bio || "",
+              avatarUrl: profile.avatar || user.user_metadata?.avatar_url || "",
+              coverImageUrl: profile.cover_image || "",
+              online: profile.online ?? true,
+              readyToWork: profile.ready_to_work ?? true,
+              dateOfBirth: profile.date_of_birth || "",
+              languages: profile.languages || "",
+              cricketRole: profile.cricket_role || "",
+              battingStyle: profile.batting_style || "",
+              bowlingStyle: profile.bowling_style || "",
+            };
+
+            setPersonalDetails(prev => ({
+              ...prev,
+              ...newDetails
+            }));
+
+            // Update localStorage with fresh data
+            localStorage.setItem('personalDetails', JSON.stringify(newDetails));
+          } else {
+            // If no profile exists yet, use auth metadata
+            setPersonalDetails(prev => ({
+              ...prev,
+              name: user.user_metadata?.full_name || prev.name,
+              avatarUrl: user.user_metadata?.avatar_url || prev.avatarUrl
+            }));
+          }
+        }
+      } catch (error) {
+        console.error('Failed to initialize personal details:', error);
+      } finally {
+        hasHydrated.current = true;
       }
-    } catch (error) {
-      console.error('Failed to parse personal details:', error);
-    } finally {
-      hasHydrated.current = true;
-    }
-  }, []);
+    };
+
+    initializeData();
+  }, [supabase]);
 
   // Save to localStorage whenever it changes (skip first paint)
   useEffect(() => {

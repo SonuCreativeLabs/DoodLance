@@ -1,72 +1,15 @@
 "use client"
 
-import { useState, useEffect, useMemo, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect, useRef } from 'react';
+import { motion } from 'framer-motion';
 import { ChatList } from '@/components/freelancer/inbox/chat-list';
 import { ChatView } from '@/components/freelancer/inbox/chat-view';
-import { ArrowLeft, Search, Plus, Filter, ChevronDown, Check } from 'lucide-react';
+import { Search, Filter, ChevronDown, Check } from 'lucide-react';
 import { useChatView } from '@/contexts/ChatViewContext';
-import { mockUpcomingJobs } from '@/components/freelancer/jobs/mock-data';
-import { mockChats } from './mockChats';
 import { useSearchParams } from 'next/navigation';
 
-// Function to generate consistent avatar URL based on name and gender
-const getAvatarUrl = (name: string, gender: 'men' | 'women' | 'male' | 'female' = 'men') => {
-  const nameHash = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  const id = nameHash % 100; // Ensure we get a number between 0-99
-  return `https://randomuser.me/api/portraits/${gender}/${id}.jpg`;
-};
-
-// Convert job data to chat format with enhanced avatars and statuses
-const jobChats = mockUpcomingJobs.map((job, index) => {
-  const description = job.description || 'No description available';
-  const payment = job.payment || 0;
-  const name = job.client?.name || `Client ${index + 1}`;
-  const gender = index % 2 === 0 ? 'men' : 'women';
-  
-  // Randomly assign some chats as unread
-  const unread = Math.random() > 0.5;
-  
-  // Add some variation to the statuses
-  let status = job.status;
-  if (status === 'ongoing' && Math.random() > 0.7) {
-    status = 'upcoming'; // Convert some ongoing to upcoming for variety
-  }
-  
-  return {
-    id: `job-${job.id}`,
-    name,
-    avatar: getAvatarUrl(name, gender),
-    jobTitle: job.title,
-    online: index % 3 === 0, // Make some users online
-    lastMessage: description.substring(0, 60) + (description.length > 60 ? '...' : ''),
-    time: new Date(job.date || new Date()).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + 
-          (job.time ? ' • ' + job.time : ''),
-    budget: `₹${payment.toLocaleString()}`,
-    status: status === 'ongoing' ? 'Ongoing' : 
-           status === 'completed' ? 'Completed' :
-           status === 'cancelled' ? 'Cancelled' : 'Upcoming',
-    unread,
-    rating: (job.client?.rating || 4.0) + (Math.random() * 0.5) // Add some rating variation
-  };
-});
-
-// Update mockChats with consistent avatars and statuses
-const enhancedMockChats = mockChats.map((chat, index) => ({
-  ...chat,
-  avatar: getAvatarUrl(chat.name, index % 2 === 0 ? 'men' : 'women'),
-  // Ensure we have a good mix of statuses
-  status: ['Upcoming', 'Ongoing', 'Completed', 'Cancelled'][index % 4],
-  unread: index % 3 === 0 // Make some chats unread
-}));
-
-// Combine and deduplicate chats by ID
-const allChats = [
-  ...enhancedMockChats,
-  ...jobChats.filter(jobChat => 
-    !enhancedMockChats.some(chat => chat.jobTitle === jobChat.jobTitle)
-  )
-];
+// Mock data removed
+const allChats: any[] = [];
 
 function InboxPageInner() {
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
@@ -102,22 +45,22 @@ function InboxPageInner() {
   }, []);
 
   const selectedChat = allChats.find(chat => chat.id === selectedChatId) || null;
-  
+
   // Filter chats based on search query and status
   const filteredChats = allChats.filter(chat => {
-    const matchesSearch = !searchQuery.trim() || 
+    const matchesSearch = !searchQuery.trim() ||
       chat.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       chat.lastMessage.toLowerCase().includes(searchQuery.toLowerCase()) ||
       chat.jobTitle.toLowerCase().includes(searchQuery.toLowerCase());
-      
+
     const matchesStatus = !statusFilter || statusFilter === 'All' || chat.status === statusFilter;
-    
+
     return matchesSearch && matchesStatus;
   });
-  
-  // Calculate unread messages count for filtered chats - ensure it's consistent between server and client
+
+  // Calculate unread messages count for filtered chats
   const [unreadCount, setUnreadCount] = useState(0);
-  
+
   // Update unread count in an effect to avoid hydration mismatch
   useEffect(() => {
     setUnreadCount(filteredChats.filter(chat => chat.unread).length);
@@ -132,19 +75,17 @@ function InboxPageInner() {
     setSelectedChatId(null);
   };
 
-  // Calculate total unread messages count for all chats
-  const totalUnreadCount = mockChats.filter(chat => chat.unread).length;
-  
+  const totalUnreadCount = 0;
+
   // Calculate heights for all fixed elements
   const mainHeaderHeight = 64;    // Main header height
   const messagesHeaderHeight = unreadCount > 0 ? 132 : 116; // Adjust height based on unread count
   const bottomNavHeight = 64;     // Bottom navigation height
   const additionalSpacing = 16;    // Extra space for better visibility
-  const totalOffset = mainHeaderHeight + messagesHeaderHeight + bottomNavHeight + additionalSpacing;
 
   return (
     <div className="flex flex-col h-[calc(100vh-64px)] bg-[#111111]">
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         className="flex-1 flex flex-col h-full overflow-hidden"
@@ -164,7 +105,7 @@ function InboxPageInner() {
         ) : (
           <div className="flex flex-col h-full">
             {/* Fixed Messages Header - positioned below main header */}
-            <div 
+            <div
               className="sticky top-0 left-0 right-0 z-10 bg-[#111111] pt-2"
               style={{ height: `${messagesHeaderHeight}px` }}
             >
@@ -180,7 +121,7 @@ function InboxPageInner() {
                       )}
                     </div>
                     <div className="relative mt-1.5" ref={filterRef}>
-                      <button 
+                      <button
                         onClick={(e) => {
                           e.stopPropagation();
                           setIsFilterOpen(!isFilterOpen);
@@ -191,7 +132,7 @@ function InboxPageInner() {
                         <span className="text-sm font-medium text-white/80">{statusFilter || 'All'}</span>
                         <ChevronDown className={`w-4 h-4 text-white/60 transition-transform ${isFilterOpen ? 'rotate-180' : ''}`} />
                       </button>
-                      
+
                       {isFilterOpen && (
                         <div className="absolute right-0 mt-1 w-40 bg-[#1E1E1E] border border-white/10 rounded-lg shadow-lg z-20 overflow-hidden">
                           {statusOptions.map((option) => (
@@ -228,11 +169,11 @@ function InboxPageInner() {
                 </div>
               </div>
             </div>
-            
+
             {/* Chat List */}
-            <div 
+            <div
               className="flex-1 overflow-y-auto pb-6"
-              style={{ 
+              style={{
                 height: `calc(100vh - ${mainHeaderHeight + messagesHeaderHeight + 16}px)`,
                 marginTop: `-${messagesHeaderHeight}px`,
                 paddingTop: `${messagesHeaderHeight}px`
@@ -244,10 +185,10 @@ function InboxPageInner() {
                   display: none;
                 }
               `}</style>
-              <ChatList 
-                chats={filteredChats} 
-                onChatSelect={setSelectedChatId} 
-                selectedChatId={selectedChatId || undefined} 
+              <ChatList
+                chats={filteredChats}
+                onChatSelect={setSelectedChatId}
+                selectedChatId={selectedChatId || undefined}
               />
             </div>
           </div>

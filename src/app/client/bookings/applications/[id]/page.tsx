@@ -33,7 +33,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { professionals } from "@/app/client/nearby/mockData";
+
 import { IdVerifiedBadge } from "@/components/freelancer/profile/IdVerifiedBadge";
 import { SkillInfoDialog } from "@/components/common/SkillInfoDialog";
 import { getSkillInfo, type SkillInfo } from "@/utils/skillUtils";
@@ -89,37 +89,73 @@ export default function ApplicationDetailPage() {
   );
 
   // Fetch freelancer full profile data
-  const freelancer = useMemo(() => {
-    if (!application) return null;
+  const [freelancer, setFreelancer] = useState<any>(null);
 
-    console.log('🔍 FREELANCER LOOKUP DEBUG:');
-    console.log('  - Application freelancer ID:', application.freelancer.id);
-    console.log('  - Application freelancer name:', application.freelancer.name);
-    console.log('  - Searching in professionals array length:', professionals.length);
+  useEffect(() => {
+    if (!application?.freelancer?.id) return;
 
-    const profile = professionals.find((p: any) => {
-      const match = p.id.toString() === application.freelancer.id;
-      if (match) {
-        console.log('  ✅ MATCH FOUND:', p.name, '(ID:', p.id, ')');
-      }
-      return match;
-    });
+    fetch(`/api/freelancers/${application.freelancer.id}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data && !data.error) {
+          const profile = data.freelancerProfile || {};
+          const skills = profile.skills ? (profile.skills.startsWith('[') ? JSON.parse(profile.skills) : [profile.skills]) : [];
+          const availability = profile.availability ? JSON.parse(profile.availability) : [];
 
-    if (!profile) {
-      console.log('  ❌ NO PROFILE FOUND for ID:', application.freelancer.id);
-      console.log('  Available IDs:', professionals.map((p: any) => ({ id: p.id, name: p.name })));
-      return null;
-    }
+          setFreelancer({
+            id: data.id,
+            name: data.name,
+            image: data.profileImage || application.freelancer.image,
+            service: data.services?.[0]?.title || profile.title || 'Freelancer',
+            location: profile.location || data.location || 'Remote',
+            rating: data.averageRating || 0,
+            reviewCount: profile.reviews?.length || 0,
+            reviews: profile.reviews?.length || 0,
+            online: profile.isOnline || false,
+            coverImage: '',
 
-    console.log('  Profile service:', profile.service);
-    console.log('  Profile cricket role:', profile.cricketRole);
+            cricketRole: '',
+            battingStyle: '',
+            bowlingStyle: '',
+            bio: profile.bio,
+            about: profile.about,
+            responseTime: profile.responseTime || '1 hour',
+            completionRate: profile.completionRate || 95,
 
-    const onlineStatus = Math.random() > 0.5;
-    return {
-      ...profile,
-      id: profile.id.toString(),
-      online: onlineStatus,
-    };
+            skills: skills,
+            availability: availability,
+
+            services: data.services?.map((s: any) => ({
+              id: s.id,
+              title: s.title,
+              description: s.description,
+              price: `₹${s.price}`,
+              deliveryTime: s.deliveryTime,
+              category: s.category?.name,
+              features: s.tags ? s.tags.split(',') : []
+            })) || [],
+
+            portfolio: profile.portfolios?.map((p: any) => ({
+              id: p.id,
+              title: p.title,
+              image: p.imageUrl || (p.images ? JSON.parse(p.images)[0] : '') || '/placeholder.jpg',
+              category: p.category
+            })) || [],
+
+            experienceDetails: profile.experiences?.map((e: any) => ({
+              id: e.id,
+              role: e.title, // Map title to role
+              company: e.company, // Assuming API/Schema has company? Check schema if needed. Fallback to description?
+              location: e.location || '',
+              startDate: e.startDate ? new Date(e.startDate).getFullYear().toString() : '',
+              endDate: e.endDate ? new Date(e.endDate).getFullYear().toString() : 'Present',
+              isCurrent: e.isCurrent,
+              description: e.description
+            })) || []
+          });
+        }
+      })
+      .catch(err => console.error("Failed to fetch freelancer profile", err));
   }, [application]);
 
   // Debug logging

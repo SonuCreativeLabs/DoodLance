@@ -33,13 +33,13 @@ export const ApplicationCard = ({ application }: { application: Application }) =
         router.push(`/client/bookings/applications/${encodeURIComponent(application["#"])}`)
     }
 
-    // Adapter for RescheduleModal
-    const mockBooking: any = {
+    // Convert application to booking format for RescheduleModal
+    const bookingData: any = {
         "#": application["#"],
         provider: application.freelancer.name,
         service: application.jobTitle,
-        date: "2024-01-01", // Mock
-        time: "10:00 AM",   // Mock
+        date: new Date().toISOString().split('T')[0], // Use current date as placeholder
+        time: "10:00 AM",
         location: application.freelancer.location,
         status: 'upcoming'
     }
@@ -328,7 +328,7 @@ export const ApplicationCard = ({ application }: { application: Application }) =
             <RescheduleModal
                 isOpen={showReschedule}
                 onClose={() => setShowReschedule(false)}
-                booking={mockBooking}
+                booking={bookingData}
                 onReschedule={handleRescheduleConfirm}
             />
         </>

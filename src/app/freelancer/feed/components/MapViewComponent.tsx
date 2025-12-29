@@ -9,10 +9,10 @@ import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import dynamic from 'next/dynamic';
 // Import types from the shared types file first
-import { 
-  ClientInfo, 
-  JobDuration, 
-  ExperienceLevel, 
+import {
+  ClientInfo,
+  JobDuration,
+  ExperienceLevel,
   JobType,
   WorkMode,
   Job as SharedJob
@@ -41,12 +41,12 @@ type Job = Omit<SharedJob, 'client' | 'clientName' | 'clientImage' | 'clientRati
   proposals: number;
   duration: JobDuration;
   experience: ExperienceLevel;
-  
+
   // Additional properties
   coordinates: [number, number];
   coords: [number, number];
   client?: ClientInfo;
-  
+
   // Make all properties optional for the input type
   [key: string]: any;
 };
@@ -107,16 +107,16 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
   const popupRef = useRef<mapboxgl.Popup | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [filteredJobs, setFilteredJobs] = useState<JobWithCoordinates[]>([]);
-  const [error, setErrorState] = useState<{message: string; details?: any} | null>(null);
+  const [error, setErrorState] = useState<{ message: string; details?: any } | null>(null);
   const [isJobDetailsOpen, setIsJobDetailsOpen] = useState(false);
-  const lastOpenedPopup = useRef<{jobId: string | null; marker: mapboxgl.Marker | null}>({jobId: null, marker: null});
+  const lastOpenedPopup = useRef<{ jobId: string | null; marker: mapboxgl.Marker | null }>({ jobId: null, marker: null });
 
   // Process jobs with default values
   const processedJobs = useMemo(() => {
     return (jobs || []).map((jobInput: JobWithCoordinates): Job => {
       // Extract coordinates safely - check both coords and coordinates
       let coords: [number, number] = [0, 0];
-      
+
       if (Array.isArray(jobInput.coords) && jobInput.coords.length === 2) {
         coords = [jobInput.coords[0], jobInput.coords[1]];
       } else if (Array.isArray(jobInput.coordinates) && jobInput.coordinates.length === 2) {
@@ -128,7 +128,7 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
           coords = [parseFloat(match[1]), parseFloat(match[2])];
         }
       }
-      
+
       // Create default client info
       const defaultClient: ClientInfo = {
         name: jobInput.clientName || 'Unknown Client',
@@ -138,10 +138,10 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
         image: jobInput.clientImage || '',
         memberSince: new Date().toISOString()
       };
-      
+
       // Use provided client or default
       const client = jobInput.client || defaultClient;
-      
+
       // Return the job with all required properties
       return {
         ...jobInput,
@@ -153,8 +153,8 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
         budget: typeof jobInput.budget === 'number' ? jobInput.budget : 0,
         location: jobInput.location || 'Remote',
         skills: Array.isArray(jobInput.skills) ? jobInput.skills : [],
-        workMode: ['remote', 'onsite', 'all'].includes(jobInput.workMode || '') 
-          ? jobInput.workMode as WorkMode 
+        workMode: ['remote', 'onsite', 'all'].includes(jobInput.workMode || '')
+          ? jobInput.workMode as WorkMode
           : 'onsite',
         type: ['freelance', 'part-time', 'full-time', 'contract'].includes(jobInput.type || '')
           ? jobInput.type as JobType
@@ -184,10 +184,10 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
   const handleOpenJobDetails = useCallback((jobId: string) => {
     const job = processedJobs.find(j => j.id === jobId);
     if (!job) return;
-    
+
     setSelectedJob(job);
     setIsJobDetailsOpen(true);
-    
+
     // Center map on selected job
     if (map.current) {
       map.current.flyTo({
@@ -197,7 +197,7 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
       });
     }
   }, [processedJobs]);
-  
+
   // Handle job selection from the list - using the single implementation below
 
   useEffect(() => {
@@ -222,7 +222,7 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
 
       map.current = new mapboxgl.Map({
         container: mapContainer.current,
-        style: 'mapbox://styles/mapbox/streets-v11',
+        style: 'mapbox://styles/mapbox/streets-v12',
         center: [0, 0],
         zoom: 2,
         attributionControl: false
@@ -231,19 +231,19 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
       // Add controls after map has loaded
       map.current.on('load', () => {
         if (!map.current) return;
-        
+
         // Create a container for the controls
         const controlsContainer = document.createElement('div');
         controlsContainer.className = 'mapboxgl-ctrl-bottom-right';
         map.current.getContainer().appendChild(controlsContainer);
-        
+
         // Add navigation control (zoom buttons)
         const nav = new mapboxgl.NavigationControl({
           showCompass: false,
           showZoom: true,
           visualizePitch: false
         });
-        
+
         // Add geolocate control with enhanced options
         const geolocate = new mapboxgl.GeolocateControl({
           positionOptions: {
@@ -257,11 +257,11 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
             maxZoom: 15
           }
         });
-        
+
         // Add controls to the map with explicit positions
         map.current.addControl(nav, 'bottom-right');
         map.current.addControl(geolocate, 'bottom-right');
-        
+
         // Add event listeners for geolocation
         geolocate.on('geolocate', (e: any) => {
           if (!e.coords) return;
@@ -272,7 +272,7 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
             essential: true
           });
         });
-        
+
         // Auto-trigger geolocation on first load
         setTimeout(() => {
           const geolocateBtn = document.querySelector('.mapboxgl-ctrl-geolocate');
@@ -280,7 +280,7 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
             (geolocateBtn as HTMLElement).click();
           }
         }, 1000);
-        
+
         // Force controls to be visible
         setTimeout(() => {
           const controls = document.querySelectorAll('.mapboxgl-ctrl-bottom-right .mapboxgl-ctrl');
@@ -323,10 +323,10 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
         });
         setIsLoading(false);
       };
-      
+
       map.current.on('error', handleMapError);
-      
-          // Cleanup function for map events
+
+      // Cleanup function for map events
       const cleanupMapEvents = () => {
         if (map.current) {
           map.current.off('error', handleMapError);
@@ -392,7 +392,7 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
         console.warn('Skipping job with invalid coordinates:', job);
         return;
       }
-      
+
       // Create a smaller location pin marker
       const markerEl = document.createElement('div');
       markerEl.className = 'custom-marker';
@@ -420,7 +420,7 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
           </g>
         </svg>
       `;
-      
+
       // Style the marker container
       markerEl.style.width = '24px';
       markerEl.style.height = '36px';
@@ -437,13 +437,13 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
 
       // Create popup content with navigation and click handler
       const popupContent = document.createElement('div');
-      
+
       // Create the job card HTML with embedded navigation
       const createJobCardHTML = (job: JobWithCoordinates) => {
         const currentIndex = processedJobs.findIndex(j => j.id === job.id);
         const hasNext = currentIndex < processedJobs.length - 1;
         const hasPrev = currentIndex > 0;
-        
+
         return `
           <div class="group bg-gradient-to-br from-[#111111] to-[#000000] opacity-95 backdrop-blur-sm rounded-2xl px-6 py-4 shadow-xl hover:shadow-purple-500/20 transition-all duration-300 w-[360px] border border-white/10 hover:border-white/20">
             
@@ -514,15 +514,15 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
                 </svg>
                 <span class="text-white/60 text-[11px] whitespace-nowrap">
                   ${(() => {
-                    const scheduledAt = job.scheduledAt ? new Date(job.scheduledAt) : new Date();
-                    const date = scheduledAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                    const time = scheduledAt.toLocaleTimeString('en-US', { 
-                      hour: 'numeric', 
-                      minute: '2-digit',
-                      hour12: true
-                    });
-                    return `${date}, ${time}`;
-                  })()}
+            const scheduledAt = job.scheduledAt ? new Date(job.scheduledAt) : new Date();
+            const date = scheduledAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            const time = scheduledAt.toLocaleTimeString('en-US', {
+              hour: 'numeric',
+              minute: '2-digit',
+              hour12: true
+            });
+            return `${date}, ${time}`;
+          })()}
                 </span>
               </div>
             </div>
@@ -551,86 +551,86 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
                 </span>
                 <span class="text-[13px] text-white/60">
                   / ${(() => {
-                    const { category, title, duration } = job;
-                    
-                    // Check for specific title hints first (overrides category logic)
-                    const titleLower = title?.toLowerCase() || '';
-                    if (titleLower.includes('90-minute') || titleLower.includes('90 minute')) {
-                      return '90 minutes';
-                    }
-                    if (titleLower.includes('2-hour') || titleLower.includes('2 hour')) {
-                      return '2 hours';
-                    }
-                    if (titleLower.includes('1-hour') || titleLower.includes('1 hour')) {
-                      return '1 hour';
-                    }
+            const { category, title, duration } = job;
 
-                    // If duration is already a formatted string (not an enum), return it directly
-                    if (typeof duration === 'string' && !['hourly', 'daily', 'weekly', 'monthly', 'one-time'].includes(duration)) {
-                      return duration;
-                    }
+            // Check for specific title hints first (overrides category logic)
+            const titleLower = title?.toLowerCase() || '';
+            if (titleLower.includes('90-minute') || titleLower.includes('90 minute')) {
+              return '90 minutes';
+            }
+            if (titleLower.includes('2-hour') || titleLower.includes('2 hour')) {
+              return '2 hours';
+            }
+            if (titleLower.includes('1-hour') || titleLower.includes('1 hour')) {
+              return '1 hour';
+            }
 
-                    // If job has a specific duration field, use that to determine the label
-                    if (duration) {
-                      const categoryLower = category?.toLowerCase() || '';
-                      const durationValue = typeof duration === 'string' ? duration : duration;
+            // If duration is already a formatted string (not an enum), return it directly
+            if (typeof duration === 'string' && !['hourly', 'daily', 'weekly', 'monthly', 'one-time'].includes(duration)) {
+              return duration;
+            }
 
-                      // Duration labels based on category and duration type
-                      switch (durationValue) {
-                        case 'hourly':
-                          if (categoryLower.includes('coach') || categoryLower.includes('coaching')) {
-                            return '1 hour'; // Default for coaching
-                          } else if (categoryLower.includes('bowling') || categoryLower.includes('net bowler') || categoryLower.includes('sidearm')) {
-                            return '1.5 hours'; // Bowling sessions
-                          } else if (categoryLower.includes('batting')) {
-                            return '1 hour'; // Batting sessions
-                          } else if (categoryLower.includes('analyst') || categoryLower.includes('analysis')) {
-                            return '2 hours'; // Analysis sessions
-                          } else if (categoryLower.includes('photo') || categoryLower.includes('videography')) {
-                            return '3 hours'; // Event photography
-                          } else if (categoryLower.includes('content creator')) {
-                            return '3 hours'; // Content creation
-                          } else if (categoryLower.includes('physio')) {
-                            return '1 hour'; // Physio sessions
-                          } else if (categoryLower.includes('conditioning') || categoryLower.includes('fitness')) {
-                            return '1.5 hours'; // Conditioning sessions
-                          }
-                          return '1 hour'; // Default hourly
+            // If job has a specific duration field, use that to determine the label
+            if (duration) {
+              const categoryLower = category?.toLowerCase() || '';
+              const durationValue = typeof duration === 'string' ? duration : duration;
 
-                        case 'daily':
-                          if (categoryLower.includes('scorer')) {
-                            return 'per match';
-                          }
-                          return 'per day';
+              // Duration labels based on category and duration type
+              switch (durationValue) {
+                case 'hourly':
+                  if (categoryLower.includes('coach') || categoryLower.includes('coaching')) {
+                    return '1 hour'; // Default for coaching
+                  } else if (categoryLower.includes('bowling') || categoryLower.includes('net bowler') || categoryLower.includes('sidearm')) {
+                    return '1.5 hours'; // Bowling sessions
+                  } else if (categoryLower.includes('batting')) {
+                    return '1 hour'; // Batting sessions
+                  } else if (categoryLower.includes('analyst') || categoryLower.includes('analysis')) {
+                    return '2 hours'; // Analysis sessions
+                  } else if (categoryLower.includes('photo') || categoryLower.includes('videography')) {
+                    return '3 hours'; // Event photography
+                  } else if (categoryLower.includes('content creator')) {
+                    return '3 hours'; // Content creation
+                  } else if (categoryLower.includes('physio')) {
+                    return '1 hour'; // Physio sessions
+                  } else if (categoryLower.includes('conditioning') || categoryLower.includes('fitness')) {
+                    return '1.5 hours'; // Conditioning sessions
+                  }
+                  return '1 hour'; // Default hourly
 
-                        case 'weekly':
-                          return 'per week';
+                case 'daily':
+                  if (categoryLower.includes('scorer')) {
+                    return 'per match';
+                  }
+                  return 'per day';
 
-                        case 'monthly':
-                          return 'per month';
+                case 'weekly':
+                  return 'per week';
 
-                        case 'one-time':
-                          if (categoryLower.includes('scorer') || categoryLower.includes('umpire')) {
-                            return 'per match';
-                          } else if (categoryLower.includes('photo') || categoryLower.includes('video')) {
-                            return 'per event';
-                          }
-                          return 'one-time';
+                case 'monthly':
+                  return 'per month';
 
-                        default:
-                          return 'per session'; // Fallback
-                      }
-                    }
+                case 'one-time':
+                  if (categoryLower.includes('scorer') || categoryLower.includes('umpire')) {
+                    return 'per match';
+                  } else if (categoryLower.includes('photo') || categoryLower.includes('video')) {
+                    return 'per event';
+                  }
+                  return 'one-time';
 
-                    // Fallback if no duration field (shouldn't happen with updated jobs)
-                    return '1 hour';
-                  })()}
+                default:
+                  return 'per session'; // Fallback
+              }
+            }
+
+            // Fallback if no duration field (shouldn't happen with updated jobs)
+            return '1 hour';
+          })()}
                 </span>
               </div>
               ${(() => {
-                const isApplied = appliedJobIds?.has(String(job.id));
-                if (isApplied) {
-                  return `
+            const isApplied = appliedJobIds?.has(String(job.id));
+            if (isApplied) {
+              return `
                     <button class="px-4 py-2 text-xs font-medium text-green-400 bg-green-600/20 border border-green-600/50 rounded-xl transition-all duration-300 shadow-lg cursor-default flex items-center justify-center gap-1.5" disabled>
                       <span>Applied</span>
                       <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
@@ -638,8 +638,8 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
                       </svg>
                     </button>
                   `;
-                }
-                return `
+            }
+            return `
                   <button class="apply-now-btn px-4 py-2 text-xs font-medium text-white bg-gradient-to-r from-[#6B46C1] to-[#4C1D95] hover:from-[#5B35B0] hover:to-[#3D1B7A] rounded-xl transition-all duration-300 shadow-lg shadow-purple-600/20 hover:shadow-purple-600/30 flex items-center justify-center gap-1.5"
                           data-job-id="${job.id}">
                     <span>Apply Now</span>
@@ -648,28 +648,28 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
                     </svg>
                   </button>
                 `;
-              })()}
+          })()}
             </div>
           </div>
         `;
       };
-      
+
       popupContent.innerHTML = createJobCardHTML(job);
       popupContent.style.cursor = 'pointer';
-      
+
       // Add click handler to the popup content
       popupContent.addEventListener('click', (e) => {
         const target = e.target as HTMLElement;
         const currentIndex = processedJobs.findIndex(j => j.id === job.id);
         const hasNext = currentIndex < processedJobs.length - 1;
         const hasPrev = currentIndex > 0;
-        
+
         // Handle navigation buttons
         if (target.closest('.nav-btn')) {
           e.stopPropagation();
           const isNext = target.closest('.next-btn');
           const isPrev = target.closest('.prev-btn');
-          
+
           if (isNext && hasNext) {
             navigateToJob(currentIndex + 1);
           } else if (isPrev && hasPrev) {
@@ -677,14 +677,14 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
           }
           return;
         }
-        
+
         // Handle apply button clicks and other card clicks
         if (target.closest('.apply-now-btn') || !target.closest('.nav-btn')) {
           setSelectedJob(job);
           setIsJobDetailsOpen(true);
         }
       });
-      
+
       // Function to navigate to a specific job
       const navigateToJob = (index: number) => {
         if (index >= 0 && index < processedJobs.length) {
@@ -693,11 +693,11 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
           if (marker && map.current) {
             // Close current popup
             popup.remove();
-            
+
             // Open the popup for the next job
             setTimeout(() => {
               marker.togglePopup();
-              
+
               // Center the map on the marker
               const lngLat = marker.getLngLat();
               map.current?.flyTo({
@@ -718,7 +718,7 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
         className: 'custom-popup',
         anchor: 'bottom'
       }).setDOMContent(popupContent);
-      
+
       // Add custom class for styling the popup tip
       popup.addClassName('custom-popup-tip');
 
@@ -731,19 +731,19 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
           .setLngLat(job.coords as [number, number])
           .setPopup(popup) // Set the popup on the marker
           .addTo(map.current!);
-        
+
         // Store job ID on marker for later reference
         (marker as any)._jobId = job.id;
-          
+
         console.log(`Marker added successfully for job: ${job.title}`);
-        
+
         // Make marker clickable
         markerEl.style.cursor = 'pointer';
-        
+
         // Add click handler to handle marker clicks
         markerEl.addEventListener('click', (e) => {
           e.stopPropagation();
-          
+
           // Close all other popups
           markersRef.current.forEach(m => {
             if (m !== marker) {
@@ -753,7 +753,7 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
               }
             }
           });
-          
+
           // Toggle the current marker's popup
           const currentPopup = marker.getPopup();
           if (currentPopup) {
@@ -762,7 +762,7 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
             } else {
               // Show the popup and center the map
               marker.togglePopup();
-              
+
               if (map.current) {
                 map.current.flyTo({
                   center: job.coords as [number, number],
@@ -770,13 +770,13 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
                   essential: true
                 });
               }
-              
+
               // Store the marker for back navigation
               lastOpenedPopup.current = { jobId: job.id, marker };
             }
           }
         });
-        
+
         // Store the marker reference
         markersRef.current.push(marker);
       } catch (error) {
@@ -784,7 +784,7 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
       }
 
     });
-    
+
     console.log(`Finished adding ${markersRef.current.length} markers to the map`);
 
     // Fit map to show all markers if we have any
@@ -817,7 +817,7 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
   // Handle closing job details
   const handleCloseJobDetails = useCallback(() => {
     setIsJobDetailsOpen(false);
-    
+
     // Show the popup for the last selected job when returning from full view
     if (lastOpenedPopup.current.jobId && lastOpenedPopup.current.marker && map.current) {
       const popup = lastOpenedPopup.current.marker.getPopup();
@@ -825,7 +825,7 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
         // Small timeout to ensure the map has finished any transitions
         setTimeout(() => {
           popup.addTo(map.current!);
-          
+
           // Center the map on the marker with a slight offset
           const markerLngLat = lastOpenedPopup.current.marker?.getLngLat();
           if (markerLngLat) {
@@ -838,31 +838,31 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
         }, 50);
       }
     }
-    
+
     // Focus the map container for keyboard navigation
     if (mapContainer.current) {
       mapContainer.current.focus();
     }
   }, []);
-  
+
   // Handle job selection
   const handleJobSelect = useCallback((jobId: string) => {
     const job = processedJobs.find(j => j.id === jobId);
     if (!job) return;
-    
+
     setSelectedJob(job);
-    
+
     // Find the marker for this job
     const marker = markersRef.current.find(m => {
       const markerJobId = (m as any)._jobId;
       return markerJobId === jobId;
     });
-    
+
     // If we have a marker, store it for later use when returning from full view
     if (marker) {
       lastOpenedPopup.current = { jobId, marker };
     }
-    
+
     // Center map on the selected job
     if (map.current && job.coords && job.coords.length === 2) {
       map.current.flyTo({
@@ -871,24 +871,24 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
         essential: true
       });
     }
-    
+
     // Close any open popups when selecting from the list
     markersRef.current.forEach(m => {
       const popup = m.getPopup();
       if (popup?.isOpen()) {
         popup.remove();
       }
-      
+
       // Open the popup for the selected job
       if (m === marker && popup) {
         popup.addTo(map.current!);
       }
     });
-    
+
     // Open the full view
     setIsJobDetailsOpen(true);
   }, [processedJobs]);
-  
+
 
   // If there's an error, show error message
   if (error) {
@@ -928,8 +928,8 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
           });
         }}
       >
-        <div 
-          ref={mapContainer} 
+        <div
+          ref={mapContainer}
           className="absolute inset-0 w-full h-full"
           style={{ zIndex: 1 }}
         />
@@ -941,12 +941,12 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
           <JobDetailsFull
             job={selectedJob}
             onBack={handleCloseJobDetails}
-            onApply={onApply || (() => {})}
+            onApply={onApply || (() => { })}
             isApplied={appliedJobIds?.has(String(selectedJob.id))}
           />
         </OverlayPortal>
       )}
-      
+
       <style jsx global>{`
         /* Map controls */
         .mapboxgl-ctrl-bottom-right {

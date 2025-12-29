@@ -3,7 +3,7 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, Check, Clock } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { professionals } from '@/app/client/nearby/mockData';
+
 
 export type Service = {
   id: string;
@@ -19,18 +19,35 @@ export default function ServicesPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const freelancerId = searchParams.get('freelancerId');
-  
+
   const [services, setServices] = useState<Service[]>([]);
   const [freelancerName, setFreelancerName] = useState('');
 
   // Check if we're viewing a freelancer's services
   useEffect(() => {
     if (freelancerId) {
-      const freelancer = professionals.find(p => p.id.toString() === freelancerId);
-      if (freelancer) {
-        setServices(freelancer.services || []);
-        setFreelancerName(freelancer.name);
-      }
+      fetch(`/api/freelancers/${freelancerId}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data) {
+            setFreelancerName(data.name || 'Anonymous');
+            // Map services
+            const mappedServices = (data.services || []).map((s: any) => ({
+              id: s.id,
+              title: s.title,
+              description: s.description,
+              price: s.price,
+              deliveryTime: s.deliveryTime || '1-3 days',
+              features: s.tags ? s.tags.split(',') : [],
+              category: s.category?.name
+            }));
+            setServices(mappedServices);
+          }
+        })
+        .catch(err => {
+          console.error("Failed to fetch services", err);
+          setServices([]);
+        });
     }
   }, [freelancerId]);
 
@@ -38,10 +55,10 @@ export default function ServicesPage() {
   useEffect(() => {
     const header = document.querySelector('header');
     const navbar = document.querySelector('nav');
-    
+
     if (header) header.style.display = 'none';
     if (navbar) navbar.style.display = 'none';
-    
+
     return () => {
       if (header) header.style.display = '';
       if (navbar) navbar.style.display = '';
@@ -51,11 +68,11 @@ export default function ServicesPage() {
   const handleBack = () => {
     if (typeof window !== 'undefined') {
       sessionStorage.setItem('scrollToServices', 'true');
-      
+
       // Check if we're viewing a freelancer's services
       const urlParams = new URLSearchParams(window.location.search);
       const freelancerId = urlParams.get('freelancerId');
-      
+
       if (freelancerId) {
         // Go back to the freelancer detail page
         const freelancerPath = `/client/freelancer/${freelancerId}`;
@@ -92,7 +109,7 @@ export default function ServicesPage() {
       {/* Sticky Header with back button and title */}
       <div className="sticky top-0 z-50 px-4 py-2 border-b border-white/5 bg-[#0f0f0f]/95 backdrop-blur-sm">
         <div className="flex items-center">
-          <button 
+          <button
             onClick={handleBack}
             className="inline-flex items-center text-sm text-purple-400 hover:text-purple-300 transition-colors duration-200"
             aria-label="Back to profile preview"
@@ -113,8 +130,8 @@ export default function ServicesPage() {
         {services.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {services.map((service) => (
-              <div 
-                key={service.id} 
+              <div
+                key={service.id}
                 className="p-5 rounded-3xl border border-white/10 bg-white/5 hover:border-purple-500/30 transition-colors flex flex-col h-full"
               >
                 <div className="flex flex-col h-full">
@@ -142,8 +159,8 @@ export default function ServicesPage() {
                     <div className="flex flex-col gap-3">
                       <div className="flex items-center justify-between">
                         <div className="text-xl font-bold text-white">
-                          {typeof service.price === 'string' && service.price.includes('₹') 
-                            ? service.price 
+                          {typeof service.price === 'string' && service.price.includes('₹')
+                            ? service.price
                             : `₹${service.price}`
                           }
                         </div>

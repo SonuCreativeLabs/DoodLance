@@ -3,59 +3,25 @@ import { ArrowLeft, Download, Upload, TrendingUp, CheckCircle, Coins } from "luc
 import Link from "next/link";
 
 // Mock data for wallet/earnings
-const earningsSummary = {
-  balance: 24500,
-  pending: 3500,
-  withdrawn: 18000,
-  totalJobs: 48,
-  lastPayout: "2025-05-01",
-};
-
-const skillCoins = {
-  available: 120,
-  pending: 30,
-};
-
-const transactions = [
-  {
-    id: 1,
-    type: "credit",
-    label: "Job Payment: Cricket Coaching",
-    amount: 2000,
-    date: "2025-05-03",
-    status: "Completed",
-    icon: <Download className="w-4 h-4 text-green-400" />,
-  },
-  {
-    id: 2,
-    type: "debit",
-    label: "Withdrawal to Bank",
-    amount: -5000,
-    date: "2025-05-02",
-    status: "Completed",
-    icon: <Upload className="w-4 h-4 text-amber-400" />,
-  },
-  {
-    id: 3,
-    type: "credit",
-    label: "Job Payment: Net Bowling",
-    amount: 1500,
-    date: "2025-05-01",
-    status: "Completed",
-    icon: <Download className="w-4 h-4 text-green-400" />,
-  },
-  {
-    id: 4,
-    type: "credit",
-    label: "Performance Bonus",
-    amount: 500,
-    date: "2025-04-29",
-    status: "Completed",
-    icon: <TrendingUp className="w-4 h-4 text-purple-400" />,
-  },
-];
+import { useState } from "react";
 
 export default function WalletPage() {
+  // Use state for real data (fetch from API in future)
+  const [earningsSummary] = useState({
+    balance: 0,
+    pending: 0,
+    withdrawn: 0,
+    totalJobs: 0,
+    lastPayout: "-",
+  });
+
+  const [skillCoins] = useState({
+    available: 0,
+    pending: 0,
+  });
+
+  const [transactions] = useState<any[]>([]);
+
   return (
     <div className="min-h-screen bg-[#111111]">
       {/* Header */}
@@ -153,9 +119,8 @@ export default function WalletPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-3 mb-2">
                       <span className="text-[14px] font-semibold text-white leading-tight">{tx.label}</span>
-                      <span className={`text-[14px] font-bold flex-shrink-0 ${
-                        tx.amount > 0 ? 'text-green-400' : 'text-amber-400'
-                      }`}>
+                      <span className={`text-[14px] font-bold flex-shrink-0 ${tx.amount > 0 ? 'text-green-400' : 'text-amber-400'
+                        }`}>
                         {tx.amount > 0 ? '+' : ''}₹{Math.abs(tx.amount).toLocaleString()}
                       </span>
                     </div>

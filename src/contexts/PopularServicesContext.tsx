@@ -26,7 +26,7 @@ const initialPopularServices: PopularService[] = [
     id: 'net-bowler',
     title: 'Net Bowler',
     icon: '🎯',
-    providerCount: 38,
+    providerCount: 0,
     image: '/images/Service Catagories/cricket net bowler.jpeg',
     mostBooked: true
   },
@@ -34,7 +34,7 @@ const initialPopularServices: PopularService[] = [
     id: 'sidearm-specialist',
     title: 'Sidearm',
     icon: '🎯',
-    providerCount: 22,
+    providerCount: 0,
     image: '/images/Service Catagories/cricket sidearm.png',
     mostBooked: true
   },
@@ -42,7 +42,7 @@ const initialPopularServices: PopularService[] = [
     id: 'coach',
     title: 'Coach',
     icon: '👨‍🏫',
-    providerCount: 35,
+    providerCount: 0,
     image: '/images/Service Catagories/Cricket coach.png',
     mostBooked: true
   },
@@ -50,7 +50,7 @@ const initialPopularServices: PopularService[] = [
     id: 'match-player',
     title: 'Match Player',
     icon: '🏏',
-    providerCount: 45,
+    providerCount: 0,
     image: '/images/Service Catagories/Cricket match player.png',
     mostBooked: true
   },
@@ -58,7 +58,7 @@ const initialPopularServices: PopularService[] = [
     id: 'cricket-photo-videography',
     title: 'Cricket Photo / Videography',
     icon: '📷',
-    providerCount: 30,
+    providerCount: 0,
     image: '/images/Service Catagories/cricket photography.jpeg',
     mostBooked: true
   }

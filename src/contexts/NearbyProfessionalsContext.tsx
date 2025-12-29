@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { professionals as mockProfessionals } from '@/app/client/nearby/mockData';
+
 
 export interface Professional {
   id: string | number;
@@ -60,7 +60,8 @@ const defaultValue: NearbyProfessionalsContextType = {
 };
 
 // Use professionals from mockData - this would typically come from an API
-const initialProfessionals: Professional[] = mockProfessionals as Professional[];
+// Mock data import removed
+const initialProfessionals: Professional[] = [];
 
 export function NearbyProfessionalsProvider({ children }: { children: ReactNode }) {
   const [professionals, setProfessionals] = useState<Professional[]>([]);
@@ -78,26 +79,16 @@ export function NearbyProfessionalsProvider({ children }: { children: ReactNode 
       }
       const data = await response.json();
 
-      // If API returns data, use it. Otherwise fallback to mock data combined (or just mock data if production requires specific behavior, but here we want real data)
-      // Actually, let's mix them or prefer real data.
-      // For now, let's assume the API returns the correct structure.
-      // We'll merge real data with typical mock data structure if needed, or just use real data.
-
-      // Note: The API might return a different shape, so we might need mapping.
-      // But assuming /api/freelancers returns similar shape or we map it.
-      // Let's assume the keys match for now or we map them.
-
       if (data && Array.isArray(data)) {
-        setProfessionals(data); // Assuming API returns compatible Professional[]
+        setProfessionals(data);
       } else {
-        // Fallback to mock if API returns empty/invalid
-        setProfessionals(initialProfessionals);
+        setProfessionals([]);
       }
 
     } catch (err) {
       console.error('Error fetching professionals:', err);
       setError('Failed to load professionals');
-      setProfessionals(initialProfessionals); // Fallback
+      setProfessionals([]);
     } finally {
       setLoading(false);
     }

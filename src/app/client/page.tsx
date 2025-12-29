@@ -29,16 +29,9 @@ const searchExamples = [
   "Sidearm thrower specialist for cricket practice"
 ];
 
-const mockLocations = [
-  { city: "Chennai", state: "TN" },
-];
+// Search examples kept as requested.
+// Mock locations and notifications removed.
 
-const mockNotifications = [
-  { id: 1, message: "Your booking with Priya Lakshmi is confirmed.", time: "2 min ago" },
-  { id: 2, message: "Rajesh Kumar has sent you a new message.", time: "15 min ago" },
-  { id: 3, message: "Your payment for Home Cleaning is complete.", time: "1 hour ago" },
-  { id: 4, message: "Reminder: AC Repair appointment tomorrow at 10:00 AM.", time: "3 hours ago" },
-];
 
 export default function ClientHome() {
   const router = useRouter();
@@ -54,7 +47,32 @@ export default function ClientHome() {
   const [showLocationPicker, setShowLocationPicker] = useState(false);
   const [currentLocation, setCurrentLocation] = useState({ city: "Getting location...", state: "" });
   const [showSidebar, setShowSidebar] = useState(false);
-  // const [isSticky, setIsSticky] = useState(false);
+  const [userName, setUserName] = useState("Guest");
+  const [userAvatar, setUserAvatar] = useState("/images/profile-placeholder.jpg"); // Fallback
+  const [notificationCount, setNotificationCount] = useState(0);
+
+  // Fetch user details
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        // Dynamic import to avoid SSR issues if any, or just standard fetch
+        const { createClient } = await import('@/lib/supabase/client');
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+
+        if (user) {
+          // Try to get profile if it exists, or just use metadata
+          setUserName(user.user_metadata?.full_name || user.user_metadata?.name || "Client");
+          setUserAvatar(user.user_metadata?.avatar_url || user.user_metadata?.picture || "/images/profile-placeholder.jpg");
+          // For now, notification count is 0 as we don't have a real notification system yet
+          setNotificationCount(0);
+        }
+      } catch (e) {
+        console.error("Error fetching user", e);
+      }
+    };
+    fetchUser();
+  }, []);
 
   // Function to reverse geocode coordinates to address
   const reverseGeocode = async (lat: number, lng: number) => {
@@ -192,9 +210,12 @@ export default function ClientHome() {
                 >
                   <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
                   <img
-                    src="/images/profile-sonu.jpg"
+                    src={userAvatar}
                     alt="Profile"
                     className="w-full h-full rounded-full object-cover ring-2 ring-white/10 group-hover:ring-purple-400/50 transition-all duration-300"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = 'https://api.dicebear.com/7.x/avataaars/svg?seed=Guest';
+                    }}
                   />
 
                 </button>
@@ -212,8 +233,12 @@ export default function ClientHome() {
                 <div className={`fixed top-0 left-0 z-50 h-full w-64 sm:w-72 bg-[#18181b] border-r border-white/10 shadow-2xl flex flex-col transition-transform duration-300 ${showSidebar ? 'translate-x-0' : '-translate-x-full'}`}>
                   <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
                     <div className="flex items-center gap-3">
-                      <img src="/images/profile-sonu.jpg" alt="Profile" className="w-10 h-10 rounded-full object-cover border-2 border-purple-400" />
-                      <span className="text-white font-medium">Sonu</span>
+                      <img src={userAvatar} alt="Profile" className="w-10 h-10 rounded-full object-cover border-2 border-purple-400"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = 'https://api.dicebear.com/7.x/avataaars/svg?seed=Guest';
+                        }}
+                      />
+                      <span className="text-white font-medium">{userName}</span>
                     </div>
                     <button
                       className="p-2 rounded-full hover:bg-white/10 text-white/70 hover:text-white transition-colors"
@@ -299,7 +324,7 @@ export default function ClientHome() {
 
             {/* Welcome & Location - RESTORED */}
             <div className="flex flex-col">
-              <span className="text-base sm:text-lg text-white/95 font-bold drop-shadow-sm">Good Morning, Sonu</span>
+              <span className="text-base sm:text-lg text-white/95 font-bold drop-shadow-sm">Good Morning, {userName}</span>
               <button
                 onClick={() => setShowLocationPicker(true)}
                 className="flex items-center gap-0.5 sm:gap-1 text-white font-semibold text-xs sm:text-sm hover:text-white/80 transition-colors"
@@ -323,9 +348,9 @@ export default function ClientHome() {
               <Link href="/client/notifications" className="relative group" aria-label="Notifications">
                 <span className="relative inline-flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/10 hover:bg-white/20 transition-colors">
                   <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-                  {mockNotifications.length > 0 && (
+                  {notificationCount > 0 && (
                     <span className="pointer-events-none absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 bg-gradient-to-r from-purple-600 to-purple-400 rounded-full flex items-center justify-center shadow-lg shadow-purple-600/20 z-10">
-                      <span className="text-[9px] sm:text-[10px] font-medium text-white leading-none">{mockNotifications.length}</span>
+                      <span className="text-[9px] sm:text-[10px] font-medium text-white leading-none">{notificationCount}</span>
                     </span>
                   )}
                 </span>

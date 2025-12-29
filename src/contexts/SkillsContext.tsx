@@ -18,50 +18,7 @@ interface SkillsContextType {
   reorderSkills: (skills: SkillItem[]) => void;
 }
 
-const defaultSkills: SkillItem[] = [
-  {
-    id: '1',
-    name: "RH Batsman",
-    description: "Right-handed batsman specializing in top-order batting with solid technique and aggressive stroke play.",
-    experience: "5 years",
-    level: "Expert"
-  },
-  {
-    id: '2',
-    name: "Sidearm Specialist",
-    description: "Expert sidearm bowler with unique delivery angles and deceptive variations.",
-    experience: "4 years",
-    level: "Expert"
-  },
-  {
-    id: '3',
-    name: "Off Spin",
-    description: "Skilled off-spin bowler with excellent control, flight, and mystery variations.",
-    experience: "3 years",
-    level: "Expert"
-  },
-  {
-    id: '4',
-    name: "Batting Coach",
-    description: "Professional batting coach with expertise in technique, mental approach, and match situations.",
-    experience: "6 years",
-    level: "Expert"
-  },
-  {
-    id: '5',
-    name: "Analyst",
-    description: "Cricket performance analyst specializing in match statistics, player metrics, and strategic insights.",
-    experience: "2 years",
-    level: "Intermediate"
-  },
-  {
-    id: '6',
-    name: "Mystery Spin",
-    description: "Specialist in mystery spin variations including doosra, carrom ball, and other deceptive deliveries.",
-    experience: "3 years",
-    level: "Expert"
-  }
-];
+const defaultSkills: SkillItem[] = [];
 
 const SkillsContext = createContext<SkillsContextType | undefined>(undefined);
 

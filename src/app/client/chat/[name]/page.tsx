@@ -3,7 +3,7 @@
 import { useEffect, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ChatView } from "@/components/client/inbox/chat-view";
-import { professionals } from "../../nearby/mockData";
+
 import { useNavbar } from "@/contexts/NavbarContext";
 
 // Message type
@@ -77,20 +77,13 @@ export default function ChatPage() {
 
     // Find matching professional or create fallback
     const professional = useMemo(() => {
-        const found = professionals.find(
-            (pro) => pro.name.toLowerCase() === freelancerName.toLowerCase()
-        );
-
-        // If not found, create a fallback professional object
-        if (!found && freelancerName) {
-            return {
-                id: freelancerName.replace(/\s+/g, '-').toLowerCase(),
-                name: freelancerName,
-                service: 'Professional Service',
-                image: '',
-            };
-        }
-        return found;
+        // Fallback professional object
+        return {
+            id: freelancerName.replace(/\s+/g, '-').toLowerCase(),
+            name: freelancerName,
+            service: 'Professional Service',
+            image: '',
+        };
     }, [freelancerName]);
 
     // Generate messages for this professional

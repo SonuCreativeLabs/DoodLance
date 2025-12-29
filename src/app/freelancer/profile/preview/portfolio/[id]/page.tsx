@@ -4,32 +4,40 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { usePortfolio } from '@/contexts/PortfolioContext';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
-import { professionals } from '@/app/client/nearby/mockData';
+
 
 export default function PortfolioDetailPage({ params }: { params: { id: string } }) {
   const searchParams = useSearchParams();
   const freelancerId = searchParams.get('freelancerId');
-  
+
   const { portfolio, isHydrated } = usePortfolio();
   const [item, setItem] = useState<any>(null);
 
   // Check if we're viewing a freelancer's portfolio item or user's own
   useEffect(() => {
     console.log('PortfolioDetailPage - freelancerId:', freelancerId, 'params.id:', params.id);
-    
+
     if (freelancerId) {
       // Show freelancer's portfolio item
-      const freelancer = professionals.find(p => p.id.toString() === freelancerId);
-      console.log('Found freelancer:', freelancer?.name, 'portfolio:', freelancer?.portfolio);
-      
-      if (freelancer && freelancer.portfolio) {
-        const portfolioItem = freelancer.portfolio.find((p) => p.id === String(params.id));
-        console.log('Found portfolio item:', portfolioItem);
-        setItem(portfolioItem);
-      } else {
-        console.log('Freelancer not found or no portfolio');
-        setItem(null);
-      }
+      fetch(`/api/freelancers/${freelancerId}`)
+        .then(res => res.json())
+        .then(data => {
+          const portfolios = data.freelancerProfile?.portfolios || [];
+          const mapped = portfolios.map((p: any) => ({
+            id: p.id,
+            title: p.title,
+            image: p.imageUrl || (p.images ? JSON.parse(p.images)[0] : '') || '/placeholder.jpg',
+            category: p.category,
+            description: p.description,
+            skills: p.skills ? (p.skills.startsWith('[') ? JSON.parse(p.skills) : [p.skills]) : []
+          }));
+          const found = mapped.find((p: any) => p.id === params.id);
+          setItem(found || null);
+        })
+        .catch(err => {
+          console.error("Failed to fetch portfolio item", err);
+          setItem(null);
+        });
     } else {
       // Show user's own portfolio item
       const portfolioItem = portfolio.find((p) => p.id === String(params.id));
@@ -42,10 +50,10 @@ export default function PortfolioDetailPage({ params }: { params: { id: string }
   useEffect(() => {
     const header = document.querySelector('header');
     const navbar = document.querySelector('nav');
-    
+
     if (header) header.style.display = 'none';
     if (navbar) navbar.style.display = 'none';
-    
+
     return () => {
       if (header) header.style.display = '';
       if (navbar) navbar.style.display = '';
@@ -71,11 +79,11 @@ export default function PortfolioDetailPage({ params }: { params: { id: string }
     if (typeof window !== 'undefined') {
       // Store scroll position before navigating back
       sessionStorage.setItem('scrollToPortfolio', 'true');
-      
+
       // Check if we're viewing a freelancer's portfolio
       const urlParams = new URLSearchParams(window.location.search);
       const freelancerId = urlParams.get('freelancerId');
-      
+
       if (freelancerId) {
         // Go back to the freelancer detail page
         window.location.href = `/client/freelancer/${freelancerId}#portfolio`;

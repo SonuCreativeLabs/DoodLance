@@ -38,13 +38,13 @@ const VerificationItem: React.FC<VerificationItemProps> = ({
         toast.error('Please upload a valid file type (JPEG, PNG, or PDF)');
         return;
       }
-      
+
       // Check file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
         toast.error('File size should be less than 5MB');
         return;
       }
-      
+
       setSelectedFile(file);
       onVerify(file);
     }
@@ -112,7 +112,7 @@ const VerificationItem: React.FC<VerificationItemProps> = ({
             <div className="flex items-center gap-2 text-xs text-white/80 bg-[#2A2A2A] px-3 py-1.5 rounded-md">
               <FileText className="h-3.5 w-3.5 text-purple-400" />
               <span className="max-w-[120px] truncate">{selectedFile.name}</span>
-              <button 
+              <button
                 onClick={handleRemoveFile}
                 className="text-white/40 hover:text-white/80 transition-colors"
                 aria-label="Remove file"
@@ -151,7 +151,7 @@ const AdvancedKYC: React.FC = () => {
 
   // Mock verification statuses - in a real app, these would come from your backend
   const [verificationStatus, setVerificationStatus] = useState<Record<string, VerificationStatus>>({
-    id: 'in_review',
+    id: 'pending',
     selfie: 'pending'
   });
 
@@ -173,16 +173,16 @@ const AdvancedKYC: React.FC = () => {
     // This is a mock implementation
     try {
       setIsVerifying(type);
-      
+
       // Simulate file upload
       await new Promise(resolve => setTimeout(resolve, 2000));
-      
+
       // Update status after successful upload
       setVerificationStatus(prev => ({
         ...prev,
         [type]: 'in_review'
       }));
-      
+
       toast.success('Document uploaded successfully! It is now under review.');
     } catch (error) {
       console.error('Error uploading file:', error);
@@ -227,8 +227,8 @@ const AdvancedKYC: React.FC = () => {
     <div className="container mx-auto px-4 py-6">
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-1">
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             size="icon"
             onClick={() => router.back()}
             className="text-white/60 hover:bg-white/5 hover:text-white h-9 w-9"
@@ -247,7 +247,7 @@ const AdvancedKYC: React.FC = () => {
             Verify your identity by uploading the required documents
           </p>
         </div>
-        
+
         <div className="space-y-4">
           {renderVerificationItems()}
         </div>
@@ -257,7 +257,7 @@ const AdvancedKYC: React.FC = () => {
           <div>
             <h3 className="font-medium text-white">Why verify your identity?</h3>
             <p className="text-sm text-white/60 mt-1">
-              Verifying your identity helps build trust with clients and is required to access certain features 
+              Verifying your identity helps build trust with clients and is required to access certain features
               on DoodLance, including receiving payments and applying for premium jobs.
             </p>
           </div>

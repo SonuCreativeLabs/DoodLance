@@ -40,72 +40,8 @@ interface BookingsContextType {
 const BookingsContext = createContext<BookingsContextType | undefined>(undefined);
 
 // Initial mock data - this would typically come from an API
-const initialBookings: Booking[] = [
-  {
-    "#": "#TNCHE001",
-    service: "Batting Coaching",
-    provider: "Rahul Sharma",
-    image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Rahul",
-    date: new Date().toISOString().split('T')[0], // Today's date
-    time: new Date().getHours() < 11 ? "11:00 AM" : "5:00 PM", // Future time today
-    status: "ongoing",
-    location: "Chepauk Stadium, Chennai",
-    price: "₹1,200/session",
-    rating: 4.8,
-    completedJobs: 342,
-    description: "Advanced batting technique and shot selection coaching",
-    category: "cricket",
-    providerPhone: "+91 8608305394"
-  },
-  {
-    "#": "#TNCHE002",
-    service: "Bowling Training",
-    provider: "Irfan Pathan",
-    image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Irfan",
-    date: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0], // Tomorrow
-    time: "5:00 PM",
-    status: "confirmed",
-    location: "MA Chidambaram Stadium, Chennai",
-    price: "₹800/hr",
-    rating: 4.9,
-    completedJobs: 234,
-    description: "Fast bowling technique and pace bowling mastery",
-    category: "cricket",
-    providerPhone: "+91 8608305394"
-  },
-  {
-    "#": "#TNCHE003",
-    service: "Fielding Practice",
-    provider: "Virat Kohli",
-    image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Virat",
-    date: new Date().toISOString().split('T')[0], // Today
-    time: new Date().getHours() < 16 ? "4:30 PM" : "8:30 PM", // Future time today
-    status: "ongoing",
-    location: "Chepauk Stadium, Chennai",
-    price: "₹1,000/session",
-    rating: 4.6,
-    completedJobs: 145,
-    description: "Advanced fielding drills and catching techniques",
-    category: "cricket",
-    providerPhone: "+91 8608305394"
-  },
-  {
-    "#": "#TNALWA001",
-    service: "Cricket Fitness Training",
-    provider: "Sachin Tendulkar",
-    image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sachin",
-    date: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString().split('T')[0], // Day after tomorrow
-    time: "5:30 PM",
-    status: "confirmed",
-    location: "Alwarpet Cricket Academy, Chennai",
-    price: "₹1,500/month",
-    rating: 5.0,
-    completedJobs: 312,
-    description: "Cricket-specific fitness and endurance training",
-    category: "cricket",
-    providerPhone: "+91 8608305394"
-  }
-];
+// Initial mock data - this would typically come from an API
+const initialBookings: Booking[] = [];
 
 // Generate a unique booking ID
 const generateBookingId = (): string => {

@@ -39,7 +39,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           id: session.user.id,
           email: session.user.email,
           phone: session.user.phone,
-          role: session.user.user_metadata?.role || 'client' // fallback to client
+          role: session.user.user_metadata?.role || 'client',
+          name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || 'User',
+          avatar: session.user.user_metadata?.avatar_url || session.user.user_metadata?.avatar || '',
         })
       } else {
         setUser(null)

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -18,7 +18,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { historyJobs } from "@/lib/mock/bookings";
+
 import { useNavbar } from "@/contexts/NavbarContext";
 import { useBookAgain } from "@/hooks/useBookAgain";
 
@@ -38,10 +38,20 @@ export default function BookingHistoryDetailPage() {
     return decodeURIComponent(value);
   }, [params]);
 
-  const historyItem = useMemo(
-    () => historyJobs.find((entry) => entry["#"] === rawId),
-    [rawId]
-  );
+  const [historyItem, setHistoryItem] = useState<any>(null);
+
+  useEffect(() => {
+    if (rawId) {
+      fetch(`/api/bookings/${rawId}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data && !data.error) {
+            setHistoryItem(data);
+          }
+        })
+        .catch(err => console.error("Failed to fetch booking history", err));
+    }
+  }, [rawId]);
 
   // Use the shared Book Again hook with replace navigation
   const { showBookAgain, setShowBookAgain, BookAgainModal } = useBookAgain(

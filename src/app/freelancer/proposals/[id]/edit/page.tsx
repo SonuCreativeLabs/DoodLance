@@ -48,28 +48,14 @@ export default function EditProposalPage() {
             attachments: data.proposal?.attachments || []
           });
         } else {
-          console.error('Failed to load application - API not available, using fallback');
-          // For demo purposes, set some default data
-          setApplication({ jobTitle: 'Sample Job' });
-          setFormData({
-            coverLetter: 'This is a sample cover letter for the job application.',
-            proposedRate: 5000,
-            estimatedDays: 7,
-            skills: ['Sample Skill 1', 'Sample Skill 2'],
-            attachments: []
-          });
+          console.error('Failed to load application');
+          toast.error('Failed to load application details');
+          router.push('/freelancer/jobs?tab=applications');
         }
       } catch (error) {
-        console.error('Error loading application - API not available, using fallback:', error);
-        // For demo purposes, set some default data
-        setApplication({ jobTitle: 'Sample Job' });
-        setFormData({
-          coverLetter: 'This is a sample cover letter for the job application.',
-          proposedRate: 5000,
-          estimatedDays: 7,
-          skills: ['Sample Skill 1', 'Sample Skill 2'],
-          attachments: []
-        });
+        console.error('Error loading application:', error);
+        toast.error('Error loading application');
+        router.push('/freelancer/jobs?tab=applications');
       } finally {
         setLoading(false);
       }
@@ -94,19 +80,14 @@ export default function EditProposalPage() {
       });
 
       if (response.ok) {
-        // Navigate back to proposals page
+        toast.success('Proposal updated successfully');
         router.push('/freelancer/jobs?tab=applications');
       } else {
-        console.error('Failed to update application - API not available, simulating success');
-        // For demo purposes, simulate success
-        alert('Changes saved successfully (demo mode)');
-        router.push('/freelancer/jobs?tab=applications');
+        toast.error('Failed to update proposal');
       }
     } catch (error) {
-      console.error('Error saving application - API not available, simulating success:', error);
-      // For demo purposes, simulate success
-      alert('Changes saved successfully (demo mode)');
-      router.push('/freelancer/jobs?tab=applications');
+      console.error('Error saving application:', error);
+      toast.error('Error saving proposal');
     } finally {
       setSaving(false);
     }

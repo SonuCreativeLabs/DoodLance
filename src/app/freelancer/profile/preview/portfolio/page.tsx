@@ -5,14 +5,14 @@ import { ArrowLeft } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { setSessionFlag, setSessionItem } from '@/utils/sessionStorage';
 import { usePortfolio, type PortfolioItem } from '@/contexts/PortfolioContext';
-import { professionals } from '@/app/client/nearby/mockData';
+
 import { PortfolioItemModal } from '@/components/common/PortfolioItemModal';
 
 export default function PortfolioPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const freelancerId = searchParams.get('freelancerId');
-  
+
   const { portfolio, isHydrated } = usePortfolio();
   const [overrideItems, setOverrideItems] = useState<PortfolioItem[] | null>(null);
   const portfolioItems = useMemo(() => overrideItems ?? portfolio, [overrideItems, portfolio]);
@@ -25,10 +25,29 @@ export default function PortfolioPage() {
   useEffect(() => {
     if (freelancerId) {
       // Show freelancer's portfolio
-      const freelancer = professionals.find(p => p.id.toString() === freelancerId);
-      if (freelancer && freelancer.portfolio) {
-        setOverrideItems(freelancer.portfolio);
-      }
+      fetch(`/api/freelancers/${freelancerId}`)
+        .then(res => res.json())
+        .then(data => {
+          const profile = data.freelancerProfile;
+          if (profile && profile.portfolios) {
+            const items = profile.portfolios.map((p: any) => ({
+              id: p.id,
+              title: p.title,
+              category: p.category,
+              image: p.imageUrl || p.images || '/placeholder.jpg', // Map image field
+              images: p.images ? [p.images] : [],
+              description: p.description,
+              skills: p.skills ? (p.skills.startsWith('[') ? JSON.parse(p.skills) : [p.skills]) : []
+            }));
+            setOverrideItems(items);
+          } else {
+            setOverrideItems([]);
+          }
+        })
+        .catch(err => {
+          console.error("Failed to fetch portfolio", err);
+          setOverrideItems([]);
+        });
     } else {
       // Show user's own portfolio
       setOverrideItems(null); // Use context data
@@ -76,7 +95,7 @@ export default function PortfolioPage() {
   const handleBack = () => {
     if (typeof window !== 'undefined') {
       sessionStorage.setItem('scrollToPortfolio', 'true');
-      
+
       // Check if we're viewing a freelancer's portfolio
       if (freelancerId) {
         // Go back to the freelancer detail page
