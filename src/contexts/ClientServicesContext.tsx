@@ -12,14 +12,31 @@ export interface ServiceItem {
   fallbackEmoji: string;
 }
 
+export interface CategoryItem {
+  id: string;
+  name: string;
+  icon: string;
+  slug: string;
+}
+
 interface ClientServicesContextType {
   services: ServiceItem[];
+  categories: CategoryItem[];
   loading: boolean;
   error: string | null;
   refreshServices: () => void;
 }
 
 const ClientServicesContext = createContext<ClientServicesContextType | undefined>(undefined);
+
+// Define categories
+const categories: CategoryItem[] = [
+  { id: 'playing', name: 'Playing', icon: '🏏', slug: 'playing' },
+  { id: 'coaching', name: 'Coaching', icon: '👨‍🏫', slug: 'coaching' },
+  { id: 'support', name: 'Support', icon: '🤝', slug: 'support' },
+  { id: 'media', name: 'Media', icon: '📸', slug: 'media' },
+  { id: 'other', name: 'Other', icon: '🔧', slug: 'other' }
+];
 
 // Initial services - will be fetched from API
 const initialServices: ServiceItem[] = [
@@ -174,6 +191,7 @@ export function ClientServicesProvider({ children }: { children: ReactNode }) {
 
   const value = {
     services,
+    categories,
     loading,
     error,
     refreshServices

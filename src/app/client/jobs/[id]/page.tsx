@@ -73,9 +73,8 @@ export default function JobDetailsPage() {
 
     const jobApplications = useMemo(() => {
         if (!jobId) return [];
-        // Show actual applications matching the job, OR mock applications for demo purposes if no real ones exist (or always)
-        // User requested to see the specific mock apps (Ashwin, Rohit etc) inside this view.
-        return applications.filter(app => app.jobId === jobId || app.jobId.startsWith('mock_job'));
+        // Show actual applications matching the job
+        return applications.filter(app => app.jobId === jobId);
     }, [applications, jobId]);
 
     const handleStatusToggle = async () => {

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 
 export interface PostedJob {
     "#": string;
@@ -87,18 +88,19 @@ export function PostedJobsProvider({ children }: { children: ReactNode }) {
         };
     }, []);
 
+    const { user } = useAuth();
+
     const refreshPostedJobs = async () => {
+        if (!user?.id) {
+            setLoading(false);
+            return;
+        }
+
         console.log('🔄 REFRESHING POSTED JOBS...');
         setLoading(true);
         setError(null);
         try {
-            // Get user session to know which client ID to filter by
-            const sessionRes = await fetch('/api/auth/session');
-            let clientId = 'user_123'; // fallback
-            if (sessionRes.ok) {
-                const session = await sessionRes.json();
-                if (session.id) clientId = session.id;
-            }
+            const clientId = user.id;
             console.log('👤 Fetching jobs for client:', clientId);
 
             const response = await fetch(`/api/jobs?clientId=${clientId}`, { cache: 'no-store' });

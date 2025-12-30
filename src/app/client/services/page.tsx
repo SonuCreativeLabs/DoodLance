@@ -8,24 +8,22 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useClientServices } from '@/contexts/ClientServicesContext'
 
-// Sidebar categories using Lucide icons
-const sidebarCategories = [
-  { id: 'for-you', name: ['For', 'You'], icon: <Sparkles className="w-6 h-6" /> },
-  { id: 'playing', name: ['Playing', 'Services'], icon: <Video className="w-6 h-6" /> },
-  { id: 'coaching', name: ['Coaching &', 'Training'], icon: <Dumbbell className="w-6 h-6" /> },
-  { id: 'support', name: ['Support', 'Staff'], icon: <Brain className="w-6 h-6" /> },
-  { id: 'media', name: ['Media &', 'Content'], icon: <Camera className="w-6 h-6" /> },
-  { id: 'other', name: ['Other', 'Services'], icon: <Package className="w-6 h-6" /> },
-]
-
-// Service items (comprehensive, grouped by category)
-// const serviceItems = [ ... ] - Now using context
-
 export default function ServicesPage() {
   const [selectedCategory, setSelectedCategory] = useState('for-you')
   const sidebarRef = useRef<HTMLDivElement>(null)
   const selectedButtonRef = useRef<HTMLButtonElement>(null)
-  const { services } = useClientServices()
+  const { services, categories } = useClientServices()
+
+  // Add 'For You' to categories if not present (it's a frontend pseudo-category)
+  const displayCategories = [
+    { id: 'for-you', name: 'For You', icon: <Sparkles className="w-6 h-6" />, slug: 'for-you' },
+    ...categories.map(cat => ({
+      id: cat.slug, // Use slug as ID for selection matching
+      name: cat.name,
+      icon: <span className="text-2xl">{cat.icon}</span>, // Render emoji/icon string 
+      slug: cat.slug
+    }))
+  ];
 
   // Function to scroll selected category into view
   useEffect(() => {
@@ -75,36 +73,33 @@ export default function ServicesPage() {
               <div ref={sidebarRef} className="w-[70px] bg-[#161616] flex-none h-[calc(100vh-60px)] overflow-y-auto scrollbar-none sticky top-[60px] border-r border-white/[0.08]">
                 <div className="py-3 flex flex-col min-h-full">
                   <div className="flex-1 px-2 space-y-1 pb-6">
-                    {sidebarCategories.map((category) => (
+                    {displayCategories.map((category) => (
                       <button
                         key={category.id}
                         ref={selectedCategory === category.id ? selectedButtonRef : null}
                         onClick={() => setSelectedCategory(category.id)}
                         className={`w-full flex flex-col items-center gap-1 py-2 px-1 rounded-lg transition-all duration-200 group relative ${selectedCategory === category.id
-                            ? 'after:absolute after:top-1/2 after:-translate-y-1/2 after:left-0 after:w-[2px] after:h-6 after:bg-purple-500 after:rounded-r-full'
-                            : 'hover:bg-white/[0.02]'
+                          ? 'after:absolute after:top-1/2 after:-translate-y-1/2 after:left-0 after:w-[2px] after:h-6 after:bg-purple-500 after:rounded-r-full'
+                          : 'hover:bg-white/[0.02]'
                           }`}
                       >
                         <div className="w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-200">
                           <div className={`${selectedCategory === category.id
-                              ? 'text-white scale-110'
-                              : 'text-white/60 group-hover:text-white/80 group-hover:scale-105'
+                            ? 'text-white scale-110'
+                            : 'text-white/60 group-hover:text-white/80 group-hover:scale-105'
                             }`}>
                             {category.icon}
                           </div>
                         </div>
-                        <div className="flex flex-col items-center leading-none">
-                          {category.name.map((line, index) => (
-                            <span
-                              key={index}
-                              className={`text-[9px] transition-colors ${selectedCategory === category.id
-                                  ? 'text-white font-bold'
-                                  : 'text-white/40 font-medium group-hover:text-white/60'
-                                }`}
-                            >
-                              {line}
-                            </span>
-                          ))}
+                        <div className="flex flex-col items-center leading-none text-center">
+                          <span
+                            className={`text-[9px] transition-colors ${selectedCategory === category.id
+                              ? 'text-white font-bold'
+                              : 'text-white/40 font-medium group-hover:text-white/60'
+                              }`}
+                          >
+                            {category.name}
+                          </span>
                         </div>
                       </button>
                     ))}
@@ -123,7 +118,7 @@ export default function ServicesPage() {
                         .filter(service => selectedCategory === 'for-you' ? !!service.mostBooked : service.category === selectedCategory)
                         .map((service) => (
                           <Link
-                            href={`/client/services/${service.id}`}
+                            href={`/client/nearby?view=list&category=${service.category}&search=${encodeURIComponent(service.name)}`}
                             key={service.id}
                             className="block group"
                           >

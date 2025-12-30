@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,41 +23,102 @@ interface ChatViewProps {
   recipientJobTitle: string;
   online: boolean;
   onBack?: () => void;
-  messages?: Message[];
+  messages?: Message[]; // Legacy prop, can be ignored or used as initial data
+  currentUserId?: string;
+  className?: string; // Added to support passing class names
 }
 
-// mockMessages removed; messages are now passed as a prop
-
-
-export function ChatView({ 
-  recipientName, 
-  recipientAvatar, 
-  recipientJobTitle, 
+export function ChatView({
+  chatId,
+  recipientName,
+  recipientAvatar,
+  recipientJobTitle,
   online,
   onBack,
-  messages = [],
+  currentUserId,
+  className
 }: ChatViewProps) {
   const [newMessage, setNewMessage] = useState('');
+  const [activeMessages, setActiveMessages] = useState<Message[]>([]);
   const { setNavbarVisibility } = useNavbar();
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Scroll to bottom
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [activeMessages]);
 
   // Hide navbar when chat view is mounted
   useEffect(() => {
     setNavbarVisibility(false);
-    
-    // Show navbar when component unmounts (when leaving chat view)
-    return () => {
-      setNavbarVisibility(true);
-    };
+    return () => setNavbarVisibility(true);
   }, [setNavbarVisibility]);
 
-  const handleSend = () => {
-    if (!newMessage.trim()) return;
-    // In a real app, this would send the message to the backend
-    setNewMessage('');
+  // Fetch messages
+  const fetchMessages = async () => {
+    if (!chatId) return;
+    try {
+      const url = currentUserId
+        ? `/api/messages?conversationId=${chatId}&userId=${currentUserId}`
+        : `/api/messages?conversationId=${chatId}`;
+
+      const res = await fetch(url);
+      if (res.ok) {
+        const data = await res.json();
+        // Transform to UI format
+        const formattedMessages: Message[] = data.map((msg: any) => ({
+          id: msg.id,
+          content: msg.content,
+          timestamp: new Date(msg.createdAt),
+          sender: msg.senderId === currentUserId ? 'user' : 'other',
+          status: msg.isRead ? 'read' : msg.isDelivered ? 'delivered' : 'sent'
+        }));
+        setActiveMessages(formattedMessages);
+      }
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+    }
+  };
+
+  // Poll for messages
+  useEffect(() => {
+    fetchMessages();
+    const interval = setInterval(fetchMessages, 3000); // Poll every 3 seconds
+    return () => clearInterval(interval);
+  }, [chatId, currentUserId]);
+
+  const handleSend = async () => {
+    if (!newMessage.trim() || !currentUserId) return;
+
+    const content = newMessage;
+    setNewMessage(''); // Optimistic clear
+
+    try {
+      const res = await fetch('/api/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          conversationId: chatId,
+          senderId: currentUserId,
+          content
+        })
+      });
+
+      if (res.ok) {
+        fetchMessages(); // Refresh immediately
+      }
+    } catch (error) {
+      console.error("Error sending message:", error);
+      setNewMessage(content); // Restore on error
+    }
   };
 
   return (
-    <div className="flex flex-col h-[100vh] fixed inset-0 bg-gradient-to-b from-[#111111] to-[#0a0a0a]">
+    <div className={`flex flex-col h-[100vh] fixed inset-0 bg-gradient-to-b from-[#111111] to-[#0a0a0a] ${className || ''}`}>
       {/* Chat Header */}
       <div className="flex items-center gap-3 p-3 border-b border-white/5 bg-gradient-to-b from-[#1a1a1a] to-[#111111] backdrop-blur-xl sticky top-0 z-10">
         <Button
@@ -108,7 +169,7 @@ export function ChatView({
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-3 space-y-3 bg-gradient-to-b from-[#111111] to-[#0a0a0a]">
-        {messages.map((message) => (
+        {activeMessages.map((message) => (
           <div
             key={message.id}
             className={`flex items-end gap-2 ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
@@ -125,9 +186,9 @@ export function ChatView({
               className={`max-w-[80%] rounded-xl p-3 transition-all duration-300 transform hover:scale-[1.01] ${message.sender === 'user'
                 ? 'bg-gradient-to-br from-purple-500 to-purple-600 text-white shadow-lg shadow-purple-500/20'
                 : 'bg-white/5 backdrop-blur-sm text-white/90 ring-1 ring-white/10 hover:bg-white/8'
-              }`}
+                }`}
             >
-              <p className="text-xs leading-relaxed font-medium">{message.content}</p>
+              <p className="text-xs leading-relaxed font-medium whitespace-pre-wrap">{message.content}</p>
               <div className="flex items-center gap-1.5 mt-1">
                 <time className="text-[9px] tabular-nums opacity-50 font-medium">
                   {formatDistanceToNow(message.timestamp, { addSuffix: true })}
@@ -149,14 +210,15 @@ export function ChatView({
             </div>
           </div>
         ))}
+        <div ref={messagesEndRef} />
       </div>
 
       {/* Message Input */}
       <div className="p-3 border-t border-white/5 bg-gradient-to-t from-[#1a1a1a] to-[#111111] backdrop-blur-xl sticky bottom-0 z-10">
         <div className="flex gap-2">
-          <Button 
-            variant="ghost" 
-            size="sm" 
+          <Button
+            variant="ghost"
+            size="sm"
             className="h-10 w-10 p-0 rounded-xl shrink-0 hover:bg-white/10 transition-all duration-200 group"
           >
             <Paperclip className="h-5 w-5 text-white/80 group-hover:text-white transition-colors" />
@@ -170,7 +232,7 @@ export function ChatView({
               onKeyPress={(e) => e.key === 'Enter' && handleSend()}
             />
             {newMessage && (
-              <button 
+              <button
                 onClick={() => setNewMessage('')}
                 className="absolute right-2 top-1/2 transform -translate-y-1/2 text-white/40 hover:text-white/60 transition-colors"
               >

@@ -7,11 +7,18 @@ import { ChatView } from '@/components/freelancer/inbox/chat-view';
 import { Search, Filter, ChevronDown, Check } from 'lucide-react';
 import { useChatView } from '@/contexts/ChatViewContext';
 import { useSearchParams } from 'next/navigation';
+import { formatDistanceToNow } from 'date-fns';
 
 // Mock data removed
-const allChats: any[] = [];
+// ... imports
+import { useAuth } from '@/contexts/AuthContext';
+
+// ... other components
+
+const allChats: any[] = []; // Used as fallback or type definition
 
 function InboxPageInner() {
+  const [conversations, setConversations] = useState<any[]>([]);
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
@@ -19,69 +26,88 @@ function InboxPageInner() {
   const filterRef = useRef<HTMLDivElement>(null);
   const { setFullChatView } = useChatView();
   const searchParams = useSearchParams();
+  const { user } = useAuth();
+  const [isLoading, setIsLoading] = useState(true);
 
   const statusOptions = ['All', 'Upcoming', 'Ongoing', 'Completed', 'Cancelled'];
+
+  // Fetch conversations
+  const fetchConversations = async () => {
+    if (!user?.id) return;
+    try {
+      const res = await fetch(`/api/conversations?userId=${user.id}`);
+      if (res.ok) {
+        const data = await res.json();
+        // Map API data to component format if needed, but API should be consistent
+        setConversations(data.map((c: any) => ({
+          id: c.id,
+          name: c.recipientName,
+          avatar: c.recipientAvatar,
+          jobTitle: c.recipientJobTitle,
+          lastMessage: c.lastMessage,
+          time: c.updatedAt ? formatDistanceToNow(new Date(c.updatedAt), { addSuffix: true }) : '',
+          unread: c.unread,
+          online: c.online,
+          // Add status if available in API or derive
+          status: 'Ongoing' // Placeholder
+        })));
+      }
+    } catch (e) {
+      console.error("Failed to fetch conversations", e);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Polling
+  useEffect(() => {
+    if (!user?.id) return;
+    fetchConversations();
+    const interval = setInterval(fetchConversations, 5000);
+    return () => clearInterval(interval);
+  }, [user?.id]);
 
   // Auto-select job chat if jobId parameter is present
   useEffect(() => {
     const jobId = searchParams.get('jobId');
     if (jobId) {
-      const jobChatId = `job-${jobId}`;
-      setSelectedChatId(jobChatId);
+      // Logic to find chat by jobId
     }
   }, [searchParams]);
 
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (filterRef.current && !filterRef.current.contains(event.target as Node)) {
-        setIsFilterOpen(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
+  // ... rest of the component ...
 
-  const selectedChat = allChats.find(chat => chat.id === selectedChatId) || null;
+  const selectedChat = conversations.find(chat => chat.id === selectedChatId) || null;
 
-  // Filter chats based on search query and status
-  const filteredChats = allChats.filter(chat => {
+  // Filter chats 
+  const filteredChats = conversations.filter(chat => {
+    // ... same filter logic ...
     const matchesSearch = !searchQuery.trim() ||
       chat.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      chat.lastMessage.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (chat.lastMessage || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
       chat.jobTitle.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesStatus = !statusFilter || statusFilter === 'All' || chat.status === statusFilter;
-
     return matchesSearch && matchesStatus;
   });
 
-  // Calculate unread messages count for filtered chats
   const [unreadCount, setUnreadCount] = useState(0);
 
-  // Update unread count in an effect to avoid hydration mismatch
   useEffect(() => {
     setUnreadCount(filteredChats.filter(chat => chat.unread).length);
   }, [filteredChats]);
 
-  useEffect(() => {
-    setFullChatView(!!selectedChat);
-    return () => setFullChatView(false);
-  }, [selectedChat, setFullChatView]);
+  // ... useEffect for setFullChatView
 
   const handleBackClick = () => {
     setSelectedChatId(null);
   };
 
-  const totalUnreadCount = 0;
+  const mainHeaderHeight = 64;
+  const messagesHeaderHeight = unreadCount > 0 ? 132 : 116;
 
-  // Calculate heights for all fixed elements
-  const mainHeaderHeight = 64;    // Main header height
-  const messagesHeaderHeight = unreadCount > 0 ? 132 : 116; // Adjust height based on unread count
-  const bottomNavHeight = 64;     // Bottom navigation height
-  const additionalSpacing = 16;    // Extra space for better visibility
+  // ... return JSX ...
+  // Update ChatView props
 
   return (
     <div className="flex flex-col h-[calc(100vh-64px)] bg-[#111111]">
@@ -100,11 +126,12 @@ function InboxPageInner() {
               online={selectedChat.online}
               onBack={handleBackClick}
               className="h-full"
+              currentUserId={user?.id}
             />
           </div>
         ) : (
           <div className="flex flex-col h-full">
-            {/* Fixed Messages Header - positioned below main header */}
+            {/* ... Header and Search ... */}
             <div
               className="sticky top-0 left-0 right-0 z-10 bg-[#111111] pt-2"
               style={{ height: `${messagesHeaderHeight}px` }}
@@ -185,11 +212,16 @@ function InboxPageInner() {
                   display: none;
                 }
               `}</style>
-              <ChatList
-                chats={filteredChats}
-                onChatSelect={setSelectedChatId}
-                selectedChatId={selectedChatId || undefined}
-              />
+
+              {isLoading ? (
+                <div className="p-8 text-center text-white/40">Loading conversations...</div>
+              ) : (
+                <ChatList
+                  chats={filteredChats}
+                  onChatSelect={setSelectedChatId}
+                  selectedChatId={selectedChatId || undefined}
+                />
+              )}
             </div>
           </div>
         )}

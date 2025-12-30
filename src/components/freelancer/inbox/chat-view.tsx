@@ -32,18 +32,12 @@ export function ChatView({
   online,
   onBack,
   className = '',
-  messages: propMessages
-}: ChatViewProps) {
+  messages: propMessages,
+  currentUserId // Add currentUserId prop
+}: ChatViewProps & { currentUserId?: string }) { // Add currentUserId type
   const [newMessage, setNewMessage] = useState('');
-  const [localMessages, setLocalMessages] = useState<Message[]>(propMessages || [{
-    id: '1',
-    content: `Hi there! This is the start of your conversation about the ${recipientJobTitle} position.`,
-    timestamp: new Date(),
-    sender: 'other' as const,
-    status: 'read' as const
-  }]);
+  const [activeMessages, setActiveMessages] = useState<Message[]>([]);
 
-  const messages = localMessages;
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
@@ -56,31 +50,70 @@ export function ChatView({
     }, 0);
   };
 
+  // Fetch messages
+  const fetchMessages = async () => {
+    if (!chatId) return;
+    try {
+      const url = currentUserId
+        ? `/api/messages?conversationId=${chatId}&userId=${currentUserId}`
+        : `/api/messages?conversationId=${chatId}`;
+
+      const res = await fetch(url);
+      if (res.ok) {
+        const data = await res.json();
+        // Transform to UI format
+        const formattedMessages: Message[] = data.map((msg: any) => ({
+          id: msg.id,
+          content: msg.content,
+          timestamp: new Date(msg.createdAt),
+          sender: msg.senderId === currentUserId ? 'user' : 'other',
+          status: msg.isRead ? 'read' : msg.isDelivered ? 'delivered' : 'sent'
+        }));
+        setActiveMessages(formattedMessages);
+      }
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+    }
+  };
+
+  // Polling for messages
   useEffect(() => {
-    // Use 'auto' behavior for initial load
-    scrollToBottom('auto');
-  }, []);
+    fetchMessages();
+    const interval = setInterval(fetchMessages, 3000); // Poll every 3 seconds
+    return () => clearInterval(interval);
+  }, [chatId, currentUserId]);
 
   useEffect(() => {
-    // Use smooth behavior for new messages
-    if (messages.length > 0) {
+    // Only scroll if we have messages
+    if (activeMessages.length > 0) {
       scrollToBottom('smooth');
     }
-  }, [messages]);
+  }, [activeMessages]);
 
-  const handleSend = () => {
-    if (!newMessage.trim()) return;
-    // In a real app, this would send the message to the backend
-    const newMsg: Message = {
-      id: Date.now().toString(),
-      content: newMessage,
-      timestamp: new Date(),
-      sender: 'user',
-      status: 'sent'
-    };
-    setLocalMessages([...localMessages, newMsg]);
-    setNewMessage('');
-    scrollToBottom();
+  const handleSend = async () => {
+    if (!newMessage.trim() || !currentUserId) return;
+
+    const content = newMessage;
+    setNewMessage(''); // Optimistic clear
+
+    try {
+      const res = await fetch('/api/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          conversationId: chatId,
+          senderId: currentUserId,
+          content
+        })
+      });
+
+      if (res.ok) {
+        fetchMessages(); // Refresh immediately
+      }
+    } catch (error) {
+      console.error("Error sending message:", error);
+      setNewMessage(content); // Restore on error
+    }
   };
 
   return (
@@ -132,7 +165,7 @@ export function ChatView({
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 pb-6" style={{ scrollBehavior: 'smooth' }}>
         <div className="space-y-4">
-          {messages.map((message) => (
+          {activeMessages.map((message) => (
             <motion.div
               key={message.id}
               initial={{ opacity: 0, y: 20 }}
@@ -141,8 +174,8 @@ export function ChatView({
             >
               <div
                 className={`max-w-[80%] rounded-2xl px-4 py-2 ${message.sender === 'user'
-                    ? 'bg-purple-600 text-white rounded-br-none'
-                    : 'bg-white/5 text-white rounded-bl-none'
+                  ? 'bg-purple-600 text-white rounded-br-none'
+                  : 'bg-white/5 text-white rounded-bl-none'
                   }`}
               >
                 <p className="text-sm break-words">{message.content}</p>
@@ -152,8 +185,8 @@ export function ChatView({
                   </span>
                   {message.sender === 'user' && (
                     <span className={`text-xs ${message.status === 'sent' ? 'text-white/50' :
-                        message.status === 'delivered' ? 'text-white/70' :
-                          'text-purple-darker' // read
+                      message.status === 'delivered' ? 'text-white/70' :
+                        'text-purple-darker' // read
                       }`}>
                       {message.status === 'sent' && '✓'}
                       {message.status === 'delivered' && '✓✓'}

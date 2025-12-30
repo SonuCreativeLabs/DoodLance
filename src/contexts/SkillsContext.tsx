@@ -27,7 +27,7 @@ import { createClient } from '@/lib/supabase/client';
 export function SkillsProvider({ children }: { children: ReactNode }) {
   const [skills, setSkills] = useState<SkillItem[]>(defaultSkills);
   const [isHydrated, setIsHydrated] = useState(false);
-  const supabase = createClient();
+  const supabase = React.useMemo(() => createClient(), []);
 
   const updateSkills = useCallback(async (newSkills: SkillItem[]) => {
     setSkills(newSkills);

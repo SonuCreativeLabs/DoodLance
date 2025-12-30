@@ -28,7 +28,7 @@ export default function ServiceCard({
   className
 }: ServiceCardProps) {
   return (
-    <Link href={`/services/${id}`}>
+    <Link href={`/client/nearby?view=list&category=${id}&search=${encodeURIComponent(title)}`}>
       <motion.div
         whileHover={{ scale: 1.01 }}
         whileTap={{ scale: 0.99 }}

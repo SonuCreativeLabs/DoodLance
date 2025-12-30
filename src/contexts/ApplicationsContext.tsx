@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 
 export interface Application {
   "#": string;
@@ -40,17 +41,15 @@ export function ApplicationsProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const { user } = useAuth();
+
   const refreshApplications = async () => {
+    if (!user?.id) return;
+
     setLoading(true);
     setError(null);
     try {
-      // Get user session to know which client ID (userId)
-      const sessionRes = await fetch('/api/auth/session');
-      let userId = 'user_123'; // fallback
-      if (sessionRes.ok) {
-        const session = await sessionRes.json();
-        if (session.id) userId = session.id;
-      }
+      const userId = user.id;
 
       // Fetch applications where I am the client (myJobs=true)
       const response = await fetch(`/api/applications?myJobs=true&userId=${userId}`, { cache: 'no-store' });

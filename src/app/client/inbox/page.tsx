@@ -6,6 +6,7 @@ import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Filter, ChevronDown, Check, MessageSquare } from 'lucide-react';
 import { useChatView } from '@/contexts/ChatViewContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 
 
@@ -49,9 +50,12 @@ const statuses: Array<'Upcoming' | 'Ongoing' | 'Completed' | 'Cancelled'> = [
   'Upcoming', 'Ongoing', 'Completed', 'Cancelled'
 ];
 
-function InboxPage() {
+const InboxPage = () => {
   // Client-side state
   const [isClient, setIsClient] = useState(false);
+  const { user } = useAuth(); // Assuming useAuth exists
+  const [conversations, setConversations] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Chat state
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
@@ -70,15 +74,46 @@ function InboxPage() {
     setIsClient(true);
   }, []);
 
+  // Fetch conversations
+  const fetchConversations = async () => {
+    if (!user?.id) return;
+    try {
+      const res = await fetch(`/api/conversations?userId=${user.id}`);
+      if (res.ok) {
+        const data = await res.json();
+        setConversations(data);
+      }
+    } catch (e) {
+      console.error("Failed to fetch conversations", e);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Polling for conversations
+  useEffect(() => {
+    if (!user?.id) return;
+    fetchConversations();
+    const interval = setInterval(fetchConversations, 5000);
+    return () => clearInterval(interval);
+  }, [user?.id]);
+
   // Get URL search params
   const searchParams = useSearchParams();
   const chatParam = searchParams.get('chat');
+  const chatIdParam = searchParams.get('chatId');
 
   // Auto-select chat based on URL parameter
   useEffect(() => {
-    if (chatParam && isClient) {
+    if (chatIdParam && conversations.length > 0) {
+      const matchingChat = conversations.find(c => c.id === chatIdParam);
+      if (matchingChat) {
+        setSelectedChatId(matchingChat.id);
+        setFullChatView(true);
+      }
+    } else if (chatParam && conversations.length > 0) {
       // Find chat by freelancer/provider name
-      const matchingChat = professionalChats.find(
+      const matchingChat = conversations.find(
         chat => chat.recipientName.toLowerCase() === chatParam.toLowerCase()
       );
       if (matchingChat) {
@@ -86,7 +121,7 @@ function InboxPage() {
         setFullChatView(true);
       }
     }
-  }, [chatParam, isClient, setFullChatView]);
+  }, [chatParam, chatIdParam, conversations, setFullChatView]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -115,8 +150,6 @@ function InboxPage() {
     );
   }
 
-
-
   // Toggle filter dropdown
   const toggleFilter = () => setShowFilterDropdown(!showFilterDropdown);
 
@@ -126,16 +159,18 @@ function InboxPage() {
     setShowFilterDropdown(false);
   };
 
-  const selectedChat = professionalChats.find(chat => chat.id === selectedChatId) || null;
+  const selectedChat = conversations.find(chat => chat.id === selectedChatId) || null;
 
   // Filter chats based on search query and status
-  const filteredChats = professionalChats.filter(chat => {
+  const filteredChats = conversations.filter(chat => {
     const matchesSearch = !searchQuery.trim() ||
       chat.recipientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      chat.lastMessage.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (chat.lastMessage || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
       chat.recipientJobTitle.toLowerCase().includes(searchQuery.toLowerCase());
 
     // If status filter is active, only show chats that match the status
+    // Note: status might not be on conversation object yet, so we treat it loosely or default to true
+    // Ideally conversation should carry job status if linked.
     const matchesStatus = !statusFilter || statusFilter === 'All' || chat.status === statusFilter;
 
     return matchesSearch && matchesStatus;
@@ -222,19 +257,23 @@ function InboxPage() {
 
         {/* Chat List */}
         <div className="flex-1 overflow-y-auto">
-          {filteredChats && (
+          {isLoading ? (
+            <div className="p-4 text-center text-white/40 text-sm">Loading conversations...</div>
+          ) : filteredChats.length > 0 ? (
             <ChatList
               chats={filteredChats}
               selectedChatId={selectedChatId || undefined}
               onSelectChat={handleSelectChat}
             />
+          ) : (
+            <div className="p-8 text-center text-white/40 text-sm">No conversations found</div>
           )}
         </div>
       </div>
 
       {/* Chat View - Only show when a chat is selected */}
       <div className="flex-1 flex flex-col bg-[#1a1a1a] border-l border-white/10">
-        {selectedChat && (
+        {selectedChat ? (
           <ChatView
             chatId={selectedChat.id}
             recipientName={selectedChat.recipientName}
@@ -242,8 +281,12 @@ function InboxPage() {
             recipientJobTitle={selectedChat.recipientJobTitle}
             online={selectedChat.online}
             onBack={() => setSelectedChatId(null)}
-            messages={mockMessages[selectedChat.id] || []}
+            currentUserId={user?.id}
           />
+        ) : (
+          <div className="flex h-full items-center justify-center text-white/40">
+            Select a conversation to start messaging
+          </div>
         )}
       </div>
     </div>

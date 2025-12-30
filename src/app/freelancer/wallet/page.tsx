@@ -1,139 +1,207 @@
-"use client";
-import { ArrowLeft, Download, Upload, TrendingUp, CheckCircle, Coins } from "lucide-react";
-import Link from "next/link";
+'use client';
 
-// Mock data for wallet/earnings
-import { useState } from "react";
+import React, { useState, useEffect } from 'react';
+import { Wallet, ArrowUpRight, ArrowDownLeft, Clock, Calendar, ChevronRight, TrendingUp, AlertCircle, Loader2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '@/contexts/AuthContext';
+import Link from 'next/link';
+
+type Transaction = {
+  id: string;
+  type: string;
+  amount: number;
+  description: string;
+  createdAt: string;
+  status: string;
+};
+
+type WalletData = {
+  balance: number;
+  frozenAmount: number;
+  coins: number;
+  transactions: Transaction[];
+};
 
 export default function WalletPage() {
-  // Use state for real data (fetch from API in future)
-  const [earningsSummary] = useState({
-    balance: 0,
-    pending: 0,
-    withdrawn: 0,
-    totalJobs: 0,
-    lastPayout: "-",
-  });
+  const { user } = useAuth();
+  const [walletData, setWalletData] = useState<WalletData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isWithdrawing, setIsWithdrawing] = useState(false);
 
-  const [skillCoins] = useState({
-    available: 0,
-    pending: 0,
-  });
+  // Fetch wallet data
+  const fetchWallet = async () => {
+    if (!user?.id) return;
+    try {
+      const response = await fetch(`/api/wallet?userId=${user.id}`);
+      if (response.ok) {
+        const data = await response.json();
+        setWalletData(data);
+      }
+    } catch (error) {
+      console.error('Error fetching wallet:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  const [transactions] = useState<any[]>([]);
+  useEffect(() => {
+    fetchWallet();
+  }, [user?.id]);
+
+  const handleWithdraw = async () => {
+    if (!user?.id || !walletData || walletData.balance <= 0) return;
+
+    setIsWithdrawing(true);
+    try {
+      const response = await fetch('/api/wallet', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user.id,
+          action: 'withdraw',
+          amount: Math.min(walletData.balance, 5000), // Cap withdrawal for demo/safety
+          description: 'Withdrawal to Bank Account'
+        })
+      });
+
+      if (response.ok) {
+        await fetchWallet(); // Refresh data
+        alert('Withdrawal request submitted successfully');
+      } else {
+        const error = await response.json();
+        alert(`Withdrawal failed: ${error.error}`);
+      }
+    } catch (error) {
+      console.error('Withdrawal error:', error);
+      alert('Withdrawal failed');
+    } finally {
+      setIsWithdrawing(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-[#111111]">
+        <Loader2 className="w-8 h-8 text-purple-500 animate-spin" />
+      </div>
+    );
+  }
+
+  const transactions = walletData?.transactions || [];
+  const currentBalance = walletData?.balance || 0;
 
   return (
-    <div className="min-h-screen bg-[#111111]">
+    <div className="min-h-screen bg-[#111111] text-white pb-20">
       {/* Header */}
-      <div className="sticky top-0 z-40 bg-[#111111]/95 backdrop-blur-xl border-b border-white/10">
-        <div className="max-w-2xl mx-auto px-4 py-4">
-          <div className="flex items-center gap-3">
-            <Link
-              href="/freelancer"
-              className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 backdrop-blur-lg transition-all duration-200 focus:ring-2 focus:ring-purple-400/40 focus:outline-none group border border-white/10 hover:border-purple-500/30"
-              aria-label="Back"
-            >
-              <ArrowLeft className="w-5 h-5 text-white/80 group-hover:text-purple-400 transition-colors" />
-            </Link>
-            <h1 className="text-xl font-semibold text-white">Earnings Wallet</h1>
-          </div>
+      <div className="sticky top-0 z-10 bg-[#111111]/80 backdrop-blur-md border-b border-white/10 px-4 py-3 flex items-center justify-between">
+        <h1 className="text-lg font-semibold">Wallet & Earnings</h1>
+        <div className="w-8 h-8 bg-purple-500/10 rounded-full flex items-center justify-center">
+          <Wallet className="w-4 h-4 text-purple-400" />
         </div>
       </div>
 
-      {/* Content */}
-      <div className="max-w-2xl mx-auto px-4 py-6">
-        {/* Summary Cards */}
-        <div className="grid grid-cols-2 gap-4 mb-8">
-          <div className="bg-gradient-to-br from-[#1E1E1E] to-[#1A1A1A] rounded-2xl p-5 border border-white/5 hover:border-white/10 transition-all duration-200">
-            <div className="flex flex-col gap-2">
-              <span className="text-xs text-white/60 uppercase">Available Balance</span>
-              <span className="text-2xl font-bold text-white">₹{earningsSummary.balance.toLocaleString()}</span>
-            </div>
-          </div>
-          <div className="bg-gradient-to-br from-[#1E1E1E] to-[#1A1A1A] rounded-2xl p-5 border border-white/5 hover:border-white/10 transition-all duration-200">
-            <div className="flex flex-col gap-2">
-              <span className="text-xs text-white/60 uppercase">Pending Earnings</span>
-              <span className="text-2xl font-bold text-yellow-300">₹{earningsSummary.pending.toLocaleString()}</span>
-            </div>
-          </div>
-          <div className="bg-gradient-to-br from-[#1E1E1E] to-[#1A1A1A] rounded-2xl p-5 border border-white/5 hover:border-white/10 transition-all duration-200">
-            <div className="flex flex-col gap-2">
-              <span className="text-xs text-white/60 uppercase">Total Withdrawn</span>
-              <span className="text-2xl font-bold text-green-400">₹{earningsSummary.withdrawn.toLocaleString()}</span>
-            </div>
-          </div>
-          <div className="bg-gradient-to-br from-[#1E1E1E] to-[#1A1A1A] rounded-2xl p-5 border border-white/5 hover:border-white/10 transition-all duration-200">
-            <div className="flex flex-col gap-2">
-              <span className="text-xs text-white/60 uppercase">Jobs Completed</span>
-              <span className="text-2xl font-bold text-white">{earningsSummary.totalJobs}</span>
-            </div>
-          </div>
-        </div>
+      <div className="p-4 space-y-6 max-w-2xl mx-auto">
+        {/* Balance Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gradient-to-br from-purple-900/50 via-[#1a1a1a] to-[#1a1a1a] rounded-2xl p-6 border border-white/10 relative overflow-hidden"
+        >
+          <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/20 blur-3xl rounded-full -mr-16 -mt-16"></div>
 
-        {/* Dood Coins Card */}
-        <div className="bg-gradient-to-br from-[#1E1E1E] to-[#1A1A1A] rounded-2xl p-5 border border-white/5 hover:border-white/10 transition-all duration-200 mb-8">
-          <div className="flex items-center gap-2 mb-3">
-            <Coins className="w-5 h-5 text-yellow-500" />
-            <span className="text-sm font-semibold text-yellow-500">Dood Coins</span>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="flex flex-col gap-2">
-              <span className="text-xs text-white/60 uppercase">Available</span>
-              <span className="text-2xl font-bold text-yellow-500">{skillCoins.available}</span>
+          <div className="relative z-10">
+            <p className="text-gray-400 text-sm mb-1">Total Balance</p>
+            <div className="flex items-baseline gap-1 mb-6">
+              <span className="text-2xl font-bold text-white">₹</span>
+              <span className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-300">
+                {currentBalance.toLocaleString('en-IN')}
+              </span>
             </div>
-            <div className="flex flex-col gap-2">
-              <span className="text-xs text-white/60 uppercase">Pending</span>
-              <span className="text-2xl font-bold text-yellow-400">{skillCoins.pending}</span>
-            </div>
-          </div>
-        </div>
 
-        {/* Last Payout Info */}
-        <div className="bg-gradient-to-br from-[#1E1E1E] to-[#1A1A1A] rounded-2xl p-5 border border-white/5 hover:border-white/10 transition-all duration-200 mb-8">
-          <div className="flex items-center gap-3">
-            <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0" />
-            <div>
-              <span className="text-sm text-white/80">Last payout completed on </span>
-              <span className="text-sm font-medium text-white">{earningsSummary.lastPayout}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Transactions */}
-        <div className="bg-gradient-to-br from-[#1E1E1E] to-[#1A1A1A] rounded-2xl border border-white/5 hover:border-white/10 transition-all duration-200">
-          <div className="p-5 border-b border-white/5">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-white">Recent Transactions</h2>
-              <button className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-white text-sm font-medium transition-all duration-200">
-                Export
+            <div className="grid grid-cols-2 gap-4">
+              <button
+                onClick={handleWithdraw}
+                disabled={isWithdrawing || currentBalance <= 0}
+                className={`flex items-center justify-center gap-2 bg-white text-black font-semibold py-2.5 rounded-xl hover:bg-gray-100 transition-colors ${isWithdrawing || currentBalance <= 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                {isWithdrawing ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <ArrowUpRight className="w-4 h-4" />
+                )}
+                Withdraw
+              </button>
+              <button className="flex items-center justify-center gap-2 bg-white/10 text-white font-semibold py-2.5 rounded-xl hover:bg-white/20 transition-colors">
+                <TrendingUp className="w-4 h-4" />
+                Analytics
               </button>
             </div>
           </div>
-          <div className="divide-y divide-white/5">
-            {transactions.map((tx) => (
-              <div key={tx.id} className="p-5">
-                <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0 mt-0.5">
-                    {tx.icon}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-3 mb-2">
-                      <span className="text-[14px] font-semibold text-white leading-tight">{tx.label}</span>
-                      <span className={`text-[14px] font-bold flex-shrink-0 ${tx.amount > 0 ? 'text-green-400' : 'text-amber-400'
-                        }`}>
-                        {tx.amount > 0 ? '+' : ''}₹{Math.abs(tx.amount).toLocaleString()}
-                      </span>
+        </motion.div>
+
+        {/* Stats Row */}
+        <div className="grid grid-cols-2 gap-4">
+          <div className="bg-[#111] p-4 rounded-xl border border-white/5">
+            <p className="text-gray-400 text-xs mb-1">Pending Clearance</p>
+            <p className="text-lg font-semibold">₹{walletData?.frozenAmount?.toLocaleString('en-IN') || 0}</p>
+          </div>
+          <div className="bg-[#111] p-4 rounded-xl border border-white/5">
+            <p className="text-gray-400 text-xs mb-1">Available Coins</p>
+            <p className="text-lg font-semibold text-yellow-500 flex items-center gap-1">
+              {walletData?.coins?.toLocaleString() || 0}
+              <span className="text-[10px] bg-yellow-500/20 px-1 py-0.5 rounded text-yellow-500">GOLD</span>
+            </p>
+          </div>
+        </div>
+
+        {/* Transactions Section */}
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold">Recent Transactions</h2>
+            <button className="text-sm text-purple-400 font-medium">See All</button>
+          </div>
+
+          <div className="space-y-3">
+            {transactions.length > 0 ? (
+              transactions.map((tx) => (
+                <div key={tx.id} className="bg-[#111] p-4 rounded-xl border border-white/5 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${tx.type === 'CREDIT' || tx.type === 'EARNING'
+                        ? 'bg-green-500/10 text-green-500'
+                        : 'bg-red-500/10 text-red-500'
+                      }`}>
+                      {tx.type === 'CREDIT' || tx.type === 'EARNING' ? (
+                        <ArrowDownLeft className="w-5 h-5" />
+                      ) : (
+                        <ArrowUpRight className="w-5 h-5" />
+                      )}
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-white/50">{tx.date}</span>
-                      <span className="px-2 py-0.5 rounded-full bg-white/5 text-xs text-white/70 border border-white/10">
-                        {tx.status}
-                      </span>
+                    <div>
+                      <p className="font-medium text-white">{tx.description}</p>
+                      <p className="text-xs text-gray-500">
+                        {new Date(tx.createdAt).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </p>
                     </div>
                   </div>
+                  <span className={`font-semibold ${tx.type === 'CREDIT' || tx.type === 'EARNING'
+                      ? 'text-green-500'
+                      : 'text-white'
+                    }`}>
+                    {tx.type === 'CREDIT' || tx.type === 'EARNING' ? '+' : '-'}₹{tx.amount.toLocaleString('en-IN')}
+                  </span>
                 </div>
+              ))
+            ) : (
+              <div className="text-center py-10 text-gray-500">
+                <Clock className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                <p>No transactions yet</p>
               </div>
-            ))}
+            )}
           </div>
         </div>
       </div>
