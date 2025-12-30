@@ -90,11 +90,10 @@ export const JobCard: React.FC<JobCardProps> = ({ job, index, onStatusChange }) 
               </div>
               <div className="min-w-0">
                 <div className="text-sm text-white/90">
-                  {(() => {
-                    // Hardcoded demo date for consistent card display: December 15, 3:30 PM
-                    const demoDate = new Date('2024-12-15T15:30:00.000Z');
-                    const date = format(demoDate, 'MMM d');
-                    const time = formatTime12Hour(`${demoDate.getHours().toString().padStart(2, '0')}:${demoDate.getMinutes().toString().padStart(2, '0')}`);
+                  {job.postedAt && (() => {
+                    const postedDate = new Date(job.postedAt);
+                    const date = format(postedDate, 'MMM d');
+                    const time = formatTime12Hour(`${postedDate.getHours().toString().padStart(2, '0')}:${postedDate.getMinutes().toString().padStart(2, '0')}`);
                     return time ? `${date}, ${time}` : date;
                   })()}
                 </div>

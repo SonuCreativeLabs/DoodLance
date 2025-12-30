@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { CheckCircle2, Clock, Trash2, Plus, Star } from "lucide-react";
+import { CheckCircle2, Clock, Trash2, Plus, Star, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,7 @@ import { useServices, type ServicePackage as CtxService } from '@/contexts/Servi
 import { CategorySelect } from "@/components/common/CategoryBadge";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { EmptyState } from '@/components/freelancer/profile/EmptyState';
 
 // Local form interface (different from context ServicePackage)
 interface ServicePackage {
@@ -102,12 +103,12 @@ function PackageForm({
       category: '',
       skill: '', // Add skill field
     };
-    
+
     return {
       ...defaultData,
       ...initialData,
-      features: Array.isArray(initialData?.features) && initialData.features.length > 0 
-        ? initialData.features 
+      features: Array.isArray(initialData?.features) && initialData.features.length > 0
+        ? initialData.features
         : defaultData.features
     };
   });
@@ -136,7 +137,7 @@ function PackageForm({
     );
     onValidationChange?.(isValid);
   }, [formData, onValidationChange]);
-  
+
 
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -150,7 +151,7 @@ function PackageForm({
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-const handleFeatureChange = (index: number, value: string) => {
+  const handleFeatureChange = (index: number, value: string) => {
     const newFeatures = [...(formData.features || [''])];
     newFeatures[index] = value;
     setFormData(prev => ({
@@ -184,7 +185,7 @@ const handleFeatureChange = (index: number, value: string) => {
       price: formData.price?.trim() || '0',
       deliveryTime: formData.deliveryTime || '',
       revisions: formData.revisions || '1 revision',
-      features: Array.isArray(formData.features) 
+      features: Array.isArray(formData.features)
         ? formData.features.filter((f): f is string => Boolean(f && typeof f === 'string' && f.trim() !== ''))
         : [],
       type: formData.type,
@@ -264,7 +265,7 @@ const handleFeatureChange = (index: number, value: string) => {
             </select>
             <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="m6 9 6 6 6-6"/>
+                <path d="m6 9 6 6 6-6" />
               </svg>
             </div>
           </div>
@@ -367,9 +368,8 @@ const handleFeatureChange = (index: number, value: string) => {
         >
           <span
             aria-hidden="true"
-            className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
-              formData.popular ? 'translate-x-6' : 'translate-x-0'
-            }`}
+            className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${formData.popular ? 'translate-x-6' : 'translate-x-0'
+              }`}
           />
         </button>
         <Label htmlFor="popular" className="text-sm font-medium text-white/80 cursor-pointer">
@@ -416,133 +416,9 @@ interface ServicePackagesProps {
 
 export function ServicePackages({ services = [] }: ServicePackagesProps) {
   const { services: ctxServices, addService, updateService, removeService } = useServices();
-  // Convert services to the internal packages format
-  const initialPackages = services.length > 0 
-    ? services.map(service => ({
-        id: service.id,
-        name: service.title,
-        // ensure numeric-only price for inputs (strip ₹ and commas)
-        price: (service.price || '').replace(/^₹\s?/, '').replace(/,/g, ''),
-        description: service.description,
-        features: service.features || [],
-        deliveryTime: service.deliveryTime || '',
-        popular: false,
-        revisions: '1 revision',
-        // carry through type and category so dialog defaults are pre-selected
-        type: service.type,
-        category: normalizeCategory(service.category)
-      }))
-    : [];
 
-  // Load packages from localStorage or use defaults
-  const [packages, setPackages] = useState<ServicePackage[]>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('userPackages');
-      if (saved) {
-        try {
-          const parsedPackages = JSON.parse(saved);
-          return parsedPackages;
-        } catch (error) {
-          console.error('Failed to parse saved packages:', error);
-        }
-      }
-    }
-
-    // Fallback to initial packages or defaults
-    return initialPackages.length > 0 ? initialPackages : [
-      {
-        id: "1",
-        name: "Net Bowling Sessions",
-        price: "500",
-        description: "Professional net bowling sessions with personalized coaching",
-        features: [
-          "1-hour net session",
-          "Ball analysis",
-          "Technique improvement",
-          "Q&A session"
-        ],
-        deliveryTime: "1 hour",
-        revisions: "1 revision",
-        category: "Net Bowler"
-      },
-      {
-        id: "2",
-        name: "Match Player",
-        price: "1,500",
-        description: "Professional match player ready to play for your team per match",
-        features: [
-          "Full match participation",
-          "Team contribution",
-          "Match commitment",
-          "Performance guarantee"
-        ],
-        deliveryTime: "Per match",
-        revisions: "1 revision",
-        category: "Match Player"
-      },
-      {
-        id: "3",
-        name: "Match Videography",
-        price: "800",
-        description: "Professional match videography and reel content creation during games",
-        features: [
-          "Full match recording",
-          "Highlight reel creation",
-          "Social media content",
-          "Priority editing"
-        ],
-        deliveryTime: "Same day",
-        revisions: "Unlimited",
-        category: "Cricket Photo / Videography"
-      },
-      {
-        id: "4",
-        name: "Sidearm Bowling",
-        price: "1,500",
-        description: "Professional sidearm bowler delivering 140km/h+ speeds for practice sessions",
-        features: [
-          "140km/h+ sidearm bowling",
-          "Practice session delivery",
-          "Consistent speed & accuracy",
-          "Training session support"
-        ],
-        popular: true,
-        deliveryTime: "per hour",
-        revisions: "2 revisions",
-        category: "Sidearm"
-      },
-      {
-        id: "5",
-        name: "Batting Coaching",
-        price: "1,200",
-        description: "Professional batting technique training and skill development",
-        features: [
-          "Batting technique analysis",
-          "Footwork drills",
-          "Shot selection training",
-          "Mental preparation coaching"
-        ],
-        deliveryTime: "per hour",
-        revisions: "2 revisions",
-        category: "Coach"
-      },
-      {
-        id: "6",
-        name: "Performance Analysis",
-        price: "2,000",
-        description: "Comprehensive cricket performance analysis and improvement recommendations",
-        features: [
-          "Match statistics review",
-          "Strength/weakness analysis",
-          "Improvement recommendations",
-          "Progress tracking"
-        ],
-        deliveryTime: "2-3 weeks",
-        revisions: "3 revisions",
-        category: "Analyst"
-      }
-    ];
-  });
+  // Use context services as the source of truth
+  const packages = ctxServices.map(mapToUI);
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -550,77 +426,50 @@ export function ServicePackages({ services = [] }: ServicePackagesProps) {
   const [editingPackage, setEditingPackage] = useState<ServicePackage | null>(null);
   const [isFormValid, setIsFormValid] = useState(false);
 
-  // Save packages to localStorage whenever they change
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('userPackages', JSON.stringify(packages));
-    }
-  }, [packages]);
-
-  // Initialize UI packages from ServicesContext if local is empty
-  useEffect(() => {
-    if (packages.length === 0 && Array.isArray(ctxServices) && ctxServices.length > 0) {
-      setPackages(ctxServices.map(mapToUI));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ctxServices]);
-
-  // Propagate UI package changes into ServicesContext (upsert)
-  useEffect(() => {
-    if (!Array.isArray(packages)) return;
-    const mapped = packages.map(mapToCtx);
-    mapped.forEach(svc => {
-      const existing = ctxServices.find(s => s.id === svc.id);
-      if (!existing) {
-        addService(svc);
-      } else {
-        updateService(svc.id, svc);
-      }
-    });
-  }, [packages]);
-
   const handleSavePackage = (pkg: Partial<ServicePackage>) => {
     // Ensure features is always an array and filter out empty strings
-    const cleanFeatures = Array.isArray(pkg.features) 
+    const cleanFeatures = Array.isArray(pkg.features)
       ? pkg.features.filter((f): f is string => Boolean(f && typeof f === 'string' && f.trim() !== ''))
       : [];
-    
-    setPackages(currentPackages => {
-      if (pkg.id && currentPackages.some(p => p.id === pkg.id)) {
-        // Update existing package
-        return currentPackages.map(p => 
-          p.id === pkg.id 
-            ? { 
-                ...pkg,
-                features: cleanFeatures,
-                id: p.id, // Preserve the original ID
-                name: pkg.name?.trim() || p.name,
-                description: pkg.description?.trim() || p.description,
-                price: pkg.price?.trim() || p.price,
-                deliveryTime: pkg.deliveryTime?.trim() || p.deliveryTime,
-                popular: pkg.popular !== undefined ? pkg.popular : p.popular,
-                revisions: pkg.revisions || p.revisions || '1 revision'
-              } as ServicePackage 
-            : p
-        );
-      } else {
-        // Add new package with all required fields
-        const newPackage: ServicePackage = {
-          id: Math.random().toString(36).substr(2, 9),
-          name: pkg.name?.trim() || 'New Package',
-          description: pkg.description?.trim() || '',
-          price: pkg.price?.trim() || '0',
+
+    if (pkg.id && packages.some(p => p.id === pkg.id)) {
+      // Update existing package
+      const existingPkg = packages.find(p => p.id === pkg.id);
+      if (existingPkg) {
+        const updatedPkg: ServicePackage = {
+          ...existingPkg,
+          ...pkg,
           features: cleanFeatures,
-          deliveryTime: pkg.deliveryTime?.trim() || '',
-          popular: Boolean(pkg.popular),
-          revisions: '1 revision',
-          type: (pkg.type as any) || 'online',
-          category: (pkg.category as any) || ''
-        };
-        return [...currentPackages, newPackage];
+          name: pkg.name?.trim() || existingPkg.name,
+          description: pkg.description?.trim() || existingPkg.description,
+          price: pkg.price?.trim() || existingPkg.price,
+          deliveryTime: pkg.deliveryTime?.trim() || existingPkg.deliveryTime,
+          revisions: pkg.revisions || existingPkg.revisions,
+          popular: pkg.popular !== undefined ? pkg.popular : existingPkg.popular,
+          skill: pkg.skill || existingPkg.skill,
+        } as ServicePackage;
+
+        updateService(pkg.id, mapToCtx(updatedPkg));
       }
-    });
-    
+    } else {
+      // Add new package
+      const newPkg: ServicePackage = {
+        id: Math.random().toString(36).substr(2, 9),
+        name: pkg.name?.trim() || 'New Package',
+        price: pkg.price?.trim() || '0',
+        description: pkg.description?.trim() || '',
+        features: cleanFeatures,
+        deliveryTime: pkg.deliveryTime?.trim() || '',
+        revisions: '1 revision',
+        popular: Boolean(pkg.popular),
+        type: (pkg.type as any) || 'online',
+        category: (pkg.category as any) || '',
+        skill: (pkg.skill as any) || '',
+      };
+
+      addService(mapToCtx(newPkg));
+    }
+
     setIsDialogOpen(false);
     setEditingPackage(null);
   };
@@ -632,8 +481,6 @@ export function ServicePackages({ services = [] }: ServicePackagesProps) {
 
   const confirmDelete = () => {
     if (packageToDelete) {
-      setPackages(pkgs => pkgs.filter(p => p.id !== packageToDelete));
-      // Also remove from ServicesContext
       removeService(packageToDelete);
     }
     setIsDeleteDialogOpen(false);
@@ -657,99 +504,119 @@ export function ServicePackages({ services = [] }: ServicePackagesProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end">
-        <Button 
-          onClick={handleAddNewPackage}
-          variant="default"
-          size="sm" 
-          className="w-full h-10 gap-2 bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-700 hover:to-purple-600 shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center rounded-lg"
-          style={{ borderRadius: '0.5rem' }}
-        >
-          <Plus className="h-4 w-4" />
-          <span>Add Package</span>
-        </Button>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {packages.map((pkg) => (
-          <div 
-            key={pkg.id} 
-            className={`relative rounded-xl border ${pkg.popular ? 'border-purple-500/30 ring-1 ring-purple-500/20' : 'border-white/5'} bg-[#1E1E1E] pt-12 pb-6 px-6`}
-          >
-            <div className="absolute -top-3 right-3">
-              <button
-                type="button"
-                className="group h-7 w-7 rounded-full flex items-center justify-center bg-red-500/80 hover:bg-red-600 border border-red-500 hover:border-red-400 transition-all duration-200 shadow-md hover:shadow-red-500/30"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDeletePackage(pkg.id);
-                }}
-                title="Delete package"
+      {packages.length === 0 ? (
+        <EmptyState
+          icon={FileText}
+          title="No service packages"
+          description="Create packages to display your services and pricing to potential clients."
+          action={
+            <Button
+              onClick={handleAddNewPackage}
+              variant="default"
+              size="sm"
+              className="gap-2 bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-700 hover:to-purple-600 shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center rounded-lg"
+              style={{ borderRadius: '0.5rem' }}
+            >
+              <Plus className="h-4 w-4" />
+              <span>Add Package</span>
+            </Button>
+          }
+        />
+      ) : (
+        <>
+          <div className="flex justify-end">
+            <Button
+              onClick={handleAddNewPackage}
+              variant="default"
+              size="sm"
+              className="w-full h-10 gap-2 bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-700 hover:to-purple-600 shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center rounded-lg"
+              style={{ borderRadius: '0.5rem' }}
+            >
+              <Plus className="h-4 w-4" />
+              <span>Add Package</span>
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {packages.map((pkg) => (
+              <div
+                key={pkg.id}
+                className={`relative rounded-xl border ${pkg.popular ? 'border-purple-500/30 ring-1 ring-purple-500/20' : 'border-white/5'} bg-[#1E1E1E] pt-12 pb-6 px-6`}
               >
-                <Trash2 className="h-3.5 w-3.5 text-white transition-colors" />
-              </button>
-            </div>
-            
-            <div className="absolute top-3 left-3">
-              {pkg.category && (
-                <Badge className="bg-white/10 text-white/80 border-white/20 px-2 py-0.5 text-xs">
-                  {pkg.category}
-                </Badge>
-              )}
-            </div>
-            
-            <div className="text-center">
-              <h3 className="text-lg font-semibold text-white">{pkg.name}</h3>
-              <div className="mt-2 space-y-1">
-                <div className="flex items-baseline justify-center gap-1">
-                  <p className="text-2xl font-bold text-white">
-                    ₹{pkg.price.replace(/^₹/, '')}
-                  </p>
-                  <span className="text-sm font-normal text-white/60">/ {pkg.deliveryTime}</span>
+                <div className="absolute -top-3 right-3">
+                  <button
+                    type="button"
+                    className="group h-7 w-7 rounded-full flex items-center justify-center bg-red-500/80 hover:bg-red-600 border border-red-500 hover:border-red-400 transition-all duration-200 shadow-md hover:shadow-red-500/30"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeletePackage(pkg.id);
+                    }}
+                    title="Delete package"
+                  >
+                    <Trash2 className="h-3.5 w-3.5 text-white transition-colors" />
+                  </button>
+                </div>
+
+                <div className="absolute top-3 left-3">
+                  {pkg.category && (
+                    <Badge className="bg-white/10 text-white/80 border-white/20 px-2 py-0.5 text-xs">
+                      {pkg.category}
+                    </Badge>
+                  )}
+                </div>
+
+                <div className="text-center">
+                  <h3 className="text-lg font-semibold text-white">{pkg.name}</h3>
+                  <div className="mt-2 space-y-1">
+                    <div className="flex items-baseline justify-center gap-1">
+                      <p className="text-2xl font-bold text-white">
+                        ₹{pkg.price.replace(/^₹/, '')}
+                      </p>
+                      <span className="text-sm font-normal text-white/60">/ {pkg.deliveryTime}</span>
+                    </div>
+                  </div>
+                  <p className="mt-2 text-sm text-white/60">{pkg.description}</p>
+                </div>
+
+                <ul className="mt-6 space-y-3">
+                  {pkg.features.map((feature, index) => (
+                    <li key={index} className="flex items-start">
+                      <CheckCircle2 className="h-5 w-5 flex-shrink-0 text-purple-400 mr-2 mt-0.5" />
+                      <span className="text-sm text-white/80">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <div className="mt-6 space-y-2">
+                  <Button
+                    className={`w-full ${pkg.popular ? 'bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800' : 'bg-white/5 hover:bg-white/10'}`}
+                    size="sm"
+                    onClick={() => handleEditPackage(pkg)}
+                  >
+                    Edit Package
+                  </Button>
                 </div>
               </div>
-              <p className="mt-2 text-sm text-white/60">{pkg.description}</p>
-            </div>
+            ))}
+          </div>
 
-            <ul className="mt-6 space-y-3">
-              {pkg.features.map((feature, index) => (
-                <li key={index} className="flex items-start">
-                  <CheckCircle2 className="h-5 w-5 flex-shrink-0 text-purple-400 mr-2 mt-0.5" />
-                  <span className="text-sm text-white/80">{feature}</span>
-                </li>
-              ))}
-            </ul>
-
-
-
-            <div className="mt-6 space-y-2">
-              <Button 
-                className={`w-full ${pkg.popular ? 'bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800' : 'bg-white/5 hover:bg-white/10'}`}
-                size="sm"
-                onClick={() => handleEditPackage(pkg)}
+          {/* Add New Package Card */}
+          <Card className="bg-[#1E1E1E] border-white/5">
+            <CardContent className="p-6">
+              <div
+                className="rounded-xl border-2 border-dashed border-white/10 p-8 hover:border-purple-500/50 transition-colors cursor-pointer flex flex-col items-center justify-center"
+                onClick={handleAddNewPackage}
               >
-                Edit Package
-              </Button>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Add New Package Card */}
-      <Card className="bg-[#1E1E1E] border-white/5">
-        <CardContent className="p-6">
-          <div 
-            className="rounded-xl border-2 border-dashed border-white/10 p-8 hover:border-purple-500/50 transition-colors cursor-pointer flex flex-col items-center justify-center"
-            onClick={handleAddNewPackage}
-          >
-            <div className="h-12 w-12 rounded-full bg-white/5 flex items-center justify-center mb-4 hover:bg-white/10 transition-colors">
-              <Plus className="h-6 w-6 text-purple-400" />
-            </div>
-            <h3 className="text-lg font-medium text-white mb-1">Add New Package</h3>
-            <p className="text-sm text-white/60 text-center max-w-md">Click here to create a new service package for your clients</p>
-          </div>
-        </CardContent>
-      </Card>
+                <div className="h-12 w-12 rounded-full bg-white/5 flex items-center justify-center mb-4 hover:bg-white/10 transition-colors">
+                  <Plus className="h-6 w-6 text-purple-400" />
+                </div>
+                <h3 className="text-lg font-medium text-white mb-1">Add New Package</h3>
+                <p className="text-sm text-white/60 text-center max-w-md">Click here to create a new service package for your clients</p>
+              </div>
+            </CardContent>
+          </Card>
+        </>
+      )}
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
@@ -810,7 +677,7 @@ export function ServicePackages({ services = [] }: ServicePackagesProps) {
               hideActions={true}
             />
           </div>
-          
+
           {/* Fixed Footer with Actions */}
           <div className="border-t border-white/10 p-4 bg-[#1E1E1E] flex-shrink-0">
             <div className="flex justify-center gap-4">

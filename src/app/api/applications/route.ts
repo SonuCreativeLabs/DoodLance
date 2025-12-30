@@ -172,42 +172,31 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check if freelancer already applied (optional - for testing purposes)
+    // Check if freelancer already applied
+    let existingApplication;
     try {
-      const existingApplication = await prisma.application.findFirst({
+      existingApplication = await prisma.application.findFirst({
         where: {
-          jobId,
-          freelancerId,
+          jobId: jobId,
+          freelancerId: freelancerId
         }
-      })
+      });
 
       if (existingApplication) {
-        console.log('⚠️ User already applied, but allowing for testing');
-        // In production, you might want to uncomment this:
-        // return NextResponse.json(
-        //   { error: 'You have already applied to this job' },
-        //   { status: 409 }
-        // )
+        return NextResponse.json(
+          { error: 'You have already applied to this job' },
+          { status: 400 }
+        );
       }
     } catch (checkError) {
       console.warn('Failed to check existing application (non-fatal):', checkError);
     }
 
-    // Generate hierarchical application ID
-    // Format: P-{city}{area}{number}-app### (e.g., P-tnche001-app001)
-    let applicationCount = 0;
-    try {
-      applicationCount = await prisma.application.count({
-        where: { jobId }
-      });
-    } catch (countError) {
-      console.warn('Failed to count applications, using random ID:', countError);
-      // Use random number if count fails
-      applicationCount = Math.floor(Math.random() * 900);
-    }
-    const appNumber = String(applicationCount + 1).padStart(3, '0')
-    // Replace J- with P- for applications
-    const applicationId = `${jobId.replace('J-', 'P-')}-app${appNumber}`
+    // Generate hierarchical application ID using new format
+    // Format: A{Category}{City}{Area}{JobSeq}{AppSeq} (e.g., APLCHVE001012)
+    const { generateApplicationId } = await import('@/lib/id-utils');
+
+    const applicationId = await generateApplicationId({ jobId });
 
     // Create the application with custom ID
     console.log('📝 Creating application with data:', {

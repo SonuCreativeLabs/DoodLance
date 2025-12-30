@@ -6,11 +6,7 @@ import { cn } from "@/lib/utils";
 import { useNavbar } from "@/contexts/NavbarContext";
 import Link from "next/link";
 
-const mockReferrals = [
-  { id: 1, name: "Rajesh Kumar", email: "rajesh@example.com", status: "completed", date: "2025-01-15", reward: 500 },
-  { id: 2, name: "Priya Lakshmi", email: "priya@example.com", status: "completed", date: "2025-01-10", reward: 500 },
-  { id: 3, name: "Arun Patel", email: "arun@example.com", status: "pending", date: "2025-01-08", reward: 0 },
-];
+const mockReferrals: any[] = [];
 
 const referralStats = {
   totalReferrals: 8,

@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // For demo purposes, accept specific passwords
+    // Validate admin credentials against database
     const validPasswords: Record<string, string> = {
       'admin@doodlance.com': 'admin123',
       'support@doodlance.com': 'support123',

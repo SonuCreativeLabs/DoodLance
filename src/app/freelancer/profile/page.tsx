@@ -1,6 +1,6 @@
 "use client"
 
-import { Briefcase, Code, Award, Star, FileText, Calendar, MessageSquare, Settings, User, Mail, Phone, Globe, MapPin, GraduationCap, Languages, Edit2, CheckCircle, CircleDollarSign, ChevronRight, BarChart2, Clock, Users, Target, Dumbbell, Trophy, CreditCard, Settings as SettingsIcon } from 'lucide-react';
+import { Briefcase, Code, Award, Star, FileText, Calendar, User, CheckCircle, BarChart2, CreditCard, Settings as SettingsIcon } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -74,7 +74,6 @@ type FreelancerData = {
 
 
 
-const experiences: Experience[] = [];
 
 // Extend FreelancerData interface to include missing properties
 type ExtendedFreelancerData = FreelancerData & {

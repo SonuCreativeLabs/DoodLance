@@ -9,9 +9,11 @@ import { useLayout } from "@/contexts/LayoutContext"
 import { useRouter } from "next/navigation"
 import { useSkills } from "@/contexts/SkillsContext"
 import { usePersonalDetails } from "@/contexts/PersonalDetailsContext"
+import { useAvailability } from "@/contexts/AvailabilityContext"
 import { useForYouJobs } from "@/contexts/ForYouJobsContext"
 import type { Job } from "./feed/types"
 import { getWorkModeLabel, getJobDurationLabel } from "./feed/types"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 export const dynamic = 'force-dynamic'
 
@@ -20,7 +22,8 @@ export default function FreelancerHome() {
   const router = useRouter();
   const { skills } = useSkills();
   const { forYouJobs } = useForYouJobs();
-  const { personalDetails } = usePersonalDetails();
+  const { personalDetails, toggleReadyToWork } = usePersonalDetails();
+  const { getWorkingHoursText } = useAvailability();
   const [jobCount, setJobCount] = useState(0);
   const [recommendedJobs, setRecommendedJobs] = useState<Job[]>([]);
 
@@ -85,11 +88,13 @@ export default function FreelancerHome() {
           >
             <div className="inline-flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full bg-white/5 backdrop-blur-sm border border-white/10 hover:border-white/20 transition-colors">
               <div className="relative w-1.5 h-1.5 sm:w-2 sm:h-2">
-                <div className="absolute inset-0 bg-green-400 rounded-full opacity-75 animate-ping"></div>
-                <div className="absolute inset-0.5 bg-green-400 rounded-full"></div>
+                {personalDetails.readyToWork && (
+                  <div className="absolute inset-0 bg-green-400 rounded-full opacity-75 animate-ping"></div>
+                )}
+                <div className={`absolute inset-0.5 rounded-full ${personalDetails.readyToWork ? 'bg-green-400' : 'bg-gray-400'}`}></div>
               </div>
               <span className="text-[10px] sm:text-xs font-medium text-white/90">
-                Online & Ready for Work
+                {personalDetails.readyToWork ? 'Online & Ready for Work' : 'Offline'}
               </span>
             </div>
             <div>
@@ -186,6 +191,7 @@ export default function FreelancerHome() {
         </div>
 
         {/* Your Profile Section */}
+        {/* Your Profile Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -202,15 +208,12 @@ export default function FreelancerHome() {
                   transition={{ delay: 0.6 }}
                   className="relative h-14 w-14 rounded-2xl overflow-hidden ring-2 ring-[#6B46C1]/40 flex-shrink-0"
                 >
-                  <Image
-                    src={personalDetails.avatarUrl || "/images/profile-placeholder.jpg"}
-                    alt="Profile Picture"
-                    width={56}
-                    height={56}
-                    className="object-cover w-full h-full"
-                    priority
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
+                  <Avatar className="h-full w-full rounded-2xl">
+                    <AvatarImage src={personalDetails.avatarUrl} alt="Profile Picture" className="object-cover" />
+                    <AvatarFallback className="rounded-2xl bg-[#2a2a2a] text-white">
+                      {personalDetails.name ? personalDetails.name.charAt(0).toUpperCase() : 'U'}
+                    </AvatarFallback>
+                  </Avatar>
                 </motion.div>
                 {/* Name and Rating */}
                 <div className="flex flex-col justify-center flex-grow min-w-0 ml-4">
@@ -256,9 +259,12 @@ export default function FreelancerHome() {
                   <p className="text-sm font-medium text-white group-hover:opacity-90 transition-colors">Ready to work</p>
                   <p className="text-xs text-white/60">Toggle your availability</p>
                 </div>
-                <div className="relative inline-flex h-6 w-11 items-center rounded-full bg-green-500 group-hover:bg-green-600 transition-colors cursor-pointer shadow-inner">
+                <div
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer shadow-inner ${personalDetails.readyToWork ? 'bg-green-500 hover:bg-green-600' : 'bg-gray-600 hover:bg-gray-500'}`}
+                  onClick={() => toggleReadyToWork()}
+                >
                   <span className="sr-only">Toggle availability</span>
-                  <span className={`absolute h-5 w-5 transform rounded-full bg-white transition-all duration-300 shadow-sm ${true ? 'translate-x-6' : 'translate-x-1'}`}></span>
+                  <span className={`absolute h-5 w-5 transform rounded-full bg-white transition-all duration-300 shadow-sm ${personalDetails.readyToWork ? 'translate-x-6' : 'translate-x-1'}`}></span>
                 </div>
               </motion.div>
               <motion.div
@@ -274,24 +280,13 @@ export default function FreelancerHome() {
                   <p className="text-sm font-medium text-white group-hover:opacity-90 transition-colors whitespace-nowrap overflow-hidden text-ellipsis">Availability & Radius</p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-white/60">Mon-Fri</span>
-                      <span className="mx-1 text-xs text-white/30">|</span>
-                      <span className="text-xs text-white/60">9AM-6PM</span>
-                    </div>
-                    <div className="flex items-center">
-                      <span className="text-xs text-white/70">Within 10km radius</span>
+                      <Clock className="w-3 h-3 text-white/40" />
+                      <span className="text-xs text-white/60 truncate" title={getWorkingHoursText()}>
+                        {getWorkingHoursText()}
+                      </span>
                     </div>
                   </div>
                 </div>
-                <a
-                  href="/freelancer/profile/availability"
-                  tabIndex={0}
-                  aria-label="Edit Availability"
-                  className="text-sm font-medium text-white/70 hover:text-white/90 transition-colors duration-200"
-                  style={{ display: 'inline-flex', alignItems: 'center' }}
-                >
-                  Edit
-                </a>
               </motion.div>
             </div>
           </div>

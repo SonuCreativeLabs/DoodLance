@@ -1,47 +1,51 @@
 "use client";
 import { CheckCircle, Briefcase, MessageCircle, ArrowLeft, Inbox } from "lucide-react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 
-const notifications = [
-  {
-    id: 1,
-    type: "job",
-    title: "New Job Posted",
-    description: "A new cricket coaching job is available near Chennai.",
-    time: "2 min ago",
-    icon: <Briefcase className="w-5 h-5 text-purple-400" />,
-    unread: true,
-  },
-  {
-    id: 2,
-    type: "message",
-    title: "New Message",
-    description: "Client Rajesh Kumar sent you a message about the net bowling session.",
-    time: "10 min ago",
-    icon: <MessageCircle className="w-5 h-5 text-green-400" />,
-    unread: true,
-  },
-  {
-    id: 3,
-    type: "job",
-    title: "Job Completed",
-    description: "You have successfully completed the batting coaching session.",
-    time: "1 hour ago",
-    icon: <CheckCircle className="w-5 h-5 text-amber-400" />,
-    unread: false,
-  },
-  {
-    id: 4,
-    type: "job",
-    title: "Payment Received",
-    description: "₹2,500 has been credited to your wallet for the completed job.",
-    time: "2 hours ago",
-    icon: <CheckCircle className="w-5 h-5 text-emerald-400" />,
-    unread: false,
-  },
-];
+interface Notification {
+  id: string;
+  type: "job" | "message" | "payment" | "system";
+  title: string;
+  description: string;
+  time: string;
+  icon: React.ReactNode;
+  unread: boolean;
+  entityId?: string;
+  actionUrl?: string;
+}
 
 export default function NotificationsPage() {
+  const { user } = useAuth();
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Fetch notifications from API
+    const fetchNotifications = async () => {
+      if (!user?.id) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        // In production, fetch from your API
+        // const response = await fetch(`/api/notifications?userId=${user.id}`);
+        // const data = await response.json();
+        
+        // For now, set to empty state
+        setNotifications([]);
+      } catch (error) {
+        console.error('Failed to fetch notifications:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchNotifications();
+  }, [user?.id]);
+
   const unreadCount = notifications.filter(n => n.unread).length;
 
   return (
@@ -71,51 +75,50 @@ export default function NotificationsPage() {
 
       {/* Content */}
       <div className="max-w-2xl mx-auto px-4 py-6">
-        <div className="space-y-2">
-          {notifications.map((notification) => (
-            <div
-              key={notification.id}
-              className={`rounded-2xl px-4 py-3 border transition-all duration-200 relative ${
-                notification.unread
-                  ? 'bg-gradient-to-br from-[#1E1E1E] to-[#1A1A1A] border-white/5 hover:border-white/10'
-                  : 'bg-[#111111] border-white/5 hover:border-white/10'
-              }`}
-            >
-              <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 mt-0.5">
-                  {notification.icon}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-3 mb-1">
-                    <div className="flex-1 min-w-0">
-                      <h3 className={`text-[14px] font-semibold leading-tight ${
-                        notification.unread ? 'text-white' : 'text-white/90'
-                      }`}>
-                        {notification.title}
-                      </h3>
-                    </div>
-                    <span className="text-xs text-white/50 flex-shrink-0">{notification.time}</span>
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-white/50 text-sm">Loading notifications...</div>
+          </div>
+        ) : notifications.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12">
+            <Inbox className="w-12 h-12 text-white/20 mb-4" />
+            <div className="text-white/50 text-sm">No notifications yet</div>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {notifications.map((notification: Notification) => (
+              <div
+                key={notification.id}
+                className={`rounded-2xl px-4 py-3 border transition-all duration-200 relative ${
+                  notification.unread
+                    ? 'bg-gradient-to-br from-[#1E1E1E] to-[#1A1A1A] border-white/5 hover:border-white/10'
+                    : 'bg-[#111111] border-white/5 hover:border-white/10'
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0 mt-0.5">
+                    {notification.icon}
                   </div>
-                  <p className={`text-[12px] leading-relaxed ${
-                    notification.unread ? 'text-white/80' : 'text-white/70'
-                  }`}>
-                    {notification.description}
-                  </p>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-3 mb-1">
+                      <div className="flex-1 min-w-0">
+                        <h3 className={`text-[14px] font-semibold leading-tight ${
+                          notification.unread ? 'text-white' : 'text-white/90'
+                        }`}>
+                          {notification.title}
+                        </h3>
+                      </div>
+                      <span className="text-xs text-white/50 flex-shrink-0">{notification.time}</span>
+                    </div>
+                    <p className={`text-[12px] leading-relaxed ${
+                      notification.unread ? 'text-white/80' : 'text-white/70'
+                    }`}>
+                      {notification.description}
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
-
-        {notifications.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-16 text-center">
-            <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center mb-4 border border-white/10">
-              <Inbox className="w-8 h-8 text-white/40" />
-            </div>
-            <h3 className="text-lg font-semibold text-white/90 mb-2">No notifications yet</h3>
-            <p className="text-sm text-white/60 max-w-sm">
-              When you receive job offers, messages, or updates, they'll appear here.
-            </p>
+            ))}
           </div>
         )}
       </div>

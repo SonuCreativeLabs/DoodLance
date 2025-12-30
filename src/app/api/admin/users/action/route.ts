@@ -5,7 +5,7 @@ let mockUsers = [
   {
     id: 'USR001',
     name: 'Rohit Sharma',
-    email: 'rohit@example.com',
+    email: user.email,
     phone: '+91 98765 43210',
     role: 'freelancer',
     status: 'active',
@@ -24,7 +24,7 @@ let mockUsers = [
   {
     id: 'USR004',
     name: 'Ananya Reddy',
-    email: 'ananya@example.com',
+    email: user.email,
     phone: '+91 65432 10987',
     role: 'freelancer',
     status: 'suspended',

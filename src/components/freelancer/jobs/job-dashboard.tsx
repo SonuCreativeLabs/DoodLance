@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { useRouter } from 'next/navigation';
 import { Search, X } from 'lucide-react';
 
-// Import components, types, utils, and mock data from our modular files
+// Import components and types
 import { JobCard, ApplicationCard } from './index';
 import { Job, Application, EarningsData, JobCategory } from './types';
 
@@ -18,11 +18,16 @@ const CLIENT_BOOKINGS_KEY = 'clientBookings';
 const convertBookingToJob = (booking: any): Job => {
   // Parse the date - handle both YYYY-MM-DD and formatted dates
   let jobDate = booking.date;
-  if (booking.date && !booking.date.includes('-')) {
-    // It's a formatted date, try to parse it
-    const parsedDate = new Date(booking.date);
-    if (!isNaN(parsedDate.getTime())) {
-      jobDate = parsedDate.toISOString().split('T')[0];
+  if (booking.date) {
+    if (!booking.date.includes('-')) {
+      // Formatted date?
+      const parsedDate = new Date(booking.date);
+      if (!isNaN(parsedDate.getTime())) {
+        jobDate = parsedDate.toISOString().split('T')[0];
+      }
+    } else if (booking.date.includes('T')) {
+      // ISO string
+      jobDate = booking.date.split('T')[0];
     }
   }
 
@@ -36,6 +41,8 @@ const convertBookingToJob = (booking: any): Job => {
     jobStatus = 'completed';
   } else if (booking.status === 'cancelled') {
     jobStatus = 'cancelled';
+  } else if (booking.status === 'confirmed') {
+    jobStatus = 'pending'; // Upcoming
   }
 
   // Generate a unique 4-digit OTP for this booking
@@ -44,23 +51,22 @@ const convertBookingToJob = (booking: any): Job => {
   };
 
   // Check if we already have an OTP stored for this booking
-  let storedOtp = '1234'; // Default for testing
-  try {
-    const otpStore = JSON.parse(localStorage.getItem('bookingOtps') || '{}');
-    if (otpStore[booking['#']]) {
-      storedOtp = otpStore[booking['#']];
-    } else {
-      storedOtp = generateOtp();
-      otpStore[booking['#']] = storedOtp;
-      localStorage.setItem('bookingOtps', JSON.stringify(otpStore));
+  let storedOtp = booking.otp || ''; // Use API provided OTP if any
+  if (!storedOtp) {
+    try {
+      const otpStore = JSON.parse(localStorage.getItem('bookingOtps') || '{}');
+      const bookingId = booking.id || booking['#'];
+      if (otpStore[bookingId]) {
+        storedOtp = otpStore[bookingId];
+      }
+    } catch (e) {
+      console.error('Error managing OTP:', e);
     }
-  } catch (e) {
-    console.error('Error managing OTP:', e);
   }
 
   return {
-    id: booking['#'] || `booking_${Date.now()}`,
-    title: booking.service || 'Service Booking',
+    id: booking.id || booking['#'] || `booking_${Date.now()}`,
+    title: booking.title || booking.service || 'Service Booking',
     category: (booking.category as JobCategory) || 'OTHER',
     date: jobDate,
     time: booking.time || '10:00 AM',
@@ -69,9 +75,9 @@ const convertBookingToJob = (booking: any): Job => {
     status: jobStatus,
     payment: typeof booking.price === 'string'
       ? parseInt(booking.price.replace(/[₹,]/g, '')) || 0
-      : booking.price || 0,
+      : Number(booking.price) || 0,
     location: booking.location || 'Location TBD',
-    description: booking.notes || '', // Use notes as description for direct hire
+    description: booking.notes || booking.description || '',
     skills: [],
     duration: 'As per booking',
     experienceLevel: undefined,
@@ -82,12 +88,12 @@ const convertBookingToJob = (booking: any): Job => {
     services: booking.services || [],
     paymentMethod: booking.paymentMethod || 'cod',
     client: {
-      name: 'Client', // In real app, this would come from client profile
+      name: booking.clientName || 'Client',
       rating: 4.5,
       jobsCompleted: 10,
       memberSince: new Date().toISOString().split('T')[0],
       phoneNumber: '+91 9876543210',
-      image: '',
+      image: booking.clientAvatar || '',
       moneySpent: 50000,
       location: booking.location || 'Location TBD',
       joinedDate: new Date().toISOString().split('T')[0],
@@ -190,14 +196,29 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
 
           // Fetch jobs (upcoming/ongoing/etc)
           const jobsRes = await fetch(`/api/jobs?userId=${userId}&role=freelancer`);
+          let loadedJobs: any[] = [];
           if (jobsRes.ok) {
             const realJobs = await jobsRes.json();
             if (Array.isArray(realJobs)) {
-              // Filter out jobs that are already in applications (if any overlap exists in API response)
-              // Or just set them.
-              setJobs(realJobs);
+              loadedJobs = realJobs;
             }
           }
+
+          // Fetch bookings (Direct Hires) from Booking system
+          try {
+            const bookingsRes = await fetch(`/api/bookings?role=freelancer`);
+            if (bookingsRes.ok) {
+              const bookingData = await bookingsRes.json();
+              if (bookingData.bookings && Array.isArray(bookingData.bookings)) {
+                const mappedBookings = bookingData.bookings.map((b: any) => convertBookingToJob(b));
+                loadedJobs = [...loadedJobs, ...mappedBookings];
+              }
+            }
+          } catch (err) {
+            console.error("Error fetching bookings:", err);
+          }
+
+          setJobs(loadedJobs);
         }
       } catch (e) {
         console.error('Error fetching dashboard data:', e);
@@ -207,6 +228,8 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
     };
     fetchData();
   }, []);
+
+
 
 
   // Initialize state from URL params and update when they change
@@ -533,8 +556,7 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
 
     // 3. Update LocalStorage (Legacy/Offline Support)
     try {
-      // Clean up duplicates first
-      // cleanupDuplicateJobs(); // Removed as it was likely dependent on mock data logic
+      // Clean up any stored job updates
 
       const storedUpdates = JSON.parse(localStorage.getItem('jobStatusUpdates') || '{}');
 
@@ -596,7 +618,7 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
     };
   }, []);
 
-  // Handler for viewing application details (placeholder for now)
+  // Handler for viewing application details
   const onViewDetails = (application: any) => {
     // Navigate to the application details page
     router.push(`/freelancer/proposals/${application["#"]}`);

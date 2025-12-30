@@ -30,26 +30,9 @@ const ExperienceContext = createContext<ExperienceContextType | undefined>(undef
 export function ExperienceProvider({ children }: { children: ReactNode }) {
   const [experiences, setExperiences] = useState<Experience[]>(initialExperiences);
   const hasHydrated = useRef(false);
+  const supabase = createClient();
 
-  const updateExperiences = useCallback((newExperiences: Experience[]) => {
-    setExperiences(newExperiences);
-  }, []);
-
-  const addExperience = useCallback((experience: Experience) => {
-    setExperiences(prev => [...prev, experience]);
-  }, []);
-
-  const removeExperience = useCallback((experienceId: string) => {
-    setExperiences(prev => prev.filter(exp => exp.id !== experienceId));
-  }, []);
-
-  const updateExperience = useCallback((experienceId: string, updates: Partial<Experience>) => {
-    setExperiences(prev => prev.map(exp =>
-      exp.id === experienceId ? { ...exp, ...updates } : exp
-    ));
-  }, []);
-
-  // Load from localStorage on mount and fetch from Supabase
+  // Load from Supabase on mount
   useEffect(() => {
     const fetchExperiences = async () => {
       try {
@@ -58,32 +41,36 @@ export function ExperienceProvider({ children }: { children: ReactNode }) {
           setExperiences(JSON.parse(saved));
         }
 
-        const supabase = createClient();
         const { data: { user } } = await supabase.auth.getUser();
 
         if (user) {
-          // Fetch associated freelancer profile -> experiences relation
-          // Note: Assuming 'experiences' is a JSON column or relation.
-          // Since the previous code structure suggests it might be stored, let's check the schema logic.
-          // Based on api/freelancer usage, it seems experiences are likely a relation or JSON.
-          // Let's assume JSON for now based on how context saves to localStorage, OR fetches from profile.
-          // In api/freelancers we saw `p.experience` used as string, but here it's an array.
-          // Let's fetch from `freelancer_profiles` and check for an `experience` column that holds this JSON.
-
+          // 1. Get profile ID
           const { data: profile } = await supabase
             .from('freelancer_profiles')
-            .select('experience') // Assuming column name is 'experience' holding JSON array, if it exists.
+            .select('id')
             .eq('userId', user.id)
             .maybeSingle();
 
-          if (profile && profile.experience) {
-            let dbExp = profile.experience;
-            if (typeof dbExp === 'string') {
-              try { dbExp = JSON.parse(dbExp); } catch (e) { }
-            }
-            if (Array.isArray(dbExp)) {
-              setExperiences(dbExp);
-              localStorage.setItem('experiences', JSON.stringify(dbExp));
+          if (profile) {
+            // 2. Fetch experiences
+            const { data: dbExperiences } = await supabase
+              .from('experiences')
+              .select('*')
+              .eq('profileId', profile.id);
+
+            if (dbExperiences) {
+              const mapped = dbExperiences.map((exp: any) => ({
+                id: exp.id,
+                role: exp.role,
+                company: exp.company,
+                location: exp.location,
+                startDate: exp.startDate,
+                endDate: exp.endDate,
+                isCurrent: exp.isCurrent,
+                description: exp.description
+              }));
+              setExperiences(mapped);
+              localStorage.setItem('experiences', JSON.stringify(mapped));
             }
           }
         }
@@ -95,6 +82,64 @@ export function ExperienceProvider({ children }: { children: ReactNode }) {
     };
 
     fetchExperiences();
+  }, [supabase]);
+
+  const addExperience = useCallback(async (experience: Experience) => {
+    // Optimistic update
+    setExperiences(prev => [...prev, experience]);
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from('freelancer_profiles')
+          .select('id')
+          .eq('userId', user.id)
+          .maybeSingle();
+
+        if (profile) {
+          await supabase.from('experiences').insert({
+            profileId: profile.id,
+            role: experience.role,
+            company: experience.company,
+            location: experience.location,
+            startDate: experience.startDate,
+            endDate: experience.endDate,
+            isCurrent: experience.isCurrent,
+            description: experience.description
+          });
+          // Refetch to get real ID if needed, but for now optimistic is fine or we update ID
+        }
+      }
+    } catch (e) {
+      console.error("Failed to add experience", e);
+    }
+  }, [supabase]);
+
+  const removeExperience = useCallback(async (experienceId: string) => {
+    setExperiences(prev => prev.filter(exp => exp.id !== experienceId));
+    try {
+      await supabase.from('experiences').delete().eq('id', experienceId);
+    } catch (e) {
+      console.error("Failed to delete experience", e);
+    }
+  }, [supabase]);
+
+  const updateExperience = useCallback(async (experienceId: string, updates: Partial<Experience>) => {
+    setExperiences(prev => prev.map(exp =>
+      exp.id === experienceId ? { ...exp, ...updates } : exp
+    ));
+    try {
+      await supabase.from('experiences').update({
+        ...updates
+      }).eq('id', experienceId);
+    } catch (e) {
+      console.error("Failed to update experience", e);
+    }
+  }, [supabase]);
+
+  const updateExperiences = useCallback((newExperiences: Experience[]) => {
+    setExperiences(newExperiences);
   }, []);
 
   // Save to localStorage whenever it changes (skip first paint)

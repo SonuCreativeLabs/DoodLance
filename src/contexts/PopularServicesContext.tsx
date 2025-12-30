@@ -20,46 +20,46 @@ interface PopularServicesContextType {
 
 const PopularServicesContext = createContext<PopularServicesContextType | undefined>(undefined);
 
-// Initial popular services data
+// Initial popular services data - will be fetched from API
 const initialPopularServices: PopularService[] = [
   {
     id: 'net-bowler',
     title: 'Net Bowler',
     icon: '🎯',
-    providerCount: 0,
+    providerCount: 156,
     image: '/images/Service Catagories/cricket net bowler.jpeg',
     mostBooked: true
   },
   {
-    id: 'sidearm-specialist',
-    title: 'Sidearm',
-    icon: '🎯',
-    providerCount: 0,
-    image: '/images/Service Catagories/cricket sidearm.png',
-    mostBooked: true
-  },
-  {
-    id: 'coach',
-    title: 'Coach',
-    icon: '👨‍🏫',
-    providerCount: 0,
+    id: 'cricket-coach',
+    title: 'Cricket Coach',
+    icon: '🏏',
+    providerCount: 120,
     image: '/images/Service Catagories/Cricket coach.png',
     mostBooked: true
   },
   {
-    id: 'match-player',
-    title: 'Match Player',
-    icon: '🏏',
-    providerCount: 0,
-    image: '/images/Service Catagories/Cricket match player.png',
+    id: 'physio',
+    title: 'Sports Physio',
+    icon: '👨‍⚕️',
+    providerCount: 28,
+    image: '/images/Service Catagories/cricket physio.png',
+    mostBooked: false
+  },
+  {
+    id: 'umpire',
+    title: 'Umpire',
+    icon: '☝️',
+    providerCount: 45,
+    image: '/images/Service Catagories/cricket umpire.png',
     mostBooked: true
   },
   {
-    id: 'cricket-photo-videography',
-    title: 'Cricket Photo / Videography',
-    icon: '📷',
-    providerCount: 0,
-    image: '/images/Service Catagories/cricket photography.jpeg',
+    id: 'sidearm-thrower',
+    title: 'Sidearm Thrower',
+    icon: '💪',
+    providerCount: 34,
+    image: '/images/Service Catagories/cricket sidearm.png',
     mostBooked: true
   }
 ];

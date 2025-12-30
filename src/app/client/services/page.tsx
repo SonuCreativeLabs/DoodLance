@@ -80,18 +80,16 @@ export default function ServicesPage() {
                         key={category.id}
                         ref={selectedCategory === category.id ? selectedButtonRef : null}
                         onClick={() => setSelectedCategory(category.id)}
-                        className={`w-full flex flex-col items-center gap-1 py-2 px-1 rounded-lg transition-all duration-200 group relative ${
-                          selectedCategory === category.id
-                          ? 'after:absolute after:top-1/2 after:-translate-y-1/2 after:left-0 after:w-[2px] after:h-6 after:bg-purple-500 after:rounded-r-full'
-                          : 'hover:bg-white/[0.02]'
-                        }`}
+                        className={`w-full flex flex-col items-center gap-1 py-2 px-1 rounded-lg transition-all duration-200 group relative ${selectedCategory === category.id
+                            ? 'after:absolute after:top-1/2 after:-translate-y-1/2 after:left-0 after:w-[2px] after:h-6 after:bg-purple-500 after:rounded-r-full'
+                            : 'hover:bg-white/[0.02]'
+                          }`}
                       >
                         <div className="w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-200">
-                          <div className={`${
-                            selectedCategory === category.id
-                            ? 'text-white scale-110'
-                            : 'text-white/60 group-hover:text-white/80 group-hover:scale-105'
-                          }`}>
+                          <div className={`${selectedCategory === category.id
+                              ? 'text-white scale-110'
+                              : 'text-white/60 group-hover:text-white/80 group-hover:scale-105'
+                            }`}>
                             {category.icon}
                           </div>
                         </div>
@@ -99,11 +97,10 @@ export default function ServicesPage() {
                           {category.name.map((line, index) => (
                             <span
                               key={index}
-                              className={`text-[9px] transition-colors ${
-                                selectedCategory === category.id
-                                ? 'text-white font-bold'
-                                : 'text-white/40 font-medium group-hover:text-white/60'
-                              }`}
+                              className={`text-[9px] transition-colors ${selectedCategory === category.id
+                                  ? 'text-white font-bold'
+                                  : 'text-white/40 font-medium group-hover:text-white/60'
+                                }`}
                             >
                               {line}
                             </span>
@@ -125,71 +122,66 @@ export default function ServicesPage() {
                         // Example future signal sources: recently viewed, clicks, bookings, category affinity.
                         .filter(service => selectedCategory === 'for-you' ? !!service.mostBooked : service.category === selectedCategory)
                         .map((service) => (
-                        <Link 
-                          href={`/client/services/${service.id}`}
-                          key={service.id}
-                          className="block group"
-                        >
-                          <div className="relative bg-[#161616] rounded-2xl overflow-hidden">
-                            {/* Full Image Container */}
-                            <div className="aspect-[3/4] relative">
-                              {/* Fallback/Loading State - Lucide icon, low opacity */}
-                              <div className="absolute inset-0 flex items-center justify-center z-0 bg-[#161616] text-white/30">
-                                {service.category === 'playing' && <Video className="w-12 h-12" />}
-                                {service.category === 'coaching' && <Dumbbell className="w-12 h-12" />}
-                                {service.category === 'support' && <Brain className="w-12 h-12" />}
-                                {service.category === 'media' && <Camera className="w-12 h-12" />}
-                                {service.category === 'other' && <Package className="w-12 h-12" />}
-                                {service.category !== 'playing' && service.category !== 'coaching' && service.category !== 'support' && service.category !== 'media' && service.category !== 'other' && (
-                                  <Video className="w-12 h-12" />
-                                )}
-                              </div>
-                              
-                              <img
-                                src={service.image}
-                                alt={service.name}
-                                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out z-[1]"
-                                onError={(e) => {
-                                  const target = e.currentTarget as HTMLImageElement;
-                                  if (target.src !== '/images/cover-placeholder.svg') {
-                                    target.src = '/images/cover-placeholder.svg';
-                                  }
-                                }}
-                              />
+                          <Link
+                            href={`/client/services/${service.id}`}
+                            key={service.id}
+                            className="block group"
+                          >
+                            <div className="relative bg-[#161616] rounded-2xl overflow-hidden">
+                              {/* Full Image Container */}
+                              <div className="aspect-[3/4] relative">
+                                {/* Fallback/Loading State - Lucide icon, low opacity */}
+                                <div className="absolute inset-0 flex items-center justify-center z-0 bg-[#161616] text-white/30">
+                                  {service.category === 'playing' && <Video className="w-12 h-12" />}
+                                  {service.category === 'coaching' && <Dumbbell className="w-12 h-12" />}
+                                  {service.category === 'support' && <Brain className="w-12 h-12" />}
+                                  {service.category === 'media' && <Camera className="w-12 h-12" />}
+                                  {service.category === 'other' && <Package className="w-12 h-12" />}
+                                  {service.category !== 'playing' && service.category !== 'coaching' && service.category !== 'support' && service.category !== 'media' && service.category !== 'other' && (
+                                    <Video className="w-12 h-12" />
+                                  )}
+                                </div>
 
-                              {/* Gradient Overlay - Balanced for text visibility */}
-                              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent z-[2]" />
+                                <img
+                                  src={service.image}
+                                  alt={service.name}
+                                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out z-[1]"
+                                  onError={(e) => {
+                                    const target = e.currentTarget as HTMLImageElement;
+                                    if (target.src !== '/images/cover-placeholder.svg') {
+                                      target.src = '/images/cover-placeholder.svg';
+                                    }
+                                  }}
+                                />
 
-                              {/* Content Overlay */}
-                              <div className="absolute inset-x-0 bottom-0 p-4 z-[3]">
-                                {/* Title and Provider Count */}
-                                <div className="space-y-2">
-                                  <div className="space-y-1.5">
-                                    <h3 className="font-medium text-[14px] text-white leading-snug break-words drop-shadow-sm">
-                                      {service.name}
-                                    </h3>
-                                    <div className="flex items-center gap-2">
-                                      <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse"></div>
-                                      <span className="text-[11px] text-white/90 drop-shadow-sm">
-                                        {service.providerCount} Providers
-                                      </span>
+                                {/* Gradient Overlay - Balanced for text visibility */}
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent z-[2]" />
+
+                                {/* Content Overlay */}
+                                <div className="absolute inset-x-0 bottom-0 p-4 z-[3]">
+                                  {/* Title and Provider Count */}
+                                  <div className="space-y-2">
+                                    <div className="space-y-1.5">
+                                      <h3 className="font-medium text-[14px] text-white leading-snug break-words drop-shadow-sm">
+                                        {service.name}
+                                      </h3>
+
                                     </div>
                                   </div>
                                 </div>
-                              </div>
 
-                              {/* Badges - Even smaller size */}
-                              <div className="absolute top-2 left-2 flex flex-wrap items-start gap-1 z-[3]">
-                                {service.mostBooked && (
-                                  <div className="bg-[#8B5CF6] text-white text-[9px] font-medium px-2 py-0.5 rounded-full shadow-sm">
-                                    Popular
-                                  </div>
-                                )}
+                                {/* Badges - Even smaller size */}
+                                <div className="absolute top-2 left-2 flex flex-wrap items-start gap-1 z-[3]">
+                                  {service.mostBooked && (
+                                    <div className="bg-[#8B5CF6] text-white text-[9px] font-medium px-2 py-0.5 rounded-full shadow-sm">
+                                      Popular
+                                    </div>
+                                  )}
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        </Link>
-                      ))}
+                          </Link>
+                        ))}
                     </div>
                   </div>
                 </div>

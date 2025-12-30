@@ -127,8 +127,10 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
       setJobOtp(job.otp);
     } else {
       // Use fixed OTP 1234 for testing (instead of random generation)
-      const testOtp = '1234';
-      setJobOtp(testOtp);
+      const otp = Math.floor(1000 + Math.random() * 9000).toString();
+      setJobOtp(otp);
+      // For demo purposes, we'll show the number in development only
+      if (process.env.NODE_ENV === 'development') {
     }
 
     // Check if job is already started

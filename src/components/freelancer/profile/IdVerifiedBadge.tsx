@@ -7,7 +7,21 @@ interface IdVerifiedBadgeProps {
 }
 
 export function IdVerifiedBadge({ isVerified = true, className = '', isDesktop = false }: IdVerifiedBadgeProps) {
-  if (!isVerified) return null;
+  if (!isVerified) {
+    if (isDesktop) {
+      return (
+        <div className={`ml-2 inline-flex items-center gap-2 px-3 py-1.5 text-[10px] font-bold border-2 shadow-xl whitespace-nowrap transform rotate-[1deg] bg-gradient-to-br from-amber-400 to-orange-500 border-amber-300 text-white shadow-amber-500/60 border-dashed ${className}`}>
+          <span className="tracking-widest font-black">NOT VERIFIED</span>
+        </div>
+      );
+    }
+
+    return (
+      <div className={`ml-2 inline-flex items-center gap-1 px-2 py-1 text-[8px] font-bold border-2 shadow-lg whitespace-nowrap transform rotate-[-2deg] bg-gradient-to-br from-amber-400 to-orange-500 border-amber-300 text-white shadow-amber-500/50 border-dashed ${className}`}>
+        <span className="tracking-widest font-black">NOT VERIFIED</span>
+      </div>
+    );
+  }
 
   // Desktop version matches GAME ON desktop sizing
   if (isDesktop) {

@@ -18,7 +18,8 @@ import {
   X,
   CheckCircle,
   ArrowRight,
-  UserPlus
+  UserPlus,
+  User
 } from 'lucide-react';
 import { useNavbar } from '@/contexts/NavbarContext';
 
@@ -179,17 +180,17 @@ export default function FreelancerDetailPage() {
           id: data.id,
           name: data.name || 'Anonymous',
           service: data.services?.[0]?.title || profile.title || 'Freelancer',
-          experience: 'Entry Level', // Not explicitly in API response root?
-          location: data.location || profile.location || 'Remote',
-          distance: 5, // Mock distance since API doesn't calc it yet relative to user
+          experience: profile.experience || '',
+          location: data.location || profile.location || '',
+          distance: data.distance || 0,
           price: data.services?.[0]?.price || profile.hourlyRate || 0,
           priceUnit: 'hr',
           rating: data.averageRating || 0,
           reviews: profile.reviews?.length || 0,
           reviewCount: profile.reviews?.length || 0,
           completedJobs: profile.completedJobs || 0,
-          responseTime: profile.responseTime || '1 hour',
-          image: data.profileImage || '/placeholder-user.jpg',
+          responseTime: profile.responseTime || '',
+          image: data.profileImage || '',
           expertise: skills,
           description: profile.about || profile.bio || '',
           availability: profile.availability ? JSON.parse(profile.availability) : [],
@@ -483,15 +484,20 @@ export default function FreelancerDetailPage() {
                 {/* Cover Photo */}
                 <div className="relative h-48 md:h-64 w-full bg-gradient-to-r from-purple-900 to-purple-700">
 
-                  <div className="absolute inset-0 w-full h-full">
-                    <img
-                      src={freelancer.coverImage || "/images/cover-pic.JPG"}
-                      alt="Profile Cover"
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDEyMDAgMzAwIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjNkI0NkMxIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIzMiIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIj5Dcmlja2V0IENvdmVyPC90ZXh0Pjwvc3ZnPg=='
-                      }}
-                    />
+                  <div className="absolute inset-0 w-full h-full bg-[#111111]">
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <User className="w-16 h-16 text-white/10" />
+                    </div>
+                    {freelancer.coverImage && (
+                      <img
+                        src={freelancer.coverImage}
+                        alt="Profile Cover"
+                        className="relative w-full h-full object-cover z-10"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    )}
                   </div>
 
                   {/* Back and Share Buttons - Original Position */}

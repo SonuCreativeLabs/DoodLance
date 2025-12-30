@@ -7,7 +7,7 @@ async function seedEnhancedData() {
   
   try {
     await prisma.$connect()
-    console.log('✅ Connected to MongoDB')
+    console.log('✅ Connected to database')
     
     // Get existing users and categories
     const client1 = await prisma.user.findUnique({ where: { email: 'client@doodlance.com' } })

@@ -17,15 +17,15 @@ interface ServiceCardProps {
   className?: string;
 }
 
-export default function ServiceCard({ 
-  id, 
-  title, 
-  image, 
+export default function ServiceCard({
+  id,
+  title,
+  image,
   icon,
   providerCount,
-  discount, 
+  discount,
   isMostBooked,
-  className 
+  className
 }: ServiceCardProps) {
   return (
     <Link href={`/services/${id}`}>
@@ -41,7 +41,7 @@ export default function ServiceCard({
         <div className="absolute inset-0 flex items-center justify-center z-0 bg-[#161616]">
           <Camera className="w-12 h-12 text-white/30" />
         </div>
-        
+
         {/* Background Image */}
         <img
           src={image}
@@ -54,10 +54,10 @@ export default function ServiceCard({
             }
           }}
         />
-        
+
         {/* Gradient Overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent z-[2]" />
-        
+
         {/* Content */}
         <div className="absolute inset-0 p-4 flex flex-col justify-between z-[3]">
           {/* Badges */}
@@ -73,32 +73,25 @@ export default function ServiceCard({
               </div>
             )}
           </div>
-          
+
           {/* Title and Provider Count */}
           <div className="space-y-1">
-            <h3 className="font-semibold text-white leading-tight break-words" 
-                style={{
-                  fontSize: 'clamp(13px, 3vw, 16px)',
-                  display: '-webkit-box',
-                  WebkitLineClamp: 3,
-                  WebkitBoxOrient: 'vertical',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  minHeight: '2.4em',
-                  maxHeight: '4.5em',
-                  lineHeight: '1.2'
-                }}
-              >
-                {title}
-              </h3>
-            {providerCount && (
-              <div className="flex items-center gap-2">
-                <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse"></div>
-                <span className="text-[11px] text-white/90">
-                  {providerCount} Providers
-                </span>
-              </div>
-            )}
+            <h3 className="font-semibold text-white leading-tight break-words"
+              style={{
+                fontSize: 'clamp(13px, 3vw, 16px)',
+                display: '-webkit-box',
+                WebkitLineClamp: 3,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                minHeight: '2.4em',
+                maxHeight: '4.5em',
+                lineHeight: '1.2'
+              }}
+            >
+              {title}
+            </h3>
+
           </div>
         </div>
       </motion.div>

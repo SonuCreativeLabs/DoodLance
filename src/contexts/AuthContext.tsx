@@ -10,6 +10,7 @@ interface User {
   name?: string
   avatar?: string
   phone?: string
+  location?: string
   phoneVerified?: boolean
   role?: string
 }
@@ -42,6 +43,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           role: session.user.user_metadata?.role || 'client',
           name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || 'User',
           avatar: session.user.user_metadata?.avatar_url || session.user.user_metadata?.avatar || '',
+          location: session.user.user_metadata?.location || '',
         })
       } else {
         setUser(null)

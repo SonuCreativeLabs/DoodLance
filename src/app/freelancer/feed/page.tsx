@@ -728,13 +728,13 @@ export default function FeedPage() {
         >
           {isSheetCollapsed ? (
             <>
-              <Map className="w-4 h-4 mr-2" />
-              <span>Show Map</span>
+              <ChevronDown className="w-4 h-4 mr-2" />
+              <span>Show List</span>
             </>
           ) : (
             <>
-              <ChevronDown className="w-4 h-4 mr-2" />
-              <span>Show List</span>
+              <Map className="w-4 h-4 mr-2" />
+              <span>Show Map</span>
             </>
           )}
         </button>

@@ -16,9 +16,17 @@ export async function GET() {
         try {
             const decoded = verifyAccessToken(accessToken);
 
+            // Fetch user from database to get display ID
+            const prisma = (await import('@/lib/db')).default;
+            const user = await prisma.user.findUnique({
+                where: { id: decoded.userId },
+                select: { displayId: true }
+            });
+
             return NextResponse.json({
                 user: {
                     id: decoded.userId,
+                    displayId: user?.displayId || null,
                     email: decoded.email,
                     role: decoded.role,
                 },

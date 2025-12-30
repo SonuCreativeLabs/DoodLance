@@ -70,10 +70,10 @@ function createMockPrismaClient() {
 export async function connectDB() {
   try {
     await prisma.$connect()
-    console.log('✅ Connected to MongoDB')
+    console.log('✅ Connected to database')
     return prisma
   } catch (error) {
-    console.error('❌ Failed to connect to MongoDB:', error)
+    console.error('❌ Failed to connect to database:', error)
     throw error
   }
 }
@@ -82,9 +82,9 @@ export async function connectDB() {
 export async function disconnectDB() {
   try {
     await prisma.$disconnect()
-    console.log('✅ Disconnected from MongoDB')
+    console.log('✅ Disconnected from database')
   } catch (error) {
-    console.error('❌ Failed to disconnect from MongoDB:', error)
+    console.error('❌ Failed to disconnect from database:', error)
   }
 }
 

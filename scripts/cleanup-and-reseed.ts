@@ -7,7 +7,7 @@ async function cleanupAndReseed() {
   
   try {
     await prisma.$connect()
-    console.log('✅ Connected to MongoDB')
+    console.log('✅ Connected to database')
     
     // Delete all data from collections
     console.log('\n🗑️  Deleting existing data...')
@@ -27,7 +27,6 @@ async function cleanupAndReseed() {
       await prisma.booking.deleteMany({})
       await prisma.service.deleteMany({})
       await prisma.category.deleteMany({})
-      await prisma.session.deleteMany({})
       await prisma.user.deleteMany({})
       console.log('✅ Deleted all existing data')
     } catch (error: any) {

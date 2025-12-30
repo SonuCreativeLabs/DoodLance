@@ -12,37 +12,14 @@ import { MapModal } from '@/components/freelancer/jobs/MapModal'
 import { useNearbyProfessionals } from '@/contexts/NearbyProfessionalsContext'
 import { usePopularServices } from '@/contexts/PopularServicesContext'
 
-const searchExamples = [
-  "Bowler for cricket practice in Chepauk",
-  "Sidearm specialist for batting practice in T Nagar",
-  "Cricket coach for beginners in Mylapore",
-  "Batsman training sessions in Adyar",
-  "Personal cricket coach in Royapettah",
-  "Cricket physio for injury recovery in Nungambakkam",
-  "Sidearm thrower for net practice in Kodambakkam",
-  "Cricket analyst for match analysis in West Mambalam",
-  "Sports conditioning trainer in Alwarpet",
-  "Cricket umpire for local matches in Besant Nagar",
-  "Cricket content creator in Velachery",
-  "Cricket scorer for tournaments in Chennai",
-  "Cricket photo videography for matches in ECR",
-  "Sidearm thrower specialist for cricket practice"
-];
-
-// Search examples kept as requested.
-// Mock locations and notifications removed.
-
+// Search functionality will be implemented with real data
 
 export default function ClientHome() {
   const router = useRouter();
   const { professionals } = useNearbyProfessionals();
   const { popularServices } = usePopularServices();
   const [searchQuery, setSearchQuery] = useState("");
-  const [currentExample, setCurrentExample] = useState(0);
-  const [placeholder, setPlaceholder] = useState("");
-  const [placeholderIndex, setPlaceholderIndex] = useState(0);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [typingSpeed, setTypingSpeed] = useState(100);
+  const [placeholder, setPlaceholder] = useState("Search for services...");
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [showLocationPicker, setShowLocationPicker] = useState(false);
   const [currentLocation, setCurrentLocation] = useState({ city: "Getting location...", state: "" });
@@ -146,40 +123,10 @@ export default function ClientHome() {
     }
   };
 
-  // ... (keeping existing hooks)
-
-  // Handle rotating search examples
+  // Search placeholder text
   useEffect(() => {
-    const typeWriter = () => {
-      const currentText = searchExamples[currentExample];
-
-      if (isDeleting) {
-        // Deleting text
-        setPlaceholder(currentText.substring(0, placeholderIndex - 1));
-        setPlaceholderIndex(prev => prev - 1);
-        setTypingSpeed(50);
-
-        if (placeholderIndex === 0) {
-          setIsDeleting(false);
-          setCurrentExample((currentExample + 1) % searchExamples.length);
-        }
-      } else {
-        // Typing text
-        setPlaceholder(currentText.substring(0, placeholderIndex + 1));
-        setPlaceholderIndex(prev => prev + 1);
-        setTypingSpeed(100);
-
-        if (placeholderIndex === currentText.length) {
-          // Pause at the end of typing before starting to delete
-          setTypingSpeed(2000);
-          setIsDeleting(true);
-        }
-      }
-    };
-
-    const timer = setTimeout(typeWriter, typingSpeed);
-    return () => clearTimeout(timer);
-  }, [currentExample, isDeleting, placeholderIndex, typingSpeed]);
+    // Future implementation for dynamic search suggestions
+  }, []);
 
   // Handle ESC key press
   useEffect(() => {
@@ -265,7 +212,6 @@ export default function ClientHome() {
                     >
                       <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" /><polyline points="7.5,4.27 12,6.11 16.5,4.27" /><polyline points="7.5,9.73 12,11.57 16.5,9.73" /><polyline points="12,2.27 12,11.57" /></svg>
                       <span className="text-white/90">Skill Coins</span>
-                      <span className="ml-auto text-xs text-purple-400 font-semibold">2,500</span>
                     </button>
                     {/* My Bookings */}
                     <button
@@ -290,9 +236,6 @@ export default function ClientHome() {
                     >
                       <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" /></svg>
                       Notifications
-                      <span className="ml-auto inline-flex items-center justify-center w-5 h-5 text-xs bg-purple-500 text-white rounded-full text-center font-semibold">
-                        4
-                      </span>
                     </button>
                     {/* Support */}
                     <button
@@ -456,69 +399,75 @@ export default function ClientHome() {
             <div className="relative">
               <div className="overflow-x-auto scrollbar-hide -mx-4 px-4 pr-8">
                 <div className="flex gap-3 pb-2">
-                  {professionals
-                    .sort((a, b) => {
-                      // First sort by rating
-                      if (b.rating !== a.rating) {
-                        return b.rating - a.rating;
-                      }
-                      // If ratings are equal, sort by number of reviews
-                      return b.reviews - a.reviews;
-                    })
-                    .slice(0, 5) // Only take top 5
-                    .map((expert) => (
-                      <button
-                        key={expert.id}
-                        onClick={() => router.push(`/client/freelancer/${expert.id}`)}
-                        className="flex-shrink-0 w-[130px] cursor-pointer"
-                      >
-                        {/* Outer Layer Card */}
-                        <div className="relative group">
-                          {/* Card Background */}
-                          <div className="absolute inset-0 rounded-2xl border border-purple-400/10 transition-all duration-300 group-hover:border-purple-400/20"></div>
+                  {professionals.length > 0 ? (
+                    professionals
+                      .sort((a, b) => {
+                        // First sort by rating
+                        if (b.rating !== a.rating) {
+                          return b.rating - a.rating;
+                        }
+                        // If ratings are equal, sort by number of reviews
+                        return b.reviews - a.reviews;
+                      })
+                      .slice(0, 5) // Only take top 5
+                      .map((expert) => (
+                        <button
+                          key={expert.id}
+                          onClick={() => router.push(`/client/freelancer/${expert.id}`)}
+                          className="flex-shrink-0 w-[130px] cursor-pointer"
+                        >
+                          {/* Outer Layer Card */}
+                          <div className="relative group">
+                            {/* Card Background */}
+                            <div className="absolute inset-0 rounded-2xl border border-purple-400/10 transition-all duration-300 group-hover:border-purple-400/20"></div>
 
-                          {/* Rating Badge - positioned at top corner of card */}
-                          <div className="absolute top-2 left-2 z-30 bg-gradient-to-r from-yellow-400 to-yellow-600 px-2 py-0.5 rounded-full flex items-center gap-1 shadow-lg">
-                            <Star className="w-2.5 h-2.5 text-black fill-current" />
-                            <span className="text-black text-[10px] font-bold">{expert.rating}</span>
-                          </div>
+                            {/* Rating Badge - positioned at top corner of card */}
+                            <div className="absolute top-2 left-2 z-30 bg-gradient-to-r from-yellow-400 to-yellow-600 px-2 py-0.5 rounded-full flex items-center gap-1 shadow-lg">
+                              <Star className="w-2.5 h-2.5 text-black fill-current" />
+                              <span className="text-black text-[10px] font-bold">{expert.rating}</span>
+                            </div>
 
-                          {/* Card Content */}
-                          <div className="relative p-2.5">
-                            <div className="relative group">
-                              {/* Rating Badge - moved to outer card */}
+                            {/* Card Content */}
+                            <div className="relative p-2.5">
+                              <div className="relative group">
+                                {/* Rating Badge - moved to outer card */}
 
-                              {/* Profile Picture */}
-                              <div className="relative w-[80px] h-[80px] mx-auto">
-                                <img
-                                  src={expert.image}
-                                  alt={expert.name}
-                                  className="w-full h-full rounded-full border-2 border-purple-200/50 relative z-10 object-cover"
-                                />
-                              </div>
+                                {/* Profile Picture */}
+                                <div className="relative w-[80px] h-[80px] mx-auto">
+                                  <img
+                                    src={expert.image}
+                                    alt={expert.name}
+                                    className="w-full h-full rounded-full border-2 border-purple-200/50 relative z-10 object-cover"
+                                  />
+                                </div>
 
-                              {/* Expert Info with Reduced Spacing */}
-                              <div className="mt-1.5 text-center">
-                                <h3 className="font-semibold text-white text-xs leading-tight truncate">{expert.name}</h3>
-                                <p className="text-purple-400 text-[10px] font-medium truncate mt-0.5">{expert.cricketRole || expert.service}</p>
-                                <p className="text-white/70 text-[9px] mt-0.5 truncate">
-                                  {expert.location}
-                                </p>
-                                <p className="text-white/50 text-[9px] font-medium mt-0.5 truncate">
-                                  {expert.distance ? (
-                                    <>
-                                      {expert.distance < 1
-                                        ? `${(expert.distance * 1000).toFixed(0)}m`
-                                        : `${expert.distance.toFixed(1)}km`} away
-                                    </>
-                                  ) : ''}
-                                </p>
+                                {/* Expert Info with Reduced Spacing */}
+                                <div className="mt-1.5 text-center">
+                                  <h3 className="font-semibold text-white text-xs leading-tight truncate">{expert.name}</h3>
+                                  <p className="text-purple-400 text-[10px] font-medium truncate mt-0.5">{expert.cricketRole || expert.service}</p>
+                                  <p className="text-white/70 text-[9px] mt-0.5 truncate">
+                                    {expert.location}
+                                  </p>
+                                  <p className="text-white/50 text-[9px] font-medium mt-0.5 truncate">
+                                    {expert.distance ? (
+                                      <>
+                                        {expert.distance < 1
+                                          ? `${(expert.distance * 1000).toFixed(0)}m`
+                                          : `${expert.distance.toFixed(1)}km`} away
+                                      </>
+                                    ) : ''}
+                                  </p>
+                                </div>
                               </div>
                             </div>
                           </div>
-                        </div>
-                      </button>
-                    ))}
+                        </button>
+                      ))
+                  ) : (
+                    <div className="w-full py-8 text-center mx-auto col-span-full">
+                      <p className="text-white/60 text-sm">No experts found nearby</p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -607,15 +556,9 @@ export default function ClientHome() {
                           aria-label="Copy coupon code WELCOME20"
                         >
                           {copiedCode === 'WELCOME20' ? (
-                            <>
-                              <Check className="w-4 h-4" />
-                              Copied
-                            </>
+                            <Check className="w-4 h-4" />
                           ) : (
-                            <>
-                              <Copy className="w-4 h-4" />
-                              Copy
-                            </>
+                            <Copy className="w-4 h-4" />
                           )}
                         </button>
                       </div>
@@ -657,15 +600,9 @@ export default function ClientHome() {
                           aria-label="Copy coupon code WEEKEND15"
                         >
                           {copiedCode === 'WEEKEND15' ? (
-                            <>
-                              <Check className="w-4 h-4" />
-                              Copied
-                            </>
+                            <Check className="w-4 h-4" />
                           ) : (
-                            <>
-                              <Copy className="w-4 h-4" />
-                              Copy
-                            </>
+                            <Copy className="w-4 h-4" />
                           )}
                         </button>
                       </div>
@@ -707,15 +644,9 @@ export default function ClientHome() {
                           aria-label="Copy coupon code BULK25"
                         >
                           {copiedCode === 'BULK25' ? (
-                            <>
-                              <Check className="w-4 h-4" />
-                              Copied
-                            </>
+                            <Check className="w-4 h-4" />
                           ) : (
-                            <>
-                              <Copy className="w-4 h-4" />
-                              Copy
-                            </>
+                            <Copy className="w-4 h-4" />
                           )}
                         </button>
                       </div>

@@ -27,19 +27,7 @@ export function ChatList({ onChatSelect, selectedChatId, chats: propChats = [] }
   console.log('ChatList rendering with chats:', propChats);
   
   // Add test chat if no chats are provided
-  const chats = propChats.length > 0 ? propChats : [{
-    id: 'test-1',
-    name: 'Test User',
-    avatar: 'https://i.pravatar.cc/150?img=1',
-    lastMessage: 'This is a test message',
-    time: 'Just now',
-    online: true,
-    jobTitle: 'Test Job',
-    budget: '₹1,000',
-    status: 'New',
-    unread: true,
-    rating: 5
-  }];
+  const chats = propChats.length > 0 ? propChats : []; // Test data removed; // Test data removed;
 
   if (!chats || chats.length === 0) {
     return (

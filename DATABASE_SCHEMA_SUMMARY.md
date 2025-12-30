@@ -1,7 +1,7 @@
 # DoodLance Database Schema Summary
 
 ## Overview
-This document outlines the comprehensive MongoDB database schema for the DoodLance cricket services marketplace, designed to support all the features described in your app flow.
+This document outlines the comprehensive database schema for the DoodLance cricket services marketplace, designed to support all the features described in your app flow.
 
 ## Core Features Supported
 

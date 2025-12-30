@@ -61,9 +61,9 @@ interface ProfessionalsFeedProps {
   appliedJobIds?: Set<string>;
 }
 
-export default function ProfessionalsFeed({ 
-  jobs = [], 
-  filteredProfessionals, 
+export default function ProfessionalsFeed({
+  jobs = [],
+  filteredProfessionals,
   onProfessionalSelect,
   onJobSelect,
   onApply,
@@ -146,7 +146,7 @@ export default function ProfessionalsFeed({
 
     // Check if freelancer has services array with actual prices
     const freelancerServices = item.services || [];
-    
+
     if (freelancerServices.length > 0) {
       // Category to service category keywords for filtering (matches service card categories)
       const categoryMapping: { [key: string]: string[] } = {
@@ -161,7 +161,7 @@ export default function ProfessionalsFeed({
       // If there's a search query, filter services matching the query
       if (searchQuery && searchQuery.trim()) {
         const query = searchQuery.toLowerCase().trim();
-        const matchingServices = freelancerServices.filter((svc: any) => 
+        const matchingServices = freelancerServices.filter((svc: any) =>
           svc.title?.toLowerCase().includes(query) ||
           svc.category?.toLowerCase().includes(query) ||
           svc.description?.toLowerCase().includes(query)
@@ -177,8 +177,8 @@ export default function ProfessionalsFeed({
           const matchingServices = freelancerServices.filter((svc: any) => {
             const svcTitle = svc.title?.toLowerCase() || '';
             const svcCategory = svc.category?.toLowerCase() || '';
-            return allowedKeywords.some(keyword => 
-              svcTitle.includes(keyword.toLowerCase()) || 
+            return allowedKeywords.some(keyword =>
+              svcTitle.includes(keyword.toLowerCase()) ||
               svcCategory.includes(keyword.toLowerCase())
             );
           });
@@ -192,7 +192,7 @@ export default function ProfessionalsFeed({
       const prices = relevantServices
         .map((svc: any) => parsePrice(svc.price))
         .filter((price: number) => price > 0);
-      
+
       if (prices.length > 0) {
         return Math.min(...prices);
       }
@@ -204,7 +204,7 @@ export default function ProfessionalsFeed({
 
   if (!items || items.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-10 text-white/60">
+      <div className="w-full py-10 text-center text-white/60">
         {filteredProfessionals ? 'No professionals found' : 'No jobs found'}
       </div>
     );
@@ -214,10 +214,10 @@ export default function ProfessionalsFeed({
   if (showFullView && selectedJob && !filteredProfessionals) {
     return (
       <OverlayPortal>
-        <JobDetailsFull 
-          job={selectedJob} 
-          onBack={handleBack} 
-          onApply={onApply || (() => {})} 
+        <JobDetailsFull
+          job={selectedJob}
+          onBack={handleBack}
+          onApply={onApply || (() => { })}
           isApplied={appliedJobIds?.has(String(selectedJob.id))}
         />
       </OverlayPortal>
@@ -235,7 +235,7 @@ export default function ProfessionalsFeed({
             <div className="relative flex flex-col items-center w-20">
               <div className="relative">
                 <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full opacity-20 blur-md"></div>
-                <div className="absolute inset-0 bg-gradient-to-br from-purple-400/50 to-purple-600/50 rounded-full animate-pulse" style={{animationDuration: '3s'}}></div>
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-400/50 to-purple-600/50 rounded-full animate-pulse" style={{ animationDuration: '3s' }}></div>
                 <img
                   src={item.avatar || item.image}
                   alt={item.name}
@@ -335,8 +335,8 @@ export default function ProfessionalsFeed({
                 {(() => {
                   const scheduledAt = item.scheduledAt ? new Date(item.scheduledAt) : new Date();
                   const date = scheduledAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                  const time = scheduledAt.toLocaleTimeString('en-US', { 
-                    hour: 'numeric', 
+                  const time = scheduledAt.toLocaleTimeString('en-US', {
+                    hour: 'numeric',
                     minute: '2-digit',
                     hour12: true
                   });
@@ -375,15 +375,14 @@ export default function ProfessionalsFeed({
             {(() => {
               const isApplied = appliedJobIds?.has(String(item.id));
               return (
-                <button 
-                  className={`px-4 py-2 text-xs font-medium text-white rounded-xl transition-all duration-300 shadow-lg flex items-center justify-center gap-1.5 ${
-                    isApplied 
-                      ? 'bg-green-600/20 text-green-400 border border-green-600/50 cursor-default' 
-                      : 'bg-gradient-to-r from-[#6B46C1] to-[#4C1D95] hover:from-[#5B35B0] hover:to-[#3D1B7A] shadow-purple-600/20 hover:shadow-purple-600/30'
-                  }`} 
-                  onClick={(e) => { 
-                    e.stopPropagation(); 
-                    if (!isApplied) handleJobApply(item.id); 
+                <button
+                  className={`px-4 py-2 text-xs font-medium text-white rounded-xl transition-all duration-300 shadow-lg flex items-center justify-center gap-1.5 ${isApplied
+                    ? 'bg-green-600/20 text-green-400 border border-green-600/50 cursor-default'
+                    : 'bg-gradient-to-r from-[#6B46C1] to-[#4C1D95] hover:from-[#5B35B0] hover:to-[#3D1B7A] shadow-purple-600/20 hover:shadow-purple-600/30'
+                    }`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (!isApplied) handleJobApply(item.id);
                   }}
                   disabled={isApplied}
                 >

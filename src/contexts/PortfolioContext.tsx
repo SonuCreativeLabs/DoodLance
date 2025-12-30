@@ -30,25 +30,10 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
   const [portfolio, setPortfolio] = useState<PortfolioItem[]>(initialPortfolio);
   const [isHydrated, setIsHydrated] = useState(false);
 
-  const updatePortfolio = useCallback((items: PortfolioItem[]) => {
-    setPortfolio(items);
-  }, []);
+  // Save to Supabase helper
+  const supabase = createClient();
 
-  const addPortfolioItem = useCallback((item: PortfolioItem) => {
-    setPortfolio(prev => [...prev, item]);
-  }, []);
-
-  const removePortfolioItem = useCallback((itemId: string) => {
-    setPortfolio(prev => prev.filter(item => item.id !== itemId));
-  }, []);
-
-  const updatePortfolioItem = useCallback((itemId: string, updates: Partial<PortfolioItem>) => {
-    setPortfolio(prev => prev.map(item =>
-      item.id === itemId ? { ...item, ...updates } : item
-    ));
-  }, []);
-
-  // Load from localStorage on mount and fetch from Supabase
+  // Load from Supabase on mount
   useEffect(() => {
     const fetchPortfolio = async () => {
       try {
@@ -61,21 +46,31 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
         const { data: { user } } = await supabase.auth.getUser();
 
         if (user) {
+          // 1. Get profile ID
           const { data: profile } = await supabase
             .from('freelancer_profiles')
-            .select('portfolio')
+            .select('id')
             .eq('userId', user.id)
             .maybeSingle();
 
-          if (profile && profile.portfolio) {
-            // Parse if stored as string, or use directly if JSON
-            let dbPortfolio = profile.portfolio;
-            if (typeof dbPortfolio === 'string') {
-              try { dbPortfolio = JSON.parse(dbPortfolio); } catch (e) { }
-            }
-            if (Array.isArray(dbPortfolio)) {
-              setPortfolio(dbPortfolio);
-              localStorage.setItem('portfolioItems', JSON.stringify(dbPortfolio));
+          if (profile) {
+            // 2. Fetch portfolios
+            const { data: dbPortfolio } = await supabase
+              .from('portfolios')
+              .select('*')
+              .eq('profileId', profile.id);
+
+            if (dbPortfolio) {
+              const mapped = dbPortfolio.map((item: any) => ({
+                id: item.id,
+                title: item.title,
+                category: item.category,
+                description: item.description,
+                image: item.images, // Note: DB field is 'images' (string), context uses 'image'
+                skills: typeof item.skills === 'string' ? item.skills.split(',') : (Array.isArray(item.skills) ? item.skills : [])
+              }));
+              setPortfolio(mapped);
+              localStorage.setItem('portfolioItems', JSON.stringify(mapped));
             }
           }
         }
@@ -87,6 +82,64 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     };
 
     fetchPortfolio();
+  }, []);
+
+  const addPortfolioItem = useCallback(async (item: PortfolioItem) => {
+    setPortfolio(prev => [...prev, item]);
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from('freelancer_profiles')
+          .select('id')
+          .eq('userId', user.id)
+          .maybeSingle();
+
+        if (profile) {
+          await supabase.from('portfolios').insert({
+            profileId: profile.id,
+            title: item.title,
+            category: item.category,
+            description: item.description,
+            images: item.image,
+            skills: Array.isArray(item.skills) ? item.skills.join(',') : item.skills
+          });
+        }
+      }
+    } catch (e) {
+      console.error("Failed to add portfolio item", e);
+    }
+  }, []);
+
+  const removePortfolioItem = useCallback(async (itemId: string) => {
+    setPortfolio(prev => prev.filter(item => item.id !== itemId));
+    try {
+      const supabase = createClient();
+      await supabase.from('portfolios').delete().eq('id', itemId);
+    } catch (e) {
+      console.error("Failed to delete portfolio item", e);
+    }
+  }, []);
+
+  const updatePortfolioItem = useCallback(async (itemId: string, updates: Partial<PortfolioItem>) => {
+    setPortfolio(prev => prev.map(item =>
+      item.id === itemId ? { ...item, ...updates } : item
+    ));
+    try {
+      const supabase = createClient();
+      const updateData: any = { ...updates };
+      if (updates.image) updateData.images = updates.image;
+      if (updates.skills) updateData.skills = Array.isArray(updates.skills) ? updates.skills.join(',') : updates.skills;
+
+      await supabase.from('portfolios').update(updateData).eq('id', itemId);
+    } catch (e) {
+      console.error("Failed to update portfolio item", e);
+    }
+  }, []);
+
+  const updatePortfolio = useCallback((items: PortfolioItem[]) => {
+    setPortfolio(items);
   }, []);
 
   // Save to localStorage whenever it changes (skip first paint to avoid overwriting saved data)

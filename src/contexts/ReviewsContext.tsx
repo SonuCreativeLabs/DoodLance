@@ -1,7 +1,8 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef } from 'react';
-import { getInitialRatingStats, reviews as reviewsData } from '@/data/reviewsData';
+import { getInitialRatingStats, reviews as reviewsDataMock } from '@/data/reviewsData';
+import { createClient } from '@/lib/supabase/client';
 
 export interface Review {
   id: string;
@@ -27,20 +28,58 @@ interface ReviewsContextType {
   removeReview: (reviewId: string) => void;
 }
 
-const initialReviewsData: ReviewsData = (() => {
-  const { averageRating, totalReviews } = getInitialRatingStats();
-  return {
-    reviews: reviewsData as Review[],
-    averageRating,
-    totalReviews,
-  };
-})();
+
 
 const ReviewsContext = createContext<ReviewsContextType | undefined>(undefined);
 
 export function ReviewsProvider({ children }: { children: ReactNode }) {
-  const [reviewsData, setReviewsData] = useState<ReviewsData>(initialReviewsData);
+  const [reviewsData, setReviewsData] = useState<ReviewsData>({
+    reviews: [],
+    averageRating: 0,
+    totalReviews: 0,
+  });
   const hasHydrated = useRef(false);
+  const supabase = createClient();
+
+  useEffect(() => {
+    const fetchReviews = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('reviews')
+        .select('*')
+        .eq('freelancer_id', user.id);
+
+      if (error) {
+        console.error('Error fetching reviews:', error);
+        return;
+      }
+
+      if (data) {
+        const formattedReviews: Review[] = data.map((r: any) => ({
+          id: r.id,
+          author: r.author_name || 'Anonymous', // Assuming these fields exist, falling back
+          rating: r.rating,
+          comment: r.comment,
+          date: new Date(r.created_at).toISOString().split('T')[0],
+          role: r.author_role || 'Client',
+          isVerified: true
+        }));
+
+        const totalRating = formattedReviews.reduce((acc, curr) => acc + curr.rating, 0);
+        const avgRating = formattedReviews.length > 0 ? totalRating / formattedReviews.length : 0;
+
+        setReviewsData({
+          reviews: formattedReviews,
+          averageRating: parseFloat(avgRating.toFixed(1)),
+          totalReviews: formattedReviews.length
+        });
+      }
+    };
+
+    fetchReviews();
+  }, [supabase]);
 
   const updateReviews = useCallback((reviews: Review[]) => {
     setReviewsData(prev => ({
@@ -70,26 +109,6 @@ export function ReviewsProvider({ children }: { children: ReactNode }) {
       reviews: prev.reviews.filter(r => r.id !== reviewId),
     }));
   }, []);
-
-  // Load from localStorage on mount
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem('reviewsData');
-      if (saved) {
-        setReviewsData(JSON.parse(saved));
-      }
-    } catch (error) {
-      console.error('Failed to parse reviews data:', error);
-    } finally {
-      hasHydrated.current = true;
-    }
-  }, []);
-
-  // Save to localStorage whenever it changes (skip first paint)
-  useEffect(() => {
-    if (!hasHydrated.current) return;
-    localStorage.setItem('reviewsData', JSON.stringify(reviewsData));
-  }, [reviewsData]);
 
   const value: ReviewsContextType = {
     reviewsData,

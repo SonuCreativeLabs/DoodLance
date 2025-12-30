@@ -21,33 +21,131 @@ interface ClientServicesContextType {
 
 const ClientServicesContext = createContext<ClientServicesContextType | undefined>(undefined);
 
-// Initial mock data - this would typically come from an API
+// Initial services - will be fetched from API
 const initialServices: ServiceItem[] = [
-  // Cricket Playing Services
-  { id: 'match-player', name: 'Match Player', category: 'playing', providerCount: 52, mostBooked: true, image: '/images/Service Catagories/Cricket match player.png', fallbackEmoji: '🏏' },
-  { id: 'net-bowler', name: 'Net Bowler', category: 'playing', providerCount: 45, mostBooked: true, image: '/images/Service Catagories/cricket net bowler.jpeg', fallbackEmoji: '🏏' },
-  { id: 'net-batsman', name: 'Net Batsman', category: 'playing', providerCount: 38, mostBooked: true, image: '/images/Service Catagories/Cricket net batsman.png', fallbackEmoji: '🏏' },
-  { id: 'sidearm-specialist', name: 'Sidearm', category: 'playing', providerCount: 22, image: '/images/Service Catagories/cricket sidearm.png', fallbackEmoji: '🎯' },
+  // Playing
+  {
+    id: 'net-bowler',
+    name: 'Net Bowler',
+    category: 'playing',
+    providerCount: 156,
+    image: '/images/Service Catagories/cricket net bowler.jpeg',
+    fallbackEmoji: '🎯',
+    mostBooked: true
+  },
+  {
+    id: 'net-batter',
+    name: 'Net Batter',
+    category: 'playing',
+    providerCount: 45,
+    image: '/images/Service Catagories/Cricket net batsman.png',
+    fallbackEmoji: '🏏'
+  },
+  {
+    id: 'match-player',
+    name: 'Match Player',
+    category: 'playing',
+    providerCount: 89,
+    image: '/images/Service Catagories/Cricket match player.png',
+    fallbackEmoji: '🏃'
+  },
 
-  // Cricket Coaching & Training
-  { id: 'coach', name: 'Coach', category: 'coaching', providerCount: 35, mostBooked: true, image: '/images/Service Catagories/Cricket coach.png', fallbackEmoji: '👨‍🏫' },
-  { id: 'trainer', name: 'Trainer', category: 'coaching', providerCount: 60, image: '/images/Service Catagories/cricket trainer.png', fallbackEmoji: '💪' },
+  // Coaching
+  {
+    id: 'cricket-coach',
+    name: 'Cricket Coach',
+    category: 'coaching',
+    providerCount: 120,
+    image: '/images/Service Catagories/Cricket coach.png',
+    fallbackEmoji: '👨‍🏫',
+    mostBooked: true
+  },
+  {
+    id: 'sidearm-thrower',
+    name: 'Sidearm Thrower',
+    category: 'coaching',
+    providerCount: 34,
+    image: '/images/Service Catagories/cricket sidearm.png',
+    fallbackEmoji: '💪'
+  },
+  {
+    id: 'cricket-trainer',
+    name: 'Fitness Trainer',
+    category: 'coaching',
+    providerCount: 56,
+    image: '/images/Service Catagories/cricket trainer.png',
+    fallbackEmoji: '🏋️'
+  },
 
-  // Cricket Support Services
-  { id: 'analyst', name: 'Analyst', category: 'support', providerCount: 18, image: '/images/Service Catagories/cricket analyst.png', fallbackEmoji: '📊' },
-  { id: 'physio', name: 'Physio', category: 'support', providerCount: 25, image: '/images/Service Catagories/cricket physio.png', fallbackEmoji: '🏥' },
-  { id: 'scorer', name: 'Scorer', category: 'support', providerCount: 15, image: '/images/Service Catagories/cricket scorer.png', fallbackEmoji: '📝' },
-  { id: 'umpire', name: 'Umpire', category: 'support', providerCount: 20, image: '/images/Service Catagories/cricket umpire.png', fallbackEmoji: '⚖️' },
+  // Support
+  {
+    id: 'umpire',
+    name: 'Umpire',
+    category: 'support',
+    providerCount: 45,
+    image: '/images/Service Catagories/cricket umpire.png',
+    fallbackEmoji: '☝️'
+  },
+  {
+    id: 'scorer',
+    name: 'Scorer',
+    category: 'support',
+    providerCount: 32,
+    image: '/images/Service Catagories/cricket scorer.png',
+    fallbackEmoji: '📝'
+  },
+  {
+    id: 'physio',
+    name: 'Sports Physio',
+    category: 'support',
+    providerCount: 28,
+    image: '/images/Service Catagories/cricket physio.png',
+    fallbackEmoji: '👨‍⚕️'
+  },
 
-  // Cricket Media & Content
-  { id: 'cricket-photo-videography', name: 'Cricket Photo / Videography', category: 'media', providerCount: 30, mostBooked: true, image: '/images/Service Catagories/cricket photography.jpeg', fallbackEmoji: '📷' },
-  { id: 'cricket-content-creator', name: 'Cricket Influencer', category: 'media', providerCount: 24, image: '/images/Service Catagories/cricket influencer.png', fallbackEmoji: '🎬' },
-  { id: 'commentator', name: 'Commentator', category: 'media', providerCount: 16, image: '/images/Service Catagories/cricket commentator.png', fallbackEmoji: '🎤' },
+  // Media
+  {
+    id: 'commentator',
+    name: 'Commentator',
+    category: 'media',
+    providerCount: 15,
+    image: '/images/Service Catagories/cricket commentator.png',
+    fallbackEmoji: '🎙️'
+  },
+  {
+    id: 'analyst',
+    name: 'Cricket Analyst',
+    category: 'media',
+    providerCount: 12,
+    image: '/images/Service Catagories/cricket analyst.png',
+    fallbackEmoji: '💻'
+  },
+  {
+    id: 'photographer',
+    name: 'Photographer',
+    category: 'media',
+    providerCount: 45,
+    image: '/images/Service Catagories/cricket photography.jpeg',
+    fallbackEmoji: '📸'
+  },
+  {
+    id: 'influencer',
+    name: 'Influencer',
+    category: 'media',
+    providerCount: 23,
+    image: '/images/Service Catagories/cricket influencer.png',
+    fallbackEmoji: '📱'
+  },
 
-  // Other Services
-  { id: 'other', name: 'Other', category: 'other', providerCount: 5, image: '/images/Service Catagories/other.png', fallbackEmoji: '🔧' },
-
-  // Cricket Ground Services
+  // Other
+  {
+    id: 'other',
+    name: 'Other Services',
+    category: 'other',
+    providerCount: 10,
+    image: '/images/Service Catagories/other.png',
+    fallbackEmoji: '🔧'
+  }
 ];
 
 export function ClientServicesProvider({ children }: { children: ReactNode }) {

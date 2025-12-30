@@ -99,7 +99,7 @@ export default function PhoneLogin() {
                         <Info className="w-5 h-5 text-purple-400 flex-shrink-0 mt-0.5" />
                         <div className="text-sm text-white/70">
                             <p className="font-medium text-white mb-1">Mock Data Access</p>
-                            <p className="text-xs">Use code <span className="font-mono font-bold text-purple-400">123456</span> to access mock data + real data for testing.</p>
+                            
                         </div>
                     </div>
 

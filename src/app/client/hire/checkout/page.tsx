@@ -47,65 +47,66 @@ export default function CheckoutPage() {
   const discount = appliedCoupon ? Math.round(subtotal * 0.1) : 0; // 10% discount for demo
   const total = subtotal + serviceFee - discount;
 
-  const handleCODBooking = () => {
+  const handleCODBooking = async () => {
     setIsProcessing(true);
-    
+
     // Generate OTP for this booking
     const otp = generateOtp();
-    
+
     // Simulate processing delay
-    setTimeout(() => {
-      // Create the booking
-      const serviceNames = state.cartItems.map(item => item.service.title).join(', ');
-      // Use the date in YYYY-MM-DD format for proper filtering
-      const bookingDate = state.selectedDate || new Date().toISOString().split('T')[0];
-      
-      const bookingId = addBooking({
-        service: serviceNames,
-        provider: state.freelancerName || 'Freelancer',
-        image: state.freelancerImage || '',
-        date: bookingDate,
-        time: state.selectedTime || '10:00 AM',
-        status: 'confirmed',
-        location: state.selectedLocation || 'Location TBD',
-        price: `₹${total.toLocaleString()}`,
-        rating: state.freelancerRating || 4.5,
-        completedJobs: state.freelancerReviewCount || 50,
-        description: `Booking for ${serviceNames}`,
-        category: 'cricket',
-        paymentMethod: 'cod',
-        notes: state.bookingNotes || undefined, // Include notes from booking details
-        otp: otp, // Include OTP for verification
-        services: state.cartItems.map(item => ({
-          id: item.service.id,
-          title: item.service.title,
-          price: item.service.price,
-          quantity: item.quantity || 1
-        }))
-      });
-      
-      // Store OTP in localStorage for the freelancer side to access
+    setTimeout(async () => {
       try {
-        const otpStore = JSON.parse(localStorage.getItem('bookingOtps') || '{}');
-        otpStore[bookingId] = otp;
-        localStorage.setItem('bookingOtps', JSON.stringify(otpStore));
-      } catch (e) {
-        console.error('Error storing OTP:', e);
+        // Create the booking
+        const serviceNames = state.cartItems.map(item => item.service.title).join(', ');
+        // Use the date in YYYY-MM-DD format for proper filtering
+        const bookingDate = state.selectedDate || new Date().toISOString().split('T')[0];
+
+        const bookingId = await addBooking({
+          service: serviceNames,
+          provider: state.freelancerName || 'Freelancer',
+          image: state.freelancerImage || '',
+          date: bookingDate,
+          time: state.selectedTime || '10:00 AM',
+          status: 'confirmed',
+          location: state.selectedLocation || 'Location TBD',
+          price: `₹${total.toLocaleString()}`,
+          rating: state.freelancerRating || 4.5,
+          completedJobs: state.freelancerReviewCount || 50,
+          description: `Booking for ${serviceNames}`,
+          category: 'cricket',
+          paymentMethod: 'cod',
+          notes: (state.bookingNotes || '') + ` [OTP: ${otp}]`, // Append OTP to notes for now
+          otp: otp,
+          services: state.cartItems.map(item => ({
+            id: item.service.id,
+            title: item.service.title,
+            price: item.service.price,
+            quantity: item.quantity || 1
+          }))
+        });
+
+        // Store OTP in localStorage for the freelancer side to access - REMOVED
+        // Ideally handled by backend. We appended to notes for persistence context.
+
+        setNewBookingId(bookingId);
+        setGeneratedOtp(otp);
+        setBookingSuccess(true);
+
+        // Clear cart and hire state
+        clearCart();
+        resetHireState();
+
+        // Redirect to bookings after showing success
+        setTimeout(() => {
+          router.push('/client/bookings');
+        }, 3500);
+
+      } catch (error) {
+        console.error("Booking creation failed:", error);
+        // Handle error UI?
+      } finally {
+        setIsProcessing(false);
       }
-      
-      setNewBookingId(bookingId);
-      setGeneratedOtp(otp);
-      setBookingSuccess(true);
-      setIsProcessing(false);
-      
-      // Clear cart and hire state
-      clearCart();
-      resetHireState();
-      
-      // Redirect to bookings after showing success
-      setTimeout(() => {
-        router.push('/client/bookings');
-      }, 3500); // Extended to show OTP longer
     }, 1500);
   };
 
@@ -119,7 +120,7 @@ export default function CheckoutPage() {
           </div>
           <h2 className="text-2xl font-bold text-white mb-2">Booking Confirmed!</h2>
           <p className="text-white/60 mb-4">Your booking {newBookingId} has been placed successfully.</p>
-          
+
           {/* OTP Display Card */}
           {generatedOtp && (
             <div className="mb-6 p-6 rounded-2xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 border border-purple-500/30">
@@ -136,7 +137,7 @@ export default function CheckoutPage() {
               </p>
             </div>
           )}
-          
+
           <p className="text-white/40 text-sm mb-4">Payment: Cash on Delivery</p>
           <p className="text-white/50 text-sm">Redirecting to your bookings...</p>
         </div>
@@ -262,7 +263,7 @@ export default function CheckoutPage() {
                 <p className="text-white/60 text-sm">Pay when service is completed</p>
               </div>
             </div>
-            <button 
+            <button
               onClick={handleCODBooking}
               disabled={isProcessing}
               className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white font-medium transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm"

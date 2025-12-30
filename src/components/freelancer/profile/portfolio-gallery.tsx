@@ -14,32 +14,11 @@ interface PortfolioItem {
 }
 
 export function PortfolioGallery() {
-  const [items, setItems] = useState<PortfolioItem[]>([
-    {
-      id: '1',
-      type: 'image',
-      url: 'https://images.unsplash.com/photo-1581094794329-c8112c4e0f8f',
-      title: 'Bathroom Renovation',
-      description: 'Complete bathroom renovation with modern fixtures'
-    },
-    {
-      id: '2',
-      type: 'video',
-      url: 'https://example.com/video.mp4',
-      title: 'Electrical Installation',
-      description: 'Smart home electrical system installation'
-    }
-  ]);
+  const [items, setItems] = useState<PortfolioItem[]>([]);
 
   const handleAddItem = () => {
-    // In a real app, this would handle file upload
-    setItems(prev => [...prev, {
-      id: Date.now().toString(),
-      type: 'image',
-      url: 'https://images.unsplash.com/photo-1581094794329-c8112c4e0f8f',
-      title: 'New Project',
-      description: 'Project description'
-    }]);
+    // This will be implemented with actual file upload
+    console.log('Add portfolio item');
   };
 
   const handleRemoveItem = (id: string) => {

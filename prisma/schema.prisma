@@ -14,6 +14,8 @@ datasource db {
 // User model for authentication
 model User {
   id        String   @id @default(cuid())
+  displayId String?  @unique // Human-readable ID: C00001, F00001
+  username  String?  @unique // Public profile username: sathishraj, john_doe
   email     String   @unique
   name      String?
   avatar    String?
@@ -249,6 +251,7 @@ model Job {
   // Status and progress
   status          String @default("OPEN") // OPEN, IN_PROGRESS, COMPLETED, CANCELLED, ON_HOLD
   progress        Int      @default(0)
+  peopleNeeded    Int      @default(1)
   notes           String?  // cancellation notes or other notes
   
   // Completion tracking

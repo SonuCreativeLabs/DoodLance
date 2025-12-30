@@ -24,8 +24,6 @@ interface ChatViewProps {
   messages?: Message[]; // Messages should be passed as prop or fetched from API
 }
 
-// mockMessages removed; messages are now passed as a prop or fetched from API
-
 export function ChatView({
   chatId,
   recipientName,
