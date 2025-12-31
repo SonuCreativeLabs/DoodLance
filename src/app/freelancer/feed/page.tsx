@@ -23,10 +23,13 @@ import SearchFilters from './components/SearchFilters';
 import { useSkills } from '@/contexts/SkillsContext';
 import { useForYouJobs } from '@/contexts/ForYouJobsContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useRequireAuth } from '@/hooks/useRequireAuth';
+import LoginDialog from '@/components/auth/LoginDialog';
 import { Job, WorkMode } from './types';
 
 export default function FeedPage() {
-  const { user } = useAuth();
+  const { user, isAuthenticated: authIsAuthenticated } = useAuth();
+  const { requireAuth, openLoginDialog, setOpenLoginDialog, isAuthenticated } = useRequireAuth();
   // Sheet and UI state
   const [isSheetCollapsed, setIsSheetCollapsed] = useState(false);
   const router = useRouter();
@@ -437,9 +440,13 @@ export default function FeedPage() {
   }, [filtersApplied, serviceCategory, workMode, priceRange, location, distance]);
 
   const handleApply = async (jobId: string, proposal: string, rate: string, rateType: string, attachments: File[]) => {
-    if (!user?.id) {
-      alert('Please sign in to apply');
-      return;
+    // Check authentication first - store this specific job application
+    requireAuth(`apply-job-${jobId}`, { redirectTo: `/freelancer/feed` });
+
+    // If user is not authenticated or profile incomplete, requireAuth handles it
+    // If we reach here, they are ready to apply
+    if (!isAuthenticated || !user?.id) {
+      return; // Login dialog will open or profile redirect will happen
     }
 
     try {
@@ -456,9 +463,9 @@ export default function FeedPage() {
           freelancerId: user.id,
           coverLetter: proposal || 'I am interested in this job and believe I can deliver quality work.',
           proposedRate: parseFloat(rate) || 2500,
-          estimatedDays: 7, // Default to 7 if not provided
-          skills: [], // Pass skills if available
-          attachments: attachments.map(f => f.name) // Currently only passing filenames. Real app would upload files first.
+          estimatedDays: 7,
+          skills: [],
+          attachments: attachments.map(f => f.name)
         })
       });
 
@@ -466,16 +473,11 @@ export default function FeedPage() {
         const newApplication = await response.json();
         console.log('Application submitted successfully:', newApplication.id);
 
-        // Dispatch event to refresh ForYouJobs context
         window.dispatchEvent(new CustomEvent('applicationCreated', { detail: { jobId } }));
-
-        // Dispatch event to refresh ApplicationsContext (for client view)
         window.dispatchEvent(new CustomEvent('applicationsUpdated'));
 
-        // Update applied jobs
         fetchAppliedStatus();
 
-        // Show success modal
         setAppliedJobTitle(job?.title || 'this job');
         setShowSuccessModal(true);
       } else {
@@ -774,6 +776,16 @@ export default function FeedPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Login Dialog */}
+      <LoginDialog
+        open={openLoginDialog}
+        onOpenChange={setOpenLoginDialog}
+        onSuccess={() => {
+          // After login, user can continue with their intended action
+          // The requireAuth hook will handle executing the pending action
+        }}
+      />
     </div>
   );
 }

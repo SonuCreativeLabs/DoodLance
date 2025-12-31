@@ -7,12 +7,16 @@ import { Button } from '@/components/ui/button';
 import { useHire } from '@/contexts/HireContext';
 import { useNavbar } from '@/contexts/NavbarContext';
 import { useBookings } from '@/contexts/BookingsContext';
+import { useRequireAuth, usePendingActionCheck } from '@/hooks/useRequireAuth';
+import LoginDialog from '@/components/auth/LoginDialog';
 
 export default function CheckoutPage() {
   const router = useRouter();
   const { state, getTotalPrice, clearCart, resetHireState } = useHire();
   const { addBooking } = useBookings();
   const { setNavbarVisibility } = useNavbar();
+  const { requireAuth, openLoginDialog, setOpenLoginDialog, isAuthenticated } = useRequireAuth();
+
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
   const [discountAmount, setDiscountAmount] = useState(0);
@@ -26,6 +30,23 @@ export default function CheckoutPage() {
   const generateOtp = () => {
     return Math.floor(1000 + Math.random() * 9000).toString();
   };
+
+  // Check authentication on mount - if not authenticated, trigger login flow
+  useEffect(() => {
+    if (!isAuthenticated) {
+      // This will open login dialog if not authenticated
+      // Or redirect to profile if incomplete
+      // The actionId 'access-checkout' helps track where user needs to return
+      requireAuth('access-checkout', { redirectTo: '/client/hire/checkout' });
+    }
+  }, [isAuthenticated, requireAuth]);
+
+  // Auto-trigger this effect when user returns from completing profile
+  usePendingActionCheck('access-checkout', () => {
+    // User has returned after completing login/profile
+    // They're already on this page, just let them stay here
+    console.log('User returned to checkout after auth/profile completion');
+  });
 
   // Hide navbar when component mounts
   useEffect(() => {
@@ -341,6 +362,13 @@ export default function CheckoutPage() {
           </div>
         </div>
       </div>
+
+      {/* Login Dialog */}
+      <LoginDialog
+        open={openLoginDialog}
+        onOpenChange={setOpenLoginDialog}
+        redirectTo="/client/hire/checkout"
+      />
     </div>
   );
 }

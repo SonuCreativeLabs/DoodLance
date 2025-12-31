@@ -7,11 +7,14 @@ import { Button } from '@/components/ui/button';
 import { useHire } from '@/contexts/HireContext';
 import { useNavbar } from '@/contexts/NavbarContext';
 import AdditionalServicesCard from '@/components/hire/AdditionalServicesCard';
+import { useRequireAuth } from '@/hooks/useRequireAuth';
+import LoginDialog from '@/components/auth/LoginDialog';
 
 export default function CartPage() {
   const router = useRouter();
   const { state, getTotalPrice, increaseQuantity, decreaseQuantity, clearCart } = useHire();
   const { setNavbarVisibility } = useNavbar();
+  const { requireAuth, openLoginDialog, setOpenLoginDialog, isAuthenticated } = useRequireAuth();
   const [showAdditionalServices, setShowAdditionalServices] = useState(false);
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
@@ -48,7 +51,14 @@ export default function CartPage() {
   };
 
   const handleCheckout = () => {
-    router.push('/client/hire/checkout');
+    // Only navigate if user is authenticated and profile is complete
+    // If not, requireAuth will handle login dialog or profile redirect
+    requireAuth('proceed-to-checkout', { redirectTo: '/client/hire/checkout' });
+
+    // If we reach here, user is authenticated and profile is complete
+    if (isAuthenticated) {
+      router.push('/client/hire/checkout');
+    }
   };
 
   const handleViewCart = () => {
@@ -132,11 +142,10 @@ export default function CartPage() {
                   {[...Array(5)].map((_, i) => (
                     <Star
                       key={i}
-                      className={`w-3 h-3 ${
-                        i < Math.floor(state.freelancerRating!)
-                          ? 'text-yellow-400 fill-yellow-400'
-                          : 'text-white/20'
-                      }`}
+                      className={`w-3 h-3 ${i < Math.floor(state.freelancerRating!)
+                        ? 'text-yellow-400 fill-yellow-400'
+                        : 'text-white/20'
+                        }`}
                     />
                   ))}
                 </div>
@@ -334,6 +343,13 @@ export default function CartPage() {
           Proceed to Payment ₹{total.toLocaleString()}
         </Button>
       </div>
+
+      {/* Login Dialog */}
+      <LoginDialog
+        open={openLoginDialog}
+        onOpenChange={setOpenLoginDialog}
+        onSuccess={() => router.push('/client/hire/checkout')}
+      />
     </div>
   );
 }

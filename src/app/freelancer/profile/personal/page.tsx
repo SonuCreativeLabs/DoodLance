@@ -18,6 +18,7 @@ import {
   Loader2
 } from 'lucide-react';
 import Link from "next/link";
+import { useRouter, useSearchParams } from 'next/navigation';
 import { cn } from "@/lib/utils";
 import { usePersonalDetails } from '@/contexts/PersonalDetailsContext';
 import { UsernameInput } from '@/components/freelancer/profile/UsernameInput';
@@ -142,6 +143,9 @@ const FormField = ({
 type EditSection = 'personal' | 'contact' | 'location' | 'cricket' | 'username' | null;
 
 export default function PersonalDetailsPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnTo = searchParams.get('returnTo'); // Get return path from query params
   const { personalDetails, updatePersonalDetails } = usePersonalDetails();
   const [editingSection, setEditingSection] = useState<EditSection>(null);
 
@@ -289,6 +293,13 @@ export default function PersonalDetailsPage() {
       // Username is saved via the UsernameInput component's own API call
     }
     setEditingSection(null);
+
+    // If there's a returnTo param (user came from auth flow), redirect after save
+    if (returnTo && typeof window !== 'undefined') {
+      setTimeout(() => {
+        router.push(decodeURIComponent(returnTo));
+      }, 500); // Small delay to ensure state updates
+    }
   };
 
   const handleCancel = (section: EditSection) => {

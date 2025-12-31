@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { User, Camera, ArrowLeft, Trash2, Check, Loader2 } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useNavbar } from '@/contexts/NavbarContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { createClient } from '@/lib/supabase/client'
@@ -12,8 +12,10 @@ import { toast } from 'sonner'
 
 export default function EditProfile() {
   const { setNavbarVisibility } = useNavbar()
-  const { user, signIn } = useAuth() // signIn used here just to trigger re-fetch if needed or we rely on session update
+  const { user, signIn } = useAuth()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const returnTo = searchParams.get('returnTo') // Get the return path if exists
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const supabase = createClient()
@@ -81,7 +83,13 @@ export default function EditProfile() {
 
       // Navigate back after a short delay
       setTimeout(() => {
-        router.push('/client/profile')
+        // If there's a returnTo param, go there (user came from auth flow)
+        if (returnTo) {
+          router.push(decodeURIComponent(returnTo))
+        } else {
+          // Otherwise go to normal profile page
+          router.push('/client/profile')
+        }
       }, 1500)
     } catch (error) {
       console.error('Failed to save profile:', error)
