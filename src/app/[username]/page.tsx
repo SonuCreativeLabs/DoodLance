@@ -194,7 +194,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
                                     Experience
                                 </h2>
                                 <div className="space-y-6">
-                                    {profile.experiences.map((exp) => (
+                                    {profile.experiences.map((exp: any) => (
                                         <div key={exp.id} className="border-l-2 border-purple-500/30 pl-4">
                                             <h3 className="font-semibold text-lg">{exp.title}</h3>
                                             <p className="text-purple-400">{exp.company}</p>
@@ -216,7 +216,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
                             <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
                                 <h2 className="text-2xl font-bold mb-6">Portfolio</h2>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {profile.portfolios.map((item) => (
+                                    {profile.portfolios.map((item: any) => (
                                         <div
                                             key={item.id}
                                             className="bg-white/5 rounded-lg overflow-hidden border border-white/10 hover:border-purple-500/30 transition-colors"
@@ -247,7 +247,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
                             <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
                                 <h2 className="text-2xl font-bold mb-6">Client Reviews</h2>
                                 <div className="space-y-6">
-                                    {profile.reviews.slice(0, 5).map((review) => (
+                                    {profile.reviews.slice(0, 5).map((review: any) => (
                                         <div key={review.id} className="border-b border-white/10 pb-6 last:border-0">
                                             <div className="flex items-center gap-2 mb-2">
                                                 <div className="flex">
