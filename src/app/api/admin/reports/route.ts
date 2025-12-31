@@ -113,7 +113,7 @@ export async function GET(request: NextRequest) {
                 growthRate: 15.3 // Placeholder - would need historical data
             },
             revenueData,
-            categoryData: categoryData.map((c, i) => ({
+            categoryData: categoryData.map((c: any, i: number) => ({
                 name: c.categoryId,
                 value: Math.round((c._count.id / totalServices) * 100),
                 color: ['#8B5CF6', '#EC4899', '#10B981', '#F59E0B', '#6B7280'][i % 5]
