@@ -36,6 +36,15 @@ export async function GET(request: NextRequest) {
 
         if (!wallet) {
             // Create wallet if it doesn't exist
+            // Verify user exists before creating wallet
+            const userExists = await prisma.user.findUnique({
+                where: { id: targetUserId }
+            });
+
+            if (!userExists) {
+                return NextResponse.json({ error: 'User not found' }, { status: 404 });
+            }
+
             wallet = await prisma.wallet.create({
                 data: {
                     userId: targetUserId,
@@ -104,7 +113,7 @@ export async function POST(request: NextRequest) {
                         type: 'CREDIT', // Or specific type like 'DEPOSIT' if schema supported, mapped to CREDIT
                         description: description || 'Added funds to wallet',
                         status: 'COMPLETED',
-                        paymentMethod: 'mock_gateway'
+                        paymentMethod: 'system_credit'
                     }
                 });
 

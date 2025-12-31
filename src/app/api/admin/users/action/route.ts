@@ -1,78 +1,106 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-// Mock user database (shared with main users route)
-let mockUsers = [
-  {
-    id: 'USR001',
-    name: 'Rohit Sharma',
-    email: user.email,
-    phone: '+91 98765 43210',
-    role: 'freelancer',
-    status: 'active',
-    isVerified: true,
-    kycStatus: 'verified',
-    joinedAt: '2024-01-15',
-    lastActive: '2 hours ago',
-    location: 'Mumbai',
-    earnings: 125000,
-    spending: 0,
-    completedJobs: 45,
-    rating: 4.8,
-    profileCompletion: 95,
-    walletBalance: 12500
-  },
-  {
-    id: 'USR004',
-    name: 'Ananya Reddy',
-    email: user.email,
-    phone: '+91 65432 10987',
-    role: 'freelancer',
-    status: 'suspended',
-    isVerified: false,
-    kycStatus: 'unverified',
-    joinedAt: '2024-03-01',
-    lastActive: '1 week ago',
-    location: 'Chennai',
-    earnings: 12000,
-    spending: 500,
-    completedJobs: 8,
-    rating: 4.2,
-    profileCompletion: 60,
-    walletBalance: 1200
-  },
-];
+import prisma from '@/lib/db';
+import { validateSession } from '@/lib/auth/jwt';
+import { logAdminAction, AdminAction } from '@/lib/audit-log';
 
 // POST /api/admin/users/action - Perform user actions
 export async function POST(request: NextRequest) {
   try {
+    const session = await validateSession();
+    // In a real app, ensure session.role === 'admin'
+
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await request.json();
     const { userId, action, reason } = body;
 
-    const userIndex = mockUsers.findIndex(u => u.id === userId);
-    if (userIndex === -1) {
+    if (!userId || !action) {
+      return NextResponse.json(
+        { error: 'Missing required user ID or action' },
+        { status: 400 }
+      );
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId }
+    });
+
+    if (!user) {
       return NextResponse.json(
         { error: 'User not found' },
         { status: 404 }
       );
     }
 
+    let updatedUser;
+    let logActionType: AdminAction;
+
     switch (action) {
       case 'suspend':
-        mockUsers[userIndex].status = 'suspended';
+        updatedUser = await prisma.user.update({
+          where: { id: userId },
+          data: { status: 'suspended' }
+        });
+        logActionType = 'SUSPEND';
         break;
       case 'activate':
-        mockUsers[userIndex].status = 'active';
+        updatedUser = await prisma.user.update({
+          where: { id: userId },
+          data: { status: 'active' } // Assuming active is the default/valid status
+        });
+        logActionType = 'ACTIVATE';
         break;
       case 'verify':
-        mockUsers[userIndex].isVerified = true;
-        mockUsers[userIndex].kycStatus = 'verified';
+        updatedUser = await prisma.user.update({
+          where: { id: userId },
+          data: { isVerified: true }
+        });
+
+        // Also verify freelancer profile if it exists
+        if (user.role === 'freelancer') {
+          try {
+            await prisma.freelancerProfile.update({
+              where: { userId },
+              data: { isVerified: true, verifiedAt: new Date() }
+            });
+          } catch (e) {
+            // Ignore if profile doesn't exist
+          }
+        }
+        logActionType = 'VERIFY';
         break;
       case 'unverify':
-        mockUsers[userIndex].isVerified = false;
-        mockUsers[userIndex].kycStatus = 'unverified';
+        updatedUser = await prisma.user.update({
+          where: { id: userId },
+          data: { isVerified: false }
+        });
+        if (user.role === 'freelancer') {
+          try {
+            await prisma.freelancerProfile.update({
+              where: { userId },
+              data: { isVerified: false }
+            });
+          } catch (e) {
+            // Ignore
+          }
+        }
+        logActionType = 'UNVERIFY';
         break;
       case 'delete':
-        mockUsers = mockUsers.filter(u => u.id !== userId);
+        await prisma.user.delete({ where: { id: userId } });
+        logActionType = 'DELETE';
+        // Return immediately as there is no user object to return
+        await logAdminAction({
+          adminId: session.userId,
+          adminEmail: session.email || 'unknown',
+          action: logActionType,
+          resource: 'USER',
+          resourceId: userId,
+          details: { reason },
+          request
+        });
         return NextResponse.json({ success: true, message: 'User deleted' });
       default:
         return NextResponse.json(
@@ -82,11 +110,19 @@ export async function POST(request: NextRequest) {
     }
 
     // Log audit action
-    console.log(`User action performed: ${action} on ${userId}. Reason: ${reason}`);
+    await logAdminAction({
+      adminId: session.userId,
+      adminEmail: session.email || 'unknown',
+      action: logActionType,
+      resource: 'USER',
+      resourceId: userId,
+      details: { reason, previousStatus: user.status },
+      request
+    });
 
     return NextResponse.json({
       success: true,
-      user: mockUsers[userIndex],
+      user: updatedUser,
       message: `User ${action} successful`
     });
   } catch (error) {

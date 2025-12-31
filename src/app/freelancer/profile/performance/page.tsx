@@ -27,13 +27,13 @@ export default function PerformancePage() {
     end: endOfMonth(new Date())
   });
   const [isLoading, setIsLoading] = useState(true);
-  
+
   // This would be replaced with actual data fetching in a real app
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoading(false);
     }, 500);
-    
+
     return () => clearTimeout(timer);
   }, [dateRange]);
 
@@ -46,17 +46,12 @@ export default function PerformancePage() {
   // Calculate summary data based on date range
   const getSummaryData = () => {
     // In a real app, this would be calculated from your actual data
-    // For now, we're using mock data
-    const monthsDiff = Math.ceil(
-      (dateRange.end.getTime() - dateRange.start.getTime()) / (1000 * 60 * 60 * 24 * 30)
-    ) || 1;
-    
     return {
-      completed: Math.round(124 * (monthsDiff / 12)),
-      inProgress: Math.round(5 * (monthsDiff / 12)),
-      pendingJobs: Math.round(3 * (monthsDiff / 12)),
-      totalWorkingHours: Math.round(1240 * (monthsDiff / 12)),
-      totalEarnings: Math.round(945000 * (monthsDiff / 12))
+      completed: 0,
+      inProgress: 0,
+      pendingJobs: 0,
+      totalWorkingHours: 0,
+      totalEarnings: 0
     };
   };
 
@@ -68,8 +63,8 @@ export default function PerformancePage() {
       <div className="sticky top-0 z-10 bg-[#0F0F0F] border-b border-white/5">
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center">
-            <Link 
-              href="/freelancer/profile" 
+            <Link
+              href="/freelancer/profile"
               className="inline-flex items-center text-sm text-purple-400 hover:text-purple-300 transition-colors duration-200"
             >
               <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors duration-200">
@@ -83,7 +78,7 @@ export default function PerformancePage() {
           </div>
         </div>
       </div>
-      
+
       {/* Scrollable Content */}
       <div className="flex-1 overflow-y-auto">
         <div className="container mx-auto px-4 py-6">

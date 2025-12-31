@@ -1,41 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/db';
+import { validateSession } from '@/lib/auth/jwt';
 
 export async function PATCH(
     request: NextRequest,
     { params }: { params: { id: string } }
 ) {
     try {
-        const { id } = params;
-        const { action } = await request.json();
-
-        if (!id) return NextResponse.json({ error: 'User ID required' }, { status: 400 });
-
-        let updateData = {};
-
-        switch (action) {
-            case 'verify':
-                updateData = { isVerified: true };
-                break;
-            case 'unverify':
-                updateData = { isVerified: false };
-                break;
-            // case 'suspend':  // Schema needs update for this
-            //   updateData = { isActive: false }; 
-            //   break;
-            // case 'activate':
-            //   updateData = { isActive: true };
-            //   break;
-            default:
-                return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
+        const session = await validateSession();
+        if (!session || session.role !== 'admin') {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const updatedUser = await prisma.user.update({
-            where: { id },
-            data: updateData
-        });
+        const { id } = params;
+        const body = await request.json();
 
-        return NextResponse.json(updatedUser);
+        // actions (suspend/verify) should now go through /api/admin/users/action
+        if (body.action) {
+            return NextResponse.json({ error: 'Use /api/admin/users/action for state changes' }, { status: 400 });
+        }
+
+        // Placeholder for future profile updates (name, email, etc.)
+        // This endpoint can be expanded when we implement direct profile editing from admin
+
+        return NextResponse.json({ message: 'Profile update not implemented yet' }, { status: 501 });
 
     } catch (error) {
         console.error('Update user error:', error);

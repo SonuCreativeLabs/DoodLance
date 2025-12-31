@@ -47,9 +47,11 @@ export async function middleware(request: NextRequest) {
         }
     }
 
-    // Admin route protection
-    if (request.nextUrl.pathname.startsWith('/admin') ||
-        request.nextUrl.pathname.startsWith('/api/admin')) {
+    // Admin route protection (except login page and auth endpoints)
+    if ((request.nextUrl.pathname.startsWith('/admin') ||
+        request.nextUrl.pathname.startsWith('/api/admin')) &&
+        request.nextUrl.pathname !== '/admin/login' &&
+        !request.nextUrl.pathname.startsWith('/api/admin/auth')) {
 
         // Get auth token from cookie or header
         const token = request.cookies.get('auth-token')?.value;

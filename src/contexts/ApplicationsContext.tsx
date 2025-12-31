@@ -67,18 +67,17 @@ export function ApplicationsProvider({ children }: { children: ReactNode }) {
           id: app.freelancer?.id,
           name: app.freelancer?.name || 'Unknown',
           image: app.freelancer?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${app.freelancer?.name || 'User'}`,
-          rating: 4.8, // Mock
-          completedJobs: 12, // Mock 
-          responseTime: '2 hours', // Mock
+          rating: app.freelancer?.rating || 0,
+          completedJobs: app.freelancer?.completedJobs || 0,
+          responseTime: app.freelancer?.responseTime || 'N/A',
           location: app.freelancer?.location || 'Remote',
         },
         proposal: app.proposal?.coverLetter || app.description || 'No proposal text',
         price: `₹${app.proposal?.proposedRate || 0}`,
-        availability: 'Flexible', // Mock
+        availability: app.freelancer?.availability || 'Flexible',
         status: app.status === 'pending' ? 'new' : (app.status as any),
       }));
 
-      // Fallback to mock data if empty (for UI testing) -> REMOVED for production
       if (mappedApps.length === 0) {
         console.log('No applications found.');
       }

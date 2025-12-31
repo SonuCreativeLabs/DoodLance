@@ -22,41 +22,6 @@ const getAvatarUrl = (name: string, gender: 'men' | 'women' = 'men') => {
     return `https://randomuser.me/api/portraits/${gender}/${id}.jpg`;
 };
 
-// Generate mock messages for a professional
-const generateMockMessages = (proName: string, service: string): Message[] => {
-    const now = Date.now();
-    return [
-        {
-            id: '1',
-            content: `Hi! I'm interested in your ${service} services.`,
-            timestamp: new Date(now - 3600000 * 24),
-            sender: 'user',
-            status: 'read',
-        },
-        {
-            id: '2',
-            content: `Hello! Thank you for reaching out. I'd be happy to help with ${service}. What specifically are you looking for?`,
-            timestamp: new Date(now - 3600000 * 23),
-            sender: 'other',
-            status: 'read',
-        },
-        {
-            id: '3',
-            content: `I need regular coaching sessions. What's your availability?`,
-            timestamp: new Date(now - 3600000 * 12),
-            sender: 'user',
-            status: 'delivered',
-        },
-        {
-            id: '4',
-            content: `I have slots available this week. Would you prefer morning or evening sessions?`,
-            timestamp: new Date(now - 3600000 * 6),
-            sender: 'other',
-            status: 'read',
-        },
-    ];
-};
-
 export default function ChatPage() {
     const params = useParams();
     const router = useRouter();
@@ -86,11 +51,10 @@ export default function ChatPage() {
         };
     }, [freelancerName]);
 
-    // Generate messages for this professional
-    const messages = useMemo(() => {
-        if (!professional) return [];
-        return generateMockMessages(professional.name, professional.service);
-    }, [professional]);
+    // Initial messages logic
+    const messages: Message[] = useMemo(() => {
+        return [];
+    }, []);
 
     // If no name provided, show error
     if (!freelancerName) {
@@ -120,6 +84,8 @@ export default function ChatPage() {
             online={true}
             onBack={() => router.back()}
             messages={messages}
+            currentUserId="user" // Placeholder or from auth
         />
     );
 }
+

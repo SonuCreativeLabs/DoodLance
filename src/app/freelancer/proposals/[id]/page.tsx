@@ -118,7 +118,7 @@ export default function ProposalDetailsPage() {
             skills: data.featuredSkills || [],
             attachments: data.attachments || []
           },
-          // Extra mock-like fields
+          // Additional fields
           clientViewedAt: data.clientViewedAt,
           moneySpent: 0,
           freelancersWorked: 0,

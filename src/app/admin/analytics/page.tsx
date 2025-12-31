@@ -11,15 +11,15 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
-  TrendingUp, Users, Package, DollarSign, Activity,
-  BarChart3, PieChart, LineChart, Download, RefreshCw,
-  Calendar, Clock, ArrowUp, ArrowDown, Minus
+  Activity, Download, RefreshCw, ArrowUp, ArrowDown, Minus
 } from 'lucide-react';
 import {
   LineChart as RechartsLineChart, Line, BarChart, Bar, PieChart as RechartsPieChart,
-  Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-  Area, AreaChart, RadialBarChart, RadialBar, ComposedChart
+  Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  Area, AreaChart, ComposedChart
 } from 'recharts';
+
+const COLORS = ['#8B5CF6', '#A78BFA', '#C4B5FD', '#DDD6FE', '#EDE9FE', '#F5F3FF'];
 
 export default function AnalyticsPage() {
   const [timeRange, setTimeRange] = useState('7days');
@@ -30,10 +30,12 @@ export default function AnalyticsPage() {
   const [performanceData, setPerformanceData] = useState<any[]>([]);
   const [userMetrics, setUserMetrics] = useState<any[]>([]);
   const [serviceDistribution, setServiceDistribution] = useState<any[]>([]);
+  const [conversionData, setConversionData] = useState<any[]>([]);
   const [stats, setStats] = useState<any>({});
 
   useEffect(() => {
     fetchAnalytics();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeRange]);
 
   const fetchAnalytics = async () => {
@@ -43,14 +45,18 @@ export default function AnalyticsPage() {
       if (res.ok) {
         const data = await res.json();
         setPerformanceData(data.performanceData || []);
-        setServiceDistribution(data.serviceDistribution || []);
+        setServiceDistribution((data.serviceDistribution || []).map((item: any, index: number) => ({
+          ...item,
+          fill: COLORS[index % COLORS.length]
+        })));
         setStats(data.stats || {});
+        setConversionData(data.conversionData || []);
 
         // Format user metrics
         setUserMetrics([
-          { name: 'Active Users', value: data.userMetrics.activeUsers || 0, change: 12.5, trending: 'up' },
-          { name: 'New Signups', value: data.userMetrics.newSignups || 0, change: -5.2, trending: 'down' },
-          { name: 'Retention Rate', value: parseFloat(data.userMetrics.retentionRate) || 0, change: 3.1, trending: 'up' },
+          { name: 'Active Users', value: data.userMetrics.activeUsers || 0, change: 0, trending: 'neutral' },
+          { name: 'New Signups', value: data.userMetrics.newSignups || 0, change: 0, trending: 'neutral' },
+          { name: 'Retention Rate', value: parseFloat(data.userMetrics.retentionRate) || 0, change: 0, trending: 'neutral' },
           { name: 'Engagement Rate', value: parseFloat(data.userMetrics.engagementRate) || 0, change: 0, trending: 'neutral' },
         ]);
       }
@@ -60,14 +66,6 @@ export default function AnalyticsPage() {
       setLoading(false);
     }
   };
-
-  const conversionData = [
-    { name: 'Page Views', value: 5000, fill: '#8B5CF6' },
-    { name: 'Sign Ups', value: 1200, fill: '#A78BFA' },
-    { name: 'Active Users', value: 800, fill: '#C4B5FD' },
-    { name: 'Bookings', value: 450, fill: '#DDD6FE' },
-    { name: 'Completed', value: 380, fill: '#EDE9FE' },
-  ];
 
   return (
     <div className="space-y-6">
@@ -89,8 +87,8 @@ export default function AnalyticsPage() {
               <SelectItem value="90days">90 Days</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline" className="text-gray-300">
-            <RefreshCw className="w-4 h-4 mr-2" />
+          <Button variant="outline" className="text-gray-300" onClick={fetchAnalytics}>
+            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
           <Button className="bg-purple-600 hover:bg-purple-700">
@@ -108,24 +106,11 @@ export default function AnalyticsPage() {
               <div>
                 <p className="text-sm text-gray-400">{metric.name}</p>
                 <p className="text-2xl font-bold text-white mt-1">
-                  {typeof metric.value === 'number' && metric.value % 1 !== 0
+                  {typeof metric.value === 'number' && metric.name.includes('Rate')
                     ? `${metric.value}%`
                     : metric.value.toLocaleString()}
                 </p>
-                <div className="flex items-center gap-1 mt-2">
-                  {metric.trending === 'up' ? (
-                    <ArrowUp className="w-4 h-4 text-green-400" />
-                  ) : metric.trending === 'down' ? (
-                    <ArrowDown className="w-4 h-4 text-red-400" />
-                  ) : (
-                    <Minus className="w-4 h-4 text-gray-400" />
-                  )}
-                  <span className={`text-sm ${metric.trending === 'up' ? 'text-green-400' :
-                      metric.trending === 'down' ? 'text-red-400' : 'text-gray-400'
-                    }`}>
-                    {Math.abs(metric.change)}%
-                  </span>
-                </div>
+                {/* Trend indicator omitted as backend doesn't provide historical comparison yet */}
               </div>
               <Activity className="w-8 h-8 text-purple-500" />
             </div>
@@ -179,25 +164,34 @@ export default function AnalyticsPage() {
         {/* Service Distribution */}
         <Card className="bg-[#1a1a1a] border-gray-800 p-6">
           <h3 className="text-lg font-semibold text-white mb-4">Service Distribution</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <RechartsPieChart>
-              <Pie
-                data={serviceDistribution}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={({ name, value }) => `${name}: ${value}%`}
-                outerRadius={100}
-                fill="#8884d8"
-                dataKey="value"
-              >
-                {serviceDistribution.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.fill} />
-                ))}
-              </Pie>
-              <Tooltip />
-            </RechartsPieChart>
-          </ResponsiveContainer>
+          {serviceDistribution.length > 0 ? (
+            <ResponsiveContainer width="100%" height={300}>
+              <RechartsPieChart>
+                <Pie
+                  data={serviceDistribution}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ name, value }) => `${name}: ${value}`}
+                  outerRadius={100}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {serviceDistribution.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.fill} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #2a2a2a' }}
+                  itemStyle={{ color: '#fff' }}
+                />
+              </RechartsPieChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="h-[300px] flex items-center justify-center text-gray-500">
+              No service data available
+            </div>
+          )}
         </Card>
 
         {/* Conversion Funnel */}
@@ -207,12 +201,13 @@ export default function AnalyticsPage() {
             <BarChart data={conversionData} layout="horizontal">
               <CartesianGrid strokeDasharray="3 3" stroke="#2a2a2a" />
               <XAxis type="number" stroke="#6b7280" />
-              <YAxis dataKey="name" type="category" stroke="#6b7280" />
+              <YAxis dataKey="name" type="category" stroke="#6b7280" width={100} />
               <Tooltip
                 contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #2a2a2a' }}
                 labelStyle={{ color: '#fff' }}
+                cursor={{ fill: 'transparent' }}
               />
-              <Bar dataKey="value" fill="#8B5CF6" />
+              <Bar dataKey="value" fill="#8B5CF6" radius={[0, 4, 4, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </Card>
@@ -224,13 +219,14 @@ export default function AnalyticsPage() {
             <ComposedChart data={performanceData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#2a2a2a" />
               <XAxis dataKey="name" stroke="#6b7280" />
-              <YAxis stroke="#6b7280" />
+              <YAxis yAxisId="left" stroke="#6b7280" />
+              <YAxis yAxisId="right" orientation="right" stroke="#6b7280" />
               <Tooltip
                 contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #2a2a2a' }}
                 labelStyle={{ color: '#fff' }}
               />
-              <Bar dataKey="bookings" barSize={20} fill="#10B981" />
-              <Line type="monotone" dataKey="users" stroke="#EC4899" strokeWidth={2} />
+              <Bar yAxisId="left" dataKey="bookings" barSize={20} fill="#10B981" name="Bookings" />
+              <Line yAxisId="right" type="monotone" dataKey="users" stroke="#EC4899" strokeWidth={2} name="Active Users" />
             </ComposedChart>
           </ResponsiveContainer>
         </Card>
@@ -241,19 +237,16 @@ export default function AnalyticsPage() {
         <h3 className="text-lg font-semibold text-white mb-4">Performance Metrics</h3>
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4">
           {[
-            { label: 'Bounce Rate', value: '32.5%', trend: 'down' },
-            { label: 'Session Duration', value: '4m 23s', trend: 'up' },
-            { label: 'Page Views', value: '12.3K', trend: 'up' },
-            { label: 'Conversion Rate', value: '3.8%', trend: 'up' },
-            { label: 'Cart Abandonment', value: '28%', trend: 'down' },
-            { label: 'Customer LTV', value: '₹8,500', trend: 'up' },
+            { label: 'Total Revenue', value: `₹${(stats.totalRevenue || 0).toLocaleString()}` },
+            { label: 'Avg Booking Value', value: `₹${Math.round(stats.avgBookingValue || 0).toLocaleString()}` },
+            { label: 'Booking Completion', value: `${stats.bookingCompletionRate || 0}%` },
+            { label: 'Total Bookings', value: (stats.totalBookings || 0).toLocaleString() },
+            { label: 'Conversion Rate', value: `${stats.conversionRate || 0}%` },
+            { label: 'Active Services', value: (stats.totalServices || 0).toLocaleString() },
           ].map((stat, index) => (
-            <div key={index} className="text-center">
-              <p className="text-xs text-gray-400">{stat.label}</p>
-              <p className="text-lg font-semibold text-white mt-1">{stat.value}</p>
-              <span className={`text-xs ${stat.trend === 'up' ? 'text-green-400' : 'text-red-400'}`}>
-                {stat.trend === 'up' ? '↑' : '↓'}
-              </span>
+            <div key={index} className="text-center p-4 bg-[#2a2a2a] rounded-lg">
+              <p className="text-xs text-gray-400 mb-1">{stat.label}</p>
+              <p className="text-lg font-bold text-white">{stat.value}</p>
             </div>
           ))}
         </div>

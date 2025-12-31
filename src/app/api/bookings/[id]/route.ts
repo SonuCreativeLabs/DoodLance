@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/db'
+import { validateSession } from '@/lib/auth/jwt'
 
 // GET /api/bookings/[id] - Get booking details
 export async function GET(
@@ -7,6 +8,11 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
+    const session = await validateSession()
+    if (!session || !session.userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const booking = await prisma.booking.findUnique({
       where: { id: params.id },
       include: {
@@ -30,6 +36,11 @@ export async function GET(
       )
     }
 
+    // Verify ownership
+    if (booking.clientId !== session.userId && booking.service.providerId !== session.userId) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
     // Map to frontend expected format
     const provider = booking.service.provider;
     const profile = provider.freelancerProfile;
@@ -43,7 +54,8 @@ export async function GET(
         name: provider.name,
         image: provider.image,
         rating: profile?.rating || 0,
-        location: profile?.location || 'Remote'
+        location: profile?.location || 'Remote',
+        phone: provider.phone // Add phone for call functionality
       },
       image: provider.image || "/images/avatar-placeholder.png",
       date: booking.scheduledAt ? new Date(booking.scheduledAt).toISOString().split('T')[0] : '',

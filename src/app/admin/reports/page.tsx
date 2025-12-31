@@ -362,25 +362,11 @@ export default function ReportsPage() {
           <h3 className="text-lg font-semibold text-white">Recent Reports</h3>
         </div>
         <div className="p-4 space-y-3">
-          {[
-            { name: 'Monthly Revenue Report - March 2024', date: '2024-03-25', format: 'PDF', size: '2.4 MB' },
-            { name: 'User Analytics Q1 2024', date: '2024-03-24', format: 'Excel', size: '1.8 MB' },
-            { name: 'Booking Performance Report', date: '2024-03-23', format: 'PDF', size: '3.2 MB' },
-            { name: 'Platform Metrics Dashboard', date: '2024-03-22', format: 'CSV', size: '456 KB' },
-          ].map((report, index) => (
-            <div key={index} className="flex items-center justify-between p-3 bg-[#2a2a2a] rounded-lg">
-              <div className="flex items-center gap-3">
-                <FileText className="w-5 h-5 text-gray-400" />
-                <div>
-                  <p className="text-white text-sm font-medium">{report.name}</p>
-                  <p className="text-xs text-gray-400">{report.date} • {report.format} • {report.size}</p>
-                </div>
-              </div>
-              <Button variant="ghost" size="sm" className="text-purple-400">
-                <Download className="w-4 h-4" />
-              </Button>
-            </div>
-          ))}
+          {loading ? (
+            <p className="text-gray-400 text-sm">Loading reports...</p>
+          ) : (
+            <p className="text-gray-500 text-sm">No recent reports generated.</p>
+          )}
         </div>
       </Card>
     </div>

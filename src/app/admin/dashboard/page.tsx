@@ -21,13 +21,8 @@ function MetricSkeleton() {
   );
 }
 
-const categoryPerformance = [
-  { name: 'Net Bowler', bookings: 234, revenue: 45600, growth: 12.3 },
-  { name: 'Coach', bookings: 189, revenue: 78900, growth: 18.7 },
-  { name: 'Match Player', bookings: 167, revenue: 34500, growth: -5.2 },
-  { name: 'Sidearm', bookings: 145, revenue: 28900, growth: 8.9 },
-  { name: 'Trainer', bookings: 98, revenue: 19800, growth: 22.1 }
-];
+// categoryPerformance removed - replaced by API data
+
 
 interface MetricCardProps {
   title: string;
@@ -234,7 +229,7 @@ export default function AdminDashboard() {
         <MetricCard
           title="Platform Fees"
           value={stats.platformFees}
-          change={15.2}
+          change={0}
           icon={CreditCard}
           color="bg-orange-600"
           prefix="₹"
@@ -250,28 +245,32 @@ export default function AdminDashboard() {
         <Card className="bg-[#1a1a1a] border-gray-800 p-6">
           <h3 className="text-lg font-semibold text-white mb-4">Category Performance</h3>
           <div className="space-y-3">
-            {categoryPerformance.map((category, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="flex items-center justify-between p-3 bg-[#2a2a2a] rounded-lg"
-              >
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-white">{category.name}</p>
-                  <div className="flex items-center gap-4 mt-1">
-                    <span className="text-xs text-gray-400">{category.bookings} bookings</span>
-                    <span className="text-xs text-gray-400">₹{category.revenue.toLocaleString()}</span>
+            {stats.categoryPerformance && stats.categoryPerformance.length > 0 ? (
+              stats.categoryPerformance.map((category: any, index: number) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className="flex items-center justify-between p-3 bg-[#2a2a2a] rounded-lg"
+                >
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-white">{category.name}</p>
+                    <div className="flex items-center gap-4 mt-1">
+                      <span className="text-xs text-gray-400">{category.bookings} bookings</span>
+                      <span className="text-xs text-gray-400">₹{category.revenue.toLocaleString()}</span>
+                    </div>
                   </div>
-                </div>
-                <div className={`flex items-center gap-1 text-sm ${category.growth >= 0 ? 'text-green-500' : 'text-red-500'
-                  }`}>
-                  {category.growth >= 0 ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />}
-                  {Math.abs(category.growth)}%
-                </div>
-              </motion.div>
-            ))}
+                  <div className={`flex items-center gap-1 text-sm ${category.growth >= 0 ? 'text-green-500' : 'text-red-500'
+                    }`}>
+                    {category.growth >= 0 ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />}
+                    {Math.abs(category.growth)}%
+                  </div>
+                </motion.div>
+              ))
+            ) : (
+              <p className="text-gray-500 text-sm">No category data available.</p>
+            )}
           </div>
         </Card>
       </div>
@@ -334,9 +333,9 @@ export default function AdminDashboard() {
             >
               <div className="flex items-center gap-3">
                 <div className={`p-2 rounded-lg ${activity.status === 'urgent' ? 'bg-red-600/20' :
-                    activity.status === 'pending' ? 'bg-yellow-600/20' :
-                      activity.status === 'success' ? 'bg-green-600/20' :
-                        'bg-blue-600/20'
+                  activity.status === 'pending' ? 'bg-yellow-600/20' :
+                    activity.status === 'success' ? 'bg-green-600/20' :
+                      'bg-blue-600/20'
                   }`}>
                   {activity.status === 'urgent' && <AlertCircle className="w-4 h-4 text-red-400" />}
                   {activity.status === 'pending' && <Clock className="w-4 h-4 text-yellow-400" />}

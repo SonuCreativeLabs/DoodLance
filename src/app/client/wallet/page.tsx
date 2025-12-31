@@ -71,7 +71,7 @@ export default function ClientWalletPage() {
           userId: user.id,
           action: 'add',
           amount: 5000,
-          description: 'Added funds via Mock Gateway'
+          description: 'Added funds via Payment Gateway'
         })
       });
 

@@ -46,6 +46,13 @@ export default function PostJobForm() {
   const [skillError, setSkillError] = useState('')
   const [peopleNeeded, setPeopleNeeded] = useState(1)
 
+  // Promo code state
+  const [promoCode, setPromoCode] = useState('')
+  const [promoValidating, setPromoValidating] = useState(false)
+  const [promoValid, setPromoValid] = useState(false)
+  const [promoDetails, setPromoDetails] = useState<any>(null)
+  const [promoError, setPromoError] = useState('')
+
   // Check if all required fields are filled
   const isFormValid = title.trim() && description.trim() && selectedCategory && budget.trim() && location.trim() && startDate && duration.trim()
 
@@ -56,6 +63,43 @@ export default function PostJobForm() {
       // This will be shown as helper text instead
     }
   }, [experience, budget])
+
+  const validatePromoCode = async () => {
+    if (!promoCode.trim()) return;
+
+    setPromoValidating(true);
+    setPromoError('');
+
+    try {
+      const res = await fetch('/api/promo/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code: promoCode.trim(),
+          orderAmount: parseFloat(budget) || 0,
+          userId: null // Will be set during submission
+        })
+      });
+
+      const data = await res.json();
+
+      if (data.valid) {
+        setPromoValid(true);
+        setPromoDetails(data);
+        setPromoError('');
+      } else {
+        setPromoValid(false);
+        setPromoDetails(null);
+        setPromoError(data.error || 'Invalid promo code');
+      }
+    } catch (error) {
+      setPromoValid(false);
+      setPromoDetails(null);
+      setPromoError('Failed to validate promo code');
+    } finally {
+      setPromoValidating(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -134,6 +178,26 @@ export default function PostJobForm() {
 
       const job = await response.json();
       console.log('Job posted successfully:', job);
+
+      // Apply promo code if validated
+      if (promoValid && promoDetails && user?.id) {
+        try {
+          await fetch('/api/promo/apply', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              promoId: promoDetails.promoId,
+              userId: user.id,
+              orderId: job.id,
+              orderAmount: parseFloat(budget),
+              discountAmount: promoDetails.discountAmount
+            })
+          });
+        } catch (err) {
+          console.error('Failed to apply promo:', err);
+          // Don't fail the job posting if promo application fails
+        }
+      }
 
       // Dispatch event to refresh ForYouJobs context
       window.dispatchEvent(new CustomEvent('jobPosted', { detail: { jobId: job.id } }));
@@ -402,6 +466,67 @@ export default function PostJobForm() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Promo Code */}
+      <div>
+        <Label htmlFor="promoCode" className="text-white font-medium flex items-center gap-2">
+          Promo Code
+          <Tag className="w-4 h-4 text-purple-400" />
+        </Label>
+        <div className="mt-2 flex gap-2">
+          <div className="flex-1 relative">
+            <Input
+              id="promoCode"
+              value={promoCode}
+              onChange={(e) => {
+                setPromoCode(e.target.value.toUpperCase());
+                setPromoValid(false);
+                setPromoDetails(null);
+                setPromoError('');
+              }}
+              placeholder="Enter promo code"
+              className="border-white/20 focus:border-purple-300 focus:ring-1 focus:ring-purple-400 bg-black/50 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-200 text-white placeholder:text-white/50 uppercase"
+            />
+            {promoValid && (
+              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
+                  <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                  </svg>
+                </div>
+              </div>
+            )}
+          </div>
+          <Button
+            type="button"
+            onClick={validatePromoCode}
+            disabled={!promoCode.trim() || promoValidating || !budget}
+            className="px-4 bg-purple-600 hover:bg-purple-700 text-white disabled:opacity-50"
+          >
+            {promoValidating ? 'Checking...' : 'Apply'}
+          </Button>
+        </div>
+        {promoError && (
+          <div className="text-red-400 text-sm mt-2">{promoError}</div>
+        )}
+        {promoValid && promoDetails && (
+          <div className="mt-2 p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+            <div className="flex items-center justify-between">
+              <span className="text-green-400 text-sm font-medium">
+                {promoDetails.description || 'Promo Applied'}
+              </span>
+              <span className="text-green-400 text-sm font-bold">
+                -₹{promoDetails.discountAmount?.toFixed(2)}
+              </span>
+            </div>
+            {budget && (
+              <div className="mt-1 text-xs text-green-300">
+                Final Price: ₹{(parseFloat(budget) - promoDetails.discountAmount).toFixed(2)}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* People Needed */}

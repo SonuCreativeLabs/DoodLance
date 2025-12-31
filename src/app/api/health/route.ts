@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
         await prisma.$connect();
         dbStatus = 'connected';
       } else {
-        dbStatus = 'mock';
+        dbStatus = 'disconnected';
       }
     } catch (error) {
       dbStatus = 'error';
@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
 
     if (type === 'message') {
       captureMessage('Test message from health endpoint', 'warning', {
-        
+
       });
       return NextResponse.json({ message: 'Test message sent to Sentry' });
     }
@@ -95,9 +95,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ status: 'ok', timestamp: new Date().toISOString() });
   } catch (error) {
     Sentry.captureException(error, {
-      
+
     });
-    
+
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }

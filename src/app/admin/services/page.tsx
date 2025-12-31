@@ -61,6 +61,16 @@ export default function ServiceManagementPage() {
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
+  // Stats state
+  const [stats, setStats] = useState({
+    totalServices: 0,
+    activeServices: 0,
+    pendingApproval: 0,
+    totalRevenue: 0,
+    avgRating: '0.0',
+    totalOrders: 0,
+  });
+
   const fetchServices = async () => {
     setLoading(true);
     try {
@@ -76,6 +86,9 @@ export default function ServiceManagementPage() {
         const data = await res.json();
         setServices(data.services);
         setTotalPages(data.totalPages);
+        if (data.stats) {
+          setStats(data.stats);
+        }
       }
     } catch (error) {
       console.error('Error fetching services:', error);
@@ -123,16 +136,6 @@ export default function ServiceManagementPage() {
       });
       if (res.ok) fetchServices();
     } catch (e) { console.error(e); }
-  };
-
-  // Stats
-  const stats = {
-    totalServices: services.length,
-    activeServices: services.filter(s => s.isActive).length,
-    pendingApproval: services.filter(s => !s.isActive).length,
-    totalRevenue: services.reduce((sum, s) => sum + (s.price * (s.totalOrders || 0)), 0),
-    avgRating: services.length > 0 ? (services.reduce((sum, s) => sum + s.rating, 0) / services.length).toFixed(1) : '0.0',
-    totalOrders: services.reduce((sum, s) => sum + (s.totalOrders || 0), 0),
   };
 
   const statusColors: Record<string, string> = {

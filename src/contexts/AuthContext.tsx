@@ -34,7 +34,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter()
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
         setUser({
           id: session.user.id,
@@ -45,6 +45,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           avatar: session.user.user_metadata?.avatar_url || session.user.user_metadata?.avatar || '',
           location: session.user.user_metadata?.location || '',
         })
+
+        // Sync session with server to set cookies
+        try {
+          await fetch('/api/auth/session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              user: {
+                id: session.user.id,
+                email: session.user.email,
+                role: session.user.user_metadata?.role || 'client'
+              }
+            })
+          });
+        } catch (err) {
+          console.error('Failed to sync session:', err);
+        }
       } else {
         setUser(null)
       }

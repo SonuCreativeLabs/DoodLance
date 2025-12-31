@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/db';
 import { createPromoSchema, validateRequest } from '@/lib/validations/admin';
 import { logAdminAction } from '@/lib/audit-log';
+import { validateSession } from '@/lib/auth/jwt';
 
 export const dynamic = 'force-dynamic';
 
@@ -42,7 +43,6 @@ export async function GET(request: NextRequest) {
       prisma.promoCode.count({ where })
     ]);
 
-    // Map stats (Mock stats for now as we don't have deep relational tracking for promo usage revenue yet)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const mappedPromos = promos.map((p: any) => ({
       ...p,
@@ -50,9 +50,9 @@ export async function GET(request: NextRequest) {
       validFrom: p.validFrom.toISOString().split('T')[0],
       validTo: p.validUntil.toISOString().split('T')[0], // Map validUntil -> validTo for frontend
       stats: {
-        totalRevenue: p.usedCount * p.discountValue * 10, // Mock calculation
-        averageOrderValue: 0, // Mock
-        conversionRate: 0 // Mock
+        totalRevenue: 0,
+        averageOrderValue: 0,
+        conversionRate: 0
       }
     }));
 
@@ -96,8 +96,14 @@ export async function POST(request: NextRequest) {
     // Handle description which might be optional in schema but usually present
     const description = (body as any).description || '';
 
-    const adminEmail = 'admin@doodlance.com';
-    const adminId = 'admin-1';
+    // Authenticate admin
+    const session = await validateSession();
+    if (!session || session.role !== 'admin') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const adminEmail = session.email;
+    const adminId = session.userId;
 
     const newPromo = await prisma.promoCode.create({
       data: {

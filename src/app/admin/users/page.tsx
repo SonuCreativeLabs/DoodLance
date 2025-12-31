@@ -37,7 +37,6 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// Mock stats for now (could be fetched from API)
 const initialStats = {
   totalUsers: 0,
   activeUsers: 0,
@@ -240,10 +239,10 @@ export default function UserManagementPage() {
         setUsers(data.users);
         setTotalPages(data.totalPages);
 
-        // Should ideally get stats from API response, 
-        // but if not, we can calculate based on current view or fetch separately
-        // For now, let's keep stats simple or mock
-        // setStats(data.stats);
+        // Update stats from API
+        if (data.stats) {
+          setStats(data.stats);
+        }
       }
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -261,10 +260,10 @@ export default function UserManagementPage() {
     console.log(`Performing ${action} on user ${userId}`);
 
     try {
-      const res = await fetch(`/api/admin/users/${userId}`, {
-        method: 'PATCH',
+      const res = await fetch(`/api/admin/users/action`, {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action })
+        body: JSON.stringify({ userId, action })
       });
 
       if (res.ok) {

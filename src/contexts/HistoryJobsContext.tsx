@@ -25,8 +25,7 @@ interface HistoryJobsContextType {
 
 const HistoryJobsContext = createContext<HistoryJobsContextType | undefined>(undefined);
 
-// Initial mock data - this would typically come from an API
-// Initial mock data - this would typically come from an API
+// Initial state
 const initialHistoryJobs: HistoryJob[] = [];
 
 export function HistoryJobsProvider({ children }: { children: ReactNode }) {

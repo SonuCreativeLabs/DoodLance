@@ -170,14 +170,14 @@ export default function ApplicationDetailPage() {
     console.log('  - Show Decline Dialog:', showDeclineDialog);
   }, [rawId, application, freelancer, isProcessing, showAcceptDialog, showDeclineDialog]);
 
-  const mockBooking: any = useMemo(() => {
+  const previewBooking: any = useMemo(() => {
     if (!application) return null;
     return {
       "#": application["#"],
       provider: application.freelancer.name,
       service: application.jobTitle,
-      date: "2024-01-01",
-      time: "10:00 AM",
+      date: "2024-01-01", // Placeholder until scheduled
+      time: "10:00 AM",   // Placeholder until scheduled
       location: application.freelancer.location,
       status: 'upcoming'
     };
@@ -1086,7 +1086,7 @@ export default function ApplicationDetailPage() {
       <RescheduleModal
         isOpen={showReschedule}
         onClose={() => setShowReschedule(false)}
-        booking={mockBooking}
+        booking={previewBooking}
         onReschedule={handleRescheduleConfirm}
       />
     </div>

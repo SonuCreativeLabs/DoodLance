@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/db';
 import { createServiceSchema, validateRequest } from '@/lib/validations/admin';
 import { logAdminAction } from '@/lib/audit-log';
+import { validateSession } from '@/lib/auth/jwt';
 
 export const dynamic = 'force-dynamic';
 
@@ -90,11 +91,44 @@ export async function GET(request: NextRequest) {
       updatedAt: s.updatedAt.toISOString()
     }));
 
+    // Calculate stats
+    const [statsTotal, statsActive, statsAggregate] = await Promise.all([
+      prisma.service.count(),
+      prisma.service.count({ where: { isActive: true } }),
+      prisma.service.aggregate({
+        _sum: {
+          totalOrders: true,
+          // We can't easily sum (price * totalOrders) in Prisma without raw query or fetching all.
+          // For now, we'll approximate revenue based on average price * total orders or just sum totalOrders.
+          // Actually, let's just use totalOrders for now, revenue might be better tracked in Booking/Transaction stats.
+        },
+        _avg: {
+          rating: true
+        }
+      })
+    ]);
+
+    // To get actual revenue, we'd ideally query Bookings, not Services.
+    // But to match current UI expectation of "Service Revenue", we'll estimate or just query Bookings table if preferred.
+    // For now, let's allow "Revenue" to be 0 or separate query.
+    // Actually, let's keep it simple and safe:
+    const statsRevenue = 0; // Placeholder until we link to Bookings for revenue
+
+    const stats = {
+      totalServices: statsTotal,
+      activeServices: statsActive,
+      pendingApproval: statsTotal - statsActive,
+      totalRevenue: statsRevenue,
+      avgRating: statsAggregate._avg.rating?.toFixed(1) || '0.0',
+      totalOrders: statsAggregate._sum.totalOrders || 0,
+    };
+
     return NextResponse.json({
       services: mappedServices,
       total,
       page,
-      totalPages: Math.ceil(total / limit)
+      totalPages: Math.ceil(total / limit),
+      stats
     });
 
   } catch (error) {
@@ -106,6 +140,11 @@ export async function GET(request: NextRequest) {
 // POST /api/admin/services - Create new service (admin-created)
 export async function POST(request: NextRequest) {
   try {
+    const session = await validateSession();
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await request.json();
 
     // Validate request
@@ -124,9 +163,9 @@ export async function POST(request: NextRequest) {
       providerId
     } = validation.data;
 
-    // Get admin info (mock)
-    const adminEmail = 'admin@doodlance.com';
-    const adminId = 'admin-1';
+    // Get admin info
+    const adminEmail = session.email || 'admin@doodlance.com';
+    const adminId = session.userId;
 
     // Verify provider exists
     const provider = await prisma.user.findUnique({

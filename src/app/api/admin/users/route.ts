@@ -31,10 +31,10 @@ export async function GET(request: NextRequest) {
       where.role = role;
     }
 
-    // Status filter - Assuming 'suspended' status logic or field triggers it
-    // Schema doesn't have 'status' field in User, only 'isActive' in Wallet or AdminUser.
-    // For now we might skip status filter if field doesn't exist, or use internal logic.
-    // Assuming no status field on User based on schema reading, ignoring status filter or mapped from something else.
+    // Status filter
+    if (status !== 'all') {
+      where.status = status;
+    }
 
     // Verification filter
     if (verification === 'verified') {
@@ -59,17 +59,16 @@ export async function GET(request: NextRequest) {
               freelancerJobs: true, // Jobs taken (accepted)
             }
           }
-          // We can't easily deep count completed bookings in one go without complex queries or relations
-          // We'll rely on profile stats or basic counts
         }
       }),
       prisma.user.count({ where })
     ]);
 
     // Map to response format
-    const mappedUsers = users.map(user => {
-      // Determine effective status (active if no suspension logic found)
-      const status = 'active';
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const mappedUsers = users.map((user: any) => {
+      // Determine effective status
+      const status = user.status || 'active';
 
       // Stats
       let completedJobs = 0;
@@ -111,11 +110,27 @@ export async function GET(request: NextRequest) {
       };
     });
 
+    // Calculate stats
+    const [statsTotalUsers, statsActiveUsers, statsVerifiedUsers, statsFreelancers] = await Promise.all([
+      prisma.user.count(),
+      prisma.user.count({ where: { status: 'active' } }),
+      prisma.user.count({ where: { isVerified: true } }),
+      prisma.user.count({ where: { role: 'freelancer' } })
+    ]);
+
+    const stats = {
+      totalUsers: statsTotalUsers,
+      activeUsers: statsActiveUsers,
+      verifiedUsers: statsVerifiedUsers,
+      freelancers: statsFreelancers
+    };
+
     return NextResponse.json({
       users: mappedUsers,
       total,
       page,
-      totalPages: Math.ceil(total / limit)
+      totalPages: Math.ceil(total / limit),
+      stats
     });
 
   } catch (error) {

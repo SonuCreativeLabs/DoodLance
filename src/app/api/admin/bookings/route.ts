@@ -58,7 +58,8 @@ export async function GET(request: NextRequest) {
     ]);
 
     // Map to frontend format
-    const mappedBookings = bookings.map(b => ({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const mappedBookings = bookings.map((b: any) => ({
       id: b.id,
       serviceTitle: b.service.title,
       serviceCategory: b.service.categoryId,
@@ -71,16 +72,44 @@ export async function GET(request: NextRequest) {
       status: b.status,
       progress: b.status === 'COMPLETED' ? 100 : b.status === 'IN_PROGRESS' ? 50 : b.status === 'CONFIRMED' ? 25 : 0,
       totalPrice: b.totalPrice,
-      platformFee: b.platformFee,
+      platformFee: b.totalPrice * 0.1, // Estimated 10%
       createdAt: b.createdAt.toISOString(),
       updatedAt: b.updatedAt.toISOString()
     }));
+
+    // Calculate stats
+    const [statsStatus, statsFinancial] = await Promise.all([
+      prisma.booking.groupBy({
+        by: ['status'],
+        _count: { status: true }
+      }),
+      prisma.booking.aggregate({
+        _sum: { totalPrice: true }
+      })
+    ]);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const statusCounts = statsStatus.reduce((acc: any, curr: any) => {
+      acc[curr.status] = curr._count.status;
+      return acc;
+    }, {} as Record<string, number>);
+
+    const stats = {
+      total: total,
+      pending: statusCounts['PENDING'] || 0,
+      inProgress: statusCounts['IN_PROGRESS'] || 0,
+      completed: statusCounts['COMPLETED'] || 0,
+      disputed: statusCounts['DISPUTED'] || 0,
+      totalRevenue: statsFinancial._sum.totalPrice || 0,
+      platformEarnings: (statsFinancial._sum.totalPrice || 0) * 0.1, // Estimated 10%
+    };
 
     return NextResponse.json({
       bookings: mappedBookings,
       total,
       page,
-      totalPages: Math.ceil(total / limit)
+      totalPages: Math.ceil(total / limit),
+      stats
     });
 
   } catch (error) {

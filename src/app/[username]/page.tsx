@@ -24,8 +24,8 @@ async function getFreelancerByUsername(username: string) {
         include: {
             freelancerProfile: {
                 include: {
-                    experience: true,
-                    portfolio: true,
+                    experiences: true,
+                    portfolios: true,
                     reviews: true,
                 },
             },
@@ -187,14 +187,14 @@ export default async function PublicProfilePage({ params }: PageProps) {
                         )}
 
                         {/* Experience */}
-                        {profile.experience && profile.experience.length > 0 && (
+                        {profile.experiences && profile.experiences.length > 0 && (
                             <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
                                 <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
                                     <Award className="h-6 w-6 text-purple-400" />
                                     Experience
                                 </h2>
                                 <div className="space-y-6">
-                                    {profile.experience.map((exp) => (
+                                    {profile.experiences.map((exp) => (
                                         <div key={exp.id} className="border-l-2 border-purple-500/30 pl-4">
                                             <h3 className="font-semibold text-lg">{exp.title}</h3>
                                             <p className="text-purple-400">{exp.company}</p>
@@ -212,11 +212,11 @@ export default async function PublicProfilePage({ params }: PageProps) {
                         )}
 
                         {/* Portfolio */}
-                        {profile.portfolio && profile.portfolio.length > 0 && (
+                        {profile.portfolios && profile.portfolios.length > 0 && (
                             <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
                                 <h2 className="text-2xl font-bold mb-6">Portfolio</h2>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {profile.portfolio.map((item) => (
+                                    {profile.portfolios.map((item) => (
                                         <div
                                             key={item.id}
                                             className="bg-white/5 rounded-lg overflow-hidden border border-white/10 hover:border-purple-500/30 transition-colors"
@@ -255,8 +255,8 @@ export default async function PublicProfilePage({ params }: PageProps) {
                                                         <Star
                                                             key={i}
                                                             className={`h-4 w-4 ${i < review.rating
-                                                                    ? 'text-yellow-400 fill-yellow-400'
-                                                                    : 'text-gray-600'
+                                                                ? 'text-yellow-400 fill-yellow-400'
+                                                                : 'text-gray-600'
                                                                 }`}
                                                         />
                                                     ))}

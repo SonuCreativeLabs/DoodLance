@@ -40,7 +40,7 @@ interface PostedJobsContextType {
 
 const PostedJobsContext = createContext<PostedJobsContextType | undefined>(undefined);
 
-// Initial mock data - will be replaced with API calls
+// Initial state
 const initialPostedJobs: PostedJob[] = [];
 
 const STORAGE_KEY = 'doodlance_posted_jobs';

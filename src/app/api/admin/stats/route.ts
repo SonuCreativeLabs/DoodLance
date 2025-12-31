@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
             revenueByDay.set(dayName, { revenue: 0, bookings: 0 });
         }
 
-        bookingsLast7Days.forEach(b => {
+        bookingsLast7Days.forEach((b: any) => {
             const dayName = days[b.createdAt.getDay()];
             const current = revenueByDay.get(dayName) || { revenue: 0, bookings: 0 };
             revenueByDay.set(dayName, {
@@ -83,21 +83,54 @@ export async function GET(request: NextRequest) {
         })).reverse(); // Show oldest to newest? No, map order is insertion based, we iterated backwards.
         // Actually simpler to just reconstruct the array in correct order.
 
+        // 7. Category Performance
+        // Group bookings by service category
+        const categoryStats = await prisma.booking.findMany({
+            where: { status: 'COMPLETED' },
+            select: {
+                totalPrice: true,
+                service: {
+                    select: {
+                        category: {
+                            select: { name: true }
+                        }
+                    }
+                }
+            }
+        });
+
+        const categoryMap = new Map();
+        categoryStats.forEach((b: any) => {
+            const catName = b.service.category.name;
+            const current = categoryMap.get(catName) || { name: catName, bookings: 0, revenue: 0 };
+            categoryMap.set(catName, {
+                name: catName,
+                bookings: current.bookings + 1,
+                revenue: current.revenue + b.totalPrice,
+                growth: 0
+            });
+        });
+
+        const categoryPerformance = Array.from(categoryMap.values())
+            .sort((a, b) => b.revenue - a.revenue)
+            .slice(0, 5);
+
         return NextResponse.json({
             totalUsers,
-            userGrowth: 5.0, // Mock for now
-            activeUsers, // using total users for now as active definition is loose
-            activeGrowth: 2.1,
+            userGrowth: 0,
+            activeUsers,
+            activeGrowth: 0,
             totalBookings,
-            bookingGrowth: 10.5,
+            bookingGrowth: 0,
             totalRevenue,
-            revenueGrowth: 15.0,
+            revenueGrowth: 0,
             platformFees,
             avgBookingValue: totalBookings > 0 ? totalRevenue / totalBookings : 0,
             completionRate: totalBookings > 0 ? (await prisma.booking.count({ where: { status: 'COMPLETED' } }) / totalBookings) * 100 : 0,
-            avgResponseTime: '2 hrs', // Mock
+            avgResponseTime: 'N/A',
             revenueData: revenueChartData,
-            recentActivity: recentBookings.map(b => ({
+            categoryPerformance,
+            recentActivity: recentBookings.map((b: any) => ({
                 id: b.id,
                 type: 'booking',
                 message: `New booking for ${b.service.title}`,

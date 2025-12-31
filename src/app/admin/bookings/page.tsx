@@ -71,6 +71,17 @@ export default function BookingManagementPage() {
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
+  // Stats state
+  const [stats, setStats] = useState({
+    total: 0,
+    pending: 0,
+    inProgress: 0,
+    completed: 0,
+    disputed: 0,
+    totalRevenue: 0,
+    platformEarnings: 0,
+  });
+
   const fetchBookings = async () => {
     setLoading(true);
     try {
@@ -85,6 +96,9 @@ export default function BookingManagementPage() {
         const data = await res.json();
         setBookings(data.bookings);
         setTotalPages(data.totalPages);
+        if (data.stats) {
+          setStats(data.stats);
+        }
       }
     } catch (error) {
       console.error('Error fetching bookings:', error);
@@ -107,17 +121,6 @@ export default function BookingManagementPage() {
       });
       if (res.ok) fetchBookings();
     } catch (e) { console.error(e); }
-  };
-
-  // Stats
-  const stats = {
-    total: bookings.length,
-    pending: bookings.filter(b => b.status === 'PENDING').length,
-    inProgress: bookings.filter(b => b.status === 'IN_PROGRESS').length,
-    completed: bookings.filter(b => b.status === 'COMPLETED').length,
-    disputed: bookings.filter(b => b.status === 'DISPUTED').length,
-    totalRevenue: bookings.reduce((sum, b) => sum + (b.totalPrice || 0), 0),
-    platformEarnings: bookings.reduce((sum, b) => sum + (b.platformFee || 0), 0),
   };
 
   return (

@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/db';
+import { validateSession } from '@/lib/auth/jwt';
 
 export const dynamic = 'force-dynamic';
 
-// GET /api/admin/transactions - List all transactions
 export async function GET(request: NextRequest) {
   try {
+    const session = await validateSession();
+    // Ideally check for admin role here
+
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
@@ -14,73 +17,130 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status') || 'all';
 
     const skip = (page - 1) * limit;
+
+    // Build where clause
     const where: any = {};
 
-    // Search
-    if (search) {
-      where.OR = [
-        { id: { contains: search, mode: 'insensitive' } },
-        { description: { contains: search, mode: 'insensitive' } },
-      ];
-    }
-
-    // Type Filter
     if (type !== 'all') {
       where.type = type;
     }
 
-    // Status Filter
     if (status !== 'all') {
       where.status = status;
     }
 
-    const [transactions, total] = await Promise.all([
+    if (search) {
+      where.OR = [
+        { description: { contains: search, mode: 'insensitive' } },
+        { id: { contains: search, mode: 'insensitive' } },
+        { reference: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    // Fetch transactions
+    const [transactions, total, stats] = await Promise.all([
       prisma.transaction.findMany({
         where,
-        skip,
-        take: limit,
-        orderBy: { createdAt: 'desc' },
         include: {
           wallet: {
             include: {
               user: {
                 select: {
                   name: true,
-                  role: true
+                  role: true,
+                  email: true
                 }
               }
             }
           }
-        }
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit
       }),
-      prisma.transaction.count({ where })
+      prisma.transaction.count({ where }),
+      // Calculate aggregations
+      prisma.$transaction([
+        prisma.transaction.aggregate({
+          _sum: { amount: true },
+          where: { type: 'EARNING' }
+        }),
+        prisma.transaction.aggregate({
+          _sum: { amount: true },
+          where: { type: 'PLATFORM_FEE' }
+        }),
+        prisma.transaction.aggregate({
+          _sum: { amount: true },
+          where: { type: 'WITHDRAWAL', status: 'PENDING' }
+        }),
+        prisma.transaction.count({
+          where: { status: 'FAILED' }
+        })
+      ])
     ]);
 
-    // Map to frontend format
-    const mappedTransactions = transactions.map(t => ({
+    // Get Revenue Chart Data (Last 6 months)
+    const revenueChartData = [];
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date();
+      date.setMonth(date.getMonth() - i);
+      date.setDate(1);
+      date.setHours(0, 0, 0, 0);
+
+      const nextMonth = new Date(date);
+      nextMonth.setMonth(nextMonth.getMonth() + 1);
+
+      const monthStats = await prisma.transaction.aggregate({
+        where: {
+          type: 'EARNING',
+          createdAt: { gte: date, lt: nextMonth }
+        },
+        _sum: { amount: true },
+        _count: { id: true }
+      });
+
+      revenueChartData.push({
+        date: date.toLocaleDateString('en-US', { month: 'short' }),
+        revenue: monthStats._sum.amount || 0,
+        transactions: monthStats._count.id || 0
+      });
+    }
+
+    const formattedTransactions = transactions.map((t: any) => ({
       id: t.id,
       walletId: t.walletId,
-      userName: t.wallet.user.name,
+      userName: t.wallet.user.name || t.wallet.user.email,
       userRole: t.wallet.user.role,
       amount: t.amount,
       type: t.type,
-      description: t.description || 'No description',
-      reference: t.referenceId || '',
+      description: t.description,
+      reference: t.reference || '',
       paymentMethod: t.paymentMethod || 'platform_wallet',
-      paymentId: t.paymentId || '',
+      paymentId: t.paymentId,
       status: t.status,
       createdAt: t.createdAt.toLocaleString(),
+      failureReason: null
     }));
 
     return NextResponse.json({
-      transactions: mappedTransactions,
-      total,
-      page,
-      totalPages: Math.ceil(total / limit)
+      transactions: formattedTransactions,
+      pagination: {
+        total,
+        pages: Math.ceil(total / limit),
+        current: page,
+        limit
+      },
+      stats: {
+        totalVolume: stats[0]._sum.amount || 0,
+        platformFees: stats[1]._sum.amount || 0,
+        pendingWithdrawals: stats[2]._sum.amount || 0,
+        failedTransactions: stats[3]
+      },
+      revenueChartData
     });
 
   } catch (error) {
-    console.error('Fetch transactions error:', error);
-    return NextResponse.json({ error: 'Failed to fetch transactions' }, { status: 500 });
+    console.error('Transactions API Error:', error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

@@ -116,9 +116,11 @@ export default function BookingHistoryDetailPage() {
                 className="h-8 w-8 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 p-0 transition-all duration-200"
                 aria-label="Call"
                 onClick={() => {
-                  // Generate a mock phone for history items
-                  const phone = '+91 8608305394';
-                  window.location.href = `tel:${phone.replace(/\s/g, '')}`;
+                  // Use phone from freelancer data
+                  const phone = historyItem.freelancer.phone || '';
+                  if (phone) {
+                    window.location.href = `tel:${phone.replace(/\s/g, '')}`;
+                  }
                 }}
               >
                 <Phone className="h-4 w-4 text-purple-400" />

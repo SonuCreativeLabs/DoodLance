@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -30,166 +30,12 @@ import {
 } from '@/components/ui/dropdown-menu';
 import {
   CreditCard, DollarSign, TrendingUp, TrendingDown,
-  ArrowUpRight, ArrowDownLeft, Search, Filter, Download,
+  ArrowUpRight, ArrowDownLeft, Search, Download,
   MoreVertical, Eye, RefreshCw, ChevronLeft, ChevronRight,
-  AlertCircle, CheckCircle, Clock, XCircle, Wallet
+  CheckCircle, Clock, XCircle
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-
-// Mock transaction data
-const mockTransactions = [
-  {
-    id: 'TXN001',
-    walletId: 'WAL001',
-    userName: 'Rohit Sharma',
-    userRole: 'freelancer',
-    amount: 2125,
-    type: 'EARNING',
-    description: 'Payment for Net Bowling Session',
-    reference: 'BK001',
-    paymentMethod: 'platform_wallet',
-    status: 'COMPLETED',
-    createdAt: '2024-03-25 10:30 AM',
-  },
-  {
-    id: 'TXN002',
-    walletId: 'WAL002',
-    userName: 'Priya Patel',
-    userRole: 'client',
-    amount: 2500,
-    type: 'DEBIT',
-    description: 'Payment for Net Bowling Session',
-    reference: 'BK001',
-    paymentMethod: 'upi',
-    paymentId: 'UPI_123456',
-    status: 'COMPLETED',
-    createdAt: '2024-03-25 10:00 AM',
-  },
-  {
-    id: 'TXN003',
-    walletId: 'WAL001',
-    userName: 'Rohit Sharma',
-    userRole: 'freelancer',
-    amount: 5000,
-    type: 'WITHDRAWAL',
-    description: 'Bank withdrawal request',
-    paymentMethod: 'bank_transfer',
-    status: 'PENDING',
-    createdAt: '2024-03-24 3:00 PM',
-  },
-  {
-    id: 'TXN004',
-    walletId: 'WAL003',
-    userName: 'Virat Singh',
-    userRole: 'freelancer',
-    amount: 2975,
-    type: 'EARNING',
-    description: 'Payment for Professional Cricket Coaching',
-    reference: 'BK002',
-    paymentMethod: 'platform_wallet',
-    status: 'COMPLETED',
-    createdAt: '2024-03-24 5:30 PM',
-  },
-  {
-    id: 'TXN005',
-    walletId: 'WAL004',
-    userName: 'Amit Kumar',
-    userRole: 'client',
-    amount: 1500,
-    type: 'REFUND',
-    description: 'Refund for cancelled booking',
-    reference: 'BK006',
-    paymentMethod: 'upi',
-    status: 'COMPLETED',
-    createdAt: '2024-03-23 11:00 AM',
-  },
-  {
-    id: 'TXN006',
-    walletId: 'WAL005',
-    userName: 'Ananya Reddy',
-    userRole: 'freelancer',
-    amount: 500,
-    type: 'REFERRAL_BONUS',
-    description: 'Referral bonus for new user signup',
-    reference: 'REF001',
-    paymentMethod: 'platform_wallet',
-    status: 'COMPLETED',
-    createdAt: '2024-03-23 9:30 AM',
-  },
-  {
-    id: 'TXN007',
-    walletId: 'WAL002',
-    userName: 'Priya Patel',
-    userRole: 'client',
-    amount: 1000,
-    type: 'COIN_PURCHASE',
-    description: 'Purchase of 100 DoodCoins',
-    paymentMethod: 'card',
-    paymentId: 'CARD_789012',
-    status: 'COMPLETED',
-    createdAt: '2024-03-22 2:00 PM',
-  },
-  {
-    id: 'TXN008',
-    walletId: 'WAL001',
-    userName: 'Rohit Sharma',
-    userRole: 'freelancer',
-    amount: 3500,
-    type: 'WITHDRAWAL',
-    description: 'Bank withdrawal completed',
-    paymentMethod: 'bank_transfer',
-    status: 'FAILED',
-    createdAt: '2024-03-21 4:00 PM',
-    failureReason: 'Invalid bank account details',
-  },
-];
-
-// Mock wallet data
-const mockWallets = [
-  {
-    id: 'WAL001',
-    userName: 'Rohit Sharma',
-    userRole: 'freelancer',
-    balance: 12500,
-    coins: 250,
-    frozenAmount: 2000,
-    totalEarnings: 234500,
-    totalWithdrawals: 222000,
-    lastTransaction: '2 hours ago',
-  },
-  {
-    id: 'WAL002',
-    userName: 'Priya Patel',
-    userRole: 'client',
-    balance: 5000,
-    coins: 100,
-    frozenAmount: 0,
-    totalSpent: 45600,
-    lastTransaction: '1 day ago',
-  },
-  {
-    id: 'WAL003',
-    userName: 'Virat Singh',
-    userRole: 'freelancer',
-    balance: 8900,
-    coins: 180,
-    frozenAmount: 1500,
-    totalEarnings: 156780,
-    totalWithdrawals: 147880,
-    lastTransaction: '5 minutes ago',
-  },
-];
-
-// Revenue chart data
-const revenueChartData = [
-  { date: 'Jan', revenue: 125000, transactions: 450 },
-  { date: 'Feb', revenue: 189000, transactions: 620 },
-  { date: 'Mar', revenue: 234000, transactions: 780 },
-  { date: 'Apr', revenue: 198000, transactions: 690 },
-  { date: 'May', revenue: 256000, transactions: 850 },
-  { date: 'Jun', revenue: 289000, transactions: 920 },
-];
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const typeColors: Record<string, string> = {
   CREDIT: 'text-green-500',
@@ -200,6 +46,7 @@ const typeColors: Record<string, string> = {
   COIN_PURCHASE: 'text-purple-500',
   COIN_REDEMPTION: 'text-blue-500',
   REFERRAL_BONUS: 'text-cyan-500',
+  PLATFORM_FEE: 'text-purple-500'
 };
 
 const statusColors: Record<string, string> = {
@@ -306,40 +153,67 @@ function TransactionDetailsModal({ transaction, open, onClose }: TransactionDeta
 }
 
 export default function TransactionManagementPage() {
-  const [transactions, setTransactions] = useState(mockTransactions);
+  const [transactions, setTransactions] = useState<any[]>([]);
+  const [stats, setStats] = useState<any>({
+    totalVolume: 0,
+    platformFees: 0,
+    totalTransactions: 0,
+    pendingWithdrawals: 0,
+    failedTransactions: 0
+  });
+  const [revenueChartData, setRevenueChartData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Filters and Pagination
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
 
-  // Filter transactions
-  const filteredTransactions = transactions.filter(transaction => {
-    const matchesSearch = 
-      transaction.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      transaction.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      transaction.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesType = typeFilter === 'all' || transaction.type === typeFilter;
-    const matchesStatus = statusFilter === 'all' || transaction.status === statusFilter;
-    
-    return matchesSearch && matchesType && matchesStatus;
-  });
+  useEffect(() => {
+    fetchTransactions();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, typeFilter, statusFilter]);
 
-  const totalPages = Math.ceil(filteredTransactions.length / itemsPerPage);
-  const paginatedTransactions = filteredTransactions.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchTransactions();
+    }, 500);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchTerm]);
 
-  // Calculate stats
-  const stats = {
-    totalTransactions: transactions.length,
-    totalVolume: transactions.reduce((sum, t) => sum + t.amount, 0),
-    platformFees: transactions.filter(t => t.type === 'EARNING').reduce((sum, t) => sum + (t.amount * 0.15), 0),
-    pendingWithdrawals: transactions.filter(t => t.type === 'WITHDRAWAL' && t.status === 'PENDING').reduce((sum, t) => sum + t.amount, 0),
-    failedTransactions: transactions.filter(t => t.status === 'FAILED').length,
+  const fetchTransactions = async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams({
+        page: currentPage.toString(),
+        limit: '10',
+        search: searchTerm,
+        type: typeFilter,
+        status: statusFilter
+      });
+
+      const res = await fetch(`/api/admin/transactions?${params}`);
+      if (res.ok) {
+        const data = await res.json();
+        setTransactions(data.transactions);
+        setTotalPages(data.pagination.pages);
+        setStats({
+          ...data.stats,
+          totalTransactions: data.pagination.total
+        });
+        setRevenueChartData(data.revenueChartData);
+      }
+    } catch (error) {
+      console.error('Error fetching transactions:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -351,6 +225,10 @@ export default function TransactionManagementPage() {
           <p className="text-gray-400 mt-1 text-sm sm:text-base">Monitor transactions, wallets, and platform revenue</p>
         </div>
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <Button variant="outline" className="text-gray-300 w-full sm:w-auto" onClick={fetchTransactions}>
+            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
           <Button variant="outline" className="text-gray-300 w-full sm:w-auto">
             <Download className="w-4 h-4 mr-2" />
             Export Report
@@ -363,8 +241,8 @@ export default function TransactionManagementPage() {
         <Card className="bg-[#1a1a1a] border-gray-800 p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-400">Total Volume</p>
-              <p className="text-2xl font-bold text-white">₹{(stats.totalVolume / 1000).toFixed(1)}k</p>
+              <p className="text-sm text-gray-400">Total Revenue</p>
+              <p className="text-2xl font-bold text-white">₹{(stats.totalVolume).toLocaleString()}</p>
             </div>
             <DollarSign className="w-8 h-8 text-green-500" />
           </div>
@@ -373,7 +251,7 @@ export default function TransactionManagementPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-400">Platform Fees</p>
-              <p className="text-2xl font-bold text-white">₹{(stats.platformFees / 1000).toFixed(1)}k</p>
+              <p className="text-2xl font-bold text-white">₹{(stats.platformFees).toLocaleString()}</p>
             </div>
             <TrendingUp className="w-8 h-8 text-purple-500" />
           </div>
@@ -391,7 +269,7 @@ export default function TransactionManagementPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-400">Pending</p>
-              <p className="text-2xl font-bold text-white">₹{(stats.pendingWithdrawals / 1000).toFixed(1)}k</p>
+              <p className="text-2xl font-bold text-white">₹{(stats.pendingWithdrawals).toLocaleString()}</p>
             </div>
             <Clock className="w-8 h-8 text-yellow-500" />
           </div>
@@ -415,14 +293,14 @@ export default function TransactionManagementPage() {
             <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
             <XAxis dataKey="date" stroke="#9CA3AF" />
             <YAxis stroke="#9CA3AF" />
-            <Tooltip 
+            <Tooltip
               contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #374151' }}
               labelStyle={{ color: '#fff' }}
             />
-            <Line 
-              type="monotone" 
-              dataKey="revenue" 
-              stroke="#8B5CF6" 
+            <Line
+              type="monotone"
+              dataKey="revenue"
+              stroke="#8B5CF6"
               strokeWidth={2}
               dot={{ fill: '#8B5CF6' }}
             />
@@ -444,7 +322,7 @@ export default function TransactionManagementPage() {
               />
             </div>
           </div>
-          
+
           <Select value={typeFilter} onValueChange={setTypeFilter}>
             <SelectTrigger className="w-[150px] bg-[#2a2a2a] border-gray-700 text-white">
               <SelectValue placeholder="Type" />
@@ -478,6 +356,7 @@ export default function TransactionManagementPage() {
               setSearchTerm('');
               setTypeFilter('all');
               setStatusFilter('all');
+              setCurrentPage(1);
             }}
             className="text-gray-300"
           >
@@ -504,93 +383,95 @@ export default function TransactionManagementPage() {
               </tr>
             </thead>
             <tbody>
-              {paginatedTransactions.map((transaction, index) => (
-                <motion.tr
-                  key={transaction.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  className="border-b border-gray-800 hover:bg-[#2a2a2a] transition-colors"
-                >
-                  <td className="p-4">
-                    <span className="text-white font-mono">{transaction.id}</span>
+              {transactions.length === 0 && !loading ? (
+                <tr>
+                  <td colSpan={8} className="p-8 text-center text-gray-400">
+                    No transactions found
                   </td>
-                  <td className="p-4">
-                    <div>
-                      <p className="text-white">{transaction.userName}</p>
-                      <p className="text-xs text-gray-400">{transaction.userRole}</p>
-                    </div>
-                  </td>
-                  <td className="p-4">
-                    <div className="flex items-center gap-2">
-                      {transaction.type === 'EARNING' || transaction.type === 'CREDIT' ? (
-                        <ArrowDownLeft className="w-4 h-4 text-green-500" />
-                      ) : (
-                        <ArrowUpRight className="w-4 h-4 text-red-500" />
-                      )}
-                      <span className="text-white text-sm">{transaction.type}</span>
-                    </div>
-                  </td>
-                  <td className="p-4">
-                    <span className={`font-medium ${typeColors[transaction.type]}`}>
-                      {transaction.type === 'DEBIT' || transaction.type === 'WITHDRAWAL' ? '-' : '+'}
-                      ₹{transaction.amount}
-                    </span>
-                  </td>
-                  <td className="p-4">
-                    <Badge className={`${statusColors[transaction.status]} text-white`}>
-                      {transaction.status}
-                    </Badge>
-                  </td>
-                  <td className="p-4">
-                    <span className="text-white text-sm">{transaction.paymentMethod}</span>
-                  </td>
-                  <td className="p-4">
-                    <span className="text-gray-400 text-sm">{transaction.createdAt}</span>
-                  </td>
-                  <td className="p-4">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm">
-                          <MoreVertical className="w-4 h-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="bg-[#1a1a1a] border-gray-800">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          onClick={() => {
-                            setSelectedTransaction(transaction);
-                            setDetailsModalOpen(true);
-                          }}
-                          className="cursor-pointer"
-                        >
-                          <Eye className="w-4 h-4 mr-2" />
-                          View Details
-                        </DropdownMenuItem>
-                        {transaction.status === 'PENDING' && (
-                          <>
-                            <DropdownMenuItem className="cursor-pointer text-green-400">
-                              <CheckCircle className="w-4 h-4 mr-2" />
-                              Approve
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="cursor-pointer text-red-400">
-                              <XCircle className="w-4 h-4 mr-2" />
-                              Reject
-                            </DropdownMenuItem>
-                          </>
+                </tr>
+              ) : (
+                transactions.map((transaction, index) => (
+                  <motion.tr
+                    key={transaction.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="border-b border-gray-800 hover:bg-[#2a2a2a] transition-colors"
+                  >
+                    <td className="p-4">
+                      <span className="text-white font-mono break-all">{transaction.id.substring(0, 8)}...</span>
+                    </td>
+                    <td className="p-4">
+                      <div>
+                        <p className="text-white">{transaction.userName}</p>
+                        <p className="text-xs text-gray-400">{transaction.userRole}</p>
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <div className="flex items-center gap-2">
+                        {transaction.type === 'EARNING' || transaction.type === 'CREDIT' ? (
+                          <ArrowDownLeft className="w-4 h-4 text-green-500" />
+                        ) : (
+                          <ArrowUpRight className="w-4 h-4 text-red-500" />
                         )}
-                        {transaction.status === 'FAILED' && (
-                          <DropdownMenuItem className="cursor-pointer text-yellow-400">
-                            <RefreshCw className="w-4 h-4 mr-2" />
-                            Retry
+                        <span className="text-white text-sm">{transaction.type}</span>
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <span className={`font-medium ${typeColors[transaction.type]}`}>
+                        {transaction.type === 'DEBIT' || transaction.type === 'WITHDRAWAL' ? '-' : '+'}
+                        ₹{transaction.amount}
+                      </span>
+                    </td>
+                    <td className="p-4">
+                      <Badge className={`${statusColors[transaction.status]} text-white`}>
+                        {transaction.status}
+                      </Badge>
+                    </td>
+                    <td className="p-4">
+                      <span className="text-white text-sm">{transaction.paymentMethod}</span>
+                    </td>
+                    <td className="p-4">
+                      <span className="text-gray-400 text-sm">{transaction.createdAt}</span>
+                    </td>
+                    <td className="p-4">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm">
+                            <MoreVertical className="w-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="bg-[#1a1a1a] border-gray-800">
+                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setSelectedTransaction(transaction);
+                              setDetailsModalOpen(true);
+                            }}
+                            className="cursor-pointer"
+                          >
+                            <Eye className="w-4 h-4 mr-2" />
+                            View Details
                           </DropdownMenuItem>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </td>
-                </motion.tr>
-              ))}
+                          {transaction.status === 'PENDING' && (
+                            <>
+                              <DropdownMenuItem className="cursor-pointer text-green-400">
+                                <CheckCircle className="w-4 h-4 mr-2" />
+                                Approve
+                              </DropdownMenuItem>
+                              <DropdownMenuItem className="cursor-pointer text-red-400">
+                                <XCircle className="w-4 h-4 mr-2" />
+                                Reject
+                              </DropdownMenuItem>
+                            </>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </td>
+                  </motion.tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -598,7 +479,7 @@ export default function TransactionManagementPage() {
         {/* Pagination */}
         <div className="flex items-center justify-between p-4 border-t border-gray-800">
           <p className="text-sm text-gray-400">
-            Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredTransactions.length)} of {filteredTransactions.length} transactions
+            Page {currentPage} of {totalPages}
           </p>
           <div className="flex items-center gap-2">
             <Button
@@ -610,17 +491,6 @@ export default function TransactionManagementPage() {
             >
               <ChevronLeft className="w-4 h-4" />
             </Button>
-            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => i + 1).map(page => (
-              <Button
-                key={page}
-                variant={currentPage === page ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setCurrentPage(page)}
-                className={currentPage === page ? 'bg-purple-600' : 'text-gray-300'}
-              >
-                {page}
-              </Button>
-            ))}
             <Button
               variant="outline"
               size="sm"

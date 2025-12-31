@@ -34,6 +34,7 @@ model User {
   
   // User preferences
   currentRole String @default("client") // current active role
+  status      String @default("active") // active, suspended, banned
   isVerified Boolean @default(false) // KYC verification status
   
   // Referral system
@@ -54,6 +55,8 @@ model User {
   freelancerProfile     FreelancerProfile?
   clientProfile         ClientProfile?
   wallet                Wallet?
+  promoUsages           PromoUsage[]
+  supportTickets        SupportTicket[]
   sentMessages          Message[] @relation("MessageSender")
   notifications         Notification[]
   
@@ -568,28 +571,21 @@ model Notification {
 
 // PromoCode moved safely, AdminUser and AuditLog removed.
 
-// Support & Dispute Management
-model SupportTicket {
+// System Configuration
+model SystemConfig {
   id          String   @id @default(cuid())
-  userId      String
-  ticketNumber String  @unique @default(cuid())
-  type        String   // BOOKING_DISPUTE, PAYMENT_ISSUE, ACCOUNT_ISSUE, SERVICE_COMPLAINT, OTHER
-  subject     String
-  description String
-  status      String   @default("OPEN") // OPEN, IN_PROGRESS, RESOLVED, CLOSED
-  priority    String   @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT
-  assignedToId String? // Kept as string for potential future mapping to User(admin) without relation constraint for now
-  bookingId   String?
-  jobId       String?
-  resolution  String?
-  attachments String?  // JSON array of file URLs
-  messages    String?  // JSON array of conversation history
-  createdAt   DateTime @default(now())
+  key         String   @unique
+  value       String
+  type        String   @default("STRING") // STRING, BOOLEAN, NUMBER, JSON
+  category    String   @default("GENERAL")
+  description String?
   updatedAt   DateTime @updatedAt
-  resolvedAt  DateTime?
   
-  @@map("support_tickets")
+  @@map("system_config")
 }
+
+// SupportTicket duplicate removed from here (it is defined below with TicketMessage relation)
+
 
 // Featured Items Management
 model FeaturedItem {
@@ -641,6 +637,23 @@ model PlatformAnalytics {
   @@map("platform_analytics")
 }
 
+// Admin Users
+model Admin {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  password_hash String
+  name          String
+  role          String    @default("admin") // SUPER_ADMIN, SUPPORT, FINANCE
+  permissions   String?   // JSON array of permissions
+  avatar        String?
+  last_login_at DateTime?
+  is_active     Boolean   @default(true)
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+  
+  @@map("admins")
+}
+
 // Admin Activity Logging
 model AdminLog {
   id          String   @id @default(cuid())
@@ -665,17 +678,78 @@ model PromoCode {
   id              String    @id @default(cuid())
   code            String    @unique
   description     String?
-  discountType    String    // 'PERCENTAGE' or 'FIXED'
+  discountType    String    // 'percentage' or 'fixed'
   discountValue   Float
-  minOrderValue   Float?
+  minOrderAmount  Float?    // Minimum order amount to apply promo
   maxDiscount     Float?    // Max discount amount for percentage based
-  validFrom       DateTime
-  validUntil      DateTime
-  maxUses         Int?
+  startDate       DateTime  @default(now())
+  endDate         DateTime?
+  usageLimit      Int?      // Total usage limit across all users
+  perUserLimit    Int?      // Max times a single user can use this code
   usedCount       Int       @default(0)
-  isActive        Boolean   @default(true)
+  status          String    @default("active") // active, inactive, expired
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
+  
+  usages          PromoUsage[]
 
   @@map("promo_codes")
+}
+
+// Track Individual Promo Code Usage
+model PromoUsage {
+  id             String    @id @default(cuid())
+  promoCodeId    String
+  promoCode      PromoCode @relation(fields: [promoCodeId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orderId        String    // Job ID or Booking ID
+  orderAmount    Float
+  discountAmount Float
+  createdAt      DateTime  @default(now())
+  
+  @@map("promo_usages")
+  @@index([promoCodeId])
+  @@index([userId])
+}
+
+// Support Tickets - Updated
+model SupportTicket {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ticketNumber String  @unique @default(cuid())
+  category    String   // Add category for classification
+  subject     String
+  description String
+  status      String   @default("OPEN") // OPEN, IN_PROGRESS, RESOLVED, CLOSED
+  priority    String   @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT
+  assignedTo  String?  // Admin ID
+  bookingId   String?
+  jobId       String?
+  resolution  String?
+  attachments String?  // JSON array of file URLs
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  resolvedAt  DateTime?
+  
+  messages    TicketMessage[]
+  
+  @@map("support_tickets")
+  @@index([userId])
+  @@index([status])
+}
+
+// Support Ticket Messages
+model TicketMessage {
+  id           String        @id @default(cuid())
+  ticketId     String
+  ticket       SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  senderId     String        // User ID or Admin ID
+  message      String
+  isAdminReply Boolean       @default(false)
+  createdAt    DateTime      @default(now())
+  
+  @@map("ticket_messages")
+  @@index([ticketId])
 }

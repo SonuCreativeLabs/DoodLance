@@ -39,9 +39,7 @@ interface BookingsContextType {
 
 const BookingsContext = createContext<BookingsContextType | undefined>(undefined);
 
-// Initial mock data - this would typically come from an API
-// Initial mock data - this would typically come from an API
-// Initial mock data - none
+// Initial state
 const initialBookings: Booking[] = [];
 
 export function BookingsProvider({ children }: { children: ReactNode }) {

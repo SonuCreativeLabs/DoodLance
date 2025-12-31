@@ -59,8 +59,8 @@ const defaultValue: NearbyProfessionalsContextType = {
   refreshProfessionals: () => { }
 };
 
-// Use professionals from mockData - this would typically come from an API
-// Mock data import removed
+// Initial state
+// Data import removed
 const initialProfessionals: Professional[] = [];
 
 export function NearbyProfessionalsProvider({ children }: { children: ReactNode }) {

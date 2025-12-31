@@ -98,7 +98,7 @@ export async function GET(request: NextRequest) {
             where: { isActive: true }
         });
 
-        const serviceDistribution = services.map(s => ({
+        const serviceDistribution = services.map((s: any) => ({
             name: s.categoryId,
             value: s._count.id
         }));
@@ -112,7 +112,7 @@ export async function GET(request: NextRequest) {
                 activeUsers,
                 newSignups,
                 retentionRate: retentionRate.toFixed(1),
-                engagementRate: 65.2 // Placeholder
+                engagementRate: totalUsers > 0 ? ((await prisma.booking.groupBy({ by: ['clientId'], _count: true })).length / totalUsers * 100).toFixed(1) : 0
             },
             performanceData,
             serviceDistribution,
@@ -120,8 +120,17 @@ export async function GET(request: NextRequest) {
                 totalRevenue: totalRevenue._sum.amount || 0,
                 totalBookings,
                 totalServices,
-                conversionRate: conversionRate.toFixed(1)
-            }
+                conversionRate: conversionRate.toFixed(1),
+                avgBookingValue: totalBookings > 0 ? (totalRevenue._sum.amount || 0) / totalBookings : 0,
+                bookingCompletionRate: totalBookings > 0 ? ((await prisma.booking.count({ where: { status: 'COMPLETED', createdAt: { gte: startDate } } })) / totalBookings * 100).toFixed(1) : 0,
+            },
+            conversionData: [
+                { name: 'Total Users', value: totalUsers, fill: '#8B5CF6' },
+                { name: 'Active Users', value: activeUsers, fill: '#A78BFA' },
+                { name: 'With Bookings', value: (await prisma.booking.groupBy({ by: ['clientId'], _count: true })).length, fill: '#C4B5FD' },
+                { name: 'Bookings', value: totalBookings, fill: '#DDD6FE' },
+                { name: 'Completed', value: await prisma.booking.count({ where: { status: 'COMPLETED', createdAt: { gte: startDate } } }), fill: '#EDE9FE' },
+            ]
         });
 
     } catch (error) {

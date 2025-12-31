@@ -87,20 +87,11 @@ export default function PhoneLogin() {
                             />
                         </div>
                         <h1 className="text-3xl font-bold tracking-tight text-white -mt-10">
-                            Developer Login
+                            Welcome Back
                         </h1>
                         <p className="text-white/50 text-sm">
-                            Phone login with mock data access
+                            Enter your phone number to sign in
                         </p>
-                    </div>
-
-                    {/* Info Box */}
-                    <div className="bg-purple-500/10 border border-purple-500/20 rounded-xl p-4 flex items-start gap-3">
-                        <Info className="w-5 h-5 text-purple-400 flex-shrink-0 mt-0.5" />
-                        <div className="text-sm text-white/70">
-                            <p className="font-medium text-white mb-1">Mock Data Access</p>
-                            
-                        </div>
                     </div>
 
                     {/* Card */}
@@ -152,9 +143,6 @@ export default function PhoneLogin() {
                                         />
                                     </div>
                                 </div>
-                                <p className="text-[10px] text-white/30 ml-1">
-                                    OTP will use fixed code: <span className="font-mono font-bold">123456</span>
-                                </p>
                             </div>
 
                             {/* Submit Button */}

@@ -6,13 +6,13 @@ import { cn } from "@/lib/utils";
 import { useNavbar } from "@/contexts/NavbarContext";
 import Link from "next/link";
 
-const mockReferrals: any[] = [];
+const referrals: any[] = [];
 
 const referralStats = {
-  totalReferrals: 8,
-  successfulReferrals: 6,
-  totalEarned: 3000,
-  pendingRewards: 1000,
+  totalReferrals: 0,
+  successfulReferrals: 0,
+  totalEarned: 0,
+  pendingRewards: 0,
 };
 
 export default function ReferralsPage() {
@@ -64,7 +64,7 @@ export default function ReferralsPage() {
         <div className="container mx-auto px-4 h-16 flex items-center relative">
           <Link href="/client" aria-label="Back to Dashboard" className="relative z-10">
             <button className="flex items-center justify-center text-white/80 hover:text-white/100 p-2 -ml-2 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-purple-400/40" aria-label="Back">
-              <svg width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
+              <svg width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
             </button>
           </Link>
 
@@ -167,7 +167,7 @@ export default function ReferralsPage() {
           <h3 className="text-lg font-semibold text-white mb-4">Referral History</h3>
 
           <div className="space-y-3">
-            {mockReferrals.map((referral) => (
+            {referrals.map((referral) => (
               <div key={referral.id} className="flex items-center justify-between p-4 bg-[#1a1a1a] rounded-xl border border-white/5">
                 <div className="flex-1 min-w-0">
                   <p className="text-white font-medium truncate">{referral.name}</p>

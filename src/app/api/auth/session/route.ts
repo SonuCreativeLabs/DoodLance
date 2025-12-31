@@ -41,3 +41,31 @@ export async function GET() {
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
 }
+// POST /api/auth/session - Set session cookies
+export async function POST(request: Request) {
+    try {
+        const body = await request.json();
+        const { user } = body;
+
+        if (!user || !user.id || !user.email) {
+            return NextResponse.json({ error: 'Invalid user data' }, { status: 400 });
+        }
+
+        const { generateAuthTokens, setAuthCookies } = await import('@/lib/auth/jwt');
+
+        // Generate tokens
+        const tokens = generateAuthTokens({
+            id: user.id,
+            email: user.email,
+            role: user.role || 'client'
+        });
+
+        // Set cookies
+        await setAuthCookies(tokens.accessToken, tokens.refreshToken);
+
+        return NextResponse.json({ success: true, user: { ...user, role: user.role || 'client' } });
+    } catch (error) {
+        console.error('Session API Error:', error);
+        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    }
+}

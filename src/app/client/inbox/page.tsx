@@ -42,8 +42,6 @@ type Message = {
 
 // Empty chats for now - replace with API fetch when backend ready
 const professionalChats: any[] = [];
-// Mock messages map needed for ChatView prop types if strictly typed, but here it's any[] likely
-const mockMessages: Record<string, Message[]> = {};
 
 // Status options for chats
 const statuses: Array<'Upcoming' | 'Ongoing' | 'Completed' | 'Cancelled'> = [
@@ -272,7 +270,7 @@ const InboxPage = () => {
       </div>
 
       {/* Chat View - Only show when a chat is selected */}
-      <div className="flex-1 flex flex-col bg-[#1a1a1a] border-l border-white/10">
+      <div className={`flex-1 flex flex-col bg-[#1a1a1a] border-l border-white/10 ${!selectedChatId ? 'hidden md:flex' : 'flex'}`}>
         {selectedChat ? (
           <ChatView
             chatId={selectedChat.id}
