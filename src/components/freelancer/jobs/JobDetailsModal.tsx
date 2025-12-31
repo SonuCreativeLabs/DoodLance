@@ -131,6 +131,8 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
       setJobOtp(otp);
       // For demo purposes, we'll show the number in development only
       if (process.env.NODE_ENV === 'development') {
+        console.log('Job OTP:', otp);
+      }
     }
 
     // Check if job is already started
@@ -1671,10 +1673,10 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                           onBlur={handleOtpBlur}
                           onPaste={index === 0 ? handlePaste : undefined}
                           className={`w-12 h-12 text-center text-xl font-mono font-bold bg-[#111111] border text-white rounded-2xl focus:outline-none transition-all duration-200 ${activeDigitIndex === index
-                              ? 'border-blue-500/70 ring-2 ring-blue-500/20'
-                              : digit
-                                ? 'border-gray-500/50'
-                                : 'border-gray-600/50 hover:border-gray-500/50'
+                            ? 'border-blue-500/70 ring-2 ring-blue-500/20'
+                            : digit
+                              ? 'border-gray-500/50'
+                              : 'border-gray-600/50 hover:border-gray-500/50'
                             }`}
                           maxLength={1}
                           autoComplete="off"
@@ -1825,8 +1827,8 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                           key={star}
                           onClick={() => setRating(star)}
                           className={`transition-all duration-200 ${star <= rating
-                              ? 'text-yellow-400 scale-110 drop-shadow-sm'
-                              : 'hover:text-yellow-400/50 hover:scale-105'
+                            ? 'text-yellow-400 scale-110 drop-shadow-sm'
+                            : 'hover:text-yellow-400/50 hover:scale-105'
                             }`}
                           style={star <= rating ? {} : { color: '#404040' }}
                         >
@@ -1841,9 +1843,9 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                             {rating === 1 ? '😞' : rating === 2 ? '😐' : rating === 3 ? '😊' : rating === 4 ? '😄' : '🤩'}
                           </span>
                           <span className={`font-bold text-sm tracking-wider ${rating === 1 ? 'text-red-400' :
-                              rating === 2 ? 'text-orange-400' :
-                                rating === 3 ? 'text-yellow-400' :
-                                  rating === 4 ? 'text-blue-400' : 'text-green-400'
+                            rating === 2 ? 'text-orange-400' :
+                              rating === 3 ? 'text-yellow-400' :
+                                rating === 4 ? 'text-blue-400' : 'text-green-400'
                             }`}>
                             {rating === 1 ? 'Poor' :
                               rating === 2 ? 'Fair' :
@@ -1884,8 +1886,8 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                           );
                         }}
                         className={`px-1.5 py-0.5 text-xs rounded-lg border transition-all duration-200 ${selectedChips.includes(chip)
-                            ? 'bg-purple-500/10 border-gray-500/50 text-purple-300'
-                            : 'bg-[#111111] border-gray-500/50 text-gray-300 hover:bg-[#1E1E1E] hover:border-gray-400/50'
+                          ? 'bg-purple-500/10 border-gray-500/50 text-purple-300'
+                          : 'bg-[#111111] border-gray-500/50 text-gray-300 hover:bg-[#1E1E1E] hover:border-gray-400/50'
                           }`}
                       >
                         {chip}
