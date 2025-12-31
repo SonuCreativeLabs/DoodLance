@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
         ]);
 
         // Map to KYC format
-        const kycRequests = users.map(u => ({
+        const kycRequests = users.map((u: any) => ({
             id: `KYC${u.id.substring(0, 6).toUpperCase()}`,
             userId: u.id,
             userName: u.name,
