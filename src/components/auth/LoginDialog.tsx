@@ -10,7 +10,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import { CricketLoader } from '@/components/ui/cricket-loader'
 import { isValidEmail } from '@/lib/validation'
-import OTPVerificationForm from './OTPVerificationForm'
+import { OTPVerificationForm } from './OTPVerificationForm'
 
 interface LoginDialogProps {
     open: boolean
@@ -105,10 +105,16 @@ export default function LoginDialog({ open, onOpenChange, onSuccess, redirectTo 
             <Dialog open={open} onOpenChange={handleDialogChange}>
                 <DialogContent className="sm:max-w-md bg-[#111111] border-white/10">
                     <OTPVerificationForm
-                        identifier={identifier}
-                        type={activeTab}
-                        onSuccess={handleOTPSuccess}
-                        onBack={() => setShowOTP(false)}
+                        phone={identifier}
+                        onVerified={handleOTPSuccess}
+                        onChangeNumber={() => setShowOTP(false)}
+                        onResendOTP={() => {
+                            if (activeTab === 'email') {
+                                sendOTP(email, 'email')
+                            } else {
+                                sendOTP(countryCode + phone, 'phone')
+                            }
+                        }}
                     />
                 </DialogContent>
             </Dialog>
