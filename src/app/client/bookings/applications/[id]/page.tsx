@@ -470,7 +470,7 @@ export default function ApplicationDetailPage() {
                   <div className="relative w-32 h-32 sm:w-40 sm:h-40 rounded-full border-4 border-[#1E1E1E] overflow-hidden bg-[#111111]">
                     <Avatar className="w-full h-full">
                       <AvatarImage src={freelancer.image} alt={freelancer.name} />
-                      <AvatarFallback>{freelancer.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                      <AvatarFallback>{freelancer.name.split(' ').map((n: string) => n[0]).join('')}</AvatarFallback>
                     </Avatar>
                   </div>
                   {/* ID Verified Badge - Mobile */}
@@ -530,7 +530,7 @@ export default function ApplicationDetailPage() {
 
               {/* Skills */}
               <div className="flex flex-wrap justify-center gap-2 mb-4">
-                {(freelancer.skills || freelancer.expertise)?.map((skill, i) => (
+                {(freelancer.skills || freelancer.expertise)?.map((skill: string, i: number) => (
                   <button
                     key={i}
                     onClick={() => handleSkillClick(skill)}

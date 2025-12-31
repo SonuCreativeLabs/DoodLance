@@ -150,12 +150,7 @@ const AdvancedKYC: React.FC = () => {
   const [isVerifying, setIsVerifying] = useState<string | null>(null);
 
   // Verification statuses will be fetched from backend
-  const [verificationStatus, setVerificationStatus] = useState<Record<string, VerificationStatus>>({});
-
-  const handleVerification = async (type: string) => {
-    // Implementation will be added later
-  };
-const [verificationStatus, setVerificationStatus] = useState<Record<string, VerificationStatus>>({
+  const [verificationStatus, setVerificationStatus] = useState<Record<string, VerificationStatus>>({
     id: 'pending',
     selfie: 'pending'
   });
@@ -177,7 +172,7 @@ const [verificationStatus, setVerificationStatus] = useState<Record<string, Veri
     // Here you would typically upload the file to your server
     // This is a mock implementation
     // Implementation will be added later
-  try {
+    try {
       setIsVerifying(type);
 
       // Simulate file upload

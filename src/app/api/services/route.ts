@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
         });
 
         // Transform to frontend ServicePackage format
-        const formattedServices = services.map(svc => ({
+        const formattedServices = services.map((svc: typeof services[0]) => ({
             id: svc.id,
             title: svc.title,
             description: svc.description,
