@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
         ]);
 
         // Map to frontend format
-        const mappedJobs = jobs.map(j => ({
+        const mappedJobs = jobs.map((j: any) => ({
             id: j.id,
             title: j.title,
             client: j.client.name,
