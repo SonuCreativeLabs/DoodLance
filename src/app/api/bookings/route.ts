@@ -72,7 +72,7 @@ export async function GET(request: NextRequest) {
         });
 
         // Format for frontend
-        const formattedBookings = bookings.map(b => ({
+        const formattedBookings = bookings.map((b: any) => ({
             id: b.id,
             title: b.service.title,
             clientName: b.client.name,
