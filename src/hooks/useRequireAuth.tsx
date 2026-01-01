@@ -18,6 +18,10 @@ interface UseRequireAuthReturn {
     openLoginDialog: boolean
     setOpenLoginDialog: (open: boolean) => void
     clearPendingAction: () => void
+    // Profile Dialog props
+    openProfileDialog: boolean
+    setOpenProfileDialog: (open: boolean) => void
+    handleCompleteProfile: () => void
 }
 
 export function useRequireAuth(): UseRequireAuthReturn {
@@ -25,6 +29,9 @@ export function useRequireAuth(): UseRequireAuthReturn {
     const router = useRouter()
     const pathname = usePathname()
     const [openLoginDialog, setOpenLoginDialog] = useState(false)
+    const [openProfileDialog, setOpenProfileDialog] = useState(false)
+    const [pendingRedirectPath, setPendingRedirectPath] = useState<string | null>(null)
+    const [pendingActionId, setPendingActionId] = useState<string | null>(null)
 
     // Check if profile is complete
     const checkProfileCompletion = useCallback((): boolean => {
@@ -36,10 +43,11 @@ export function useRequireAuth(): UseRequireAuthReturn {
         const hasBasicInfo = !!(user.name && user.location)
 
         if (role === 'client') {
-            return hasBasicInfo
+            // Clients need: name, location, and profile picture
+            return hasBasicInfo && !!user.profileImage
         } else {
-            // Freelancer needs more info
-            return hasBasicInfo
+            // Freelancers need: name, location, and profile picture
+            return hasBasicInfo && !!user.profileImage
         }
     }, [user])
 
@@ -58,7 +66,7 @@ export function useRequireAuth(): UseRequireAuthReturn {
         if (typeof window === 'undefined') return
 
         if (isAuthenticated && isProfileComplete) {
-            const pendingActionId = localStorage.getItem(PENDING_ACTION_KEY)
+            const storedActionId = localStorage.getItem(PENDING_ACTION_KEY)
             const returnTo = localStorage.getItem(RETURN_TO_KEY)
 
             if (returnTo && pathname !== returnTo) {
@@ -66,13 +74,28 @@ export function useRequireAuth(): UseRequireAuthReturn {
                 clearPendingAction()
                 // Navigate to the intended destination
                 router.push(returnTo)
-            } else if (pendingActionId) {
+            } else if (storedActionId) {
                 // User is on the right page, clear the stored action
                 // The page itself should handle re-executing the action if needed
                 clearPendingAction()
             }
         }
     }, [isAuthenticated, isProfileComplete, pathname, clearPendingAction, router])
+
+    const handleCompleteProfile = useCallback(() => {
+        if (!pendingRedirectPath) return
+
+        // Redirect to profile with return param
+        // Determine context based on the return path - if user is trying to access freelancer pages, send to freelancer profile
+        const isFreelancerContext = pendingRedirectPath.startsWith('/freelancer')
+        const profilePath = isFreelancerContext
+            ? '/freelancer/profile/personal'
+            : '/client/profile/edit'
+
+        const actionQuery = pendingActionId ? `&action=${pendingActionId}` : ''
+        router.push(`${profilePath}?returnTo=${encodeURIComponent(pendingRedirectPath)}${actionQuery}`)
+        setOpenProfileDialog(false)
+    }, [pendingRedirectPath, pendingActionId, router])
 
     /**
      * Protect an action with authentication and profile completion checks
@@ -98,13 +121,10 @@ export function useRequireAuth(): UseRequireAuthReturn {
                     localStorage.setItem(RETURN_TO_KEY, returnPath)
                 }
 
-                // Redirect to profile with return param
-                const role = user.role || 'client'
-                const profilePath = role === 'freelancer'
-                    ? '/freelancer/profile/personal'
-                    : '/client/profile/edit'
-
-                router.push(`${profilePath}?returnTo=${encodeURIComponent(returnPath)}&action=${actionId}`)
+                // Instead of redirecting immediately, show the dialog
+                setPendingRedirectPath(returnPath)
+                setPendingActionId(actionId)
+                setOpenProfileDialog(true)
                 return
             }
 
@@ -129,7 +149,11 @@ export function useRequireAuth(): UseRequireAuthReturn {
         isProfileComplete,
         openLoginDialog,
         setOpenLoginDialog,
-        clearPendingAction
+        clearPendingAction,
+        // Profile Dialog props
+        openProfileDialog,
+        setOpenProfileDialog,
+        handleCompleteProfile
     }
 }
 

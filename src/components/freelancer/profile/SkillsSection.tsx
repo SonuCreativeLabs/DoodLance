@@ -383,16 +383,19 @@ export function SkillsSection({
   const handleAddSkill = () => {
     if (newSkill.trim() && !skills.some(s => s.name.toLowerCase() === newSkill.toLowerCase())) {
       const formattedExp = newExperience ? formatExperience(newExperience) : '';
-      setSkills(prev => [
-        ...prev,
-        {
-          id: Math.random().toString(36).substr(2, 9),
-          name: newSkill.trim(),
-          description: newDescription.trim() || undefined,
-          experience: formattedExp,
-          level: newLevel
-        }
-      ]);
+      const skillToAdd: SkillItemType = {
+        id: Math.random().toString(36).substr(2, 9),
+        name: newSkill.trim(),
+        description: newDescription.trim() || undefined,
+        experience: formattedExp,
+        level: newLevel
+      };
+
+      const updatedSkills = [...skills, skillToAdd];
+      setSkills(updatedSkills);
+      // Explicitly update context to ensure persistence
+      updateSkills(updatedSkills);
+
       setNewSkill('');
       setNewExperience('');
       setNewDescription('');

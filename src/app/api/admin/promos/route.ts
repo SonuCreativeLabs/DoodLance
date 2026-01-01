@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/db';
 import { createPromoSchema, validateRequest } from '@/lib/validations/admin';
 import { logAdminAction } from '@/lib/audit-log';
-import { validateSession } from '@/lib/auth/jwt';
+import { createClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -97,13 +97,25 @@ export async function POST(request: NextRequest) {
     const description = (body as any).description || '';
 
     // Authenticate admin
-    const session = await validateSession();
-    if (!session || session.role !== 'admin') {
+    const supabase = createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+    if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const adminEmail = session.email;
-    const adminId = session.userId;
+    // Check admin role via database
+    const dbUser = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: { role: true, email: true }
+    });
+
+    if (!dbUser || dbUser.role !== 'admin') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const adminEmail = dbUser.email;
+    const adminId = user.id;
 
     const newPromo = await prisma.promoCode.create({
       data: {

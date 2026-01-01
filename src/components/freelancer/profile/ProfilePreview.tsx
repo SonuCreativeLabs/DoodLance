@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useEffect, useCallback, useMemo, memo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { createPortal } from 'react-dom';
 import {
   Share2,
@@ -36,7 +37,8 @@ import {
   groupServicesByType,
   formatExperienceDuration,
   getRecentExperiences,
-  getAvailabilityText
+  getAvailabilityText,
+  formatTime
 } from '@/utils/profileUtils';
 
 // Memoized component to prevent unnecessary re-renders
@@ -45,6 +47,7 @@ const ProfilePreview = memo(({
   onClose = () => { },
   profileData
 }: Partial<Props> & { profileData: ProfileData }) => {
+  const router = useRouter();
   // Refs
   const scrollY = useRef(0);
   const scrollTimer = useRef<number | null>(null);
@@ -63,9 +66,8 @@ const ProfilePreview = memo(({
     { id: 'top', label: 'Profile' },
     { id: 'about', label: 'About' },
     { id: 'services', label: 'Services' },
-    { id: 'portfolio', label: 'Portfolio' },
+    { id: 'reviews', label: 'Reviews' },
     { id: 'experience', label: 'Experience' },
-    { id: 'reviews', label: 'Reviews' }
   ] as const;
 
   type TabId = typeof tabs[number]['id'];
@@ -297,8 +299,8 @@ const ProfilePreview = memo(({
     sessionStorage.setItem('freelancerName', profileData.name);
 
     // Navigate to the full view
-    window.location.href = `/freelancer/profile/preview/${type}#fromPreview`;
-  }, [profileData]);
+    router.push(`/freelancer/profile/preview/${type}#fromPreview`);
+  }, [profileData, router]);
 
   // Handle view all portfolio click
   const handleViewAllPortfolio = useCallback(() => {
@@ -338,7 +340,7 @@ const ProfilePreview = memo(({
     sessionStorage.setItem('freelancerName', profileData.name);
 
     // Navigate to services page with preview flag
-    window.location.href = `/services#fromPreview`;
+    router.push(`/services#fromPreview`);
   };
 
   // Handle active tab update using Intersection Observer
@@ -832,7 +834,11 @@ const ProfilePreview = memo(({
                             {profileData.availability.filter(day => day.available).map((day, index) => (
                               <div key={index} className="flex justify-between items-center text-sm">
                                 <span className="text-white/60">{day.day}:</span>
-                                <span className="text-white/80">9 AM - 6 PM</span>
+                                <span className="text-white/80">
+                                  {day.timeSlots && day.timeSlots.length > 0
+                                    ? day.timeSlots.map(slot => `${formatTime(slot.start)} - ${formatTime(slot.end)}`).join(', ')
+                                    : '9 AM - 6 PM'}
+                                </span>
                               </div>
                             ))}
                           </div>
@@ -916,79 +922,7 @@ const ProfilePreview = memo(({
               </section>
 
               {/* Portfolio Section */}
-              <section id="portfolio" data-section="portfolio" className="pt-8 scroll-mt-20 relative group" style={{ scrollMarginTop: '80px' }}>
-                <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
-                <div className="mb-4">
-                  <h2 className="text-xl font-semibold text-white mb-1">My Portfolio</h2>
-                  <p className="text-white/60 text-sm">Showcase of my best work and projects</p>
-                </div>
 
-                {profileData.portfolio.length > 0 ? (
-                  <div className="relative">
-                    <div className="flex -mx-2 overflow-x-auto scrollbar-hide pb-2">
-                      <div className="flex gap-4 px-2">
-                        {profileData.portfolio.map((item) => (
-                          <div
-                            key={item.id}
-                            className="w-80 flex-shrink-0 group relative aspect-video rounded-xl overflow-hidden border border-white/10 hover:border-white/20 transition-all duration-300 cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-500"
-                            role="button"
-                            tabIndex={0}
-                            aria-label={`Open portfolio item: ${item.title}`}
-                            onClick={() => {
-                              setSelectedPortfolioItem(item);
-                              setIsPortfolioModalOpen(true);
-                            }}
-                            onKeyDown={e => {
-                              if (e.key === 'Enter' || e.key === ' ') {
-                                setSelectedPortfolioItem(item);
-                                setIsPortfolioModalOpen(true);
-                              }
-                            }}
-                          >
-                            <div className="relative w-full h-full">
-                              <div className="absolute inset-0 flex items-center justify-center bg-gray-800/50 rounded-xl">
-                                <img
-                                  src={item.image}
-                                  alt={item.title}
-                                  className="w-full h-full object-cover transition-all duration-300 group-hover:scale-105 rounded-xl"
-                                  onError={(e) => {
-                                    e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjAwIiBoZWlnaHQ9IjgwMCIgdmlld0JveD0iMCAwIDYwMCA0MDAiPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiMxQTFBMUEiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE4IiBmb250LXdlaWdodD0iYm9sZCIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGRvbWluYW50LWJhc2VsaW5lPSJtaWRkbGUiPk5vIFRodW1ibmFpbCBBdmFpbGFibGU8L3RleHQ+PC9zdmc+'
-                                  }}
-                                />
-                                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity">
-                                </div>
-                              </div>
-                              <div className="absolute inset-0 p-4 flex flex-col justify-end bg-gradient-to-t from-black/70 via-black/40 to-transparent rounded-xl">
-                                <div className="flex justify-between items-end mb-8">
-                                  <div className="pr-2 flex-1">
-                                    <h3 className="font-medium text-white line-clamp-1 text-sm">{item.title}</h3>
-                                  </div>
-                                </div>
-                                <div className="absolute bottom-3 left-3 bg-white/10 text-white/80 border-white/20 px-2 py-0.5 text-xs rounded-full border">
-                                  {item.category}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    <button
-                      onClick={handleViewAllPortfolio}
-                      className="w-full mt-2 py-2.5 px-4 border border-white/30 hover:bg-white/5 transition-colors text-sm font-medium flex items-center justify-center gap-2 text-white rounded-[6px]"
-                    >
-                      View All {profileData.portfolio.length} Portfolio Items
-                      <ArrowRight className="h-4 w-4" />
-                    </button>
-                  </div>
-                ) : (
-                  <div className="text-center p-8 rounded-3xl border border-white/10 bg-white/5">
-                    <Award className="h-12 w-12 mx-auto text-white/20 mb-4" />
-                    <h3 className="text-lg font-medium text-white">No portfolio items yet</h3>
-                    <p className="text-white/60 mt-1">Showcase your best work to attract more clients</p>
-                  </div>
-                )}
-              </section>
 
               {/* Experience Section */}
               <section

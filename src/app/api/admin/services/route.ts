@@ -2,13 +2,41 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/db';
 import { createServiceSchema, validateRequest } from '@/lib/validations/admin';
 import { logAdminAction } from '@/lib/audit-log';
-import { validateSession } from '@/lib/auth/jwt';
+import { createClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
 // GET /api/admin/services - List all services
 export async function GET(request: NextRequest) {
   try {
+    // Authenticate admin (optional for reading? Usually admin endpoints are protected)
+    // The previous code didn't check session in GET explicitly for auth, but strictly speaking admin routes should be protected?
+    // Reviewing previous code: GET function didn't call validateSession!
+    // It seems GET /api/admin/services was public? Or maybe middleware handled it?
+    // But lines 1-6 show import of validateSession. The GET function didn't use it.
+    // However, this is /api/admin/... usually implies protection.
+    // Let's protect it to be safe, or leave as is if it was intended for public catalog?
+    // Wait, the path is /api/admin/services. This suggests admin view (listing pending approval etc).
+    // The public services are in /api/services.
+    // So this MUST be protected.
+
+    const supabase = createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Check admin role via database
+    const dbUser = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: { role: true }
+    });
+
+    if (!dbUser || dbUser.role !== 'admin') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
@@ -140,8 +168,20 @@ export async function GET(request: NextRequest) {
 // POST /api/admin/services - Create new service (admin-created)
 export async function POST(request: NextRequest) {
   try {
-    const session = await validateSession();
-    if (!session) {
+    const supabase = createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Check admin role via database
+    const dbUser = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: { role: true, email: true }
+    });
+
+    if (!dbUser || dbUser.role !== 'admin') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -164,8 +204,8 @@ export async function POST(request: NextRequest) {
     } = validation.data;
 
     // Get admin info
-    const adminEmail = session.email || 'admin@doodlance.com';
-    const adminId = session.userId;
+    const adminEmail = dbUser.email || 'admin@doodlance.com';
+    const adminId = user.id;
 
     // Verify provider exists
     const provider = await prisma.user.findUnique({

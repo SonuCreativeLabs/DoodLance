@@ -1,56 +1,80 @@
-import { NextRequest, NextResponse } from 'next/server'
-import prisma from '@/lib/db'
+import { NextRequest, NextResponse } from 'next/server';
+import prisma from '@/lib/db';
 
-// GET /api/freelancers/[id] - Get freelancer profile and services
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const freelancer = await prisma.user.findUnique({
-      where: { id: params.id },
+    const { id } = params;
+
+    const profile = await prisma.freelancerProfile.findUnique({
+      where: { id },
       include: {
-        freelancerProfile: {
-          include: {
-            experiences: true,
-            portfolios: true,
-            reviews: {
-              take: 5,
-              orderBy: { createdAt: 'desc' }
-            }
+        user: {
+          select: {
+            id: true,
+            name: true,
+            avatar: true,
+            location: true,
+            bio: true,
+            phone: true,
+            email: true,
           }
         },
-        services: {
-          where: { isActive: true },
+        reviews: {
           include: {
-            category: true
-          },
-          take: 10
+            client: {
+              select: {
+                id: true,
+                name: true,
+                avatar: true
+              }
+            }
+          }
         }
       }
-    })
+    });
 
-    if (!freelancer) {
-      return NextResponse.json(
-        { error: 'Freelancer not found' },
-        { status: 404 }
-      )
+    if (!profile) {
+      return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
     }
 
-    // Calculate average rating from reviews
-    const avgRating = freelancer.freelancerProfile?.reviews?.length
-      ? freelancer.freelancerProfile.reviews.reduce((acc: number, review: { rating: number }) => acc + review.rating, 0) / freelancer.freelancerProfile.reviews.length
-      : 0
+    // Transform to match expected format
+    const formattedProfile = {
+      id: profile.id,
+      userId: profile.userId,
+      name: profile.user.name,
+      title: profile.title,
+      about: profile.about,
+      location: profile.user.location,
+      bio: profile.user.bio,
+      avatar: profile.user.avatar,
+      phone: profile.user.phone,
+      email: profile.user.email,
+      hourlyRate: profile.hourlyRate,
+      rating: profile.rating,
+      reviewCount: profile.reviewCount,
+      completedJobs: profile.completedJobs,
+      responseTime: profile.responseTime,
+      deliveryTime: profile.deliveryTime,
+      skills: typeof profile.skills === 'string' ? JSON.parse(profile.skills || '[]') : profile.skills,
+      cricketRole: profile.cricketRole,
+      battingStyle: profile.battingStyle,
+      bowlingStyle: profile.bowlingStyle,
+      languages: profile.languages,
+      isOnline: profile.isOnline,
+      isVerified: profile.isVerified,
+      reviews: profile.reviews
+    };
 
-    return NextResponse.json({
-      ...freelancer,
-      averageRating: avgRating
-    })
+    return NextResponse.json({ profile: formattedProfile });
+
   } catch (error) {
-    console.error('Error fetching freelancer:', error)
+    console.error('Freelancer detail fetch error:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch freelancer' },
+      { error: 'Failed to fetch freelancer details' },
       { status: 500 }
-    )
+    );
   }
 }

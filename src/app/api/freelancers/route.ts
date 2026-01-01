@@ -9,12 +9,16 @@ export async function GET(request: Request) {
         const { searchParams } = new URL(request.url);
         const category = searchParams.get('category');
 
-        // Build filter
-        const where: any = {};
+        // Get current user to exclude from results
+        const { createClient } = await import('@/lib/supabase/server');
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
 
-        // If filtering by category, we might need to filter users who have services in that category
-        // But since we query FreelancerProfile, filtering by user.services.some(...) is harder in simple where.
-        // For now, let's fetch all and filter in memory or rely on basic profile filtering if added later.
+        // Build filter - exclude current user
+        const where: any = {};
+        if (user) {
+            where.userId = { not: user.id };
+        }
 
         const profiles = await prisma.freelancerProfile.findMany({
             where,

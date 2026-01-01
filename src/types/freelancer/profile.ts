@@ -40,6 +40,7 @@ export interface Review {
 export interface Availability {
   day: string;
   available: boolean;
+  timeSlots?: { start: string; end: string }[];
 }
 
 export interface ProfileData {
@@ -85,11 +86,11 @@ export const getAvailabilityText = (availability: Availability[]) => {
   const availableDays = availability
     .filter(day => day.available)
     .map(day => day.day.substring(0, 3));
-  
+
   if (availableDays.length === 7) return 'Available every day';
-  if (availableDays.length === 5 && 
-      !availableDays.includes('Sat') && 
-      !availableDays.includes('Sun')) {
+  if (availableDays.length === 5 &&
+    !availableDays.includes('Sat') &&
+    !availableDays.includes('Sun')) {
     return 'Available weekdays';
   }
   return `Available: ${availableDays.join(', ')}`;

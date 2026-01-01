@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/db';
-import { validateSession } from '@/lib/auth/jwt';
+import { createClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,9 +19,10 @@ export async function GET(request: NextRequest) {
 
         // If no specific userId requested, try to use authenticated user's ID
         if (!targetUserId) {
-            const session = await validateSession();
-            if (session?.userId) {
-                targetUserId = session.userId;
+            const supabase = createClient()
+            const { data: { user } } = await supabase.auth.getUser()
+            if (user?.id) {
+                targetUserId = user.id;
             }
         }
 
@@ -74,12 +75,16 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
     try {
-        const session = await validateSession();
-        if (!session || !session.userId) {
+        const supabase = createClient()
+        const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+        if (authError || !user) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
         const body = await request.json();
+        console.log('📦 Service creation request:', body);
+
         const {
             title,
             description,
@@ -92,29 +97,46 @@ export async function POST(request: NextRequest) {
         } = body;
 
         if (!title || !price || !category) {
+            console.error('❌ Missing required fields:', { title: !!title, price: !!price, category: !!category });
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }
 
-        // Resolve Category
+        // Resolve Category - Find or Create
         let categoryRecord = await prisma.category.findUnique({
             where: { name: category }
         });
 
         if (!categoryRecord) {
-            // Try finding by ID if name failed
-            categoryRecord = await prisma.category.findUnique({
-                where: { id: category }
-            });
+            // Try finding by ID if it looks like a CUID
+            if (category.startsWith('c')) {
+                try {
+                    categoryRecord = await prisma.category.findUnique({
+                        where: { id: category }
+                    });
+                } catch (e) {
+                    console.log('Not a valid category ID, will create new');
+                }
+            }
 
             if (!categoryRecord) {
-                // OPTIONAL: Create category if it doesn't exist?
-                // For now, fail or pick a default?
-                return NextResponse.json({ error: `Category '${category}' not found` }, { status: 400 });
+                // Create if not found (auto-seed)
+                console.log(`📝 Creating new category: '${category}'`);
+                const slug = category.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+                categoryRecord = await prisma.category.create({
+                    data: {
+                        name: category,
+                        slug: slug,
+                        description: `Services related to ${category}`
+                    }
+                });
             }
         }
 
+        console.log('✅ Using category:', categoryRecord.id, categoryRecord.name);
+
         // Parse price
-        const numPrice = parseFloat(price.replace(/[^0-9.]/g, ''));
+        const numPrice = typeof price === 'number' ? price : parseFloat(String(price).replace(/[^0-9.]/g, ''));
+        console.log('💰 Parsed price:', numPrice);
 
         // Create Service
         const newService = await prisma.service.create({
@@ -122,24 +144,29 @@ export async function POST(request: NextRequest) {
                 title,
                 description: description || '',
                 price: numPrice || 0,
-                duration: 60, // Default duration?
+                duration: 60, // Default duration
                 categoryId: categoryRecord.id,
-                providerId: session.userId,
-                location: '', // Optional
-                coords: '', // Optional
+                providerId: user.id,
+                location: '',
+                coords: '[0,0]', // Default coords
                 serviceType: type || 'online',
-                deliveryTime: deliveryTime,
+                deliveryTime: deliveryTime || '1 week',
                 packages: JSON.stringify({ features: features || [] }),
-                requirements: '', // Default
-                images: '[]', // Default
-                tags: skill || '', // Store skill in tags for now
+                requirements: '',
+                images: '[]',
+                tags: skill || '',
             }
         });
 
+        console.log('✅ Service created:', newService.id);
         return NextResponse.json({ success: true, service: newService });
 
-    } catch (error) {
-        console.error('Failed to create service:', error);
-        return NextResponse.json({ error: 'Failed to create service' }, { status: 500 });
+    } catch (error: any) {
+        console.error('❌ Failed to create service:', error);
+        console.error('Error details:', error.message, error.stack);
+        return NextResponse.json({
+            error: 'Failed to create service',
+            details: error.message
+        }, { status: 500 });
     }
 }

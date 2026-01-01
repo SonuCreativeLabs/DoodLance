@@ -9,10 +9,12 @@ interface User {
   email?: string
   name?: string
   avatar?: string
+  profileImage?: string
   phone?: string
   location?: string
   phoneVerified?: boolean
   role?: string
+  createdAt?: string
 }
 
 interface AuthContextType {
@@ -36,17 +38,64 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
+        // Set user immediately to unblock login
         setUser({
           id: session.user.id,
           email: session.user.email,
-          phone: session.user.phone,
+          phone: session.user.user_metadata?.phone || '',
           role: session.user.user_metadata?.role || 'client',
           name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || 'User',
           avatar: session.user.user_metadata?.avatar_url || session.user.user_metadata?.avatar || '',
+          profileImage: session.user.user_metadata?.avatar_url || session.user.user_metadata?.avatar || '',
           location: session.user.user_metadata?.location || '',
+          createdAt: session.user.created_at,
         })
+        setIsLoading(false)
 
-        // Sync session with server to set cookies
+        //Fetch DB data in background
+        setTimeout(async () => {
+          try {
+            console.log('🔍 Fetching user data from database...')
+            const { data, error: fetchError } = await supabase
+              .from('users')
+              .select('name,phone,location,avatar,createdAt,email,gender')
+              .eq('id', session.user.id)
+              .single()
+
+            console.log('📊 Database response:', { data, error: fetchError })
+
+            if (fetchError && fetchError.code === 'PGRST116') {
+              console.log('👤 User not found in DB, creating...')
+              await supabase.from('users').insert({
+                id: session.user.id,
+                email: session.user.email,
+                name: session.user.user_metadata?.full_name || 'User',
+                avatar: session.user.user_metadata?.avatar_url || '',
+                created_at: new Date().toISOString(),
+              })
+            } else if (data) {
+              console.log('✅ Updating user with DB data:', {
+                phone: data.phone,
+                name: data.name,
+                location: data.location
+              })
+              setUser(prev => ({
+                ...prev!,
+                phone: data.phone || prev!.phone,
+                name: data.name || prev!.name,
+                avatar: data.avatar || prev!.avatar,
+                profileImage: data.avatar || prev!.profileImage,
+                location: data.location || prev!.location,
+                email: data.email || prev!.email || '',
+                createdAt: (data as any).created_at || prev!.createdAt,
+              }))
+            }
+          } catch (dbError) {
+            console.warn('Failed to fetch user data:', dbError)
+          }
+        }, 0)
+
+        // Sync session
         try {
           await fetch('/api/auth/session', {
             method: 'POST',
@@ -64,8 +113,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       } else {
         setUser(null)
+        setIsLoading(false)
       }
-      setIsLoading(false)
     })
 
     return () => {
@@ -86,42 +135,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const sendOTP = async (identifier: string, type: 'email' | 'phone' = 'email') => {
-    if (type === 'email') {
-      const { error } = await supabase.auth.signInWithOtp({
-        email: identifier,
-        options: {
-          shouldCreateUser: true,
-        }
-      })
-      if (error) throw error
-    } else {
-      const { error } = await supabase.auth.signInWithOtp({ phone: identifier })
-      if (error) throw error
-    }
+    // Only support email OTP
+    const { error } = await supabase.auth.signInWithOtp({
+      email: identifier,
+      options: {
+        shouldCreateUser: true,
+      }
+    })
+    if (error) throw error
   }
 
   const verifyOTP = async (identifier: string, code: string, type: 'email' | 'phone' = 'email') => {
-    if (type === 'email') {
-      const { error } = await supabase.auth.verifyOtp({
-        email: identifier,
-        token: code,
-        type: 'email'
-      })
-      if (error) throw error
-    } else {
-      const { error } = await supabase.auth.verifyOtp({
-        phone: identifier,
-        token: code,
-        type: 'sms'
-      })
-      if (error) throw error
-    }
+    // Only support email OTP verification
+    const { error } = await supabase.auth.verifyOtp({
+      email: identifier,
+      token: code,
+      type: 'email'
+    })
+    if (error) throw error
 
     // User is set automatically by onAuthStateChange
   }
 
   const signOut = async () => {
     await supabase.auth.signOut()
+    setUser(null)
     router.push('/')
   }
 

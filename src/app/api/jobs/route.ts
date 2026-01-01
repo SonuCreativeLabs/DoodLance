@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/db'
+import { createClient } from '@/lib/supabase/server'
 
 export const dynamic = 'force-dynamic'
 
@@ -32,10 +33,13 @@ export async function GET(request: NextRequest) {
     // Location-based filtering (simplified - could be enhanced with geospatial queries)
     if (location) where.location = { contains: location }
 
-    // Skills filtering
+    // Skills filtering - skills is a String field, not array
     if (skills) {
-      const skillsArray = skills.split(',')
-      where.skills = { hasSome: skillsArray }
+      // Use OR conditions to match any skill in the comma-separated list
+      const skillsArray = skills.split(',').map(s => s.trim())
+      where.OR = skillsArray.map(skill => ({
+        skills: { contains: skill, mode: 'insensitive' }
+      }))
     }
 
     const jobs = await prisma.job.findMany({
@@ -95,16 +99,10 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // Get user from session using our auth system
-    const sessionResponse = await fetch(`${request.nextUrl.origin}/api/auth/session`)
-    if (!sessionResponse.ok) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-    const user = await sessionResponse.json()
+    const supabase = createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
 
-    if (!user?.id) {
+    if (authError || !user) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }

@@ -6,20 +6,27 @@ import { useEffect } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import PostJobForm from "@/components/job/post-job-form";
 import { useNavbar } from '@/contexts/NavbarContext';
+import { useRequireAuth } from '@/hooks/useRequireAuth';
+import LoginDialog from '@/components/auth/LoginDialog';
+import ProfileCompletionDialog from '@/components/auth/ProfileCompletionDialog';
 
 export default function PostPage() {
   const router = useRouter();
   const { setNavbarVisibility } = useNavbar();
+  const { requireAuth, isAuthenticated, openLoginDialog, setOpenLoginDialog, openProfileDialog, setOpenProfileDialog, handleCompleteProfile } = useRequireAuth();
 
   useEffect(() => {
     // Hide bottom navbar when component mounts
     setNavbarVisibility(false);
 
+    // Require authentication to post a job
+    requireAuth('post-job', { redirectTo: '/client/post' });
+
     // Show navbar again when component unmounts
     return () => {
       setNavbarVisibility(true);
     };
-  }, [setNavbarVisibility]);
+  }, [setNavbarVisibility, requireAuth]);
 
   return (
     <div className="min-h-screen bg-[#0F0F0F] text-white flex flex-col h-screen overflow-hidden">
@@ -50,13 +57,27 @@ export default function PostPage() {
       </div>
 
       {/* Scrollable Content */}
-      <div className="flex-1 overflow-y-auto pt-[72px] pb-[24px]">
+      <div className="flex-1 pt-[72px]">
         <div className="container mx-auto px-4 py-6">
           <div className="max-w-4xl mx-auto">
             <PostJobForm />
           </div>
         </div>
       </div>
+
+      {/* Login Dialog */}
+      <LoginDialog
+        open={openLoginDialog}
+        onOpenChange={setOpenLoginDialog}
+        redirectTo="/client/post"
+      />
+
+      {/* Profile Completion Dialog */}
+      <ProfileCompletionDialog
+        open={openProfileDialog}
+        onOpenChange={setOpenProfileDialog}
+        onCompleteProfile={handleCompleteProfile}
+      />
     </div>
   );
 } 

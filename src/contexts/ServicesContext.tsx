@@ -42,6 +42,7 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
 
   const addService = useCallback(async (service: ServicePackage) => {
     try {
+      console.log('🚀 Sending service to API:', service);
       setServices(prev => [...prev, service]); // Optimistic UI
 
       const response = await fetch('/api/services', {
@@ -52,9 +53,12 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
 
       if (response.ok) {
         const data = await response.json();
+        console.log('✅ Service created successfully:', data);
         // Replace the optimistic one (with temp ID) with real one
         setServices(prev => prev.map(s => s.id === service.id ? { ...s, id: data.service.id } : s));
       } else {
+        const errorData = await response.json();
+        console.error('❌ Service creation failed:', errorData);
         // Revert on failure
         setServices(prev => prev.filter(s => s.id !== service.id));
         console.error('Failed to add service');

@@ -141,9 +141,20 @@ export function ProfileHeader({
     }
   };
 
-  const handleSkillClick = (skillName: string) => {
-    const skillInfo = getSkillInfo(skillName);
-    setSelectedSkillInfo(skillInfo);
+  const handleSkillClick = (skill: any) => {
+    // If the skill object has detailed info (from JSON), use it
+    if (skill.description || skill.experience || skill.level) {
+      setSelectedSkillInfo({
+        name: skill.name,
+        description: skill.description,
+        experience: skill.experience,
+        level: skill.level || 'Intermediate'
+      });
+    } else {
+      // Fallback to lookup for legacy/simple skills
+      const skillInfo = getSkillInfo(skill.name);
+      setSelectedSkillInfo(skillInfo);
+    }
     setIsSkillDialogOpen(true);
   };
 
@@ -267,7 +278,7 @@ export function ProfileHeader({
       </div>
 
       {/* Profile Content */}
-      <div className="max-w-6xl mx-auto px-4 relative">
+      <div className="max-w-6xl mx-auto px-4 relative z-20">
         <div className="flex flex-col items-center md:flex-row md:items-end md:justify-between -mt-16 mb-4 relative">
           {/* Profile Picture */}
           <div className="relative group">
@@ -372,7 +383,7 @@ export function ProfileHeader({
           {Array.isArray(skills) && skills.map((skill) => (
             <button
               key={skill.id}
-              onClick={() => handleSkillClick(skill.name)}
+              onClick={() => handleSkillClick(skill)}
               className="bg-white/5 text-white/80 border border-white/10 hover:bg-white/10 rounded-full px-2 py-0.5 text-xs transition-colors cursor-pointer"
             >
               {skill.name}
@@ -464,7 +475,8 @@ export function ProfileHeader({
           })) : [],
           availability: availabilityDays.map(day => ({
             day: day.name,
-            available: day.available
+            available: day.available,
+            timeSlots: day.timeSlots
           }))
         }}
       />

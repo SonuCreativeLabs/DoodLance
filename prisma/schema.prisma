@@ -31,6 +31,7 @@ model User {
   location  String?
   coords    String  // [longitude, latitude] for location
   bio       String?
+  gender    String?
   
   // User preferences
   currentRole String @default("client") // current active role
@@ -390,6 +391,12 @@ model FreelancerProfile {
   // Skills and specializations
   skills          String // cricket skills
   specializations String // specific areas of expertise
+  
+  // Cricket Specifics
+  cricketRole     String?
+  battingStyle    String?
+  bowlingStyle    String?
+
   languages       String @default("English") // comma-separated list
   
   // Stats

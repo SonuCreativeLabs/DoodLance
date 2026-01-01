@@ -146,8 +146,13 @@ export default function PersonalDetailsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const returnTo = searchParams.get('returnTo'); // Get return path from query params
-  const { personalDetails, updatePersonalDetails } = usePersonalDetails();
+  const { personalDetails, updatePersonalDetails, refreshUser } = usePersonalDetails();
   const [editingSection, setEditingSection] = useState<EditSection>(null);
+
+  // Refresh user data on mount to ensure we have latest updates from Client profile
+  useEffect(() => {
+    refreshUser();
+  }, [refreshUser]);
 
   // Initialize state from context
   const [username, setUsername] = useState(personalDetails.username || '');
@@ -157,14 +162,14 @@ export default function PersonalDetailsPage() {
 
   const [personalInfo, setPersonalInfo] = useState<PersonalInfo>({
     fullName: personalDetails.name || "",
-    gender: "", // Gender not in context currently, might need to add or keep local if not in DB
+    gender: personalDetails.gender || "",
     dateOfBirth: personalDetails.dateOfBirth || "",
     bio: personalDetails.bio || "",
   });
 
   const [contactInfo, setContactInfo] = useState<ContactInfo>({
-    email: "", // Email often in auth user metadata, not personalDetails context explicitly?
-    phone: "",
+    email: personalDetails.email || "",
+    phone: personalDetails.phone || "",
     website: ""
   });
 
@@ -187,6 +192,7 @@ export default function PersonalDetailsPage() {
     setPersonalInfo(prev => ({
       ...prev,
       fullName: personalDetails.name || "",
+      gender: personalDetails.gender || "",
       dateOfBirth: personalDetails.dateOfBirth || "",
       bio: personalDetails.bio || ""
     }));
@@ -195,6 +201,12 @@ export default function PersonalDetailsPage() {
       cricketRole: personalDetails.cricketRole || "",
       battingStyle: personalDetails.battingStyle || "",
       bowlingStyle: personalDetails.bowlingStyle || ""
+    }));
+
+    setContactInfo(prev => ({
+      ...prev,
+      email: personalDetails.email || "",
+      phone: personalDetails.phone || ""
     }));
 
     if (personalDetails.location) {
@@ -259,12 +271,16 @@ export default function PersonalDetailsPage() {
         title: cricketInfo.cricketRole || 'Cricketer',
         location: locationInfo.city + ', ' + locationInfo.country,
         dateOfBirth: editPersonalInfo.dateOfBirth,
-        bio: editPersonalInfo.bio
+        bio: editPersonalInfo.bio,
+        gender: editPersonalInfo.gender
       });
     } else if (section === 'contact') {
       const newContactInfo = { ...editContact };
       setContactInfo(newContactInfo);
-      // Contact info not yet fully in simplified PersonalDetailsContext
+      updatePersonalDetails({
+        email: editContact.email,
+        phone: editContact.phone
+      });
     } else if (section === 'location') {
       const newLocationInfo = { ...editLocation };
       setLocationInfo(newLocationInfo);

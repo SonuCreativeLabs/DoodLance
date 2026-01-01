@@ -32,19 +32,17 @@ export function SkillsProvider({ children }: { children: ReactNode }) {
   const updateSkills = useCallback(async (newSkills: SkillItem[]) => {
     setSkills(newSkills);
 
-    // Persist to Supabase
+    // Persist via API
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        await supabase
-          .from('freelancer_profiles')
-          .update({ skills: newSkills })
-          .eq('userId', user.id);
-      }
+      await fetch('/api/freelancer/skills', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ skills: newSkills })
+      });
     } catch (error) {
       console.error('Failed to save skills:', error);
     }
-  }, [supabase]);
+  }, []);
 
   const addSkill = useCallback(async (skill: SkillItem) => {
     setSkills(prev => {
@@ -52,20 +50,18 @@ export function SkillsProvider({ children }: { children: ReactNode }) {
       // Persist
       (async () => {
         try {
-          const { data: { user } } = await supabase.auth.getUser();
-          if (user) {
-            await supabase
-              .from('freelancer_profiles')
-              .update({ skills: newSkills })
-              .eq('userId', user.id);
-          }
+          await fetch('/api/freelancer/skills', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ skills: newSkills })
+          });
         } catch (error) {
           console.error('Failed to save skills:', error);
         }
       })();
       return newSkills;
     });
-  }, [supabase]);
+  }, []);
 
   const removeSkill = useCallback(async (skillId: string) => {
     setSkills(prev => {
@@ -73,36 +69,32 @@ export function SkillsProvider({ children }: { children: ReactNode }) {
       // Persist
       (async () => {
         try {
-          const { data: { user } } = await supabase.auth.getUser();
-          if (user) {
-            await supabase
-              .from('freelancer_profiles')
-              .update({ skills: newSkills })
-              .eq('userId', user.id);
-          }
+          await fetch('/api/freelancer/skills', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ skills: newSkills })
+          });
         } catch (error) {
           console.error('Failed to save skills:', error);
         }
       })();
       return newSkills;
     });
-  }, [supabase]);
+  }, []);
 
   const reorderSkills = useCallback(async (reorderedSkills: SkillItem[]) => {
     setSkills(reorderedSkills);
     // Persist
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        await supabase
-          .from('freelancer_profiles')
-          .update({ skills: reorderedSkills })
-          .eq('userId', user.id);
-      }
+      await fetch('/api/freelancer/skills', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ skills: reorderedSkills })
+      });
     } catch (error) {
       console.error('Failed to save skills:', error);
     }
-  }, [supabase]);
+  }, []);
 
   // Load from localStorage on mount and fetch from Supabase
   useEffect(() => {
@@ -124,33 +116,23 @@ export function SkillsProvider({ children }: { children: ReactNode }) {
           }
         }
 
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          const { data: profile } = await supabase
-            .from('freelancer_profiles')
-            .select('skills')
-            .eq('userId', user.id)
-            .maybeSingle();
+        // Fetch from API
+        const response = await fetch('/api/freelancer/skills');
+        if (response.ok) {
+          const { skills: dbSkills } = await response.json();
 
-          if (profile && profile.skills) {
-            let dbSkills = profile.skills;
-            if (typeof dbSkills === 'string') {
-              try { dbSkills = JSON.parse(dbSkills); } catch (e) { }
-            }
-
-            if (Array.isArray(dbSkills)) {
-              // Check if it's string array or object array
-              if (dbSkills.length > 0 && typeof dbSkills[0] === 'string') {
-                const skillItems = dbSkills.map((name: string, index: number) => ({
-                  id: `${Date.now()}-${index}`,
-                  name,
-                }));
-                setSkills(skillItems);
-                localStorage.setItem('userSkills', JSON.stringify(skillItems));
-              } else {
-                setSkills(dbSkills);
-                localStorage.setItem('userSkills', JSON.stringify(dbSkills));
-              }
+          if (Array.isArray(dbSkills) && dbSkills.length > 0) {
+            // Check if it's string array or object array
+            if (typeof dbSkills[0] === 'string') {
+              const skillItems = dbSkills.map((name: string, index: number) => ({
+                id: `${Date.now()}-${index}`,
+                name,
+              }));
+              setSkills(skillItems);
+              localStorage.setItem('userSkills', JSON.stringify(skillItems));
+            } else {
+              setSkills(dbSkills);
+              localStorage.setItem('userSkills', JSON.stringify(dbSkills));
             }
           }
         }

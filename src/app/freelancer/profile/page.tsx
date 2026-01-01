@@ -12,9 +12,12 @@ import { MonthlyActivities } from '@/components/freelancer/profile/MonthlyActivi
 import { ProfileSectionCard } from '@/components/freelancer/profile/ProfileSectionCard';
 import { SkillsSection } from '@/components/freelancer/profile/SkillsSection';
 import { useSearchParams } from 'next/navigation';
-import { useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { type PortfolioItem } from '@/contexts/PortfolioContext';
 import { getSessionFlag, removeSessionItem } from '@/utils/sessionStorage';
+import { useRequireAuth } from '@/hooks/useRequireAuth';
+import { useAuth } from '@/contexts/AuthContext';
+import FreelancerProfileLogin from '@/components/freelancer/FreelancerProfileLogin';
 
 // Types
 type Experience = {
@@ -83,7 +86,6 @@ type ExtendedFreelancerData = FreelancerData & {
 };
 
 import { createClient } from '@/lib/supabase/client';
-import { useState } from 'react';
 
 // Main Profile Page Component
 export default function ProfilePage() {
@@ -95,6 +97,15 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [profileData, setProfileData] = useState<any>(null);
   const supabase = createClient();
+  const { requireAuth, openLoginDialog, setOpenLoginDialog, isAuthenticated } = useRequireAuth();
+
+  useEffect(() => {
+    // Require authentication to access profile, but don't force profile completion
+    requireAuth('view-profile', {
+      redirectTo: '/freelancer/profile',
+      skipProfileCheck: true // Allow viewing profile dashboard even if incomplete
+    });
+  }, [requireAuth]);
 
   useEffect(() => {
     async function fetchProfile() {
@@ -197,6 +208,11 @@ export default function ProfilePage() {
     };
   }, []); // Remove searchParams dependency to ensure it always runs
 
+  // Show full-page login if not authenticated
+  if (!isAuthenticated) {
+    return <FreelancerProfileLogin />;
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0f0f0f] flex items-center justify-center">
@@ -233,18 +249,7 @@ export default function ProfilePage() {
               icon={<User className="h-4 w-4" />}
             />
           </div>
-          <div
-            id="portfolio"
-            ref={portfolioRef}
-            className="scroll-mt-24" // Add scroll margin to account for fixed header
-          >
-            <ProfileSectionCard
-              title="Portfolio"
-              description="Showcase your best work with images and details"
-              href="/freelancer/profile/portfolio?from=profile#portfolio"
-              icon={<Briefcase className="h-4 w-4" />}
-            />
-          </div>
+
 
           <div
             id="skills"

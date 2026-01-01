@@ -1,15 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/db';
-import { validateSession } from '@/lib/auth/jwt';
 import { logAdminAction, AdminAction } from '@/lib/audit-log';
+import { createClient } from '@/lib/supabase/server';
 
 // POST /api/admin/users/action - Perform user actions
 export async function POST(request: NextRequest) {
   try {
-    const session = await validateSession();
-    // In a real app, ensure session.role === 'admin'
+    const supabase = createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
 
-    if (!session) {
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Check admin role via database
+    const dbUser = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: { role: true, email: true }
+    });
+
+    if (!dbUser || dbUser.role !== 'admin') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -23,11 +33,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const user = await prisma.user.findUnique({
+    const targetUser = await prisma.user.findUnique({
       where: { id: userId }
     });
 
-    if (!user) {
+    if (!targetUser) {
       return NextResponse.json(
         { error: 'User not found' },
         { status: 404 }
@@ -59,7 +69,7 @@ export async function POST(request: NextRequest) {
         });
 
         // Also verify freelancer profile if it exists
-        if (user.role === 'freelancer') {
+        if (targetUser.role === 'freelancer') {
           try {
             await prisma.freelancerProfile.update({
               where: { userId },
@@ -76,7 +86,7 @@ export async function POST(request: NextRequest) {
           where: { id: userId },
           data: { isVerified: false }
         });
-        if (user.role === 'freelancer') {
+        if (targetUser.role === 'freelancer') {
           try {
             await prisma.freelancerProfile.update({
               where: { userId },
@@ -93,8 +103,8 @@ export async function POST(request: NextRequest) {
         logActionType = 'DELETE';
         // Return immediately as there is no user object to return
         await logAdminAction({
-          adminId: session.userId,
-          adminEmail: session.email || 'unknown',
+          adminId: user.id,
+          adminEmail: dbUser.email || 'unknown',
           action: logActionType,
           resource: 'USER',
           resourceId: userId,
@@ -111,12 +121,12 @@ export async function POST(request: NextRequest) {
 
     // Log audit action
     await logAdminAction({
-      adminId: session.userId,
-      adminEmail: session.email || 'unknown',
+      adminId: user.id,
+      adminEmail: dbUser.email || 'unknown',
       action: logActionType,
       resource: 'USER',
       resourceId: userId,
-      details: { reason, previousStatus: user.status },
+      details: { reason, previousStatus: targetUser.status },
       request
     });
 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import prisma from '@/lib/db';
-import { validateSession } from '@/lib/auth/jwt';
+import { createClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,11 +14,50 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET(request: NextRequest) {
     try {
-        const session = await validateSession();
-        if (!session || !session.userId) {
+        const supabase = createClient()
+        const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+        if (authError || !user) {
+            // Fallback: Check for 'auth-token' (Legacy/JWT)
+            const cookieStore = cookies();
+            const token = cookieStore.get('auth-token')?.value;
+
+            if (token) {
+                try {
+                    const { verifyAccessToken } = await import('@/lib/auth/jwt');
+                    const decoded = verifyAccessToken(token);
+                    if (decoded && decoded.userId) {
+                        // Valid JWT, manually verify user exists in DB to be safe
+                        const dbUser = await prisma.user.findUnique({
+                            where: { id: decoded.userId }
+                        });
+                        if (dbUser) {
+                            // Proceed as authenticated with this user
+                            // Re-assign 'user' variable for downstream logic
+                            // We need to return the same shape as supabase.auth.getUser()
+                            // But we can just override the logic below.
+                            // Let's restart the flow with valid user.
+                            return handleGetBookings(request, { id: dbUser.id, role: dbUser.role || 'client' } as any);
+                        }
+                    }
+                } catch (e) {
+                    console.warn('JWT Fallback failed:', e);
+                }
+            }
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
+        return handleGetBookings(request, user);
+
+    } catch (error) {
+        console.error('Failed to fetch bookings:', error);
+        return NextResponse.json({ error: 'Failed to fetch bookings' }, { status: 500 });
+    }
+}
+
+// Extracted handler to support both auth methods
+async function handleGetBookings(request: NextRequest, user: { id: string, role?: string }) {
+    try {
         const { searchParams } = new URL(request.url);
         const role = searchParams.get('role'); // optional explicit role filter
         const status = searchParams.get('status');
@@ -33,18 +73,18 @@ export async function GET(request: NextRequest) {
         if (role === 'freelancer') {
             // Need to join via Service to find bookings provided by this user
             whereClause.service = {
-                providerId: session.userId
+                providerId: user.id
             };
         } else {
             // Default to client view or check both?
             // Simplest is to check if user appears in EITHER clientId OR service.providerId
             if (!role) {
                 whereClause.OR = [
-                    { clientId: session.userId },
-                    { service: { providerId: session.userId } }
+                    { clientId: user.id },
+                    { service: { providerId: user.id } }
                 ];
             } else {
-                whereClause.clientId = session.userId;
+                whereClause.clientId = user.id;
             }
         }
 
@@ -99,8 +139,10 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
     try {
-        const session = await validateSession();
-        if (!session || !session.userId) {
+        const supabase = createClient()
+        const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+        if (authError || !user) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
@@ -131,7 +173,7 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Service is not active' }, { status: 400 });
         }
 
-        if (service.providerId === session.userId) {
+        if (service.providerId === user.id) {
             return NextResponse.json({ error: 'Cannot book your own service' }, { status: 400 });
         }
 
@@ -142,7 +184,7 @@ export async function POST(request: NextRequest) {
 
         const booking = await prisma.booking.create({
             data: {
-                clientId: session.userId,
+                clientId: user.id,
                 serviceId: service.id,
                 scheduledAt: scheduledAt ? new Date(scheduledAt) : null,
                 duration: service.duration,
@@ -164,3 +206,4 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Failed to create booking' }, { status: 500 });
     }
 }
+

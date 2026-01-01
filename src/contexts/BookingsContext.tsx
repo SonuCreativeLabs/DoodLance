@@ -63,7 +63,7 @@ export function BookingsProvider({ children }: { children: ReactNode }) {
             "#": b.id,
             service: b.title,
             provider: b.freelancerName || 'Unknown',
-            image: b.freelancerAvatar || '/images/avatar-placeholder.png',
+            image: b.freelancerAvatar || '/images/default-avatar.svg',
             date: dateObj ? dateObj.toISOString().split('T')[0] : '',
             time: dateObj ? dateObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }) : '',
             status: (b.status?.toLowerCase() as any) || 'pending',

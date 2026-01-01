@@ -18,6 +18,8 @@ export default function EditProfile() {
   const returnTo = searchParams.get('returnTo') // Get the return path if exists
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
   const supabase = createClient()
 
   const [formData, setFormData] = useState({
@@ -52,18 +54,23 @@ export default function EditProfile() {
 
     setSaving(true)
     try {
-      // 1. Update User table
-      const { error: dbError } = await supabase
-        .from('users')
-        .update({
+      console.log('💾 Saving profile with data:', formData)
+
+      // 1. Update User table via API (Bypasses RLS issues)
+      const response = await fetch('/api/user/update', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           name: formData.name,
           phone: formData.phone,
           location: formData.location,
-          avatar: formData.avatar
+          avatarUrl: formData.avatar
         })
-        .eq('id', user.id)
+      });
 
-      if (dbError) throw dbError
+      if (!response.ok) throw new Error('Failed to update profile');
+
+      console.log('✅ Database updated successfully')
 
       // 2. Update Supabase Auth Metadata (to reflect in other parts of app immediately)
       const { error: authError } = await supabase.auth.updateUser({
@@ -75,21 +82,28 @@ export default function EditProfile() {
         }
       })
 
-      if (authError) throw authError
+      if (authError) {
+        console.error('❌ Auth update error:', authError)
+        throw authError
+      }
+
+      console.log('✅ Auth metadata updated successfully')
+
+      // Manually update AuthContext instead of reloading
+      if (user) {
+        user.name = formData.name
+        user.phone = formData.phone
+        user.location = formData.location
+        user.avatar = formData.avatar
+      }
 
       // Show success state
       setSaved(true)
       toast.success("Profile updated successfully")
 
-      // Navigate back after a short delay
+      // Navigate back after delay
       setTimeout(() => {
-        // If there's a returnTo param, go there (user came from auth flow)
-        if (returnTo) {
-          router.push(decodeURIComponent(returnTo))
-        } else {
-          // Otherwise go to normal profile page
-          router.push('/client/profile')
-        }
+        router.push(returnTo ? decodeURIComponent(returnTo) : '/client/profile')
       }, 1500)
     } catch (error) {
       console.error('Failed to save profile:', error)
@@ -99,11 +113,122 @@ export default function EditProfile() {
     }
   }
 
-  const handleAvatarUpload = () => {
-    // TODO: Implement actual image upload
-    // For now, prompt or simple toggle for demo if strictly needed, 
-    // but user asked for sync. We'll leave as logic-ready.
-    toast.info("Avatar upload would open here")
+  // Compress image before upload
+  const compressImage = (file: File): Promise<File> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.readAsDataURL(file)
+      reader.onload = (event) => {
+        const img = new window.Image()
+        img.src = event.target?.result as string
+        img.onload = () => {
+          const canvas = document.createElement('canvas')
+          const ctx = canvas.getContext('2d')!
+
+          // Max width/height for profile pictures
+          const MAX_SIZE = 400
+          let width = img.width
+          let height = img.height
+
+          // Calculate new dimensions
+          if (width > height) {
+            if (width > MAX_SIZE) {
+              height = (height * MAX_SIZE) / width
+              width = MAX_SIZE
+            }
+          } else {
+            if (height > MAX_SIZE) {
+              width = (width * MAX_SIZE) / height
+              height = MAX_SIZE
+            }
+          }
+
+          canvas.width = width
+          canvas.height = height
+          ctx.drawImage(img, 0, 0, width, height)
+
+          // Convert to blob with compression
+          canvas.toBlob(
+            (blob) => {
+              if (blob) {
+                const compressedFile = new File([blob], file.name, {
+                  type: 'image/jpeg',
+                  lastModified: Date.now()
+                })
+                resolve(compressedFile)
+              } else {
+                reject(new Error('Canvas to Blob conversion failed'))
+              }
+            },
+            'image/jpeg',
+            0.7 // 70% quality - good balance between size and quality
+          )
+        }
+        img.onerror = reject
+      }
+      reader.onerror = reject
+    })
+  }
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !user) return
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please upload an image file')
+      return
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image size must be less than 5MB')
+      return
+    }
+
+    setUploading(true)
+    setUploadProgress(20)
+    try {
+      // Compress image first
+      toast.info('Compressing image...')
+      const compressedFile = await compressImage(file)
+      setUploadProgress(60)
+
+      // Create unique filename
+      const fileExt = 'jpg' // Always use jpg after compression
+      const fileName = `${user.id}-${Date.now()}.${fileExt}`
+      const filePath = `avatars/${fileName}`
+
+      // Upload to Supabase storage
+      toast.info('Uploading...')
+      setUploadProgress(80)
+      const { error: uploadError } = await supabase.storage
+        .from('profile-pictures')
+        .upload(filePath, compressedFile, {
+          cacheControl: '3600',
+          upsert: false
+        })
+
+      if (uploadError) throw uploadError
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('profile-pictures')
+        .getPublicUrl(filePath)
+
+      setUploadProgress(100)
+      // Update form data with optimistic update
+      setFormData({ ...formData, avatar: publicUrl })
+      toast.success('Profile picture uploaded!')
+    } catch (error) {
+      console.error('Upload error:', error)
+      toast.error('Failed to upload image')
+    } finally {
+      setTimeout(() => {
+        setUploading(false)
+        setUploadProgress(0)
+      }, 300)
+    }
   }
 
   return (
@@ -131,22 +256,32 @@ export default function EditProfile() {
           <div className="flex flex-col items-center gap-4">
             <div className="relative group">
               <Image
-                src={formData.avatar || '/placeholder-user.jpg'}
+                src={formData.avatar || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="120" height="120"%3E%3Crect width="120" height="120" fill="%23333"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-size="48" fill="%23999"%3E%F0%9F%91%A4%3C/text%3E%3C/svg%3E'}
                 alt="Profile"
                 width={120}
                 height={120}
                 className="rounded-full border-2 border-purple-400/50 object-cover shadow-lg bg-[#18181b]"
                 onError={(e) => {
-                  e.currentTarget.src = '/placeholder-user.jpg';
+                  e.currentTarget.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="120" height="120"%3E%3Crect width="120" height="120" fill="%23333"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-size="48" fill="%23999"%3E%F0%9F%91%A4%3C/text%3E%3C/svg%3E';
                 }}
               />
-              <button
-                type="button"
-                onClick={handleAvatarUpload}
-                className="absolute bottom-2 right-2 p-2 bg-[#18181b] border border-white/20 rounded-full shadow-lg hover:bg-white/10 transition-colors group-hover:scale-110"
+              <label
+                htmlFor="avatar-upload"
+                className="absolute bottom-2 right-2 p-2 bg-[#18181b] border border-white/20 rounded-full shadow-lg hover:bg-white/10 transition-colors group-hover:scale-110 cursor-pointer"
               >
-                <Camera className="w-5 h-5 text-white" />
-              </button>
+                {uploading ? (
+                  <Loader2 className="w-5 h-5 text-white animate-spin" />
+                ) : (
+                  <Camera className="w-5 h-5 text-white" />
+                )}
+              </label>
+              <input
+                id="avatar-upload"
+                type="file"
+                accept="image/*"
+                onChange={handleAvatarUpload}
+                className="hidden"
+              />
             </div>
             {formData.avatar && (
               <button

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import prisma from '@/lib/db';
 import { validateUsername, formatUsername } from '@/lib/username-utils';
-import { validateSession } from '@/lib/auth/jwt';
+import { createClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,16 +12,15 @@ export const dynamic = 'force-dynamic';
  */
 export async function PATCH(request: NextRequest) {
     try {
-        // validateSession handles getting cookies, verifying, AND refreshing if needed
-        const session = await validateSession();
+        const supabase = createClient()
+        const { data: { user }, error: authError } = await supabase.auth.getUser()
 
-        if (!session || !session.userId) {
+        if (authError || !user) {
             console.error('Username update: No valid session found');
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const userId = session.userId;
-
+        const userId = user.id;
 
         const body = await request.json();
         const { username } = body;
@@ -93,13 +92,14 @@ export async function PATCH(request: NextRequest) {
  */
 export async function DELETE(request: NextRequest) {
     try {
-        const session = await validateSession();
+        const supabase = createClient()
+        const { data: { user }, error: authError } = await supabase.auth.getUser()
 
-        if (!session || !session.userId) {
+        if (authError || !user) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const userId = session.userId;
+        const userId = user.id;
 
         // Remove username
         await prisma.user.update({

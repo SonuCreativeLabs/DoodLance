@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/db';
-import { validateSession } from '@/lib/auth/jwt';
+import { createClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,8 +13,10 @@ export async function PATCH(
     { params }: { params: { id: string } }
 ) {
     try {
-        const session = await validateSession();
-        if (!session || !session.userId) {
+        const supabase = createClient()
+        const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+        if (authError || !user) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
@@ -31,7 +33,7 @@ export async function PATCH(
             return NextResponse.json({ error: 'Service not found' }, { status: 404 });
         }
 
-        if (existingService.providerId !== session.userId) {
+        if (existingService.providerId !== user.id) {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
 
@@ -80,8 +82,10 @@ export async function DELETE(
     { params }: { params: { id: string } }
 ) {
     try {
-        const session = await validateSession();
-        if (!session || !session.userId) {
+        const supabase = createClient()
+        const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+        if (authError || !user) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
@@ -97,7 +101,7 @@ export async function DELETE(
             return NextResponse.json({ error: 'Service not found' }, { status: 404 });
         }
 
-        if (existingService.providerId !== session.userId) {
+        if (existingService.providerId !== user.id) {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
 

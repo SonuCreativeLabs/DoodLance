@@ -1,0 +1,249 @@
+'use client'
+
+import { useState, useRef } from 'react'
+import Image from 'next/image'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { Mail, ArrowRight, ShieldCheck } from 'lucide-react'
+import { useAuth } from '@/contexts/AuthContext'
+import { motion } from 'framer-motion'
+import { CricketLoader } from '@/components/ui/cricket-loader'
+import { isValidEmail } from '@/lib/validation'
+
+export default function FreelancerProfileLogin() {
+    const router = useRouter()
+    const { sendOTP, verifyOTP } = useAuth()
+
+    const [step, setStep] = useState<'email' | 'otp'>('email')
+    const [email, setEmail] = useState('')
+    const [otp, setOtp] = useState(['', '', '', '', '', ''])
+    const [isLoading, setIsLoading] = useState(false)
+    const [error, setError] = useState<string | null>(null)
+    const inputRefs = useRef<(HTMLInputElement | null)[]>([])
+
+    const handleEmailSubmit = async (e: React.FormEvent) => {
+        e.preventDefault()
+        setError(null)
+
+        if (!isValidEmail(email)) {
+            setError('Please enter a valid email address')
+            return
+        }
+
+        setIsLoading(true)
+        try {
+            await sendOTP(email, 'email')
+            setStep('otp')
+        } catch (err) {
+            setError('Failed to send verification code. Please try again.')
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+    const handleOTPSubmit = async (e: React.FormEvent) => {
+        e.preventDefault()
+        setError(null)
+
+        const otpCode = otp.join('')
+        if (otpCode.length !== 6) {
+            setError('Please enter the complete 6-digit code')
+            return
+        }
+
+        setIsLoading(true)
+        try {
+            await verifyOTP(email, otpCode, 'email')
+            // Use router.refresh() instead of window.location.reload() for faster transition
+            router.refresh()
+        } catch (err) {
+            setError('Invalid code. Please try again.')
+            setOtp(['', '', '', '', '', ''])
+            inputRefs.current[0]?.focus()
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+    const handleOTPChange = (index: number, value: string) => {
+        if (value.length > 1) value = value[0]
+
+        const newOtp = [...otp]
+        newOtp[index] = value
+        setOtp(newOtp)
+
+        if (value && index < 5) {
+            inputRefs.current[index + 1]?.focus()
+        }
+    }
+
+    const handleOTPKeyDown = (index: number, e: React.KeyboardEvent) => {
+        if (e.key === 'Backspace' && !otp[index] && index > 0) {
+            inputRefs.current[index - 1]?.focus()
+        }
+    }
+
+    return (
+        <div className="min-h-screen w-full bg-[#0a0a0a] text-white relative overflow-hidden flex flex-col">
+            {/* Background Effects */}
+            <div className="absolute inset-0 z-0">
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-[#0a0a0a] to-[#0a0a0a]" />
+                <div className="absolute top-0 left-0 w-full h-full bg-[url('/images/grid-pattern.svg')] bg-repeat opacity-[0.03]" />
+                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-[120px]" />
+            </div>
+
+            {/* Main Content */}
+            <main className="flex-1 relative z-10 flex flex-col items-center px-4 sm:px-6 pt-2 pb-12">
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                    className="w-full max-w-md space-y-2"
+                >
+                    {/* Logo & Title */}
+                    <div className="text-center space-y-2">
+                        <div className="relative w-32 h-32 mx-auto mb-0 overflow-hidden">
+                            <Image
+                                src="/images/LOGOS/Doodlance Logo.svg"
+                                alt="DoodLance"
+                                fill
+                                className="object-cover scale-110"
+                                priority
+                            />
+                        </div>
+                        <h1 className="text-3xl font-bold tracking-tight text-white -mt-10">
+                            {step === 'email' ? 'Access Your Profile' : 'Enter Verification Code'}
+                        </h1>
+                        <p className="text-white/50 text-sm">
+                            {step === 'email' ? 'Login to manage your freelancer profile' : `We've sent a 6-digit code to ${email}`}
+                        </p>
+                    </div>
+
+                    {/* Card */}
+                    <div className="bg-[#111111]/80 backdrop-blur-xl border border-white/10 rounded-2xl p-6 shadow-2xl shadow-purple-900/20">
+                        {step === 'email' ? (
+                            <form onSubmit={handleEmailSubmit} className="space-y-4">
+                                {error && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: -10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-3 flex items-center gap-2"
+                                    >
+                                        <div className="w-1.5 h-1.5 rounded-full bg-red-400" />
+                                        {error}
+                                    </motion.div>
+                                )}
+
+                                <div className="space-y-2">
+                                    <label className="text-xs font-medium text-white/70 ml-1">Email Address</label>
+                                    <div className="relative group">
+                                        <Mail className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-white/40 group-focus-within:text-purple-400 transition-colors" />
+                                        <input
+                                            type="email"
+                                            value={email}
+                                            onChange={(e) => setEmail(e.target.value)}
+                                            placeholder="your@email.com"
+                                            className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-base text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500/50 transition-all"
+                                            autoComplete="email"
+                                            autoFocus
+                                        />
+                                    </div>
+                                    <p className="text-[10px] text-white/30 ml-1">
+                                        We'll send you a 6-digit verification code.
+                                    </p>
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    disabled={isLoading || !email}
+                                    className="w-full py-3 rounded-xl text-sm font-bold bg-gradient-to-r from-[#6B46C1] via-[#4C1D95] to-[#2D1B69] text-white hover:opacity-90 shadow-lg hover:shadow-md hover:shadow-[#4C1D95]/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none transform active:scale-[0.98] flex items-center justify-center gap-2"
+                                >
+                                    {isLoading ? (
+                                        <>
+                                            <CricketLoader size={20} color="white" /> Sending Code...
+                                        </>
+                                    ) : (
+                                        <>
+                                            Get OTP <ArrowRight className="w-4 h-4" />
+                                        </>
+                                    )}
+                                </button>
+                            </form>
+                        ) : (
+                            <form onSubmit={handleOTPSubmit} className="space-y-4">
+                                {error && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: -10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-3 flex items-center gap-2"
+                                    >
+                                        <div className="w-1.5 h-1.5 rounded-full bg-red-400" />
+                                        {error}
+                                    </motion.div>
+                                )}
+
+                                <div className="flex gap-2 justify-center">
+                                    {otp.map((digit, index) => (
+                                        <input
+                                            key={index}
+                                            ref={(el) => (inputRefs.current[index] = el)}
+                                            type="text"
+                                            inputMode="numeric"
+                                            maxLength={1}
+                                            value={digit}
+                                            onChange={(e) => handleOTPChange(index, e.target.value)}
+                                            onKeyDown={(e) => handleOTPKeyDown(index, e)}
+                                            className="w-12 h-14 text-center text-2xl font-bold bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500/50 transition-all"
+                                            autoFocus={index === 0}
+                                        />
+                                    ))}
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    disabled={isLoading}
+                                    className="w-full py-3 rounded-xl text-sm font-bold bg-gradient-to-r from-[#6B46C1] via-[#4C1D95] to-[#2D1B69] text-white hover:opacity-90 shadow-lg hover:shadow-md hover:shadow-[#4C1D95]/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none transform active:scale-[0.98] flex items-center justify-center gap-2"
+                                >
+                                    {isLoading ? (
+                                        <>
+                                            <CricketLoader size={20} color="white" /> Verifying...
+                                        </>
+                                    ) : (
+                                        'Verify Code'
+                                    )}
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setStep('email')
+                                        setOtp(['', '', '', '', '', ''])
+                                        setError(null)
+                                    }}
+                                    className="w-full text-sm text-white/60 hover:text-white transition-colors"
+                                >
+                                    Change email
+                                </button>
+                            </form>
+                        )}
+
+                        <div className="mt-6 pt-6 border-t border-white/5 text-center">
+                            <div className="flex items-center justify-center gap-2 text-xs text-white/30">
+                                <ShieldCheck className="w-3 h-3" />
+                                <span>Secure & Passwordless Login</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Footer */}
+                    <p className="text-center text-xs text-white/30 max-w-xs mx-auto">
+                        By continuing, you agree to our{' '}
+                        <Link href="/legal/terms" className="text-white/50 hover:text-white transition-colors underline decoration-white/20 hover:decoration-white/50">Terms of Service</Link>
+                        {' '}and{' '}
+                        <Link href="/legal/privacy" className="text-white/50 hover:text-white transition-colors underline decoration-white/20 hover:decoration-white/50">Privacy Policy</Link>
+                    </p>
+                </motion.div>
+            </main>
+        </div>
+    )
+}

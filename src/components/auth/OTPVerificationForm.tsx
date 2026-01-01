@@ -3,19 +3,18 @@
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Loader2, CheckCircle2 } from 'lucide-react';
-import { maskPhoneNumber } from '@/lib/phone-utils';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface OTPVerificationFormProps {
-    phone: string;
-    onVerified: (user: any, token: string) => void;
+    email: string;
+    onVerified: () => void;
     onChangeNumber: () => void;
     onResendOTP: () => void;
 }
 
 export function OTPVerificationForm({
-    phone,
+    email,
     onVerified,
     onChangeNumber,
     onResendOTP,
@@ -25,6 +24,7 @@ export function OTPVerificationForm({
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
     const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+    const { verifyOTP } = useAuth();
 
     useEffect(() => {
         // Focus first input on mount
@@ -60,20 +60,31 @@ export function OTPVerificationForm({
 
     const handlePaste = (e: React.ClipboardEvent) => {
         e.preventDefault();
-        const pastedData = e.clipboardData.getData('text').replace(/\D/g, '');
+        const pastedData = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+        const newOtp = [...otp];
 
+        pastedData.split('').forEach((char, index) => {
+            if (index < 6) {
+                newOtp[index] = char;
+            }
+        });
+
+        setOtp(newOtp);
+
+        // Focus last filled input
+        const lastIndex = Math.min(pastedData.length, 5);
+        inputRefs.current[lastIndex]?.focus();
+
+        // Auto-verify if complete
         if (pastedData.length === 6) {
-            const newOtp = pastedData.split('');
-            setOtp(newOtp);
-            inputRefs.current[5]?.focus();
             handleVerify(pastedData);
         }
     };
 
-    const handleVerify = async (code?: string) => {
-        const otpCode = code || otp.join('');
+    const handleVerify = async (otpCode?: string) => {
+        const code = otpCode || otp.join('');
 
-        if (otpCode.length !== 6) {
+        if (code.length !== 6) {
             setError('Please enter all 6 digits');
             return;
         }
@@ -82,26 +93,13 @@ export function OTPVerificationForm({
         setError('');
 
         try {
-            const response = await fetch('/api/auth/otp/verify', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ phone, code: otpCode }),
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.error || 'Verification failed');
-            }
-
+            await verifyOTP(email, code, 'email');
             setSuccess(true);
             setTimeout(() => {
-                onVerified(data.user, data.token);
-            }, 1000);
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Verification failed');
+                onVerified();
+            }, 500);
+        } catch (err: any) {
+            setError(err?.message || 'Verification failed. Please try again.');
             setOtp(['', '', '', '', '', '']);
             inputRefs.current[0]?.focus();
         } finally {
@@ -109,28 +107,25 @@ export function OTPVerificationForm({
         }
     };
 
-    const maskedPhone = maskPhoneNumber(phone);
-
     return (
         <div className="space-y-6">
             <div className="text-center space-y-2">
-                <h2 className="text-2xl font-bold">Enter Verification Code</h2>
-                <p className="text-gray-600">
+                <h2 className="text-2xl font-bold text-white">Enter Verification Code</h2>
+                <p className="text-white/60 text-sm">
                     We've sent a 6-digit code to
                     <br />
-                    <span className="font-semibold">{maskedPhone}</span>
+                    <span className="font-semibold text-white">{email}</span>
                 </p>
                 <button
                     type="button"
                     onClick={onChangeNumber}
-                    className="text-sm text-purple-600 hover:text-purple-700 underline"
+                    className="text-sm text-purple-400 hover:text-purple-300 underline"
                 >
-                    Change number
+                    Change email
                 </button>
             </div>
 
             <div className="space-y-4">
-                <Label className="text-center block">Enter OTP</Label>
                 <div className="flex gap-2 justify-center">
                     {otp.map((digit, index) => (
                         <Input
@@ -145,7 +140,7 @@ export function OTPVerificationForm({
                             onChange={(e) => handleChange(index, e.target.value)}
                             onKeyDown={(e) => handleKeyDown(index, e)}
                             onPaste={index === 0 ? handlePaste : undefined}
-                            className="w-12 h-12 text-center text-lg font-semibold"
+                            className="w-12 h-12 text-center text-lg font-semibold bg-white/5 border-white/10 text-white focus:border-purple-500"
                             disabled={loading || success}
                         />
                     ))}
@@ -153,13 +148,13 @@ export function OTPVerificationForm({
             </div>
 
             {error && (
-                <div className="rounded-md bg-red-50 p-3 text-sm text-red-800 text-center">
+                <div className="rounded-md bg-red-500/10 border border-red-500/20 p-3 text-sm text-red-400 text-center">
                     {error}
                 </div>
             )}
 
             {success && (
-                <div className="rounded-md bg-green-50 p-3 text-sm text-green-800 text-center flex items-center justify-center gap-2">
+                <div className="rounded-md bg-green-500/10 border border-green-500/20 p-3 text-sm text-green-400 text-center flex items-center justify-center gap-2">
                     <CheckCircle2 className="h-4 w-4" />
                     Verified successfully!
                 </div>
@@ -169,7 +164,7 @@ export function OTPVerificationForm({
                 <Button
                     type="button"
                     onClick={() => handleVerify()}
-                    className="w-full"
+                    className="w-full bg-gradient-to-r from-purple-600 to-purple-800 hover:opacity-90"
                     disabled={loading || success || otp.some((d) => !d)}
                 >
                     {loading ? (
@@ -188,10 +183,10 @@ export function OTPVerificationForm({
                     <button
                         type="button"
                         onClick={onResendOTP}
-                        className="text-sm text-gray-600 hover:text-gray-800"
+                        className="text-sm text-white/50 hover:text-white/70"
                         disabled={loading || success}
                     >
-                        Didn't receive code? <span className="text-purple-600 underline">Resend</span>
+                        Didn't receive code? <span className="text-purple-400 underline">Resend</span>
                     </button>
                 </div>
             </div>

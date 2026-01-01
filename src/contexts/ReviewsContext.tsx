@@ -46,10 +46,19 @@ export function ReviewsProvider({ children }: { children: ReactNode }) {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      // First get the freelancer profile ID
+      const { data: profile } = await supabase
+        .from('freelancer_profiles')
+        .select('id')
+        .eq('userId', user.id)
+        .single();
+
+      if (!profile) return;
+
       const { data, error } = await supabase
         .from('reviews')
         .select('*')
-        .eq('freelancer_id', user.id);
+        .eq('profileId', profile.id);
 
       if (error) {
         console.error('Error fetching reviews:', error);
@@ -59,12 +68,12 @@ export function ReviewsProvider({ children }: { children: ReactNode }) {
       if (data) {
         const formattedReviews: Review[] = data.map((r: any) => ({
           id: r.id,
-          author: r.author_name || 'Anonymous', // Assuming these fields exist, falling back
+          author: r.clientName || 'Anonymous',
           rating: r.rating,
           comment: r.comment,
-          date: new Date(r.created_at).toISOString().split('T')[0],
-          role: r.author_role || 'Client',
-          isVerified: true
+          date: new Date(r.createdAt).toISOString().split('T')[0],
+          role: r.clientRole || 'Client',
+          isVerified: r.isVerified
         }));
 
         const totalRating = formattedReviews.reduce((acc, curr) => acc + curr.rating, 0);

@@ -33,7 +33,7 @@ export default function ClientProfile() {
         <div className="container mx-auto px-4 h-16 flex items-center relative">
           <Link href="/client" aria-label="Back to Dashboard" className="relative z-10">
             <button className="flex items-center justify-center text-white/80 hover:text-white/100 p-2 -ml-2 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-purple-400/40" aria-label="Back">
-              <svg width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
+              <svg width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
             </button>
           </Link>
 
@@ -132,7 +132,7 @@ export default function ClientProfile() {
                   <Calendar className="w-5 h-5 text-purple-400" />
                   <div>
                     <p className="text-white/60 text-xs">Member since</p>
-                    <p className="text-white">{(user as any)?.createdAt ? new Date((user as any).createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : 'Not available'}</p>
+                    <p className="text-white">{user.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : 'Not available'}</p>
                   </div>
                 </div>
               </div>

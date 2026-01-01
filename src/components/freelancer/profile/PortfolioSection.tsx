@@ -88,16 +88,34 @@ export function PortfolioForm({ portfolio, onSave, onCancel, onValidationChange,
     setIsUploading(true);
 
     try {
-      // In a real app, you would upload the image to a server here
-      // For now, we'll just use the file URL
       const file = files[0];
-      const imageUrl = URL.createObjectURL(file);
-      setImage(imageUrl);
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;
+      const filePath = `portfolio/${fileName}`;
+
+      // Upload to Supabase Storage
+      const { createClient } = require('@/lib/supabase/client'); // Dynamic import to avoid SSR issues if any
+      const supabase = createClient();
+
+      const { error: uploadError } = await supabase.storage
+        .from('images') // Assuming 'images' bucket exists, standard in most setups or 'public'
+        .upload(filePath, file);
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      // Get Public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('images')
+        .getPublicUrl(filePath);
+
+      setImage(publicUrl);
     } catch (error) {
       console.error('Error uploading image:', error);
+      alert('Failed to upload image. Please try again.');
     } finally {
       setIsUploading(false);
-      // Clear the input to allow selecting the same file again
       e.target.value = '';
     }
   };

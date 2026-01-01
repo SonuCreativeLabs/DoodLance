@@ -50,26 +50,14 @@ export function AvailabilityProvider({ children }: { children: ReactNode }) {
           setDays(JSON.parse(saved));
         }
 
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          const { data: profile } = await supabase
-            .from('freelancer_profiles')
-            .select('availability')
-            .eq('userId', user.id)
-            .maybeSingle();
+        // Fetch from API
+        const response = await fetch('/api/freelancer/availability');
+        if (response.ok) {
+          const { availability: dbAvailability } = await response.json();
 
-          if (profile && profile.availability) {
-            // Parse if stored as string, or use directly if already JSON
-            let dbAvailability = profile.availability;
-            // Supabase might return it as string or object depending on driver/type
-            if (typeof dbAvailability === 'string') {
-              try { dbAvailability = JSON.parse(dbAvailability); } catch (e) { }
-            }
-
-            if (Array.isArray(dbAvailability) && dbAvailability.length > 0) {
-              setDays(dbAvailability);
-              localStorage.setItem('availability', JSON.stringify(dbAvailability));
-            }
+          if (Array.isArray(dbAvailability) && dbAvailability.length > 0) {
+            setDays(dbAvailability);
+            localStorage.setItem('availability', JSON.stringify(dbAvailability));
           }
         }
       } catch (error) {
@@ -80,7 +68,7 @@ export function AvailabilityProvider({ children }: { children: ReactNode }) {
     };
 
     fetchAvailability();
-  }, [supabase]);
+  }, []);
 
   // Save to localStorage whenever it changes
   useEffect(() => {
@@ -91,19 +79,17 @@ export function AvailabilityProvider({ children }: { children: ReactNode }) {
   const updateDays = useCallback(async (newDays: DayAvailability[]) => {
     setDays(newDays);
 
-    // Also persist to Supabase
+    // Persist via API
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        await supabase
-          .from('freelancer_profiles')
-          .update({ availability: newDays })
-          .eq('userId', user.id);
-      }
+      await fetch('/api/freelancer/availability', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ availability: newDays })
+      });
     } catch (error) {
       console.error('Failed to save availability to database:', error);
     }
-  }, [supabase]);
+  }, []);
 
   const getAvailableDays = useCallback(() => {
     return days.filter(day => day.available);

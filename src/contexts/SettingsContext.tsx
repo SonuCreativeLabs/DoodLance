@@ -20,7 +20,7 @@ interface SettingsContextType {
   updateNotificationSettings: (settings: NotificationSettings) => void;
   updateEmail: (email: string) => void;
   deactivateAccount: () => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   isLoading: boolean;
 }
 
@@ -98,15 +98,32 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const logout = useCallback(() => {
-    // Clear all stored data
-    if (typeof window !== 'undefined') {
-      localStorage.clear();
-      sessionStorage.clear();
-    }
+  const logout = useCallback(async () => {
+    // Import Supabase client
+    const { createClient } = await import('@/lib/supabase/client');
+    const supabase = createClient();
 
-    // In a real app, this would clear auth tokens and redirect to login
-    window.location.href = '/login';
+    try {
+      // Sign out from Supabase
+      await supabase.auth.signOut();
+
+      // Clear all stored data
+      if (typeof window !== 'undefined') {
+        localStorage.clear();
+        sessionStorage.clear();
+      }
+
+      // Redirect to home or login page
+      window.location.href = '/';
+    } catch (error) {
+      console.error('Error during logout:', error);
+      // Even if signOut fails, clear local storage and redirect
+      if (typeof window !== 'undefined') {
+        localStorage.clear();
+        sessionStorage.clear();
+      }
+      window.location.href = '/';
+    }
   }, []);
 
   const value: SettingsContextType = {
