@@ -10,6 +10,7 @@ import { DateRangeProvider } from '@/contexts/DateRangeContext';
 import { ModalProvider } from '@/contexts/ModalContext';
 import { CombinedProfileProvider } from '@/contexts/CombinedProfileProvider';
 import { AvailabilityProvider } from '@/contexts/AvailabilityContext';
+import { ListingsProvider } from '@/contexts/ListingsContext';
 import { RoleProvider } from '@/contexts/role-context';
 import { NearbyProfessionalsProvider } from '@/contexts/NearbyProfessionalsContext';
 import { PopularServicesProvider } from '@/contexts/PopularServicesContext';
@@ -36,27 +37,29 @@ export function Providers({ children }: ProvidersProps) {
                 <DateRangeProvider>
                   <ModalProvider>
                     <AvailabilityProvider>
-                      <CombinedProfileProvider>
-                        <NearbyProfessionalsProvider>
-                          <PopularServicesProvider>
-                            <ClientServicesProvider>
-                              <BookingsProvider>
-                                <ApplicationsProvider>
-                                  <HistoryJobsProvider>
-                                    <PostedJobsProvider>
-                                      <HireProvider>
-                                        <RoleSwitchProvider>
-                                          {children}
-                                        </RoleSwitchProvider>
-                                      </HireProvider>
-                                    </PostedJobsProvider>
-                                  </HistoryJobsProvider>
-                                </ApplicationsProvider>
-                              </BookingsProvider>
-                            </ClientServicesProvider>
-                          </PopularServicesProvider>
-                        </NearbyProfessionalsProvider>
-                      </CombinedProfileProvider>
+                      <ListingsProvider>
+                        <CombinedProfileProvider>
+                          <NearbyProfessionalsProvider>
+                            <PopularServicesProvider>
+                              <ClientServicesProvider>
+                                <BookingsProvider>
+                                  <ApplicationsProvider>
+                                    <HistoryJobsProvider>
+                                      <PostedJobsProvider>
+                                        <HireProvider>
+                                          <RoleSwitchProvider>
+                                            {children}
+                                          </RoleSwitchProvider>
+                                        </HireProvider>
+                                      </PostedJobsProvider>
+                                    </HistoryJobsProvider>
+                                  </ApplicationsProvider>
+                                </BookingsProvider>
+                              </ClientServicesProvider>
+                            </PopularServicesProvider>
+                          </NearbyProfessionalsProvider>
+                        </CombinedProfileProvider>
+                      </ListingsProvider>
                     </AvailabilityProvider>
                   </ModalProvider>
                 </DateRangeProvider>

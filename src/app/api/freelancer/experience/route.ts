@@ -32,8 +32,8 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ experiences });
 
     } catch (error) {
-        console.error('Experience fetch error:', error);
-        return NextResponse.json({ error: 'Failed to fetch experiences' }, { status: 500 });
+        console.error('Experience fetch error DETAILS:', error);
+        return NextResponse.json({ error: 'Failed to fetch experiences', details: String(error) }, { status: 500 });
     }
 }
 

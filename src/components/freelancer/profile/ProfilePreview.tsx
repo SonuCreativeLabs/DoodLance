@@ -793,9 +793,9 @@ const ProfilePreview = memo(({
                   <div className="bg-white/5 p-4 rounded-xl border border-white/10">
                     <div className="flex items-center justify-between mb-3">
                       <h3 className="font-medium text-white">Availability</h3>
-                      <div className="flex items-center gap-1 text-xs text-white/60">
-                        <div className="w-2 h-2 rounded-full bg-green-400/80"></div>
-                        <span>Available</span>
+                      <div className={`flex items-center gap-1 text-xs ${profileData.online ? 'text-green-400' : 'text-yellow-400'}`}>
+                        <div className={`w-2 h-2 rounded-full ${profileData.online ? 'bg-green-400/80' : 'bg-yellow-400/80'}`}></div>
+                        <span>{profileData.online ? 'Available' : 'Not Available'}</span>
                       </div>
                     </div>
 
@@ -804,7 +804,9 @@ const ProfilePreview = memo(({
                         <div key={i} className="flex flex-col items-center">
                           <div
                             className={`w-8 h-8 flex items-center justify-center rounded-full text-sm font-medium ${day.available
-                              ? 'bg-green-500/10 text-green-400'
+                              ? profileData.online
+                                ? 'bg-green-500/10 text-green-400'
+                                : 'bg-yellow-500/10 text-yellow-400'
                               : 'bg-white/5 text-white/40'
                               }`}
                           >
@@ -813,6 +815,7 @@ const ProfilePreview = memo(({
                         </div>
                       ))}
                     </div>
+
 
                     {/* Working Hours Dropdown */}
                     <div className="mt-4">
@@ -900,8 +903,14 @@ const ProfilePreview = memo(({
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                  <button className="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-xl text-sm font-medium transition-colors">
-                                    Hire Me
+                                  <button
+                                    disabled={!profileData.online}
+                                    className={`flex-1 py-2 px-4 rounded-xl text-sm font-medium transition-colors ${profileData.online
+                                      ? 'bg-purple-600 hover:bg-purple-700 text-white'
+                                      : 'bg-white/10 text-white/40 cursor-not-allowed'
+                                      }`}
+                                  >
+                                    {profileData.online ? 'Hire Me' : 'Currently Not Available'}
                                   </button>
                                 </div>
                               </div>

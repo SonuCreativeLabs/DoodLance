@@ -35,7 +35,8 @@ export async function PATCH(request: NextRequest) {
             readyToWork,
             hourlyRate,
             skills,
-            specializations
+            specializations,
+            coverImageUrl // Add this
         } = body;
 
         // 1. Update User Table
@@ -65,21 +66,7 @@ export async function PATCH(request: NextRequest) {
         if (bowlingStyle !== undefined) profileUpdates.bowlingStyle = bowlingStyle;
         if (languages !== undefined) profileUpdates.languages = languages;
         if (online !== undefined) profileUpdates.isOnline = online; // map online -> isOnline
-        if (profileUpdates.isOnline !== undefined) {
-            // mapped above
-        }
-        // Assuming keys match schema for now, or I'll fix if error.
-
-        // Check schema for date_of_birth -> Not in snippet 380-450 either.
-        // I need to be careful.
-
-        // Let's just update what we KNOW exists and what we ADDED.
-
-        // Using prisma.freelancerProfile.update
-        // But first ensure profile exists.
-
-        // Upsert not easy with split tables unless we know ID.
-        // Query profile first.
+        if (coverImageUrl !== undefined) profileUpdates.coverImage = coverImageUrl; // map coverImageUrl -> coverImage
 
         const profile = await prisma.freelancerProfile.findUnique({
             where: { userId: user.id }
@@ -87,15 +74,8 @@ export async function PATCH(request: NextRequest) {
 
         if (profile) {
             // Update existing profile
-            const data: any = {};
-            if (title !== undefined) data.title = title;
-            if (about !== undefined) data.about = about;
-            if (cricketRole !== undefined) data.cricketRole = cricketRole;
-            if (battingStyle !== undefined) data.battingStyle = battingStyle;
-            if (bowlingStyle !== undefined) data.bowlingStyle = bowlingStyle;
+            const data: any = { ...profileUpdates };
             if (dateOfBirth !== undefined) data.dateOfBirth = dateOfBirth;
-            if (languages !== undefined) data.languages = languages;
-            if (online !== undefined) data.isOnline = online;
             if (hourlyRate !== undefined) data.hourlyRate = hourlyRate;
             if (skills !== undefined) {
                 data.skills = typeof skills === 'string' ? skills : JSON.stringify(skills);
@@ -103,7 +83,6 @@ export async function PATCH(request: NextRequest) {
             if (specializations !== undefined) {
                 data.specializations = typeof specializations === 'string' ? specializations : JSON.stringify(specializations);
             }
-            // ready_to_work removed
 
             if (Object.keys(data).length > 0) {
                 await prisma.freelancerProfile.update({

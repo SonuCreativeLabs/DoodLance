@@ -40,56 +40,99 @@ const defaultSettings: SettingsData = {
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
-  const [settings, setSettings] = useState<SettingsData | null>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('settings');
-      return saved ? { ...defaultSettings, ...JSON.parse(saved) } : defaultSettings;
-    }
-    return defaultSettings;
-  });
+  const [settings, setSettings] = useState<SettingsData | null>(defaultSettings);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const [isLoading, setIsLoading] = useState(false);
-
-  const updateNotificationSettings = useCallback((notificationSettings: NotificationSettings) => {
-    setSettings(prev => {
-      if (!prev) return prev;
-      const updated = { ...prev, notifications: notificationSettings };
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('settings', JSON.stringify(updated));
+  // Load settings from API
+  React.useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const response = await fetch('/api/freelancer/settings');
+        if (response.ok) {
+          const data = await response.json();
+          setSettings(prev => ({
+            ...prev || defaultSettings,
+            notifications: data.settings,
+            email: data.email || prev?.email || defaultSettings.email
+          }));
+        }
+      } catch (error) {
+        console.error('Failed to load settings:', error);
+      } finally {
+        setIsLoading(false);
       }
-      return updated;
-    });
+    };
+
+    fetchSettings();
   }, []);
 
-  const updateEmail = useCallback((email: string) => {
-    setSettings(prev => {
-      if (!prev) return prev;
-      const updated = { ...prev, email };
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('settings', JSON.stringify(updated));
+  const updateNotificationSettings = useCallback(async (notificationSettings: NotificationSettings) => {
+    // Optimistic update
+    setSettings(prev => prev ? { ...prev, notifications: notificationSettings } : null);
+
+    try {
+      const response = await fetch('/api/freelancer/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notifications: notificationSettings })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save settings');
       }
-      return updated;
-    });
+    } catch (error) {
+      console.error('Failed to update notification settings:', error);
+      // Revert if needed, but for now we just log
+    }
+  }, []);
+
+  const updateEmail = useCallback(async (email: string) => {
+    // Import Supabase client dynamically
+    const { createClient } = await import('@/lib/supabase/client');
+    const supabase = createClient();
+
+    try {
+      // 1. Update in Supabase Auth
+      const { error } = await supabase.auth.updateUser({ email });
+      if (error) throw error;
+
+      // 2. Update in Database via API
+      const response = await fetch('/api/freelancer/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update email in database');
+      }
+
+      setSettings(prev => prev ? { ...prev, email } : null);
+    } catch (error) {
+      console.error('Failed to update email:', error);
+      throw error;
+    }
   }, []);
 
   const deactivateAccount = useCallback(async () => {
     setIsLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // In a real app, you might want to call an API to mark the user as deactivated in DB
+      const { createClient } = await import('@/lib/supabase/client');
+      const supabase = createClient();
 
-      setSettings(prev => {
-        if (!prev) return prev;
-        const updated = { ...prev, accountStatus: 'deactivated' as const };
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('settings', JSON.stringify(updated));
-        }
-        return updated;
-      });
+      // For now, we'll just sign out, but you could add an API call here
+      // await fetch('/api/user/deactivate', { method: 'POST' });
 
-      // In a real app, this would redirect to login or show confirmation
-      alert('Account deactivated successfully. You will be logged out.');
-      logout();
+      await supabase.auth.signOut();
+
+      // Clear data
+      if (typeof window !== 'undefined') {
+        localStorage.clear();
+        sessionStorage.clear();
+      }
+
+      window.location.href = '/';
     } catch (error) {
       console.error('Failed to deactivate account:', error);
       throw error;
@@ -99,25 +142,20 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(async () => {
-    // Import Supabase client
     const { createClient } = await import('@/lib/supabase/client');
     const supabase = createClient();
 
     try {
-      // Sign out from Supabase
       await supabase.auth.signOut();
 
-      // Clear all stored data
       if (typeof window !== 'undefined') {
         localStorage.clear();
         sessionStorage.clear();
       }
 
-      // Redirect to home or login page
       window.location.href = '/';
     } catch (error) {
       console.error('Error during logout:', error);
-      // Even if signOut fails, clear local storage and redirect
       if (typeof window !== 'undefined') {
         localStorage.clear();
         sessionStorage.clear();

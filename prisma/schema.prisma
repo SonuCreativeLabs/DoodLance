@@ -411,10 +411,12 @@ model FreelancerProfile {
   // Location
   coords          String  // [longitude, latitude]
   serviceRadius   Float?   // service area radius in km
+  advanceNoticeHours Int?  // minimum hours notice required for bookings
   
   // Availability
   isOnline        Boolean  @default(false)
   availability    String?  // JSON string for availability schedule
+  listings        String?  // JSON string for availability listings/windows
   timeZone        String   @default("Asia/Kolkata")
   
   // Identity verification
@@ -430,6 +432,8 @@ model FreelancerProfile {
   // Profile settings
   isProfilePublic Boolean  @default(true)
   acceptsMessages Boolean  @default(true)
+  notificationSettings String? // JSON string for notification preferences
+  coverImage      String?
   
   // Timestamps
   createdAt       DateTime @default(now())

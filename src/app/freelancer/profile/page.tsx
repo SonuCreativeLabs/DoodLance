@@ -10,7 +10,7 @@ import { ProfileHeader } from '@/components/freelancer/profile/ProfileHeader';
 import { ProfileStatsCard } from '@/components/freelancer/profile/ProfileStatsCard';
 import { MonthlyActivities } from '@/components/freelancer/profile/MonthlyActivities';
 import { ProfileSectionCard } from '@/components/freelancer/profile/ProfileSectionCard';
-import { SkillsSection } from '@/components/freelancer/profile/SkillsSection';
+
 import { useSearchParams } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
 import { type PortfolioItem } from '@/contexts/PortfolioContext';
@@ -354,10 +354,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Hidden SkillsSection to sync skills immediately on page load */}
-      <div className="hidden">
-        <SkillsSection />
-      </div>
+
     </div>
   );
 }

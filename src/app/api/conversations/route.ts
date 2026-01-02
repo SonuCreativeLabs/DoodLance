@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
                 id: conv.id,
                 recipientId: otherUserId,
                 recipientName: otherUser?.name || 'Unknown User',
-                recipientAvatar: otherUser?.avatar || '/images/profile-placeholder.jpg',
+                recipientAvatar: otherUser?.avatar || '/images/default-avatar.svg',
                 recipientJobTitle: isClient
                     ? (otherUser?.freelancerProfile?.title || 'Freelancer')
                     : (otherUser?.clientProfile?.company || 'Client'),

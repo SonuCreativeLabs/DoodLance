@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
         let targetUserId: string;
 
         if (userIdParam) {
-            // Public access - client viewing a freelancer's availability
+            // Public access - client viewing a freelancer's availability listings
             targetUserId = userIdParam;
         } else {
             // Authenticated access - freelancer viewing their own
@@ -28,30 +28,30 @@ export async function GET(request: NextRequest) {
 
         const profile = await prisma.freelancerProfile.findUnique({
             where: { userId: targetUserId },
-            select: { availability: true }
+            select: { listings: true }
         });
 
         if (!profile) {
-            return NextResponse.json({ availability: [] });
+            return NextResponse.json({ listings: [] });
         }
 
-        // Parse availability JSON string
-        let availability = [];
-        if (profile.availability) {
+        // Parse listings JSON string
+        let listings = [];
+        if (profile.listings) {
             try {
-                availability = typeof profile.availability === 'string'
-                    ? JSON.parse(profile.availability)
-                    : profile.availability;
+                listings = typeof profile.listings === 'string'
+                    ? JSON.parse(profile.listings)
+                    : profile.listings;
             } catch {
-                availability = [];
+                listings = [];
             }
         }
 
-        return NextResponse.json({ availability });
+        return NextResponse.json({ listings });
 
     } catch (error) {
-        console.error('Availability fetch error:', error);
-        return NextResponse.json({ error: 'Failed to fetch availability' }, { status: 500 });
+        console.error('Listings fetch error:', error);
+        return NextResponse.json({ error: 'Failed to fetch listings' }, { status: 500 });
     }
 }
 
@@ -65,19 +65,19 @@ export async function PATCH(request: NextRequest) {
         }
 
         const body = await request.json();
-        const { availability } = body;
+        const { listings } = body;
 
-        // Stringify availability for storage
-        const availabilityString = typeof availability === 'string'
-            ? availability
-            : JSON.stringify(availability);
+        // Stringify listings for storage
+        const listingsString = typeof listings === 'string'
+            ? listings
+            : JSON.stringify(listings);
 
         await prisma.freelancerProfile.upsert({
             where: { userId: user.id },
-            update: { availability: availabilityString },
+            update: { listings: listingsString },
             create: {
                 userId: user.id,
-                availability: availabilityString,
+                listings: listingsString,
                 title: '',
                 about: '',
                 skills: '[]',
@@ -91,7 +91,7 @@ export async function PATCH(request: NextRequest) {
         return NextResponse.json({ success: true });
 
     } catch (error) {
-        console.error('Availability update error:', error);
-        return NextResponse.json({ error: 'Failed to update availability' }, { status: 500 });
+        console.error('Listings update error:', error);
+        return NextResponse.json({ error: 'Failed to update listings' }, { status: 500 });
     }
 }

@@ -27,35 +27,39 @@ export default function PerformancePage() {
     end: endOfMonth(new Date())
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [stats, setStats] = useState({
+    totalEarnings: 0,
+    thisMonthEarnings: 0,
+    completedJobs: 0,
+    rating: 0,
+    reviewCount: 0,
+    completionRate: 0,
+    avgProjectValue: 0
+  });
 
-  // This would be replaced with actual data fetching in a real app
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 500);
+    const fetchStats = async () => {
+      try {
+        const response = await fetch('/api/freelancer/stats');
+        if (response.ok) {
+          const data = await response.json();
+          setStats(data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch stats:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-    return () => clearTimeout(timer);
+    fetchStats();
   }, [dateRange]);
 
   const handleRangeChange = (range: { start: Date; end: Date }) => {
     setIsLoading(true);
     setDateRange(range);
-    // In a real app, you would fetch data for the new date range here
+    // In a future update, you could pass date range to the API to filter stats
   };
-
-  // Calculate summary data based on date range
-  const getSummaryData = () => {
-    // In a real app, this would be calculated from your actual data
-    return {
-      completed: 0,
-      inProgress: 0,
-      pendingJobs: 0,
-      totalWorkingHours: 0,
-      totalEarnings: 0
-    };
-  };
-
-  // const summaryData = getSummaryData(); // Unused
 
   return (
     <div className="min-h-screen bg-[#0F0F0F] text-white flex flex-col">
@@ -83,7 +87,31 @@ export default function PerformancePage() {
       <div className="flex-1 overflow-y-auto">
         <div className="container mx-auto px-4 py-6">
           {/* Main Content with Stats */}
-          <div className="grid grid-cols-1">
+          <div className="grid grid-cols-1 gap-6">
+            {/* Quick Stats Grid */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-[#1E1E1E] p-4 rounded-xl border border-white/10">
+                <p className="text-sm text-white/50">Total Earnings</p>
+                <p className="text-2xl font-bold text-white mt-1">₹{stats.totalEarnings}</p>
+              </div>
+              <div className="bg-[#1E1E1E] p-4 rounded-xl border border-white/10">
+                <p className="text-sm text-white/50">Completed Jobs</p>
+                <p className="text-2xl font-bold text-white mt-1">{stats.completedJobs}</p>
+              </div>
+              <div className="bg-[#1E1E1E] p-4 rounded-xl border border-white/10">
+                <p className="text-sm text-white/50">Avg. Rating</p>
+                <div className="flex items-center gap-1 mt-1">
+                  <span className="text-2xl font-bold text-white">{stats.rating.toFixed(1)}</span>
+                  <span className="text-sm text-yellow-500">★</span>
+                  <span className="text-xs text-white/40 ml-1">({stats.reviewCount})</span>
+                </div>
+              </div>
+              <div className="bg-[#1E1E1E] p-4 rounded-xl border border-white/10">
+                <p className="text-sm text-white/50">Completion Rate</p>
+                <p className="text-2xl font-bold text-white mt-1">{stats.completionRate}%</p>
+              </div>
+            </div>
+
             {/* MonthlyActivities (bars) first */}
             <MonthlyActivities isLoading={isLoading} />
           </div>

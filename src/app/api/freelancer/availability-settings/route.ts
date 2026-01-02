@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
         let targetUserId: string;
 
         if (userIdParam) {
-            // Public access - client viewing a freelancer's availability
+            // Public access - client viewing a freelancer's settings
             targetUserId = userIdParam;
         } else {
             // Authenticated access - freelancer viewing their own
@@ -28,30 +28,27 @@ export async function GET(request: NextRequest) {
 
         const profile = await prisma.freelancerProfile.findUnique({
             where: { userId: targetUserId },
-            select: { availability: true }
+            select: {
+                serviceRadius: true,
+                advanceNoticeHours: true
+            }
         });
 
         if (!profile) {
-            return NextResponse.json({ availability: [] });
+            return NextResponse.json({
+                serviceRadius: 10,
+                advanceNoticeHours: 0
+            });
         }
 
-        // Parse availability JSON string
-        let availability = [];
-        if (profile.availability) {
-            try {
-                availability = typeof profile.availability === 'string'
-                    ? JSON.parse(profile.availability)
-                    : profile.availability;
-            } catch {
-                availability = [];
-            }
-        }
-
-        return NextResponse.json({ availability });
+        return NextResponse.json({
+            serviceRadius: profile.serviceRadius || 10,
+            advanceNoticeHours: profile.advanceNoticeHours || 0
+        });
 
     } catch (error) {
-        console.error('Availability fetch error:', error);
-        return NextResponse.json({ error: 'Failed to fetch availability' }, { status: 500 });
+        console.error('Availability settings fetch error:', error);
+        return NextResponse.json({ error: 'Failed to fetch availability settings' }, { status: 500 });
     }
 }
 
@@ -65,19 +62,18 @@ export async function PATCH(request: NextRequest) {
         }
 
         const body = await request.json();
-        const { availability } = body;
-
-        // Stringify availability for storage
-        const availabilityString = typeof availability === 'string'
-            ? availability
-            : JSON.stringify(availability);
+        const { serviceRadius, advanceNoticeHours } = body;
 
         await prisma.freelancerProfile.upsert({
             where: { userId: user.id },
-            update: { availability: availabilityString },
+            update: {
+                serviceRadius: serviceRadius !== undefined ? parseFloat(serviceRadius) : undefined,
+                advanceNoticeHours: advanceNoticeHours !== undefined ? parseInt(advanceNoticeHours) : undefined
+            },
             create: {
                 userId: user.id,
-                availability: availabilityString,
+                serviceRadius: serviceRadius !== undefined ? parseFloat(serviceRadius) : 10,
+                advanceNoticeHours: advanceNoticeHours !== undefined ? parseInt(advanceNoticeHours) : 0,
                 title: '',
                 about: '',
                 skills: '[]',
@@ -91,7 +87,7 @@ export async function PATCH(request: NextRequest) {
         return NextResponse.json({ success: true });
 
     } catch (error) {
-        console.error('Availability update error:', error);
-        return NextResponse.json({ error: 'Failed to update availability' }, { status: 500 });
+        console.error('Availability settings update error:', error);
+        return NextResponse.json({ error: 'Failed to update availability settings' }, { status: 500 });
     }
 }

@@ -114,15 +114,25 @@ export function PersonalDetailsProvider({ children }: { children: ReactNode }) {
   }, [supabase]);
 
   const toggleReadyToWork = useCallback(() => {
+    // Calculate new status based on current state
     setPersonalDetails(prev => {
       const newStatus = !prev.readyToWork;
+
+      // Persist to DB
+      // We perform this side effect here to access the calculated newStatus easily
+      // without needing checks on the previous state in a separate effect
+      updatePersonalDetails({
+        readyToWork: newStatus,
+        online: newStatus
+      });
+
       return {
         ...prev,
         readyToWork: newStatus,
-        online: newStatus, // Sync online status with ready to work
+        online: newStatus,
       };
     });
-  }, []);
+  }, [updatePersonalDetails]);
 
   // Refactored fetch logic to be reusable
   const fetchUserData = useCallback(async () => {
@@ -147,40 +157,39 @@ export function PersonalDetailsProvider({ children }: { children: ReactNode }) {
         .eq('id', user.id)
         .maybeSingle();
 
-      if (profile) {
-        const newDetails = {
-          name: userData?.name || user.user_metadata?.full_name || "",
-          title: profile.title || "",
-          location: userData?.location || user.user_metadata?.location || "",
-          about: profile.about || "",
-          bio: userData?.bio || "",
-          avatarUrl: userData?.avatar || user.user_metadata?.avatar_url || "",
-          coverImageUrl: profile.coverImage || "",
-          online: profile.isOnline ?? true,
-          readyToWork: true,
-          dateOfBirth: "",
-          languages: profile.languages || "",
-          cricketRole: profile.cricketRole || "",
-          battingStyle: profile.battingStyle || "",
-          bowlingStyle: profile.bowlingStyle || "",
-          responseTime: profile.responseTime || "",
-          deliveryTime: profile.deliveryTime || "",
-          completionRate: profile.completionRate || 0,
-          completedJobs: profile.completedJobs || 0,
-          activeJobs: 0,
-          username: userData?.username || "",
-          displayId: userData?.displayId || "",
-          isVerified: userData?.isVerified || false,
-          gender: userData?.gender || "",
-          email: userData?.email || user.email || "",
-          phone: userData?.phone || ""
-        };
+      // Always populate data, even if freelancer profile doesn't exist yet
+      const newDetails = {
+        name: userData?.name || user.user_metadata?.full_name || "",
+        title: profile?.title || "",
+        location: userData?.location || user.user_metadata?.location || "",
+        about: profile?.about || "",
+        bio: userData?.bio || "",
+        avatarUrl: userData?.avatar || user.user_metadata?.avatar_url || "",
+        coverImageUrl: profile?.coverImage || "",
+        online: profile?.isOnline ?? true,
+        readyToWork: profile?.isOnline ?? false,
+        dateOfBirth: "",
+        languages: profile?.languages || "",
+        cricketRole: profile?.cricketRole || "",
+        battingStyle: profile?.battingStyle || "",
+        bowlingStyle: profile?.bowlingStyle || "",
+        responseTime: profile?.responseTime || "",
+        deliveryTime: profile?.deliveryTime || "",
+        completionRate: profile?.completionRate || 0,
+        completedJobs: profile?.completedJobs || 0,
+        activeJobs: 0,
+        username: userData?.username || "",
+        displayId: userData?.displayId || "",
+        isVerified: userData?.isVerified || false,
+        gender: userData?.gender || "",
+        email: userData?.email || user.email || "",
+        phone: userData?.phone || ""
+      };
 
-        setPersonalDetails(prev => ({
-          ...prev,
-          ...newDetails
-        }));
-      }
+      setPersonalDetails(prev => ({
+        ...prev,
+        ...newDetails
+      }));
     } catch (error) {
       console.error('Failed to fetch user data:', error);
     }

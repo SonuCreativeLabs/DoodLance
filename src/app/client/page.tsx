@@ -25,7 +25,7 @@ export default function ClientHome() {
   const [currentLocation, setCurrentLocation] = useState({ city: "Getting location...", state: "" });
   const [showSidebar, setShowSidebar] = useState(false);
   const [userName, setUserName] = useState("Guest");
-  const [userAvatar, setUserAvatar] = useState("/images/profile-placeholder.jpg"); // Fallback
+  const [userAvatar, setUserAvatar] = useState("/images/default-avatar.svg"); // Fallback
   const [notificationCount, setNotificationCount] = useState(0);
 
   // Fetch user details
@@ -40,7 +40,7 @@ export default function ClientHome() {
         if (user) {
           // Try to get profile if it exists, or just use metadata
           setUserName(user.user_metadata?.full_name || user.user_metadata?.name || "Client");
-          setUserAvatar(user.user_metadata?.avatar_url || user.user_metadata?.picture || "/images/profile-placeholder.jpg");
+          setUserAvatar(user.user_metadata?.avatar_url || user.user_metadata?.picture || "/images/default-avatar.svg");
           // For now, notification count is 0 as we don't have a real notification system yet
           setNotificationCount(0);
         }

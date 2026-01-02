@@ -231,7 +231,7 @@ export function ProfileHeader({
       <div className="group relative h-48 md:h-64 w-full bg-gradient-to-r from-purple-900 to-purple-700">
         {/* Switch to Client Button - Top-right of cover */}
         {!isPreview && (
-          <div className="absolute top-4 right-4 z-10">
+          <div className="absolute top-4 right-4 z-20">
             <Button
               variant="default"
               size="sm"
