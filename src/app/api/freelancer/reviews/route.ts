@@ -12,10 +12,22 @@ export async function GET(request: NextRequest) {
         }
 
         const { searchParams } = new URL(request.url);
-        const profileId = searchParams.get('profileId');
+        let targetProfileId = searchParams.get('profileId');
+
+        if (!targetProfileId) {
+            const profile = await prisma.freelancerProfile.findUnique({
+                where: { userId: user.id },
+                select: { id: true }
+            });
+
+            if (!profile) {
+                return NextResponse.json({ reviews: [] });
+            }
+            targetProfileId = profile.id;
+        }
 
         const reviews = await prisma.review.findMany({
-            where: { freelancerId: profileId || user.id },
+            where: { profileId: targetProfileId },
             include: {
                 client: {
                     select: {

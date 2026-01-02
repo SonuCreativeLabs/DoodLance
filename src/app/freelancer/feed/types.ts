@@ -148,10 +148,32 @@ export interface Job {
   companyLogo: string;
   clientName: string;
   clientImage?: string;
-  clientRating: string | number;
+
   clientJobs: number;
   proposals: number;
   duration?: JobDuration;
   experience: ExperienceLevel;
   client?: ClientInfo;
+  // Added for JobDetailsModal compatibility
+  status?: 'upcoming' | 'pending' | 'started' | 'completed' | 'cancelled';
+  payment?: number;
+  freelancerRating?: {
+    stars: number;
+    review: string;
+    feedbackChips: string[];
+    date: string;
+  };
+  clientRating?: {
+    stars: number;
+    feedback: string;
+    feedbackChips: string[];
+  };
+  startedAt?: string;
+  completedAt?: string;
+  otp?: string;
+  cancellationDetails?: {
+    cancelledBy: 'client' | 'freelancer';
+    cancelledAt: string;
+    notes?: string;
+  };
 }

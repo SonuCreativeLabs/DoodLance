@@ -34,9 +34,11 @@ export async function middleware(request: NextRequest) {
         const windowMs = 60 * 1000; // 1 minute
 
         if (isAdminApi) {
-            limit = 100; // Admin: 100 req/min
+            limit = 1000; // Admin: 100 req/min
         } else if (isAuthApi) {
-            limit = 60; // Auth: 60 req/min (increased from 5 to allow session polling)
+            limit = 600; // Auth: 60 req/min
+        } else {
+            limit = 1000 // Default increased for debugging
         }
 
         if (!rateLimit(ip, limit, windowMs)) {

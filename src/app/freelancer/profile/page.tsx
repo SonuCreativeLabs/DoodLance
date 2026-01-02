@@ -116,17 +116,13 @@ export default function ProfilePage() {
           return;
         }
 
-        // Fetch essential profile data from Supabase
-        const { data: profile, error } = await supabase
-          .from('freelancer_profiles')
-          .select('*')
-          .eq('userId', user.id)
-          .maybeSingle();
-
-        if (error && error.code !== 'PGRST116') { // Ignore not found error if profile doesn't exist yet
-          console.error('Error fetching profile:', error);
+        // Fetch essential profile data from API
+        const response = await fetch('/api/freelancer/profile');
+        if (!response.ok) {
+          throw new Error('Failed to fetch profile');
         }
 
+        const { profile } = await response.json();
         setProfileData(profile);
       } catch (err) {
         console.error('Unexpected error fetching profile:', err);
@@ -135,7 +131,8 @@ export default function ProfilePage() {
       }
     }
     fetchProfile();
-  }, [supabase]);
+    fetchProfile();
+  }, []); // Empty dependency array to run only once on mount
 
   const scrollToSection = (ref: React.RefObject<HTMLElement>) => {
     if (ref.current) {

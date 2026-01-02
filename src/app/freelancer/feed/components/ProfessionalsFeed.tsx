@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { Star, Clock, MapPin, ArrowLeft, Check } from 'lucide-react';
 import Image from 'next/image';
-import JobDetailsFull from './JobDetailsFull';
+
+import { JobDetailsModal } from '@/components/freelancer/jobs/JobDetailsModal';
 import OverlayPortal from './OverlayPortal';
 import { Job, getWorkModeLabel, getJobDurationLabel } from '../types';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -214,11 +215,12 @@ export default function ProfessionalsFeed({
   if (showFullView && selectedJob && !filteredProfessionals) {
     return (
       <OverlayPortal>
-        <JobDetailsFull
+        <JobDetailsModal
           job={selectedJob}
-          onBack={handleBack}
-          onApply={onApply || (() => { })}
-          isApplied={appliedJobIds?.has(String(selectedJob.id))}
+          onClose={handleBack}
+          onJobUpdate={() => {
+            // Optional: refresh jobs list if needed
+          }}
         />
       </OverlayPortal>
     );

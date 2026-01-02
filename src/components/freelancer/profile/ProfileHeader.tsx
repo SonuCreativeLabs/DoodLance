@@ -159,7 +159,7 @@ export function ProfileHeader({
   };
 
   // Handle Cover Image Upload
-  const handleCoverImageChange = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleCoverImageChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -175,20 +175,39 @@ export function ProfileHeader({
 
     setIsUploading(true);
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const result = reader.result as string;
-      setCoverImage(result);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('bucket', 'images'); // Assuming 'images' bucket exists
+      formData.append('path', 'covers');
+
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Upload failed');
+      }
+
+      const data = await response.json();
+      const imageUrl = data.url;
+
+      setCoverImage(imageUrl);
       // Persist to context and DB
-      updatePersonalDetails({ coverImageUrl: result });
-      setIsUploading(false);
+      updatePersonalDetails({ coverImageUrl: imageUrl });
       toast.success('Cover photo updated successfully');
-    };
-    reader.readAsDataURL(file);
+    } catch (error: any) {
+      console.error('Error uploading cover image:', error);
+      toast.error(error.message || 'Failed to upload cover photo');
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   // Handle Profile Image Upload
-  const handleProfileImageChange = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleProfileImageChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -204,16 +223,35 @@ export function ProfileHeader({
 
     setIsProfileUploading(true);
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const result = reader.result as string;
-      setProfileImage(result);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('bucket', 'images');
+      formData.append('path', 'avatars');
+
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Upload failed');
+      }
+
+      const data = await response.json();
+      const imageUrl = data.url;
+
+      setProfileImage(imageUrl);
       // Persist to context and DB
-      updatePersonalDetails({ avatarUrl: result });
-      setIsProfileUploading(false);
+      updatePersonalDetails({ avatarUrl: imageUrl });
       toast.success('Profile picture updated successfully');
-    };
-    reader.readAsDataURL(file);
+    } catch (error: any) {
+      console.error('Error uploading profile picture:', error);
+      toast.error(error.message || 'Failed to upload profile picture');
+    } finally {
+      setIsProfileUploading(false);
+    }
   };
 
   const handleEditCoverClick = () => {
@@ -355,9 +393,11 @@ export function ProfileHeader({
           {personalDetails.username && (
             <p className="text-sm text-white/50 font-medium mt-0.5">@{personalDetails.username}</p>
           )}
+          {/* Display ID hidden for public view
           {personalDetails.displayId && (
             <p className="text-xs text-gray-500 mt-1">ID: {personalDetails.displayId}</p>
-          )}
+          )} 
+          */}
           <p className="text-purple-400 font-medium mt-1">{personalDetails.cricketRole || 'Role not set'}</p>
 
           <div className="mt-2 flex flex-col items-center gap-0.5 text-sm text-white/70">

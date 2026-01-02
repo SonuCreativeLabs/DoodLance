@@ -174,10 +174,10 @@ export default function PersonalDetailsPage() {
   });
 
   const [locationInfo, setLocationInfo] = useState<LocationInfo>({
-    address: "",
-    city: personalDetails.location?.split(',')[0]?.trim() || "",
-    country: personalDetails.location?.split(',')[1]?.trim() || "",
-    postalCode: ""
+    address: personalDetails.address || "",
+    city: personalDetails.city || "",
+    country: personalDetails.state || "", // Using country field for State temporarily to match UI
+    postalCode: personalDetails.postalCode || ""
   });
 
   const [cricketInfo, setCricketInfo] = useState<CricketInfo>({
@@ -209,14 +209,13 @@ export default function PersonalDetailsPage() {
       phone: personalDetails.phone || ""
     }));
 
-    if (personalDetails.location) {
-      const parts = personalDetails.location.split(',');
-      setLocationInfo(prev => ({
-        ...prev,
-        city: parts[0]?.trim() || "",
-        country: parts[1]?.trim() || ""
-      }));
-    }
+    setLocationInfo(prev => ({
+      ...prev,
+      address: personalDetails.address || "",
+      city: personalDetails.city || "",
+      country: personalDetails.state || "",
+      postalCode: personalDetails.postalCode || ""
+    }));
   }, [personalDetails]);
 
   const [editPersonalInfo, setEditPersonalInfo] = useState<PersonalInfo>({ ...personalInfo });
@@ -288,8 +287,12 @@ export default function PersonalDetailsPage() {
       updatePersonalDetails({
         name: personalInfo.fullName,
         title: cricketInfo.cricketRole || 'Cricketer',
-        location: editLocation.city + ', ' + editLocation.country,
-        dateOfBirth: personalInfo.dateOfBirth
+        location: `${editLocation.city}, ${editLocation.country}`,
+        dateOfBirth: personalInfo.dateOfBirth,
+        address: editLocation.address,
+        city: editLocation.city,
+        state: editLocation.country,
+        postalCode: editLocation.postalCode
       });
     } else if (section === 'cricket') {
       const newCricketInfo = { ...editCricket };
@@ -612,12 +615,12 @@ export default function PersonalDetailsPage() {
                   />
                 </FormField>
 
-                <FormField label="Country" required>
+                <FormField label="State" required>
                   <Input
                     value={editLocation.country}
                     onChange={(e) => handleInputChange(e, 'location', 'country')}
                     className="bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50"
-                    placeholder="Country"
+                    placeholder="State/Province"
                   />
                 </FormField>
 
@@ -846,32 +849,34 @@ export default function PersonalDetailsPage() {
         >
           {isEditing ? (
             <div className="space-y-4">
-              <FormField label="Cricket Role" required>
-                <Input
-                  value={editCricket.cricketRole}
-                  onChange={(e) => handleInputChange(e, 'cricket', 'cricketRole')}
-                  className="bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50"
-                  placeholder="e.g., All-rounder, Batsman, Bowler"
-                />
-              </FormField>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField label="Cricket Role" required>
+                  <Input
+                    value={editCricket.cricketRole}
+                    onChange={(e) => handleInputChange(e, 'cricket', 'cricketRole')}
+                    className="bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50"
+                    placeholder="e.g., All-rounder, Batsman, Bowler"
+                  />
+                </FormField>
 
-              <FormField label="Batting Style" required>
-                <Input
-                  value={editCricket.battingStyle}
-                  onChange={(e) => handleInputChange(e, 'cricket', 'battingStyle')}
-                  className="bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50"
-                  placeholder="e.g., Right-handed, Left-handed"
-                />
-              </FormField>
+                <FormField label="Batting Style" required>
+                  <Input
+                    value={editCricket.battingStyle}
+                    onChange={(e) => handleInputChange(e, 'cricket', 'battingStyle')}
+                    className="bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50"
+                    placeholder="e.g., Right-handed, Left-handed"
+                  />
+                </FormField>
 
-              <FormField label="Bowling Style" required>
-                <Input
-                  value={editCricket.bowlingStyle}
-                  onChange={(e) => handleInputChange(e, 'cricket', 'bowlingStyle')}
-                  className="bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50"
-                  placeholder="e.g., Right-arm off-spin, Left-arm orthodox"
-                />
-              </FormField>
+                <FormField label="Bowling Style" required>
+                  <Input
+                    value={editCricket.bowlingStyle}
+                    onChange={(e) => handleInputChange(e, 'cricket', 'bowlingStyle')}
+                    className="bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50"
+                    placeholder="e.g., Right-arm off-spin, Left-arm orthodox"
+                  />
+                </FormField>
+              </div>
 
               <div className="pt-4 border-t border-white/10">
                 <div className="flex justify-center gap-4">

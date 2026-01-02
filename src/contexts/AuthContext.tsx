@@ -25,14 +25,20 @@ interface AuthContextType {
   signOut: () => Promise<void>
   verifyOTP: (identifier: string, code: string, type?: 'email' | 'phone') => Promise<void>
   sendOTP: (identifier: string, type?: 'email' | 'phone') => Promise<void>
+  refreshUser: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
+
+  useEffect(() => {
+    if (user) console.log('👤 AuthContext User Updated:', user.id, user.name);
+  }, [user]);
+
   const [isLoading, setIsLoading] = useState(true)
-  const supabase = createClient()
+  const [supabase] = useState(() => createClient())
   const router = useRouter()
 
   useEffect(() => {
@@ -52,29 +58,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         })
         setIsLoading(false)
 
-        //Fetch DB data in background
+        //Fetch DB data in background via API
         setTimeout(async () => {
           try {
-            console.log('🔍 Fetching user data from database...')
-            const { data, error: fetchError } = await supabase
-              .from('users')
-              .select('name,phone,location,avatar,createdAt,email,gender')
-              .eq('id', session.user.id)
-              .single()
+            console.log('🔍 Fetching user data from API...')
+            const response = await fetch('/api/user/profile')
 
-            console.log('📊 Database response:', { data, error: fetchError })
-
-            if (fetchError && fetchError.code === 'PGRST116') {
-              console.log('👤 User not found in DB, creating...')
-              await supabase.from('users').insert({
-                id: session.user.id,
-                email: session.user.email,
-                name: session.user.user_metadata?.full_name || 'User',
-                avatar: session.user.user_metadata?.avatar_url || '',
-                created_at: new Date().toISOString(),
-              })
-            } else if (data) {
-              console.log('✅ Updating user with DB data:', {
+            if (response.ok) {
+              const data = await response.json()
+              console.log('✅ Updating user with API data:', {
                 phone: data.phone,
                 name: data.name,
                 location: data.location
@@ -87,8 +79,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 profileImage: data.avatar || prev!.profileImage,
                 location: data.location || prev!.location,
                 email: data.email || prev!.email || '',
-                createdAt: (data as any).created_at || prev!.createdAt,
+                createdAt: data.createdAt || prev!.createdAt,
               }))
+            } else if (response.status === 404) {
+              console.log('👤 User not found in DB - will be created on first profile update')
             }
           } catch (dbError) {
             console.warn('Failed to fetch user data:', dbError)
@@ -171,6 +165,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signOut,
     verifyOTP,
     sendOTP,
+    refreshUser: async () => {
+      // Allow manual refresh of user data
+      if (user?.id) {
+        try {
+          console.log('🔍 Manually refreshing user data...')
+          const response = await fetch('/api/user/profile')
+
+          if (response.ok) {
+            const data = await response.json()
+            console.log('✅ Updating user with API data:', {
+              phone: data.phone,
+              name: data.name,
+              location: data.location
+            })
+            setUser(prev => {
+              if (!prev) return null;
+              return {
+                ...prev,
+                phone: data.phone || prev.phone,
+                name: data.name || prev.name,
+                avatar: data.avatar || prev.avatar,
+                profileImage: data.avatar || prev.profileImage, // Sync both fields
+                location: data.location || prev.location,
+                email: data.email || prev.email || '',
+                createdAt: data.createdAt || prev.createdAt,
+              }
+            })
+          }
+        } catch (error) {
+          console.error('Failed to refresh user data:', error)
+        }
+      }
+    }
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

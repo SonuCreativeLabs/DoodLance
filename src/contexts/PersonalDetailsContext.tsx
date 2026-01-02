@@ -13,7 +13,6 @@ export interface PersonalDetails {
   online: boolean;
   readyToWork: boolean;
   dateOfBirth?: string;
-  languages?: string;
   cricketRole?: string;
   battingStyle?: string;
   bowlingStyle?: string;
@@ -30,6 +29,11 @@ export interface PersonalDetails {
   gender?: string;
   email?: string;
   phone?: string;
+  // Address fields
+  address?: string;
+  city?: string;
+  state?: string;
+  postalCode?: string;
 }
 
 interface PersonalDetailsContextType {
@@ -50,7 +54,6 @@ const initialPersonalDetails: PersonalDetails = {
   online: false,
   readyToWork: false,
   dateOfBirth: "",
-  languages: "",
   cricketRole: "",
   battingStyle: "",
   bowlingStyle: "",
@@ -64,7 +67,11 @@ const initialPersonalDetails: PersonalDetails = {
   isVerified: false,
   gender: "",
   email: "",
-  phone: ""
+  phone: "",
+  address: "",
+  city: "",
+  state: "",
+  postalCode: ""
 };
 
 const PersonalDetailsContext = createContext<PersonalDetailsContextType | undefined>(undefined);
@@ -74,11 +81,13 @@ function isValidEmail(email: string | null | undefined): boolean {
 }
 
 import { createClient } from '@/lib/supabase/client';
+import { useAuth } from './AuthContext';
 
 export function PersonalDetailsProvider({ children }: { children: ReactNode }) {
   const [personalDetails, setPersonalDetails] = useState<PersonalDetails>(initialPersonalDetails);
   const hasHydrated = useRef(false);
   const supabase = createClient();
+  const { refreshUser: refreshAuthUser } = useAuth();
 
   const updatePersonalDetails = useCallback(async (updates: Partial<PersonalDetails>) => {
     // 1. Optimistic update
@@ -106,12 +115,14 @@ export function PersonalDetailsProvider({ children }: { children: ReactNode }) {
       }
 
       // Refresh session if needed, or just let optimistic update hold
+      // Trigger AuthContext refresh to sync changes (like name/phone) across the app
+      await refreshAuthUser();
 
     } catch (error) {
       console.error('Failed to persist personal details:', error);
       // We could revert state here if strict, but for now just log
     }
-  }, [supabase]);
+  }, [refreshAuthUser]);
 
   const toggleReadyToWork = useCallback(() => {
     // Calculate new status based on current state
@@ -137,39 +148,34 @@ export function PersonalDetailsProvider({ children }: { children: ReactNode }) {
   // Refactored fetch logic to be reusable
   const fetchUserData = useCallback(async () => {
     try {
-      // Use API route instead of direct Supabase query to bypass RLS
-      const response = await fetch('/api/freelancer/profile');
-
-      if (!response.ok) {
-        console.error('Failed to fetch profile from API');
+      // Fetch user data from API (bypasses RLS issues)
+      const userResponse = await fetch('/api/user/profile');
+      if (!userResponse.ok) {
+        console.error('Failed to fetch user profile from API');
         return;
       }
+      const userData = await userResponse.json();
 
-      const { profile } = await response.json();
+      // Fetch freelancer profile from API
+      const profileResponse = await fetch('/api/freelancer/profile');
+      let profile = null;
+      if (profileResponse.ok) {
+        const data = await profileResponse.json();
+        profile = data.profile;
+      }
 
-      // Also fetch user data from Supabase Users table (this works)
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data: userData } = await supabase
-        .from('users')
-        .select('username, displayId, isVerified, gender, email, phone, name, location, avatar, bio')
-        .eq('id', user.id)
-        .maybeSingle();
-
-      // Always populate data, even if freelancer profile doesn't exist yet
+      // Map all fields from both sources
       const newDetails = {
-        name: userData?.name || user.user_metadata?.full_name || "",
+        name: userData?.name || "",
         title: profile?.title || "",
-        location: userData?.location || user.user_metadata?.location || "",
+        location: userData?.location || "",
         about: profile?.about || "",
         bio: userData?.bio || "",
-        avatarUrl: userData?.avatar || user.user_metadata?.avatar_url || "",
+        avatarUrl: userData?.avatar || "",
         coverImageUrl: profile?.coverImage || "",
         online: profile?.isOnline ?? true,
         readyToWork: profile?.isOnline ?? false,
-        dateOfBirth: "",
-        languages: profile?.languages || "",
+        dateOfBirth: profile?.dateOfBirth || "",
         cricketRole: profile?.cricketRole || "",
         battingStyle: profile?.battingStyle || "",
         bowlingStyle: profile?.bowlingStyle || "",
@@ -182,8 +188,12 @@ export function PersonalDetailsProvider({ children }: { children: ReactNode }) {
         displayId: userData?.displayId || "",
         isVerified: userData?.isVerified || false,
         gender: userData?.gender || "",
-        email: userData?.email || user.email || "",
-        phone: userData?.phone || ""
+        email: userData?.email || "",
+        phone: userData?.phone || "",
+        address: userData?.address || "",
+        city: userData?.city || "",
+        state: userData?.state || "",
+        postalCode: userData?.postalCode || ""
       };
 
       setPersonalDetails(prev => ({
@@ -193,7 +203,7 @@ export function PersonalDetailsProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error('Failed to fetch user data:', error);
     }
-  }, [supabase]);
+  }, []);
 
   // Initial load
   useEffect(() => {

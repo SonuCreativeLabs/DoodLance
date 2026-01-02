@@ -100,22 +100,6 @@ export function SkillsProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const fetchSkills = async () => {
       try {
-        const saved = localStorage.getItem('userSkills');
-        if (saved) {
-          const parsedSkills = JSON.parse(saved);
-          if (Array.isArray(parsedSkills)) {
-            if (typeof parsedSkills[0] === 'string') {
-              const skillItems = parsedSkills.map((name: string, index: number) => ({
-                id: `${index}`,
-                name,
-              }));
-              setSkills(skillItems);
-            } else {
-              setSkills(parsedSkills);
-            }
-          }
-        }
-
         // Fetch from API
         const response = await fetch('/api/freelancer/skills');
         if (response.ok) {
@@ -129,10 +113,8 @@ export function SkillsProvider({ children }: { children: ReactNode }) {
                 name,
               }));
               setSkills(skillItems);
-              localStorage.setItem('userSkills', JSON.stringify(skillItems));
             } else {
               setSkills(dbSkills);
-              localStorage.setItem('userSkills', JSON.stringify(dbSkills));
             }
           }
         }
@@ -147,10 +129,7 @@ export function SkillsProvider({ children }: { children: ReactNode }) {
   }, [supabase]);
 
   // Save to localStorage whenever skills change
-  useEffect(() => {
-    if (!isHydrated) return;
-    localStorage.setItem('userSkills', JSON.stringify(skills));
-  }, [skills, isHydrated]);
+  // No localStorage side effects needed. Data is persisted to DB.
 
   const value: SkillsContextType = {
     skills,

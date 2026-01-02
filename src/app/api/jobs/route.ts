@@ -139,26 +139,25 @@ export async function POST(request: NextRequest) {
     } = body
 
     // Ensure user exists in database to prevent foreign key errors
-    // Generate display ID for new users
-    const { generateUserDisplayId } = await import('@/lib/user-id-utils');
-
     const existingUser = await prisma.user.findUnique({
       where: { id: user.id }
     });
 
-    await prisma.user.upsert({
-      where: { id: user.id },
-      update: {},
-      create: {
-        id: user.id,
-        displayId: await generateUserDisplayId(user.role === 'freelancer' ? 'freelancer' : 'client'),
-        email: user.email,
-        name: user.name,
-        role: user.role,
-        currentRole: user.currentRole,
-        coords: '[]', // Default empty coords
-      }
-    });
+    if (!existingUser) {
+      // Generate display ID for new users
+      const { generateUserDisplayId } = await import('@/lib/user-id-utils');
+
+      await prisma.user.create({
+        data: {
+          id: user.id,
+          displayId: await generateUserDisplayId('client'), // Default to client for job posting
+          email: user.email || '',
+          coords: '[]', // Default empty coords
+          role: 'client',
+          currentRole: 'client'
+        }
+      });
+    }
 
     // Validated required fields
     if (!title || !description || !category || !budget || !location) {
@@ -210,6 +209,7 @@ export async function POST(request: NextRequest) {
         duration: duration || 'hourly',
         experience: experience || 'Intermediate',
         clientId: user.id,
+        status: 'OPEN', // Explicitly set status
         isActive: true,
         proposals: 0,
         scheduledAt: startDate ? new Date(startDate).toISOString() : null,

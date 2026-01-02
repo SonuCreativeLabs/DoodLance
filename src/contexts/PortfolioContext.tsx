@@ -42,37 +42,25 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
           setPortfolio(JSON.parse(saved));
         }
 
-        const supabase = createClient();
-        const { data: { user } } = await supabase.auth.getUser();
+        const response = await fetch('/api/freelancer/portfolio');
+        if (!response.ok) {
+          console.error('Failed to fetch portfolio API');
+          return;
+        }
 
-        if (user) {
-          // 1. Get profile ID
-          const { data: profile } = await supabase
-            .from('freelancer_profiles')
-            .select('id')
-            .eq('userId', user.id)
-            .maybeSingle();
+        const { portfolio: dbPortfolio } = await response.json();
 
-          if (profile) {
-            // 2. Fetch portfolios
-            const { data: dbPortfolio } = await supabase
-              .from('portfolios')
-              .select('*')
-              .eq('profileId', profile.id);
-
-            if (dbPortfolio) {
-              const mapped = dbPortfolio.map((item: any) => ({
-                id: item.id,
-                title: item.title,
-                category: item.category,
-                description: item.description,
-                image: item.images, // Note: DB field is 'images' (string), context uses 'image'
-                skills: typeof item.skills === 'string' ? item.skills.split(',') : (Array.isArray(item.skills) ? item.skills : [])
-              }));
-              setPortfolio(mapped);
-              localStorage.setItem('portfolioItems', JSON.stringify(mapped));
-            }
-          }
+        if (dbPortfolio) {
+          const mapped = dbPortfolio.map((item: any) => ({
+            id: item.id,
+            title: item.title,
+            category: item.category,
+            description: item.description,
+            image: item.images, // API returns directly what's in DB
+            skills: typeof item.skills === 'string' ? item.skills.split(',') : (Array.isArray(item.skills) ? item.skills : [])
+          }));
+          setPortfolio(mapped);
+          localStorage.setItem('portfolioItems', JSON.stringify(mapped));
         }
       } catch (error) {
         console.error('Failed to load portfolio:', error);

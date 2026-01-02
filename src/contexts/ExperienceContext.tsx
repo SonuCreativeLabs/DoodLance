@@ -36,11 +36,6 @@ export function ExperienceProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const fetchExperiences = async () => {
       try {
-        const saved = localStorage.getItem('experiences');
-        if (saved) {
-          setExperiences(JSON.parse(saved));
-        }
-
         // Fetch from API
         const response = await fetch('/api/freelancer/experience');
         if (response.ok) {
@@ -57,7 +52,6 @@ export function ExperienceProvider({ children }: { children: ReactNode }) {
               description: exp.description
             }));
             setExperiences(mapped);
-            localStorage.setItem('experiences', JSON.stringify(mapped));
           }
         }
       } catch (error) {
@@ -121,10 +115,7 @@ export function ExperienceProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // Save to localStorage whenever it changes (skip first paint)
-  useEffect(() => {
-    if (!hasHydrated.current) return;
-    localStorage.setItem('experiences', JSON.stringify(experiences));
-  }, [experiences]);
+  // No localStorage side effects needed. Data is persisted to DB.
 
   const value: ExperienceContextType = {
     experiences,

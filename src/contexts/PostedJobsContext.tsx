@@ -91,16 +91,23 @@ export function PostedJobsProvider({ children }: { children: ReactNode }) {
     const { user } = useAuth();
 
     const refreshPostedJobs = async () => {
-        if (!user?.id) {
-            setLoading(false);
-            return;
-        }
-
         console.log('🔄 REFRESHING POSTED JOBS...');
         setLoading(true);
         setError(null);
         try {
-            const clientId = user.id;
+            // Get client ID from Supabase session directly
+            // This is more reliable than waiting for AuthContext to populate
+            const { createClient } = await import('@/lib/supabase/client');
+            const supabase = createClient();
+            const { data: { user: sessionUser } } = await supabase.auth.getUser();
+
+            if (!sessionUser) {
+                console.log('⚠️ No authenticated user');
+                setLoading(false);
+                return;
+            }
+
+            const clientId = sessionUser.id;
             console.log('👤 Fetching jobs for client:', clientId);
 
             const response = await fetch(`/api/jobs?clientId=${clientId}`, { cache: 'no-store' });

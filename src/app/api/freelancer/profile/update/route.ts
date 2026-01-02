@@ -30,13 +30,18 @@ export async function PATCH(request: NextRequest) {
             battingStyle,
             bowlingStyle,
             dateOfBirth,
-            languages,
             online,
             readyToWork,
             hourlyRate,
             skills,
             specializations,
-            coverImageUrl // Add this
+            coverImageUrl, // Add this
+
+            // Address fields (stored on User table)
+            address,
+            city,
+            state,
+            postalCode
         } = body;
 
         // 1. Update User Table
@@ -57,6 +62,20 @@ export async function PATCH(request: NextRequest) {
             });
         }
 
+        // 1b. Update address fields on User table
+        const addressUpdates: any = {};
+        if (address !== undefined) addressUpdates.address = address;
+        if (city !== undefined) addressUpdates.city = city;
+        if (state !== undefined) addressUpdates.state = state;
+        if (postalCode !== undefined) addressUpdates.postalCode = postalCode;
+
+        if (Object.keys(addressUpdates).length > 0) {
+            await prisma.user.update({
+                where: { id: user.id },
+                data: addressUpdates
+            });
+        }
+
         // 2. Update Freelancer Profile
         const profileUpdates: any = {};
         if (title !== undefined) profileUpdates.title = title;
@@ -64,7 +83,6 @@ export async function PATCH(request: NextRequest) {
         if (cricketRole !== undefined) profileUpdates.cricketRole = cricketRole;
         if (battingStyle !== undefined) profileUpdates.battingStyle = battingStyle;
         if (bowlingStyle !== undefined) profileUpdates.bowlingStyle = bowlingStyle;
-        if (languages !== undefined) profileUpdates.languages = languages;
         if (online !== undefined) profileUpdates.isOnline = online; // map online -> isOnline
         if (coverImageUrl !== undefined) profileUpdates.coverImage = coverImageUrl; // map coverImageUrl -> coverImage
 
@@ -75,7 +93,9 @@ export async function PATCH(request: NextRequest) {
         if (profile) {
             // Update existing profile
             const data: any = { ...profileUpdates };
-            if (dateOfBirth !== undefined) data.dateOfBirth = dateOfBirth;
+            if (dateOfBirth !== undefined && dateOfBirth !== "") {
+                data.dateOfBirth = new Date(dateOfBirth);
+            }
             if (hourlyRate !== undefined) data.hourlyRate = hourlyRate;
             if (skills !== undefined) {
                 data.skills = typeof skills === 'string' ? skills : JSON.stringify(skills);
@@ -101,7 +121,6 @@ export async function PATCH(request: NextRequest) {
                     cricketRole: cricketRole || '',
                     battingStyle: battingStyle || '',
                     bowlingStyle: bowlingStyle || '',
-                    languages: languages || '',
                     hourlyRate: hourlyRate || 30, // Default
                     isOnline: online ?? true,
                     // ready_to_work removed as it is not in schema
@@ -118,7 +137,9 @@ export async function PATCH(request: NextRequest) {
                     repeatClientRate: 0,
                     totalEarnings: 0,
                     thisMonthEarnings: 0,
-                    avgProjectValue: 0
+                    avgProjectValue: 0,
+                    dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
+                    coverImage: coverImageUrl || null
                 }
             });
         }

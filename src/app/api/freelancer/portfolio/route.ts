@@ -12,18 +12,41 @@ export async function GET(request: NextRequest) {
         }
 
         const { searchParams } = new URL(request.url);
-        const profileId = searchParams.get('profileId');
+        // If profileId is provided, use it directly (public view)
+        // Otherwise, find the profile for the current user
+        let targetProfileId = searchParams.get('profileId');
+
+        if (!targetProfileId) {
+            const profile = await prisma.freelancerProfile.findUnique({
+                where: { userId: user.id },
+                select: { id: true }
+            });
+
+            if (!profile) {
+                return NextResponse.json({ portfolio: [] });
+            }
+            targetProfileId = profile.id;
+        }
 
         const portfolio = await prisma.portfolio.findMany({
-            where: { userId: profileId || user.id },
+            where: { profileId: targetProfileId },
             orderBy: { createdAt: 'desc' }
         });
+
+        // Map images string to array if needed (though frontend seems to expect string sometimes, context maps it)
+        // The DB schema says images is String. The context expects it to be JSON stringified array or single string?
+        // Let's return raw and let context handle parsing if needed, 
+        // OR better, parse it here to return standard JSON. 
+        // Context code: image: item.images (Note: DB field is 'images' (string), context uses 'image')
 
         return NextResponse.json({ portfolio });
 
     } catch (error) {
         console.error('Portfolio fetch error:', error);
-        return NextResponse.json({ error: 'Failed to fetch portfolio' }, { status: 500 });
+        return NextResponse.json(
+            { error: 'Failed to fetch portfolio' },
+            { status: 500 }
+        );
     }
 }
 

@@ -282,7 +282,7 @@ export function ExperienceSection() {
               <Button
                 type="submit"
                 form="experience-form"
-                disabled={!newExperience.role.trim() || !newExperience.company.trim() || !newExperience.startDate || (!newExperience.isCurrent && !newExperience.endDate)}
+                disabled={!newExperience.role?.trim() || !newExperience.company?.trim() || !newExperience.startDate || (!newExperience.isCurrent && !newExperience.endDate)}
                 className="h-10 px-8 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-700 hover:to-purple-600 shadow-md hover:shadow-purple-500/30 transition-all"
               >
                 <span className="whitespace-nowrap">{editingExperience ? 'Update Experience' : 'Save Experience'}</span>

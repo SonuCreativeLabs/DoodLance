@@ -43,52 +43,39 @@ export function ReviewsProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const fetchReviews = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      try {
+        const response = await fetch('/api/freelancer/reviews');
+        if (!response.ok) return;
 
-      // First get the freelancer profile ID
-      const { data: profile } = await supabase
-        .from('freelancer_profiles')
-        .select('id')
-        .eq('userId', user.id)
-        .single();
+        const { reviews: data } = await response.json();
 
-      if (!profile) return;
+        if (data) {
+          const formattedReviews: Review[] = data.map((r: any) => ({
+            id: r.id,
+            author: r.client?.name || 'Anonymous', // Use joined client data
+            rating: r.rating,
+            comment: r.comment,
+            date: new Date(r.createdAt).toISOString().split('T')[0],
+            role: 'Client', // Default role since clientRole is not in schema often
+            isVerified: r.isVerified
+          }));
 
-      const { data, error } = await supabase
-        .from('reviews')
-        .select('*')
-        .eq('profileId', profile.id);
+          const totalRating = formattedReviews.reduce((acc, curr) => acc + curr.rating, 0);
+          const avgRating = formattedReviews.length > 0 ? totalRating / formattedReviews.length : 0;
 
-      if (error) {
+          setReviewsData({
+            reviews: formattedReviews,
+            averageRating: parseFloat(avgRating.toFixed(1)),
+            totalReviews: formattedReviews.length
+          });
+        }
+      } catch (error) {
         console.error('Error fetching reviews:', error);
-        return;
-      }
-
-      if (data) {
-        const formattedReviews: Review[] = data.map((r: any) => ({
-          id: r.id,
-          author: r.clientName || 'Anonymous',
-          rating: r.rating,
-          comment: r.comment,
-          date: new Date(r.createdAt).toISOString().split('T')[0],
-          role: r.clientRole || 'Client',
-          isVerified: r.isVerified
-        }));
-
-        const totalRating = formattedReviews.reduce((acc, curr) => acc + curr.rating, 0);
-        const avgRating = formattedReviews.length > 0 ? totalRating / formattedReviews.length : 0;
-
-        setReviewsData({
-          reviews: formattedReviews,
-          averageRating: parseFloat(avgRating.toFixed(1)),
-          totalReviews: formattedReviews.length
-        });
       }
     };
 
     fetchReviews();
-  }, [supabase]);
+  }, []);
 
   const updateReviews = useCallback((reviews: Review[]) => {
     setReviewsData(prev => ({
