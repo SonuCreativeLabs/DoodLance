@@ -12,26 +12,21 @@ export async function GET(
       where: { id },
       include: {
         user: {
-          select: {
-            id: true,
-            name: true,
-            avatar: true,
-            location: true,
-            bio: true,
-            phone: true,
-            email: true,
+          include: {
+            services: true // Include services
           }
         },
         reviews: {
-          include: {
-            client: {
-              select: {
-                id: true,
-                name: true,
-                avatar: true
-              }
-            }
-          }
+          reviews: {
+            orderBy: { createdAt: 'desc' }
+          },
+          orderBy: { createdAt: 'desc' }
+        },
+        experiences: {
+          orderBy: { startDate: 'desc' }
+        },
+        portfolios: {
+          orderBy: { createdAt: 'desc' }
         }
       }
     });
@@ -65,7 +60,11 @@ export async function GET(
       languages: profile.languages,
       isOnline: profile.isOnline,
       isVerified: profile.isVerified,
-      reviews: profile.reviews
+      reviews: profile.reviews,
+      experiences: profile.experiences,
+      portfolios: profile.portfolios,
+      services: profile.user.services,
+      availability: profile.availability ? JSON.parse(profile.availability) : []
     };
 
     return NextResponse.json({ profile: formattedProfile });

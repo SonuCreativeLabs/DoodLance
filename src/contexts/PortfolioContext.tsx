@@ -20,21 +20,34 @@ interface PortfolioContextType {
   addPortfolioItem: (item: PortfolioItem) => void;
   removePortfolioItem: (itemId: string) => void;
   updatePortfolioItem: (itemId: string, updates: Partial<PortfolioItem>) => void;
+  hydratePortfolio: (items: PortfolioItem[]) => void;
 }
 
 const initialPortfolio: PortfolioItem[] = [];
 
 const PortfolioContext = createContext<PortfolioContextType | undefined>(undefined);
 
-export function PortfolioProvider({ children }: { children: ReactNode }) {
+export interface PortfolioProviderProps {
+  children: ReactNode;
+  skipInitialFetch?: boolean;
+}
+
+export function PortfolioProvider({ children, skipInitialFetch = false }: PortfolioProviderProps) {
   const [portfolio, setPortfolio] = useState<PortfolioItem[]>(initialPortfolio);
   const [isHydrated, setIsHydrated] = useState(false);
 
   // Save to Supabase helper
   const supabase = createClient();
 
+  const hydratePortfolio = useCallback((items: PortfolioItem[]) => {
+    setPortfolio(items);
+    setIsHydrated(true);
+  }, []);
+
   // Load from Supabase on mount
   useEffect(() => {
+    if (skipInitialFetch) return;
+
     const fetchPortfolio = async () => {
       try {
         const saved = localStorage.getItem('portfolioItems');
@@ -70,7 +83,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     };
 
     fetchPortfolio();
-  }, []);
+  }, [skipInitialFetch]);
 
   const addPortfolioItem = useCallback(async (item: PortfolioItem) => {
     setPortfolio(prev => [...prev, item]);
@@ -143,6 +156,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     addPortfolioItem,
     removePortfolioItem,
     updatePortfolioItem,
+    hydratePortfolio,
   };
 
   return (

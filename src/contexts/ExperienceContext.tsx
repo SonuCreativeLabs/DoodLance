@@ -20,6 +20,7 @@ interface ExperienceContextType {
   addExperience: (experience: Experience) => void;
   removeExperience: (experienceId: string) => void;
   updateExperience: (experienceId: string, updates: Partial<Experience>) => void;
+  hydrateExperiences: (experiences: Experience[]) => void;
   hydrated: boolean;
 }
 
@@ -27,13 +28,25 @@ const initialExperiences: Experience[] = [];
 
 const ExperienceContext = createContext<ExperienceContextType | undefined>(undefined);
 
-export function ExperienceProvider({ children }: { children: ReactNode }) {
+export interface ExperienceProviderProps {
+  children: ReactNode;
+  skipInitialFetch?: boolean;
+}
+
+export function ExperienceProvider({ children, skipInitialFetch = false }: ExperienceProviderProps) {
   const [experiences, setExperiences] = useState<Experience[]>(initialExperiences);
   const hasHydrated = useRef(false);
   const supabase = createClient();
 
+  const hydrateExperiences = useCallback((newExperiences: Experience[]) => {
+    setExperiences(newExperiences);
+    hasHydrated.current = true;
+  }, []);
+
   // Load from Supabase on mount
   useEffect(() => {
+    if (skipInitialFetch) return;
+
     const fetchExperiences = async () => {
       try {
         // Fetch from API
@@ -62,7 +75,7 @@ export function ExperienceProvider({ children }: { children: ReactNode }) {
     };
 
     fetchExperiences();
-  }, []);
+  }, [skipInitialFetch]);
 
   const addExperience = useCallback(async (experience: Experience) => {
     setExperiences(prev => [...prev, experience]);
@@ -123,6 +136,7 @@ export function ExperienceProvider({ children }: { children: ReactNode }) {
     addExperience,
     removeExperience,
     updateExperience,
+    hydrateExperiences,
     hydrated: hasHydrated.current,
   };
 

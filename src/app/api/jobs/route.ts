@@ -16,8 +16,17 @@ export async function GET(request: NextRequest) {
     const experience = searchParams.get('experience')
     const clientId = searchParams.get('clientId')
 
+    const { createClient } = await import('@/lib/supabase/server')
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
     const where: any = {
       isActive: true,
+    }
+
+    // Exclude own jobs
+    if (user) {
+      where.clientId = { not: user.id }
     }
 
     // Add filters

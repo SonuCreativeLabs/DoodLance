@@ -29,6 +29,9 @@ export async function GET(request: Request) {
                     }
                 },
                 reviews: true,
+                experiences: {
+                    orderBy: { startDate: 'desc' }
+                }
             }
         });
 
@@ -65,6 +68,11 @@ export async function GET(request: Request) {
                 }
             }
 
+            // Calculate experience
+            const experience = p.experiences && p.experiences.length > 0
+                ? `${p.experiences.length} roles`
+                : (p.experience || 'New Talent');
+
             return {
                 id: p.id,
                 userId: p.userId,
@@ -73,23 +81,23 @@ export async function GET(request: Request) {
                 rating: p.rating || rating || 0,
                 reviews: p.reviewCount || p.reviews.length,
                 completedJobs: p.completedJobs || 0,
-                location: p.location || p.user.location || 'Remote', // Fallback to user location if profile location missing? Schema has location on user? No, schema has coords on user. Service has location.
-                // Profile has coords? Schema line 399: coords String.
+                location: p.user.city ? `${p.user.city}, ${p.user.state || ''}` : (p.location || p.user.location || 'Remote'),
                 responseTime: p.responseTime || '1 hour',
-                image: p.user.profileImage || '/placeholder-user.jpg',
-                avatar: p.user.profileImage || '/placeholder-user.jpg',
-                distance: 5, // Mock
+                image: p.user.avatar || p.user.profileImage || '/placeholder-user.jpg',
+                avatar: p.user.avatar || p.user.profileImage || '/placeholder-user.jpg',
+                distance: 5, // Geo-calc required for real distance
                 price: p.hourlyRate || userServices[0]?.price || 0,
                 priceUnit: 'hr',
-                coords: p.coords ? JSON.parse(p.coords) : [80.2707, 13.0827], // Safe parse needed? Schema says String.
+                coords: p.coords ? JSON.parse(p.coords) : [80.2707, 13.0827],
                 expertise: skills,
-                experience: 'Entry Level', // Profile doesn't have experience level string? It has `Experience[]` relation. Logic was `p.experience || 'Entry Level'`. Schema doesn't have `experience` string field on Profile, only relation.
-                description: p.about || p.bio || '',
+                experience: experience,
+                description: p.bio || p.about || '',
+                cricketRole: p.cricketRole,
                 services: userServices.map((s: any) => ({
                     id: s.id,
                     title: s.title,
                     price: s.price,
-                    category: s.categoryId // Model has categoryId, not category name directly?
+                    category: s.categoryId
                 }))
             };
         });

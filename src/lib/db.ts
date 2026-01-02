@@ -62,6 +62,13 @@ function createMockPrismaClient() {
       delete: async () => ({}),
       deleteMany: async () => ({}),
     },
+    bankAccount: {
+      findUnique: async () => null,
+      upsert: async () => ({}),
+      create: async () => ({}),
+      update: async () => ({}),
+      delete: async () => ({}),
+    },
     // Add other models as needed for the demo
   };
 }

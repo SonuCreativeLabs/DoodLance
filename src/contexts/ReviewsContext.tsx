@@ -26,13 +26,17 @@ interface ReviewsContextType {
   updateRating: (rating: number, reviewCount: number) => void;
   addReview: (review: Review) => void;
   removeReview: (reviewId: string) => void;
+  hydrateReviews: (reviews: Review[]) => void;
 }
-
-
 
 const ReviewsContext = createContext<ReviewsContextType | undefined>(undefined);
 
-export function ReviewsProvider({ children }: { children: ReactNode }) {
+export interface ReviewsProviderProps {
+  children: ReactNode;
+  skipInitialFetch?: boolean;
+}
+
+export function ReviewsProvider({ children, skipInitialFetch = false }: ReviewsProviderProps) {
   const [reviewsData, setReviewsData] = useState<ReviewsData>({
     reviews: [],
     averageRating: 0,
@@ -41,7 +45,21 @@ export function ReviewsProvider({ children }: { children: ReactNode }) {
   const hasHydrated = useRef(false);
   const supabase = createClient();
 
+  const hydrateReviews = useCallback((reviews: Review[]) => {
+    const totalRating = reviews.reduce((acc, curr) => acc + curr.rating, 0);
+    const avgRating = reviews.length > 0 ? totalRating / reviews.length : 0;
+
+    setReviewsData({
+      reviews,
+      averageRating: parseFloat(avgRating.toFixed(1)),
+      totalReviews: reviews.length
+    });
+    hasHydrated.current = true;
+  }, []);
+
   useEffect(() => {
+    if (skipInitialFetch) return;
+
     const fetchReviews = async () => {
       try {
         const response = await fetch('/api/freelancer/reviews');
@@ -75,7 +93,7 @@ export function ReviewsProvider({ children }: { children: ReactNode }) {
     };
 
     fetchReviews();
-  }, []);
+  }, [skipInitialFetch]);
 
   const updateReviews = useCallback((reviews: Review[]) => {
     setReviewsData(prev => ({
@@ -112,6 +130,7 @@ export function ReviewsProvider({ children }: { children: ReactNode }) {
     updateRating,
     addReview,
     removeReview,
+    hydrateReviews,
   };
 
   return (

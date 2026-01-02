@@ -11,6 +11,7 @@ import { useState, useEffect } from 'react'
 import { MapModal } from '@/components/freelancer/jobs/MapModal'
 import { useNearbyProfessionals } from '@/contexts/NearbyProfessionalsContext'
 import { usePopularServices } from '@/contexts/PopularServicesContext'
+import { useAuth } from '@/contexts/AuthContext';
 
 // Search functionality will be implemented with real data
 
@@ -28,28 +29,21 @@ export default function ClientHome() {
   const [userAvatar, setUserAvatar] = useState("/images/default-avatar.svg"); // Fallback
   const [notificationCount, setNotificationCount] = useState(0);
 
-  // Fetch user details
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        // Dynamic import to avoid SSR issues if any, or just standard fetch
-        const { createClient } = await import('@/lib/supabase/client');
-        const supabase = createClient();
-        const { data: { user } } = await supabase.auth.getUser();
+  const { user, refreshUser } = useAuth();
 
-        if (user) {
-          // Try to get profile if it exists, or just use metadata
-          setUserName(user.user_metadata?.full_name || user.user_metadata?.name || "Client");
-          setUserAvatar(user.user_metadata?.avatar_url || user.user_metadata?.picture || "/images/default-avatar.svg");
-          // For now, notification count is 0 as we don't have a real notification system yet
-          setNotificationCount(0);
-        }
-      } catch (e) {
-        console.error("Error fetching user", e);
-      }
-    };
-    fetchUser();
-  }, []);
+  // Set local state when user from context changes
+  useEffect(() => {
+    if (user) {
+      setUserName(user.name || "Client");
+      setUserAvatar(user.avatar || "/images/default-avatar.svg");
+      setNotificationCount(0); // Still 0 for now
+    }
+  }, [user]);
+
+  // Initial refresh to ensure we have latest data
+  useEffect(() => {
+    refreshUser();
+  }, [refreshUser]);
 
   // Function to reverse geocode coordinates to address
   const reverseGeocode = async (lat: number, lng: number) => {

@@ -16,6 +16,7 @@ interface SkillsContextType {
   addSkill: (skill: SkillItem) => void;
   removeSkill: (skillId: string) => void;
   reorderSkills: (skills: SkillItem[]) => void;
+  hydrateSkills: (skills: SkillItem[]) => void;
 }
 
 const defaultSkills: SkillItem[] = [];
@@ -24,7 +25,12 @@ const SkillsContext = createContext<SkillsContextType | undefined>(undefined);
 
 import { createClient } from '@/lib/supabase/client';
 
-export function SkillsProvider({ children }: { children: ReactNode }) {
+export interface SkillsProviderProps {
+  children: ReactNode;
+  skipInitialFetch?: boolean;
+}
+
+export function SkillsProvider({ children, skipInitialFetch = false }: SkillsProviderProps) {
   const [skills, setSkills] = useState<SkillItem[]>(defaultSkills);
   const [isHydrated, setIsHydrated] = useState(false);
   const supabase = React.useMemo(() => createClient(), []);
@@ -42,6 +48,11 @@ export function SkillsProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error('Failed to save skills:', error);
     }
+  }, []);
+
+  const hydrateSkills = useCallback((newSkills: SkillItem[]) => {
+    setSkills(newSkills);
+    setIsHydrated(true);
   }, []);
 
   const addSkill = useCallback(async (skill: SkillItem) => {
@@ -98,6 +109,8 @@ export function SkillsProvider({ children }: { children: ReactNode }) {
 
   // Load from localStorage on mount and fetch from Supabase
   useEffect(() => {
+    if (skipInitialFetch) return;
+
     const fetchSkills = async () => {
       try {
         // Fetch from API
@@ -126,7 +139,7 @@ export function SkillsProvider({ children }: { children: ReactNode }) {
     };
 
     fetchSkills();
-  }, [supabase]);
+  }, [supabase, skipInitialFetch]);
 
   // Save to localStorage whenever skills change
   // No localStorage side effects needed. Data is persisted to DB.
@@ -134,6 +147,7 @@ export function SkillsProvider({ children }: { children: ReactNode }) {
   const value: SkillsContextType = {
     skills,
     updateSkills,
+    hydrateSkills,
     addSkill,
     removeSkill,
     reorderSkills,
