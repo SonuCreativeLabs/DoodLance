@@ -324,8 +324,10 @@ export default function BookingDetailPage() {
                       <div className="w-2 h-2 rounded-full bg-purple-500"></div>
                       <div className="flex flex-col">
                         <span className="text-white/90">{service.title}</span>
-                        {service.duration && (
-                          <span className="text-xs text-white/50">{service.duration} mins</span>
+                        {(service.duration || service.deliveryTime) && (
+                          <span className="text-xs text-white/50">
+                            {service.duration ? `${service.duration} mins` : service.deliveryTime}
+                          </span>
                         )}
                       </div>
                       {service.quantity > 1 && (

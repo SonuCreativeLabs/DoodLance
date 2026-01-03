@@ -26,6 +26,7 @@ export interface Booking {
     price: string | number;
     quantity: number;
     duration?: number;
+    deliveryTime?: string;
   }[];
   completedAt?: string;
 }
