@@ -218,10 +218,21 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Cannot book your own service' }, { status: 400 });
         }
 
-        // Calculate price (simplified, could depend on packageType)
-        // For now use base service price
-        let finalPrice = service.price;
-        // logic to adjust price based on package...
+        // Calculate price
+        let finalPrice = 0;
+
+        if (body.services && body.services.length > 0) {
+            // Calculate total from services array
+            finalPrice = body.services.reduce((total: number, s: any) => {
+                const price = typeof s.price === 'string'
+                    ? parseFloat(s.price.replace(/[^\d.]/g, ''))
+                    : s.price;
+                return total + (price * (s.quantity || 1));
+            }, 0);
+        } else {
+            // Fallback to single service price
+            finalPrice = service.price;
+        }
 
         const bookingData = {
             clientId: user.id,

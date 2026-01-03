@@ -26,6 +26,7 @@ import { useNavbar } from '@/contexts/NavbarContext';
 import { IdVerifiedBadge } from '@/components/freelancer/profile/IdVerifiedBadge';
 import { SkillInfoDialog } from '@/components/common/SkillInfoDialog';
 import { getSkillInfo, type SkillInfo } from '@/utils/skillUtils';
+import { formatTime } from '@/utils/profileUtils';
 import Image from 'next/image';
 import { IconButton } from '@/components/ui/icon-button';
 import { PortfolioItemModal } from '@/components/common/PortfolioItemModal';
@@ -51,6 +52,7 @@ interface FreelancerDetail {
     availability: {
         day: string;
         available: boolean;
+        timeSlots?: { start: string; end: string }[];
     }[];
     online: boolean;
 
@@ -811,7 +813,11 @@ export default function FreelancerDetailPage() {
                                                                 {freelancer.availability.filter(day => day.available).map((day, index) => (
                                                                     <div key={index} className="flex justify-between items-center text-sm">
                                                                         <span className="text-white/60">{day.day}:</span>
-                                                                        <span className="text-white/80">9 AM - 6 PM</span>
+                                                                        <span className="text-white/80">
+                                                                            {day.timeSlots && day.timeSlots.length > 0
+                                                                                ? day.timeSlots.map(slot => `${formatTime(slot.start)} - ${formatTime(slot.end)}`).join(', ')
+                                                                                : '9 AM - 6 PM'}
+                                                                        </span>
                                                                     </div>
                                                                 ))}
                                                             </div>

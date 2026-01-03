@@ -1,8 +1,10 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ArrowLeft, Check, Clock } from 'lucide-react';
+import { ArrowLeft, Check, Clock, UserPlus } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { HireBottomSheet } from '@/components/hire/HireBottomSheet';
+import { ServiceItem } from '@/contexts/HireContext';
 
 
 export type Service = {
@@ -22,6 +24,8 @@ export default function ServicesPage() {
 
   const [services, setServices] = useState<Service[]>([]);
   const [freelancerName, setFreelancerName] = useState('');
+  const [freelancerImage, setFreelancerImage] = useState('');
+  const [isHireSheetOpen, setIsHireSheetOpen] = useState(false);
 
   // Check if we're viewing a freelancer's services
   useEffect(() => {
@@ -29,10 +33,11 @@ export default function ServicesPage() {
       fetch(`/api/freelancers/${freelancerId}`)
         .then(res => res.json())
         .then(data => {
-          if (data) {
-            setFreelancerName(data.name || 'Anonymous');
+          if (data && data.profile) {
+            setFreelancerName(data.profile.name || 'Anonymous');
+            setFreelancerImage(data.profile.avatar || '');
             // Map services
-            const mappedServices = (data.services || []).map((s: any) => ({
+            const mappedServices = (data.profile.services || []).map((s: any) => ({
               id: s.id,
               title: s.title,
               description: s.description,
@@ -105,9 +110,15 @@ export default function ServicesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0F0F0F] text-white">
+    <div className="min-h-screen bg-[#0F0F0F] text-white padding-bottom-for-footer">
+      <style jsx>{`
+        .padding-bottom-for-footer {
+          padding-bottom: 80px;
+        }
+      `}</style>
+
       {/* Sticky Header with back button and title */}
-      <div className="sticky top-0 z-50 px-4 py-2 border-b border-white/5 bg-[#0f0f0f]/95 backdrop-blur-sm">
+      <div className="sticky top-0 z-50 px-4 py-2 border-b border-white/5 bg-[#0f0f0f]/95 backdrop-blur-sm transition-all duration-300">
         <div className="flex items-center">
           <button
             onClick={handleBack}
@@ -133,6 +144,8 @@ export default function ServicesPage() {
               <div
                 key={service.id}
                 className="p-5 rounded-3xl border border-white/10 bg-white/5 hover:border-purple-500/30 transition-colors flex flex-col h-full"
+                onClick={() => setIsHireSheetOpen(true)}
+                style={{ cursor: 'pointer' }}
               >
                 <div className="flex flex-col h-full">
                   <div className="flex-1">
@@ -156,22 +169,15 @@ export default function ServicesPage() {
 
                   <div className="mt-4 pt-4 relative">
                     <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
-                    <div className="flex flex-col gap-3">
-                      <div className="flex items-center justify-between">
-                        <div className="text-xl font-bold text-white">
-                          {typeof service.price === 'string' && service.price.includes('₹')
-                            ? service.price
-                            : `₹${service.price}`
-                          }
-                        </div>
-                        <div className="text-sm text-white/60 bg-white/5 px-3 py-1 rounded-full">
-                          {service.deliveryTime}
-                        </div>
+                    <div className="flex items-center justify-between">
+                      <div className="text-xl font-bold text-white">
+                        {typeof service.price === 'string' && service.price.includes('₹')
+                          ? service.price
+                          : `₹${service.price}`
+                        }
                       </div>
-                      <div className="flex items-center gap-2">
-                        <button className="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-xl text-sm font-medium transition-colors">
-                          Hire Me
-                        </button>
+                      <div className="text-sm text-white/60 bg-white/5 px-3 py-1 rounded-full">
+                        {service.deliveryTime}
                       </div>
                     </div>
                   </div>
@@ -187,6 +193,26 @@ export default function ServicesPage() {
           </div>
         )}
       </div>
+
+      {/* Sticky Hire Me Button */}
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-[#0F0F0F]/95 backdrop-blur-sm border-t border-white/10 z-40 safe-area-bottom">
+        <button
+          onClick={() => setIsHireSheetOpen(true)}
+          className="w-full py-2.5 bg-gradient-to-r from-purple-600 to-purple-500 text-white font-medium rounded-xl hover:from-purple-700 hover:to-purple-600 transition-all flex items-center justify-center gap-2 shadow-lg"
+        >
+          <UserPlus className="w-4 h-4" />
+          Hire {freelancerName || 'Freelancer'}
+        </button>
+      </div>
+
+      <HireBottomSheet
+        isOpen={isHireSheetOpen}
+        onClose={() => setIsHireSheetOpen(false)}
+        freelancerId={freelancerId || ''}
+        freelancerName={freelancerName}
+        freelancerImage={freelancerImage}
+        services={services as ServiceItem[]}
+      />
     </div>
   );
 }

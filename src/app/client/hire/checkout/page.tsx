@@ -102,7 +102,8 @@ export default function CheckoutPage() {
             id: item.service.id,
             title: item.service.title,
             price: item.service.price,
-            quantity: item.quantity || 1
+            quantity: item.quantity || 1,
+            duration: item.duration || (item.service as any).duration // Try item duration or service duration
           }))
         });
 

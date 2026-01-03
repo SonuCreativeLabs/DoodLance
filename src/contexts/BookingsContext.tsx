@@ -25,6 +25,7 @@ export interface Booking {
     title: string;
     price: string | number;
     quantity: number;
+    duration?: number;
   }[];
   completedAt?: string;
 }
@@ -76,6 +77,8 @@ export function BookingsProvider({ children }: { children: ReactNode }) {
             category: 'General',
             otp: b.otp,
             completedAt: b.completedAt ? new Date(b.completedAt).toLocaleDateString() : undefined,
+            notes: b.notes,
+            services: b.services,
           };
         });
         setBookings(mapped);
@@ -132,6 +135,7 @@ export function BookingsProvider({ children }: { children: ReactNode }) {
           notes: bookingData.notes,
           otp: bookingData.otp, // Pass the client-generated OTP
           location: bookingData.location, // Pass the location
+          services: bookingData.services,
           // Pass other fields if API supports
         }),
       });

@@ -10,6 +10,7 @@ import { useBookings } from "@/contexts/BookingsContext";
 import { useNavbar } from "@/contexts/NavbarContext";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { RescheduleModal } from "@/components/client/bookings/RescheduleModal";
 
 const statusCopy: Record<string, string> = {
   ongoing: "Ongoing",
@@ -40,8 +41,9 @@ export default function BookingDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { setNavbarVisibility } = useNavbar();
-  const { bookings, loading, refreshBookings } = useBookings();
+  const { bookings, loading, refreshBookings, rescheduleBooking } = useBookings();
 
+  const [showRescheduleModal, setShowRescheduleModal] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showCompleteDialog, setShowCompleteDialog] = useState(false);
   const [cancelNotes, setCancelNotes] = useState('');
@@ -160,6 +162,12 @@ export default function BookingDetailPage() {
 
   const booking = useMemo(() => bookings.find((entry) => entry["#"] === rawId), [rawId, bookings]);
 
+  const handleRescheduleSubmit = async (id: string, newDate: string, newTime: string, location?: string) => {
+    if (!booking) return;
+    await rescheduleBooking(id, newDate, newTime);
+    await refreshBookings();
+  };
+
   // Show loading state
   if (loading) {
     return (
@@ -265,9 +273,8 @@ export default function BookingDetailPage() {
               </div>
 
               <div className="text-right">
-                <p className="text-xs text-white/50 mb-1">Session Fee</p>
+                <p className="text-xs text-white/50 mb-1">Total Session Charges</p>
                 <p className="text-3xl font-semibold text-white">{booking.price}</p>
-                <p className="text-xs text-white/50 mt-2">Includes taxes & venue charges</p>
               </div>
             </div>
           </div>
@@ -294,26 +301,33 @@ export default function BookingDetailPage() {
               <p className="text-sm text-white/60">Arrive 10 minutes earlier</p>
             </div>
 
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl">
+            <div
+              className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl cursor-pointer hover:bg-white/10 transition-colors"
+              onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(booking.location)}`, '_blank')}
+            >
               <div className="flex items-center gap-2 text-white/70 text-sm mb-2">
                 <MapPin className="w-4 h-4 text-purple-300" />
                 <span>Venue</span>
               </div>
               <p className="text-lg font-semibold text-white">{booking.location}</p>
-              <p className="text-sm text-white/60">Indoor training facility</p>
             </div>
           </div>
 
           {/* Services Booked */}
-          {booking.services && booking.services.length > 0 && (
-            <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl">
-              <h3 className="text-lg font-semibold text-white mb-4">Services Booked</h3>
-              <div className="space-y-3">
-                {booking.services.map((service, idx) => (
+          <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl">
+            <h3 className="text-lg font-semibold text-white mb-4">Services Booked</h3>
+            <div className="space-y-3">
+              {booking.services && booking.services.length > 0 ? (
+                booking.services.map((service, idx) => (
                   <div key={idx} className="flex items-center justify-between py-2 border-b border-white/5 last:border-0">
                     <div className="flex items-center gap-3">
                       <div className="w-2 h-2 rounded-full bg-purple-500"></div>
-                      <span className="text-white/90">{service.title}</span>
+                      <div className="flex flex-col">
+                        <span className="text-white/90">{service.title}</span>
+                        {service.duration && (
+                          <span className="text-xs text-white/50">{service.duration} mins</span>
+                        )}
+                      </div>
                       {service.quantity > 1 && (
                         <span className="text-xs text-white/50">x{service.quantity}</span>
                       )}
@@ -322,18 +336,26 @@ export default function BookingDetailPage() {
                       {typeof service.price === 'number' ? `₹${service.price.toLocaleString()}` : service.price}
                     </span>
                   </div>
-                ))}
-              </div>
-              {booking.paymentMethod === 'cod' && (
-                <div className="mt-4 pt-4 border-t border-white/10 flex items-center justify-between">
-                  <span className="text-white/60 text-sm">Payment Method</span>
-                  <span className="text-xs font-medium px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                    Cash on Delivery
-                  </span>
+                ))
+              ) : (
+                <div className="flex items-center justify-between py-2 border-b border-white/5 last:border-0">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full bg-purple-500"></div>
+                    <span className="text-white/90">{booking.service || 'Standard Session'}</span>
+                  </div>
+                  <span className="text-white font-medium">{booking.price}</span>
                 </div>
               )}
             </div>
-          )}
+            {booking.paymentMethod === 'cod' && (
+              <div className="mt-4 pt-4 border-t border-white/10 flex items-center justify-between">
+                <span className="text-white/60 text-sm">Payment Method</span>
+                <span className="text-xs font-medium px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                  Cash on Delivery
+                </span>
+              </div>
+            )}
+          </div>
 
           {/* OTP Verification Card - Show for confirmed/upcoming bookings */}
           {(booking.status === 'confirmed' || booking.status === 'pending') && booking.otp && (
@@ -371,7 +393,7 @@ export default function BookingDetailPage() {
                 </div>
                 <div className="flex-1">
                   <h3 className="text-md font-semibold text-white mb-2">Your Notes</h3>
-                  <p className="text-sm text-white/70 leading-relaxed">{booking.notes}</p>
+                  <p className="text-sm text-white/70 leading-relaxed">{booking.notes.replace(/\s*\[OTP:\s*\d+\]/g, '')}</p>
                 </div>
               </div>
             </div>
@@ -459,7 +481,7 @@ export default function BookingDetailPage() {
 
       {/* Action Bar */}
       <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-white/10 bg-[#111111]/95 backdrop-blur-md px-4 py-4">
-        {booking.status === 'confirmed' || booking.status === 'ongoing' ? (
+        {booking.status === 'ongoing' ? (
           <div className="grid grid-cols-2 gap-3">
             <Button
               variant="outline"
@@ -474,8 +496,29 @@ export default function BookingDetailPage() {
               Mark Complete
             </Button>
           </div>
+        ) : booking.status === 'confirmed' ? (
+          <div className="grid grid-cols-2 gap-3">
+            <Button
+              variant="outline"
+              className="border-white/20 bg-white/5 text-red-400 hover:bg-white/10 hover:text-red-300"
+              onClick={handleCancelBooking}
+            >
+              <X className="mr-2 h-4 w-4" />
+              Cancel
+            </Button>
+            <Button
+              className="bg-purple-600 hover:bg-purple-700"
+              onClick={() => setShowRescheduleModal(true)}
+            >
+              <Calendar className="mr-2 h-4 w-4" />
+              Reschedule
+            </Button>
+          </div>
         ) : (
-          <Button className="w-full bg-purple-600 hover:bg-purple-700">
+          <Button
+            className="w-full bg-purple-600 hover:bg-purple-700"
+            onClick={() => setShowRescheduleModal(true)}
+          >
             <Calendar className="mr-2 h-4 w-4" />
             Reschedule session
           </Button>
@@ -816,6 +859,13 @@ export default function BookingDetailPage() {
           </div>
         </div>
       )}
+      <RescheduleModal
+        isOpen={showRescheduleModal}
+        onClose={() => setShowRescheduleModal(false)}
+        booking={booking}
+        onReschedule={handleRescheduleSubmit}
+        mode="reschedule"
+      />
     </div>
   );
 }
