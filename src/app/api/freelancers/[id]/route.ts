@@ -14,7 +14,13 @@ export async function GET(
       include: {
         user: {
           include: {
-            services: true
+            services: {
+              include: {
+                category: {
+                  select: { name: true }
+                }
+              }
+            }
           }
         },
         reviews: {
@@ -38,7 +44,13 @@ export async function GET(
         include: {
           user: {
             include: {
-              services: true
+              services: {
+                include: {
+                  category: {
+                    select: { name: true }
+                  }
+                }
+              }
             }
           },
           reviews: {
@@ -59,6 +71,7 @@ export async function GET(
     }
 
     // Transform to match expected format
+    // Transformation logic 
     const formattedProfile = {
       id: profile.id,
       userId: profile.userId,
@@ -89,7 +102,19 @@ export async function GET(
       services: profile.user.services,
       availability: (() => {
         try {
-          return profile.availability ? JSON.parse(profile.availability) : [];
+          const parsed = profile.availability ? JSON.parse(profile.availability) : [];
+          const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+          if (Array.isArray(parsed)) {
+            return parsed.map((day: any, index: number) => ({
+              ...day,
+              // Setup day name if missing. If day is an object, use day.day, else use index
+              day: day.day || weekDays[index] || '?',
+              // Ensure available is boolean
+              available: typeof day.available === 'boolean' ? day.available : !!day
+            }));
+          }
+          return [];
         } catch (e) {
           console.error("Failed to parse availability JSON:", e);
           return [];

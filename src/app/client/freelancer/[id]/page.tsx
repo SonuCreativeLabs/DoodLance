@@ -211,7 +211,7 @@ export default function FreelancerDetailPage() {
                         title: s.title,
                         description: s.description,
                         price: s.price,
-                        category: s.categoryId, // Category name not inferred easily without relation, or store category name
+                        category: s.category?.name || 'Service',
                         deliveryTime: s.deliveryTime
                     })) || [],
 
