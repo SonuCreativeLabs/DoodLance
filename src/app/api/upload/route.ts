@@ -18,7 +18,8 @@ export async function POST(request: Request) {
         // Authenticate user
         const { data: { user }, error: authError } = await supabase.auth.getUser();
         if (authError || !user) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+            console.error("Upload API Unauthorized:", authError, "User:", user);
+            return NextResponse.json({ error: 'Unauthorized', details: authError }, { status: 401 });
         }
 
         const fileExt = file.name.split('.').pop();

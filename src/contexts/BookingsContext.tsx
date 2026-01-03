@@ -9,7 +9,7 @@ export interface Booking {
   image: string;
   date: string;
   time: string;
-  status: 'confirmed' | 'ongoing' | 'completed' | 'cancelled';
+  status: 'pending' | 'confirmed' | 'ongoing' | 'completed' | 'cancelled';
   location: string;
   price: string;
   rating: number;
@@ -26,14 +26,15 @@ export interface Booking {
     price: string | number;
     quantity: number;
   }[];
+  completedAt?: string;
 }
 
 interface BookingsContextType {
   bookings: Booking[];
   loading: boolean;
   error: string | null;
-  refreshBookings: () => void;
-  addBooking: (booking: Omit<Booking, '#'>) => string;
+  refreshBookings: () => Promise<void>;
+  addBooking: (booking: Omit<Booking, "#">) => Promise<string>;
   rescheduleBooking: (id: string, newDate: string, newTime: string) => Promise<void>;
 }
 
@@ -67,12 +68,14 @@ export function BookingsProvider({ children }: { children: ReactNode }) {
             date: dateObj ? dateObj.toISOString().split('T')[0] : '',
             time: dateObj ? dateObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }) : '',
             status: (b.status?.toLowerCase() as any) || 'pending',
-            location: 'Remote',
+            location: b.location || 'Remote',
             price: `₹${b.price}`,
             rating: 0,
             completedJobs: 0,
             description: '',
             category: 'General',
+            otp: b.otp,
+            completedAt: b.completedAt ? new Date(b.completedAt).toLocaleDateString() : undefined,
           };
         });
         setBookings(mapped);
@@ -127,6 +130,8 @@ export function BookingsProvider({ children }: { children: ReactNode }) {
           serviceId,
           scheduledAt: bookingData.date ? new Date(`${bookingData.date} ${bookingData.time}`) : undefined,
           notes: bookingData.notes,
+          otp: bookingData.otp, // Pass the client-generated OTP
+          location: bookingData.location, // Pass the location
           // Pass other fields if API supports
         }),
       });
@@ -184,10 +189,10 @@ export function BookingsProvider({ children }: { children: ReactNode }) {
     bookings,
     loading,
     error,
-    refreshBookings,
+    refreshBookings: fetchBookings,
     // Cast appropriately or update Interface in Step 1
-    addBooking: addBooking as any,
-    rescheduleBooking
+    addBooking: addBooking,
+    rescheduleBooking,
   };
 
   return (

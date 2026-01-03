@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { jwtVerify } from 'jose';
+import { updateSession } from '@/lib/supabase/middleware';
 
 // Rate limiting storage (in-memory for development, use Redis in production)
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
@@ -27,6 +28,7 @@ export async function middleware(request: NextRequest) {
 
     // Rate limiting for API routes
     if (request.nextUrl.pathname.startsWith('/api/')) {
+
         const isAdminApi = request.nextUrl.pathname.startsWith('/api/admin/');
         const isAuthApi = request.nextUrl.pathname.startsWith('/api/auth/');
 
@@ -100,7 +102,7 @@ export async function middleware(request: NextRequest) {
         }
     }
 
-    return NextResponse.next();
+    return await updateSession(request);
 }
 
 export const config = {

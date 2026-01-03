@@ -2,6 +2,19 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import prisma from '@/lib/db';
 
+
+async function getDbUser(supabaseUserId: string, email?: string) {
+    if (!supabaseUserId) return null;
+    let dbUser = await prisma.user.findUnique({ where: { supabaseUid: supabaseUserId } });
+    if (!dbUser) {
+        dbUser = await prisma.user.findUnique({ where: { id: supabaseUserId } });
+    }
+    if (!dbUser && email) {
+        dbUser = await prisma.user.findUnique({ where: { email } });
+    }
+    return dbUser;
+}
+
 export async function GET(request: NextRequest) {
     try {
         const supabase = createClient();
@@ -15,8 +28,13 @@ export async function GET(request: NextRequest) {
         let targetProfileId = searchParams.get('profileId');
 
         if (!targetProfileId) {
+            const dbUser = await getDbUser(user.id, user.email);
+            if (!dbUser) {
+                return NextResponse.json({ reviews: [] });
+            }
+
             const profile = await prisma.freelancerProfile.findUnique({
-                where: { userId: user.id },
+                where: { userId: dbUser.id },
                 select: { id: true }
             });
 

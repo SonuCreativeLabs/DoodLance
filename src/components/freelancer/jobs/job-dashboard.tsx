@@ -35,14 +35,20 @@ const convertBookingToJob = (booking: any): Job => {
   // 'confirmed' bookings should show as 'pending' (upcoming) jobs
   // 'ongoing' bookings should show as 'started' jobs
   let jobStatus: 'pending' | 'started' | 'completed' | 'cancelled' = 'pending';
-  if (booking.status === 'ongoing') {
+
+  const statusLower = (booking.status || '').toLowerCase();
+
+  if (statusLower === 'ongoing' || statusLower === 'started') {
     jobStatus = 'started';
-  } else if (booking.status === 'completed') {
+  } else if (statusLower === 'completed') {
     jobStatus = 'completed';
-  } else if (booking.status === 'cancelled') {
+  } else if (statusLower === 'cancelled') {
     jobStatus = 'cancelled';
-  } else if (booking.status === 'confirmed') {
+  } else if (statusLower === 'confirmed' || statusLower === 'pending') {
     jobStatus = 'pending'; // Upcoming
+  } else {
+    console.warn('Unknown booking status:', booking.status);
+    jobStatus = 'pending'; // Default fallback
   }
 
   // Generate a unique 4-digit OTP for this booking
@@ -76,10 +82,34 @@ const convertBookingToJob = (booking: any): Job => {
     payment: typeof booking.price === 'string'
       ? parseInt(booking.price.replace(/[₹,]/g, '')) || 0
       : Number(booking.price) || 0,
-    location: booking.location || 'Location TBD',
-    description: booking.notes || booking.description || '',
-    skills: [],
-    duration: 'As per booking',
+    location: booking.location || 'Remote',
+    description: booking.notes || booking.description || 'No description provided',
+    skills: booking.skills || [],
+    duration: (() => {
+      // Calculate total duration from services if available
+      if (booking.services && Array.isArray(booking.services) && booking.services.length > 0) {
+        // Assume default 60 mins per service quantity if not specified, 
+        // or rely on cart logic where 1 qty = 1 hour usually for hourly services.
+        // If booking.duration is available from API (which summons up service duration), use that.
+
+        let totalMins = 0;
+        if (booking.duration) {
+          totalMins = booking.duration;
+        } else {
+          // Fallback calculation
+          booking.services.forEach((s: any) => {
+            totalMins += (s.quantity || 1) * 60; // Assuming 60 mins per slot
+          });
+        }
+
+        const hours = Math.floor(totalMins / 60);
+        const mins = totalMins % 60;
+        if (hours > 0 && mins > 0) return `${hours} hr ${mins} mins`;
+        if (hours > 0) return `${hours} hr`;
+        return `${mins} mins`;
+      }
+      return booking.duration ? `${booking.duration} mins` : 'As per booking';
+    })(),
     experienceLevel: undefined,
     otp: storedOtp,
     // Direct hire specific fields
@@ -95,7 +125,7 @@ const convertBookingToJob = (booking: any): Job => {
       phoneNumber: '+91 9876543210',
       image: booking.clientAvatar || '',
       moneySpent: 50000,
-      location: booking.location || 'Location TBD',
+      location: booking.location || 'Remote',
       joinedDate: new Date().toISOString().split('T')[0],
       freelancersWorked: 5,
       freelancerAvatars: []
@@ -182,7 +212,7 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
       try {
         const sessionRes = await fetch('/api/auth/session');
         const session = await sessionRes.json();
-        const userId = session?.id;
+        const userId = session?.user?.id;
 
         if (userId) {
           // Fetch applications
@@ -213,6 +243,8 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
                 const mappedBookings = bookingData.bookings.map((b: any) => convertBookingToJob(b));
                 loadedJobs = [...loadedJobs, ...mappedBookings];
               }
+            } else {
+              console.error('Error fetching bookings:', await bookingsRes.text());
             }
           } catch (err) {
             console.error("Error fetching bookings:", err);

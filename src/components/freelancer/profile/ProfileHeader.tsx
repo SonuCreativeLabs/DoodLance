@@ -405,15 +405,9 @@ export function ProfileHeader({
               <span>{personalDetails.location || 'Location not set'}</span>
             </div>
             <div className="flex items-center gap-1">
-              {[...Array(5)].map((_, i) => (
-                <Star
-                  key={i}
-                  className={`h-4 w-4 ${i < Math.floor(reviewsData?.averageRating || 0) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-500'}`}
-                />
-              ))}
-              <span className="ml-1 font-medium text-white">{(reviewsData?.averageRating || 0).toFixed(1)}</span>
-              <span className="mx-1">·</span>
-              <span>{reviewsData?.totalReviews || 0} reviews</span>
+              <span className="font-bold text-white text-sm">{(reviewsData?.averageRating || 0).toFixed(1)}</span>
+              <Star className="h-3.5 w-3.5 text-yellow-400 fill-yellow-400" />
+              <span className="text-white/60 text-sm">({reviewsData?.totalReviews || 0})</span>
             </div>
           </div>
         </div>

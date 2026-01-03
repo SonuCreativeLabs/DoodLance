@@ -606,15 +606,18 @@ export default function FreelancerDetailPage() {
 
                                     {/* Skills */}
                                     <div className="flex flex-wrap justify-center gap-2">
-                                        {(freelancer.skills || freelancer.expertise)?.map((skill, i) => (
-                                            <button
-                                                key={i}
-                                                onClick={() => handleSkillClick(skill)}
-                                                className="bg-white/5 text-white/80 border border-white/10 hover:bg-white/10 rounded-full px-2 py-0.5 text-xs transition-colors cursor-pointer"
-                                            >
-                                                {skill}
-                                            </button>
-                                        ))}
+                                        {(freelancer.skills || freelancer.expertise)?.map((skill: any, i) => {
+                                            const skillName = typeof skill === 'object' && skill !== null ? (skill.name || skill.title || 'Unknown') : skill;
+                                            return (
+                                                <button
+                                                    key={i}
+                                                    onClick={() => handleSkillClick(skillName)}
+                                                    className="bg-white/5 text-white/80 border border-white/10 hover:bg-white/10 rounded-full px-2 py-0.5 text-xs transition-colors cursor-pointer"
+                                                >
+                                                    {skillName}
+                                                </button>
+                                            );
+                                        })}
                                     </div>
                                 </div>
                             </div>
@@ -720,22 +723,28 @@ export default function FreelancerDetailPage() {
                                         <div className="mb-6">
                                             <h3 className="font-medium text-white mb-2">Skills</h3>
                                             <div className="flex flex-wrap gap-1.5">
-                                                {freelancer.skills?.map((skill, i) => (
-                                                    <button
-                                                        key={i}
-                                                        onClick={() => handleSkillClick(skill)}
-                                                        className="bg-white/5 text-white/80 border border-white/10 hover:bg-white/10 rounded-full px-1.5 py-0.5 text-xs transition-colors cursor-pointer"
-                                                    >
-                                                        {skill}
-                                                    </button>
-                                                )) || freelancer.expertise?.map((skill, i) => (
-                                                    <span
-                                                        key={i}
-                                                        className="px-1.5 py-0.5 bg-purple-500/10 text-purple-400 rounded-full text-xs font-medium border border-purple-500/20"
-                                                    >
-                                                        {skill}
-                                                    </span>
-                                                ))}
+                                                {freelancer.skills?.map((skill: any, i) => {
+                                                    const skillName = typeof skill === 'object' && skill !== null ? (skill.name || skill.title || 'Unknown') : skill;
+                                                    return (
+                                                        <button
+                                                            key={i}
+                                                            onClick={() => handleSkillClick(skillName)}
+                                                            className="bg-white/5 text-white/80 border border-white/10 hover:bg-white/10 rounded-full px-1.5 py-0.5 text-xs transition-colors cursor-pointer"
+                                                        >
+                                                            {skillName}
+                                                        </button>
+                                                    );
+                                                }) || freelancer.expertise?.map((skill: any, i) => {
+                                                    const skillName = typeof skill === 'object' && skill !== null ? (skill.name || skill.title || 'Unknown') : skill;
+                                                    return (
+                                                        <span
+                                                            key={i}
+                                                            className="px-1.5 py-0.5 bg-purple-500/10 text-purple-400 rounded-full text-xs font-medium border border-purple-500/20"
+                                                        >
+                                                            {skillName}
+                                                        </span>
+                                                    );
+                                                })}
                                             </div>
                                         </div>
 
@@ -776,7 +785,7 @@ export default function FreelancerDetailPage() {
                                                                     : 'bg-white/5 text-white/40'
                                                                     }`}
                                                             >
-                                                                {day.day.substring(0, 1)}
+                                                                {day.day?.substring(0, 1) || '?'}
                                                             </div>
                                                         </div>
                                                     ))}
@@ -1111,18 +1120,20 @@ export default function FreelancerDetailPage() {
                     />
 
                     {/* Hire Bottom Sheet */}
-                    {freelancer && (
-                        <HireBottomSheet
-                            isOpen={isHireBottomSheetOpen}
-                            onClose={() => setIsHireBottomSheetOpen(false)}
-                            freelancerId={freelancer.id}
-                            freelancerName={freelancer.name}
-                            freelancerImage={freelancer.image}
-                            freelancerRating={freelancer.rating}
-                            freelancerReviewCount={freelancer.reviewCount}
-                            services={freelancer.services || []}
-                        />
-                    )}
+                    {
+                        freelancer && (
+                            <HireBottomSheet
+                                isOpen={isHireBottomSheetOpen}
+                                onClose={() => setIsHireBottomSheetOpen(false)}
+                                freelancerId={freelancer.id}
+                                freelancerName={freelancer.name}
+                                freelancerImage={freelancer.image}
+                                freelancerRating={freelancer.rating}
+                                freelancerReviewCount={freelancer.reviewCount}
+                                services={freelancer.services || []}
+                            />
+                        )
+                    }
 
                     {/* Sticky Hire Me Button */}
                     <div className="fixed bottom-0 left-0 right-0 p-4 bg-[#0F0F0F]/95 backdrop-blur-sm border-t border-white/10">
@@ -1134,8 +1145,9 @@ export default function FreelancerDetailPage() {
                             Hire {freelancer?.name || 'Freelancer'}
                         </button>
                     </div>
-                </div>
-            )}
-        </div>
+                </div >
+            )
+            }
+        </div >
     );
 }

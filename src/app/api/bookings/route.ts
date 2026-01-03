@@ -71,34 +71,28 @@ async function handleGetBookings(request: NextRequest, user: { id: string, role?
         // If not specified, maybe fetch both? Or just use clientId for clients.
 
         if (role === 'freelancer') {
-            // Need to join via Service to find bookings provided by this user
+            // Freelancer view: bookings for services provided by this user
             whereClause.service = {
                 providerId: user.id
             };
         } else {
-            // Default to client view or check both?
-            // Simplest is to check if user appears in EITHER clientId OR service.providerId
-            if (!role) {
-                whereClause.OR = [
-                    { clientId: user.id },
-                    { service: { providerId: user.id } }
-                ];
-            } else {
-                whereClause.clientId = user.id;
-            }
+            // Client view (default): bookings made BY this user
+            whereClause.clientId = user.id;
         }
 
         const bookings = await prisma.booking.findMany({
             where: whereClause,
             include: {
                 service: {
-                    include: {
+                    select: {
                         provider: {
                             select: {
                                 name: true,
                                 avatar: true,
                             }
-                        }
+                        },
+                        title: true,
+                        tags: true, // Fetch tags for skills
                     }
                 },
                 client: {
@@ -118,11 +112,21 @@ async function handleGetBookings(request: NextRequest, user: { id: string, role?
             clientName: b.client.name,
             freelancerName: b.service.provider.name,
             freelancerAvatar: b.service.provider.avatar,
-            status: b.status, // PENDING, CONFIRMED etc
+            clientAvatar: b.client.avatar, // Added client avatar
+            status: b.status,
             date: b.scheduledAt ? b.scheduledAt.toISOString() : null,
+            time: b.scheduledAt ? b.scheduledAt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }) : null, // Added time
             price: b.totalPrice,
             serviceId: b.serviceId,
-            clientId: b.clientId
+            clientId: b.clientId,
+            otp: b.otp,
+            completedAt: b.deliveredAt ? b.deliveredAt.toISOString() : null,
+            location: b.location, // Added location
+            duration: b.duration, // Added duration
+            notes: b.notes, // Added notes
+            requirements: b.requirements, // Added requirements
+            skills: b.service.tags ? b.service.tags.split(',').map((s: string) => s.trim()) : [], // Added skills from service tags
+            services: b.services || [], // Return services list
         }));
 
         return NextResponse.json({ bookings: formattedBookings });
@@ -140,20 +144,57 @@ async function handleGetBookings(request: NextRequest, user: { id: string, role?
 export async function POST(request: NextRequest) {
     try {
         const supabase = createClient()
-        const { data: { user }, error: authError } = await supabase.auth.getUser()
+        let { data: { user }, error: authError } = await supabase.auth.getUser()
 
         if (authError || !user) {
+            // Fallback: Check for 'auth-token' (Legacy/JWT)
+            const cookieStore = cookies();
+            const token = cookieStore.get('auth-token')?.value;
+
+            if (token) {
+                try {
+                    const { verifyAccessToken } = await import('@/lib/auth/jwt');
+                    const decoded = verifyAccessToken(token);
+                    if (decoded && decoded.userId) {
+                        const dbUser = await prisma.user.findUnique({
+                            where: { id: decoded.userId }
+                        });
+                        if (dbUser) {
+                            // Re-assign 'user' variable for downstream logic
+                            user = { id: dbUser.id, role: dbUser.role || 'client' } as any;
+                            // Clear authError to allow proceeding
+                            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                            // authError = null; 
+                            // We handled it, so we flow through.
+                        } else {
+                            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+                        }
+                    } else {
+                        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+                    }
+                } catch (e) {
+                    console.warn('JWT Fallback failed:', e);
+                    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+                }
+            } else {
+                return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+            }
+        }
+        if (!user) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
         const body = await request.json();
+        console.log('Booking POST Body:', body);
         const {
             serviceId,
             scheduledAt,
             packageType,
             requirements,
-            location,
-            notes
+            location, // Extract location
+            notes,
+            otp,
+            services // Extract services
         } = body;
 
         if (!serviceId) {
@@ -182,28 +223,53 @@ export async function POST(request: NextRequest) {
         let finalPrice = service.price;
         // logic to adjust price based on package...
 
-        const booking = await prisma.booking.create({
-            data: {
-                clientId: user.id,
-                serviceId: service.id,
-                scheduledAt: scheduledAt ? new Date(scheduledAt) : null,
-                duration: service.duration,
-                totalPrice: finalPrice,
-                packageType: packageType || 'Standard',
-                status: 'PENDING',
-                location: location || service.location || '',
-                coords: '', // Optional or derive
-                notes: notes || '',
-                requirements: requirements || '',
-                deliverables: '', // Empty initially
-            }
-        });
+        const bookingData = {
+            clientId: user.id,
+            serviceId: service.id,
+            scheduledAt: scheduledAt ? new Date(scheduledAt) : null,
+            duration: service.duration,
+            totalPrice: finalPrice,
+            packageType: packageType || 'Standard',
+            status: 'confirmed',
+            location: location || service.location || '',
+            coords: '',
+            notes: notes || '',
+            requirements: requirements || '',
+            deliverables: '',
+            otp: (body.otp as string) || Math.floor(1000 + Math.random() * 9000).toString(),
+            services: body.services || [], // Save services JSON
+        };
 
-        return NextResponse.json({ success: true, booking });
+        console.log('Attempting to create booking with data:', JSON.stringify({
+            ...bookingData,
+            clientId: user.id, // Ensure we see the ID
+            scheduledAt: bookingData.scheduledAt?.toString()
+        }, null, 2));
+
+        try {
+            // Check if user exists in DB to prevent FK error if Supabase user exists but DB user doesn't
+            const userExists = await prisma.user.findUnique({ where: { id: user.id } });
+            if (!userExists) {
+                console.error(`User ${user.id} not found in database (FK violation risk)`);
+                return NextResponse.json({ error: 'User profile not found. Please complete your profile.' }, { status: 400 });
+            }
+
+            const booking = await prisma.booking.create({
+                data: bookingData
+            });
+            console.log('Booking created successfully:', booking.id);
+            return NextResponse.json({ success: true, booking });
+        } catch (dbError: any) {
+            console.error('Prisma Create Error:', dbError);
+            console.error('Error Code:', dbError.code);
+            console.error('Error Meta:', dbError.meta);
+            console.error('Error Message:', dbError.message);
+            throw dbError; // Re-throw to be caught by outer catch
+        }
 
     } catch (error) {
         console.error('Failed to create booking:', error);
-        return NextResponse.json({ error: 'Failed to create booking' }, { status: 500 });
+        return NextResponse.json({ error: `Failed to create booking: ${(error as any).message}` }, { status: 500 });
     }
 }
 

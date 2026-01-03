@@ -1081,10 +1081,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
             {!job.isDirectHire && (
               <div className="flex items-start gap-3">
                 <User className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
-                <div>
-                  <div className="text-sm text-gray-400">Experience</div>
-                  <div className="text-white font-medium">{getExperienceLevelDisplayName(job.experienceLevel || job.experience || 'Expert')}</div>
-                </div>
+                {/* Experience field removed as per user request */}
               </div>
             )}
           </div>

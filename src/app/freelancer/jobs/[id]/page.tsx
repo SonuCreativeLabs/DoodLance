@@ -30,12 +30,19 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
         title: data.title,
         category: data.category,
         description: data.description,
-        status: data.status === 'OPEN' ? 'upcoming' : (data.status.toLowerCase() as any),
-        payment: data.payment || data.budget || 0,
+        status: (() => {
+          const s = (data.status || '').toLowerCase();
+          if (s === 'ongoing' || s === 'started') return 'started';
+          if (s === 'completed') return 'completed';
+          if (s === 'cancelled') return 'cancelled';
+          if (s === 'confirmed' || s === 'pending') return 'upcoming';
+          return 'upcoming';
+        })(),
+        payment: data.payment || data.budget || data.price || 0,
         location: data.location || 'Remote',
-        date: data.scheduledAt ? new Date(data.scheduledAt).toLocaleDateString() : 'TBD',
-        time: data.scheduledAt ? new Date(data.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'TBD',
-        duration: data.duration,
+        date: data.scheduledAt ? new Date(data.scheduledAt).toLocaleDateString() : (data.date || 'TBD'),
+        time: data.scheduledAt ? new Date(data.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : (data.time || 'TBD'),
+        duration: data.duration ? `${data.duration} mins` : 'Flexible',
         workMode: data.workMode,
         experience: data.experience,
         skills: typeof data.skills === 'string' ? data.skills.split(',') : (data.skills || []),
@@ -51,7 +58,10 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
         startedAt: data.startedAt,
         completedAt: data.completedAt,
         freelancerRating: data.freelancerRating, // Assuming API returns this object structure
-        clientRating: data.clientRating
+        clientRating: data.clientRating,
+        isDirectHire: !!data.otp || !!data.serviceId, // Identify as direct hire if OTP or ServiceID exists
+        services: data.services || [],
+        notes: data.notes || ''
       };
 
       setJob(mappedJob);

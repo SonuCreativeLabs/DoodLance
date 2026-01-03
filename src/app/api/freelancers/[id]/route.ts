@@ -8,18 +8,18 @@ export async function GET(
   try {
     const { id } = params;
 
-    const profile = await prisma.freelancerProfile.findUnique({
+    // Try finding by Profile ID first
+    let profile = await prisma.freelancerProfile.findUnique({
       where: { id },
       include: {
         user: {
           include: {
-            services: true // Include services
+            services: true
           }
         },
         reviews: {
-          reviews: {
-            orderBy: { createdAt: 'desc' }
-          },
+          // Relation name might be wrong in schema check.
+          // Schema has `reviews Review[]`
           orderBy: { createdAt: 'desc' }
         },
         experiences: {
@@ -30,6 +30,29 @@ export async function GET(
         }
       }
     });
+
+    // If not found, try finding by User ID (UserId)
+    if (!profile) {
+      profile = await prisma.freelancerProfile.findUnique({
+        where: { userId: id },
+        include: {
+          user: {
+            include: {
+              services: true
+            }
+          },
+          reviews: {
+            orderBy: { createdAt: 'desc' }
+          },
+          experiences: {
+            orderBy: { startDate: 'desc' }
+          },
+          portfolios: {
+            orderBy: { createdAt: 'desc' }
+          }
+        }
+      });
+    }
 
     if (!profile) {
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
@@ -64,7 +87,14 @@ export async function GET(
       experiences: profile.experiences,
       portfolios: profile.portfolios,
       services: profile.user.services,
-      availability: profile.availability ? JSON.parse(profile.availability) : []
+      availability: (() => {
+        try {
+          return profile.availability ? JSON.parse(profile.availability) : [];
+        } catch (e) {
+          console.error("Failed to parse availability JSON:", e);
+          return [];
+        }
+      })()
     };
 
     return NextResponse.json({ profile: formattedProfile });

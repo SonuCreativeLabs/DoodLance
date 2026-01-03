@@ -54,9 +54,11 @@ const BookingCard = ({ booking, showActions = true }: BookingCardProps) => {
             <div className="flex items-center gap-2">
               <div className={`text-xs font-medium px-3 py-1 rounded-full border w-fit ${booking.status === 'ongoing'
                 ? 'bg-green-500/10 text-green-400 border-green-500/20'
-                : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                : booking.status === 'confirmed' || booking.status === 'pending'
+                  ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                  : 'bg-green-500/10 text-green-400 border-green-500/20' // This will actually be handled by the first check if we reorder or use explicit 'ongoing'
                 }`}>
-                {booking.status === 'ongoing' ? 'Ongoing' : booking.status === 'confirmed' ? 'Upcoming' : 'Completed'}
+                {booking.status === 'ongoing' ? 'Ongoing' : (booking.status === 'confirmed' || booking.status === 'pending') ? 'Upcoming' : 'Completed'}
               </div>
               {booking.paymentMethod === 'cod' && (
                 <div className="text-xs font-medium px-2 py-1 rounded-full border bg-blue-500/10 text-blue-400 border-blue-500/20">
@@ -65,6 +67,12 @@ const BookingCard = ({ booking, showActions = true }: BookingCardProps) => {
               )}
             </div>
             <div className="flex items-center gap-1.5 text-sm text-white/60">
+              {booking.otp && (booking.status === 'confirmed' || booking.status === 'pending') && (
+                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-400 mr-2">
+                  <span className="text-[10px] uppercase font-semibold">Start Code</span>
+                  <span className="font-mono text-xs font-bold tracking-wider">{booking.otp}</span>
+                </div>
+              )}
               <span className="font-mono text-xs">{booking["#"]}</span>
             </div>
           </div>
@@ -274,12 +282,28 @@ const AcceptedProposalCard = ({ application }: { application: Application }) => 
   )
 }
 
-const HistoryCard = ({ job }: { job: HistoryJob }) => {
+// Card for history jobs
+const HistoryCard = ({ booking }: { booking: Booking }) => {
   const router = useRouter()
-  const { showBookAgain, setShowBookAgain, BookAgainModal } = useBookAgain(job)
+  // Mocking history job for useBookAgain hook, or we need to update hook
+  const historyJobMock: HistoryJob = {
+    "#": booking["#"],
+    title: booking.service,
+    freelancer: {
+      name: booking.provider,
+      image: booking.image,
+      rating: booking.rating
+    },
+    completedDate: booking.completedAt || booking.date,
+    status: booking.status === 'completed' ? 'Completed' : 'Cancelled',
+    yourRating: booking.rating,
+    earnedMoney: booking.price
+  }
+
+  const { showBookAgain, setShowBookAgain, BookAgainModal } = useBookAgain(historyJobMock)
 
   const handleOpenDetails = () => {
-    router.push(`/client/bookings/history/${encodeURIComponent(job["#"])}`)
+    router.push(`/client/bookings/history/${encodeURIComponent(booking["#"])}`)
   }
 
   return (
@@ -300,30 +324,30 @@ const HistoryCard = ({ job }: { job: HistoryJob }) => {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              {job.status === 'Completed' && (
+              {booking.status === 'completed' && (
                 <div className="bg-green-500/10 text-green-400 text-xs font-medium px-3 py-1 rounded-full border border-green-500/20 w-fit">
                   Completed
                 </div>
               )}
-              {job.status === 'Cancelled' && (
+              {booking.status === 'cancelled' && (
                 <div className="bg-red-500/10 text-red-400 text-xs font-medium px-3 py-1 rounded-full border border-red-500/20 w-fit">
                   Cancelled
                 </div>
               )}
             </div>
             <div className="flex items-center gap-1.5 text-sm text-white/60">
-              <span className="font-mono text-xs">{job["#"]}</span>
+              <span className="font-mono text-xs">{booking["#"]}</span>
             </div>
           </div>
 
           <div>
-            <h3 className="text-base font-medium text-white line-clamp-2 mb-1">{job.title}</h3>
+            <h3 className="text-base font-medium text-white line-clamp-2 mb-1">{booking.service}</h3>
             <div className="flex items-center gap-2 text-sm text-white/60">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-user w-3.5 h-3.5 text-purple-400">
                 <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
                 <circle cx="12" cy="7" r="4"></circle>
               </svg>
-              <span>{job.freelancer.name}</span>
+              <span>{booking.provider}</span>
             </div>
           </div>
 
@@ -339,7 +363,7 @@ const HistoryCard = ({ job }: { job: HistoryJob }) => {
               </div>
               <div className="min-w-0">
                 <div className="text-xs text-white/40 mb-0.5">Completed</div>
-                <div className="text-sm text-white/90">{job.completedDate}</div>
+                <div className="text-sm text-white/90">{booking.completedAt || 'N/A'}</div>
               </div>
             </div>
 
@@ -352,18 +376,19 @@ const HistoryCard = ({ job }: { job: HistoryJob }) => {
               <div className="min-w-0">
                 <div className="text-xs text-white/40 mb-0.5">Your Rating</div>
                 <div className="flex items-center gap-1">
-                  {[...Array(job.yourRating)].map((_, i) => (
+                  {[...Array(booking.rating)].map((_, i) => (
                     <svg key={i} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" className="w-3 h-3 text-yellow-400">
                       <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
                     </svg>
                   ))}
+                  {booking.rating === 0 && <span className="text-xs text-white/40">Not rated</span>}
                 </div>
               </div>
             </div>
           </div>
 
           <div className="font-bold text-white">
-            Earned: {job.earnedMoney}
+            {booking.price}
           </div>
 
           <div className="flex gap-2">
@@ -584,7 +609,7 @@ export default function BookingsPage() {
 
     if (selectedFilter === 'all') {
       return bookingMatchesSearch &&
-        (booking.status === 'confirmed' || booking.status === 'ongoing')
+        (booking.status === 'confirmed' || booking.status === 'ongoing' || booking.status === 'pending')
     }
 
     if (selectedFilter === 'ongoing') {
@@ -598,7 +623,7 @@ export default function BookingsPage() {
     if (selectedFilter === 'upcoming') {
       return bookingMatchesSearch &&
         bookingDate > today && // Future date
-        (booking.status === 'confirmed' || booking.status === 'ongoing')
+        (booking.status === 'confirmed' || booking.status === 'ongoing' || booking.status === 'pending')
     }
 
     return bookingMatchesSearch
@@ -621,16 +646,19 @@ export default function BookingsPage() {
 
 
 
-  const filteredHistory = historyJobs.filter(job => {
-    const historyMatchesSearch = job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      job.freelancer.name.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredHistory = bookings.filter(booking => {
+    const matchesSearch = booking.service.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      booking.provider.toLowerCase().includes(searchQuery.toLowerCase())
 
-    if (historyFilter === 'all') return historyMatchesSearch
-    return historyMatchesSearch && job.status.toLowerCase() === historyFilter.toLowerCase()
+    const isHistoryStatus = booking.status === 'completed' || booking.status === 'cancelled';
+
+    if (!isHistoryStatus) return false;
+
+    if (historyFilter === 'all') return matchesSearch
+    return matchesSearch && booking.status.toLowerCase() === historyFilter.toLowerCase()
   }).sort((a, b) => {
-    // Sort by completion date, most recent first
-    const dateA = new Date(a.completedDate)
-    const dateB = new Date(b.completedDate)
+    const dateA = a.completedAt ? new Date(a.completedAt) : new Date(0)
+    const dateB = b.completedAt ? new Date(b.completedAt) : new Date(0)
     return dateB.getTime() - dateA.getTime()
   })
 
@@ -764,7 +792,7 @@ export default function BookingsPage() {
                   </div>
                   <div className="space-y-4">
                     {filteredBookings.filter(booking =>
-                      booking.status === 'confirmed' || booking.status === 'ongoing'
+                      booking.status === 'confirmed' || booking.status === 'ongoing' || booking.status === 'pending'
                     ).length === 0 ? (
                       <div className="text-center py-12">
                         <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-white/5 flex items-center justify-center">
@@ -790,7 +818,7 @@ export default function BookingsPage() {
                         }
                         {/* Active Bookings */}
                         {filteredBookings
-                          .filter(booking => booking.status === 'confirmed' || booking.status === 'ongoing')
+                          .filter(booking => booking.status === 'confirmed' || booking.status === 'ongoing' || booking.status === 'pending')
                           .map((booking) => (
                             <BookingCard
                               key={booking["#"]}
@@ -887,8 +915,8 @@ export default function BookingsPage() {
                         </p>
                       </div>
                     ) : (
-                      filteredHistory.map((job) => (
-                        <HistoryCard key={job["#"]} job={job} />
+                      filteredHistory.map((booking) => (
+                        <HistoryCard key={booking["#"]} booking={booking} />
                       ))
                     )}
                   </div>

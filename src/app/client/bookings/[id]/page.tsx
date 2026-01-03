@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 const statusCopy: Record<string, string> = {
   ongoing: "Ongoing",
   confirmed: "Upcoming",
+  pending: "Upcoming",
   completed: "Completed",
   cancelled: "Cancelled",
 };
@@ -39,7 +40,7 @@ export default function BookingDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { setNavbarVisibility } = useNavbar();
-  const { bookings, loading } = useBookings();
+  const { bookings, loading, refreshBookings } = useBookings();
 
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showCompleteDialog, setShowCompleteDialog] = useState(false);
@@ -63,7 +64,7 @@ export default function BookingDetailPage() {
     setShowCancelDialog(true);
   };
 
-  const confirmCancelBooking = () => {
+  const confirmCancelBooking = async () => {
     if (!cancelNotes.trim()) {
       alert('Please provide a reason for cancellation.');
       return;
@@ -72,26 +73,34 @@ export default function BookingDetailPage() {
     if (!booking) return;
 
     try {
-      // Update booking status in localStorage
-      const storedBookings = JSON.parse(localStorage.getItem('clientBookings') || '[]');
-      const updatedBookings = storedBookings.map((b: any) => {
-        if (b['#'] === booking['#']) {
-          return { ...b, status: 'cancelled', cancellationNotes: cancelNotes };
-        }
-        return b;
+      const response = await fetch(`/api/jobs/${encodeURIComponent(rawId)}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          status: 'cancelled',
+          notes: cancelNotes
+        }),
       });
-      localStorage.setItem('clientBookings', JSON.stringify(updatedBookings));
 
-      // Dispatch event to notify other components
-      window.dispatchEvent(new CustomEvent('clientBookingUpdated', {
-        detail: { bookings: updatedBookings, action: 'cancelled' }
-      }));
+      if (response.ok) {
+        // Dispatch event to notify other components (legacy support)
+        window.dispatchEvent(new CustomEvent('clientBookingUpdated', {
+          detail: { bookings: [], action: 'cancelled' } // Pass empty or fetch fresh
+        }));
 
-      setShowCancelDialog(false);
-      setCancelNotes('');
+        await refreshBookings();
 
-      // Redirect to bookings list
-      router.push('/client/bookings');
+        setShowCancelDialog(false);
+        setCancelNotes('');
+
+        // Redirect to bookings list
+        router.push('/client/bookings');
+      } else {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to cancel booking');
+      }
     } catch (error) {
       console.error('Error cancelling booking:', error);
       alert('Failed to cancel booking. Please try again.');
@@ -102,7 +111,7 @@ export default function BookingDetailPage() {
     setShowCompleteDialog(true);
   };
 
-  const confirmMarkComplete = () => {
+  const confirmMarkComplete = async () => {
     if (rating === 0) {
       alert('Please provide a rating before marking as complete.');
       return;
@@ -111,37 +120,38 @@ export default function BookingDetailPage() {
     if (!booking) return;
 
     try {
-      // Update booking status in localStorage
-      const storedBookings = JSON.parse(localStorage.getItem('clientBookings') || '[]');
-      const updatedBookings = storedBookings.map((b: any) => {
-        if (b['#'] === booking['#']) {
-          return {
-            ...b,
-            status: 'completed',
-            clientRating: {
-              stars: rating,
-              feedback: review,
-              feedbackChips: selectedChips,
-              date: new Date().toISOString()
-            }
-          };
-        }
-        return b;
+      const response = await fetch(`/api/jobs/${encodeURIComponent(rawId)}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          status: 'completed',
+          rating: rating,
+          review: review,
+          feedbackChips: selectedChips
+        }),
       });
-      localStorage.setItem('clientBookings', JSON.stringify(updatedBookings));
 
-      // Dispatch event to notify other components
-      window.dispatchEvent(new CustomEvent('clientBookingUpdated', {
-        detail: { bookings: updatedBookings, action: 'completed' }
-      }));
+      if (response.ok) {
+        // Dispatch event to notify other components (legacy support)
+        window.dispatchEvent(new CustomEvent('clientBookingUpdated', {
+          detail: { bookings: [], action: 'completed' }
+        }));
 
-      setShowCompleteDialog(false);
-      setReview('');
-      setRating(0);
-      setSelectedChips([]);
+        await refreshBookings();
 
-      // Redirect to bookings list
-      router.push('/client/bookings');
+        setShowCompleteDialog(false);
+        setReview('');
+        setRating(0);
+        setSelectedChips([]);
+
+        // Redirect to bookings list
+        router.push('/client/bookings');
+      } else {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to complete booking');
+      }
     } catch (error) {
       console.error('Error completing booking:', error);
       alert('Failed to complete booking. Please try again.');
@@ -325,8 +335,8 @@ export default function BookingDetailPage() {
             </div>
           )}
 
-          {/* OTP Verification Card - Show for confirmed bookings */}
-          {booking.status === 'confirmed' && booking.otp && (
+          {/* OTP Verification Card - Show for confirmed/upcoming bookings */}
+          {(booking.status === 'confirmed' || booking.status === 'pending') && booking.otp && (
             <div className="mt-8 rounded-2xl border border-purple-500/30 bg-gradient-to-br from-purple-500/10 via-blue-500/5 to-purple-500/10 p-6 backdrop-blur-xl">
               <div className="text-center">
                 <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-purple-500/20 flex items-center justify-center">

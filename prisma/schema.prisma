@@ -130,10 +130,16 @@ model Booking {
   progress       Int       @default(0)
   milestones     String?
   conversationId String?
+  otp            String?   // For job start verification
   notes          String?
   requirements   String?
   deliveredAt    DateTime?
-  deliverables   String
+  deliverables   String?
+  cancelledAt    DateTime?
+  cancellationReason String?
+  clientRating   Json?     // Rating given by freelancer to client
+  services       Json?     // List of services included in this booking
+  freelancerRating Json?   // Rating given by client to freelancer
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
   client         User      @relation("UserBookings", fields: [clientId], references: [id])
@@ -195,6 +201,7 @@ model Job {
   progress     Int           @default(0)
   peopleNeeded Int           @default(1)
   notes        String?
+  otp          String?       // For job start verification
   completedAt  DateTime?
   completedBy  String?
   isActive     Boolean       @default(true)
