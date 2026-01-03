@@ -2,6 +2,31 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import prisma from '@/lib/db';
 
+async function getDbUser(supabaseUserId: string, email?: string) {
+    if (!supabaseUserId) return null;
+
+    // First try by supabaseUid
+    let dbUser = await prisma.user.findUnique({
+        where: { supabaseUid: supabaseUserId }
+    });
+
+    // Fallback to ID
+    if (!dbUser) {
+        dbUser = await prisma.user.findUnique({
+            where: { id: supabaseUserId }
+        });
+    }
+
+    // Fallback to email
+    if (!dbUser && email) {
+        dbUser = await prisma.user.findUnique({
+            where: { email }
+        });
+    }
+
+    return dbUser;
+}
+
 export async function GET(request: NextRequest) {
     try {
         const supabase = createClient();
@@ -12,11 +37,14 @@ export async function GET(request: NextRequest) {
         }
 
         const { searchParams } = new URL(request.url);
-        const profileId = searchParams.get('profileId');
+        const queryUserId = searchParams.get('profileId');
 
-        // Get user's FreelancerProfile first
+        const dbUser = await getDbUser(user.id, user.email);
+        const targetUserId = queryUserId || (dbUser ? dbUser.id : user.id);
+
+        // Get user's FreelancerProfile
         const profile = await prisma.freelancerProfile.findUnique({
-            where: { userId: profileId || user.id }
+            where: { userId: targetUserId }
         });
 
         if (!profile) {
@@ -46,16 +74,42 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
+        const dbUser = await getDbUser(user.id, user.email);
+        if (!dbUser) return NextResponse.json({ error: 'User not found' }, { status: 404 });
+
         const body = await request.json();
         const { title, company, location, startDate, endDate, description, current } = body;
 
         // Get user's FreelancerProfile
-        const profile = await prisma.freelancerProfile.findUnique({
-            where: { userId: user.id }
+        let profile = await prisma.freelancerProfile.findUnique({
+            where: { userId: dbUser.id }
         });
 
         if (!profile) {
-            return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
+            console.log('Profile missing during Experience Create. Auto-creating...');
+            // Auto-create profile if missing
+            profile = await prisma.freelancerProfile.create({
+                data: {
+                    userId: dbUser.id,
+                    title: '',
+                    about: '',
+                    skills: '[]',
+                    specializations: '[]',
+                    coords: JSON.stringify([0, 0]),
+                    hourlyRate: 0,
+                    availability: "[]",
+                    rating: 0,
+                    reviewCount: 0,
+                    completedJobs: 0,
+                    serviceRadius: 0,
+                    advanceNoticeHours: 0,
+                    totalEarnings: 0,
+                    thisMonthEarnings: 0,
+                    avgProjectValue: 0,
+                    isOnline: false,
+                    isProfilePublic: true
+                }
+            });
         }
 
         const experience = await prisma.experience.create({
@@ -88,20 +142,32 @@ export async function PUT(request: NextRequest) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
+        const dbUser = await getDbUser(user.id, user.email);
+        if (!dbUser) return NextResponse.json({ error: 'User not found' }, { status: 404 });
+
         const body = await request.json();
         const { id, role, company, location, startDate, endDate, description, isCurrent } = body;
 
-        // Get user's profile to ensure they own this experience
+        // Get user's profile
         const profile = await prisma.freelancerProfile.findUnique({
-            where: { userId: user.id }
+            where: { userId: dbUser.id }
         });
 
         if (!profile) {
             return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
         }
 
+        // Verify ownership
+        const existingExp = await prisma.experience.findUnique({
+            where: { id }
+        });
+
+        if (!existingExp || existingExp.profileId !== profile.id) {
+            return NextResponse.json({ error: 'Experience not found or unauthorized' }, { status: 403 });
+        }
+
         const experience = await prisma.experience.update({
-            where: { id, profileId: profile.id },
+            where: { id },
             data: {
                 role,
                 company,
@@ -130,6 +196,9 @@ export async function DELETE(request: NextRequest) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
+        const dbUser = await getDbUser(user.id, user.email);
+        if (!dbUser) return NextResponse.json({ error: 'User not found' }, { status: 404 });
+
         const { searchParams } = new URL(request.url);
         const id = searchParams.get('id');
 
@@ -139,15 +208,24 @@ export async function DELETE(request: NextRequest) {
 
         // Get user's profile
         const profile = await prisma.freelancerProfile.findUnique({
-            where: { userId: user.id }
+            where: { userId: dbUser.id }
         });
 
         if (!profile) {
             return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
         }
 
+        // Verify ownership
+        const existingExp = await prisma.experience.findUnique({
+            where: { id }
+        });
+
+        if (!existingExp || existingExp.profileId !== profile.id) {
+            return NextResponse.json({ error: 'Experience not found or unauthorized' }, { status: 403 });
+        }
+
         await prisma.experience.delete({
-            where: { id, profileId: profile.id }
+            where: { id }
         });
 
         return NextResponse.json({ success: true });

@@ -4,6 +4,19 @@ import prisma from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
+
+async function getDbUser(supabaseUserId: string, email?: string) {
+    if (!supabaseUserId) return null;
+    let dbUser = await prisma.user.findUnique({ where: { supabaseUid: supabaseUserId } });
+    if (!dbUser) {
+        dbUser = await prisma.user.findUnique({ where: { id: supabaseUserId } });
+    }
+    if (!dbUser && email) {
+        dbUser = await prisma.user.findUnique({ where: { email } });
+    }
+    return dbUser;
+}
+
 export async function GET(request: NextRequest) {
     try {
         const supabase = createClient();
@@ -13,7 +26,22 @@ export async function GET(request: NextRequest) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const userId = user.id;
+        const dbUser = await getDbUser(user.id, user.email);
+
+        if (!dbUser) {
+            // If user doesn't exist in DB yet (race condition on first login), return empty
+            return NextResponse.json({
+                user: null,
+                profile: null,
+                skills: [],
+                experiences: [],
+                portfolios: [],
+                reviews: [],
+                bankAccount: null
+            });
+        }
+
+        const userId = dbUser.id; // Use the Correct CUID
 
         // Parallelize all fetches
         const [
@@ -42,11 +70,8 @@ export async function GET(request: NextRequest) {
                 where: { userId },
             }),
 
-            // 3. Skills (Usually stored in FreelancerProfile.skills or separate table? 
-            // Based on SkillsContext, it calls /api/freelancer/skills which reads .skills jsonb from profile)
-            // We can just use the profile fetch above for this if it's the same table.
-            // Let's assume we extract it from freelancerProfile later.
-            Promise.resolve(null), // Placeholder if skills are in profile
+            // 3. Skills - placeholder
+            Promise.resolve(null),
 
             // 4. Experiences
             prisma.experience.findMany({
@@ -78,9 +103,23 @@ export async function GET(request: NextRequest) {
             })
         ]);
 
-        // Format Skills (if they are just JSON in profile)
-        // The current /api/freelancer/skills endpoint just returns { skills: profile.skills }
-        const formattedSkills = freelancerProfile?.skills || [];
+        // Format Skills
+        let formattedSkills = [];
+        if (freelancerProfile?.skills) {
+            try {
+                const rawSkills = freelancerProfile.skills;
+                if (typeof rawSkills === 'string' && (rawSkills.trim().startsWith('[') || rawSkills.trim().startsWith('{'))) {
+                    formattedSkills = JSON.parse(rawSkills);
+                } else if (typeof rawSkills === 'object') {
+                    formattedSkills = rawSkills; // Already parsed (e.g. if Prisma Json type)
+                } else {
+                    formattedSkills = [rawSkills];
+                }
+            } catch (e) {
+                console.error("Error parsing skills in dashboard:", e);
+                formattedSkills = [];
+            }
+        }
 
         return NextResponse.json({
             user: userProfile,

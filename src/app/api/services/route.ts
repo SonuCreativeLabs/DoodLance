@@ -4,6 +4,25 @@ import { createClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
+
+async function getDbUser(supabaseUserId: string, email?: string) {
+    if (!supabaseUserId) return null;
+
+    // First try by supabaseUid
+    let dbUser = await prisma.user.findUnique({ where: { supabaseUid: supabaseUserId } });
+
+    // Fallback to ID
+    if (!dbUser) {
+        dbUser = await prisma.user.findUnique({ where: { id: supabaseUserId } });
+    }
+
+    // Fallback to email
+    if (!dbUser && email) {
+        dbUser = await prisma.user.findUnique({ where: { email } });
+    }
+    return dbUser;
+}
+
 /**
  * GET /api/services
  * Fetch services.
@@ -22,7 +41,10 @@ export async function GET(request: NextRequest) {
             const supabase = createClient()
             const { data: { user } } = await supabase.auth.getUser()
             if (user?.id) {
-                targetUserId = user.id;
+                const dbUser = await getDbUser(user.id, user.email);
+                if (dbUser) {
+                    targetUserId = dbUser.id;
+                }
             }
         }
 
@@ -80,6 +102,11 @@ export async function POST(request: NextRequest) {
 
         if (authError || !user) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        const dbUser = await getDbUser(user.id, user.email);
+        if (!dbUser) {
+            return NextResponse.json({ error: 'User not found in database' }, { status: 404 });
         }
 
         const body = await request.json();
@@ -146,7 +173,7 @@ export async function POST(request: NextRequest) {
                 price: numPrice || 0,
                 duration: 60, // Default duration
                 categoryId: categoryRecord.id,
-                providerId: user.id,
+                providerId: dbUser.id,
                 location: '',
                 coords: '[0,0]', // Default coords
                 serviceType: type || 'online',

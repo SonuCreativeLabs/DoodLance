@@ -2,6 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import prisma from '@/lib/db';
 
+async function getDbUser(supabaseUserId: string, email?: string) {
+    if (!supabaseUserId) return null;
+    let dbUser = await prisma.user.findUnique({ where: { id: supabaseUserId } });
+    if (!dbUser && email) {
+        dbUser = await prisma.user.findUnique({ where: { email } });
+    }
+    return dbUser;
+}
+
 export async function GET(request: NextRequest) {
     try {
         const supabase = createClient();
@@ -11,23 +20,29 @@ export async function GET(request: NextRequest) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        // Fetch profile settings AND user email
-        const userData = await prisma.user.findUnique({
-            where: { id: user.id },
-            select: {
-                email: true,
-                freelancerProfile: {
-                    select: { notificationSettings: true }
+        const dbUser = await getDbUser(user.id, user.email);
+
+        let settings = null;
+        let email = user.email;
+
+        // Only try to fetch profile if we found a DB User
+        if (dbUser) {
+            email = dbUser.email;
+            const profile = await prisma.freelancerProfile.findUnique({
+                where: { userId: dbUser.id },
+                select: { notificationSettings: true }
+            });
+            if (profile?.notificationSettings) {
+                try {
+                    settings = JSON.parse(profile.notificationSettings);
+                } catch (e) {
+                    console.error("Error parsing settings:", e);
                 }
             }
-        });
-
-        const settings = userData?.freelancerProfile?.notificationSettings
-            ? JSON.parse(userData.freelancerProfile.notificationSettings)
-            : null;
+        }
 
         return NextResponse.json({
-            email: userData?.email || user.email,
+            email: email,
             settings: settings || {
                 jobAlerts: true,
                 messageNotifications: true,
@@ -51,31 +66,44 @@ export async function PUT(request: NextRequest) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
+        const dbUser = await getDbUser(user.id, user.email);
+        if (!dbUser) {
+            // If user simply doesn't exist in DB yet, we might want to fail gracefully or auto-create?
+            // For settings, failing is appropriate as profile should exist.
+            return NextResponse.json({ error: 'User not found' }, { status: 404 });
+        }
+
         const body = await request.json();
         const { notifications, email } = body;
 
         // Update notifications if provided
         if (notifications) {
-            await prisma.freelancerProfile.update({
-                where: { userId: user.id },
-                data: {
-                    notificationSettings: JSON.stringify(notifications)
+            // Upsert profile if missing?
+            // "Settings" implies Profile Settings.
+            // If profile missing, create it.
+
+            const settingsString = JSON.stringify(notifications);
+
+            await prisma.freelancerProfile.upsert({
+                where: { userId: dbUser.id },
+                update: {
+                    notificationSettings: settingsString
+                },
+                create: {
+                    userId: dbUser.id,
+                    notificationSettings: settingsString,
+                    // Minimal required fields
+                    skills: '[]',
+                    specializations: '[]',
+                    coords: JSON.stringify([0, 0])
                 }
             });
         }
 
         // Update email if provided
         if (email) {
-            // 1. Update in Supabase Auth (Client should theoretically do this to trigger confirmation, 
-            // but we can try here if admin/service role, or just rely on client. 
-            // For this request, we MUST update our local 'users' table to reflect the change visually.)
-
-            // Note: Changing auth email usually requires re-confirmation. 
-            // We will update the DB directly for display purposes, assuming Auth update is handled or we just want 
-            // the display to be in sync.
-
             await prisma.user.update({
-                where: { id: user.id },
+                where: { id: dbUser.id },
                 data: { email: email }
             });
         }

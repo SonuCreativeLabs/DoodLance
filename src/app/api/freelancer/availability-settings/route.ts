@@ -2,20 +2,25 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import prisma from '@/lib/db';
 
+async function getDbUser(supabaseUserId: string, email?: string) {
+    if (!supabaseUserId) return null;
+    let dbUser = await prisma.user.findUnique({ where: { id: supabaseUserId } });
+    if (!dbUser && email) {
+        dbUser = await prisma.user.findUnique({ where: { email } });
+    }
+    return dbUser;
+}
+
 export async function GET(request: NextRequest) {
     try {
         const { searchParams } = new URL(request.url);
         const userIdParam = searchParams.get('userId');
 
-        // If userId is provided in query (client viewing freelancer), use that
-        // Otherwise, get from auth (freelancer viewing their own)
         let targetUserId: string;
 
         if (userIdParam) {
-            // Public access - client viewing a freelancer's settings
             targetUserId = userIdParam;
         } else {
-            // Authenticated access - freelancer viewing their own
             const supabase = createClient();
             const { data: { user }, error: authError } = await supabase.auth.getUser();
 
@@ -23,7 +28,12 @@ export async function GET(request: NextRequest) {
                 return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
             }
 
-            targetUserId = user.id;
+            const dbUser = await getDbUser(user.id, user.email);
+            if (!dbUser) return NextResponse.json({
+                serviceRadius: 10,
+                advanceNoticeHours: 0
+            });
+            targetUserId = dbUser.id;
         }
 
         const profile = await prisma.freelancerProfile.findUnique({
@@ -61,26 +71,38 @@ export async function PATCH(request: NextRequest) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
+        const dbUser = await getDbUser(user.id, user.email);
+        if (!dbUser) return NextResponse.json({ error: 'User not found in database' }, { status: 404 });
+
         const body = await request.json();
         const { serviceRadius, advanceNoticeHours } = body;
 
         await prisma.freelancerProfile.upsert({
-            where: { userId: user.id },
+            where: { userId: dbUser.id },
             update: {
                 serviceRadius: serviceRadius !== undefined ? parseFloat(serviceRadius) : undefined,
                 advanceNoticeHours: advanceNoticeHours !== undefined ? parseInt(advanceNoticeHours) : undefined
             },
             create: {
-                userId: user.id,
+                userId: dbUser.id,
                 serviceRadius: serviceRadius !== undefined ? parseFloat(serviceRadius) : 10,
                 advanceNoticeHours: advanceNoticeHours !== undefined ? parseInt(advanceNoticeHours) : 0,
                 title: '',
                 about: '',
                 skills: '[]',
                 specializations: '[]',
-                languages: 'English',
-                coords: '[0,0]',
+                // languages removed
+                coords: JSON.stringify([0, 0]),
                 hourlyRate: 0,
+                availability: "[]",
+                rating: 0,
+                reviewCount: 0,
+                completedJobs: 0,
+                totalEarnings: 0,
+                thisMonthEarnings: 0,
+                avgProjectValue: 0,
+                isOnline: false,
+                isProfilePublic: true
             }
         });
 

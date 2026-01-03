@@ -359,7 +359,7 @@ export function SkillsSection({
 
   // Keep local state in sync with context when it hydrates/changes, but only if context has detailed skills
   useEffect(() => {
-    if (contextSkills && contextSkills.length > 0 && contextSkills[0].description) {
+    if (contextSkills && contextSkills.length > 0) {
       setSkills(contextSkills as SkillItemType[]);
     }
   }, [contextSkills]);
@@ -370,10 +370,10 @@ export function SkillsSection({
   const [newDescription, setNewDescription] = useState('');
   const [newLevel, setNewLevel] = useState<'Beginner' | 'Intermediate' | 'Expert'>('Intermediate');
 
-  // Sync skills with SkillsContext whenever skills change
-  useEffect(() => {
-    updateSkills(skills);
-  }, [skills, updateSkills]);
+  // Sync skills with SkillsContext whenever skills change - REMOVED to prevent overwrite
+  // useEffect(() => {
+  //   updateSkills(skills);
+  // }, [skills, updateSkills]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -406,21 +406,24 @@ export function SkillsSection({
 
   const handleEditSkill = (id: string, newName: string, newDescription?: string, newExperience?: string, newLevel?: string) => {
     const formattedExp = newExperience ? formatExperience(newExperience) : '';
-    setSkills(prev =>
-      prev.map(skill =>
-        skill.id === id ? {
-          ...skill,
-          name: newName,
-          description: newDescription,
-          experience: formattedExp,
-          level: (newLevel || 'Intermediate') as 'Beginner' | 'Intermediate' | 'Expert'
-        } : skill
-      )
+    const updatedSkills = skills.map(skill =>
+      skill.id === id ? {
+        ...skill,
+        name: newName,
+        description: newDescription,
+        experience: formattedExp,
+        level: (newLevel || 'Intermediate') as 'Beginner' | 'Intermediate' | 'Expert'
+      } : skill
     );
+
+    setSkills(updatedSkills);
+    updateSkills(updatedSkills);
   };
 
   const handleDeleteSkill = (id: string) => {
-    setSkills(prev => prev.filter(skill => skill.id !== id));
+    const updatedSkills = skills.filter(skill => skill.id !== id);
+    setSkills(updatedSkills);
+    updateSkills(updatedSkills);
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -430,7 +433,12 @@ export function SkillsSection({
       setSkills((items) => {
         const oldIndex = items.findIndex((item: SkillItemType) => item.id === active.id.toString());
         const newIndex = items.findIndex((item: SkillItemType) => item.id === over.id.toString());
-        return arrayMove(items, oldIndex, newIndex);
+        const reorderedSkills = arrayMove(items, oldIndex, newIndex);
+
+        // Sync with context
+        updateSkills(reorderedSkills);
+
+        return reorderedSkills;
       });
     }
   };

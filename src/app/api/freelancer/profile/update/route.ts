@@ -8,7 +8,40 @@ export async function PATCH(request: NextRequest) {
         const { data: { user }, error: authError } = await supabase.auth.getUser();
 
         if (authError || !user) {
+            console.error("Auth Error in Profile Update:", authError);
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        // Resolve User (Handle Supabase UUID vs DB CUID mismatch)
+        // Auto-create/Sync User if missing
+        let dbUser = await prisma.user.findFirst({
+            where: {
+                OR: [
+                    { id: user.id },
+                    { email: user.email }
+                ]
+            },
+            select: { id: true }
+        });
+
+        if (!dbUser) {
+            console.log(`User ${user.email} missing in DB. Auto-creating...`);
+            try {
+                dbUser = await prisma.user.create({
+                    data: {
+                        id: user.id, // Try to sync IDs
+                        email: user.email!,
+                        name: user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0],
+                        role: 'freelancer',
+                        coords: JSON.stringify([0, 0]),
+                        isVerified: true
+                    },
+                    select: { id: true }
+                });
+            } catch (e) {
+                console.error("Failed to auto-create user:", e);
+                return NextResponse.json({ error: 'User sync failed' }, { status: 500 });
+            }
         }
 
         const body = await request.json();
@@ -57,7 +90,7 @@ export async function PATCH(request: NextRequest) {
 
         if (Object.keys(userUpdates).length > 0) {
             await prisma.user.update({
-                where: { id: user.id },
+                where: { id: dbUser.id },
                 data: userUpdates
             });
         }
@@ -71,7 +104,7 @@ export async function PATCH(request: NextRequest) {
 
         if (Object.keys(addressUpdates).length > 0) {
             await prisma.user.update({
-                where: { id: user.id },
+                where: { id: dbUser.id },
                 data: addressUpdates
             });
         }
@@ -87,7 +120,7 @@ export async function PATCH(request: NextRequest) {
         if (coverImageUrl !== undefined) profileUpdates.coverImage = coverImageUrl; // map coverImageUrl -> coverImage
 
         const profile = await prisma.freelancerProfile.findUnique({
-            where: { userId: user.id }
+            where: { userId: dbUser.id }
         });
 
         if (profile) {
@@ -106,16 +139,16 @@ export async function PATCH(request: NextRequest) {
 
             if (Object.keys(data).length > 0) {
                 await prisma.freelancerProfile.update({
-                    where: { userId: user.id },
+                    where: { userId: dbUser.id },
                     data
                 });
             }
         } else {
             // Create new profile
-            console.log("Creating new freelancer profile for user", user.id);
+            console.log("Creating new freelancer profile for user", dbUser.id);
             await prisma.freelancerProfile.create({
                 data: {
-                    userId: user.id,
+                    userId: dbUser.id,
                     title: title || '',
                     about: about || '',
                     cricketRole: cricketRole || '',
@@ -123,10 +156,9 @@ export async function PATCH(request: NextRequest) {
                     bowlingStyle: bowlingStyle || '',
                     hourlyRate: hourlyRate || 30, // Default
                     isOnline: online ?? true,
-                    // ready_to_work removed as it is not in schema
                     skills: Array.isArray(skills) ? JSON.stringify(skills) : (skills || "[]"),
                     specializations: Array.isArray(specializations) ? JSON.stringify(specializations) : (specializations || "[]"),
-                    availability: [], // Default empty
+                    availability: "[]", // Default empty JSON string, NOT array
                     // Add other required fields with defaults
                     rating: 0,
                     reviewCount: 0,
@@ -139,17 +171,23 @@ export async function PATCH(request: NextRequest) {
                     thisMonthEarnings: 0,
                     avgProjectValue: 0,
                     dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
-                    coverImage: coverImageUrl || null
+                    coverImage: coverImageUrl || null,
+                    coords: JSON.stringify([0, 0]) // Required by schema
                 }
             });
         }
 
         return NextResponse.json({ success: true });
 
-    } catch (error) {
-        console.error('Profile update error:', error);
+    } catch (error: any) {
+        console.error('SERVER ERROR in Profile Update:', error);
+        console.error('Error Stack:', error.stack);
+        // Log inner error if Prisma
+        if (error.code) console.error('Prisma Error Code:', error.code);
+        if (error.meta) console.error('Prisma Error Meta:', error.meta);
+
         return NextResponse.json(
-            { error: 'Failed to update profile' },
+            { error: 'Failed to update profile: ' + error.message },
             { status: 500 }
         );
     }
