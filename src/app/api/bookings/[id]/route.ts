@@ -14,9 +14,35 @@ export async function GET(
 ) {
   try {
     const supabase = createClient()
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    let { data: { user }, error: authError } = await supabase.auth.getUser()
 
     if (authError || !user) {
+      // Fallback: Check for 'auth-token' (Legacy/JWT)
+      const { cookies } = await import('next/headers');
+      const cookieStore = cookies();
+      const token = cookieStore.get('auth-token')?.value;
+
+      if (token) {
+        try {
+          const { verifyAccessToken } = await import('@/lib/auth/jwt');
+          const decoded = verifyAccessToken(token);
+          if (decoded && decoded.userId) {
+            const dbUser = await prisma.user.findUnique({
+              where: { id: decoded.userId }
+            });
+            if (dbUser) {
+              // Proceed as authenticated with this user
+              user = { id: dbUser.id, role: dbUser.role || 'client', email: dbUser.email || '' } as any;
+              // Fallback successful
+            }
+          }
+        } catch (e) {
+          console.warn('JWT Fallback failed in booking/[id]:', e);
+        }
+      }
+    }
+
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -49,42 +75,46 @@ export async function GET(
     }
 
     // Map to frontend expected format
-    const provider = booking.service.provider;
-    const profile = provider.freelancerProfile;
+    const provider = booking.service?.provider;
+    const profile = provider?.freelancerProfile;
 
     const mappedBooking = {
       "#": booking.id,
-      service: booking.service.title,
-      title: booking.service.title,
-      provider: provider.name,
+      service: booking.service?.title || 'Unknown Service',
+      title: booking.service?.title || 'Unknown Service',
+      provider: provider?.name || 'Unknown Provider',
       freelancer: {
-        name: provider.name,
-        image: provider.avatar || "/images/avatar-placeholder.png",
+        name: provider?.name || 'Unknown',
+        image: provider?.avatar || "/images/avatar-placeholder.png",
         rating: profile?.rating || 0,
         location: profile?.location || 'Remote',
-        phone: provider.phone
+        phone: provider?.phone || ''
       },
-      image: provider.avatar || "/images/avatar-placeholder.png",
+      image: provider?.avatar || "/images/avatar-placeholder.png",
       date: booking.scheduledAt ? new Date(booking.scheduledAt).toISOString().split('T')[0] : '',
       time: booking.scheduledAt ? new Date(booking.scheduledAt).toLocaleTimeString() : '',
       status: booking.status.toLowerCase(),
       location: booking.location || "Remote",
       price: `₹${booking.totalPrice}`,
       totalPrice: booking.totalPrice,
-      rating: 0,
+      rating: booking.rating || 0,
+      review: (booking as any).review || '',
       completedJobs: profile?.completedJobs || 0,
-      description: booking.service.description,
-      category: booking.service.category || "General",
+      description: booking.service?.description || '',
+      category: booking.service?.category || "General",
       earnedMoney: `₹${booking.totalPrice}`,
-      completedDate: booking.scheduledAt ? new Date(booking.scheduledAt).toLocaleDateString() : '',
-      yourRating: 0
+      completedDate: (booking as any).deliveredAt
+        ? new Date((booking as any).deliveredAt).toLocaleDateString()
+        : (booking.scheduledAt ? new Date(booking.scheduledAt).toLocaleDateString() : ''),
+      cancellationNotes: booking.notes || '',
+      clientRating: (booking as any).clientRating || null,
+      yourRating: booking.rating || 0
     };
-
     return NextResponse.json(mappedBooking);
 
   } catch (error) {
-    console.error('Fetch booking error:', error);
-    return NextResponse.json({ error: 'Failed to fetch booking' }, { status: 500 });
+    console.error('Fetch booking error ID:', params.id, error);
+    return NextResponse.json({ error: 'Failed to fetch booking', details: String(error) }, { status: 500 });
   }
 }
 
@@ -98,9 +128,33 @@ export async function PUT(
 ) {
   try {
     const supabase = createClient()
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    let { data: { user }, error: authError } = await supabase.auth.getUser()
 
     if (authError || !user) {
+      // Fallback: Check for 'auth-token' (Legacy/JWT)
+      const { cookies } = await import('next/headers');
+      const cookieStore = cookies();
+      const token = cookieStore.get('auth-token')?.value;
+
+      if (token) {
+        try {
+          const { verifyAccessToken } = await import('@/lib/auth/jwt');
+          const decoded = verifyAccessToken(token);
+          if (decoded && decoded.userId) {
+            const dbUser = await prisma.user.findUnique({
+              where: { id: decoded.userId }
+            });
+            if (dbUser) {
+              user = { id: dbUser.id, role: dbUser.role || 'client', email: dbUser.email || '' } as any;
+            }
+          }
+        } catch (e) {
+          console.warn('JWT Fallback failed in booking/[id] PUT:', e);
+        }
+      }
+    }
+
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

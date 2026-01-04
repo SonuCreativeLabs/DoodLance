@@ -61,6 +61,7 @@ export async function GET(request: NextRequest) {
             avatar: true,
             location: true,
             isVerified: true,
+            phone: true,
           }
         },
         _count: {

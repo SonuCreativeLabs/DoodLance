@@ -15,7 +15,7 @@ const RealtimeContext = createContext<RealtimeContextType | undefined>(undefined
 export function RealtimeProvider({ children }: { children: React.ReactNode }) {
     const [isConnected, setIsConnected] = useState(false)
     const { user } = useAuth()
-    const supabase = createClient()
+    const [supabase] = useState(() => createClient())
     const router = useRouter()
 
     useEffect(() => {

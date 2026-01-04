@@ -138,7 +138,7 @@ export const JobCard: React.FC<JobCardProps> = ({ job, index, onStatusChange }) 
           </div>
 
           {/* Rating and Review for Completed Jobs */}
-          {job.status === 'completed' && job.clientRating && (
+          {(job.status === 'completed' || job.status === 'delivered') && job.clientRating && (
             <div className="pt-3 border-t border-white/10">
               <div className="space-y-2">
                 {/* Show client rating */}
@@ -201,8 +201,9 @@ export const JobCard: React.FC<JobCardProps> = ({ job, index, onStatusChange }) 
               <Button
                 variant="default"
                 size="sm"
-                className="flex-1 bg-gradient-to-r from-[#643cb5] to-[#4a1c91] hover:from-[#5a36a3] hover:to-[#3a1773] text-white h-9 text-xs font-medium shadow-md shadow-purple-900/20 transition-all duration-200 flex items-center justify-center gap-1.5"
-                onClick={handleMessageClick}
+                disabled
+                className="flex-1 bg-gradient-to-r from-[#643cb5]/50 to-[#4a1c91]/50 text-white/50 h-9 text-xs font-medium shadow-none cursor-not-allowed flex items-center justify-center gap-1.5"
+              // onClick={handleMessageClick}
               >
                 <MessageCircle className="w-3.5 h-3.5" />
                 <span>Message</span>
@@ -225,12 +226,13 @@ export const JobCard: React.FC<JobCardProps> = ({ job, index, onStatusChange }) 
                 }}
                 onClick={(e) => {
                   e.stopPropagation();
-                  if (job.client?.phoneNumber) {
-                    window.location.href = `tel:${job.client.phoneNumber}`;
+                  // Check mapped phoneNumber
+                  const phone = job.client?.phoneNumber || job.client?.phone;
+                  if (phone) {
+                    window.location.href = `tel:${phone.replace(/\s/g, '')}`;
                   } else {
                     console.log('No phone number available for this client');
-                    // Optionally alert the user
-                    // alert('No phone number available for this client');
+                    alert('No phone number available for this client');
                   }
                 }}
               >

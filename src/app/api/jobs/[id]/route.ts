@@ -54,7 +54,7 @@ export async function GET(
             phone: true,
           }
         },
-        service: true // Include service details for job info
+        service: true, // Include service details for job info
       }
     })
 
@@ -72,13 +72,13 @@ export async function GET(
       // Map booking to job shape
       return NextResponse.json({
         id: booking.id,
-        title: booking.service.title,
-        description: booking.service.description,
+        title: booking.service?.title || 'Unknown Job',
+        description: booking.service?.description || '',
         status: booking.status === 'PENDING' ? 'OPEN' : booking.status === 'CONFIRMED' ? 'OPEN' : booking.status === 'ONGOING' ? 'STARTED' : booking.status,
         payment: booking.totalPrice,
         location: booking.location,
         scheduledAt: booking.scheduledAt,
-        duration: booking.duration + " mins",
+        duration: (booking.duration || 60) + " mins",
         client: booking.client,
         otp: otp,
         clientId: booking.clientId,
@@ -88,6 +88,14 @@ export async function GET(
         skills: '', // Or derive from service tags
         peopleNeeded: 1,
         applications: [], // No applications for direct booking
+        services: booking.services,
+        notes: booking.notes,
+        createdAt: booking.createdAt,
+        completedAt: booking.deliveredAt,
+        cancelledAt: booking.cancelledAt,
+        clientRating: booking.clientRating,
+        freelancerRating: booking.freelancerRating,
+        isDirectHire: true,
       })
     }
 
@@ -97,9 +105,9 @@ export async function GET(
     )
 
   } catch (error) {
-    console.error('Database error fetching job:', error)
+    console.error('Database error fetching job ID:', params.id, error)
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Internal server error', details: String(error) },
       { status: 500 }
     )
   }
@@ -196,15 +204,24 @@ export async function PUT(
         // I'll skip startedAt for now to be safe, or just check 'updatedAt'.
       }
 
-      if (status === 'completed') {
+      if (status === 'delivered') {
         if (isBooking) updateData.deliveredAt = new Date();
-        // if (isJob) updateData.completedAt = new Date(); // Schema has compeletedAt
-        updateData.completedAt = new Date(); // Booking doesn't have completedAt?
-        // Booking has 'deliveredAt'. Job has 'completedAt'.
+        // delivered status is valid for Freelancer marking "Work Done"
+      }
+
+      if (status === 'completed') {
+        // Final completion (Client confirms)
         if (isBooking) {
-          updateData.deliveredAt = new Date();
-          delete updateData.completedAt;
+          // Ensure deliveredAt is set if it wasn't before (e.g. direct complete)
+          if (!isBooking.deliveredAt) updateData.deliveredAt = new Date();
+          // Booking doesn't have a specific completedAt field in schema distinct from deliveredAt? 
+          // Wait, schema has `deliveredAt` (DateTime?). 
+          // Schema doesn't have `completedAt`.
+          // Let's us `deliveredAt` for the freelancer's "Delivery" time.
+          // And we just rely on `status="completed"` for the final state.
+          // Or, we use `completedAt` if it exists on Job? Job has `completedAt`.
         }
+        if (isJob) updateData.completedAt = new Date();
       }
 
       if (status === 'cancelled') {

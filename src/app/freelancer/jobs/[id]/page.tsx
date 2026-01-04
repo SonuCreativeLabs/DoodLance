@@ -53,6 +53,7 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
           location: data.client?.location || '',
           jobsCompleted: 10, // Placeholder if not in API
           memberSince: '2023', // Placeholder
+          phoneNumber: data.client?.phone || '',
         },
         otp: data.otp,
         startedAt: data.startedAt,

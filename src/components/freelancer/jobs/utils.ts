@@ -26,21 +26,21 @@ export const getCategoryDisplayName = (category: string) => {
 // Function to format time in 12-hour format with AM/PM
 export const formatTime12Hour = (timeString: string): string => {
   if (!timeString) return '';
-  
+
   try {
     // Handle both 24h and 12h formats
     const [hours, minutes] = timeString.split(':');
     let h = parseInt(hours, 10);
     const m = parseInt(minutes, 10) || 0;
     const ampm = h >= 12 ? 'PM' : 'AM';
-    
+
     // Convert to 12-hour format
     h = h % 12;
     h = h === 0 ? 12 : h; // Convert 0 to 12 for 12 AM
-    
+
     // Format minutes with leading zero
     const formattedMinutes = m < 10 ? `0${m}` : m;
-    
+
     return `${h}:${formattedMinutes} ${ampm}`;
   } catch (error) {
     console.error('Error formatting time:', error);
@@ -53,14 +53,14 @@ export const formatTimeRemaining = (dateTimeString: string) => {
   const now = new Date();
   const jobDate = new Date(dateTimeString);
   const diffMs = jobDate.getTime() - now.getTime();
-  
+
   if (diffMs <= 0) return '00:00:00';
-  
+
   const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
   const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
   const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
   const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
-  
+
   if (days > 0) return `${days}d ${hours}h`;
   return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 };
@@ -73,11 +73,11 @@ export const formatDate = (dateString: string) => {
 export const calculateJobEarnings = (job: Job) => {
   const baseAmount = typeof job.payment === 'string' ? parseFloat(job.payment) : job.payment;
 
-  // Default platform commission rate (10%)
-  const commissionRate = 0.10;
+  // Default platform commission rate (25%)
+  const commissionRate = 0.25;
 
-  // GST rate (18% standard Indian rate)
-  const gstRate = 0.18;
+  // No GST charged to freelancer
+  const gstRate = 0;
 
   // Calculate tips (could be from job data or default to 0)
   const tips = job.earnings?.tips || 0;
@@ -88,14 +88,14 @@ export const calculateJobEarnings = (job: Job) => {
   // Calculate subtotal (base + tips + add-ons)
   const subtotal = baseAmount + tips + addOnServicesTotal;
 
-  // Calculate platform commission (10% of subtotal including tips)
+  // Calculate platform commission (25% of subtotal including tips)
   const platformCommission = Math.round(subtotal * commissionRate);
 
-  // Calculate GST on the subtotal (18% GST on total earnings)
-  const gst = Math.round(subtotal * gstRate);
+  // Calculate GST (0)
+  const gst = 0;
 
-  // Calculate total earnings (subtotal - platform fee - GST)
-  const totalEarnings = subtotal - platformCommission - gst;
+  // Calculate total earnings (subtotal - platform fee)
+  const totalEarnings = subtotal - platformCommission;
 
   // Alternative GST calculation methods (commented out)
   // Method 1: GST on full amount before platform fee
@@ -135,27 +135,27 @@ export const calculateJobEarnings = (job: Job) => {
 // Status colors mapping with modern design
 export const statusColors = {
   // Job status colors
-  pending: { 
-    bg: 'bg-amber-500/10', 
-    text: 'text-amber-400', 
+  pending: {
+    bg: 'bg-amber-500/10',
+    text: 'text-amber-400',
     border: 'border-amber-500/20',
     shadow: 'shadow-amber-500/10'
   },
-  completed: { 
-    bg: 'bg-emerald-500/10', 
-    text: 'text-emerald-400', 
+  completed: {
+    bg: 'bg-emerald-500/10',
+    text: 'text-emerald-400',
     border: 'border-emerald-500/20',
     shadow: 'shadow-emerald-500/10'
   },
-  cancelled: { 
-    bg: 'bg-rose-500/10', 
-    text: 'text-rose-400', 
+  cancelled: {
+    bg: 'bg-rose-500/10',
+    text: 'text-rose-400',
     border: 'border-rose-500/20',
     shadow: 'shadow-rose-500/10'
   },
-  upcoming: { 
-    bg: 'bg-amber-500/10', 
-    text: 'text-amber-400', 
+  upcoming: {
+    bg: 'bg-amber-500/10',
+    text: 'text-amber-400',
     border: 'border-amber-500/20',
     shadow: 'shadow-amber-500/10'
   },
@@ -171,41 +171,47 @@ export const statusColors = {
     border: 'border-green-500/20',
     shadow: 'shadow-green-500/10'
   },
+  delivered: {
+    bg: 'bg-indigo-500/10',
+    text: 'text-indigo-400',
+    border: 'border-indigo-500/20',
+    shadow: 'shadow-indigo-500/10'
+  },
   // Application status colors
-  accepted: { 
-    bg: 'bg-emerald-500/10', 
-    text: 'text-emerald-400', 
+  accepted: {
+    bg: 'bg-emerald-500/10',
+    text: 'text-emerald-400',
     border: 'border-emerald-500/20',
     shadow: 'shadow-emerald-500/10'
   },
-  rejected: { 
-    bg: 'bg-rose-500/10', 
-    text: 'text-rose-400', 
+  rejected: {
+    bg: 'bg-rose-500/10',
+    text: 'text-rose-400',
     border: 'border-rose-500/20',
     shadow: 'shadow-rose-500/10'
   },
-  withdrawn: { 
-    bg: 'bg-gray-500/10', 
-    text: 'text-gray-400', 
+  withdrawn: {
+    bg: 'bg-gray-500/10',
+    text: 'text-gray-400',
     border: 'border-gray-500/20',
     shadow: 'shadow-gray-500/10'
   },
   // Transaction status colors
-  paid: { 
-    bg: 'bg-emerald-500/10', 
-    text: 'text-emerald-400', 
+  paid: {
+    bg: 'bg-emerald-500/10',
+    text: 'text-emerald-400',
     border: 'border-emerald-500/20',
     shadow: 'shadow-emerald-500/10'
   },
-  failed: { 
-    bg: 'bg-rose-500/10', 
-    text: 'text-rose-400', 
+  failed: {
+    bg: 'bg-rose-500/10',
+    text: 'text-rose-400',
     border: 'border-rose-500/20',
     shadow: 'shadow-rose-500/10'
   },
-  pending_payment: { 
-    bg: 'bg-amber-500/10', 
-    text: 'text-amber-400', 
+  pending_payment: {
+    bg: 'bg-amber-500/10',
+    text: 'text-amber-400',
     border: 'border-amber-500/20',
     shadow: 'shadow-amber-500/10'
   }

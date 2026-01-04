@@ -34,7 +34,7 @@ const convertBookingToJob = (booking: any): Job => {
   // Map booking status to job status
   // 'confirmed' bookings should show as 'pending' (upcoming) jobs
   // 'ongoing' bookings should show as 'started' jobs
-  let jobStatus: 'pending' | 'started' | 'completed' | 'cancelled' = 'pending';
+  let jobStatus: 'pending' | 'started' | 'completed' | 'cancelled' | 'delivered' = 'pending';
 
   const statusLower = (booking.status || '').toLowerCase();
 
@@ -42,6 +42,8 @@ const convertBookingToJob = (booking: any): Job => {
     jobStatus = 'started';
   } else if (statusLower === 'completed') {
     jobStatus = 'completed';
+  } else if (statusLower === 'delivered') {
+    jobStatus = 'delivered'; // keep as delivered
   } else if (statusLower === 'cancelled') {
     jobStatus = 'cancelled';
   } else if (statusLower === 'confirmed' || statusLower === 'pending') {
@@ -122,7 +124,7 @@ const convertBookingToJob = (booking: any): Job => {
       rating: 4.5,
       jobsCompleted: 10,
       memberSince: new Date().toISOString().split('T')[0],
-      phoneNumber: '+91 9876543210',
+      phoneNumber: booking.providerPhone || booking.client?.phone,
       image: booking.clientAvatar || '',
       moneySpent: 50000,
       location: booking.location || 'Remote',
@@ -158,9 +160,11 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
   // Transform database job to JobCard expected format
   const transformJobForCard = (dbJob: any) => {
     // Map original job status to our 3-status system
-    let displayStatus: 'upcoming' | 'completed' | 'cancelled' | 'ongoing' = 'upcoming';
+    let displayStatus: 'upcoming' | 'completed' | 'cancelled' | 'ongoing' | 'delivered' = 'upcoming';
     if (dbJob.status === 'completed') {
       displayStatus = 'completed';
+    } else if (dbJob.status === 'delivered') {
+      displayStatus = 'delivered';
     } else if (dbJob.status === 'cancelled') {
       displayStatus = 'cancelled';
     } else if (dbJob.status === 'started') {
@@ -188,7 +192,7 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
         rating: 4.5,
         jobsCompleted: 10,
         memberSince: new Date().toISOString().split('T')[0],
-        phoneNumber: '+91 9876543210',
+        phoneNumber: dbJob.client?.phone || dbJob.client?.phoneNumber,
         image: '',
         moneySpent: 50000,
         location: 'Location not specified',
@@ -333,7 +337,7 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
 
     if (!searchLower) {
       if (statusFilter === 'completed') {
-        return jobs.filter(job => job.status === 'completed').map(transformJobForCard);
+        return jobs.filter(job => job.status === 'completed' || job.status === 'delivered').map(transformJobForCard);
       } else if (statusFilter === 'cancelled') {
         return jobs.filter(job => job.status === 'cancelled').map(transformJobForCard);
       } else if (statusFilter === 'ongoing') {
@@ -366,7 +370,7 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
 
       // Apply status filter if specified
       const matchesStatus = statusFilter === 'upcoming' ||
-        (statusFilter === 'completed' && job.status === 'completed') ||
+        (statusFilter === 'completed' && (job.status === 'completed' || job.status === 'delivered')) ||
         (statusFilter === 'cancelled' && job.status === 'cancelled') ||
         (statusFilter === 'ongoing' && job.status === 'started');
 
@@ -428,7 +432,7 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
   const tabCounts = useMemo(() => {
     const upcomingJobs = jobs.filter(job => job.status === 'upcoming' || job.status === 'pending');
     const ongoingJobs = jobs.filter(job => job.status === 'started');
-    const completedJobs = jobs.filter(job => job.status === 'completed');
+    const completedJobs = jobs.filter(job => job.status === 'completed' || job.status === 'delivered');
     const cancelledJobs = jobs.filter(job => job.status === 'cancelled');
 
     const pendingApplications = applications.filter(app => app.status === 'pending');

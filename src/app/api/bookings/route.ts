@@ -239,6 +239,10 @@ export async function POST(request: NextRequest) {
             finalPrice = service.price;
         }
 
+        // Add 5% platform fee
+        const platformFee = Math.round(finalPrice * 0.05);
+        finalPrice += platformFee;
+
         const bookingData = {
             clientId: user.id,
             serviceId: service.id,
