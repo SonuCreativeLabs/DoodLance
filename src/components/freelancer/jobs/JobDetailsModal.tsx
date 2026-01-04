@@ -1665,7 +1665,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                   <div className="space-y-1">
                     <h1 className="text-xl font-bold text-white">Job Verification</h1>
                     <p className="text-gray-400 text-sm leading-relaxed max-w-sm mx-auto">
-                      Get the 4-digit verification code from the client when you meet them on the field to start the job (💡 Test: 1234).
+                      Get the 4-digit verification code from the client when you meet them on the field to start the job.
                     </p>
                   </div>
                 </div>
@@ -1740,7 +1740,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                   </div>
                   <div className="text-center">
                     <p className="text-xs text-gray-400">
-                      Get the 4-digit verification code from the client on the field (💡 Test: 1234)
+                      Get the 4-digit verification code from the client on the field
                     </p>
                   </div>
 
