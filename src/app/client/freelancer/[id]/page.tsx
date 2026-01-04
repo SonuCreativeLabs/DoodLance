@@ -210,7 +210,7 @@ export default function FreelancerDetailPage() {
                     languages: profile.languages,
                     completionRate: 0,
                     skills: skills,
-                    coverImage: '',
+                    coverImage: profile.coverImage || '',
 
                     services: profile.services?.map((s: any) => ({
                         id: s.id,
@@ -523,7 +523,7 @@ export default function FreelancerDetailPage() {
                                             <img
                                                 src={freelancer.coverImage}
                                                 alt="Profile Cover"
-                                                className="relative w-full h-full object-cover z-10"
+                                                className="absolute inset-0 w-full h-full object-cover z-10"
                                                 onError={(e) => {
                                                     e.currentTarget.style.display = 'none';
                                                 }}
@@ -549,7 +549,7 @@ export default function FreelancerDetailPage() {
                                 </div>
 
                                 {/* Profile Content */}
-                                <div className="max-w-6xl mx-auto px-4 relative">
+                                <div className="max-w-6xl mx-auto px-4 relative z-20">
                                     <div className="flex flex-col items-center md:flex-row md:items-end md:justify-between -mt-16 mb-4 relative">
                                         {/* Profile Picture */}
                                         <div className="relative group">

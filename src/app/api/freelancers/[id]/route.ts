@@ -81,6 +81,7 @@ export async function GET(
       location: profile.user.location,
       bio: profile.user.bio,
       avatar: profile.user.avatar,
+      coverImage: profile.coverImage,
       phone: profile.user.phone,
       email: profile.user.email,
       hourlyRate: profile.hourlyRate,
@@ -124,10 +125,10 @@ export async function GET(
 
     return NextResponse.json({ profile: formattedProfile });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Freelancer detail fetch error:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch freelancer details' },
+      { error: 'Failed to fetch freelancer details: ' + error.message },
       { status: 500 }
     );
   }
