@@ -29,6 +29,26 @@ export function BottomNav() {
         <div className="flex justify-between items-center">
           {navigation.map((item) => {
             const isActive = pathname === item.href
+            const isInbox = item.href === '/client/inbox'
+
+            if (isInbox) {
+              return (
+                <button
+                  key={item.name}
+                  onClick={(e) => {
+                    e.preventDefault()
+                    // Optional: toast("Inbox coming soon!")
+                  }}
+                  className="flex flex-col items-center min-w-[64px] cursor-not-allowed opacity-50"
+                >
+                  <div className="flex flex-col items-center text-gray-400">
+                    <item.icon className="h-6 w-6" />
+                    <span className="text-[10px] mt-1 font-medium">Coming Soon</span>
+                  </div>
+                </button>
+              )
+            }
+
             return (
               <Link
                 key={item.name}
@@ -45,7 +65,7 @@ export function BottomNav() {
               </Link>
             )
           })}
-          
+
           <Link
             href="/freelancer"
             onClick={handleWorkAndEarn}

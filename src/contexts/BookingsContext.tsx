@@ -6,6 +6,7 @@ export interface Booking {
   "#": string;
   service: string;
   provider: string;
+  freelancerId?: string;
   image: string;
   date: string;
   time: string;
@@ -56,6 +57,7 @@ export function BookingsProvider({ children }: { children: ReactNode }) {
       const response = await fetch('/api/bookings');
       if (response.ok) {
         const data = await response.json();
+        console.log('Bookings API Data:', data);
         // Map API response to Context Booking interface
         // API returns: { id, title, clientName, freelancerName, freelancerAvatar, ... }
         // Context expects: { '#': string, service: string, provider: string, ... }
@@ -80,7 +82,8 @@ export function BookingsProvider({ children }: { children: ReactNode }) {
             completedAt: b.completedAt ? new Date(b.completedAt).toLocaleDateString() : undefined,
             notes: b.notes,
             services: b.services,
-            providerPhone: b.freelancerPhone || '9999999999', // Mock fallback for testing call button
+            providerPhone: b.freelancerPhone,
+            freelancerId: b.freelancerId,
           };
         });
         setBookings(mapped);
@@ -128,6 +131,7 @@ export function BookingsProvider({ children }: { children: ReactNode }) {
     }
 
     try {
+      console.log('Sending booking request with serviceId:', serviceId);
       const response = await fetch('/api/bookings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -177,10 +181,9 @@ export function BookingsProvider({ children }: { children: ReactNode }) {
         method: 'PUT', // or PATCH
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          status: 'CONFIRMED', // Reschedule usually confirms it?
-          // API PUT expects status.
+          status: 'confirmed',
+          scheduledAt: new Date(`${newDate} ${newTime}`),
           // We might need a specific 'reschedule' field or just update logic.
-          // For now just status update as per existing PUT
         }),
       });
 

@@ -136,7 +136,7 @@ export default function CartPage() {
           </div>
           <div>
             <h3 className="font-medium text-white">{state.freelancerName}</h3>
-            {state.freelancerRating && (
+            {(state.freelancerRating || 0) > 0 && (
               <div className="flex items-center gap-1 mt-1">
                 <div className="flex items-center gap-0.5">
                   {[...Array(5)].map((_, i) => (
@@ -150,7 +150,7 @@ export default function CartPage() {
                   ))}
                 </div>
                 <span className="text-sm text-white/70 ml-1">
-                  {state.freelancerRating.toFixed(1)} ({state.freelancerReviewCount || 0} reviews)
+                  {(state.freelancerRating || 0).toFixed(1)} ({state.freelancerReviewCount || 0} reviews)
                 </span>
               </div>
             )}

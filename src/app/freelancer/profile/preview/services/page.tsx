@@ -26,35 +26,14 @@ export default function ServicesPage() {
   const [freelancerName, setFreelancerName] = useState('');
   const [freelancerImage, setFreelancerImage] = useState('');
   const [isHireSheetOpen, setIsHireSheetOpen] = useState(false);
+  const [isViewOnly, setIsViewOnly] = useState(false);
 
-  // Check if we're viewing a freelancer's services
+  // Check if we are in view only mode
   useEffect(() => {
-    if (freelancerId) {
-      fetch(`/api/freelancers/${freelancerId}`)
-        .then(res => res.json())
-        .then(data => {
-          if (data && data.profile) {
-            setFreelancerName(data.profile.name || 'Anonymous');
-            setFreelancerImage(data.profile.avatar || '');
-            // Map services
-            const mappedServices = (data.profile.services || []).map((s: any) => ({
-              id: s.id,
-              title: s.title,
-              description: s.description,
-              price: s.price,
-              deliveryTime: s.deliveryTime || '1-3 days',
-              features: s.tags ? s.tags.split(',') : [],
-              category: s.category?.name
-            }));
-            setServices(mappedServices);
-          }
-        })
-        .catch(err => {
-          console.error("Failed to fetch services", err);
-          setServices([]);
-        });
+    if (typeof window !== 'undefined') {
+      setIsViewOnly(window.location.hash.includes('fromPreview'));
     }
-  }, [freelancerId]);
+  }, []);
 
   // Hide header and navbar for this page
   useEffect(() => {
@@ -195,24 +174,28 @@ export default function ServicesPage() {
       </div>
 
       {/* Sticky Hire Me Button */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-[#0F0F0F]/95 backdrop-blur-sm border-t border-white/10 z-40 safe-area-bottom">
-        <button
-          onClick={() => setIsHireSheetOpen(true)}
-          className="w-full py-2.5 bg-gradient-to-r from-purple-600 to-purple-500 text-white font-medium rounded-xl hover:from-purple-700 hover:to-purple-600 transition-all flex items-center justify-center gap-2 shadow-lg"
-        >
-          <UserPlus className="w-4 h-4" />
-          Hire {freelancerName || 'Freelancer'}
-        </button>
-      </div>
+      {!isViewOnly && (
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-[#0F0F0F]/95 backdrop-blur-sm border-t border-white/10 z-40 safe-area-bottom">
+          <button
+            onClick={() => setIsHireSheetOpen(true)}
+            className="w-full py-2.5 bg-gradient-to-r from-purple-600 to-purple-500 text-white font-medium rounded-xl hover:from-purple-700 hover:to-purple-600 transition-all flex items-center justify-center gap-2 shadow-lg"
+          >
+            <UserPlus className="w-4 h-4" />
+            Hire {freelancerName || 'Freelancer'}
+          </button>
+        </div>
+      )}
 
-      <HireBottomSheet
-        isOpen={isHireSheetOpen}
-        onClose={() => setIsHireSheetOpen(false)}
-        freelancerId={freelancerId || ''}
-        freelancerName={freelancerName}
-        freelancerImage={freelancerImage}
-        services={services as ServiceItem[]}
-      />
+      {!isViewOnly && (
+        <HireBottomSheet
+          isOpen={isHireSheetOpen}
+          onClose={() => setIsHireSheetOpen(false)}
+          freelancerId={freelancerId || ''}
+          freelancerName={freelancerName}
+          freelancerImage={freelancerImage}
+          services={services as ServiceItem[]}
+        />
+      )}
     </div>
   );
 }

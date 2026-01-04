@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
-import { Clock, Calendar, Search, X, Briefcase, Star, Phone } from "lucide-react"
+import { Clock, Calendar, Search, X, Briefcase, Star, Phone as PhoneIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 import ClientLayout from "@/components/layouts/client-layout"
 import { useBookings, Booking } from "@/contexts/BookingsContext"
@@ -140,10 +140,11 @@ const BookingCard = ({ booking, showActions = true }: BookingCardProps) => {
               <Button
                 size="sm"
                 variant="outline"
-                className="flex-1 border-white/20 text-white/70 hover:bg-white/10 hover:border-white/30 transition-all duration-300 !rounded-lg"
+                disabled
+                className="flex-1 border-white/10 text-white/30 hover:bg-transparent hover:border-white/10 cursor-not-allowed transition-all duration-300 !rounded-lg"
                 onClick={(event) => {
                   event.stopPropagation()
-                  router.push(`/client/chat/${encodeURIComponent(booking.provider)}`)
+                  event.preventDefault()
                 }}
               >
                 Message
@@ -155,14 +156,14 @@ const BookingCard = ({ booking, showActions = true }: BookingCardProps) => {
                 onClick={(event) => {
                   event.stopPropagation()
                   if (booking.providerPhone) {
-                    window.location.href = `tel:${booking.providerPhone}`
+                    window.location.href = `tel:${booking.providerPhone.replace(/\s/g, '')}`
                   } else {
                     // Fallback or toast
                     alert("Phone number not available")
                   }
                 }}
               >
-                <Phone className="w-4 h-4 mr-2" />
+                <PhoneIcon className="w-4 h-4 mr-2" />
                 Call
               </Button>
             </div>
@@ -267,10 +268,11 @@ const AcceptedProposalCard = ({ application }: { application: Application }) => 
           <Button
             size="sm"
             variant="outline"
-            className="flex-1 border-white/20 text-white/70 hover:bg-white/10 hover:border-white/30 transition-all duration-300 !rounded-lg"
+            disabled
+            className="flex-1 border-white/10 text-white/30 hover:bg-transparent hover:border-white/10 cursor-not-allowed transition-all duration-300 !rounded-lg"
             onClick={(event) => {
               event.stopPropagation()
-              router.push(`/client/chat/${encodeURIComponent(application.freelancer.name)}`)
+              event.preventDefault()
             }}
           >
             Message

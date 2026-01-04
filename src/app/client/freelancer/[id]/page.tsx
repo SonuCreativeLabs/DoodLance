@@ -1,5 +1,7 @@
 "use client";
 
+import { CricketLoader } from '@/components/ui/cricket-loader';
+
 import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -147,6 +149,8 @@ export default function FreelancerDetailPage() {
             setNavbarVisibility(true);
         };
     }, [setNavbarVisibility]);
+
+    const isViewOnly = searchParams.get('viewOnly') === 'true';
 
     // Load freelancer data
     useEffect(() => {
@@ -303,6 +307,11 @@ export default function FreelancerDetailPage() {
     }, [freelancer]);
 
     const handleBack = () => {
+        if (isViewOnly) {
+            router.back();
+            return;
+        }
+
         const source = searchParams.get('source');
         if (source === 'list') {
             // Came from list view, go back to hirefeed with list view expanded
@@ -333,7 +342,7 @@ export default function FreelancerDetailPage() {
             sessionStorage.setItem('returnToProfilePreview', currentUrl);
 
             // Pass freelancer ID to show this freelancer's services
-            router.push(`/freelancer/profile/preview/services?freelancerId=${freelancerId}#fromPreview`);
+            router.push(`/freelancer/profile/preview/services?freelancerId=${freelancerId}${isViewOnly ? '&viewOnly=true' : ''}#fromPreview`);
         }
     };
 
@@ -350,7 +359,7 @@ export default function FreelancerDetailPage() {
             sessionStorage.setItem('returnToProfilePreview', currentUrl);
 
             // Pass freelancer ID to show this freelancer's reviews
-            router.push(`/freelancer/profile/preview/reviews?freelancerId=${freelancerId}`);
+            router.push(`/freelancer/profile/preview/reviews?freelancerId=${freelancerId}${isViewOnly ? '&viewOnly=true' : ''}`);
         }
     };
 
@@ -480,7 +489,7 @@ export default function FreelancerDetailPage() {
         <div>
             {loading && (
                 <div className="flex items-center justify-center h-screen bg-[#0F0F0F]">
-                    <div className="text-white/60">Loading...</div>
+                    <CricketLoader size={60} />
                 </div>
             )}
 
@@ -972,7 +981,7 @@ export default function FreelancerDetailPage() {
                                                         sessionStorage.setItem('returnToProfilePreview', currentUrl);
 
                                                         // Use router.push instead of window.location.href for better navigation
-                                                        router.push(`/freelancer/profile/preview/portfolio?freelancerId=${freelancerId}#fromPreview`);
+                                                        router.push(`/freelancer/profile/preview/portfolio?freelancerId=${freelancerId}${isViewOnly ? '&viewOnly=true' : ''}#fromPreview`);
                                                     }
                                                 }}
                                                 className="w-full mt-2 py-2.5 px-4 border border-white/30 hover:bg-white/5 transition-colors text-sm font-medium flex items-center justify-center gap-2 text-white rounded-[6px]"
@@ -1142,15 +1151,17 @@ export default function FreelancerDetailPage() {
                     }
 
                     {/* Sticky Hire Me Button */}
-                    <div className="fixed bottom-0 left-0 right-0 p-4 bg-[#0F0F0F]/95 backdrop-blur-sm border-t border-white/10">
-                        <button
-                            onClick={() => setIsHireBottomSheetOpen(true)}
-                            className="w-full py-2.5 bg-gradient-to-r from-purple-600 to-purple-500 text-white font-medium rounded-xl hover:from-purple-700 hover:to-purple-600 transition-all flex items-center justify-center gap-2 shadow-lg"
-                        >
-                            <UserPlus className="w-4 h-4" />
-                            Hire {freelancer?.name || 'Freelancer'}
-                        </button>
-                    </div>
+                    {!isViewOnly && (
+                        <div className="fixed bottom-0 left-0 right-0 p-4 bg-[#0F0F0F]/95 backdrop-blur-sm border-t border-white/10">
+                            <button
+                                onClick={() => setIsHireBottomSheetOpen(true)}
+                                className="w-full py-2.5 bg-gradient-to-r from-purple-600 to-purple-500 text-white font-medium rounded-xl hover:from-purple-700 hover:to-purple-600 transition-all flex items-center justify-center gap-2 shadow-lg"
+                            >
+                                <UserPlus className="w-4 h-4" />
+                                Hire {freelancer?.name || 'Freelancer'}
+                            </button>
+                        </div>
+                    )}
                 </div >
             )
             }

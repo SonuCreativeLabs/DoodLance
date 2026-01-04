@@ -89,10 +89,13 @@ async function handleGetBookings(request: NextRequest, user: { id: string, role?
                             select: {
                                 name: true,
                                 avatar: true,
+                                id: true,
+                                phone: true,
                             }
                         },
                         title: true,
                         tags: true, // Fetch tags for skills
+                        providerId: true,
                     }
                 },
                 client: {
@@ -111,7 +114,9 @@ async function handleGetBookings(request: NextRequest, user: { id: string, role?
             title: b.service.title,
             clientName: b.client.name,
             freelancerName: b.service.provider.name,
+            freelancerId: b.service.provider.id,
             freelancerAvatar: b.service.provider.avatar,
+            freelancerPhone: b.service.provider.phone,
             clientAvatar: b.client.avatar, // Added client avatar
             status: b.status,
             date: b.scheduledAt ? b.scheduledAt.toISOString() : null,

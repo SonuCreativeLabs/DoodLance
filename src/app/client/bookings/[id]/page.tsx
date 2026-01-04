@@ -6,6 +6,7 @@ import { ArrowLeft, MapPin, Calendar, Clock, MessageSquare, Phone, Star, Briefca
 
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { CricketLoader } from '@/components/ui/cricket-loader';
 import { useBookings } from "@/contexts/BookingsContext";
 import { useNavbar } from "@/contexts/NavbarContext";
 import { Textarea } from "@/components/ui/textarea";
@@ -172,8 +173,8 @@ export default function BookingDetailPage() {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-[#111111] to-[#050505] text-white/70">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-500 mb-4"></div>
-        <div className="text-lg">Loading booking...</div>
+        <CricketLoader size={60} />
+        <div className="text-lg mt-4">Loading booking...</div>
       </div>
     );
   }
@@ -217,23 +218,16 @@ export default function BookingDetailPage() {
             </div>
 
             <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 p-0 transition-all duration-200"
-                onClick={() => router.push(`/client/chat/${encodeURIComponent(booking.provider)}`)}
-                aria-label="Message"
-              >
-                <MessageSquare className="h-4 w-4 text-purple-400" />
-              </Button>
+              {/* Chat Button Removed */}
               <Button
                 variant="ghost"
                 size="sm"
                 className="h-8 w-8 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 p-0 transition-all duration-200"
                 aria-label="Call"
                 onClick={() => {
-                  const phone = booking.providerPhone || '+91 8608305394';
-                  window.location.href = `tel:${phone.replace(/\s/g, '')}`;
+                  if (booking.providerPhone) {
+                    window.location.href = `tel:${booking.providerPhone.replace(/\s/g, '')}`;
+                  }
                 }}
               >
                 <Phone className="h-4 w-4 text-purple-400" />
@@ -250,13 +244,19 @@ export default function BookingDetailPage() {
           <div className="relative px-4 py-10">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
               <div className="flex items-center gap-4">
-                <Avatar className="h-16 w-16 ring-4 ring-purple-500/20 backdrop-blur-xl">
+                <Avatar
+                  className="h-16 w-16 ring-4 ring-purple-500/20 backdrop-blur-xl cursor-pointer hover:ring-purple-500/40 transition-all"
+                  onClick={() => booking.freelancerId && router.push(`/client/freelancer/${booking.freelancerId}?viewOnly=true`)}
+                >
                   <AvatarImage src={booking.image} alt={booking.provider} />
                   <AvatarFallback className="bg-gradient-to-br from-purple-500 to-purple-700 text-white font-semibold text-lg">
                     {booking.provider.charAt(0)}
                   </AvatarFallback>
                 </Avatar>
-                <div>
+                <div
+                  className="cursor-pointer group"
+                  onClick={() => booking.freelancerId && router.push(`/client/freelancer/${booking.freelancerId}?viewOnly=true`)}
+                >
                   <p className="text-sm text-white/60">Coach</p>
                   <h2 className="text-2xl font-semibold text-white">{booking.provider}</h2>
                   <div className="mt-2 flex items-center gap-4 text-xs text-white/60">
@@ -295,9 +295,11 @@ export default function BookingDetailPage() {
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl">
               <div className="flex items-center gap-2 text-white/70 text-sm mb-2">
                 <Clock className="w-4 h-4 text-purple-300" />
-                <span>Session duration</span>
+                <span>Duration</span>
               </div>
-              <p className="text-lg font-semibold text-white">60 minutes</p>
+              <p className="text-lg font-semibold text-white">
+                {booking.services?.reduce((acc, s) => acc + (s.duration || 0), 0) || 0} minutes
+              </p>
               <p className="text-sm text-white/60">Arrive 10 minutes earlier</p>
             </div>
 
@@ -324,11 +326,6 @@ export default function BookingDetailPage() {
                       <div className="w-2 h-2 rounded-full bg-purple-500"></div>
                       <div className="flex flex-col">
                         <span className="text-white/90">{service.title}</span>
-                        {(service.duration || service.deliveryTime) && (
-                          <span className="text-xs text-white/50">
-                            {service.duration ? `${service.duration} mins` : service.deliveryTime}
-                          </span>
-                        )}
                       </div>
                       {service.quantity > 1 && (
                         <span className="text-xs text-white/50">x{service.quantity}</span>
@@ -336,6 +333,7 @@ export default function BookingDetailPage() {
                     </div>
                     <span className="text-white font-medium">
                       {typeof service.price === 'number' ? `₹${service.price.toLocaleString()}` : service.price}
+                      {service.duration ? ` / ${service.duration} mins` : (service.deliveryTime ? ` / ${service.deliveryTime}` : '')}
                     </span>
                   </div>
                 ))
@@ -426,7 +424,7 @@ export default function BookingDetailPage() {
               </div>
 
               <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-                <p className="text-sm font-semibold text-white mb-2">Coach assurances</p>
+                <p className="text-sm font-semibold text-white mb-2">Expert assurances</p>
                 <ul className="space-y-2 text-sm text-white/70">
                   <li className="flex items-center gap-2">
                     <Shield className="w-4 h-4 text-purple-300" />

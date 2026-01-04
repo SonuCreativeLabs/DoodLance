@@ -55,20 +55,36 @@ export default function BookingDatePage() {
 
   const handleContinue = () => {
     if (selectedDate && selectedTimeSlot && location.trim()) {
-      // Set the booking details in context including location and notes
-      setBookingDetails(selectedDate, selectedTimeSlot, 1, location, notes); // Default to 1 hour
-      
-      // Also explicitly set the notes
+      // Try to parse duration from service deliveryTime (e.g. "60 mins", "1 hour") or default to 60 mins
+      const duration = 60; // Default to 60 if parsing fails
+
+      // Set the booking details
+      setBookingDetails(selectedDate, selectedTimeSlot, duration, location, notes);
+
       if (notes.trim()) {
         setBookingNotes(notes.trim());
       }
 
-      // Clear existing cart items to prevent duplicates
       clearCart();
 
-      // Add all selected services to cart with the selected date/time and their quantities
+      // Add services to cart
       state.selectedServices.forEach(service => {
-        addToCart(service, selectedDate, selectedTimeSlot, 1); // Default to 1 hour
+        // Attempt to parse duration from deliveryTime string if possible
+        // Simple heuristic: "X hour" -> X * 60, "X mins" -> X
+        let serviceDuration = 60;
+        if (service.deliveryTime) {
+          const lower = service.deliveryTime.toLowerCase();
+          const match = lower.match(/(\d+)\s*(hour|min|day)/);
+          if (match) {
+            const val = parseInt(match[1]);
+            const unit = match[2];
+            if (unit.startsWith('hour')) serviceDuration = val * 60;
+            else if (unit.startsWith('date') || unit.startsWith('day')) serviceDuration = val * 60 * 24; // Maybe too long for 'duration' field which is usually session length?
+            else serviceDuration = val; // mins
+          }
+        }
+
+        addToCart(service, selectedDate, selectedTimeSlot, serviceDuration);
       });
 
       router.push('/client/hire/cart');
@@ -109,22 +125,21 @@ export default function BookingDatePage() {
           </div>
           <div>
             <h3 className="font-medium text-white">{state.freelancerName}</h3>
-            {state.freelancerRating && (
+            {(state.freelancerRating || 0) > 0 && (
               <div className="flex items-center gap-1 mt-1">
                 <div className="flex items-center gap-0.5">
                   {[...Array(5)].map((_, i) => (
                     <Star
                       key={i}
-                      className={`w-3 h-3 ${
-                        i < Math.floor(state.freelancerRating!)
-                          ? 'text-yellow-400 fill-yellow-400'
-                          : 'text-white/20'
-                      }`}
+                      className={`w-3 h-3 ${i < Math.floor(state.freelancerRating!)
+                        ? 'text-yellow-400 fill-yellow-400'
+                        : 'text-white/20'
+                        }`}
                     />
                   ))}
                 </div>
                 <span className="text-sm text-white/70 ml-1">
-                  {state.freelancerRating.toFixed(1)} ({state.freelancerReviewCount || 0} reviews)
+                  {(state.freelancerRating || 0).toFixed(1)} ({state.freelancerReviewCount || 0} reviews)
                 </span>
               </div>
             )}
@@ -170,11 +185,10 @@ export default function BookingDatePage() {
               <button
                 key={date.date}
                 onClick={() => setSelectedDate(date.date)}
-                className={`flex-shrink-0 w-16 h-16 rounded-xl border transition-all flex flex-col items-center justify-center ${
-                  selectedDate === date.date
-                    ? 'border-purple-500 bg-purple-500/20 text-white'
-                    : 'border-white/20 bg-white/5 text-white/70 hover:border-white/30 hover:bg-white/10'
-                }`}
+                className={`flex-shrink-0 w-16 h-16 rounded-xl border transition-all flex flex-col items-center justify-center ${selectedDate === date.date
+                  ? 'border-purple-500 bg-purple-500/20 text-white'
+                  : 'border-white/20 bg-white/5 text-white/70 hover:border-white/30 hover:bg-white/10'
+                  }`}
               >
                 <span className="text-sm font-medium">{date.day}</span>
                 <span className="text-xs">{date.weekday}</span>
@@ -195,11 +209,10 @@ export default function BookingDatePage() {
               <button
                 key={time}
                 onClick={() => setSelectedTimeSlot(time)}
-                className={`flex-shrink-0 px-4 py-3 rounded-xl border transition-all text-center whitespace-nowrap ${
-                  selectedTimeSlot === time
-                    ? 'border-purple-500 bg-purple-500/20 text-white'
-                    : 'border-white/20 bg-white/5 text-white/70 hover:border-white/30 hover:bg-white/10'
-                }`}
+                className={`flex-shrink-0 px-4 py-3 rounded-xl border transition-all text-center whitespace-nowrap ${selectedTimeSlot === time
+                  ? 'border-purple-500 bg-purple-500/20 text-white'
+                  : 'border-white/20 bg-white/5 text-white/70 hover:border-white/30 hover:bg-white/10'
+                  }`}
               >
                 <span className="text-sm font-medium">{time}</span>
               </button>

@@ -105,11 +105,19 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { status, notes, rating, review } = body;
+    const { status, notes, rating, review, scheduledAt } = body;
 
+    // Validation
+    if (!status && !scheduledAt && !notes && !rating && !review) {
+      // Allow update if at least one field is present
+      return NextResponse.json({ error: 'No fields to update' }, { status: 400 });
+    }
+
+    /* 
     if (!status) {
       return NextResponse.json({ error: 'Status is required' }, { status: 400 });
     }
+    */
 
     if (status === 'cancelled' && !notes?.trim()) {
       return NextResponse.json({ error: 'Cancellation notes are required' }, { status: 400 });
@@ -136,12 +144,16 @@ export async function PUT(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
+    const updateData: any = {};
+    if (status) updateData.status = status.toUpperCase();
+    if (notes) updateData.notes = notes;
+    if (scheduledAt) updateData.scheduledAt = new Date(scheduledAt);
+    if (rating) { /* handle rating logic if implemented in DB */ }
+    // Review logic might be separate or here
+
     const updatedBooking = await prisma.booking.update({
       where: { id: params.id },
-      data: {
-        status: status.toUpperCase(),
-        notes: notes,
-      }
+      data: updateData
     });
 
     return NextResponse.json({

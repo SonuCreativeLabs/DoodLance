@@ -108,6 +108,7 @@ export default function ApplicationDetailPage() {
             image: data.profileImage || application.freelancer.image,
             service: data.services?.[0]?.title || profile.title || 'Freelancer',
             location: profile.location || data.location || 'Remote',
+            phone: profile.phone || data.phone || '',
             rating: data.averageRating || 0,
             reviewCount: profile.reviews?.length || 0,
             reviews: profile.reviews?.length || 0,
@@ -449,7 +450,11 @@ export default function ApplicationDetailPage() {
                     />
                     <IconButton
                       icon={Phone}
-                      onClick={() => { }}
+                      onClick={() => {
+                        if (freelancer.phone) {
+                          window.location.href = `tel:${freelancer.phone.replace(/\s/g, '')}`;
+                        }
+                      }}
                       aria-label="Call"
                     />
                     <IconButton
@@ -569,7 +574,11 @@ export default function ApplicationDetailPage() {
                   />
                   <IconButton
                     icon={Phone}
-                    onClick={() => { }}
+                    onClick={() => {
+                      if (freelancer.phone) {
+                        window.location.href = `tel:${freelancer.phone.replace(/\s/g, '')}`;
+                      }
+                    }}
                     aria-label="Call"
                   />
                   <IconButton
