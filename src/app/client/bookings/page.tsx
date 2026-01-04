@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
-import { Clock, Calendar, Search, X, Briefcase, Star } from "lucide-react"
+import { Clock, Calendar, Search, X, Briefcase, Star, Phone } from "lucide-react"
 import { cn } from "@/lib/utils"
 import ClientLayout from "@/components/layouts/client-layout"
 import { useBookings, Booking } from "@/contexts/BookingsContext"
@@ -67,18 +67,20 @@ const BookingCard = ({ booking, showActions = true }: BookingCardProps) => {
               )}
             </div>
             <div className="flex items-center gap-1.5 text-sm text-white/60">
-              {booking.otp && (booking.status === 'confirmed' || booking.status === 'pending') && (
-                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-400 mr-2">
-                  <span className="text-[10px] uppercase font-semibold">Start Code</span>
-                  <span className="font-mono text-xs font-bold tracking-wider">{booking.otp}</span>
-                </div>
-              )}
               <span className="font-mono text-xs">{booking["#"]}</span>
             </div>
           </div>
 
           <div>
-            <h3 className="text-base font-medium text-white line-clamp-2 mb-1">{booking.service}</h3>
+            <div className="flex items-center justify-between gap-2 mb-1 flex-wrap">
+              <h3 className="text-base font-medium text-white line-clamp-1">{booking.service}</h3>
+              {booking.otp && (booking.status === 'confirmed' || booking.status === 'pending') && (
+                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-400">
+                  <span className="text-[10px] uppercase font-semibold">Start Code</span>
+                  <span className="font-mono text-xs font-bold tracking-wider">{booking.otp}</span>
+                </div>
+              )}
+            </div>
             <div className="flex items-center gap-2 text-sm text-white/60">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-user w-3.5 h-3.5 text-purple-400">
                 <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
@@ -148,13 +150,20 @@ const BookingCard = ({ booking, showActions = true }: BookingCardProps) => {
               </Button>
               <Button
                 size="sm"
-                className="flex-1 bg-gradient-to-r from-purple-600 via-purple-500 to-purple-400 text-white border-0 hover:shadow-lg hover:from-purple-700 hover:to-purple-500 transition-all duration-300 !rounded-lg"
+                variant="outline"
+                className="flex-1 border-white/20 text-white/70 hover:bg-white/10 hover:border-white/30 transition-all duration-300 !rounded-lg"
                 onClick={(event) => {
                   event.stopPropagation()
-                  setShowReschedule(true)
+                  if (booking.providerPhone) {
+                    window.location.href = `tel:${booking.providerPhone}`
+                  } else {
+                    // Fallback or toast
+                    alert("Phone number not available")
+                  }
                 }}
               >
-                Reschedule
+                <Phone className="w-4 h-4 mr-2" />
+                Call
               </Button>
             </div>
           )}

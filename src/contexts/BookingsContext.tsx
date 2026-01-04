@@ -80,6 +80,7 @@ export function BookingsProvider({ children }: { children: ReactNode }) {
             completedAt: b.completedAt ? new Date(b.completedAt).toLocaleDateString() : undefined,
             notes: b.notes,
             services: b.services,
+            providerPhone: b.freelancerPhone || '9999999999', // Mock fallback for testing call button
           };
         });
         setBookings(mapped);

@@ -90,11 +90,22 @@ export const JobCard: React.FC<JobCardProps> = ({ job, index, onStatusChange }) 
               </div>
               <div className="min-w-0">
                 <div className="text-sm text-white/90">
-                  {job.postedAt && (() => {
-                    const postedDate = new Date(job.postedAt);
-                    const date = format(postedDate, 'MMM d');
-                    const time = formatTime12Hour(`${postedDate.getHours().toString().padStart(2, '0')}:${postedDate.getMinutes().toString().padStart(2, '0')}`);
-                    return time ? `${date}, ${time}` : date;
+                  {(() => {
+                    const dateStr = job.date || job.jobDate;
+                    const timeStr = job.time || job.jobTime;
+
+                    if (!dateStr) return 'Date not specified';
+
+                    try {
+                      const dateObj = new Date(dateStr);
+                      // If invalid date
+                      if (isNaN(dateObj.getTime())) return dateStr;
+
+                      const formattedDate = format(dateObj, 'MMM d, yyyy');
+                      return timeStr ? `${formattedDate} at ${timeStr}` : formattedDate;
+                    } catch (e) {
+                      return dateStr;
+                    }
                   })()}
                 </div>
               </div>
@@ -194,7 +205,7 @@ export const JobCard: React.FC<JobCardProps> = ({ job, index, onStatusChange }) 
                 onClick={handleMessageClick}
               >
                 <MessageCircle className="w-3.5 h-3.5" />
-                <span>Chat</span>
+                <span>Message</span>
               </Button>
 
               {/* Call Button */}
