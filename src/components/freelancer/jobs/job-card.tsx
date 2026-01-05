@@ -91,14 +91,14 @@ export const JobCard: React.FC<JobCardProps> = ({ job, index, onStatusChange }) 
               <div className="min-w-0">
                 <div className="text-sm text-white/90">
                   {(() => {
-                    const dateStr = job?.date || job?.jobDate;
-                    const timeStr = job?.time || job?.jobTime;
+                    const dateStr = job.date || job.jobDate;
+                    const timeStr = job.time || job.jobTime;
 
                     if (!dateStr) return 'Date not specified';
 
                     try {
-                      // Handle potential invalid date strings gracefully
                       const dateObj = new Date(dateStr);
+                      // If invalid date
                       if (isNaN(dateObj.getTime())) return dateStr;
 
                       const formattedDate = format(dateObj, 'MMM d, yyyy');
@@ -110,7 +110,7 @@ export const JobCard: React.FC<JobCardProps> = ({ job, index, onStatusChange }) 
                 </div>
               </div>
             </div>
-            {job?.location && (
+            {job.location && (
               <div className="flex items-start gap-2 text-white/60">
                 <MapPin className="w-4 h-4 text-purple-400 flex-shrink-0 mt-0.5" />
                 <div>
@@ -125,14 +125,14 @@ export const JobCard: React.FC<JobCardProps> = ({ job, index, onStatusChange }) 
               <IndianRupee className="w-4 h-4 text-purple-400 flex-shrink-0 mt-0.5" />
               <div>
                 <div className="text-xs text-white/40">Payment</div>
-                <div className="text-white/80">₹{job?.payment || 0}</div>
+                <div className="text-white/80">₹{job.payment}</div>
               </div>
             </div>
             <div className="flex items-start gap-2 text-white/60">
               <ClockIcon className="w-4 h-4 text-purple-400 flex-shrink-0 mt-0.5" />
               <div>
                 <div className="text-xs text-white/40">Duration</div>
-                <div className="text-white/80">{job?.duration || 'Flexible'}</div>
+                <div className="text-white/80">{job.duration || 'Flexible'}</div>
               </div>
             </div>
           </div>

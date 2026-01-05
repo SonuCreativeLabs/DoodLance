@@ -38,45 +38,31 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
           if (s === 'confirmed' || s === 'pending') return 'upcoming';
           return 'upcoming';
         })(),
-        payment: (() => {
-          const val = data.payment || data.budget || data.price;
-          if (typeof val === 'object') return 0;
-          return Number(val) || 0;
-        })(),
-        location: typeof data.location === 'string' ? data.location : 'Remote',
-        date: (() => {
-          try {
-            if (data.scheduledAt) return new Date(data.scheduledAt).toLocaleDateString();
-            return typeof data.date === 'string' ? data.date : 'TBD';
-          } catch { return 'TBD'; }
-        })(),
-        time: (() => {
-          try {
-            if (data.scheduledAt) return new Date(data.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            return typeof data.time === 'string' ? data.time : 'TBD';
-          } catch { return 'TBD'; }
-        })(),
+        payment: data.payment || data.budget || data.price || 0,
+        location: data.location || 'Remote',
+        date: data.scheduledAt ? new Date(data.scheduledAt).toLocaleDateString() : (data.date || 'TBD'),
+        time: data.scheduledAt ? new Date(data.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : (data.time || 'TBD'),
         duration: data.duration ? `${data.duration} mins` : 'Flexible',
         workMode: data.workMode,
         experience: data.experience,
-        skills: typeof data.skills === 'string' ? data.skills.split(',') : (Array.isArray(data.skills) ? data.skills : []),
+        skills: typeof data.skills === 'string' ? data.skills.split(',') : (data.skills || []),
         client: {
           name: data.client?.name || 'Unknown Client',
           image: data.client?.avatar || data.client?.image || '/placeholder-user.jpg',
           rating: data.client?.rating || 4.5,
           location: data.client?.location || '',
-          jobsCompleted: 10,
-          memberSince: '2023',
+          jobsCompleted: 10, // Placeholder if not in API
+          memberSince: '2023', // Placeholder
           phoneNumber: data.client?.phone || '',
         },
-        otp: data.otp || undefined,
+        otp: data.otp,
         startedAt: data.startedAt,
         completedAt: data.completedAt,
-        freelancerRating: data.freelancerRating,
+        freelancerRating: data.freelancerRating, // Assuming API returns this object structure
         clientRating: data.clientRating,
-        isDirectHire: !!data.otp || !!data.serviceId,
-        services: Array.isArray(data.services) ? data.services : [],
-        notes: typeof data.notes === 'string' ? data.notes : ''
+        isDirectHire: !!data.otp || !!data.serviceId, // Identify as direct hire if OTP or ServiceID exists
+        services: data.services || [],
+        notes: data.notes || ''
       };
 
       setJob(mappedJob);

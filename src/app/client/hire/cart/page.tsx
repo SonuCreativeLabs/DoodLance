@@ -8,7 +8,7 @@ import { useHire } from '@/contexts/HireContext';
 import { useNavbar } from '@/contexts/NavbarContext';
 import AdditionalServicesCard from '@/components/hire/AdditionalServicesCard';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
-
+import LoginDialog from '@/components/auth/LoginDialog';
 
 export default function CartPage() {
   const router = useRouter();
@@ -60,14 +60,14 @@ export default function CartPage() {
   };
 
   const handleCheckout = () => {
-    // Only navigate if user is authenticated
-    if (!isAuthenticated) {
-      router.push('/auth/login?returnTo=/client/hire/cart');
-      return;
-    }
+    // Only navigate if user is authenticated and profile is complete
+    // If not, requireAuth will handle login dialog or profile redirect
+    requireAuth('proceed-to-checkout', { redirectTo: '/client/hire/checkout' });
 
-    // Proceed to checkout
-    router.push('/client/hire/checkout');
+    // If we reach here, user is authenticated and profile is complete
+    if (isAuthenticated) {
+      router.push('/client/hire/checkout');
+    }
   };
 
   const handleViewCart = () => {
@@ -353,7 +353,12 @@ export default function CartPage() {
         </Button>
       </div>
 
-      {/* Login Dialog removed as per flow simplification */}
+      {/* Login Dialog */}
+      <LoginDialog
+        open={openLoginDialog}
+        onOpenChange={setOpenLoginDialog}
+        onSuccess={() => router.push('/client/hire/checkout')}
+      />
     </div>
   );
 }

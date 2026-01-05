@@ -7,35 +7,29 @@ import { Button } from '@/components/ui/button';
 import { useHire } from '@/contexts/HireContext';
 import { useNavbar } from '@/contexts/NavbarContext';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
+import LoginDialog from '@/components/auth/LoginDialog';
+import ProfileCompletionDialog from '@/components/auth/ProfileCompletionDialog';
 
 export default function BookingDatePage() {
   const router = useRouter();
   const { state, setBookingDetails, setBookingNotes, addToCart, clearCart, isLoaded } = useHire();
   const { setNavbarVisibility } = useNavbar();
-  const { requireAuth, isAuthenticated, authLoading, isProfileComplete, openLoginDialog, setOpenLoginDialog, openProfileDialog, setOpenProfileDialog, handleCompleteProfile } = useRequireAuth();
+  const { requireAuth, isAuthenticated, isProfileComplete, openLoginDialog, setOpenLoginDialog, openProfileDialog, setOpenProfileDialog, handleCompleteProfile } = useRequireAuth();
 
-  // Protect page - checks removed as per user request
-  // useEffect(() => {
-  //   // Only check auth once loading is complete
-  //   if (isLoaded && !authLoading) {
-  //     if (!isAuthenticated) {
-  //       router.push('/auth/login');
-  //       return;
-  //     }
-  //     if (!isProfileComplete) {
-  //       router.push('/client/profile/edit');
-  //       return;
-  //     }
-  //   }
-  // }, [isLoaded, authLoading, isAuthenticated, isProfileComplete, router]);
+  // Protect page
+  useEffect(() => {
+    if (isLoaded && (!isAuthenticated || !isProfileComplete)) {
+      requireAuth('booking_date_access', { redirectTo: '/client/hire/booking-date' });
+    }
+  }, [isLoaded, isAuthenticated, isProfileComplete, requireAuth]);
 
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);
   const [location, setLocation] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
 
-  // Wait for hydration and auth check
-  if (!isLoaded || authLoading) {
+  // Wait for hydration
+  if (!isLoaded) {
     return (
       <div className="h-screen bg-[#0F0F0F] flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -293,6 +287,19 @@ export default function BookingDatePage() {
           <ArrowRight className="w-4 h-4 ml-2" />
         </Button>
       </div>
+      <LoginDialog
+        open={openLoginDialog}
+        onOpenChange={setOpenLoginDialog}
+        onSuccess={() => {
+          // Reload logic if needed, or just stay on page
+        }}
+      />
+
+      <ProfileCompletionDialog
+        open={openProfileDialog}
+        onOpenChange={setOpenProfileDialog}
+        onCompleteProfile={handleCompleteProfile}
+      />
     </div>
   );
 }
