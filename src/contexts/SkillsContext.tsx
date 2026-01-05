@@ -144,14 +144,14 @@ export function SkillsProvider({ children, skipInitialFetch = false }: SkillsPro
   // Save to localStorage whenever skills change
   // No localStorage side effects needed. Data is persisted to DB.
 
-  const value: SkillsContextType = {
+  const value: SkillsContextType = React.useMemo(() => ({
     skills,
     updateSkills,
     hydrateSkills,
     addSkill,
     removeSkill,
     reorderSkills,
-  };
+  }), [skills, updateSkills, hydrateSkills, addSkill, removeSkill, reorderSkills]);
 
   return (
     <SkillsContext.Provider value={value}>
