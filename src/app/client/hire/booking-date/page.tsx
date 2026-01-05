@@ -295,11 +295,11 @@ export default function BookingDatePage() {
         }}
       />
 
-      <ProfileCompletionDialog
+      {/* <ProfileCompletionDialog
         open={openProfileDialog}
         onOpenChange={setOpenProfileDialog}
         onCompleteProfile={handleCompleteProfile}
-      />
+      /> */}
     </div>
   );
 }
