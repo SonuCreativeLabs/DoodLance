@@ -68,6 +68,17 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
+        // Resolve DB User (CUID)
+        let userId = user.id;
+        const dbUser = await prisma.user.findUnique({ where: { supabaseUid: user.id } });
+        if (dbUser) {
+            userId = dbUser.id;
+        } else {
+            // Fallback
+            const byId = await prisma.user.findUnique({ where: { id: user.id } });
+            if (byId) userId = byId.id;
+        }
+
         const body = await request.json();
         const {
             title,
