@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo, useCallback } from 'react';
 import { useSkills } from './SkillsContext';
 import type { Job } from '@/app/freelancer/feed/types';
 
@@ -20,7 +20,7 @@ export function ForYouJobsProvider({ children }: { children: ReactNode }) {
     return skills.map(skill => skill.name).join(',');
   }, [skills]);
 
-  const fetchForYouJobs = async () => {
+  const fetchForYouJobs = useCallback(async () => {
     console.log('🔄 Fetching For You jobs with skills:', skillsDependency);
 
     // If no skills, we can't really filter "for you", so returns empty or all? 
@@ -54,23 +54,23 @@ export function ForYouJobsProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [skillsDependency, skills]);
 
-  const refreshForYouJobs = async () => {
+  const refreshForYouJobs = useCallback(async () => {
     await fetchForYouJobs();
-  };
+  }, [fetchForYouJobs]);
 
   useEffect(() => {
     fetchForYouJobs();
-  }, [skillsDependency]);
+  }, [fetchForYouJobs]);
 
   // Listen for application creation events and refresh jobs
   useEffect(() => {
-    const handleApplicationCreated = (event: CustomEvent) => {
+    const handleApplicationCreated = () => {
       refreshForYouJobs();
     };
 
-    const handleJobPosted = (event: CustomEvent) => {
+    const handleJobPosted = () => {
       refreshForYouJobs();
     };
 
@@ -81,7 +81,7 @@ export function ForYouJobsProvider({ children }: { children: ReactNode }) {
       window.removeEventListener('applicationCreated', handleApplicationCreated as EventListener);
       window.removeEventListener('jobPosted', handleJobPosted as EventListener);
     };
-  }, []);
+  }, [refreshForYouJobs]);
 
   const value: ForYouJobsContextType = {
     forYouJobs,

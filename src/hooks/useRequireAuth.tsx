@@ -141,7 +141,7 @@ export function useRequireAuth(): UseRequireAuthReturn {
         }
 
         setOpenLoginDialog(true)
-    }, [isAuthenticated, user, checkProfileCompletion, router, pathname])
+    }, [isAuthenticated, user, checkProfileCompletion, pathname])
 
     return {
         requireAuth,
