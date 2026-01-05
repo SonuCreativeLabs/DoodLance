@@ -139,13 +139,13 @@ export default function BookingDatePage() {
         <div className="flex items-center gap-4 p-4 bg-white/5 rounded-xl border border-white/10">
           <div className="w-12 h-12 rounded-full overflow-hidden bg-white/10">
             <img
-              src={state.freelancerImage || ''}
-              alt={state.freelancerName || ''}
+              src={String(state.freelancerImage || '')}
+              alt={String(state.freelancerName || '')}
               className="w-full h-full object-cover"
             />
           </div>
           <div>
-            <h3 className="font-medium text-white">{state.freelancerName}</h3>
+            <h3 className="font-medium text-white">{String(state.freelancerName)}</h3>
             {(state.freelancerRating || 0) > 0 && (
               <div className="flex items-center gap-1 mt-1">
                 <div className="flex items-center gap-0.5">
@@ -179,11 +179,11 @@ export default function BookingDatePage() {
             {state.selectedServices.map((service) => (
               <div key={service.id}>
                 <div className="py-2">
-                  <h5 className="font-medium text-white text-sm">{service.title}</h5>
+                  <h5 className="font-medium text-white text-sm">{String(service.title)}</h5>
                   <div className="text-sm font-semibold text-white/80 mt-0.5">
                     ₹{typeof service.price === 'string'
                       ? parseFloat(service.price.replace(/[^\d.]/g, ''))
-                      : String(service.price)} / {service.deliveryTime}
+                      : String(service.price)} / {String(service.deliveryTime)}
                   </div>
                 </div>
                 {state.selectedServices.indexOf(service) < state.selectedServices.length - 1 && (
