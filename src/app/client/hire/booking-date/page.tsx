@@ -152,7 +152,7 @@ export default function BookingDatePage() {
                   {[...Array(5)].map((_, i) => (
                     <Star
                       key={i}
-                      className={`w-3 h-3 ${i < Math.floor(state.freelancerRating!)
+                      className={`w-3 h-3 ${i < Math.floor(Number(state.freelancerRating) || 0)
                         ? 'text-yellow-400 fill-yellow-400'
                         : 'text-white/20'
                         }`}
@@ -160,7 +160,7 @@ export default function BookingDatePage() {
                   ))}
                 </div>
                 <span className="text-sm text-white/70 ml-1">
-                  {(state.freelancerRating || 0).toFixed(1)} ({state.freelancerReviewCount || 0} reviews)
+                  {String((state.freelancerRating || 0))} ({String(state.freelancerReviewCount || 0)} reviews)
                 </span>
               </div>
             )}
