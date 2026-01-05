@@ -29,16 +29,7 @@ export default function BookingDatePage() {
   const [location, setLocation] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
 
-  // Wait for hydration
-  if (!isLoaded) {
-    return (
-      <div className="h-screen bg-[#0F0F0F] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
-  // Hide navbar when component mounts
+  // Hide navbar when component mounts - MUST be before early return
   useEffect(() => {
     setNavbarVisibility(false);
 
@@ -47,6 +38,15 @@ export default function BookingDatePage() {
       setNavbarVisibility(true);
     };
   }, [setNavbarVisibility]);
+
+  // Wait for hydration - early return AFTER all hooks
+  if (!isLoaded) {
+    return (
+      <div className="h-screen bg-[#0F0F0F] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   // Generate next 7 days starting from tomorrow
   const generateDates = () => {
