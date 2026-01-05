@@ -80,7 +80,7 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
     }
   }, [jobId]);
 
-  const handleJobUpdate = async (id: string, newStatus: 'completed' | 'cancelled' | 'started', notes?: string, completionData?: any) => {
+  const handleJobUpdate = async (id: string, newStatus: 'completed' | 'cancelled' | 'started' | 'delivered', notes?: string, completionData?: { rating: number; review: string; feedbackChips: string[]; }) => {
     // Optimistic update
     if (job) {
       setJob({ ...job, status: newStatus as any });
