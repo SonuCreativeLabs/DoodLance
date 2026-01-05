@@ -14,6 +14,7 @@ interface UseRequireAuthReturn {
         redirectTo?: string
     }) => void
     isAuthenticated: boolean
+    authLoading: boolean
     isProfileComplete: boolean
     openLoginDialog: boolean
     setOpenLoginDialog: (open: boolean) => void
@@ -146,6 +147,7 @@ export function useRequireAuth(): UseRequireAuthReturn {
     return {
         requireAuth,
         isAuthenticated,
+        authLoading: useAuth().isLoading,
         isProfileComplete,
         openLoginDialog,
         setOpenLoginDialog,

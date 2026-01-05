@@ -32,7 +32,7 @@ export function HireBottomSheet({
 }: HireBottomSheetProps) {
   const router = useRouter();
   const { state, setFreelancer, setSelectedService, removeService, resetHireState } = useHire();
-  const { requireAuth, isAuthenticated, isProfileComplete, openLoginDialog, setOpenLoginDialog, openProfileDialog, setOpenProfileDialog, handleCompleteProfile } = useRequireAuth();
+  const { requireAuth, isAuthenticated, authLoading, isProfileComplete, openLoginDialog, setOpenLoginDialog, openProfileDialog, setOpenProfileDialog, handleCompleteProfile } = useRequireAuth();
   const prevFreelancerIdRef = React.useRef<string | null>(null);
 
   useEffect(() => {
@@ -64,6 +64,8 @@ export function HireBottomSheet({
 
   const handleContinue = () => {
     if (state.selectedServices.length > 0) {
+      if (authLoading) return; // Wait for auth load
+
       if (!isAuthenticated || !isProfileComplete) {
         requireAuth('hire_service', { redirectTo: '/client/hire/booking-date' });
         return;

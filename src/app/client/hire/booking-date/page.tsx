@@ -14,22 +14,23 @@ export default function BookingDatePage() {
   const router = useRouter();
   const { state, setBookingDetails, setBookingNotes, addToCart, clearCart, isLoaded } = useHire();
   const { setNavbarVisibility } = useNavbar();
-  const { requireAuth, isAuthenticated, isProfileComplete, openLoginDialog, setOpenLoginDialog, openProfileDialog, setOpenProfileDialog, handleCompleteProfile } = useRequireAuth();
+  const { requireAuth, isAuthenticated, authLoading, isProfileComplete, openLoginDialog, setOpenLoginDialog, openProfileDialog, setOpenProfileDialog, handleCompleteProfile } = useRequireAuth();
 
   // Protect page
   useEffect(() => {
-    if (isLoaded && (!isAuthenticated || !isProfileComplete)) {
+    // Only check auth once loading is complete
+    if (isLoaded && !authLoading && (!isAuthenticated || !isProfileComplete)) {
       requireAuth('booking_date_access', { redirectTo: '/client/hire/booking-date' });
     }
-  }, [isLoaded, isAuthenticated, isProfileComplete, requireAuth]);
+  }, [isLoaded, authLoading, isAuthenticated, isProfileComplete, requireAuth]);
 
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);
   const [location, setLocation] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
 
-  // Wait for hydration
-  if (!isLoaded) {
+  // Wait for hydration and auth check
+  if (!isLoaded || authLoading) {
     return (
       <div className="h-screen bg-[#0F0F0F] flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
