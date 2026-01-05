@@ -65,7 +65,7 @@ export default function FeedPage() {
     companyLogo: string;
     clientName: string;
     clientImage?: string;
-    clientRating: string | number;
+    clientRating: string | number | { stars: number; feedback: string; feedbackChips: string[]; };
     clientJobs: number;
     proposals: number;
     duration: 'hourly' | 'daily' | 'weekly' | 'monthly' | 'one-time';

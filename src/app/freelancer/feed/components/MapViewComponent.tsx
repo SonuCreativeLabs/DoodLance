@@ -36,7 +36,7 @@ type Job = Omit<SharedJob, 'client' | 'clientName' | 'clientImage' | 'clientRati
   companyLogo: string;
   clientName: string;
   clientImage?: string;
-  clientRating: string | number;
+  clientRating: string | number | { stars: number; feedback: string; feedbackChips: string[]; };
   clientJobs: number;
   proposals: number;
   duration: JobDuration;
