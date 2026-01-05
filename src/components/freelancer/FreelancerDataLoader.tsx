@@ -114,7 +114,7 @@ export function FreelancerDataLoader() {
             window.removeEventListener('refreshProfile', handleRefresh);
         };
 
-    }, [user, hasLoaded, hydrateSkills, hydrateExperiences, hydratePortfolio, hydrateReviews, hydrateBankAccount]);
+    }, [user, hasLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
 
     return null; // Headless component
 }
