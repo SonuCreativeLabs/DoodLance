@@ -939,7 +939,17 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
       {isJobDetailsOpen && selectedJob && (
         <OverlayPortal>
           <JobDetailsFull
-            job={selectedJob}
+            job={{
+              ...selectedJob,
+              // Transform local simplified clientRating to the object expected by SharedJob
+              clientRating: typeof selectedJob.clientRating === 'object'
+                ? selectedJob.clientRating
+                : {
+                  stars: Number(selectedJob.clientRating) || 0,
+                  feedback: '',
+                  feedbackChips: []
+                }
+            } as any}
             onBack={handleCloseJobDetails}
             onApply={onApply || (() => { })}
             isApplied={appliedJobIds?.has(String(selectedJob.id))}
