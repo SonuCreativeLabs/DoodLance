@@ -33,6 +33,8 @@ export function HireBottomSheet({
   const { user } = useAuth();
   const prevFreelancerIdRef = React.useRef<string | null>(null);
 
+  console.log('[DEBUG] HireBottomSheet render - isOpen:', isOpen, 'freelancerId:', freelancerId);
+
   useEffect(() => {
     if (isOpen) {
       // Reset if switching to a different freelancer

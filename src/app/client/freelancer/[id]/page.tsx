@@ -1175,12 +1175,14 @@ export default function FreelancerDetailPage() {
                         <div className="fixed bottom-0 left-0 right-0 p-4 bg-[#0F0F0F]/95 backdrop-blur-sm border-t border-white/10">
                             <button
                                 onClick={() => {
+                                    console.log('[DEBUG] Hire button clicked - user:', user);
                                     // Simple check: if no user, show login dialog
                                     if (!user) {
                                         setShowLoginDialog(true);
                                         return;
                                     }
                                     // If user exists, open hire sheet
+                                    console.log('[DEBUG] Opening hire sheet...');
                                     setIsHireBottomSheetOpen(true);
                                 }}
                                 className="w-full py-2.5 bg-gradient-to-r from-purple-600 to-purple-500 text-white font-medium rounded-xl hover:from-purple-700 hover:to-purple-600 transition-all flex items-center justify-center gap-2 shadow-lg"
