@@ -119,7 +119,7 @@ export default function FreelancerDetailPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { setNavbarVisibility } = useNavbar();
-    const { requireAuth, openLoginDialog, setOpenLoginDialog, openProfileDialog, setOpenProfileDialog, handleCompleteProfile } = useRequireAuth();
+    const { requireAuth, isAuthenticated, isProfileComplete, openLoginDialog, setOpenLoginDialog, openProfileDialog, setOpenProfileDialog, handleCompleteProfile } = useRequireAuth();
     const [freelancer, setFreelancer] = useState<FreelancerDetail | null>(null);
     const [loading, setLoading] = useState(true);
     const [isSkillDialogOpen, setIsSkillDialogOpen] = useState(false);
