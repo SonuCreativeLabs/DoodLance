@@ -183,7 +183,7 @@ export default function BookingDatePage() {
                   <div className="text-sm font-semibold text-white/80 mt-0.5">
                     ₹{typeof service.price === 'string'
                       ? parseFloat(service.price.replace(/[^\d.]/g, ''))
-                      : service.price} / {service.deliveryTime}
+                      : String(service.price)} / {service.deliveryTime}
                   </div>
                 </div>
                 {state.selectedServices.indexOf(service) < state.selectedServices.length - 1 && (
@@ -295,11 +295,11 @@ export default function BookingDatePage() {
         }}
       />
 
-      {/* <ProfileCompletionDialog
+      <ProfileCompletionDialog
         open={openProfileDialog}
         onOpenChange={setOpenProfileDialog}
         onCompleteProfile={handleCompleteProfile}
-      /> */}
+      />
     </div>
   );
 }

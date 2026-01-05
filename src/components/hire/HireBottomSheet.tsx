@@ -226,11 +226,11 @@ export function HireBottomSheet({
         }}
       />
 
-      {/* <ProfileCompletionDialog
+      <ProfileCompletionDialog
         open={openProfileDialog}
         onOpenChange={setOpenProfileDialog}
         onCompleteProfile={handleCompleteProfile}
-      /> */}
+      />
     </>
   );
 }
