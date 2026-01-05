@@ -7,15 +7,14 @@ import { Button } from '@/components/ui/button';
 import { useHire } from '@/contexts/HireContext';
 import { useNavbar } from '@/contexts/NavbarContext';
 import { useBookings } from '@/contexts/BookingsContext';
-import { useRequireAuth, usePendingActionCheck } from '@/hooks/useRequireAuth';
-import LoginDialog from '@/components/auth/LoginDialog';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function CheckoutPage() {
   const router = useRouter();
   const { state, getTotalPrice, clearCart, resetHireState } = useHire();
   const { addBooking } = useBookings();
   const { setNavbarVisibility } = useNavbar();
-  const { requireAuth, openLoginDialog, setOpenLoginDialog, isAuthenticated } = useRequireAuth();
+  const { user } = useAuth();
 
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
