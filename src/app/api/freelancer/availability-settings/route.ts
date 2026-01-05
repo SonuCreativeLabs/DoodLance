@@ -4,7 +4,10 @@ import prisma from '@/lib/db';
 
 async function getDbUser(supabaseUserId: string, email?: string) {
     if (!supabaseUserId) return null;
-    let dbUser = await prisma.user.findUnique({ where: { id: supabaseUserId } });
+    let dbUser = await prisma.user.findUnique({ where: { supabaseUid: supabaseUserId } });
+    if (!dbUser) {
+        dbUser = await prisma.user.findUnique({ where: { id: supabaseUserId } });
+    }
     if (!dbUser && email) {
         dbUser = await prisma.user.findUnique({ where: { email } });
     }

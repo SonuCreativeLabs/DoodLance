@@ -5,10 +5,17 @@ import prisma from '@/lib/db';
 async function getDbUser(supabaseUserId: string, email?: string) {
     if (!supabaseUserId) return null;
 
-    // First try by ID
+    // First try by Supabase UID
     let dbUser = await prisma.user.findUnique({
-        where: { id: supabaseUserId }
+        where: { supabaseUid: supabaseUserId }
     });
+
+    // Fallback to ID (in case it IS a CUID, though unlikely from Supabase Auth)
+    if (!dbUser) {
+        dbUser = await prisma.user.findUnique({
+            where: { id: supabaseUserId }
+        });
+    }
 
     // Fallback to email
     if (!dbUser && email) {

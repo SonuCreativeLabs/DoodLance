@@ -11,9 +11,20 @@ export async function GET(request: Request) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
+        // Resolve DB User (CUID)
+        let userId = user.id;
+        const dbUser = await prisma.user.findUnique({ where: { supabaseUid: user.id } });
+        if (dbUser) {
+            userId = dbUser.id;
+        } else {
+            // Fallback
+            const byId = await prisma.user.findUnique({ where: { id: user.id } });
+            if (byId) userId = byId.id;
+        }
+
         const services = await prisma.service.findMany({
             where: {
-                providerId: user.id
+                providerId: userId
             },
             include: {
                 category: true
@@ -123,7 +134,7 @@ export async function POST(request: Request) {
                 requirements: '', // Required
 
                 provider: {
-                    connect: { id: user.id }
+                    connect: { id: userId }
                 },
                 category: {
                     connect: { id: categoryRecord.id }

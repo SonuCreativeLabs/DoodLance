@@ -20,13 +20,27 @@ export async function GET(request: NextRequest) {
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
+    let dbUserId = user?.id; // Default to Auth ID (fallback)
+
+    // Resolve internal DB ID if user is logged in
+    if (user) {
+      const dbUser = await prisma.user.findUnique({ where: { supabaseUid: user.id } });
+      if (dbUser) {
+        dbUserId = dbUser.id;
+      } else {
+        // Fallback: Check if user exists by ID directly (legacy/mixed mode)
+        const byId = await prisma.user.findUnique({ where: { id: user.id } });
+        if (byId) dbUserId = byId.id;
+      }
+    }
+
     const where: any = {
       isActive: true,
     }
 
     // Exclude own jobs
-    if (user) {
-      where.clientId = { not: user.id }
+    if (dbUserId) {
+      where.clientId = { not: dbUserId }
     }
 
     // Add filters
@@ -156,25 +170,43 @@ export async function POST(request: NextRequest) {
     } = body
 
     // Ensure user exists in database to prevent foreign key errors
-    const existingUser = await prisma.user.findUnique({
-      where: { id: user.id }
-    });
+    let dbUser = await prisma.user.findUnique({ where: { supabaseUid: user.id } });
 
-    if (!existingUser) {
-      // Generate display ID for new users
-      const { generateUserDisplayId } = await import('@/lib/user-id-utils');
-
-      await prisma.user.create({
-        data: {
-          id: user.id,
-          displayId: await generateUserDisplayId('client'), // Default to client for job posting
-          email: user.email || '',
-          coords: '[]', // Default empty coords
-          role: 'client',
-          currentRole: 'client'
-        }
-      });
+    if (!dbUser) {
+      // Fallback check by ID
+      dbUser = await prisma.user.findUnique({ where: { id: user.id } });
     }
+
+    if (!dbUser) {
+      // User doesn't exist? This is critical. We shouldn't auto-create here without profile data.
+      // But for now, to replicate previous behavior safely:
+      // Check if email exists to avoid unique constraint error
+      const emailUser = user.email ? await prisma.user.findUnique({ where: { email: user.email } }) : null;
+
+      if (emailUser) {
+        dbUser = emailUser; // Link to existing email user
+        // Optionally update supabaseUid here?
+        if (!emailUser.supabaseUid) {
+          await prisma.user.update({ where: { id: emailUser.id }, data: { supabaseUid: user.id } });
+        }
+      } else {
+        // Create new user ONLY if absolutely unknown
+        const { generateUserDisplayId } = await import('@/lib/user-id-utils');
+        dbUser = await prisma.user.create({
+          data: {
+            // We rely on standard CUID generation for ID, but store Supabase UID
+            supabaseUid: user.id,
+            displayId: await generateUserDisplayId('client'),
+            email: user.email || '',
+            coords: '[]',
+            role: 'client',
+            currentRole: 'client'
+          }
+        });
+      }
+    }
+
+    const userId = dbUser.id; // Correct CUID
 
     // Validated required fields
     if (!title || !description || !category || !budget || !location) {
@@ -225,7 +257,7 @@ export async function POST(request: NextRequest) {
         type: type || 'freelance',
         duration: duration || 'hourly',
         experience: experience || 'Intermediate',
-        clientId: user.id,
+        clientId: userId,
         status: 'OPEN', // Explicitly set status
         isActive: true,
         proposals: 0,

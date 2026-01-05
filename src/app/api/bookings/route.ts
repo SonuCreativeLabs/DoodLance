@@ -47,7 +47,22 @@ export async function GET(request: NextRequest) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        return handleGetBookings(request, user);
+        // Resolving DB User (CUID)
+        let dbUser = await prisma.user.findUnique({ where: { supabaseUid: user.id } });
+        if (!dbUser) dbUser = await prisma.user.findUnique({ where: { id: user.id } });
+
+        if (!dbUser) {
+            // Fallback: try email
+            if (user.email) dbUser = await prisma.user.findUnique({ where: { email: user.email } });
+        }
+
+        if (!dbUser) {
+            // If still not found, we can't fetch bookings for non-existent user
+            return NextResponse.json({ bookings: [] });
+        }
+
+        // Use the resolved DB user
+        return handleGetBookings(request, { ...user, id: dbUser.id });
 
     } catch (error) {
         console.error('Failed to fetch bookings:', error);
@@ -189,6 +204,18 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
+        // Resolving DB User (CUID) for POST
+        let dbUser = await prisma.user.findUnique({ where: { supabaseUid: user.id } });
+        if (!dbUser) dbUser = await prisma.user.findUnique({ where: { id: user.id } });
+
+        if (!dbUser && user.email) dbUser = await prisma.user.findUnique({ where: { email: user.email } });
+
+        if (!dbUser) {
+            return NextResponse.json({ error: 'User profile not found. Please complete your profile.' }, { status: 400 });
+        }
+
+        const userId = dbUser.id;
+
         const body = await request.json();
         console.log('Booking POST Body:', body);
         const {
@@ -219,7 +246,7 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Service is not active' }, { status: 400 });
         }
 
-        if (service.providerId === user.id) {
+        if (service.providerId === userId) {
             return NextResponse.json({ error: 'Cannot book your own service' }, { status: 400 });
         }
 
@@ -244,7 +271,7 @@ export async function POST(request: NextRequest) {
         finalPrice += platformFee;
 
         const bookingData = {
-            clientId: user.id,
+            clientId: userId,
             serviceId: service.id,
             scheduledAt: scheduledAt ? new Date(scheduledAt) : null,
             duration: service.duration,
@@ -262,15 +289,15 @@ export async function POST(request: NextRequest) {
 
         console.log('Attempting to create booking with data:', JSON.stringify({
             ...bookingData,
-            clientId: user.id, // Ensure we see the ID
+            clientId: userId, // Ensure we see the ID
             scheduledAt: bookingData.scheduledAt?.toString()
         }, null, 2));
 
         try {
             // Check if user exists in DB to prevent FK error if Supabase user exists but DB user doesn't
-            const userExists = await prisma.user.findUnique({ where: { id: user.id } });
+            const userExists = await prisma.user.findUnique({ where: { id: userId } });
             if (!userExists) {
-                console.error(`User ${user.id} not found in database (FK violation risk)`);
+                console.error(`User ${userId} not found in database (FK violation risk)`);
                 return NextResponse.json({ error: 'User profile not found. Please complete your profile.' }, { status: 400 });
             }
 
