@@ -31,22 +31,8 @@ export default function CheckoutPage() {
     return Math.floor(1000 + Math.random() * 9000).toString();
   };
 
-  // Check authentication on mount - if not authenticated, trigger login flow
-  useEffect(() => {
-    if (!isAuthenticated) {
-      // This will open login dialog if not authenticated
-      // Or redirect to profile if incomplete
-      // The actionId 'access-checkout' helps track where user needs to return
-      requireAuth('access-checkout', { redirectTo: '/client/hire/checkout' });
-    }
-  }, [isAuthenticated, requireAuth]);
+  // Auth check removed - will validate when user clicks payment button instead
 
-  // Auto-trigger this effect when user returns from completing profile
-  usePendingActionCheck('access-checkout', () => {
-    // User has returned after completing login/profile
-    // They're already on this page, just let them stay here
-    console.log('User returned to checkout after auth/profile completion');
-  });
 
   // Hide navbar when component mounts
   useEffect(() => {

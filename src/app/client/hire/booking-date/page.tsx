@@ -16,12 +16,8 @@ export default function BookingDatePage() {
   const { setNavbarVisibility } = useNavbar();
   const { requireAuth, isAuthenticated, isProfileComplete, openLoginDialog, setOpenLoginDialog, openProfileDialog, setOpenProfileDialog, handleCompleteProfile } = useRequireAuth();
 
-  // Protect page
-  useEffect(() => {
-    if (isLoaded && (!isAuthenticated || !isProfileComplete)) {
-      requireAuth('booking_date_access', { redirectTo: '/client/hire/booking-date' });
-    }
-  }, [isLoaded, isAuthenticated, isProfileComplete, requireAuth]);
+  // Auth check removed - only validate when user clicks Continue button to avoid infinite loops
+
 
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);
