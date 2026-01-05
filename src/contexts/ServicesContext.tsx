@@ -45,7 +45,7 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
       console.log('🚀 Sending service to API:', service);
       setServices(prev => [...prev, service]); // Optimistic UI
 
-      const response = await fetch('/api/services', {
+      const response = await fetch('/api/freelancer/services', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(service),
@@ -75,7 +75,7 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
     setServices(prev => prev.filter(svc => svc.id !== serviceId));
 
     try {
-      const response = await fetch(`/api/services/${serviceId}`, {
+      const response = await fetch(`/api/freelancer/services/${serviceId}`, {
         method: 'DELETE',
       });
       if (!response.ok) {
@@ -93,7 +93,7 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
     setServices(prev => prev.map(svc => svc.id === serviceId ? { ...svc, ...updates } : svc));
 
     try {
-      const response = await fetch(`/api/services/${serviceId}`, {
+      const response = await fetch(`/api/freelancer/services/${serviceId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates),
@@ -111,7 +111,7 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const fetchServices = async () => {
       try {
-        const response = await fetch('/api/services'); // Fetches for current user by default
+        const response = await fetch('/api/freelancer/services');
         if (response.ok) {
           const data = await response.json();
           setServices(data.services || []);
