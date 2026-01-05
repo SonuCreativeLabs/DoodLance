@@ -41,7 +41,19 @@ export async function GET(request: NextRequest) {
         });
 
         if (!dbUser) {
-            return NextResponse.json({ error: 'User not found' }, { status: 404 });
+            console.log(`[API] User ${user.id} not found in DB, creating new record...`);
+            // Auto-create user if they exist in Auth but not in DB (Self-healing)
+            const newDbUser = await prisma.user.create({
+                data: {
+                    id: user.id,
+                    email: user.email!,
+                    name: user.user_metadata?.name || user.user_metadata?.full_name || user.email!.split('@')[0],
+                    role: 'client', // Default role
+                    coords: '[0,0]',
+                    isVerified: false,
+                }
+            });
+            return NextResponse.json(newDbUser);
         }
 
         return NextResponse.json(dbUser);

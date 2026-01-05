@@ -275,7 +275,7 @@ export default function CheckoutPage() {
 
         {/* Payment Methods */}
         <div className="space-y-8">
-          <h3 className="text-white font-semibold text-lg">Choose Payment Method</h3>
+          <h3 className="text-white font-semibold text-lg">Payment Method</h3>
 
           {/* Cash on Delivery - Top Priority */}
           <div className="space-y-3">
@@ -308,60 +308,7 @@ export default function CheckoutPage() {
             </div>
           </div>
 
-          {/* UPI Payment */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <Smartphone className="w-5 h-5 text-white/60" />
-              <div>
-                <h4 className="text-white font-semibold">UPI Payment</h4>
-                <p className="text-white/60 text-sm">Instant payment via UPI apps</p>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <button className="py-3 px-4 rounded-xl bg-white/5 hover:bg-white/10 text-white text-sm font-medium transition-all duration-200">
-                Google Pay
-              </button>
-              <button className="py-3 px-4 rounded-xl bg-white/5 hover:bg-white/10 text-white text-sm font-medium transition-all duration-200">
-                PhonePe
-              </button>
-              <button className="py-3 px-4 rounded-xl bg-white/5 hover:bg-white/10 text-white text-sm font-medium transition-all duration-200">
-                Paytm
-              </button>
-              <button className="py-3 px-4 rounded-xl bg-white/5 hover:bg-white/10 text-white text-sm font-medium transition-all duration-200">
-                Other UPI
-              </button>
-            </div>
-          </div>
 
-          {/* Card Payment */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <CreditCard className="w-5 h-5 text-white/60" />
-              <div>
-                <h4 className="text-white font-semibold">Card Payment</h4>
-                <p className="text-white/60 text-sm">Credit & Debit cards</p>
-              </div>
-            </div>
-            <button className="w-full py-3 px-6 rounded-xl bg-white/5 hover:bg-white/10 text-white font-medium transition-all duration-200 flex items-center justify-center gap-3">
-              <CreditCard className="w-5 h-5" />
-              Pay with Card
-            </button>
-          </div>
-
-          {/* Wallets - Simplified */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <Wallet className="w-5 h-5 text-white/60" />
-              <div>
-                <h4 className="text-white font-semibold">Digital Wallets</h4>
-                <p className="text-white/60 text-sm">Paytm, Mobikwik & more</p>
-              </div>
-            </div>
-            <button className="w-full py-3 px-6 rounded-xl bg-white/5 hover:bg-white/10 text-white font-medium transition-all duration-200 flex items-center justify-center gap-3">
-              <Wallet className="w-5 h-5" />
-              Pay with Wallet
-            </button>
-          </div>
         </div>
       </div>
 
