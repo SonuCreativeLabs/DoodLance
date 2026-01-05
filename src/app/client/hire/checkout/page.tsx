@@ -296,13 +296,6 @@ export default function CheckoutPage() {
 
         </div>
       </div>
-
-      {/* Login Dialog */}
-      <LoginDialog
-        open={openLoginDialog}
-        onOpenChange={setOpenLoginDialog}
-        redirectTo="/client/hire/checkout"
-      />
     </div>
   );
 }
