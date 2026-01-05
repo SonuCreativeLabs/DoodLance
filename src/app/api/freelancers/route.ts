@@ -53,8 +53,15 @@ export async function GET(request: Request) {
                     // Try JSON parse, fallback to comma split, fallback to single item
                     try {
                         const parsed = JSON.parse(p.skills);
-                        if (Array.isArray(parsed)) skills = parsed;
-                        else skills = [p.skills];
+                        if (Array.isArray(parsed)) {
+                            skills = parsed.map((s: any) => {
+                                if (typeof s === 'object' && s !== null) {
+                                    return s.name || s.title || s.label || JSON.stringify(s);
+                                }
+                                return String(s);
+                            });
+                        }
+                        else skills = [typeof parsed === 'object' ? (parsed.name || JSON.stringify(parsed)) : String(parsed)];
                     } catch (e) {
                         // If not JSON, maybe comma separated?
                         if (p.skills.includes(',')) {
