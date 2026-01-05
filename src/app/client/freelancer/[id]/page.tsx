@@ -24,9 +24,8 @@ import {
     User
 } from 'lucide-react';
 import { useNavbar } from '@/contexts/NavbarContext';
-import { useRequireAuth } from '@/hooks/useRequireAuth';
+import { useAuth } from '@/contexts/AuthContext';
 import LoginDialog from '@/components/auth/LoginDialog';
-import ProfileCompletionDialog from '@/components/auth/ProfileCompletionDialog';
 
 import { IdVerifiedBadge } from '@/components/freelancer/profile/IdVerifiedBadge';
 import { SkillInfoDialog } from '@/components/common/SkillInfoDialog';
@@ -119,7 +118,7 @@ export default function FreelancerDetailPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { setNavbarVisibility } = useNavbar();
-    const { requireAuth, isAuthenticated, isProfileComplete, openLoginDialog, setOpenLoginDialog, openProfileDialog, setOpenProfileDialog, handleCompleteProfile } = useRequireAuth();
+    const { user } = useAuth();
     const [freelancer, setFreelancer] = useState<FreelancerDetail | null>(null);
     const [loading, setLoading] = useState(true);
     const [isSkillDialogOpen, setIsSkillDialogOpen] = useState(false);
@@ -130,6 +129,7 @@ export default function FreelancerDetailPage() {
     const [selectedPortfolioItem, setSelectedPortfolioItem] = useState<any>(null);
     const [isPortfolioModalOpen, setIsPortfolioModalOpen] = useState(false);
     const [isHireBottomSheetOpen, setIsHireBottomSheetOpen] = useState(false);
+    const [showLoginDialog, setShowLoginDialog] = useState(false);
     const tabsContainerRef = useRef<HTMLDivElement>(null);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -1175,13 +1175,13 @@ export default function FreelancerDetailPage() {
                         <div className="fixed bottom-0 left-0 right-0 p-4 bg-[#0F0F0F]/95 backdrop-blur-sm border-t border-white/10">
                             <button
                                 onClick={() => {
-                                    // If already authenticated and profile complete, open hire sheet
-                                    if (isAuthenticated && isProfileComplete) {
-                                        setIsHireBottomSheetOpen(true);
-                                    } else {
-                                        // Otherwise, trigger auth flow (will show login/profile dialogs)
-                                        requireAuth('hire_freelancer', { redirectTo: `/client/freelancer/${freelancerId}` });
+                                    // Simple check: if no user, show login dialog
+                                    if (!user) {
+                                        setShowLoginDialog(true);
+                                        return;
                                     }
+                                    // If user exists, open hire sheet
+                                    setIsHireBottomSheetOpen(true);
                                 }}
                                 className="w-full py-2.5 bg-gradient-to-r from-purple-600 to-purple-500 text-white font-medium rounded-xl hover:from-purple-700 hover:to-purple-600 transition-all flex items-center justify-center gap-2 shadow-lg"
                             >
@@ -1191,13 +1191,8 @@ export default function FreelancerDetailPage() {
                         </div>
                     )}
 
-                    {/* Auth Dialogs */}
-                    <LoginDialog open={openLoginDialog} onOpenChange={setOpenLoginDialog} />
-                    <ProfileCompletionDialog
-                        open={openProfileDialog}
-                        onOpenChange={setOpenProfileDialog}
-                        onCompleteProfile={handleCompleteProfile}
-                    />
+                    {/* Simple LoginDialog */}
+                    <LoginDialog open={showLoginDialog} onOpenChange={setShowLoginDialog} />
                 </div >
             )
             }
