@@ -22,6 +22,14 @@ export async function PATCH(request: NextRequest) {
         if (gender !== undefined) updates.gender = gender;
         if (bio !== undefined) updates.bio = bio;
 
+        // Check DB connection explicitly
+        try {
+            await prisma.$connect();
+        } catch (dbError: any) {
+            console.error('Database connection failed:', dbError);
+            return NextResponse.json({ error: 'Database connection failed' }, { status: 503 });
+        }
+
         if (Object.keys(updates).length > 0) {
             await prisma.user.upsert({
                 where: { id: user.id },
@@ -38,10 +46,14 @@ export async function PATCH(request: NextRequest) {
 
         return NextResponse.json({ success: true });
 
-    } catch (error) {
-        console.error('User update error:', error);
+    } catch (error: any) {
+        console.error('User update error:', {
+            message: error.message,
+            stack: error.stack,
+            code: error.code
+        });
         return NextResponse.json(
-            { error: 'Failed to update user profile' },
+            { error: `Failed to update user profile: ${error.message}` },
             { status: 500 }
         );
     }
