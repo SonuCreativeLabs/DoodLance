@@ -9,12 +9,21 @@ import { useNavbar } from '@/contexts/NavbarContext';
 
 export default function BookingDatePage() {
   const router = useRouter();
-  const { state, setBookingDetails, setBookingNotes, addToCart, clearCart } = useHire();
+  const { state, setBookingDetails, setBookingNotes, addToCart, clearCart, isLoaded } = useHire();
   const { setNavbarVisibility } = useNavbar();
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);
   const [location, setLocation] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
+
+  // Wait for hydration
+  if (!isLoaded) {
+    return (
+      <div className="h-screen bg-[#0F0F0F] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   // Hide navbar when component mounts
   useEffect(() => {

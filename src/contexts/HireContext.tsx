@@ -57,6 +57,7 @@ interface HireContextType {
   clearCart: () => void;
   resetHireState: () => void;
   getTotalPrice: () => number;
+  isLoaded: boolean;
 }
 
 const initialState: HireState = {
@@ -263,6 +264,7 @@ export function HireProvider({ children }: { children: ReactNode }) {
     clearCart,
     resetHireState,
     getTotalPrice,
+    isLoaded: isInitialized,
   };
 
   return (

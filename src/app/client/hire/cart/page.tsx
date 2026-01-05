@@ -12,13 +12,22 @@ import LoginDialog from '@/components/auth/LoginDialog';
 
 export default function CartPage() {
   const router = useRouter();
-  const { state, getTotalPrice, increaseQuantity, decreaseQuantity, clearCart } = useHire();
+  const { state, getTotalPrice, increaseQuantity, decreaseQuantity, clearCart, isLoaded } = useHire();
   const { setNavbarVisibility } = useNavbar();
   const { requireAuth, openLoginDialog, setOpenLoginDialog, isAuthenticated } = useRequireAuth();
   const [showAdditionalServices, setShowAdditionalServices] = useState(false);
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
   const [discountAmount, setDiscountAmount] = useState(0);
+
+  // Wait for hydration
+  if (!isLoaded) {
+    return (
+      <div className="h-screen bg-[#0F0F0F] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   // Hide navbar when component mounts
   useEffect(() => {
