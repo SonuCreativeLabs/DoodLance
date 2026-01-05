@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 import { useSkills } from '@/contexts/SkillsContext';
 import { useExperience } from '@/contexts/ExperienceContext';
 import { usePortfolio } from '@/contexts/PortfolioContext';
@@ -9,6 +10,7 @@ import { useBankAccount } from '@/contexts/BankAccountContext';
 import { usePersonalDetails } from '@/contexts/PersonalDetailsContext';
 
 export function FreelancerDataLoader() {
+    const { user } = useAuth();
     const { hydrateSkills } = useSkills();
     const { hydrateExperiences } = useExperience();
     const { hydratePortfolio } = usePortfolio();
@@ -21,14 +23,16 @@ export function FreelancerDataLoader() {
     const [hasLoaded, setHasLoaded] = useState(false);
 
     useEffect(() => {
-        if (hasLoaded) return;
-
         const fetchDashboard = async () => {
+            if (!user) return;
+
+            console.log('🔄 FreelancerDataLoader: Fetching dashboard data...');
             try {
                 const response = await fetch('/api/freelancer/dashboard');
                 if (!response.ok) return;
 
                 const data = await response.json();
+                console.log('✅ FreelancerDataLoader: Data received');
 
                 // 1. Hydrate Skills
                 if (data.skills) {
@@ -94,8 +98,23 @@ export function FreelancerDataLoader() {
             }
         };
 
-        fetchDashboard();
-    }, [hasLoaded, hydrateSkills, hydrateExperiences, hydratePortfolio, hydrateReviews, hydrateBankAccount]);
+        // Initial load
+        if (user && !hasLoaded) {
+            fetchDashboard();
+        }
+
+        // Event listener for re-fetching
+        const handleRefresh = () => {
+            console.log('🔔 refreshProfile event received. Reloading dashboard data...');
+            fetchDashboard();
+        };
+
+        window.addEventListener('refreshProfile', handleRefresh);
+        return () => {
+            window.removeEventListener('refreshProfile', handleRefresh);
+        };
+
+    }, [user, hasLoaded, hydrateSkills, hydrateExperiences, hydratePortfolio, hydrateReviews, hydrateBankAccount]);
 
     return null; // Headless component
 }

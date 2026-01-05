@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 
 export interface Booking {
     "#": string;
@@ -51,26 +52,36 @@ export function BookingsProvider({ children }: { children: ReactNode }) {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
+    const { user, isAuthenticated } = useAuth();
+
     const fetchBookings = async () => {
-        setLoading(true);
+        if (!user) {
+            console.log('⏳ BookingsContext: Waiting for user auth...');
+            return;
+        }
+
+        // Only show loading state if we don't have data yet
+        // This prevents the flicker when refreshing data
+        if (bookings.length === 0) {
+            setLoading(true);
+        }
+
         try {
+            console.log('🔄 Fetching bookings for user:', user.email);
             const response = await fetch('/api/bookings');
             if (response.ok) {
                 const data = await response.json();
-                console.log('Bookings API Data:', data);
-                // Map API response to Context Booking interface
-                // API returns: { id, title, clientName, freelancerName, freelancerAvatar, ... }
-                // Context expects: { '#': string, service: string, provider: string, ... }
+                console.log('✅ Bookings API Data:', data);
 
                 const mapped: Booking[] = (data.bookings || []).map((b: any) => {
                     const dateObj = b.date ? new Date(b.date) : null;
                     return {
-                        "#": b.id,
+                        "#": b.id, // Ensure this matches the Booking interface
                         service: b.title,
                         provider: b.freelancerName || 'Unknown',
                         image: b.freelancerAvatar || '/images/default-avatar.svg',
-                        date: dateObj ? dateObj.toISOString().split('T')[0] : '',
-                        time: dateObj ? dateObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }) : '',
+                        date: dateObj ? dateObj.toISOString().split('T')[0] : '', // YYYY-MM-DD
+                        time: b.time || (dateObj ? dateObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }) : ''),
                         status: (b.status?.toLowerCase() as any) || 'pending',
                         location: b.location || 'Remote',
                         price: `₹${b.price}`,
@@ -86,10 +97,16 @@ export function BookingsProvider({ children }: { children: ReactNode }) {
                         freelancerId: b.freelancerId,
                     };
                 });
+
+                // Only update state if JSON stringified data is different to avoid re-renders
+                // or just set it (React handles ref equality check usually, but new array always triggers)
+                // For now, simple setBookings is fine as long as we don't flicker loading
                 setBookings(mapped);
             } else {
-                // If 401, maybe just empty
-                if (response.status === 401) setBookings([]);
+                if (response.status === 401) {
+                    console.log('⚠️ 401 fetching bookings - User might be logged out or session invalid');
+                    setBookings([]);
+                }
                 else setError('Failed to fetch bookings');
             }
         } catch (err) {
@@ -100,10 +117,14 @@ export function BookingsProvider({ children }: { children: ReactNode }) {
         }
     };
 
-    // Load bookings on mount
+    // Load bookings on mount or when user changes
     useEffect(() => {
-        fetchBookings();
-    }, []);
+        if (user) {
+            fetchBookings();
+        } else {
+            setBookings([]); // Clear bookings on logout
+        }
+    }, [user]);
 
     const refreshBookings = fetchBookings;
 

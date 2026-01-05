@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -569,6 +569,8 @@ const PostedJobCard = ({ job, showUpcoming = false }: { job: any; showUpcoming?:
   )
 }
 
+import { CricketLoader } from "@/components/ui/cricket-loader"
+
 export default function BookingsPage() {
   const searchParams = useSearchParams()
   const initialTab = searchParams.get('tab') || 'active'
@@ -583,79 +585,91 @@ export default function BookingsPage() {
 
   const [isSearchOpen, setIsSearchOpen] = useState(false)
 
-  const { bookings } = useBookings()
+  const { bookings, loading: bookingsLoading } = useBookings()
   const { applications } = useApplications()
   const { historyJobs } = useHistoryJobs()
   const { postedJobs, loading: jobsLoading } = usePostedJobs()
 
 
-  const filteredBookings = bookings.filter(booking => {
-    const bookingMatchesSearch = booking.service.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      booking.provider.toLowerCase().includes(searchQuery.toLowerCase())
-
+  const filteredBookings = useMemo(() => {
     const today = new Date()
     today.setHours(0, 0, 0, 0) // Reset time to start of day
+    const now = new Date();
 
-    // Parse the time properly considering AM/PM
-    const timeStr = booking.time
-    const [time, period] = timeStr.split(' ')
-    const [hours, minutes] = time.split(':').map(Number)
-    let bookingHours = hours
-    if (period === 'PM' && hours !== 12) bookingHours += 12
-    if (period === 'AM' && hours === 12) bookingHours = 0
+    return bookings.filter(booking => {
+      const bookingMatchesSearch = booking.service.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        booking.provider.toLowerCase().includes(searchQuery.toLowerCase())
 
-    // Create booking date with proper time
-    const [bookingYear, bookingMonth, bookingDay] = booking.date.split('-').map(Number)
-    const bookingDate = new Date(bookingYear, bookingMonth - 1, bookingDay)
-    const bookingDateTime = new Date(bookingYear, bookingMonth - 1, bookingDay, bookingHours, minutes)
+      // Basic search filter first - if it doesn't match, skip expensive date logic
+      if (!bookingMatchesSearch) return false;
 
-    // For debugging
-    console.log({
-      service: booking.service,
-      status: booking.status,
-      filter: selectedFilter,
-      bookingDate: bookingDate.toDateString(),
-      today: today.toDateString(),
-      isToday: bookingDate.toDateString() === today.toDateString(),
-      isFuture: bookingDate > today
+      // Parse the time properly considering AM/PM
+      const timeStr = booking.time
+      const [time, period] = timeStr.split(' ')
+      const [hours, minutes] = time.split(':').map(Number)
+      let bookingHours = hours
+      if (period === 'PM' && hours !== 12) bookingHours += 12
+      if (period === 'AM' && hours === 12) bookingHours = 0
+
+      // Create booking date with proper time
+      const [bookingYear, bookingMonth, bookingDay] = booking.date.split('-').map(Number)
+      const bookingDate = new Date(bookingYear, bookingMonth - 1, bookingDay)
+      const bookingDateTime = new Date(bookingYear, bookingMonth - 1, bookingDay, bookingHours, minutes)
+
+      // Debug log for first few items
+      // console.log('Booking filter check:', ...);
+
+      if (selectedFilter === 'all') {
+        return (booking.status === 'confirmed' || booking.status === 'ongoing' || booking.status === 'pending')
+      }
+
+      if (selectedFilter === 'ongoing') {
+        // Relaxed check: Just check if dates match (ignoring time for now to see jobs)
+        // or check if status is specifically 'ongoing' regardless of time
+        const datesMatch = bookingDate.toDateString() === today.toDateString();
+
+        // If status is EXPLICITLY 'ongoing', show it regardless of time
+        if (booking.status === 'ongoing') return true;
+
+        // Otherwise for confirmed/pending, check date
+        return datesMatch && (booking.status === 'confirmed');
+      }
+
+      if (selectedFilter === 'upcoming') {
+        // Check if date is strictly in future (tomorrow onwards)
+        // OR if it's today but time is in future?
+        // Let's stick to strict date > today first
+
+        // Note: bookingDate is 00:00:00 local time of the booking day
+        // today is 00:00:00 local time of today
+
+        return bookingDate > today &&
+          (booking.status === 'confirmed' || booking.status === 'ongoing' || booking.status === 'pending')
+      }
+
+      return true
+    }).sort((a, b) => {
+      // Parse dates for sorting
+      const parseDateTime = (date: string, time: string) => {
+        const [year, month, day] = date.split('-').map(Number)
+        const [timeStr, period] = time.split(' ')
+        const [hours, minutes] = timeStr.split(':').map(Number)
+        let adjustedHours = hours
+        if (period === 'PM' && hours !== 12) adjustedHours += 12
+        if (period === 'AM' && hours === 12) adjustedHours = 0
+        return new Date(year, month - 1, day, adjustedHours, minutes).getTime()
+      }
+
+      const timeA = parseDateTime(a.date, a.time)
+      const timeB = parseDateTime(b.date, b.time)
+
+      // Ascending order for upcoming (nearest first), descending for others
+      if (selectedFilter === 'upcoming' || selectedFilter === 'ongoing') {
+        return timeA - timeB
+      }
+      return timeB - timeA // Default: Newest first
     })
-
-    if (selectedFilter === 'all') {
-      return bookingMatchesSearch &&
-        (booking.status === 'confirmed' || booking.status === 'ongoing' || booking.status === 'pending')
-    }
-
-    if (selectedFilter === 'ongoing') {
-      const now = new Date()
-      return bookingMatchesSearch &&
-        bookingDate.toDateString() === today.toDateString() && // Same day
-        (booking.status === 'confirmed' || booking.status === 'ongoing') &&
-        bookingDateTime >= now // Not past the booking time
-    }
-
-    if (selectedFilter === 'upcoming') {
-      return bookingMatchesSearch &&
-        bookingDate > today && // Future date
-        (booking.status === 'confirmed' || booking.status === 'ongoing' || booking.status === 'pending')
-    }
-
-    return bookingMatchesSearch
-  }).sort((a, b) => {
-    // Parse dates for sorting
-    const parseDateTime = (date: string, time: string) => {
-      const [year, month, day] = date.split('-').map(Number)
-      const [timeStr, period] = time.split(' ')
-      const [hours, minutes] = timeStr.split(':').map(Number)
-      let adjustedHours = hours
-      if (period === 'PM' && hours !== 12) adjustedHours += 12
-      if (period === 'AM' && hours === 12) adjustedHours = 0
-      return new Date(year, month - 1, day, adjustedHours, minutes)
-    }
-
-    const dateA = parseDateTime(a.date, a.time)
-    const dateB = parseDateTime(b.date, b.time)
-    return dateA.getTime() - dateB.getTime()
-  })
+  }, [bookings, searchQuery, selectedFilter])
 
 
 
@@ -804,7 +818,12 @@ export default function BookingsPage() {
                     ))}
                   </div>
                   <div className="space-y-4">
-                    {filteredBookings.filter(booking =>
+                    {bookingsLoading ? (
+                      <div className="flex flex-col items-center justify-center py-20">
+                        <CricketLoader size={48} color="white" />
+                        <p className="mt-4 text-white/40 text-sm">Loading your crease...</p>
+                      </div>
+                    ) : filteredBookings.filter(booking =>
                       booking.status === 'confirmed' || booking.status === 'ongoing' || booking.status === 'pending'
                     ).length === 0 ? (
                       <div className="text-center py-12">

@@ -46,6 +46,7 @@ const initialPostedJobs: PostedJob[] = [];
 const STORAGE_KEY = 'doodlance_posted_jobs';
 
 export function PostedJobsProvider({ children }: { children: ReactNode }) {
+    const { user } = useAuth();
     const [postedJobs, setPostedJobs] = useState<PostedJob[]>(initialPostedJobs);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -60,9 +61,17 @@ export function PostedJobsProvider({ children }: { children: ReactNode }) {
                 console.error('Failed to parse posted jobs from localStorage:', e);
             }
         }
-        // Fetch fresh data from API
-        refreshPostedJobs();
     }, []);
+
+    // Fetch fresh data when user updates
+    useEffect(() => {
+        if (user) {
+            refreshPostedJobs();
+        } else {
+            // Optional: Clear jobs on logout
+            // setPostedJobs([]); 
+        }
+    }, [user]);
 
     // Save to localStorage whenever postedJobs changes
     useEffect(() => {
@@ -88,26 +97,20 @@ export function PostedJobsProvider({ children }: { children: ReactNode }) {
         };
     }, []);
 
-    const { user } = useAuth();
+
 
     const refreshPostedJobs = async () => {
-        console.log('🔄 REFRESHING POSTED JOBS...');
+        // If no user, or user not loaded, don't fetch yet or clear jobs
+        if (!user) {
+            if (loading) setLoading(false);
+            return;
+        }
+
+        console.log('🔄 REFRESHING POSTED JOBS for user:', user.email);
         setLoading(true);
         setError(null);
         try {
-            // Get client ID from Supabase session directly
-            // This is more reliable than waiting for AuthContext to populate
-            const { createClient } = await import('@/lib/supabase/client');
-            const supabase = createClient();
-            const { data: { user: sessionUser } } = await supabase.auth.getUser();
-
-            if (!sessionUser) {
-                console.log('⚠️ No authenticated user');
-                setLoading(false);
-                return;
-            }
-
-            const clientId = sessionUser.id;
+            const clientId = user.id;
             console.log('👤 Fetching jobs for client:', clientId);
 
             const response = await fetch(`/api/jobs?clientId=${clientId}`, { cache: 'no-store' });

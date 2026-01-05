@@ -11,6 +11,7 @@ import { Search, X } from 'lucide-react';
 import { JobCard, ApplicationCard } from './index';
 import { Job, Application, EarningsData, JobCategory } from './types';
 import { CricketComingSoon } from '@/components/common/CricketComingSoon';
+import { CricketLoader } from '@/components/ui/cricket-loader';
 
 // LocalStorage key for client bookings
 const CLIENT_BOOKINGS_KEY = 'clientBookings';
@@ -347,14 +348,6 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
       // Default to upcoming (includes confirmed, pending jobs AND accepted applications)
       const regularJobs = jobs.filter(job => job.status === 'confirmed' || job.status === 'pending').map(transformJobForCard);
       const acceptedApplications = applications.filter(app => app.status === 'accepted').map(transformApplicationForCard);
-
-      console.log('🔍 Filtering for upcoming jobs:');
-      console.log('  - Regular jobs:', regularJobs.length);
-      console.log('  - Total applications:', applications.length);
-      console.log('  - Accepted applications:', acceptedApplications.length);
-      if (applications.length > 0) {
-        console.log('  - Applications data:', applications.map(app => ({ id: app['#'], status: app.status })));
-      }
 
       return [...regularJobs, ...acceptedApplications];
     }
@@ -802,7 +795,12 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
                   className="w-full px-2"
                 >
                   <TabsContent value="upcoming" className="mt-0 w-full">
-                    {filteredJobs.length > 0 ? (
+                    {loading ? (
+                      <div className="flex flex-col items-center justify-center py-20">
+                        <CricketLoader size={48} color="white" />
+                        <p className="mt-4 text-white/40 text-sm">Loading your crease...</p>
+                      </div>
+                    ) : filteredJobs.length > 0 ? (
                       <div className="space-y-4 w-full">
                         {filteredJobs.map((job) => (
                           <JobCard
@@ -816,9 +814,9 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
                     ) : (
                       <div className="flex flex-col items-center justify-center py-16 text-center">
                         <div className="relative mb-6">
-                          <div className="w-20 h-20 bg-gradient-to-br from-gray-800/50 to-gray-900/50 rounded-2xl flex items-center justify-center backdrop-blur-sm border border-gray-700/30">
+                          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-white/5 flex items-center justify-center">
                             <svg
-                              className="h-10 w-10 text-gray-400"
+                              className="h-8 w-8 text-white/40"
                               fill="none"
                               viewBox="0 0 24 24"
                               stroke="currentColor"
@@ -827,19 +825,17 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
                               <path
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
-                                d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
                               />
                             </svg>
                           </div>
                         </div>
                         <div className="space-y-3 max-w-sm">
                           <h3 className="text-xl font-semibold text-white">
-                            No {statusFilter === 'upcoming' ? 'upcoming' : statusFilter === 'ongoing' ? 'ongoing' : statusFilter} jobs found
+                            No current bookings
                           </h3>
                           <p className="text-gray-400 text-sm leading-relaxed">
-                            {searchQuery
-                              ? 'Try adjusting your search or filter to find what you\'re looking for.'
-                              : 'Jobs will appear here once they are posted and available for you.'}
+                            You haven&apos;t applied for any services yet
                           </p>
                         </div>
                       </div>

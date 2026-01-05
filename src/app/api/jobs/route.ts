@@ -84,7 +84,14 @@ export async function GET(request: NextRequest) {
     const jobsWithParsedFields = jobs.map((job: any) => {
       return {
         ...job,
-        coords: job.coords ? JSON.parse(job.coords) : [],
+        coords: (() => {
+          try {
+            return job.coords ? JSON.parse(job.coords) : []
+          } catch (e) {
+            console.error(`Invalid coords for job ${job.id}:`, job.coords);
+            return [];
+          }
+        })(),
         skills: job.skills ? job.skills.split(',').map((s: string) => s.trim()).filter(Boolean) : [],
         duration: job.duration || 'hourly',
         experience: job.experience || 'Intermediate',
