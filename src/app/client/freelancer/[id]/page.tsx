@@ -24,6 +24,9 @@ import {
     User
 } from 'lucide-react';
 import { useNavbar } from '@/contexts/NavbarContext';
+import { useRequireAuth } from '@/hooks/useRequireAuth';
+import LoginDialog from '@/components/auth/LoginDialog';
+import ProfileCompletionDialog from '@/components/auth/ProfileCompletionDialog';
 
 import { IdVerifiedBadge } from '@/components/freelancer/profile/IdVerifiedBadge';
 import { SkillInfoDialog } from '@/components/common/SkillInfoDialog';
@@ -116,6 +119,7 @@ export default function FreelancerDetailPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { setNavbarVisibility } = useNavbar();
+    const { requireAuth, openLoginDialog, setOpenLoginDialog, openProfileDialog, setOpenProfileDialog, handleCompleteProfile } = useRequireAuth();
     const [freelancer, setFreelancer] = useState<FreelancerDetail | null>(null);
     const [loading, setLoading] = useState(true);
     const [isSkillDialogOpen, setIsSkillDialogOpen] = useState(false);
@@ -1170,7 +1174,11 @@ export default function FreelancerDetailPage() {
                     {!isViewOnly && (
                         <div className="fixed bottom-0 left-0 right-0 p-4 bg-[#0F0F0F]/95 backdrop-blur-sm border-t border-white/10">
                             <button
-                                onClick={() => setIsHireBottomSheetOpen(true)}
+                                onClick={() => {
+                                    requireAuth('hire_freelancer', { redirectTo: `/client/freelancer/${freelancerId}` });
+                                    // If already authenticated, open hire sheet
+                                    // Otherwise requireAuth will show login/profile dialogs
+                                }}
                                 className="w-full py-2.5 bg-gradient-to-r from-purple-600 to-purple-500 text-white font-medium rounded-xl hover:from-purple-700 hover:to-purple-600 transition-all flex items-center justify-center gap-2 shadow-lg"
                             >
                                 <UserPlus className="w-4 h-4" />
@@ -1178,6 +1186,14 @@ export default function FreelancerDetailPage() {
                             </button>
                         </div>
                     )}
+
+                    {/* Auth Dialogs */}
+                    <LoginDialog open={openLoginDialog} onOpenChange={setOpenLoginDialog} />
+                    <ProfileCompletionDialog
+                        open={openProfileDialog}
+                        onOpenChange={setOpenProfileDialog}
+                        onComplete={handleCompleteProfile}
+                    />
                 </div >
             )
             }
