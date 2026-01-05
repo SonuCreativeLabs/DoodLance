@@ -23,9 +23,16 @@ export async function PATCH(request: NextRequest) {
         if (bio !== undefined) updates.bio = bio;
 
         if (Object.keys(updates).length > 0) {
-            await prisma.user.update({
+            await prisma.user.upsert({
                 where: { id: user.id },
-                data: updates
+                update: updates,
+                create: {
+                    id: user.id,
+                    email: user.email!,
+                    role: 'client', // Default role for new users
+                    coords: '[0,0]', // Default coords
+                    ...updates
+                }
             });
         }
 
