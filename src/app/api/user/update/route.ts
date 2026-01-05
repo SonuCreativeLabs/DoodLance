@@ -27,7 +27,10 @@ export async function PATCH(request: NextRequest) {
             await prisma.$connect();
         } catch (dbError: any) {
             console.error('Database connection failed:', dbError);
-            return NextResponse.json({ error: 'Database connection failed' }, { status: 503 });
+            return NextResponse.json({
+                error: `Database connection failed: ${dbError.message}`,
+                details: String(dbError)
+            }, { status: 503 });
         }
 
         if (Object.keys(updates).length > 0) {
