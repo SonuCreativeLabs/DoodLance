@@ -111,21 +111,29 @@ export function useRequireAuth(): UseRequireAuthReturn {
     ) => {
         // If already authenticated
         if (isAuthenticated && user) {
-            // Check profile completion unless skipped
-            if (!options?.skipProfileCheck && !checkProfileCompletion()) {
-                // Store action ID and return path in localStorage
-                const returnPath = options?.redirectTo || pathname
+            // Check profile completion unless skipped - inline the logic to avoid circular dependency
+            if (!options?.skipProfileCheck) {
+                const role = user.role || 'client'
+                const hasBasicInfo = !!(user.name && user.location)
+                const isComplete = role === 'client'
+                    ? (hasBasicInfo && !!user.profileImage)
+                    : (hasBasicInfo && !!user.profileImage)
 
-                if (typeof window !== 'undefined') {
-                    localStorage.setItem(PENDING_ACTION_KEY, actionId)
-                    localStorage.setItem(RETURN_TO_KEY, returnPath)
+                if (!isComplete) {
+                    // Store action ID and return path in localStorage
+                    const returnPath = options?.redirectTo || pathname
+
+                    if (typeof window !== 'undefined') {
+                        localStorage.setItem(PENDING_ACTION_KEY, actionId)
+                        localStorage.setItem(RETURN_TO_KEY, returnPath)
+                    }
+
+                    // Instead of redirecting immediately, show the dialog
+                    setPendingRedirectPath(returnPath)
+                    setPendingActionId(actionId)
+                    setOpenProfileDialog(true)
+                    return
                 }
-
-                // Instead of redirecting immediately, show the dialog
-                setPendingRedirectPath(returnPath)
-                setPendingActionId(actionId)
-                setOpenProfileDialog(true)
-                return
             }
 
             // Profile is complete - action can proceed
@@ -141,7 +149,7 @@ export function useRequireAuth(): UseRequireAuthReturn {
         }
 
         setOpenLoginDialog(true)
-    }, [isAuthenticated, user, checkProfileCompletion, pathname])
+    }, [isAuthenticated, user, pathname]) // Removed checkProfileCompletion - inlined instead
 
     return {
         requireAuth,
