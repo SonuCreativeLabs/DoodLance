@@ -281,19 +281,6 @@ export default function BookingDatePage() {
           <ArrowRight className="w-4 h-4 ml-2" />
         </Button>
       </div>
-      <LoginDialog
-        open={openLoginDialog}
-        onOpenChange={setOpenLoginDialog}
-        onSuccess={() => {
-          // Reload logic if needed, or just stay on page
-        }}
-      />
-
-      <ProfileCompletionDialog
-        open={openProfileDialog}
-        onOpenChange={setOpenProfileDialog}
-        onCompleteProfile={handleCompleteProfile}
-      />
     </div>
   );
 }
