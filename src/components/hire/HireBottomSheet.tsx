@@ -28,7 +28,7 @@ export function HireBottomSheet({
   services
 }: HireBottomSheetProps) {
   const router = useRouter();
-  const { state, setFreelancer, addService, removeService, resetHireState } = useHire();
+  const { state, setFreelancer, setSelectedService, removeService, resetHireState } = useHire();
   const prevFreelancerIdRef = React.useRef<string | null>(null);
 
   useEffect(() => {
@@ -38,7 +38,7 @@ export function HireBottomSheet({
         resetHireState();
       }
       prevFreelancerIdRef.current = freelancerId;
-      
+
       // Set freelancer data
       setFreelancer(freelancerId, freelancerName, freelancerImage, freelancerRating, freelancerReviewCount, services);
     }
@@ -50,7 +50,7 @@ export function HireBottomSheet({
     if (isSelected) {
       removeService(service.id);
     } else {
-      addService(service);
+      setSelectedService(service);
     }
   };
 
@@ -94,7 +94,7 @@ export function HireBottomSheet({
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-white">Hire {freelancerName}</h3>
-                  <p className="text-sm text-white/60">Select services to continue</p>
+                  <p className="text-sm text-white/60">Select a service to continue</p>
                 </div>
               </div>
               <button
@@ -123,11 +123,10 @@ export function HireBottomSheet({
                         key={service.id}
                         role="button"
                         tabIndex={0}
-                        className={`p-4 rounded-xl border transition-all cursor-pointer select-none ${
-                          isSelected
-                            ? 'border-purple-500/50 bg-purple-500/10'
-                            : 'border-white/10 bg-white/5 hover:border-white/20'
-                        }`}
+                        className={`p-4 rounded-xl border transition-all cursor-pointer select-none ${isSelected
+                          ? 'border-purple-500/50 bg-purple-500/10'
+                          : 'border-white/10 bg-white/5 hover:border-white/20'
+                          }`}
                         onClick={(e) => {
                           e.stopPropagation();
                           handleServiceToggle(service);
@@ -141,11 +140,10 @@ export function HireBottomSheet({
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
-                            <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
-                              isSelected
-                                ? 'border-purple-500 bg-purple-500'
-                                : 'border-white/30'
-                            }`}>
+                            <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${isSelected
+                              ? 'border-purple-500 bg-purple-500'
+                              : 'border-white/30'
+                              }`}>
                               {isSelected && <Check className="w-3 h-3 text-white" />}
                             </div>
                             <div>
@@ -171,7 +169,7 @@ export function HireBottomSheet({
             <div className="flex-shrink-0 p-6 border-t border-white/10 bg-[#1E1E1E]">
               <div className="flex items-center justify-between mb-4">
                 <div className="text-sm text-white/60">
-                  {state.selectedServices.length} service{state.selectedServices.length !== 1 ? 's' : ''} selected
+                  {state.selectedServices.length > 0 ? '1 service selected' : 'No service selected'}
                 </div>
                 {state.selectedServices.length > 0 && (
                   <div className="text-sm font-medium text-white">
@@ -191,11 +189,10 @@ export function HireBottomSheet({
               <button
                 onClick={handleContinue}
                 disabled={state.selectedServices.length === 0}
-                className={`w-full py-3 px-4 rounded-xl font-medium transition-all flex items-center justify-center gap-2 ${
-                  state.selectedServices.length > 0
-                    ? 'bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-700 hover:to-purple-600 shadow-lg'
-                    : 'bg-white/10 text-white/40 cursor-not-allowed'
-                }`}
+                className={`w-full py-3 px-4 rounded-xl font-medium transition-all flex items-center justify-center gap-2 ${state.selectedServices.length > 0
+                  ? 'bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-700 hover:to-purple-600 shadow-lg'
+                  : 'bg-white/10 text-white/40 cursor-not-allowed'
+                  }`}
               >
                 Confirm
                 <ArrowRight className="w-4 h-4" />

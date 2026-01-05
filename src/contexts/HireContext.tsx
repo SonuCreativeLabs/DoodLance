@@ -44,6 +44,7 @@ interface HireContextType {
   state: HireState;
   setFreelancer: (id: string, name: string, image: string, rating?: number | null, reviewCount?: number | null, services?: ServiceItem[]) => void;
   addService: (service: ServiceItem) => void;
+  setSelectedService: (service: ServiceItem) => void;
   removeService: (serviceId: string) => void;
   increaseSelectedServiceQuantity: (serviceId: string) => void;
   decreaseSelectedServiceQuantity: (serviceId: string) => void;
@@ -95,6 +96,13 @@ export function HireProvider({ children }: { children: ReactNode }) {
     setState(prev => ({
       ...prev,
       selectedServices: [...prev.selectedServices, { ...service, quantity: 1 }],
+    }));
+  }, []);
+
+  const setSelectedService = useCallback((service: ServiceItem) => {
+    setState(prev => ({
+      ...prev,
+      selectedServices: [{ ...service, quantity: 1 }],
     }));
   }, []);
 
@@ -219,6 +227,7 @@ export function HireProvider({ children }: { children: ReactNode }) {
     state,
     setFreelancer,
     addService,
+    setSelectedService,
     removeService,
     increaseSelectedServiceQuantity,
     decreaseSelectedServiceQuantity,
