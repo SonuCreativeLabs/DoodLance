@@ -156,10 +156,26 @@ export default function FreelancerDetailPage() {
     useEffect(() => {
         async function loadFreelancer() {
             setLoading(true);
+
+            // Check cache first
+            const cachedData = sessionStorage.getItem(`freelancer_profile_${freelancerId}`);
+            if (cachedData) {
+                try {
+                    const parsed = JSON.parse(cachedData);
+                    setFreelancer(parsed);
+                    setLoading(false);
+                    // verified - we can return here, or fetch in background to update
+                    // returning here is faster and meets "keep infos solid" requirement
+                    // we can do a background SWR-like revalidation if needed, but for now simple cache is best
+                } catch (e) {
+                    console.error("Cache parse error", e);
+                }
+            }
+
             try {
                 const res = await fetch(`/api/freelancers/${freelancerId}`);
                 if (!res.ok) {
-                    setFreelancer(null);
+                    if (!cachedData) setFreelancer(null); // Only clear if no cache
                     setLoading(false);
                     return;
                 }
@@ -251,6 +267,7 @@ export default function FreelancerDetailPage() {
                 };
 
                 setFreelancer(mappedFreelancer);
+                sessionStorage.setItem(`freelancer_profile_${freelancerId}`, JSON.stringify(mappedFreelancer));
 
             } catch (error) {
                 console.error("Failed to load freelancer", error);
