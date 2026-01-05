@@ -6,15 +6,13 @@ import { ArrowLeft, Clock, Calendar, ArrowRight, ShoppingCart, Star, MapPin, Mes
 import { Button } from '@/components/ui/button';
 import { useHire } from '@/contexts/HireContext';
 import { useNavbar } from '@/contexts/NavbarContext';
-import { useRequireAuth } from '@/hooks/useRequireAuth';
-import LoginDialog from '@/components/auth/LoginDialog';
-import ProfileCompletionDialog from '@/components/auth/ProfileCompletionDialog';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function BookingDatePage() {
   const router = useRouter();
   const { state, setBookingDetails, setBookingNotes, addToCart, clearCart, isLoaded } = useHire();
   const { setNavbarVisibility } = useNavbar();
-  const { requireAuth, isAuthenticated, isProfileComplete, openLoginDialog, setOpenLoginDialog, openProfileDialog, setOpenProfileDialog, handleCompleteProfile } = useRequireAuth();
+  const { user } = useAuth();
 
   // Auth check removed - only validate when user clicks Continue button to avoid infinite loops
 
