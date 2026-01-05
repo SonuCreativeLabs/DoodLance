@@ -88,6 +88,37 @@ export function HireProvider({ children }: { children: ReactNode }) {
     if (savedState) {
       try {
         const parsedState = JSON.parse(savedState);
+        // Sanitization Layer: Ensure deeply nested fields are safe
+        // This fixes legacy corrupted data (where price might be an object)
+        if (parsedState.freelancerName && typeof parsedState.freelancerName === 'object') {
+          parsedState.freelancerName = String(parsedState.freelancerName);
+        }
+        if (parsedState.freelancerImage && typeof parsedState.freelancerImage === 'object') {
+          parsedState.freelancerImage = String(parsedState.freelancerImage);
+        }
+
+        // Sanitize selectedServices
+        if (Array.isArray(parsedState.selectedServices)) {
+          parsedState.selectedServices = parsedState.selectedServices.map((s: any) => ({
+            ...s,
+            price: typeof s.price === 'object' ? String(s.price) : s.price,
+            title: typeof s.title === 'object' ? String(s.title) : s.title,
+            deliveryTime: typeof s.deliveryTime === 'object' ? String(s.deliveryTime) : s.deliveryTime
+          }));
+        }
+
+        // Sanitize Cart Items
+        if (Array.isArray(parsedState.cartItems)) {
+          parsedState.cartItems = parsedState.cartItems.map((item: any) => ({
+            ...item,
+            service: {
+              ...item.service,
+              price: typeof item.service?.price === 'object' ? String(item.service.price) : item.service?.price,
+              title: typeof item.service?.title === 'object' ? String(item.service.title) : item.service?.title
+            }
+          }));
+        }
+
         // Ensure all required fields exist (merge with initial state for safety)
         setState({ ...initialState, ...parsedState });
       } catch (error) {

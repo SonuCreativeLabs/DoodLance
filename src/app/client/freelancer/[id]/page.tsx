@@ -199,70 +199,69 @@ export default function FreelancerDetailPage() {
                 // route.ts doesn't return coords. Assuming default or add to API if needed.
 
                 const mappedFreelancer: FreelancerDetail = {
-                    id: profile.id,
-                    name: profile.name || 'Anonymous',
-                    service: profile.title || 'Freelancer',
-                    experience: profile.experience || '',
-                    location: profile.location || '',
+                    id: String(profile.id),
+                    name: String(profile.name || 'Anonymous'),
+                    service: String(profile.title || 'Freelancer'),
+                    experience: String(profile.experience || ''),
+                    location: String(profile.location || ''),
                     distance: 0,
-                    price: profile.hourlyRate || 0,
+                    price: Number(profile.hourlyRate) || 0,
                     priceUnit: 'hr',
-                    rating: profile.rating || 0,
-                    reviews: profile.reviews?.length || 0,
-                    reviewCount: profile.reviewCount || 0,
-                    completedJobs: profile.completedJobs || 0,
-                    responseTime: profile.responseTime || '',
-                    image: profile.avatar || '',
+                    rating: Number(profile.rating) || 0,
+                    reviews: Number(profile.reviews?.length) || 0,
+                    reviewCount: Number(profile.reviewCount) || 0,
+                    completedJobs: Number(profile.completedJobs) || 0,
+                    responseTime: String(profile.responseTime || ''),
+                    image: String(profile.avatar || ''),
                     expertise: skills,
-                    description: profile.about || profile.bio || '',
+                    description: String(profile.about || profile.bio || ''),
                     availability: profile.availability || [],
-                    online: profile.isOnline || false,
+                    online: Boolean(profile.isOnline),
 
-                    bio: profile.bio,
-                    about: profile.about,
+                    bio: profile.bio ? String(profile.bio) : undefined,
+                    about: profile.about ? String(profile.about) : undefined,
                     cricketRole: profile.cricketRole,
                     battingStyle: profile.battingStyle,
                     bowlingStyle: profile.bowlingStyle,
                     languages: profile.languages,
                     completionRate: 0,
                     skills: skills,
-                    coverImage: profile.coverImage || '',
+                    coverImage: String(profile.coverImage || ''),
 
                     services: profile.services?.map((s: any) => ({
-                        id: s.id,
-                        title: s.title,
-                        description: s.description,
-                        price: s.price,
-                        category: s.category?.name || 'Service',
-                        deliveryTime: s.deliveryTime
+                        id: String(s.id),
+                        title: String(s.title),
+                        description: String(s.description),
+                        price: String(s.price), // Force string as per interface expectation or UI usage
+                        category: String(s.category?.name || 'Service'),
+                        deliveryTime: String(s.deliveryTime)
                     })) || [],
 
                     experienceDetails: profile.experiences?.map((exp: any) => ({
-                        id: exp.id,
-                        role: exp.role,
-                        company: exp.company,
-                        location: exp.location,
-                        startDate: exp.startDate,
-                        endDate: exp.endDate,
-                        isCurrent: exp.isCurrent,
-                        description: exp.description
+                        id: String(exp.id),
+                        role: String(exp.role),
+                        company: String(exp.company),
+                        location: String(exp.location),
+                        startDate: String(exp.startDate),
+                        endDate: String(exp.endDate),
+                        isCurrent: Boolean(exp.isCurrent),
+                        description: String(exp.description)
                     })) || [],
 
                     portfolio: profile.portfolios?.map((p: any) => ({
-                        id: p.id,
-                        title: p.title,
-                        image: p.images ? (JSON.parse(p.images)[0] || '') : '', // Assuming images is JSON string of array
-                        category: p.category
+                        id: String(p.id),
+                        title: String(p.title),
+                        image: p.images ? String(JSON.parse(p.images)[0] || '') : '',
+                        category: String(p.category)
                     })) || [],
 
                     reviewsData: profile.reviews?.map((r: any) => ({
-                        id: r.id,
-                        author: r.clientName || 'Anonymous', // Use stored name
-                        role: r.clientRole || 'Client',
-                        rating: r.rating,
-                        comment: r.comment,
-                        date: r.createdAt
-                        // avatar: r.clientAvatar - if needed in future
+                        id: String(r.id),
+                        author: String(r.clientName || 'Anonymous'),
+                        role: String(r.clientRole || 'Client'),
+                        rating: Number(r.rating),
+                        comment: String(r.comment),
+                        date: String(r.createdAt)
                     })) || []
                 };
 
