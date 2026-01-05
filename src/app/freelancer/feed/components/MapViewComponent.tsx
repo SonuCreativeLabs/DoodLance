@@ -36,7 +36,7 @@ type Job = Omit<SharedJob, 'client' | 'clientName' | 'clientImage' | 'clientRati
   companyLogo: string;
   clientName: string;
   clientImage?: string;
-  clientRating: string | number | { stars: number; feedback: string; feedbackChips: string[]; };
+  clientRating?: { stars: number; feedback: string; feedbackChips: string[]; };
   clientJobs: number;
   proposals: number;
   duration: JobDuration;
@@ -164,7 +164,11 @@ const MapViewComponent: React.FC<MapViewProps> = ({ jobs, selectedCategory, styl
         companyLogo: jobInput.companyLogo || '',
         clientName: client.name,
         clientImage: client.image,
-        clientRating: client.rating || 0,
+        clientRating: {
+          stars: Number(client.rating) || 0,
+          feedback: '',
+          feedbackChips: []
+        },
         clientJobs: client.jobsCompleted || 0,
         proposals: jobInput.proposals || 0,
         duration: ['hourly', 'daily', 'weekly', 'monthly', 'one-time'].includes(jobInput.duration || '')

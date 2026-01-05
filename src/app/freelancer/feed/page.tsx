@@ -65,7 +65,7 @@ export default function FeedPage() {
     companyLogo: string;
     clientName: string;
     clientImage?: string;
-    clientRating: string | number | { stars: number; feedback: string; feedbackChips: string[]; };
+    clientRating?: { stars: number; feedback: string; feedbackChips: string[]; };
     clientJobs: number;
     proposals: number;
     duration: 'hourly' | 'daily' | 'weekly' | 'monthly' | 'one-time';
@@ -260,9 +260,9 @@ export default function FeedPage() {
         companyLogo: job.companyLogo ?? '',
         clientName: job.clientName ?? 'Anonymous',
         clientImage: job.clientImage,
-        clientRating: typeof job.clientRating === 'number' || typeof job.clientRating === 'string'
+        clientRating: typeof job.clientRating === 'object'
           ? job.clientRating
-          : 0,
+          : { stars: Number(job.clientRating) || 0, feedback: '', feedbackChips: [] },
         clientJobs: typeof job.clientJobs === 'number' ? job.clientJobs : 0,
         proposals: typeof job.proposals === 'number' ? job.proposals : 0,
         duration: job.duration || 'one-time',
