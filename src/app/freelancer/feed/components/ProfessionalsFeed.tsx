@@ -216,7 +216,7 @@ export default function ProfessionalsFeed({
     return (
       <OverlayPortal>
         <JobDetailsModal
-          job={selectedJob}
+          job={selectedJob as any}
           onClose={handleBack}
           onJobUpdate={() => {
             // Optional: refresh jobs list if needed
