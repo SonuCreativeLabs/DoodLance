@@ -7,8 +7,6 @@ import { Button } from '@/components/ui/button';
 import { useHire } from '@/contexts/HireContext';
 import { useNavbar } from '@/contexts/NavbarContext';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
-import LoginDialog from '@/components/auth/LoginDialog';
-import ProfileCompletionDialog from '@/components/auth/ProfileCompletionDialog';
 
 export default function BookingDatePage() {
   const router = useRouter();
@@ -16,13 +14,20 @@ export default function BookingDatePage() {
   const { setNavbarVisibility } = useNavbar();
   const { requireAuth, isAuthenticated, authLoading, isProfileComplete, openLoginDialog, setOpenLoginDialog, openProfileDialog, setOpenProfileDialog, handleCompleteProfile } = useRequireAuth();
 
-  // Protect page
-  useEffect(() => {
-    // Only check auth once loading is complete
-    if (isLoaded && !authLoading && (!isAuthenticated || !isProfileComplete)) {
-      requireAuth('booking_date_access', { redirectTo: '/client/hire/booking-date' });
-    }
-  }, [isLoaded, authLoading, isAuthenticated, isProfileComplete, requireAuth]);
+  // Protect page - checks removed as per user request
+  // useEffect(() => {
+  //   // Only check auth once loading is complete
+  //   if (isLoaded && !authLoading) {
+  //     if (!isAuthenticated) {
+  //       router.push('/auth/login');
+  //       return;
+  //     }
+  //     if (!isProfileComplete) {
+  //       router.push('/client/profile/edit');
+  //       return;
+  //     }
+  //   }
+  // }, [isLoaded, authLoading, isAuthenticated, isProfileComplete, router]);
 
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);
@@ -288,19 +293,6 @@ export default function BookingDatePage() {
           <ArrowRight className="w-4 h-4 ml-2" />
         </Button>
       </div>
-      <LoginDialog
-        open={openLoginDialog}
-        onOpenChange={setOpenLoginDialog}
-        onSuccess={() => {
-          // Reload logic if needed, or just stay on page
-        }}
-      />
-
-      <ProfileCompletionDialog
-        open={openProfileDialog}
-        onOpenChange={setOpenProfileDialog}
-        onCompleteProfile={handleCompleteProfile}
-      />
     </div>
   );
 }

@@ -6,8 +6,6 @@ import { X, Check, ArrowRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useHire, ServiceItem } from '@/contexts/HireContext';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
-import LoginDialog from '@/components/auth/LoginDialog';
-import ProfileCompletionDialog from '@/components/auth/ProfileCompletionDialog';
 
 interface HireBottomSheetProps {
   isOpen: boolean;
@@ -64,12 +62,7 @@ export function HireBottomSheet({
 
   const handleContinue = () => {
     if (state.selectedServices.length > 0) {
-      if (authLoading) return; // Wait for auth load
-
-      if (!isAuthenticated || !isProfileComplete) {
-        requireAuth('hire_service', { redirectTo: '/client/hire/booking-date' });
-        return;
-      }
+      // Auth checks removed as per user request to prioritize hiring flow
 
       onClose();
       router.push('/client/hire/booking-date');
@@ -218,21 +211,6 @@ export function HireBottomSheet({
           </>
         )}
       </AnimatePresence>
-
-      <LoginDialog
-        open={openLoginDialog}
-        onOpenChange={setOpenLoginDialog}
-        onSuccess={() => {
-          onClose();
-          router.push('/client/hire/booking-date');
-        }}
-      />
-
-      <ProfileCompletionDialog
-        open={openProfileDialog}
-        onOpenChange={setOpenProfileDialog}
-        onCompleteProfile={handleCompleteProfile}
-      />
     </>
   );
 }
