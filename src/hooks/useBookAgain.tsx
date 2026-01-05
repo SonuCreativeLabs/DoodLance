@@ -58,7 +58,7 @@ export function useBookAgain(historyJob: HistoryJobData | null, options?: { useR
         if (!historyJob) return;
 
         try {
-            const newBookingId = addBooking({
+            const newBookingId = await addBooking({
                 service: historyJob.title,
                 provider: historyJob.freelancer.name,
                 image: historyJob.freelancer.image,

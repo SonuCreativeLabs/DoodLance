@@ -21,6 +21,8 @@ interface BookingCardProps {
 }
 
 import { RescheduleModal } from "@/components/client/bookings/RescheduleModal"
+import { ComingSoonOverlay } from '@/components/common/ComingSoonOverlay';
+import { CricketComingSoon } from '@/components/common/CricketComingSoon';
 
 const BookingCard = ({ booking, showActions = true }: BookingCardProps) => {
   const router = useRouter()
@@ -844,55 +846,16 @@ export default function BookingsPage() {
                 </TabsContent>
 
                 <TabsContent value="applications" className="mt-2 focus-visible:outline-none focus-visible:ring-0">
-                  {/* Applications Tab Filters - Showing Posted Jobs */}
-                  <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-                    {['all', 'open', 'closed', 'deleted'].map((filter) => (
-                      <button
-                        key={filter}
-                        onClick={() => setApplicationFilter(filter)}
-                        className={cn(
-                          "px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all",
-                          applicationFilter === filter
-                            ? "bg-purple-500/20 text-purple-400 border border-purple-500/30"
-                            : "bg-white/5 text-white/60 border border-white/10 hover:bg-white/10"
-                        )}
-                      >
-                        {filter.charAt(0).toUpperCase() + filter.slice(1)}
-                      </button>
-                    ))}
-                  </div>
-                  <div className="space-y-4">
-                    {jobsLoading ? (
-                      <div className="text-center py-12">
-                        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-white/5 flex items-center justify-center">
-                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
-                        </div>
-                        <h3 className="text-lg font-medium text-white/90 mb-2">Loading jobs...</h3>
-                      </div>
-                    ) : postedJobs
-                      .filter(job => applicationFilter === 'all' || job.status === applicationFilter)
-                      .length === 0 ? (
-                      <div className="text-center py-12">
-                        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-white/5 flex items-center justify-center">
-                          <Briefcase className="w-8 h-8 text-white/40" />
-                        </div>
-                        <h3 className="text-lg font-medium text-white/90 mb-2">No {applicationFilter === 'all' ? '' : applicationFilter} jobs found</h3>
-                        <p className="text-white/60 text-sm">
-                          {applicationFilter === 'all'
-                            ? "You haven't posted any jobs yet"
-                            : `No jobs found with status '${applicationFilter}'`}
-                        </p>
-                      </div>
-                    ) : (
-                      postedJobs
-                        .filter(job => applicationFilter === 'all' || job.status === applicationFilter)
-                        .map((job) => (
-                          <PostedJobCard
-                            key={job["#"]}
-                            job={job}
-                          />
-                        ))
-                    )}
+                  <div className="py-12">
+                    <CricketComingSoon
+                      title="Field Setting Change!"
+                      description={
+                        <>
+                          The Job Posting arena is being marked for the next match.<br />
+                          Get your game plan ready!
+                        </>
+                      }
+                    />
                   </div>
                 </TabsContent>
 

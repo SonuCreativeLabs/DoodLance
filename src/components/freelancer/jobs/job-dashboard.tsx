@@ -10,6 +10,7 @@ import { Search, X } from 'lucide-react';
 // Import components and types
 import { JobCard, ApplicationCard } from './index';
 import { Job, Application, EarningsData, JobCategory } from './types';
+import { CricketComingSoon } from '@/components/common/CricketComingSoon';
 
 // LocalStorage key for client bookings
 const CLIENT_BOOKINGS_KEY = 'clientBookings';
@@ -800,7 +801,6 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
                   transition={{ duration: 0.15 }}
                   className="w-full px-2"
                 >
-                  {/* Upcoming Jobs Tab */}
                   <TabsContent value="upcoming" className="mt-0 w-full">
                     {filteredJobs.length > 0 ? (
                       <div className="space-y-4 w-full">
@@ -846,51 +846,18 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
                     )}
                   </TabsContent>
 
-                  {/* Applications Tab */}
                   <TabsContent value="applications" className="mt-0 w-full">
-                    {filteredApplications.length > 0 ? (
-                      <div className="space-y-4 w-full">
-                        {filteredApplications.map((application) => (
-                          <ApplicationCard
-                            key={application["#"]}
-                            application={application}
-                            index={filteredApplications.indexOf(application)}
-                            onViewDetails={() => onViewDetails(application)}
-                            onStatusChange={handleApplicationStatusChange}
-                          />
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="flex flex-col items-center justify-center py-16 text-center">
-                        <div className="relative mb-6">
-                          <div className="w-20 h-20 bg-gradient-to-br from-gray-800/50 to-gray-900/50 rounded-2xl flex items-center justify-center backdrop-blur-sm border border-gray-700/30">
-                            <svg
-                              className="h-10 w-10 text-gray-400"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                              strokeWidth={1.5}
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                              />
-                            </svg>
-                          </div>
-                        </div>
-                        <div className="space-y-3 max-w-sm">
-                          <h3 className="text-xl font-semibold text-white">
-                            No {statusFilter} applications found
-                          </h3>
-                          <p className="text-gray-400 text-sm leading-relaxed">
-                            {searchQuery
-                              ? 'Try adjusting your search or filter to find what you\'re looking for.'
-                              : 'When you submit proposals, they will appear here.'}
-                          </p>
-                        </div>
-                      </div>
-                    )}
+                    <div className="py-12">
+                      <CricketComingSoon
+                        title="Pitch Inspection in Progress!"
+                        description={
+                          <>
+                            Your Proposals dashboard is being prepared for the match.<br />
+                            The umpire will clear the pitch shortly!
+                          </>
+                        }
+                      />
+                    </div>
                   </TabsContent>
                 </motion.div>
               </AnimatePresence>

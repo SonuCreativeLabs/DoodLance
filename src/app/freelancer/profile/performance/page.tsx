@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 // import { ProfileStatsCard } from '@/components/freelancer/profile/ProfileStatsCard' // Unused;
 import { MonthlyActivities } from '@/components/freelancer/profile/MonthlyActivities';
 import { TimeRangeSelector } from '@/components/freelancer/profile/TimeRangeSelector';
@@ -34,7 +34,8 @@ export default function PerformancePage() {
     rating: 0,
     reviewCount: 0,
     completionRate: 0,
-    avgProjectValue: 0
+    avgProjectValue: 0,
+    monthlyStats: []
   });
 
   useEffect(() => {
@@ -55,11 +56,11 @@ export default function PerformancePage() {
     fetchStats();
   }, [dateRange]);
 
-  const handleRangeChange = (range: { start: Date; end: Date }) => {
+  const handleRangeChange = useCallback((range: { start: Date; end: Date }) => {
     setIsLoading(true);
     setDateRange(range);
     // In a future update, you could pass date range to the API to filter stats
-  };
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#0F0F0F] text-white flex flex-col">
@@ -87,7 +88,13 @@ export default function PerformancePage() {
       <div className="flex-1 overflow-y-auto">
         <div className="container mx-auto px-4 py-6">
           {/* Main Content with Stats */}
+          {/* Main Content with Stats */}
           <div className="grid grid-cols-1 gap-6">
+            {/* Date Range Selector */}
+            <div className="flex justify-end">
+              <TimeRangeSelector onRangeChange={handleRangeChange} />
+            </div>
+
             {/* Quick Stats Grid */}
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-[#1E1E1E] p-4 rounded-xl border border-white/10">
@@ -112,8 +119,11 @@ export default function PerformancePage() {
               </div>
             </div>
 
-            {/* MonthlyActivities (bars) first */}
-            <MonthlyActivities isLoading={isLoading} />
+            {/* MonthlyActivities Chart */}
+            <MonthlyActivities
+              isLoading={isLoading}
+              monthlyStats={stats.monthlyStats}
+            />
           </div>
         </div>
       </div>

@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Clock, Calendar, Star, Check, ChevronDown, Map, Sparkles, Compass } from 'lucide-react';
 import type { PanInfo } from 'framer-motion';
 import dynamic from 'next/dynamic';
+import { ComingSoonOverlay } from '@/components/common/ComingSoonOverlay';
 
 const MapView = dynamic(
   () => import('./components/MapViewComponent').then(mod => ({ default: mod.default })),
@@ -503,289 +504,299 @@ export default function FeedPage() {
   }, [showSuccessModal]);
 
   return (
-    <div className="relative h-screen w-full bg-black overflow-hidden">
-      {/* SearchFilters Modal */}
-      <SearchFilters
-        isOpen={showFilterModal}
-        onClose={() => setShowFilterModal(false)}
-        location={location}
-        setLocation={setLocation}
-        serviceCategory={serviceCategory}
-        setServiceCategory={setServiceCategory}
-        workMode={workMode}
-        setWorkMode={setWorkMode}
-        priceRange={priceRange}
-        setPriceRange={setPriceRange}
-        distance={distance}
-        setDistance={setDistance}
-        filtersApplied={filtersApplied}
-        currentLocation={currentLocation}
-        clearFilters={clearAllFilters}
-        applyFilters={applyFilters}
-      />
-
-      {/* Map View */}
-      <div className="absolute inset-0 z-0">
-        <MapView
-          jobs={filteredJobs}
-          selectedCategory={selectedCategory}
-          onApply={handleApply}
-          appliedJobIds={appliedJobIds}
+    <ComingSoonOverlay
+      title="Drinks Break!"
+      description={
+        <>
+          The Feed is rehydrating and will be back with fresh opportunities.<br />
+          Stay tuned for the next session!
+        </>
+      }
+    >
+      <div className="relative h-screen w-full bg-black overflow-hidden">
+        {/* SearchFilters Modal */}
+        <SearchFilters
+          isOpen={showFilterModal}
+          onClose={() => setShowFilterModal(false)}
+          location={location}
+          setLocation={setLocation}
+          serviceCategory={serviceCategory}
+          setServiceCategory={setServiceCategory}
+          workMode={workMode}
+          setWorkMode={setWorkMode}
+          priceRange={priceRange}
+          setPriceRange={setPriceRange}
+          distance={distance}
+          setDistance={setDistance}
+          filtersApplied={filtersApplied}
+          currentLocation={currentLocation}
+          clearFilters={clearAllFilters}
+          applyFilters={applyFilters}
         />
-      </div>
 
-      {/* Header - Fixed height to account for search and tabs */}
-      <div className={`fixed top-0 left-0 right-0 z-10 px-4 pt-4 pb-0 transition-all duration-300 h-[120px] flex flex-col justify-start bg-[#121212] ${isSheetCollapsed ? 'bg-transparent' : 'bg-[#121212]'
-        }`}>
-        {/* Search Bar */}
-        <div className="flex items-center mb-1">
-          <div className="relative w-full">
-            <input
-              type="text"
-              placeholder="Search jobs..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-black/30 backdrop-blur-md text-white text-sm px-4 py-2.5 pl-10 pr-4 rounded-full border border-white/10 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent placeholder-white/70"
-            />
-            <svg className="w-3.5 h-3.5 text-white/60 absolute left-3 top-1/2 transform -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </div>
+        {/* Map View */}
+        <div className="absolute inset-0 z-0">
+          <MapView
+            jobs={filteredJobs}
+            selectedCategory={selectedCategory}
+            onApply={handleApply}
+            appliedJobIds={appliedJobIds}
+          />
         </div>
 
-        {/* Categories with Filter Button */}
-        <div className="relative flex items-center justify-center py-1.5 w-full overflow-visible">
-          <div className={`relative transition-transform duration-300 ease-in-out ${selectedCategory === 'Explore' ? '-translate-x-8' : 'translate-x-0'
-            }`}>
-            <div className="flex items-center space-x-3">
-              {/* For You Tab */}
-              <button
-                className={`px-4 py-1.5 text-sm font-medium rounded whitespace-nowrap transition-all duration-200 flex items-center space-x-2 h-8
-                  backdrop-blur-sm border transform scale-100 ${selectedCategory === 'For You'
-                    ? 'bg-gradient-to-r from-purple-600/90 to-purple-500/90 text-white border-purple-500/30 shadow-lg shadow-purple-500/20'
-                    : 'bg-black/30 text-white/90 border-white/5'
-                  }`}
-                onClick={() => setSelectedCategory('For You')}
-              >
-                <Sparkles className="w-3 h-3" />
-                <span className="font-medium">For You</span>
-              </button>
+        {/* Header - Fixed height to account for search and tabs */}
+        <div className={`fixed top-0 left-0 right-0 z-10 px-4 pt-4 pb-0 transition-all duration-300 h-[120px] flex flex-col justify-start bg-[#121212] ${isSheetCollapsed ? 'bg-transparent' : 'bg-[#121212]'
+          }`}>
+          {/* Search Bar */}
+          <div className="flex items-center mb-1">
+            <div className="relative w-full">
+              <input
+                type="text"
+                placeholder="Search jobs..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-black/30 backdrop-blur-md text-white text-sm px-4 py-2.5 pl-10 pr-4 rounded-full border border-white/10 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent placeholder-white/70"
+              />
+              <svg className="w-3.5 h-3.5 text-white/60 absolute left-3 top-1/2 transform -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+          </div>
 
-              {/* Explore All Tab */}
-              <div className="relative flex items-center">
+          {/* Categories with Filter Button */}
+          <div className="relative flex items-center justify-center py-1.5 w-full overflow-visible">
+            <div className={`relative transition-transform duration-300 ease-in-out ${selectedCategory === 'Explore' ? '-translate-x-8' : 'translate-x-0'
+              }`}>
+              <div className="flex items-center space-x-3">
+                {/* For You Tab */}
                 <button
                   className={`px-4 py-1.5 text-sm font-medium rounded whitespace-nowrap transition-all duration-200 flex items-center space-x-2 h-8
-                    backdrop-blur-sm border transform scale-100 ${selectedCategory === 'Explore'
+                    backdrop-blur-sm border transform scale-100 ${selectedCategory === 'For You'
                       ? 'bg-gradient-to-r from-purple-600/90 to-purple-500/90 text-white border-purple-500/30 shadow-lg shadow-purple-500/20'
                       : 'bg-black/30 text-white/90 border-white/5'
                     }`}
-                  onClick={() => setSelectedCategory('Explore')}
+                  onClick={() => setSelectedCategory('For You')}
                 >
-                  <Compass className="w-3 h-3" strokeWidth={1.5} />
-                  <span className="font-medium">Explore All</span>
+                  <Sparkles className="w-3 h-3" />
+                  <span className="font-medium">For You</span>
                 </button>
 
-                {/* Filter Button */}
-                <motion.div
-                  className="absolute left-full ml-3 top-0 h-full flex items-center"
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{
-                    opacity: selectedCategory === 'Explore' ? 1 : 0,
-                    x: selectedCategory === 'Explore' ? 0 : -10,
-                    pointerEvents: selectedCategory === 'Explore' ? 'auto' : 'none'
-                  }}
-                  transition={{ duration: 0.3, ease: "easeInOut" }}
-                >
+                {/* Explore All Tab */}
+                <div className="relative flex items-center">
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setShowFilterModal(true);
-                    }}
-                    className={`w-8 h-8 flex items-center justify-center rounded-full backdrop-blur-sm transition-all duration-300 border ${filtersApplied
-                      ? 'bg-gradient-to-r from-purple-600/90 to-purple-500/90 border-purple-500/30 shadow-lg shadow-purple-500/10'
-                      : 'bg-black/30 border-white/10 hover:border-white/20'
+                    className={`px-4 py-1.5 text-sm font-medium rounded whitespace-nowrap transition-all duration-200 flex items-center space-x-2 h-8
+                      backdrop-blur-sm border transform scale-100 ${selectedCategory === 'Explore'
+                        ? 'bg-gradient-to-r from-purple-600/90 to-purple-500/90 text-white border-purple-500/30 shadow-lg shadow-purple-500/20'
+                        : 'bg-black/30 text-white/90 border-white/5'
                       }`}
+                    onClick={() => setSelectedCategory('Explore')}
                   >
-                    <svg
-                      className={`w-4 h-4 ${filtersApplied ? 'text-white' : 'text-white/90'}`}
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                    </svg>
+                    <Compass className="w-3 h-3" strokeWidth={1.5} />
+                    <span className="font-medium">Explore All</span>
                   </button>
-                  {filtersApplied && selectedCategory === 'Explore' && (
-                    <motion.span
-                      className="absolute -top-1 -right-1 w-2 h-2 bg-purple-400 rounded-full"
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ delay: 0.2 }}
-                    />
-                  )}
-                </motion.div>
+
+                  {/* Filter Button */}
+                  <motion.div
+                    className="absolute left-full ml-3 top-0 h-full flex items-center"
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{
+                      opacity: selectedCategory === 'Explore' ? 1 : 0,
+                      x: selectedCategory === 'Explore' ? 0 : -10,
+                      pointerEvents: selectedCategory === 'Explore' ? 'auto' : 'none'
+                    }}
+                    transition={{ duration: 0.3, ease: "easeInOut" }}
+                  >
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowFilterModal(true);
+                      }}
+                      className={`w-8 h-8 flex items-center justify-center rounded-full backdrop-blur-sm transition-all duration-300 border ${filtersApplied
+                        ? 'bg-gradient-to-r from-purple-600/90 to-purple-500/90 border-purple-500/30 shadow-lg shadow-purple-500/10'
+                        : 'bg-black/30 border-white/10 hover:border-white/20'
+                        }`}
+                    >
+                      <svg
+                        className={`w-4 h-4 ${filtersApplied ? 'text-white' : 'text-white/90'}`}
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                      </svg>
+                    </button>
+                    {filtersApplied && selectedCategory === 'Explore' && (
+                      <motion.span
+                        className="absolute -top-1 -right-1 w-2 h-2 bg-purple-400 rounded-full"
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ delay: 0.2 }}
+                      />
+                    )}
+                  </motion.div>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
 
 
-      {/* Bottom Sheet */}
-      <motion.div
-        className={`bg-[#121212] backdrop-blur-lg ${isSheetCollapsed ? 'rounded-t-3xl' : 'rounded-none'} shadow-none`}
-        style={{
-          position: 'fixed',
-          left: 0,
-          right: 0,
-          top: '119px',
-          bottom: 0,
-          touchAction: 'pan-y',
-          willChange: 'transform',
-          overflow: 'hidden',
-        }}
-        initial={{ y: 'calc(100vh - 160px)' }}
-        animate={{
-          y: isSheetCollapsed ? 'calc(100vh - 160px)' : '0',
-          borderTopLeftRadius: isSheetCollapsed ? '1.5rem' : '0',
-          borderTopRightRadius: isSheetCollapsed ? '1.5rem' : '0',
-        }}
-        transition={{
-          type: "spring",
-          damping: 30,
-          stiffness: 300
-        }}
-        drag="y"
-        dragElastic={0.1}
-        dragConstraints={{
-          top: 0,
-          bottom: typeof window !== 'undefined' ? window.innerHeight * 0.7 : 0
-        }}
-        dragMomentum={false}
-        onDragEnd={(event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-          const dragDistance = info.offset.y;
-          const dragVelocity = info.velocity.y;
-
-          if (dragDistance > 50 || dragVelocity > 300) {
-            setIsSheetCollapsed(true);
-          } else if (dragDistance < -50 || dragVelocity < -300) {
-            setIsSheetCollapsed(false);
-          } else {
-            setIsSheetCollapsed(dragDistance > 0);
-          }
-          resetDragTextVisibility();
-        }}
-        onDragStart={() => {
-          setIsDragTextVisible(false);
-        }}
-        onClick={() => {
-          setIsDragTextVisible(false);
-          resetDragTextVisibility();
-        }}
-      >
-        {/* Drag handle */}
-        <div
-          className="flex flex-col items-center pt-1 pb-2 cursor-grab active:cursor-grabbing touch-none select-none bg-[#121212]"
-          style={{ touchAction: 'none' }}
-          onPointerDown={() => setIsDragTextVisible(false)}
-          onPointerUp={() => resetDragTextVisibility()}
-        >
-          <div className="w-10 h-1 bg-white/30 rounded-full mb-1.5" />
-          <div className="text-white/80 text-sm font-semibold">
-            {filteredJobs.length} jobs available
-          </div>
-        </div>
-
-        {/* Content container */}
-        <div
-          className={`flex-1 ${isSheetCollapsed ? 'overflow-hidden' : 'overflow-y-auto'} overscroll-contain`}
+        {/* Bottom Sheet */}
+        <motion.div
+          className={`bg-[#121212] backdrop-blur-lg ${isSheetCollapsed ? 'rounded-t-3xl' : 'rounded-none'} shadow-none`}
           style={{
-            maxHeight: isSheetCollapsed ? '0' : 'calc(100vh - 140px)'
+            position: 'fixed',
+            left: 0,
+            right: 0,
+            top: '119px',
+            bottom: 0,
+            touchAction: 'pan-y',
+            willChange: 'transform',
+            overflow: 'hidden',
+          }}
+          initial={{ y: 'calc(100vh - 160px)' }}
+          animate={{
+            y: isSheetCollapsed ? 'calc(100vh - 160px)' : '0',
+            borderTopLeftRadius: isSheetCollapsed ? '1.5rem' : '0',
+            borderTopRightRadius: isSheetCollapsed ? '1.5rem' : '0',
+          }}
+          transition={{
+            type: "spring",
+            damping: 30,
+            stiffness: 300
+          }}
+          drag="y"
+          dragElastic={0.1}
+          dragConstraints={{
+            top: 0,
+            bottom: typeof window !== 'undefined' ? window.innerHeight * 0.7 : 0
+          }}
+          dragMomentum={false}
+          onDragEnd={(event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+            const dragDistance = info.offset.y;
+            const dragVelocity = info.velocity.y;
+
+            if (dragDistance > 50 || dragVelocity > 300) {
+              setIsSheetCollapsed(true);
+            } else if (dragDistance < -50 || dragVelocity < -300) {
+              setIsSheetCollapsed(false);
+            } else {
+              setIsSheetCollapsed(dragDistance > 0);
+            }
+            resetDragTextVisibility();
+          }}
+          onDragStart={() => {
+            setIsDragTextVisible(false);
+          }}
+          onClick={() => {
+            setIsDragTextVisible(false);
+            resetDragTextVisibility();
           }}
         >
-          <div className="container max-w-2xl mx-auto px-0 pb-6">
-            {/* Jobs list */}
-            <div className="space-y-2 px-4">
-              <ProfessionalsFeed
-                jobs={filteredJobs}
-                onApply={handleApply}
-                appliedJobIds={appliedJobIds}
-              />
+          {/* Drag handle */}
+          <div
+            className="flex flex-col items-center pt-1 pb-2 cursor-grab active:cursor-grabbing touch-none select-none bg-[#121212]"
+            style={{ touchAction: 'none' }}
+            onPointerDown={() => setIsDragTextVisible(false)}
+            onPointerUp={() => resetDragTextVisibility()}
+          >
+            <div className="w-10 h-1 bg-white/30 rounded-full mb-1.5" />
+            <div className="text-white/80 text-sm font-semibold">
+              {filteredJobs.length} jobs available
             </div>
           </div>
-        </div>
-      </motion.div>
 
-      {/* Toggle Map/List Button - Positioned 15% from bottom and centered */}
-      <motion.div
-        className={`fixed bottom-[15%] left-0 right-0 z-50 flex justify-center transition-opacity duration-200 ${showFilterModal ? 'opacity-0 pointer-events-none' : 'opacity-100'
-          }`}
-        initial={{ opacity: 1 }}
-        animate={{ opacity: showFilterModal ? 0 : 1 }}
-      >
-        <button
-          onClick={() => setIsSheetCollapsed(!isSheetCollapsed)}
-          className="flex items-center h-9 px-5 bg-white/95 backdrop-blur-sm text-gray-700 rounded-full shadow-lg hover:bg-white transition-all border border-white/20 shadow-black/20 whitespace-nowrap text-sm"
-        >
-          {isSheetCollapsed ? (
-            <>
-              <ChevronDown className="w-4 h-4 mr-2" />
-              <span>Show List</span>
-            </>
-          ) : (
-            <>
-              <Map className="w-4 h-4 mr-2" />
-              <span>Show Map</span>
-            </>
-          )}
-        </button>
-      </motion.div>
-
-      {/* Success Modal */}
-      <AnimatePresence>
-        {showSuccessModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm px-4"
+          {/* Content container */}
+          <div
+            className={`flex-1 ${isSheetCollapsed ? 'overflow-hidden' : 'overflow-y-auto'} overscroll-contain`}
+            style={{
+              maxHeight: isSheetCollapsed ? '0' : 'calc(100vh - 140px)'
+            }}
           >
-            <motion.div
-              initial={{ scale: 0.9, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.9, y: 20 }}
-              className="bg-[#1e1e1e] rounded-2xl p-6 md:p-8 max-w-sm w-full border border-white/10 shadow-2xl relative"
-            >
-              <div className="flex flex-col items-center text-center">
-                <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mb-4">
-                  <Check className="w-8 h-8 text-green-500" />
-                </div>
-                <h3 className="text-xl font-bold text-white mb-2">Application Sent!</h3>
-                <p className="text-gray-400 text-sm mb-6">
-                  Your application for <span className="text-white font-medium">{appliedJobTitle}</span> has been submitted successfully to the coach.
-                </p>
-                <button
-                  onClick={() => setShowSuccessModal(false)}
-                  className="w-full py-3 bg-white text-black font-semibold rounded-xl hover:bg-gray-200 transition-colors"
-                >
-                  Continuue Browsing
-                </button>
+            <div className="container max-w-2xl mx-auto px-0 pb-6">
+              {/* Jobs list */}
+              <div className="space-y-2 px-4">
+                <ProfessionalsFeed
+                  jobs={filteredJobs}
+                  onApply={handleApply}
+                  appliedJobIds={appliedJobIds}
+                />
               </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            </div>
+          </div>
+        </motion.div>
 
-      {/* Login Dialog */}
-      <LoginDialog
-        open={openLoginDialog}
-        onOpenChange={setOpenLoginDialog}
-        onSuccess={() => {
-          // After login, user can continue with their intended action
-          // The requireAuth hook will handle executing the pending action
-        }}
-      />
-    </div>
+        {/* Toggle Map/List Button - Positioned 15% from bottom and centered */}
+        <motion.div
+          className={`fixed bottom-[15%] left-0 right-0 z-50 flex justify-center transition-opacity duration-200 ${showFilterModal ? 'opacity-0 pointer-events-none' : 'opacity-100'
+            }`}
+          initial={{ opacity: 1 }}
+          animate={{ opacity: showFilterModal ? 0 : 1 }}
+        >
+          <button
+            onClick={() => setIsSheetCollapsed(!isSheetCollapsed)}
+            className="flex items-center h-9 px-5 bg-white/95 backdrop-blur-sm text-gray-700 rounded-full shadow-lg hover:bg-white transition-all border border-white/20 shadow-black/20 whitespace-nowrap text-sm"
+          >
+            {isSheetCollapsed ? (
+              <>
+                <ChevronDown className="w-4 h-4 mr-2" />
+                <span>Show List</span>
+              </>
+            ) : (
+              <>
+                <Map className="w-4 h-4 mr-2" />
+                <span>Show Map</span>
+              </>
+            )}
+          </button>
+        </motion.div>
+
+        {/* Success Modal */}
+        <AnimatePresence>
+          {showSuccessModal && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm px-4"
+            >
+              <motion.div
+                initial={{ scale: 0.9, y: 20 }}
+                animate={{ scale: 1, y: 0 }}
+                exit={{ scale: 0.9, y: 20 }}
+                className="bg-[#1e1e1e] rounded-2xl p-6 md:p-8 max-w-sm w-full border border-white/10 shadow-2xl relative"
+              >
+                <div className="flex flex-col items-center text-center">
+                  <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mb-4">
+                    <Check className="w-8 h-8 text-green-500" />
+                  </div>
+                  <h3 className="text-xl font-bold text-white mb-2">Application Sent!</h3>
+                  <p className="text-gray-400 text-sm mb-6">
+                    Your application for <span className="text-white font-medium">{appliedJobTitle}</span> has been submitted successfully to the coach.
+                  </p>
+                  <button
+                    onClick={() => setShowSuccessModal(false)}
+                    className="w-full py-3 bg-white text-black font-semibold rounded-xl hover:bg-gray-200 transition-colors"
+                  >
+                    Continuue Browsing
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Login Dialog */}
+        <LoginDialog
+          open={openLoginDialog}
+          onOpenChange={setOpenLoginDialog}
+          onSuccess={() => {
+            // After login, user can continue with their intended action
+            // The requireAuth hook will handle executing the pending action
+          }}
+        />
+      </div>
+    </ComingSoonOverlay>
   );
 }
