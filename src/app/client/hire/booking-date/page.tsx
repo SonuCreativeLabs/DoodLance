@@ -14,6 +14,13 @@ export default function BookingDatePage() {
   const { setNavbarVisibility } = useNavbar();
   const { user } = useAuth();
 
+  console.log('🔍 [BOOKING-DATE] Component render:', {
+    isLoaded,
+    hasUser: !!user,
+    userId: user?.id,
+    selectedServicesCount: state.selectedServices.length
+  });
+
   // Auth check removed - only validate when user clicks Continue button to avoid infinite loops
 
 

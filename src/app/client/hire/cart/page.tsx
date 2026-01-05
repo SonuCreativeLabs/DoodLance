@@ -19,16 +19,14 @@ export default function CartPage() {
   const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
   const [discountAmount, setDiscountAmount] = useState(0);
 
-  // Wait for hydration
-  if (!isLoaded) {
-    return (
-      <div className="h-screen bg-[#0F0F0F] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
+  console.log('🔍 [CART] Component render:', {
+    isLoaded,
+    hasUser: !!user,
+    userId: user?.id,
+    cartItemsCount: state.cartItems.length
+  });
 
-  // Hide navbar when component mounts
+  // Hide navbar when component mounts - MUST be before early return
   useEffect(() => {
     setNavbarVisibility(false);
 
@@ -37,6 +35,15 @@ export default function CartPage() {
       setNavbarVisibility(true);
     };
   }, [setNavbarVisibility]);
+
+  // Wait for hydration - early return AFTER all hooks
+  if (!isLoaded) {
+    return (
+      <div className="h-screen bg-[#0F0F0F] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   const subtotal = state.cartItems.reduce((total, item) => {
     const price = typeof item.service.price === 'string'

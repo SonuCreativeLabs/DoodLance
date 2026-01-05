@@ -21,8 +21,7 @@ export function ForYouJobsProvider({ children }: { children: ReactNode }) {
   }, [skills]);
 
   const fetchForYouJobs = useCallback(async () => {
-    console.log('🔄 [DEBUG] Fetching For You jobs with skills:', skillsDependency);
-    console.trace('[DEBUG] fetchForYouJobs call stack:');
+    console.log('🔄 Fetching For You jobs with skills:', skillsDependency);
 
     // If no skills, we can't really filter "for you", so returns empty or all? 
     // Usually "For You" implies personalization. If no skills, maybe return empty or popular.

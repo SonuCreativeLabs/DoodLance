@@ -33,17 +33,27 @@ export function HireBottomSheet({
   const { user } = useAuth();
   const prevFreelancerIdRef = React.useRef<string | null>(null);
 
-  console.log('[DEBUG] HireBottomSheet render - isOpen:', isOpen, 'freelancerId:', freelancerId);
+  console.log('🔍 [HIRE SHEET] Render:', {
+    isOpen,
+    freelancerId,
+    hasUser: !!user,
+    userId: user?.id,
+    servicesCount: services?.length,
+    selectedCount: state.selectedServices.length
+  });
 
   useEffect(() => {
+    console.log('🔍 [HIRE SHEET] useEffect triggered:', { isOpen, freelancerId });
     if (isOpen) {
       // Reset if switching to a different freelancer
       if (prevFreelancerIdRef.current !== null && prevFreelancerIdRef.current !== freelancerId) {
+        console.log('🔄 [HIRE SHEET] Switching freelancers, resetting state');
         resetHireState();
       }
       prevFreelancerIdRef.current = freelancerId;
 
       // Set freelancer data
+      console.log('✅ [HIRE SHEET] Setting freelancer data');
       setFreelancer(freelancerId, freelancerName, freelancerImage, freelancerRating, freelancerReviewCount, services);
     }
   }, [isOpen, freelancerId, freelancerName, freelancerImage, freelancerRating, freelancerReviewCount, services, setFreelancer, resetHireState]);
@@ -63,15 +73,25 @@ export function HireBottomSheet({
   // ... (inside the component)
 
   const handleContinue = () => {
+    console.log('🔍 [HIRE SHEET] Continue clicked:', {
+      selectedServicesCount: state.selectedServices.length,
+      hasUser: !!user,
+      userId: user?.id
+    });
+
     if (state.selectedServices.length > 0) {
       if (!user) {
+        console.warn('⚠️ [HIRE SHEET] User not authenticated, cannot proceed');
         // User needs to login - but we can't show dialog here
         // The parent component should handle this
         return;
       }
 
+      console.log('✅ [HIRE SHEET] Proceeding to booking-date');
       onClose();
       router.push('/client/hire/booking-date');
+    } else {
+      console.warn('⚠️ [HIRE SHEET] No services selected');
     }
   };
 
