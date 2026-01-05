@@ -1192,7 +1192,7 @@ export default function FreelancerDetailPage() {
                     <ProfileCompletionDialog
                         open={openProfileDialog}
                         onOpenChange={setOpenProfileDialog}
-                        onComplete={handleCompleteProfile}
+                        onCompleteProfile={handleCompleteProfile}
                     />
                 </div >
             )
