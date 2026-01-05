@@ -1175,9 +1175,13 @@ export default function FreelancerDetailPage() {
                         <div className="fixed bottom-0 left-0 right-0 p-4 bg-[#0F0F0F]/95 backdrop-blur-sm border-t border-white/10">
                             <button
                                 onClick={() => {
-                                    requireAuth('hire_freelancer', { redirectTo: `/client/freelancer/${freelancerId}` });
-                                    // If already authenticated, open hire sheet
-                                    // Otherwise requireAuth will show login/profile dialogs
+                                    // If already authenticated and profile complete, open hire sheet
+                                    if (isAuthenticated && isProfileComplete) {
+                                        setIsHireBottomSheetOpen(true);
+                                    } else {
+                                        // Otherwise, trigger auth flow (will show login/profile dialogs)
+                                        requireAuth('hire_freelancer', { redirectTo: `/client/freelancer/${freelancerId}` });
+                                    }
                                 }}
                                 className="w-full py-2.5 bg-gradient-to-r from-purple-600 to-purple-500 text-white font-medium rounded-xl hover:from-purple-700 hover:to-purple-600 transition-all flex items-center justify-center gap-2 shadow-lg"
                             >
