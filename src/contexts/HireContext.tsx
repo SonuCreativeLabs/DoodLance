@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 
 export interface ServiceItem {
   id: string;
@@ -79,6 +79,29 @@ const HireContext = createContext<HireContextType | undefined>(undefined);
 
 export function HireProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<HireState>(initialState);
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Load from localStorage on mount
+  useEffect(() => {
+    const savedState = localStorage.getItem('doodlance_hire_state');
+    if (savedState) {
+      try {
+        const parsedState = JSON.parse(savedState);
+        // Ensure all required fields exist (merge with initial state for safety)
+        setState({ ...initialState, ...parsedState });
+      } catch (error) {
+        console.error('Failed to parse hire state from localStorage', error);
+      }
+    }
+    setIsInitialized(true);
+  }, []);
+
+  // Save to localStorage whenever state changes
+  useEffect(() => {
+    if (isInitialized) {
+      localStorage.setItem('doodlance_hire_state', JSON.stringify(state));
+    }
+  }, [state, isInitialized]);
 
   const setFreelancer = useCallback((id: string, name: string, image: string, rating: number | null = null, reviewCount: number | null = null, services: ServiceItem[] = []) => {
     setState(prev => ({
