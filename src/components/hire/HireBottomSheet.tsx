@@ -5,9 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Check, ArrowRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useHire, ServiceItem } from '@/contexts/HireContext';
-import { useRequireAuth } from '@/hooks/useRequireAuth';
-import LoginDialog from '@/components/auth/LoginDialog';
-import ProfileCompletionDialog from '@/components/auth/ProfileCompletionDialog';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface HireBottomSheetProps {
   isOpen: boolean;
@@ -32,7 +30,7 @@ export function HireBottomSheet({
 }: HireBottomSheetProps) {
   const router = useRouter();
   const { state, setFreelancer, setSelectedService, removeService, resetHireState } = useHire();
-  const { requireAuth, isAuthenticated, isProfileComplete, openLoginDialog, setOpenLoginDialog, openProfileDialog, setOpenProfileDialog, handleCompleteProfile } = useRequireAuth();
+  const { user } = useAuth();
   const prevFreelancerIdRef = React.useRef<string | null>(null);
 
   useEffect(() => {
@@ -64,8 +62,9 @@ export function HireBottomSheet({
 
   const handleContinue = () => {
     if (state.selectedServices.length > 0) {
-      if (!isAuthenticated || !isProfileComplete) {
-        requireAuth('hire_service', { redirectTo: '/client/hire/booking-date' });
+      if (!user) {
+        // User needs to login - but we can't show dialog here
+        // The parent component should handle this
         return;
       }
 
@@ -217,20 +216,6 @@ export function HireBottomSheet({
         )}
       </AnimatePresence>
 
-      <LoginDialog
-        open={openLoginDialog}
-        onOpenChange={setOpenLoginDialog}
-        onSuccess={() => {
-          onClose();
-          router.push('/client/hire/booking-date');
-        }}
-      />
-
-      <ProfileCompletionDialog
-        open={openProfileDialog}
-        onOpenChange={setOpenProfileDialog}
-        onCompleteProfile={handleCompleteProfile}
-      />
     </>
   );
 }
