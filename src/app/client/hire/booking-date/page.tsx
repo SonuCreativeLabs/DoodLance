@@ -6,11 +6,23 @@ import { ArrowLeft, Clock, Calendar, ArrowRight, ShoppingCart, Star, MapPin, Mes
 import { Button } from '@/components/ui/button';
 import { useHire } from '@/contexts/HireContext';
 import { useNavbar } from '@/contexts/NavbarContext';
+import { useRequireAuth } from '@/hooks/useRequireAuth';
+import LoginDialog from '@/components/auth/LoginDialog';
+import ProfileCompletionDialog from '@/components/auth/ProfileCompletionDialog';
 
 export default function BookingDatePage() {
   const router = useRouter();
   const { state, setBookingDetails, setBookingNotes, addToCart, clearCart, isLoaded } = useHire();
   const { setNavbarVisibility } = useNavbar();
+  const { requireAuth, isAuthenticated, isProfileComplete, openLoginDialog, setOpenLoginDialog, openProfileDialog, setOpenProfileDialog, handleCompleteProfile } = useRequireAuth();
+
+  // Protect page
+  useEffect(() => {
+    if (isLoaded && (!isAuthenticated || !isProfileComplete)) {
+      requireAuth('booking_date_access', { redirectTo: '/client/hire/booking-date' });
+    }
+  }, [isLoaded, isAuthenticated, isProfileComplete, requireAuth]);
+
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);
   const [location, setLocation] = useState<string>('');
@@ -275,6 +287,19 @@ export default function BookingDatePage() {
           <ArrowRight className="w-4 h-4 ml-2" />
         </Button>
       </div>
+      <LoginDialog
+        open={openLoginDialog}
+        onOpenChange={setOpenLoginDialog}
+        onSuccess={() => {
+          // Reload logic if needed, or just stay on page
+        }}
+      />
+
+      <ProfileCompletionDialog
+        open={openProfileDialog}
+        onOpenChange={setOpenProfileDialog}
+        onCompleteProfile={handleCompleteProfile}
+      />
     </div>
   );
 }

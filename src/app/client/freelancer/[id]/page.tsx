@@ -280,7 +280,7 @@ export default function FreelancerDetailPage() {
         if (freelancerId) {
             loadFreelancer();
         }
-    }, [freelancerId, searchParams]);
+    }, [freelancerId]);
 
     // Handle scroll to specific section when returning from preview pages
     useLayoutEffect(() => {
