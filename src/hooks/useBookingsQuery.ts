@@ -1,6 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/contexts/AuthContext'
 import type { Booking } from '@/contexts/BookingsContext'
+import { useEffect } from 'react'
 
 interface UseBookingsQueryReturn {
     bookings: Booking[]
@@ -65,6 +66,11 @@ export function useBookingsQuery(): UseBookingsQueryReturn {
     const { authUser } = useAuth()
     const queryClient = useQueryClient()
 
+    // 🔍 Debug: Log authUser to see if it's actually stable
+    useEffect(() => {
+        console.log('🔑 [React Query] authUser changed:', authUser?.id)
+    }, [authUser])
+
     const {
         data: bookings = [],
         isLoading,
@@ -75,6 +81,15 @@ export function useBookingsQuery(): UseBookingsQueryReturn {
         queryFn: fetchBookings,
         enabled: !!authUser?.id, // Only fetch when user is authenticated
     })
+
+    // 🔍 Debug: Log when query state changes
+    useEffect(() => {
+        console.log('📊 [React Query] Query state:', {
+            hasData: bookings.length > 0,
+            isLoading,
+            authUserId: authUser?.id
+        })
+    }, [bookings.length, isLoading, authUser?.id])
 
     const refreshBookings = async () => {
         console.log('♻️ [React Query] Manual refresh triggered')
