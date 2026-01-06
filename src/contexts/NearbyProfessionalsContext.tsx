@@ -46,7 +46,7 @@ interface NearbyProfessionalsContextType {
   professionals: Professional[];
   loading: boolean;
   error: string | null;
-  refreshProfessionals: () => void;
+  refreshProfessionals: (lat?: number, lng?: number) => void;
 }
 
 const NearbyProfessionalsContext = createContext<NearbyProfessionalsContextType | undefined>(undefined);
@@ -68,12 +68,20 @@ export function NearbyProfessionalsProvider({ children }: { children: ReactNode 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const refreshProfessionals = async () => {
+  const refreshProfessionals = async (lat?: number, lng?: number) => {
     setLoading(true);
     setError(null);
     try {
+      // Build query params
+      const params = new URLSearchParams();
+      if (lat) params.append('lat', lat.toString());
+      if (lng) params.append('lng', lng.toString());
+
+      const queryString = params.toString();
+      const url = `/api/freelancers${queryString ? `?${queryString}` : ''}`;
+
       // Fetch from API
-      const response = await fetch('/api/freelancers');
+      const response = await fetch(url);
       if (!response.ok) {
         throw new Error('Failed to fetch professionals');
       }
@@ -95,7 +103,22 @@ export function NearbyProfessionalsProvider({ children }: { children: ReactNode 
   };
 
   useEffect(() => {
-    refreshProfessionals();
+    // Get location first, then fetch
+    if (typeof window !== 'undefined' && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          refreshProfessionals(latitude, longitude);
+        },
+        (error) => {
+          console.warn('Geolocation error:', error);
+          refreshProfessionals(); // Fallback to default (Chennai in API)
+        },
+        { timeout: 5000 }
+      );
+    } else {
+      refreshProfessionals();
+    }
   }, []);
 
   const value = {

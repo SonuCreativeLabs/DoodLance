@@ -35,50 +35,56 @@ export async function GET(request: Request) {
             }
         });
 
+        const latParam = searchParams.get('lat');
+        const lngParam = searchParams.get('lng');
+        const userLat = latParam ? parseFloat(latParam) : 13.0827; // Default Chennai
+        const userLng = lngParam ? parseFloat(lngParam) : 80.2707;
+
+        // Helper for distance calculation (Haversine formula)
+        const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+            const R = 6371; // Radius of the earth in km
+            const dLat = (lat2 - lat1) * (Math.PI / 180);
+            const dLon = (lon2 - lon1) * (Math.PI / 180);
+            const a =
+                Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c; // Distance in km
+        };
+
         // Transform to match Professional interface
         const formattedProfiles = profiles.map((p: any) => {
             const rating = p.reviews.reduce((acc: number, r: any) => acc + r.rating, 0) / (p.reviews.length || 1);
 
             // Services come from the User relation now
-            // We assume the user linked to this profile owns the services
             const userServices = p.user.services || [];
 
-            // Attempt to determine primary service/category
+            // Primary service
             const primaryService = userServices[0]?.title || p.title || 'Freelancer';
 
-            // Parse skills
+            // Parse skills (simplified)
             let skills: string[] = [];
-            if (p.skills) {
+            try {
                 if (typeof p.skills === 'string') {
-                    // Try JSON parse, fallback to comma split, fallback to single item
-                    try {
-                        const parsed = JSON.parse(p.skills);
-                        if (Array.isArray(parsed)) {
-                            skills = parsed.map((s: any) => {
-                                if (typeof s === 'object' && s !== null) {
-                                    return s.name || s.title || s.label || JSON.stringify(s);
-                                }
-                                return String(s);
-                            });
-                        }
-                        else skills = [typeof parsed === 'object' ? (parsed.name || JSON.stringify(parsed)) : String(parsed)];
-                    } catch (e) {
-                        // If not JSON, maybe comma separated?
-                        if (p.skills.includes(',')) {
-                            skills = (p.skills as string).split(',').map((s: string) => s.trim());
-                        } else {
-                            skills = [p.skills];
-                        }
-                    }
+                    const parsed = JSON.parse(p.skills);
+                    skills = Array.isArray(parsed) ? parsed.map(s => typeof s === 'object' ? s.name || s.title : String(s)) : [String(parsed)];
                 } else if (Array.isArray(p.skills)) {
                     skills = p.skills;
                 }
+            } catch (e) {
+                skills = p.skills && typeof p.skills === 'string' ? p.skills.split(',') : [];
             }
 
-            // Calculate experience
+            // Experience
             const experience = p.experiences && p.experiences.length > 0
                 ? `${p.experiences.length} roles`
                 : (p.experience || 'New Talent');
+
+            // Coordinates & Distance
+            // Default to Chennai [80.27..., 13.08...] if coords missing
+            const coords = p.coords ? JSON.parse(p.coords) : [80.2707, 13.0827];
+            const distance = calculateDistance(userLat, userLng, coords[1], coords[0]);
 
             return {
                 id: p.id,
@@ -86,16 +92,16 @@ export async function GET(request: Request) {
                 name: p.user.name || 'Anonymous',
                 service: primaryService,
                 rating: p.rating || rating || 0,
-                reviews: p.reviewCount || p.reviews.length,
+                reviews: p.reviews.length, // Bug fix: previously p.reviews.length || p.reviews.length ?
                 completedJobs: p.completedJobs || 0,
-                location: p.user.city ? `${p.user.city}, ${p.user.state || ''}` : (p.location || p.user.location || 'Remote'),
+                location: p.user.city ? `${p.user.city}, ${p.user.state || ''}` : (p.location || p.user.location || 'Chennai, India'),
                 responseTime: p.responseTime || '1 hour',
                 image: p.user.avatar || p.user.profileImage || '/placeholder-user.jpg',
                 avatar: p.user.avatar || p.user.profileImage || '/placeholder-user.jpg',
-                distance: 5, // Geo-calc required for real distance
+                distance: distance,
                 price: p.hourlyRate || userServices[0]?.price || 0,
                 priceUnit: 'hr',
-                coords: p.coords ? JSON.parse(p.coords) : [80.2707, 13.0827],
+                coords: coords,
                 expertise: skills,
                 experience: experience,
                 description: p.bio || p.about || '',

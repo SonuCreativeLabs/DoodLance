@@ -29,7 +29,7 @@ export default function ClientHome() {
   const [userAvatar, setUserAvatar] = useState("/images/default-avatar.svg"); // Fallback
   const [notificationCount, setNotificationCount] = useState(0);
 
-  const { user, refreshUser } = useAuth();
+  const { user, refreshUser, signOut, isAuthenticated } = useAuth();
 
   // Set local state when user from context changes
   useEffect(() => {
@@ -44,6 +44,16 @@ export default function ClientHome() {
   useEffect(() => {
     refreshUser();
   }, [refreshUser]);
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      setShowSidebar(false);
+      // signOut handles redirect
+    } catch (error) {
+      console.error('Logout failed', error);
+    }
+  };
 
   // Function to reverse geocode coordinates to address
   const reverseGeocode = async (lat: number, lng: number) => {
@@ -242,10 +252,23 @@ export default function ClientHome() {
 
                     <div className="border-t border-white/10 my-2" />
                     {/* Logout at the bottom */}
-                    <button className="flex items-center gap-3 px-6 py-3 text-left text-red-400 hover:bg-white/10 hover:text-red-300 transition-colors">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7" /><path d="M3 21V3" /></svg>
-                      Logout
-                    </button>
+                    {isAuthenticated ? (
+                      <button
+                        onClick={handleLogout}
+                        className="flex items-center gap-3 px-6 py-3 text-left text-red-400 hover:bg-white/10 hover:text-red-300 transition-colors"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7" /><path d="M3 21V3" /></svg>
+                        Logout
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => router.push('/auth/login')}
+                        className="flex items-center gap-3 px-6 py-3 text-left text-green-400 hover:bg-white/10 hover:text-green-300 transition-colors"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" /></svg>
+                        Login
+                      </button>
+                    )}
                   </div>
                   {/* Hamburger icon at bottom - now darker for visibility */}
                   <div className="flex justify-center pb-6">
