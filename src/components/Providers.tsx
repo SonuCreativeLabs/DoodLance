@@ -21,6 +21,9 @@ import { ClientServicesProvider } from '@/contexts/ClientServicesContext';
 import { HireProvider } from '@/contexts/HireContext';
 import { RoleSwitchProvider } from '@/contexts/RoleSwitchContext';
 import { PostedJobsProvider } from '@/contexts/PostedJobsContext';
+// 🚀 React Query POC
+import { QueryClientProvider } from '@tanstack/react-query';
+import { queryClient } from '@/lib/query-client';
 
 interface ProvidersProps {
   children: ReactNode;
@@ -28,46 +31,48 @@ interface ProvidersProps {
 
 export function Providers({ children }: ProvidersProps) {
   return (
-    <AuthProvider>
-      <RoleProvider>
-        <RealtimeProvider>
-          <NavbarProvider>
-            <LayoutProvider>
-              <ChatViewProvider>
-                <DateRangeProvider>
-                  <ModalProvider>
-                    <AvailabilityProvider>
-                      <ListingsProvider>
-                        <CombinedProfileProvider>
-                          <NearbyProfessionalsProvider>
-                            <PopularServicesProvider>
-                              <ClientServicesProvider>
-                                <BookingsProvider>
-                                  <ApplicationsProvider>
-                                    <HistoryJobsProvider>
-                                      <PostedJobsProvider>
-                                        <HireProvider>
-                                          <RoleSwitchProvider>
-                                            {children}
-                                          </RoleSwitchProvider>
-                                        </HireProvider>
-                                      </PostedJobsProvider>
-                                    </HistoryJobsProvider>
-                                  </ApplicationsProvider>
-                                </BookingsProvider>
-                              </ClientServicesProvider>
-                            </PopularServicesProvider>
-                          </NearbyProfessionalsProvider>
-                        </CombinedProfileProvider>
-                      </ListingsProvider>
-                    </AvailabilityProvider>
-                  </ModalProvider>
-                </DateRangeProvider>
-              </ChatViewProvider>
-            </LayoutProvider>
-          </NavbarProvider>
-        </RealtimeProvider>
-      </RoleProvider>
-    </AuthProvider>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <RoleProvider>
+          <RealtimeProvider>
+            <NavbarProvider>
+              <LayoutProvider>
+                <ChatViewProvider>
+                  <DateRangeProvider>
+                    <ModalProvider>
+                      <AvailabilityProvider>
+                        <ListingsProvider>
+                          <CombinedProfileProvider>
+                            <NearbyProfessionalsProvider>
+                              <PopularServicesProvider>
+                                <ClientServicesProvider>
+                                  <BookingsProvider>
+                                    <ApplicationsProvider>
+                                      <HistoryJobsProvider>
+                                        <PostedJobsProvider>
+                                          <HireProvider>
+                                            <RoleSwitchProvider>
+                                              {children}
+                                            </RoleSwitchProvider>
+                                          </HireProvider>
+                                        </PostedJobsProvider>
+                                      </HistoryJobsProvider>
+                                    </ApplicationsProvider>
+                                  </BookingsProvider>
+                                </ClientServicesProvider>
+                              </PopularServicesProvider>
+                            </NearbyProfessionalsProvider>
+                          </CombinedProfileProvider>
+                        </ListingsProvider>
+                      </AvailabilityProvider>
+                    </ModalProvider>
+                  </DateRangeProvider>
+                </ChatViewProvider>
+              </LayoutProvider>
+            </NavbarProvider>
+          </RealtimeProvider>
+        </RoleProvider>
+      </AuthProvider>
+    </QueryClientProvider>
   );
 }

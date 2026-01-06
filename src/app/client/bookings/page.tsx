@@ -940,17 +940,13 @@ function BookingsPageContent() {
   )
 }
 
-// 🎁 Wrapper component with QueryClientProvider for POC
+// Export the content directly (QueryClientProvider is now global in Providers.tsx)
 export default function BookingsPage() {
   if (USE_REACT_QUERY) {
     console.log('🚀 [POC] Using React Query for Bookings page')
-    return (
-      <QueryClientProvider client={queryClient}>
-        <BookingsPageContent />
-      </QueryClientProvider>
-    )
+  } else {
+    console.log('📦 [Fallback] Using BookingsContext for Bookings page')
   }
 
-  console.log('📦 [Fallback] Using BookingsContext for Bookings page')
   return <BookingsPageContent />
 }
