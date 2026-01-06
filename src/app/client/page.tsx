@@ -12,12 +12,13 @@ import { MapModal } from '@/components/freelancer/jobs/MapModal'
 import { useNearbyProfessionals } from '@/contexts/NearbyProfessionalsContext'
 import { usePopularServices } from '@/contexts/PopularServicesContext'
 import { useAuth } from '@/contexts/AuthContext';
+import { ExpertCardSkeleton } from '@/components/skeletons/ExpertCardSkeleton'
 
 // Search functionality will be implemented with real data
 
 export default function ClientHome() {
   const router = useRouter();
-  const { professionals } = useNearbyProfessionals();
+  const { professionals, loading } = useNearbyProfessionals();
   const { popularServices } = usePopularServices();
   const [searchQuery, setSearchQuery] = useState("");
   const [placeholder, setPlaceholder] = useState("Search for services...");
@@ -421,7 +422,12 @@ export default function ClientHome() {
             <div className="relative">
               <div className="overflow-x-auto scrollbar-hide -mx-4 px-4 pr-8">
                 <div className="flex gap-3 pb-2">
-                  {professionals.length > 0 ? (
+                  {loading ? (
+                    // Show skeleton cards while loading
+                    [...Array(5)].map((_, i) => (
+                      <ExpertCardSkeleton key={i} />
+                    ))
+                  ) : professionals.length > 0 ? (
                     professionals
                       .sort((a, b) => {
                         // First sort by rating

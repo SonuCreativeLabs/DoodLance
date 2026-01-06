@@ -18,7 +18,7 @@ async function main() {
     });
     console.log(`Sathishraj (Provider) Count: ${nathishBookings.length}`);
     if (nathishBookings.length > 0) {
-        console.log('Sample Booking IDs:', nathishBookings.map(b => b.id));
+        console.log('Sample Booking IDs:', nathishBookings.map((b: any) => b.id));
     }
 }
 

@@ -18,7 +18,7 @@ import { getSessionFlag, removeSessionItem } from '@/utils/sessionStorage';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
 import { useAuth } from '@/contexts/AuthContext';
 import FreelancerProfileLogin from '@/components/freelancer/FreelancerProfileLogin';
-import CricketBallLoader from '@/components/ui/CricketBallLoader';
+import { ProfileSkeleton } from '@/components/skeletons/ProfileSkeleton';
 import { useFreelancerProfile } from '@/contexts/FreelancerProfileContext';
 
 // Types
@@ -185,7 +185,7 @@ export default function ProfilePage() {
   }
 
   if (loading) {
-    return <CricketBallLoader />;
+    return <ProfileSkeleton />;
   }
 
   return (

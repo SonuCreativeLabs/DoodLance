@@ -27,6 +27,7 @@ interface BookingCardProps {
 import { RescheduleModal } from "@/components/client/bookings/RescheduleModal"
 import { ComingSoonOverlay } from '@/components/common/ComingSoonOverlay';
 import { CricketComingSoon } from '@/components/common/CricketComingSoon';
+import { BookingCardSkeleton } from '@/components/skeletons/BookingCardSkeleton'
 
 const BookingCard = ({ booking, showActions = true }: BookingCardProps) => {
   const router = useRouter()
@@ -836,10 +837,10 @@ function BookingsPageContent() {
                   </div>
                   <div className="space-y-4">
                     {bookingsLoading ? (
-                      <div className="flex flex-col items-center justify-center py-20">
-                        <CricketLoader size={48} color="white" />
-                        <p className="mt-4 text-white/40 text-sm">Loading your crease...</p>
-                      </div>
+                      // Show skeleton cards while loading
+                      [...Array(3)].map((_, i) => (
+                        <BookingCardSkeleton key={i} />
+                      ))
                     ) : filteredBookings.filter(booking =>
                       booking.status === 'confirmed' || booking.status === 'ongoing' || booking.status === 'pending'
                     ).length === 0 ? (
@@ -914,7 +915,12 @@ function BookingsPageContent() {
                     ))}
                   </div>
                   <div className="space-y-4">
-                    {filteredHistory.length === 0 ? (
+                    {bookingsLoading ? (
+                      // Show skeleton cards while loading
+                      [...Array(3)].map((_, i) => (
+                        <BookingCardSkeleton key={i} />
+                      ))
+                    ) : filteredHistory.length === 0 ? (
                       <div className="text-center py-12">
                         <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-white/5 flex items-center justify-center">
                           <Clock className="w-8 h-8 text-white/40" />

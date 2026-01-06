@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Star, Clock, MapPin, ArrowLeft, Check } from 'lucide-react';
 import Image from 'next/image';
+import { ExpertCardSkeleton } from '@/components/skeletons/ExpertCardSkeleton';
 
 import { JobDetailsModal } from '@/components/freelancer/jobs/JobDetailsModal';
 import OverlayPortal from './OverlayPortal';
@@ -60,6 +61,7 @@ interface ProfessionalsFeedProps {
   searchQuery?: string;
   selectedCategory?: string;
   appliedJobIds?: Set<string>;
+  loading?: boolean;
 }
 
 export default function ProfessionalsFeed({
@@ -71,7 +73,8 @@ export default function ProfessionalsFeed({
   className = '',
   searchQuery = '',
   selectedCategory = 'All',
-  appliedJobIds = new Set()
+  appliedJobIds = new Set(),
+  loading = false
 }: ProfessionalsFeedProps) {
   const formatScheduledDate = (scheduledAt: string) => {
     if (!scheduledAt) return 'Date TBD';
@@ -202,6 +205,16 @@ export default function ProfessionalsFeed({
     // Fallback: use item.budget or item.price if no services array
     return item.budget || item.price || 500;
   };
+
+  if (loading) {
+    return (
+      <div className="space-y-4 pb-24">
+        {[...Array(3)].map((_, i) => (
+          <ExpertCardSkeleton key={i} />
+        ))}
+      </div>
+    );
+  }
 
   if (!items || items.length === 0) {
     return (

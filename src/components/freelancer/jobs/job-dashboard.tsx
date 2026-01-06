@@ -11,7 +11,7 @@ import { Search, X } from 'lucide-react';
 import { JobCard, ApplicationCard } from './index';
 import { Job, Application, EarningsData, JobCategory } from './types';
 import { CricketComingSoon } from '@/components/common/CricketComingSoon';
-import { CricketLoader } from '@/components/ui/cricket-loader';
+import { JobCardSkeleton } from '@/components/skeletons/JobCardSkeleton';
 
 // LocalStorage key for client bookings
 const CLIENT_BOOKINGS_KEY = 'clientBookings';
@@ -796,9 +796,10 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
                 >
                   <TabsContent value="upcoming" className="mt-0 w-full">
                     {loading ? (
-                      <div className="flex flex-col items-center justify-center py-20">
-                        <CricketLoader size={48} color="white" />
-                        <p className="mt-4 text-white/40 text-sm">Loading your crease...</p>
+                      <div className="space-y-4">
+                        {[...Array(3)].map((_, i) => (
+                          <JobCardSkeleton key={i} />
+                        ))}
                       </div>
                     ) : filteredJobs.length > 0 ? (
                       <div className="space-y-4 w-full">
@@ -860,7 +861,7 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
             </div>
           </Tabs>
         </div>
-      </div>
-    </div>
+      </div >
+    </div >
   );
 }

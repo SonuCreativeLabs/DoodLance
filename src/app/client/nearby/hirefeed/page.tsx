@@ -19,7 +19,7 @@ export default function IntegratedExplorePage() {
   const [sheetOffset, setSheetOffset] = useState(0);
   const [isDragTextVisible, setIsDragTextVisible] = useState(true);
   const router = useRouter();
-  const { professionals } = useNearbyProfessionals();
+  const { professionals, loading } = useNearbyProfessionals();
   const mapViewRef = useRef<any>(null);
 
   // Check URL parameters to determine initial sheet state and pin to open
@@ -558,6 +558,7 @@ export default function IntegratedExplorePage() {
                   filteredProfessionals={filteredProfessionals}
                   searchQuery={searchQuery}
                   selectedCategory={selectedCategory}
+                  loading={loading}
                 />
               </div>
             )}

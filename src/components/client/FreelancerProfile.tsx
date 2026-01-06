@@ -1,6 +1,6 @@
 "use client";
 
-import { CricketLoader } from '@/components/ui/cricket-loader';
+import { ProfileSkeleton } from '@/components/skeletons/ProfileSkeleton';
 import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { useParams, useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -545,9 +545,7 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
     return (
         <div>
             {loading && (
-                <div className="flex items-center justify-center h-screen bg-[#0F0F0F]">
-                    <CricketLoader size={60} />
-                </div>
+                <ProfileSkeleton />
             )}
 
             {!loading && !freelancer && (
