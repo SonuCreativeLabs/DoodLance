@@ -13,6 +13,10 @@ import { useApplications, Application } from "@/contexts/ApplicationsContext"
 import { useHistoryJobs, HistoryJob } from "@/contexts/HistoryJobsContext"
 import { usePostedJobs } from "@/contexts/PostedJobsContext"
 import { useBookAgain } from "@/hooks/useBookAgain"
+// 🚀 React Query POC imports
+import { QueryClientProvider } from '@tanstack/react-query'
+import { queryClient } from '@/lib/query-client'
+import { useBookingsQuery } from '@/hooks/useBookingsQuery'
 
 
 interface BookingCardProps {
@@ -571,7 +575,10 @@ const PostedJobCard = ({ job, showUpcoming = false }: { job: any; showUpcoming?:
 
 import { CricketLoader } from "@/components/ui/cricket-loader"
 
-export default function BookingsPage() {
+// 🎯 Feature flag for React Query POC
+const USE_REACT_QUERY = process.env.NEXT_PUBLIC_USE_REACT_QUERY === 'true'
+
+function BookingsPageContent() {
   const searchParams = useSearchParams()
   const initialTab = searchParams.get('tab') || 'active'
   const initialFilter = searchParams.get('filter') || 'all'
@@ -585,10 +592,20 @@ export default function BookingsPage() {
 
   const [isSearchOpen, setIsSearchOpen] = useState(false)
 
-  const { bookings, loading: bookingsLoading } = useBookings()
+  // 🔀 Conditional hook usage: React Query (POC) OR BookingsContext (fallback)
+  const bookingsFromQuery = USE_REACT_QUERY ? useBookingsQuery() : { bookings: [], loading: false }
+  const bookingsFromContext = USE_REACT_QUERY ? { bookings: [], loading: false } : useBookings()
+
+  const { bookings, loading: bookingsLoading } = USE_REACT_QUERY ? bookingsFromQuery : bookingsFromContext
+
   const { applications } = useApplications()
   const { historyJobs } = useHistoryJobs()
   const { postedJobs, loading: jobsLoading } = usePostedJobs()
+
+  // 📊 Log which data source is being used
+  if (typeof window !== 'undefined' && bookings.length > 0) {
+    console.log(`📦 Bookings Source: ${USE_REACT_QUERY ? 'React Query (Cached)' : 'BookingsContext'}, Count: ${bookings.length}`)
+  }
 
 
   const filteredBookings = useMemo(() => {
@@ -921,4 +938,19 @@ export default function BookingsPage() {
       </div>
     </ClientLayout>
   )
+}
+
+// 🎁 Wrapper component with QueryClientProvider for POC
+export default function BookingsPage() {
+  if (USE_REACT_QUERY) {
+    console.log('🚀 [POC] Using React Query for Bookings page')
+    return (
+      <QueryClientProvider client={queryClient}>
+        <BookingsPageContent />
+      </QueryClientProvider>
+    )
+  }
+
+  console.log('📦 [Fallback] Using BookingsContext for Bookings page')
+  return <BookingsPageContent />
 }
