@@ -6,12 +6,27 @@ import type { Experience, Review, Service, Availability } from '@/types/freelanc
  * @returns Formatted date string (e.g., "January 1, 2023")
  */
 export const formatDate = (dateString: string): string => {
-  const options: Intl.DateTimeFormatOptions = { 
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric' 
+  const options: Intl.DateTimeFormatOptions = {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
   };
   return new Date(dateString).toLocaleDateString(undefined, options);
+};
+
+/**
+ * Formats a time string to 12-hour format with AM/PM
+ * @param timeString - The time string to format (HH:MM or HH:MM:SS)
+ * @returns Formatted time string (e.g., "9AM", "2:30PM")
+ */
+export const formatTime = (timeString: string) => {
+  if (!timeString) return '';
+  const [hours, minutes] = timeString.split(':');
+  const hour = parseInt(hours);
+  const ampm = hour >= 12 ? 'PM' : 'AM';
+  const displayHour = hour % 12 || 12;
+  const displayMinutes = minutes === '00' ? '' : `:${minutes}`;
+  return `${displayHour}${displayMinutes}${ampm}`;
 };
 
 /**
@@ -50,11 +65,11 @@ export const getAvailabilityText = (availability: Availability[]): string => {
   const availableDays = availability
     .filter(day => day.available)
     .map(day => day.day.substring(0, 3));
-  
+
   if (availableDays.length === 7) return 'Available every day';
-  if (availableDays.length === 5 && 
-      !availableDays.includes('Sat') && 
-      !availableDays.includes('Sun')) {
+  if (availableDays.length === 5 &&
+    !availableDays.includes('Sat') &&
+    !availableDays.includes('Sun')) {
     return 'Available weekdays';
   }
   return `Available: ${availableDays.join(', ')}`;
@@ -69,18 +84,18 @@ export const getAvailabilityText = (availability: Availability[]): string => {
 export const formatExperienceDuration = (startDate: string, endDate?: string): string => {
   const start = new Date(startDate);
   const end = endDate ? new Date(endDate) : new Date();
-  
+
   let months = (end.getFullYear() - start.getFullYear()) * 12;
   months -= start.getMonth();
   months += end.getMonth();
-  
+
   const years = Math.floor(months / 12);
   const remainingMonths = months % 12;
-  
+
   const parts = [];
   if (years > 0) parts.push(`${years} ${years === 1 ? 'year' : 'years'}`);
   if (remainingMonths > 0) parts.push(`${remainingMonths} ${remainingMonths === 1 ? 'month' : 'months'}`);
-  
+
   return parts.length > 0 ? parts.join(' ') : 'Less than a month';
 };
 

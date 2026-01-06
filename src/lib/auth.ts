@@ -1,11 +1,6 @@
-// Simplified auth for now - in production this would use proper session management
+// Get user from session - will be populated by the authentication system
 export async function getUserFromSession() {
-  // For now, return a mock user - in production this would get from WorkOS session
-  return {
-    id: 'user_123',
-    email: 'client@example.com',
-    name: 'Demo Client',
-    role: 'client',
-    currentRole: 'client',
-  }
+  // This will be populated by your authentication system
+  // Return null when no user is logged in
+  return null
 }

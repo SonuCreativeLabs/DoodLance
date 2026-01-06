@@ -76,8 +76,8 @@ export function getSkillInfo(skillName: string): SkillInfo {
   // Return basic info if not found
   return {
     name: skillName,
-    description: "Professional expertise in this area",
-    experience: "Experience varies",
+    description: "Verified Skill",
+    experience: "N/A",
     level: "Intermediate"
   };
 }

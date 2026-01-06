@@ -7,7 +7,7 @@ async function seedEnhancedData() {
   
   try {
     await prisma.$connect()
-    console.log('✅ Connected to MongoDB')
+    console.log('✅ Connected to database')
     
     // Get existing users and categories
     const client1 = await prisma.user.findUnique({ where: { email: 'client@doodlance.com' } })
@@ -85,7 +85,7 @@ async function seedEnhancedData() {
         location: 'T Nagar Cricket Academy, Chennai',
         coords: JSON.stringify([80.2279, 13.0418]),
         bio: 'Parent looking for cricket coaching for my son',
-        referralCode: 'ARJUN2024',
+        referralCode: 'ARJUNM2024',
         isVerified: true,
       },
     })

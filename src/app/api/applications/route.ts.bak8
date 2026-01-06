@@ -1,0 +1,248 @@
+import { NextRequest, NextResponse } from 'next/server'
+import prisma from '@/lib/db'
+
+
+export const dynamic = 'force-dynamic'
+
+// GET /api/applications - Get applications (for freelancers or clients)
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const userId = searchParams.get('userId')
+    const jobId = searchParams.get('jobId')
+    const status = searchParams.get('status')
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'User ID required' },
+        { status: 400 }
+      )
+    }
+
+    const where: any = {}
+
+    // If requesting user's applications
+    if (searchParams.get('myApplications') === 'true') {
+      where.freelancerId = userId
+    }
+    // If requesting applications for user's job posts
+    else if (searchParams.get('myJobs') === 'true') {
+      // Get all jobs by this user first
+      const userJobs = await prisma.job.findMany({
+        where: { clientId: userId },
+        select: { id: true }
+      })
+      where.jobId = { in: userJobs.map((job: { id: string }) => job.id) }
+    }
+
+    if (jobId) where.jobId = jobId
+    if (status) where.status = status
+
+    const applications = await prisma.application.findMany({
+      where,
+      include: {
+        job: {
+          include: {
+            client: {
+              select: {
+                id: true,
+                name: true,
+                avatar: true,
+                location: true,
+                isVerified: true
+              }
+            }
+          }
+        },
+        freelancer: {
+          select: {
+            id: true,
+            name: true,
+            avatar: true,
+            location: true,
+            phone: true,
+          }
+        }
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    })
+
+    // Parse string fields and structure for frontend
+    const parsedApplications = applications.map((app: any) => ({
+      ...app,
+      "#": app.id, // Map ID to '#' for frontend table component compatibility
+      jobTitle: app.job?.title || 'Unknown Job',
+      category: app.job?.category || 'Other',
+      location: app.job?.location || app.freelancer?.location || '',
+      clientName: app.job?.client?.name || 'Unknown Client',
+      clientImage: app.job?.client?.avatar || '',
+      clientId: app.job?.clientId,
+      description: app.job?.description || '',
+      postedDate: app.job?.createdAt,
+      appliedDate: app.createdAt,
+      status: app.status.toLowerCase(), // Normalize status to lowercase
+      budget: {
+        min: app.job?.budgetMin || 0,
+        max: app.job?.budgetMax || 0
+      },
+      skills: typeof app.skills === 'string' ? JSON.parse(app.skills) : (app.skills || []),
+      attachments: typeof app.attachments === 'string' ? JSON.parse(app.attachments) : (app.attachments || []),
+
+      // Add 'proposal' object alias providing backward compatibility
+      proposal: {
+        proposedRate: app.proposedRate,
+        estimatedDays: app.estimatedDays,
+        coverLetter: app.coverLetter,
+        skills: typeof app.skills === 'string' ? JSON.parse(app.skills) : (app.skills || []),
+        attachments: typeof app.attachments === 'string' ? JSON.parse(app.attachments) : (app.attachments || [])
+      }
+    }))
+
+    return NextResponse.json(parsedApplications)
+  } catch (error) {
+    console.error('Error fetching applications:', error)
+    return NextResponse.json(
+      { error: 'Failed to fetch applications' },
+      { status: 500 }
+    )
+  }
+}
+
+// POST /api/applications - Submit a job application (freelancers only)
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json()
+    const {
+      jobId,
+      coverLetter,
+      proposedRate,
+      estimatedDays,
+      skills,
+      attachments,
+      freelancerId, // This should come from session in real app
+    } = body
+
+    // Validate required fields
+    if (!jobId || !coverLetter || !proposedRate || !estimatedDays) {
+      return NextResponse.json(
+        { error: 'Missing required fields' },
+        { status: 400 }
+      )
+    }
+
+    // Check if job exists and is active
+    const job = await prisma.job.findUnique({
+      where: { id: jobId },
+      select: { id: true, isActive: true, clientId: true }
+    })
+
+    if (!job) {
+      return NextResponse.json(
+        { error: 'Job not found or no longer active' },
+        { status: 404 }
+      )
+    }
+
+    // Check if freelancer already applied
+    const existingApplication = await prisma.application.findFirst({
+      where: {
+        jobId,
+        freelancerId,
+      }
+    })
+
+    if (existingApplication) {
+      return NextResponse.json(
+        { error: 'You have already applied to this job' },
+        { status: 409 }
+      )
+    }
+
+    // Generate hierarchical application ID
+    // Format: P-{city}{area}{number}-app### (e.g., P-tnche001-app001)
+    const applicationCount = await prisma.application.count({
+      where: { jobId }
+    })
+    const appNumber = String(applicationCount + 1).padStart(3, '0')
+    // Replace J- with P- for applications
+    const applicationId = `${jobId.replace('J-', 'P-')}-app${appNumber}`
+
+    // Create the application with custom ID
+    const application = await prisma.application.create({
+      data: {
+        id: applicationId,
+        jobId,
+        freelancerId,
+        coverLetter,
+        proposedRate: parseFloat(proposedRate),
+        estimatedDays: parseInt(estimatedDays),
+        skills: skills || [],
+        attachments: attachments || [],
+        status: 'PENDING',
+      },
+    })
+
+    // Get job and freelancer details for notifications
+    const jobDetails = await prisma.job.findUnique({
+      where: { id: jobId },
+      select: { title: true, clientId: true }
+    })
+
+    const freelancerDetails = await prisma.user.findUnique({
+      where: { id: freelancerId },
+      select: { name: true }
+    })
+
+    if (!jobDetails || !freelancerDetails) {
+      return NextResponse.json(
+        { error: 'Failed to retrieve job or freelancer details' },
+        { status: 500 }
+      )
+    }
+
+    // Update job proposal count
+    await prisma.job.update({
+      where: { id: jobId },
+      data: {
+        proposals: { increment: 1 }
+      }
+    })
+
+    // Create notifications
+    // Notify freelancer
+    await prisma.notification.create({
+      data: {
+        userId: freelancerId,
+        title: 'Application Submitted',
+        message: `Your application for "${jobDetails.title}" has been submitted successfully`,
+        type: 'JOB_APPLICATION',
+        entityId: application.id,
+        entityType: 'application',
+        actionUrl: `/freelancer/applications/${application.id}`,
+      }
+    })
+
+    // Notify client
+    await prisma.notification.create({
+      data: {
+        userId: jobDetails.clientId,
+        title: 'New Job Application',
+        message: `${freelancerDetails.name} has applied to your job "${jobDetails.title}"`,
+        type: 'JOB_APPLICATION',
+        entityId: application.id,
+        entityType: 'application',
+        actionUrl: `/client/applications/${application.id}`,
+      }
+    })
+
+    return NextResponse.json(application, { status: 201 })
+  } catch (error) {
+    console.error('Error creating application:', error)
+    return NextResponse.json(
+      { error: 'Failed to submit application' },
+      { status: 500 }
+    )
+  }
+}

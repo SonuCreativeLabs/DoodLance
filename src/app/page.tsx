@@ -4,10 +4,14 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 import { ArrowRight, Activity, Trophy, Users, PlayCircle } from 'lucide-react'
+import { useAuth } from '@/contexts/AuthContext'
 
 export default function Home() {
   const [showSplash, setShowSplash] = useState(true)
+  const router = useRouter()
+  const { isAuthenticated, isLoading } = useAuth()
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -15,6 +19,16 @@ export default function Home() {
     }, 2500)
     return () => clearTimeout(timer)
   }, [])
+
+  const handleGetStarted = () => {
+    if (isAuthenticated) {
+      // User is logged in, redirect to client home
+      router.push('/client')
+    } else {
+      // User not logged in, go to auth
+      router.push('/auth/login')
+    }
+  }
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white overflow-hidden font-sans selection:bg-purple-500/30">
@@ -37,7 +51,7 @@ export default function Home() {
               transition={{ duration: 1, ease: "easeOut" }}
               className="relative z-10 w-64 h-64 mb-0 overflow-hidden"
             >
-               <Image
+              <Image
                 src="/images/LOGOS/Doodlance Logo.svg"
                 alt="DoodLance"
                 fill
@@ -51,7 +65,7 @@ export default function Home() {
               transition={{ delay: 0.5, duration: 0.8 }}
               className="relative z-20 flex flex-col items-center -mt-24"
             >
-              <p 
+              <p
                 className="text-purple-400 text-sm md:text-base mt-4 font-medium"
               >
                 {Array.from("Redefining Sports Freelancing").map((char, index) => (
@@ -89,16 +103,16 @@ export default function Home() {
             <header className="relative z-10 px-6 py-6 flex flex-col items-center max-w-7xl mx-auto w-full">
               <div className="flex flex-col items-center gap-4">
                 <div className="w-64 h-64 relative overflow-hidden">
-                   <Image
+                  <Image
                     src="/images/LOGOS/Doodlance Logo.svg"
                     alt="DoodLance"
                     fill
                     className="object-cover scale-110"
                   />
                 </div>
-                
+
                 {/* Badge right below logo */}
-                <motion.div 
+                <motion.div
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.2, duration: 0.8 }}
@@ -117,7 +131,7 @@ export default function Home() {
 
             {/* Hero Section */}
             <div className="relative z-10 flex flex-col items-center px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full py-2 lg:py-4 pt-0">
-              <motion.div 
+              <motion.div
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.2, duration: 0.8 }}
@@ -134,15 +148,15 @@ export default function Home() {
 
                 {/* Action Button */}
                 <div className="flex justify-center w-full">
-                  <Link href="/auth/login" className="group">
-                    <motion.button 
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="px-6 py-3 rounded-full bg-gradient-to-r from-[#6B46C1] via-[#4C1D95] to-[#2D1B69] text-white font-bold text-lg flex items-center gap-2 shadow-lg hover:shadow-md hover:shadow-[#4C1D95]/40 transition-all duration-300 transform hover:-translate-y-0.5 focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-[#6B46C1]"
-                    >
-                      Get Started <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                    </motion.button>
-                  </Link>
+                  <motion.button
+                    onClick={handleGetStarted}
+                    disabled={isLoading}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="group px-6 py-3 rounded-full bg-gradient-to-r from-[#6B46C1] via-[#4C1D95] to-[#2D1B69] text-white font-bold text-lg flex items-center gap-2 shadow-lg hover:shadow-md hover:shadow-[#4C1D95]/40 transition-all duration-300 transform hover:-translate-y-0.5 focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-[#6B46C1] disabled:opacity-50"
+                  >
+                    Get Started <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  </motion.button>
                 </div>
               </motion.div>
             </div>

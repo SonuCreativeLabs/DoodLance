@@ -7,17 +7,26 @@ import { Button } from '@/components/ui/button';
 import { useHire } from '@/contexts/HireContext';
 import { useNavbar } from '@/contexts/NavbarContext';
 import AdditionalServicesCard from '@/components/hire/AdditionalServicesCard';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function CartPage() {
   const router = useRouter();
-  const { state, getTotalPrice, increaseQuantity, decreaseQuantity, clearCart } = useHire();
+  const { state, getTotalPrice, increaseQuantity, decreaseQuantity, clearCart, isLoaded } = useHire();
   const { setNavbarVisibility } = useNavbar();
+  const { user } = useAuth();
   const [showAdditionalServices, setShowAdditionalServices] = useState(false);
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
   const [discountAmount, setDiscountAmount] = useState(0);
 
-  // Hide navbar when component mounts
+  console.log('🔍 [CART] Component render:', {
+    isLoaded,
+    hasUser: !!user,
+    userId: user?.id,
+    cartItemsCount: state.cartItems.length
+  });
+
+  // Hide navbar when component mounts - MUST be before early return
   useEffect(() => {
     setNavbarVisibility(false);
 
@@ -27,13 +36,22 @@ export default function CartPage() {
     };
   }, [setNavbarVisibility]);
 
+  // Wait for hydration - early return AFTER all hooks
+  if (!isLoaded) {
+    return (
+      <div className="h-screen bg-[#0F0F0F] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
   const subtotal = state.cartItems.reduce((total, item) => {
     const price = typeof item.service.price === 'string'
       ? parseFloat(item.service.price.replace(/[^\d.]/g, ''))
       : item.service.price;
     return total + (price * (item.quantity || 1));
   }, 0);
-  const serviceFee = 10; // Fixed service fee of ₹10
+  const serviceFee = Math.round(subtotal * 0.05); // 5% platform fee
   const discount = appliedCoupon ? Math.round(subtotal * 0.1) : 0; // 10% discount for demo
   const total = subtotal + serviceFee - discount;
 
@@ -48,6 +66,10 @@ export default function CartPage() {
   };
 
   const handleCheckout = () => {
+    if (!user) {
+      // Could show a toast or message
+      return;
+    }
     router.push('/client/hire/checkout');
   };
 
@@ -126,22 +148,21 @@ export default function CartPage() {
           </div>
           <div>
             <h3 className="font-medium text-white">{state.freelancerName}</h3>
-            {state.freelancerRating && (
+            {(state.freelancerRating || 0) > 0 && (
               <div className="flex items-center gap-1 mt-1">
                 <div className="flex items-center gap-0.5">
                   {[...Array(5)].map((_, i) => (
                     <Star
                       key={i}
-                      className={`w-3 h-3 ${
-                        i < Math.floor(state.freelancerRating!)
-                          ? 'text-yellow-400 fill-yellow-400'
-                          : 'text-white/20'
-                      }`}
+                      className={`w-3 h-3 ${i < Math.floor(state.freelancerRating!)
+                        ? 'text-yellow-400 fill-yellow-400'
+                        : 'text-white/20'
+                        }`}
                     />
                   ))}
                 </div>
                 <span className="text-sm text-white/70 ml-1">
-                  {state.freelancerRating.toFixed(1)} ({state.freelancerReviewCount || 0} reviews)
+                  {(state.freelancerRating || 0).toFixed(1)} ({state.freelancerReviewCount || 0} reviews)
                 </span>
               </div>
             )}
@@ -276,7 +297,7 @@ export default function CartPage() {
             </div>
 
             <div className="flex justify-between text-sm">
-              <span className="text-white/70">Platform Fee</span>
+              <span className="text-white/70">Platform Fee (5%)</span>
               <span className="text-white">₹{serviceFee.toLocaleString()}</span>
             </div>
 
@@ -334,6 +355,8 @@ export default function CartPage() {
           Proceed to Payment ₹{total.toLocaleString()}
         </Button>
       </div>
+
+
     </div>
   );
 }

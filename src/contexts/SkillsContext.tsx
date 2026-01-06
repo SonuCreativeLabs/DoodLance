@@ -16,115 +16,142 @@ interface SkillsContextType {
   addSkill: (skill: SkillItem) => void;
   removeSkill: (skillId: string) => void;
   reorderSkills: (skills: SkillItem[]) => void;
+  hydrateSkills: (skills: SkillItem[]) => void;
 }
 
-const defaultSkills: SkillItem[] = [
-  {
-    id: '1',
-    name: "RH Batsman",
-    description: "Right-handed batsman specializing in top-order batting with solid technique and aggressive stroke play.",
-    experience: "5 years",
-    level: "Expert"
-  },
-  {
-    id: '2',
-    name: "Sidearm Specialist",
-    description: "Expert sidearm bowler with unique delivery angles and deceptive variations.",
-    experience: "4 years",
-    level: "Expert"
-  },
-  {
-    id: '3',
-    name: "Off Spin",
-    description: "Skilled off-spin bowler with excellent control, flight, and mystery variations.",
-    experience: "3 years",
-    level: "Expert"
-  },
-  {
-    id: '4',
-    name: "Batting Coach",
-    description: "Professional batting coach with expertise in technique, mental approach, and match situations.",
-    experience: "6 years",
-    level: "Expert"
-  },
-  {
-    id: '5',
-    name: "Analyst",
-    description: "Cricket performance analyst specializing in match statistics, player metrics, and strategic insights.",
-    experience: "2 years",
-    level: "Intermediate"
-  },
-  {
-    id: '6',
-    name: "Mystery Spin",
-    description: "Specialist in mystery spin variations including doosra, carrom ball, and other deceptive deliveries.",
-    experience: "3 years",
-    level: "Expert"
-  }
-];
+const defaultSkills: SkillItem[] = [];
 
 const SkillsContext = createContext<SkillsContextType | undefined>(undefined);
 
-export function SkillsProvider({ children }: { children: ReactNode }) {
+import { createClient } from '@/lib/supabase/client';
+
+export interface SkillsProviderProps {
+  children: ReactNode;
+  skipInitialFetch?: boolean;
+}
+
+export function SkillsProvider({ children, skipInitialFetch = false }: SkillsProviderProps) {
   const [skills, setSkills] = useState<SkillItem[]>(defaultSkills);
-  const hasHydrated = useRef(false);
+  const [isHydrated, setIsHydrated] = useState(false);
+  const supabase = React.useMemo(() => createClient(), []);
 
-  const updateSkills = useCallback((newSkills: SkillItem[]) => {
+  const updateSkills = useCallback(async (newSkills: SkillItem[]) => {
     setSkills(newSkills);
-  }, []);
 
-  const addSkill = useCallback((skill: SkillItem) => {
-    setSkills(prev => [...prev, skill]);
-  }, []);
-
-  const removeSkill = useCallback((skillId: string) => {
-    setSkills(prev => prev.filter(s => s.id !== skillId));
-  }, []);
-
-  const reorderSkills = useCallback((reorderedSkills: SkillItem[]) => {
-    setSkills(reorderedSkills);
-  }, []);
-
-  // Load from localStorage on mount
-  useEffect(() => {
+    // Persist via API
     try {
-      const saved = localStorage.getItem('userSkills');
-      if (saved) {
-        const parsedSkills = JSON.parse(saved);
-        // Handle both string array and SkillItem array formats
-        if (Array.isArray(parsedSkills)) {
-          if (typeof parsedSkills[0] === 'string') {
-            // Convert string array to SkillItem array
-            const skillItems = parsedSkills.map((name: string, index: number) => ({
-              id: `${index}`,
-              name,
-            }));
-            setSkills(skillItems);
-          } else {
-            setSkills(parsedSkills);
-          }
-        }
-      }
+      await fetch('/api/freelancer/skills', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ skills: newSkills })
+      });
     } catch (error) {
-      console.error('Failed to parse skills:', error);
-    } finally {
-      hasHydrated.current = true;
+      console.error('Failed to save skills:', error);
     }
   }, []);
 
-  // Save to localStorage whenever skills change (skip first paint)
-  useEffect(() => {
-    if (!hasHydrated.current) return;
-    localStorage.setItem('userSkills', JSON.stringify(skills));
-  }, [skills]);
+  const hydrateSkills = useCallback((newSkills: SkillItem[]) => {
+    setSkills(newSkills);
+    setIsHydrated(true);
+  }, []);
 
-  const value: SkillsContextType = {
+  const addSkill = useCallback(async (skill: SkillItem) => {
+    setSkills(prev => {
+      const newSkills = [...prev, skill];
+      // Persist
+      (async () => {
+        try {
+          await fetch('/api/freelancer/skills', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ skills: newSkills })
+          });
+        } catch (error) {
+          console.error('Failed to save skills:', error);
+        }
+      })();
+      return newSkills;
+    });
+  }, []);
+
+  const removeSkill = useCallback(async (skillId: string) => {
+    setSkills(prev => {
+      const newSkills = prev.filter(s => s.id !== skillId);
+      // Persist
+      (async () => {
+        try {
+          await fetch('/api/freelancer/skills', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ skills: newSkills })
+          });
+        } catch (error) {
+          console.error('Failed to save skills:', error);
+        }
+      })();
+      return newSkills;
+    });
+  }, []);
+
+  const reorderSkills = useCallback(async (reorderedSkills: SkillItem[]) => {
+    setSkills(reorderedSkills);
+    // Persist
+    try {
+      await fetch('/api/freelancer/skills', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ skills: reorderedSkills })
+      });
+    } catch (error) {
+      console.error('Failed to save skills:', error);
+    }
+  }, []);
+
+  // Load from localStorage on mount and fetch from Supabase
+  useEffect(() => {
+    if (skipInitialFetch) return;
+
+    const fetchSkills = async () => {
+      try {
+        // Fetch from API
+        const response = await fetch('/api/freelancer/skills');
+        if (response.ok) {
+          const { skills: dbSkills } = await response.json();
+
+          if (Array.isArray(dbSkills) && dbSkills.length > 0) {
+            // Check if it's string array or object array
+            if (typeof dbSkills[0] === 'string') {
+              const skillItems = dbSkills.map((name: string, index: number) => ({
+                id: `${Date.now()}-${index}`,
+                name,
+              }));
+              setSkills(skillItems);
+            } else {
+              setSkills(dbSkills);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load skills:', error);
+      } finally {
+        setIsHydrated(true);
+      }
+    };
+
+    fetchSkills();
+  }, [supabase, skipInitialFetch]);
+
+  // Save to localStorage whenever skills change
+  // No localStorage side effects needed. Data is persisted to DB.
+
+  const value: SkillsContextType = React.useMemo(() => ({
     skills,
     updateSkills,
+    hydrateSkills,
     addSkill,
     removeSkill,
     reorderSkills,
-  };
+  }), [skills, updateSkills, hydrateSkills, addSkill, removeSkill, reorderSkills]);
 
   return (
     <SkillsContext.Provider value={value}>

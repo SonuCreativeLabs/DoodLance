@@ -5,7 +5,7 @@ import { ArrowLeft, Star, User, MessageSquare } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useReviews } from '@/contexts/ReviewsContext';
 import { usePersonalDetails } from '@/contexts/PersonalDetailsContext';
-import { professionals } from '@/app/client/nearby/mockData';
+
 
 export type Review = {
   id: string;
@@ -21,10 +21,10 @@ export default function ReviewsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const freelancerId = searchParams.get('freelancerId');
-  
+
   const { reviewsData: contextReviewsData } = useReviews();
   const { personalDetails } = usePersonalDetails();
-  
+
   const [reviews, setReviews] = useState<Review[]>([]);
   const [freelancerName, setFreelancerName] = useState('');
 
@@ -32,11 +32,32 @@ export default function ReviewsPage() {
   useEffect(() => {
     if (freelancerId) {
       // Show freelancer's reviews
-      const freelancer = professionals.find(p => p.id.toString() === freelancerId);
-      if (freelancer) {
-        setReviews(freelancer.reviewsData || []);
-        setFreelancerName(freelancer.name);
-      }
+      fetch(`/api/freelancers/${freelancerId}`)
+        .then(res => res.json())
+        .then(data => {
+          const profile = data.freelancerProfile;
+          if (profile) {
+            setFreelancerName(data.name || 'Anonymous');
+            if (profile.reviews) {
+              const mappedReviews = profile.reviews.map((r: any) => ({
+                id: r.id,
+                author: r.clientName || 'Client',
+                role: 'Client',
+                rating: r.rating,
+                comment: r.comment,
+                date: r.createdAt,
+                isVerified: true
+              }));
+              setReviews(mappedReviews);
+            } else {
+              setReviews([]);
+            }
+          }
+        })
+        .catch(err => {
+          console.error("Failed to fetch reviews", err);
+          setReviews([]);
+        });
     } else {
       // Show user's own reviews
       setReviews(contextReviewsData.reviews);
@@ -47,7 +68,7 @@ export default function ReviewsPage() {
   const handleBack = () => {
     if (typeof window !== 'undefined') {
       sessionStorage.setItem('scrollToReviews', 'true');
-      
+
       // Check if we're viewing a freelancer's reviews
       if (freelancerId) {
         // Go back to the freelancer detail page
@@ -94,7 +115,7 @@ export default function ReviewsPage() {
       {/* Sticky Header with back button and title */}
       <div className="sticky top-0 z-50 px-4 py-2 border-b border-white/5 bg-[#0f0f0f]/95 backdrop-blur-sm">
         <div className="flex items-center">
-          <button 
+          <button
             onClick={handleBack}
             className="inline-flex items-center text-sm text-purple-400 hover:text-purple-300 transition-colors duration-200"
             aria-label="Back to profile preview"
@@ -117,7 +138,7 @@ export default function ReviewsPage() {
             <div className="flex items-center bg-gradient-to-r from-amber-400 to-yellow-400 px-3 py-1 rounded-full">
               <Star className="h-4 w-4 text-amber-800 fill-current mr-1" />
               <span className="text-sm font-bold text-amber-900">
-                {reviews.length > 0 
+                {reviews.length > 0
                   ? (reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length).toFixed(1)
                   : '0.0'}
               </span>
@@ -126,16 +147,16 @@ export default function ReviewsPage() {
             <div className="flex items-center">
               <div className="flex items-center space-x-1">
                 {[1, 2, 3, 4, 5].map((star) => {
-                  const averageRating = reviews.length > 0 
-                    ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length 
+                  const averageRating = reviews.length > 0
+                    ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length
                     : 0;
                   const fillPercentage = Math.min(Math.max(0, averageRating - (star - 1)), 1) * 100;
-                  
+
                   return (
                     <div key={star} className="relative h-4 w-4">
                       <Star className="absolute h-4 w-4 text-gray-400" />
-                      <div 
-                        className="absolute h-4 overflow-hidden" 
+                      <div
+                        className="absolute h-4 overflow-hidden"
                         style={{ width: `${fillPercentage}%` }}
                       >
                         <Star className="h-4 w-4 text-yellow-400 fill-current" />
@@ -154,8 +175,8 @@ export default function ReviewsPage() {
         {reviews.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {reviews.map((review) => (
-              <div 
-                key={review.id} 
+              <div
+                key={review.id}
                 className="p-5 rounded-3xl border border-white/10 bg-white/5 hover:border-purple-500/30 transition-colors flex flex-col h-full group"
               >
                 <div className="flex justify-between items-start mb-3">

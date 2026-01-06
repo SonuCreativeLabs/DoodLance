@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,37 +19,9 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import {
-  LineChart, Line, BarChart as RechartsBarChart, Bar, PieChart as RechartsPieChart, 
+  LineChart, Line, BarChart as RechartsBarChart, Bar, PieChart as RechartsPieChart,
   Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, AreaChart
 } from 'recharts';
-
-// Mock data for reports
-const revenueData = [
-  { month: 'Jan', revenue: 125000, bookings: 145, users: 23 },
-  { month: 'Feb', revenue: 145000, bookings: 178, users: 45 },
-  { month: 'Mar', revenue: 178000, bookings: 198, users: 67 },
-  { month: 'Apr', revenue: 156000, bookings: 167, users: 34 },
-  { month: 'May', revenue: 189000, bookings: 212, users: 56 },
-  { month: 'Jun', revenue: 198000, bookings: 234, users: 78 },
-];
-
-const categoryData = [
-  { name: 'Net Bowler', value: 35, color: '#8B5CF6' },
-  { name: 'Coach', value: 25, color: '#EC4899' },
-  { name: 'Match Player', value: 20, color: '#10B981' },
-  { name: 'Physio', value: 10, color: '#F59E0B' },
-  { name: 'Others', value: 10, color: '#6B7280' },
-];
-
-const userGrowthData = [
-  { date: '1', clients: 120, freelancers: 89 },
-  { date: '5', clients: 145, freelancers: 98 },
-  { date: '10', clients: 167, freelancers: 112 },
-  { date: '15', clients: 189, freelancers: 123 },
-  { date: '20', clients: 212, freelancers: 145 },
-  { date: '25', clients: 234, freelancers: 156 },
-  { date: '30', clients: 256, freelancers: 167 },
-];
 
 const reportTypes = [
   {
@@ -91,19 +63,39 @@ export default function ReportsPage() {
   const [reportType, setReportType] = useState('all');
   const [exportFormat, setExportFormat] = useState('pdf');
   const [selectedReport, setSelectedReport] = useState('overview');
+  const [loading, setLoading] = useState(true);
+
+  // State for API data
+  const [revenueData, setRevenueData] = useState<any[]>([]);
+  const [categoryData, setCategoryData] = useState<any[]>([]);
+  const [userGrowthData, setUserGrowthData] = useState<any[]>([]);
+  const [stats, setStats] = useState<any>({});
+
+  useEffect(() => {
+    fetchReports();
+  }, [reportType]);
+
+  const fetchReports = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/admin/reports?type=${reportType}`);
+      if (res.ok) {
+        const data = await res.json();
+        setRevenueData(data.revenueData || []);
+        setCategoryData(data.categoryData || []);
+        setUserGrowthData(data.userGrowthData || []);
+        setStats(data.stats || {});
+      }
+    } catch (error) {
+      console.error('Error fetching reports:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleExport = (format: string) => {
     console.log(`Exporting ${selectedReport} report as ${format}`);
     // In production, this would generate and download the report
-  };
-
-  const stats = {
-    totalRevenue: '₹8,27,500',
-    totalBookings: '1,456',
-    totalUsers: '523',
-    avgOrderValue: '₹2,500',
-    conversionRate: '23.5%',
-    growthRate: '+15.3%',
   };
 
   return (
@@ -131,38 +123,38 @@ export default function ReportsPage() {
         <Card className="bg-[#1a1a1a] border-gray-800 p-4">
           <div>
             <p className="text-sm text-gray-400">Total Revenue</p>
-            <p className="text-2xl font-bold text-white">{stats.totalRevenue}</p>
-            <p className="text-xs text-green-400 mt-1">{stats.growthRate}</p>
+            <p className="text-2xl font-bold text-white">₹{(stats.totalRevenue || 0).toLocaleString()}</p>
+            <p className="text-xs text-green-400 mt-1">{stats.growthRate || '+0%'}</p>
           </div>
         </Card>
         <Card className="bg-[#1a1a1a] border-gray-800 p-4">
           <div>
             <p className="text-sm text-gray-400">Total Bookings</p>
-            <p className="text-2xl font-bold text-white">{stats.totalBookings}</p>
+            <p className="text-2xl font-bold text-white">{(stats.totalBookings || 0).toLocaleString()}</p>
           </div>
         </Card>
         <Card className="bg-[#1a1a1a] border-gray-800 p-4">
           <div>
             <p className="text-sm text-gray-400">Total Users</p>
-            <p className="text-2xl font-bold text-white">{stats.totalUsers}</p>
+            <p className="text-2xl font-bold text-white">{(stats.totalUsers || 0).toLocaleString()}</p>
           </div>
         </Card>
         <Card className="bg-[#1a1a1a] border-gray-800 p-4">
           <div>
             <p className="text-sm text-gray-400">Avg Order Value</p>
-            <p className="text-2xl font-bold text-white">{stats.avgOrderValue}</p>
+            <p className="text-2xl font-bold text-white">₹{Math.round(stats.avgOrderValue || 0).toLocaleString()}</p>
           </div>
         </Card>
         <Card className="bg-[#1a1a1a] border-gray-800 p-4">
           <div>
             <p className="text-sm text-gray-400">Conversion Rate</p>
-            <p className="text-2xl font-bold text-white">{stats.conversionRate}</p>
+            <p className="text-2xl font-bold text-white">{(stats.conversionRate || 0).toFixed(1)}%</p>
           </div>
         </Card>
         <Card className="bg-[#1a1a1a] border-gray-800 p-4">
           <div>
             <p className="text-sm text-gray-400">Growth Rate</p>
-            <p className="text-2xl font-bold text-white">{stats.growthRate}</p>
+            <p className="text-2xl font-bold text-white">+{(stats.growthRate || 0).toFixed(1)}%</p>
           </div>
         </Card>
       </div>
@@ -176,7 +168,7 @@ export default function ReportsPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
           >
-            <Card 
+            <Card
               className="bg-[#1a1a1a] border-gray-800 p-4 cursor-pointer hover:border-purple-600 transition-colors"
               onClick={() => setSelectedReport(report.id)}
             >
@@ -187,9 +179,9 @@ export default function ReportsPage() {
                 <div className="flex-1">
                   <h3 className="font-medium text-white">{report.title}</h3>
                   <p className="text-sm text-gray-400 mt-1">{report.description}</p>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     className="mt-2 text-purple-400 hover:text-purple-300 p-0"
                   >
                     Generate Report →
@@ -250,7 +242,7 @@ export default function ReportsPage() {
               </SelectContent>
             </Select>
           </div>
-          <Button 
+          <Button
             onClick={() => handleExport(exportFormat)}
             className="bg-purple-600 hover:bg-purple-700"
           >
@@ -269,14 +261,14 @@ export default function ReportsPage() {
             <AreaChart data={revenueData}>
               <defs>
                 <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.8}/>
-                  <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0}/>
+                  <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.8} />
+                  <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#2a2a2a" />
               <XAxis dataKey="month" stroke="#6b7280" />
               <YAxis stroke="#6b7280" />
-              <Tooltip 
+              <Tooltip
                 contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #2a2a2a' }}
                 labelStyle={{ color: '#fff' }}
               />
@@ -323,22 +315,22 @@ export default function ReportsPage() {
               <CartesianGrid strokeDasharray="3 3" stroke="#2a2a2a" />
               <XAxis dataKey="date" stroke="#6b7280" />
               <YAxis stroke="#6b7280" />
-              <Tooltip 
+              <Tooltip
                 contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #2a2a2a' }}
                 labelStyle={{ color: '#fff' }}
               />
               <Legend />
-              <Line 
-                type="monotone" 
-                dataKey="clients" 
-                stroke="#10B981" 
+              <Line
+                type="monotone"
+                dataKey="clients"
+                stroke="#10B981"
                 strokeWidth={2}
                 dot={{ fill: '#10B981', r: 4 }}
               />
-              <Line 
-                type="monotone" 
-                dataKey="freelancers" 
-                stroke="#F59E0B" 
+              <Line
+                type="monotone"
+                dataKey="freelancers"
+                stroke="#F59E0B"
                 strokeWidth={2}
                 dot={{ fill: '#F59E0B', r: 4 }}
               />
@@ -354,7 +346,7 @@ export default function ReportsPage() {
               <CartesianGrid strokeDasharray="3 3" stroke="#2a2a2a" />
               <XAxis dataKey="month" stroke="#6b7280" />
               <YAxis stroke="#6b7280" />
-              <Tooltip 
+              <Tooltip
                 contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #2a2a2a' }}
                 labelStyle={{ color: '#fff' }}
               />
@@ -370,25 +362,11 @@ export default function ReportsPage() {
           <h3 className="text-lg font-semibold text-white">Recent Reports</h3>
         </div>
         <div className="p-4 space-y-3">
-          {[
-            { name: 'Monthly Revenue Report - March 2024', date: '2024-03-25', format: 'PDF', size: '2.4 MB' },
-            { name: 'User Analytics Q1 2024', date: '2024-03-24', format: 'Excel', size: '1.8 MB' },
-            { name: 'Booking Performance Report', date: '2024-03-23', format: 'PDF', size: '3.2 MB' },
-            { name: 'Platform Metrics Dashboard', date: '2024-03-22', format: 'CSV', size: '456 KB' },
-          ].map((report, index) => (
-            <div key={index} className="flex items-center justify-between p-3 bg-[#2a2a2a] rounded-lg">
-              <div className="flex items-center gap-3">
-                <FileText className="w-5 h-5 text-gray-400" />
-                <div>
-                  <p className="text-white text-sm font-medium">{report.name}</p>
-                  <p className="text-xs text-gray-400">{report.date} • {report.format} • {report.size}</p>
-                </div>
-              </div>
-              <Button variant="ghost" size="sm" className="text-purple-400">
-                <Download className="w-4 h-4" />
-              </Button>
-            </div>
-          ))}
+          {loading ? (
+            <p className="text-gray-400 text-sm">Loading reports...</p>
+          ) : (
+            <p className="text-gray-500 text-sm">No recent reports generated.</p>
+          )}
         </div>
       </Card>
     </div>

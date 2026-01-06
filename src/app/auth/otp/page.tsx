@@ -12,14 +12,16 @@ function OTPContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const phone = searchParams?.get('phone') || ''
+  const email = searchParams?.get('email') || ''
+  const identifier = email || phone // Use email first, then phone
   const { verifyOTP, sendOTP } = useAuth()
-  
+
   const [otp, setOtp] = useState(['', '', '', '', '', ''])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [timer, setTimer] = useState(30)
+  const [timer, setTimer] = useState(60)
   const [showDemoHint, setShowDemoHint] = useState(false)
-  
+
   const inputRefs = useRef<(HTMLInputElement | null)[]>([])
 
   useEffect(() => {
@@ -78,28 +80,41 @@ function OTPContent() {
       return
     }
 
+    if (!identifier) {
+      setError('Email/Phone and code are required')
+      return
+    }
+
     setIsLoading(true)
     setError(null)
 
     try {
-      // Verify phone OTP
-      await verifyOTP(phone, code, 'phone')
-      
+      console.log('🔐 Starting OTP verification...', { identifier, code })
+
+      // Determine type based on identifier
+      const type = email ? 'email' : 'phone'
+      await verifyOTP(identifier, code, type)
+
+      console.log('✅ OTP verified successfully!')
+      console.log('🚀 Redirecting to /client...')
+
       // Redirect to main app
       router.push('/client')
     } catch (err: any) {
+      console.error('❌ OTP verification failed:', err)
       setError(err.message || 'Invalid verification code. Please try again.')
       setIsLoading(false)
     }
   }
 
   const handleResend = async () => {
-    setTimer(30)
+    setTimer(60)
     setOtp(['', '', '', '', '', ''])
     setError(null)
     inputRefs.current[0]?.focus()
     try {
-      await sendOTP(phone, 'phone')
+      const type = email ? 'email' : 'phone'
+      await sendOTP(identifier, type)
       setShowDemoHint(true)
     } catch (err) {
       setError('Failed to resend code')
@@ -128,7 +143,7 @@ function OTPContent() {
 
       {/* Main Content */}
       <main className="flex-1 relative z-10 flex flex-col items-center px-4 sm:px-6 pt-2 pb-12">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -137,7 +152,7 @@ function OTPContent() {
           {/* Logo & Title */}
           <div className="text-center space-y-2">
             <div className="relative w-32 h-32 mx-auto mb-0 overflow-hidden">
-               <Image
+              <Image
                 src="/images/LOGOS/Doodlance Logo.svg"
                 alt="DoodLance"
                 fill
@@ -146,10 +161,10 @@ function OTPContent() {
               />
             </div>
             <h1 className="text-3xl font-bold tracking-tight text-white -mt-10">
-              Verify Mobile
+              Enter Verification Code
             </h1>
             <p className="text-white/50 text-sm">
-              Enter the 6-digit code sent to <span className="text-[#39FF14] font-medium">{phone}</span>
+              We've sent a 6-digit code to {email || phone}
             </p>
           </div>
 
@@ -164,7 +179,7 @@ function OTPContent() {
               )}
 
               {/* OTP Inputs */}
-              <div className="flex gap-3 justify-center">
+              <div className="flex gap-2 justify-center">
                 {otp.map((digit, index) => (
                   <input
                     key={index}
@@ -178,8 +193,8 @@ function OTPContent() {
                     onChange={(e) => handleChange(index, e.target.value)}
                     onKeyDown={(e) => handleKeyDown(index, e)}
                     onPaste={handlePaste}
-                    className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 text-center text-xl font-bold text-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500/50 transition-all placeholder:text-white/10"
-                    placeholder="-"
+                    className="w-12 h-14 text-center text-2xl font-bold bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500/50 transition-all"
+                    autoFocus={index === 0}
                   />
                 ))}
               </div>

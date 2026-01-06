@@ -1,105 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import prisma from '@/lib/db';
 
-// Mock user database
-let mockUsers = [
-  {
-    id: 'USR001',
-    name: 'Rohit Sharma',
-    email: 'rohit@example.com',
-    phone: '+91 98765 43210',
-    role: 'freelancer',
-    status: 'active',
-    isVerified: true,
-    kycStatus: 'verified',
-    joinedAt: '2024-01-15',
-    lastActive: '2 hours ago',
-    location: 'Mumbai',
-    earnings: 125000,
-    spending: 0,
-    completedJobs: 45,
-    rating: 4.8,
-    profileCompletion: 95,
-    walletBalance: 12500
-  },
-  {
-    id: 'USR002',
-    name: 'Priya Patel',
-    email: 'priya@example.com',
-    phone: '+91 87654 32109',
-    role: 'client',
-    status: 'active',
-    isVerified: true,
-    kycStatus: 'pending',
-    joinedAt: '2024-02-10',
-    lastActive: '1 day ago',
-    location: 'Delhi',
-    earnings: 0,
-    spending: 45600,
-    completedJobs: 12,
-    rating: 4.9,
-    profileCompletion: 80,
-    walletBalance: 5000
-  },
-  {
-    id: 'USR003',
-    name: 'Virat Singh',
-    email: 'virat@example.com',
-    phone: '+91 76543 21098',
-    role: 'freelancer',
-    status: 'active',
-    isVerified: true,
-    kycStatus: 'verified',
-    joinedAt: '2023-12-20',
-    lastActive: '5 minutes ago',
-    location: 'Bangalore',
-    earnings: 234500,
-    spending: 2300,
-    completedJobs: 156,
-    rating: 4.9,
-    profileCompletion: 100,
-    walletBalance: 23450
-  },
-  {
-    id: 'USR004',
-    name: 'Ananya Reddy',
-    email: 'ananya@example.com',
-    phone: '+91 65432 10987',
-    role: 'freelancer',
-    status: 'suspended',
-    isVerified: false,
-    kycStatus: 'unverified',
-    joinedAt: '2024-03-01',
-    lastActive: '1 week ago',
-    location: 'Chennai',
-    earnings: 12000,
-    spending: 500,
-    completedJobs: 8,
-    rating: 4.2,
-    profileCompletion: 60,
-    walletBalance: 1200
-  },
-  {
-    id: 'USR005',
-    name: 'Amit Kumar',
-    email: 'amit@example.com',
-    phone: '+91 54321 09876',
-    role: 'client',
-    status: 'active',
-    isVerified: true,
-    kycStatus: 'verified',
-    joinedAt: '2024-01-20',
-    lastActive: '3 days ago',
-    location: 'Pune',
-    earnings: 0,
-    spending: 78900,
-    completedJobs: 23,
-    rating: 4.7,
-    profileCompletion: 90,
-    walletBalance: 8900
-  }
-];
+export const dynamic = 'force-dynamic';
 
-// GET /api/admin/users - Get all users with filtering
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -107,146 +10,131 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '10');
     const search = searchParams.get('search') || '';
     const role = searchParams.get('role') || 'all';
-    const status = searchParams.get('status') || 'all';
-    const verified = searchParams.get('verified') || 'all';
+    const status = searchParams.get('status') || 'all'; // status in User might not strictly exist as enum, using simple logic
+    const verification = searchParams.get('verification') || 'all';
 
-    // Filter users
-    let filteredUsers = [...mockUsers];
-    
+    const skip = (page - 1) * limit;
+
+    const where: any = {};
+
+    // Search
     if (search) {
-      filteredUsers = filteredUsers.filter(user => 
-        user.name.toLowerCase().includes(search.toLowerCase()) ||
-        user.email.toLowerCase().includes(search.toLowerCase()) ||
-        user.phone.includes(search)
-      );
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { email: { contains: search, mode: 'insensitive' } },
+        { phone: { contains: search, mode: 'insensitive' } },
+      ];
     }
-    
+
+    // Role filter
     if (role !== 'all') {
-      filteredUsers = filteredUsers.filter(user => user.role === role);
+      where.role = role;
     }
-    
+
+    // Status filter
     if (status !== 'all') {
-      filteredUsers = filteredUsers.filter(user => user.status === status);
-    }
-    
-    if (verified !== 'all') {
-      filteredUsers = filteredUsers.filter(user => 
-        verified === 'verified' ? user.isVerified : !user.isVerified
-      );
+      where.status = status;
     }
 
-    // Pagination
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
+    // Verification filter
+    if (verification === 'verified') {
+      where.isVerified = true;
+    } else if (verification === 'unverified') {
+      where.isVerified = false;
+    }
 
-    return NextResponse.json({
-      users: paginatedUsers,
-      total: filteredUsers.length,
-      page,
-      totalPages: Math.ceil(filteredUsers.length / limit),
-      stats: {
-        total: mockUsers.length,
-        active: mockUsers.filter(u => u.status === 'active').length,
-        suspended: mockUsers.filter(u => u.status === 'suspended').length,
-        verified: mockUsers.filter(u => u.isVerified).length,
-        freelancers: mockUsers.filter(u => u.role === 'freelancer').length,
-        clients: mockUsers.filter(u => u.role === 'client').length
+    // Fetch users
+    const [users, total] = await Promise.all([
+      prisma.user.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          freelancerProfile: true,
+          clientProfile: true,
+          _count: {
+            select: {
+              clientJobs: true, // Projects posted
+              freelancerJobs: true, // Jobs taken (accepted)
+            }
+          }
+        }
+      }),
+      prisma.user.count({ where })
+    ]);
+
+    // Map to response format
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const mappedUsers = users.map((user: any) => {
+      // Determine effective status
+      const status = user.status || 'active';
+
+      // Stats
+      let completedJobs = 0;
+      let totalEarnings = 0;
+      let totalSpent = 0;
+      let rating = 0;
+
+      if (user.role === 'freelancer' && user.freelancerProfile) {
+        completedJobs = user.freelancerProfile.completedJobs;
+        totalEarnings = user.freelancerProfile.totalEarnings;
+        rating = user.freelancerProfile.rating;
+        // If profile stats are 0, maybe use relation counts as fallback if needed
+        if (completedJobs === 0) completedJobs = user._count.freelancerJobs;
+      } else if (user.role === 'client' && user.clientProfile) {
+        totalSpent = user.clientProfile.totalSpent;
+        // projectsPosted can come from profile or relation count
+        // user.clientProfile.projectsPosted might be more accurate if updated
       }
+
+      return {
+        id: user.id,
+        name: user.name || 'Unknown',
+        email: user.email,
+        phone: user.phone || 'N/A',
+        role: user.role,
+        currentRole: user.currentRole,
+        location: user.location || 'Unknown',
+        isVerified: user.isVerified,
+        rating: rating,
+        completedJobs: completedJobs,
+        totalEarnings: totalEarnings,
+        totalSpent: totalSpent,
+        projectsPosted: user._count.clientJobs,
+        joinedAt: user.createdAt.toISOString().split('T')[0],
+        lastActive: 'Recently', // We don't track last active strictly in this schema yet (AdminUser has lastLogin)
+        status: status,
+        avatar: user.avatar,
+        services: user.freelancerProfile?.specializations ? user.freelancerProfile.specializations.split(',') : [],
+      };
     });
-  } catch (error) {
-    console.error('Get users error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
 
-// PUT /api/admin/users - Update user
-export async function PUT(request: NextRequest) {
-  try {
-    const body = await request.json();
-    const { userId, updates } = body;
+    // Calculate stats
+    const [statsTotalUsers, statsActiveUsers, statsVerifiedUsers, statsFreelancers] = await Promise.all([
+      prisma.user.count(),
+      prisma.user.count({ where: { status: 'active' } }),
+      prisma.user.count({ where: { isVerified: true } }),
+      prisma.user.count({ where: { role: 'freelancer' } })
+    ]);
 
-    const userIndex = mockUsers.findIndex(u => u.id === userId);
-    if (userIndex === -1) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      );
-    }
-
-    mockUsers[userIndex] = { ...mockUsers[userIndex], ...updates };
-
-    // Log audit action
-    console.log(`User ${userId} updated:`, updates);
+    const stats = {
+      totalUsers: statsTotalUsers,
+      activeUsers: statsActiveUsers,
+      verifiedUsers: statsVerifiedUsers,
+      freelancers: statsFreelancers
+    };
 
     return NextResponse.json({
-      success: true,
-      user: mockUsers[userIndex]
+      users: mappedUsers,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+      stats
     });
+
   } catch (error) {
-    console.error('Update user error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
-
-// POST /api/admin/users/action - Perform user actions
-export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
-    const { userId, action, reason } = body;
-
-    const userIndex = mockUsers.findIndex(u => u.id === userId);
-    if (userIndex === -1) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      );
-    }
-
-    switch (action) {
-      case 'suspend':
-        mockUsers[userIndex].status = 'suspended';
-        break;
-      case 'activate':
-        mockUsers[userIndex].status = 'active';
-        break;
-      case 'verify':
-        mockUsers[userIndex].isVerified = true;
-        mockUsers[userIndex].kycStatus = 'verified';
-        break;
-      case 'unverify':
-        mockUsers[userIndex].isVerified = false;
-        mockUsers[userIndex].kycStatus = 'unverified';
-        break;
-      case 'delete':
-        mockUsers = mockUsers.filter(u => u.id !== userId);
-        return NextResponse.json({ success: true, message: 'User deleted' });
-      default:
-        return NextResponse.json(
-          { error: 'Invalid action' },
-          { status: 400 }
-        );
-    }
-
-    // Log audit action
-    console.log(`User action performed: ${action} on ${userId}. Reason: ${reason}`);
-
-    return NextResponse.json({
-      success: true,
-      user: mockUsers[userIndex],
-      message: `User ${action} successful`
-    });
-  } catch (error) {
-    console.error('User action error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    console.error('Fetch users error:', error);
+    return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 });
   }
 }

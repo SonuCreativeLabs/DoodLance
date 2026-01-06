@@ -1,12 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
 import {
   Select,
@@ -15,14 +13,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,7 +29,6 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { BookingDetailsModal } from '@/components/admin/BookingDetailsModal';
-import { mockBookings } from '@/lib/mock/admin-data';
 
 const statusColors: Record<string, string> = {
   PENDING: 'bg-yellow-500',
@@ -62,53 +51,77 @@ const statusIcons: Record<string, React.ElementType> = {
 };
 
 export default function BookingManagementPage() {
-  const [bookings, setBookings] = useState(mockBookings);
+  const [bookings, setBookings] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [categoryFilter, setCategoryFilter] = useState('all');
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const itemsPerPage = 10;
 
-  // Filter bookings
-  const filteredBookings = bookings.filter(booking => {
-    const matchesSearch = 
-      booking.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      booking.serviceTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      booking.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      booking.freelancerName.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || booking.status === statusFilter;
-    const matchesCategory = categoryFilter === 'all' || booking.serviceCategory === categoryFilter;
-    
-    return matchesSearch && matchesStatus && matchesCategory;
+  // Debounce search
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+      setCurrentPage(1);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Stats state
+  const [stats, setStats] = useState({
+    total: 0,
+    pending: 0,
+    inProgress: 0,
+    completed: 0,
+    disputed: 0,
+    totalRevenue: 0,
+    platformEarnings: 0,
   });
 
-  const totalPages = Math.ceil(filteredBookings.length / itemsPerPage);
-  const paginatedBookings = filteredBookings.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
-  const handleStatusChange = (bookingId: string, newStatus: string) => {
-    setBookings(bookings.map(b => 
-      b.id === bookingId ? { ...b, status: newStatus } : b
-    ));
+  const fetchBookings = async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams({
+        page: currentPage.toString(),
+        limit: itemsPerPage.toString(),
+        search: debouncedSearch,
+        status: statusFilter
+      });
+      const res = await fetch(`/api/admin/bookings?${params}`);
+      if (res.ok) {
+        const data = await res.json();
+        setBookings(data.bookings);
+        setTotalPages(data.totalPages);
+        if (data.stats) {
+          setStats(data.stats);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching bookings:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Stats
-  const stats = {
-    total: bookings.length,
-    pending: bookings.filter(b => b.status === 'PENDING').length,
-    inProgress: bookings.filter(b => b.status === 'IN_PROGRESS').length,
-    completed: bookings.filter(b => b.status === 'COMPLETED').length,
-    disputed: bookings.filter(b => b.status === 'DISPUTED').length,
-    totalRevenue: bookings.reduce((sum, b) => sum + b.totalPrice, 0),
-    platformEarnings: bookings.reduce((sum, b) => sum + b.platformFee, 0),
-  };
+  useEffect(() => {
+    fetchBookings();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, debouncedSearch, statusFilter]);
 
-  // Get unique categories
-  const categories = Array.from(new Set(bookings.map(b => b.serviceCategory)));
+  const handleStatusChange = async (bookingId: string, newStatus: string) => {
+    try {
+      const res = await fetch(`/api/admin/bookings/${bookingId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus })
+      });
+      if (res.ok) fetchBookings();
+    } catch (e) { console.error(e); }
+  };
 
   return (
     <div className="space-y-6">
@@ -180,7 +193,7 @@ export default function BookingManagementPage() {
               />
             </div>
           </div>
-          
+
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-[150px] bg-[#2a2a2a] border-gray-700 text-white">
               <SelectValue placeholder="Status" />
@@ -196,24 +209,11 @@ export default function BookingManagementPage() {
             </SelectContent>
           </Select>
 
-          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger className="w-[180px] bg-[#2a2a2a] border-gray-700 text-white">
-              <SelectValue placeholder="Category" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Categories</SelectItem>
-              {categories.map(category => (
-                <SelectItem key={category} value={category}>{category}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
           <Button
             variant="outline"
             onClick={() => {
               setSearchTerm('');
               setStatusFilter('all');
-              setCategoryFilter('all');
             }}
             className="text-gray-300"
           >
@@ -241,7 +241,9 @@ export default function BookingManagementPage() {
               </tr>
             </thead>
             <tbody>
-              {paginatedBookings.map((booking, index) => {
+              {loading ? (
+                <tr><td colSpan={9} className="p-4 text-center text-gray-400">Loading...</td></tr>
+              ) : bookings.map((booking, index) => {
                 const StatusIcon = statusIcons[booking.status];
                 return (
                   <motion.tr
@@ -252,7 +254,7 @@ export default function BookingManagementPage() {
                     className="border-b border-gray-800 hover:bg-[#2a2a2a] transition-colors"
                   >
                     <td className="p-4">
-                      <span className="text-white font-mono">{booking.id}</span>
+                      <span className="text-white font-mono">{booking.id.substring(0, 8)}</span>
                     </td>
                     <td className="p-4">
                       <div>
@@ -310,71 +312,38 @@ export default function BookingManagementPage() {
                             <Eye className="w-4 h-4 mr-2" />
                             View Details
                           </DropdownMenuItem>
-                          <DropdownMenuItem className="cursor-pointer">
-                            <Edit className="w-4 h-4 mr-2" />
-                            Edit Booking
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="cursor-pointer">
-                            <MessageSquare className="w-4 h-4 mr-2" />
-                            Contact Parties
-                          </DropdownMenuItem>
-                          {booking.status === 'DISPUTED' && (
-                            <DropdownMenuItem className="cursor-pointer text-yellow-400">
-                              <AlertTriangle className="w-4 h-4 mr-2" />
-                              Resolve Dispute
-                            </DropdownMenuItem>
-                          )}
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem className="cursor-pointer text-red-400">
-                            <XCircle className="w-4 h-4 mr-2" />
-                            Cancel Booking
-                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </td>
                   </motion.tr>
                 );
               })}
+              {!loading && bookings.length === 0 && (
+                <tr><td colSpan={9} className="p-4 text-center text-gray-400">No bookings found.</td></tr>
+              )}
             </tbody>
           </table>
         </div>
 
         {/* Pagination */}
-        <div className="flex items-center justify-between p-4 border-t border-gray-800">
-          <p className="text-sm text-gray-400">
-            Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredBookings.length)} of {filteredBookings.length} bookings
-          </p>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-              disabled={currentPage === 1}
-              className="text-gray-300"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </Button>
-            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => i + 1).map(page => (
-              <Button
-                key={page}
-                variant={currentPage === page ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setCurrentPage(page)}
-                className={currentPage === page ? 'bg-purple-600' : 'text-gray-300'}
-              >
-                {page}
-              </Button>
-            ))}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-              disabled={currentPage === totalPages}
-              className="text-gray-300"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </Button>
-          </div>
+        <div className="flex items-center justify-center gap-2 p-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+            disabled={currentPage === 1}
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </Button>
+          <span className="text-gray-400">Page {currentPage} of {totalPages}</span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+            disabled={currentPage === totalPages}
+          >
+            <ChevronRight className="w-4 h-4" />
+          </Button>
         </div>
       </Card>
 

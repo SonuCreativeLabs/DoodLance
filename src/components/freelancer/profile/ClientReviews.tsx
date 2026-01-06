@@ -1,5 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Star, StarHalf } from "lucide-react";
+import { EmptyState } from '@/components/freelancer/profile/EmptyState';
 
 export interface Review {
   id: string;
@@ -33,6 +34,16 @@ export function ClientReviews({ reviews }: ClientReviewsProps) {
 
     return stars;
   };
+
+  if (reviews.length === 0) {
+    return (
+      <EmptyState
+        icon={Star}
+        title="No reviews yet"
+        description="Client reviews will appear here once you complete jobs and receive feedback."
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">

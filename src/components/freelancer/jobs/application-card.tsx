@@ -4,11 +4,11 @@ import { Button } from '@/components/ui/button';
 import { MapPin, FileText, MessageCircle, Clock, CheckCircle, XCircle, User, Phone, X as XIcon, Trash2 } from 'lucide-react';
 import { IndianRupee } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { getJobDurationLabel } from '@/app/freelancer/feed/types';
 
 import { Application, ApplicationStatus } from './types';
 import { getStatusStyles } from './utils';
 import { cn } from '@/lib/utils';
-import { updateApplicationStatus } from './mock-data';
 import { SuccessMessage } from '@/components/ui/success-message';
 
 interface ApplicationCardProps {
@@ -55,49 +55,32 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, i
   const handleWithdraw = async () => {
     setIsWithdrawing(true);
     try {
+      console.log('Withdrawing application:', application["#"]);
+
       const response = await fetch(`/api/applications/${application["#"]}`, {
         method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
       });
 
-      if (response.ok) {
-        const result = await response.json();
-
-        console.log('Withdrawal API response:', result);
-
-        // Update the application status locally using the returned data
-        if (result.application) {
-          Object.assign(application, result.application);
-        } else {
-          // Fallback to local status update if no application data returned
-          application.status = 'withdrawn';
-        }
-
-        // Update the shared mock data so other components see the change
-        updateApplicationStatus(application["#"], 'withdrawn');
-
-        // Notify parent component about status change
-        if (onStatusChange) {
-          onStatusChange(application["#"], 'withdrawn');
-        }
-
-        setShowWithdrawDialog(false);
-        // Show success message
-        showSuccessMessage(
-          'Application Withdrawn!',
-          'Your application has been successfully withdrawn.',
-          'warning'
-        );
-      } else {
-        console.error('Failed to withdraw application - Status:', response.status);
-        const errorText = await response.text();
-        console.error('Error response:', errorText);
-
-        // Show error message
-        alert('Failed to withdraw application. Please try again.');
+      if (!response.ok) {
+        throw new Error('Failed to withdraw application');
       }
+
+      // Update local state
+      application.status = 'withdrawn';
+
+      // Notify parent component about status change
+      if (onStatusChange) {
+        onStatusChange(application["#"], 'withdrawn');
+      }
+
+      setShowWithdrawDialog(false);
+
+      // Show success message
+      showSuccessMessage(
+        'Application Withdrawn!',
+        'Your application has been successfully withdrawn.',
+        'warning'
+      );
     } catch (error) {
       console.error('Error withdrawing application:', error);
       // Show error message
@@ -106,7 +89,7 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, i
       setIsWithdrawing(false);
     }
   };
-  
+
   const statusStyles = getStatusStyles(application.status as ApplicationStatus);
   const isPending = application.status === 'pending';
   const isAccepted = application.status === 'accepted';
@@ -151,7 +134,13 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, i
       onClick={handleCardClick}
     >
       <motion.div
-        className="p-5 rounded-xl bg-[#1E1E1E] border border-white/5 w-full shadow-lg"
+        className={cn(
+          "p-5 rounded-xl bg-[#1E1E1E] border border-white/5 border-l-4 w-full shadow-lg",
+          application.status === 'pending' && "border-l-amber-500",
+          application.status === 'accepted' && "border-l-blue-500",
+          application.status === 'rejected' && "border-l-red-500",
+          application.status === 'withdrawn' && "border-l-gray-500"
+        )}
       >
         <div className="space-y-4">
           {/* Status and Time */}
@@ -184,8 +173,31 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, i
             </div>
           </div>
 
-          {/* Job Meta */}
+          {/* Job Meta - Matching My Jobs Card Layout */}
           <div className="grid grid-cols-2 gap-3 text-sm">
+            {/* Date & Time */}
+            <div className="flex items-start gap-2 text-white/60">
+              <div className="flex-shrink-0 mt-0.5">
+                <Clock className="w-4 h-4 text-purple-400" />
+              </div>
+              <div>
+                <div className="text-xs text-white/40 mb-0.5">Scheduled</div>
+                <div className="text-sm text-white/90">
+                  {application.scheduledAt ? (() => {
+                    const scheduled = new Date(application.scheduledAt);
+                    const date = scheduled.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                    const time = scheduled.toLocaleTimeString('en-US', {
+                      hour: 'numeric',
+                      minute: '2-digit',
+                      hour12: true
+                    });
+                    return `${date}, ${time}`;
+                  })() : 'TBD'}
+                </div>
+              </div>
+            </div>
+
+            {/* Location */}
             <div className="flex items-start gap-2 text-white/60">
               <div className="flex-shrink-0 mt-0.5 flex flex-col items-center">
                 <MapPin className="w-4 h-4 text-purple-400" />
@@ -197,22 +209,38 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, i
                 </div>
               </div>
             </div>
+
+            {/* Payment (Budget) */}
             <div className="flex items-start gap-2 text-white/60">
               <div className="flex-shrink-0 mt-0.5">
                 <IndianRupee className="w-4 h-4 text-purple-400" />
               </div>
               <div>
-                <div className="text-xs text-white/40 mb-0.5">Proposed Rate</div>
+                <div className="text-xs text-white/40 mb-0.5">Payment</div>
                 <div className="text-sm text-white/90">
-                  ₹{application.proposal.proposedRate.toLocaleString()}
+                  ₹{(application.budget?.max || application.budget || 0).toLocaleString()}
+                </div>
+              </div>
+            </div>
+
+            {/* Duration */}
+            <div className="flex items-start gap-2 text-white/60">
+              <div className="flex-shrink-0 mt-0.5">
+                <Clock className="w-4 h-4 text-purple-400" />
+              </div>
+              <div>
+                <div className="text-xs text-white/40 mb-0.5">Duration</div>
+                <div className="text-sm text-white/90">
+                  {getJobDurationLabel(application as any)}
                 </div>
               </div>
             </div>
           </div>
 
+
           {/* Expandable section */}
           {isExpanded && (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
@@ -232,8 +260,8 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, i
                   <p className="text-xs text-white/60 mb-2">SKILLS SHOWCASED</p>
                   <div className="flex flex-wrap gap-2">
                     {application.proposal.skills.map((skill, i) => (
-                      <span 
-                        key={i} 
+                      <span
+                        key={i}
                         className="text-xs bg-white/5 text-white/80 px-2.5 py-1 rounded-full border border-white/5"
                       >
                         {skill}
@@ -248,8 +276,8 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, i
                     <p className="text-xs text-white/60 mb-2">ATTACHMENTS</p>
                     <div className="space-y-2">
                       {application.proposal.attachments.map((file, i) => (
-                        <div 
-                          key={i} 
+                        <div
+                          key={i}
                           className="flex items-center text-sm text-white/70 hover:text-white/90 transition-colors cursor-pointer"
                         >
                           <FileText className="w-4 h-4 mr-2 text-purple-400" />
@@ -319,7 +347,7 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, i
                   </Button>
                 </div>
               )}
-              
+
               {isWithdrawn && (
                 <div className="text-xs text-gray-400 italic">
                   Withdrawn by you

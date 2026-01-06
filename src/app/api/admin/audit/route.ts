@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
     const authHeader = req.headers.get('authorization');
     const token = authHeader?.replace('Bearer ', '') || 
                  req.headers.get('x-admin-token') ||
-                 'demo-token';
+                 req.headers.get('authorization')?.split(' ')[1] || '';
     
     // Create audit log entry
     const auditEntry = {

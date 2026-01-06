@@ -8,9 +8,12 @@ import { useState, useEffect } from "react"
 import { useLayout } from "@/contexts/LayoutContext"
 import { useRouter } from "next/navigation"
 import { useSkills } from "@/contexts/SkillsContext"
+import { usePersonalDetails } from "@/contexts/PersonalDetailsContext"
+import { useAvailability } from "@/contexts/AvailabilityContext"
 import { useForYouJobs } from "@/contexts/ForYouJobsContext"
 import type { Job } from "./feed/types"
 import { getWorkModeLabel, getJobDurationLabel } from "./feed/types"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 export const dynamic = 'force-dynamic'
 
@@ -19,6 +22,8 @@ export default function FreelancerHome() {
   const router = useRouter();
   const { skills } = useSkills();
   const { forYouJobs } = useForYouJobs();
+  const { personalDetails, toggleReadyToWork } = usePersonalDetails();
+  const { getWorkingHoursText } = useAvailability();
   const [jobCount, setJobCount] = useState(0);
   const [recommendedJobs, setRecommendedJobs] = useState<Job[]>([]);
 
@@ -46,7 +51,7 @@ export default function FreelancerHome() {
   return (
     <div className="min-h-screen bg-[#111111] pb-16 sm:pb-20 lg:pb-24">
       {/* Hero Banner */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="relative min-h-[120px] sm:min-h-[140px] md:min-h-[150px] overflow-hidden rounded-b-2xl sm:rounded-b-3xl mx-2 sm:mx-3 -mt-1"
@@ -55,27 +60,27 @@ export default function FreelancerHome() {
         <div className="absolute inset-0">
           {/* Main Gradient */}
           <div className="absolute inset-0 bg-gradient-to-br from-purple-900 via-purple-800 to-purple-600 rounded-b-3xl"></div>
-          
+
           {/* Animated Gradient Overlay */}
           <div className="absolute inset-0 bg-gradient-to-r from-purple-600/90 via-purple-500/80 to-purple-400/90 animate-gradient-x rounded-b-3xl"></div>
-          
+
           {/* Subtle Pattern Overlay */}
           <div className="absolute inset-0 opacity-30 rounded-b-3xl" style={{
             backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.2) 1px, transparent 0)',
             backgroundSize: '20px 20px'
           }}></div>
-          
+
           {/* Decorative Elements */}
           <div className="absolute -right-20 -top-20 w-64 h-64 rounded-full bg-purple-400/20 blur-3xl"></div>
           <div className="absolute -left-20 -bottom-20 w-80 h-80 rounded-full bg-purple-600/20 blur-3xl"></div>
-          
+
           {/* Gradient Overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-black/10 to-transparent rounded-b-3xl"></div>
         </div>
 
         {/* Hero Content */}
         <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 h-full flex flex-col justify-center py-3 sm:py-4">
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
@@ -83,18 +88,20 @@ export default function FreelancerHome() {
           >
             <div className="inline-flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full bg-white/5 backdrop-blur-sm border border-white/10 hover:border-white/20 transition-colors">
               <div className="relative w-1.5 h-1.5 sm:w-2 sm:h-2">
-                <div className="absolute inset-0 bg-green-400 rounded-full opacity-75 animate-ping"></div>
-                <div className="absolute inset-0.5 bg-green-400 rounded-full"></div>
+                {personalDetails.readyToWork && (
+                  <div className="absolute inset-0 bg-green-400 rounded-full opacity-75 animate-ping"></div>
+                )}
+                <div className={`absolute inset-0.5 rounded-full ${personalDetails.readyToWork ? 'bg-green-400' : 'bg-gray-400'}`}></div>
               </div>
               <span className="text-[10px] sm:text-xs font-medium text-white/90">
-                Online & Ready for Work
+                {personalDetails.readyToWork ? 'Online & Ready for Work' : 'Offline'}
               </span>
             </div>
             <div>
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white leading-tight mb-0.5 sm:mb-1">Welcome back, <span className="text-white font-extrabold">Sonu</span>!</h1>
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white leading-tight mb-0.5 sm:mb-1">Welcome back, <span className="text-white font-extrabold">{personalDetails.name || 'User'}</span>!</h1>
               <p className="text-sm sm:text-[15px] md:text-[16px] text-white/80 leading-tight">
                 You have{' '}
-                <a 
+                <a
                   href="/freelancer/feed"
                   className="inline-flex items-center gap-1 px-2 py-0.5 -mx-1 rounded-md hover:bg-white/5 transition-colors group"
                 >
@@ -110,7 +117,7 @@ export default function FreelancerHome() {
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 md:py-12 bg-[#111111] relative z-0">
         {/* Section Title */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
@@ -121,67 +128,58 @@ export default function FreelancerHome() {
         </motion.div>
 
         {/* Earnings Cards Section */}
+        {/* Earnings Cards Section - Placeholder for now as real earnings API needs to be connected */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
             className="bg-gradient-to-br from-[#1E1E1E] to-[#121212] rounded-2xl p-6 border border-white/10 transition-all duration-300 shadow-lg"
           >
-
             <div className="relative">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold text-white">Today&apos;s Earnings</h2>
-                <span className="inline-flex items-center gap-1 text-xs text-green-400">
-                  <TrendingUp className="w-3 h-3" /> +12%
-                </span>
               </div>
-              <p className="text-2xl sm:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#bf82fb] to-[#9537ea] mb-2 break-words truncate w-full">₹2,000</p>
+              <p className="text-2xl sm:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#bf82fb] to-[#9537ea] mb-2 break-words truncate w-full">₹0</p>
               <div className="flex items-center gap-2 flex-nowrap min-w-0 w-full overflow-hidden">
-                <p className="text-sm text-white/60 truncate">From 3 completed jobs</p>
+                <p className="text-sm text-white/60 truncate">No jobs completed today</p>
               </div>
             </div>
           </motion.div>
           <div className="grid grid-cols-2 gap-4 md:col-span-2">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
               className="bg-gradient-to-br from-[#1E1E1E] to-[#121212] rounded-2xl p-6 border border-white/10 transition-all duration-300 shadow-lg"
             >
-  
               <div className="relative">
                 <div className="flex flex-col h-full justify-between">
                   <div>
                     <div className="flex items-start justify-between mb-4">
                       <h2 className="text-lg font-semibold text-white">Total Earnings</h2>
-                      <span className="inline-flex items-center gap-1 text-[10px] sm:text-xs text-amber-400 font-medium whitespace-nowrap mt-0.5"><Award className="w-2.5 h-2.5" /> Top 10%</span>
                     </div>
-                    <p className="text-2xl sm:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#bf82fb] to-[#9537ea] mb-2 break-words truncate w-full">₹24,500</p>
+                    <p className="text-2xl sm:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#bf82fb] to-[#9537ea] mb-2 break-words truncate w-full">₹0</p>
                     <div className="flex items-center gap-2 flex-nowrap min-w-0 w-full overflow-hidden">
-                      <p className="text-sm text-white/60 truncate">from 11 jobs</p>
+                      <p className="text-sm text-white/60 truncate">Start applying to jobs!</p>
                     </div>
                   </div>
                 </div>
               </div>
             </motion.div>
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
               className="bg-gradient-to-br from-[#1E1E1E] to-[#121212] rounded-2xl p-6 border border-white/10 transition-all duration-300 shadow-lg"
             >
-  
               <div className="relative">
                 <div className="flex flex-col h-full justify-between">
                   <div>
                     <div className="flex items-start justify-between mb-4">
                       <h2 className="text-lg font-semibold text-white">Active Hours</h2>
-                      <span className="inline-flex items-center gap-1 text-xs text-blue-400 mt-0.5">
-                        <TrendingUp className="w-3 h-3" /> +8h
-                      </span>
                     </div>
-                    <p className="text-2xl sm:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#bf82fb] to-[#9537ea] mb-2 break-words truncate w-full">32.5h</p>
+                    <p className="text-2xl sm:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#bf82fb] to-[#9537ea] mb-2 break-words truncate w-full">0h</p>
                     <div className="flex items-center gap-2 flex-nowrap min-w-0 w-full overflow-hidden">
                       <p className="text-sm text-white/60 truncate">This week</p>
                     </div>
@@ -193,7 +191,8 @@ export default function FreelancerHome() {
         </div>
 
         {/* Your Profile Section */}
-        <motion.div 
+        {/* Your Profile Section */}
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
@@ -203,41 +202,37 @@ export default function FreelancerHome() {
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center w-full py-1 px-0">
                 {/* Avatar */}
-                <motion.div 
-                  initial={{ scale: 0.9 }} 
-                  animate={{ scale: 1 }} 
-                  transition={{ delay: 0.6 }} 
+                <motion.div
+                  initial={{ scale: 0.9 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.6 }}
                   className="relative h-14 w-14 rounded-2xl overflow-hidden ring-2 ring-[#6B46C1]/40 flex-shrink-0"
                 >
-                  <Image
-                    src="/images/profile-sonu.jpg"
-                    alt="Profile Picture"
-                    width={56}
-                    height={56}
-                    className="object-cover w-full h-full"
-                    priority
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
+                  <Avatar className="h-full w-full rounded-2xl">
+                    <AvatarImage src={personalDetails.avatarUrl} alt="Profile Picture" className="object-cover" />
+                    <AvatarFallback className="rounded-2xl bg-[#2a2a2a] text-white">
+                      {personalDetails.name ? personalDetails.name.charAt(0).toUpperCase() : 'U'}
+                    </AvatarFallback>
+                  </Avatar>
                 </motion.div>
                 {/* Name and Rating */}
                 <div className="flex flex-col justify-center flex-grow min-w-0 ml-4">
-  <div className="flex flex-col sm:flex-row sm:items-center sm:gap-4 gap-0 w-full">
-    {/* Name + Rating */}
-    <div className="flex flex-row items-center gap-3 min-w-0 w-full">
-      <h2 className="text-lg sm:text-2xl font-bold text-white leading-tight max-w-full whitespace-nowrap overflow-visible">Sathish Sonu</h2>
-      <span className="flex items-center px-1.5 py-0.5 rounded-full bg-yellow-400/10 border border-yellow-300/30 ml-1 sm:ml-3 gap-0.5">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="#fbbf24" className="h-3 w-3 flex-shrink-0">
-          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.967a1 1 0 00.95.69h4.178c.969 0 1.371 1.24.588 1.81l-3.385 2.46a1 1 0 00-.364 1.118l1.287 3.966c.3.921-.755 1.688-1.54 1.118l-3.385-2.46a1 1 0 00-1.176 0l-3.385 2.46c-.784.57-1.838-.197-1.54-1.118l1.287-3.966a1 1 0 00-.364-1.118L2.045 9.394c-.783-.57-.38-1.81.588-1.81h4.178a1 1 0 00.95-.69l1.286-3.967z" />
-        </svg>
-        <span className="text-xs font-semibold text-yellow-300">4.8</span>
-      </span>
-    </div>
-    {/* Edit Icon stays here on desktop */}
-  </div>
-  <div className="flex flex-row items-center gap-2 mt-1">
-    <span className="text-sm font-medium text-purple-400">Cricketer & AI Engineer</span>
-  </div>
-</div>
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:gap-4 gap-0 w-full">
+                    {/* Name + Rating */}
+                    <div className="flex flex-row items-center gap-3 min-w-0 w-full">
+                      <h2 className="text-lg sm:text-2xl font-bold text-white leading-tight max-w-full whitespace-nowrap overflow-visible">{personalDetails.name || 'Your Name'}</h2>
+                      <span className="flex items-center px-1.5 py-0.5 rounded-full bg-yellow-400/10 border border-yellow-300/30 ml-1 sm:ml-3 gap-0.5">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="#fbbf24" className="h-3 w-3 flex-shrink-0">
+                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.967a1 1 0 00.95.69h4.178c.969 0 1.371 1.24.588 1.81l-3.385 2.46a1 1 0 00-.364 1.118l1.287 3.966c.3.921-.755 1.688-1.54 1.118l-3.385-2.46a1 1 0 00-1.176 0l-3.385 2.46c-.784.57-1.838-.197-1.54-1.118l1.287-3.966a1 1 0 00-.364-1.118L2.045 9.394c-.783-.57-.38-1.81.588-1.81h4.178a1 1 0 00.95-.69l1.286-3.967z" />
+                        </svg>
+                        <span className="text-xs font-semibold text-yellow-300">New</span>
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex flex-row items-center gap-2 mt-1">
+                    <span className="text-sm font-medium text-purple-400">{personalDetails.title || 'Freelancer'}</span>
+                  </div>
+                </div>
                 {/* Edit Icon Button */}
                 <Link
                   href="/freelancer/profile/personal"
@@ -245,13 +240,13 @@ export default function FreelancerHome() {
                   title="Edit Profile"
                   aria-label="Edit Profile"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-edit-2 h-4 w-4 text-white/70 hover:text-white/90"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 3 21l.5-4.5Z"/></svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-edit-2 h-4 w-4 text-white/70 hover:text-white/90"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 3 21l.5-4.5Z" /></svg>
                 </Link>
               </div>
-              
+
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.7 }}
@@ -264,12 +259,15 @@ export default function FreelancerHome() {
                   <p className="text-sm font-medium text-white group-hover:opacity-90 transition-colors">Ready to work</p>
                   <p className="text-xs text-white/60">Toggle your availability</p>
                 </div>
-                <div className="relative inline-flex h-6 w-11 items-center rounded-full bg-green-500 group-hover:bg-green-600 transition-colors cursor-pointer shadow-inner">
+                <div
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer shadow-inner ${personalDetails.readyToWork ? 'bg-green-500 hover:bg-green-600' : 'bg-gray-600 hover:bg-gray-500'}`}
+                  onClick={() => toggleReadyToWork()}
+                >
                   <span className="sr-only">Toggle availability</span>
-                  <span className={`absolute h-5 w-5 transform rounded-full bg-white transition-all duration-300 shadow-sm ${true ? 'translate-x-6' : 'translate-x-1'}`}></span>
+                  <span className={`absolute h-5 w-5 transform rounded-full bg-white transition-all duration-300 shadow-sm ${personalDetails.readyToWork ? 'translate-x-6' : 'translate-x-1'}`}></span>
                 </div>
               </motion.div>
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.8 }}
@@ -282,24 +280,13 @@ export default function FreelancerHome() {
                   <p className="text-sm font-medium text-white group-hover:opacity-90 transition-colors whitespace-nowrap overflow-hidden text-ellipsis">Availability & Radius</p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-white/60">Mon-Fri</span>
-                      <span className="mx-1 text-xs text-white/30">|</span>
-                      <span className="text-xs text-white/60">9AM-6PM</span>
-                    </div>
-                    <div className="flex items-center">
-                      <span className="text-xs text-white/70">Within 10km radius</span>
+                      <Clock className="w-3 h-3 text-white/40" />
+                      <span className="text-xs text-white/60 truncate" title={getWorkingHoursText()}>
+                        {getWorkingHoursText()}
+                      </span>
                     </div>
                   </div>
                 </div>
-                <a
-                  href="/freelancer/profile/availability"
-                  tabIndex={0}
-                  aria-label="Edit Availability"
-                  className="text-sm font-medium text-white/70 hover:text-white/90 transition-colors duration-200"
-                  style={{ display: 'inline-flex', alignItems: 'center' }}
-                >
-                  Edit
-                </a>
               </motion.div>
             </div>
           </div>
@@ -438,7 +425,7 @@ export default function FreelancerHome() {
         </motion.div>
 
         {/* Skills Progress */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.9 }}
@@ -448,7 +435,7 @@ export default function FreelancerHome() {
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-white">Your Top Skills</h2>
             <Link href="/freelancer/profile/skills">
-              <motion.button 
+              <motion.button
                 whileHover={{ x: 3 }}
                 className="text-white/70 hover:text-white/90 text-sm font-medium flex items-center transition-colors duration-200"
               >
@@ -457,46 +444,37 @@ export default function FreelancerHome() {
               </motion.button>
             </Link>
           </div>
-          
-          <motion.div 
+
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 1.3 }}
             className="bg-gradient-to-br from-[#1E1E1E] to-[#121212] rounded-2xl px-5 py-3 border border-white/10 transition-all duration-300 shadow-lg"
           >
             {/* Skills content */}
-            <div className="py-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gray-600/20 to-gray-700/20 flex-shrink-0 flex items-center justify-center">
-                    <Trophy className="w-5 h-5 text-gray-400" />
-                  </div>
-                  <div className="min-w-0">
-                    <h3 className="text-sm font-medium text-white truncate">Cricket Coaching</h3>
-                    <p className="text-xs text-gray-400/80 font-medium mt-0.5">5 years experience</p>
-                  </div>
-                </div>
-                <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 ml-2 whitespace-nowrap">Expert</span>
+            {skills.length === 0 ? (
+              <div className="py-4 text-center text-white/50 text-sm">
+                <p>No skills added yet.</p>
               </div>
-            </div>
-
-            {/* Divider */}
-            <div className="h-px bg-white/5 w-full my-2"></div>
-
-            <div className="py-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gray-600/20 to-gray-700/20 flex-shrink-0 flex items-center justify-center">
-                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+            ) : (
+              skills.slice(0, 3).map((skill, index) => (
+                <div key={skill.id || index} className="py-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gray-600/20 to-gray-700/20 flex-shrink-0 flex items-center justify-center">
+                        <Trophy className="w-5 h-5 text-gray-400" />
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="text-sm font-medium text-white truncate">{skill.name}</h3>
+                        <p className="text-xs text-gray-400/80 font-medium mt-0.5">{skill.experience || 'Entry level'}</p>
+                      </div>
+                    </div>
+                    <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 ml-2 whitespace-nowrap">{skill.level || 'Beginner'}</span>
                   </div>
-                  <div className="min-w-0">
-                    <h3 className="text-sm font-medium text-white truncate">Cricket Analyst</h3>
-                    <p className="text-xs text-gray-400/80 font-medium mt-0.5">3 years experience</p>
-                  </div>
+                  {index < Math.min(skills.length, 3) - 1 && <div className="h-px bg-white/5 w-full my-2"></div>}
                 </div>
-                <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-400 ml-2 whitespace-nowrap">Intermediate</span>
-              </div>
-            </div>
+              ))
+            )}
           </motion.div>
         </motion.div>
       </div>

@@ -6,14 +6,17 @@ import { ArrowLeft, MapPin, Calendar, Clock, MessageSquare, Phone, Star, Briefca
 
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { CricketLoader } from '@/components/ui/cricket-loader';
 import { useBookings } from "@/contexts/BookingsContext";
 import { useNavbar } from "@/contexts/NavbarContext";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { RescheduleModal } from "@/components/client/bookings/RescheduleModal";
 
 const statusCopy: Record<string, string> = {
   ongoing: "Ongoing",
   confirmed: "Upcoming",
+  pending: "Upcoming",
   completed: "Completed",
   cancelled: "Cancelled",
 };
@@ -39,8 +42,9 @@ export default function BookingDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { setNavbarVisibility } = useNavbar();
-  const { bookings, loading } = useBookings();
+  const { bookings, loading, refreshBookings, rescheduleBooking } = useBookings();
 
+  const [showRescheduleModal, setShowRescheduleModal] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showCompleteDialog, setShowCompleteDialog] = useState(false);
   const [cancelNotes, setCancelNotes] = useState('');
@@ -63,7 +67,7 @@ export default function BookingDetailPage() {
     setShowCancelDialog(true);
   };
 
-  const confirmCancelBooking = () => {
+  const confirmCancelBooking = async () => {
     if (!cancelNotes.trim()) {
       alert('Please provide a reason for cancellation.');
       return;
@@ -72,26 +76,34 @@ export default function BookingDetailPage() {
     if (!booking) return;
 
     try {
-      // Update booking status in localStorage
-      const storedBookings = JSON.parse(localStorage.getItem('clientBookings') || '[]');
-      const updatedBookings = storedBookings.map((b: any) => {
-        if (b['#'] === booking['#']) {
-          return { ...b, status: 'cancelled', cancellationNotes: cancelNotes };
-        }
-        return b;
+      const response = await fetch(`/api/jobs/${encodeURIComponent(rawId)}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          status: 'cancelled',
+          notes: cancelNotes
+        }),
       });
-      localStorage.setItem('clientBookings', JSON.stringify(updatedBookings));
-      
-      // Dispatch event to notify other components
-      window.dispatchEvent(new CustomEvent('clientBookingUpdated', { 
-        detail: { bookings: updatedBookings, action: 'cancelled' } 
-      }));
 
-      setShowCancelDialog(false);
-      setCancelNotes('');
-      
-      // Redirect to bookings list
-      router.push('/client/bookings');
+      if (response.ok) {
+        // Dispatch event to notify other components (legacy support)
+        window.dispatchEvent(new CustomEvent('clientBookingUpdated', {
+          detail: { bookings: [], action: 'cancelled' } // Pass empty or fetch fresh
+        }));
+
+        await refreshBookings();
+
+        setShowCancelDialog(false);
+        setCancelNotes('');
+
+        // Redirect to bookings list
+        router.push('/client/bookings');
+      } else {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to cancel booking');
+      }
     } catch (error) {
       console.error('Error cancelling booking:', error);
       alert('Failed to cancel booking. Please try again.');
@@ -102,7 +114,7 @@ export default function BookingDetailPage() {
     setShowCompleteDialog(true);
   };
 
-  const confirmMarkComplete = () => {
+  const confirmMarkComplete = async () => {
     if (rating === 0) {
       alert('Please provide a rating before marking as complete.');
       return;
@@ -111,37 +123,38 @@ export default function BookingDetailPage() {
     if (!booking) return;
 
     try {
-      // Update booking status in localStorage
-      const storedBookings = JSON.parse(localStorage.getItem('clientBookings') || '[]');
-      const updatedBookings = storedBookings.map((b: any) => {
-        if (b['#'] === booking['#']) {
-          return { 
-            ...b, 
-            status: 'completed',
-            clientRating: {
-              stars: rating,
-              feedback: review,
-              feedbackChips: selectedChips,
-              date: new Date().toISOString()
-            }
-          };
-        }
-        return b;
+      const response = await fetch(`/api/jobs/${encodeURIComponent(rawId)}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          status: 'completed',
+          rating: rating,
+          review: review,
+          feedbackChips: selectedChips
+        }),
       });
-      localStorage.setItem('clientBookings', JSON.stringify(updatedBookings));
-      
-      // Dispatch event to notify other components
-      window.dispatchEvent(new CustomEvent('clientBookingUpdated', { 
-        detail: { bookings: updatedBookings, action: 'completed' } 
-      }));
 
-      setShowCompleteDialog(false);
-      setReview('');
-      setRating(0);
-      setSelectedChips([]);
-      
-      // Redirect to bookings list
-      router.push('/client/bookings');
+      if (response.ok) {
+        // Dispatch event to notify other components (legacy support)
+        window.dispatchEvent(new CustomEvent('clientBookingUpdated', {
+          detail: { bookings: [], action: 'completed' }
+        }));
+
+        await refreshBookings();
+
+        setShowCompleteDialog(false);
+        setReview('');
+        setRating(0);
+        setSelectedChips([]);
+
+        // Redirect to bookings list
+        router.push('/client/bookings');
+      } else {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to complete booking');
+      }
     } catch (error) {
       console.error('Error completing booking:', error);
       alert('Failed to complete booking. Please try again.');
@@ -150,12 +163,18 @@ export default function BookingDetailPage() {
 
   const booking = useMemo(() => bookings.find((entry) => entry["#"] === rawId), [rawId, bookings]);
 
+  const handleRescheduleSubmit = async (id: string, newDate: string, newTime: string, location?: string) => {
+    if (!booking) return;
+    await rescheduleBooking(id, newDate, newTime);
+    await refreshBookings();
+  };
+
   // Show loading state
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-[#111111] to-[#050505] text-white/70">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-500 mb-4"></div>
-        <div className="text-lg">Loading booking...</div>
+        <CricketLoader size={60} />
+        <div className="text-lg mt-4">Loading booking...</div>
       </div>
     );
   }
@@ -176,14 +195,14 @@ export default function BookingDetailPage() {
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-[#111111] via-[#0b0b0b] to-[#050505] text-white">
       {/* Header */}
-      <div className="sticky top-0 z-30 bg-[#0F0F0F] border-b border-white/5">
+      <div className="fixed top-0 left-0 right-0 z-30 bg-[#0F0F0F]/95 backdrop-blur-md border-b border-white/5">
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => router.back()}
+                onClick={() => router.push('/client/bookings?tab=active')}
                 className="inline-flex items-center p-0 hover:bg-transparent text-sm text-purple-400 hover:text-purple-300 transition-colors duration-200"
                 aria-label="Back"
               >
@@ -198,32 +217,46 @@ export default function BookingDetailPage() {
               </div>
             </div>
 
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 w-8 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 p-0 transition-all duration-200"
-              aria-label="Call"
-            >
-              <Phone className="h-4 w-4 text-purple-400" />
-            </Button>
+            <div className="flex items-center gap-2">
+              {/* Chat Button Removed */}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 p-0 transition-all duration-200"
+                aria-label="Call"
+                onClick={() => {
+                  if (booking.providerPhone) {
+                    window.location.href = `tel:${booking.providerPhone.replace(/\s/g, '')}`;
+                  }
+                }}
+              >
+                <Phone className="h-4 w-4 text-purple-400" />
+              </Button>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto pt-[64px] pb-[88px]">
         <div className="relative bg-gradient-to-br from-purple-500/10 via-purple-500/5 to-transparent">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(168,85,247,0.25),transparent_60%)]" />
           <div className="relative px-4 py-10">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
               <div className="flex items-center gap-4">
-                <Avatar className="h-16 w-16 ring-4 ring-purple-500/20 backdrop-blur-xl">
+                <Avatar
+                  className="h-16 w-16 ring-4 ring-purple-500/20 backdrop-blur-xl cursor-pointer hover:ring-purple-500/40 transition-all"
+                  onClick={() => booking.freelancerId && router.push(`/client/freelancer/${booking.freelancerId}?viewOnly=true`)}
+                >
                   <AvatarImage src={booking.image} alt={booking.provider} />
                   <AvatarFallback className="bg-gradient-to-br from-purple-500 to-purple-700 text-white font-semibold text-lg">
                     {booking.provider.charAt(0)}
                   </AvatarFallback>
                 </Avatar>
-                <div>
+                <div
+                  className="cursor-pointer group"
+                  onClick={() => booking.freelancerId && router.push(`/client/freelancer/${booking.freelancerId}?viewOnly=true`)}
+                >
                   <p className="text-sm text-white/60">Coach</p>
                   <h2 className="text-2xl font-semibold text-white">{booking.provider}</h2>
                   <div className="mt-2 flex items-center gap-4 text-xs text-white/60">
@@ -240,9 +273,8 @@ export default function BookingDetailPage() {
               </div>
 
               <div className="text-right">
-                <p className="text-xs text-white/50 mb-1">Session Fee</p>
+                <p className="text-xs text-white/50 mb-1">Total Session Charges</p>
                 <p className="text-3xl font-semibold text-white">{booking.price}</p>
-                <p className="text-xs text-white/50 mt-2">Includes taxes & venue charges</p>
               </div>
             </div>
           </div>
@@ -263,55 +295,70 @@ export default function BookingDetailPage() {
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl">
               <div className="flex items-center gap-2 text-white/70 text-sm mb-2">
                 <Clock className="w-4 h-4 text-purple-300" />
-                <span>Session duration</span>
+                <span>Duration</span>
               </div>
-              <p className="text-lg font-semibold text-white">60 minutes</p>
+              <p className="text-lg font-semibold text-white">
+                {booking.services?.reduce((acc, s) => acc + (s.duration || 0), 0) || 0} minutes
+              </p>
               <p className="text-sm text-white/60">Arrive 10 minutes earlier</p>
             </div>
 
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl">
+            <div
+              className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl cursor-pointer hover:bg-white/10 transition-colors"
+              onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(booking.location)}`, '_blank')}
+            >
               <div className="flex items-center gap-2 text-white/70 text-sm mb-2">
                 <MapPin className="w-4 h-4 text-purple-300" />
                 <span>Venue</span>
               </div>
               <p className="text-lg font-semibold text-white">{booking.location}</p>
-              <p className="text-sm text-white/60">Indoor training facility</p>
             </div>
           </div>
 
           {/* Services Booked */}
-          {booking.services && booking.services.length > 0 && (
-            <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl">
-              <h3 className="text-lg font-semibold text-white mb-4">Services Booked</h3>
-              <div className="space-y-3">
-                {booking.services.map((service, idx) => (
+          <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl">
+            <h3 className="text-lg font-semibold text-white mb-4">Services Booked</h3>
+            <div className="space-y-3">
+              {booking.services && booking.services.length > 0 ? (
+                booking.services.map((service, idx) => (
                   <div key={idx} className="flex items-center justify-between py-2 border-b border-white/5 last:border-0">
                     <div className="flex items-center gap-3">
                       <div className="w-2 h-2 rounded-full bg-purple-500"></div>
-                      <span className="text-white/90">{service.title}</span>
+                      <div className="flex flex-col">
+                        <span className="text-white/90">{service.title}</span>
+                      </div>
                       {service.quantity > 1 && (
                         <span className="text-xs text-white/50">x{service.quantity}</span>
                       )}
                     </div>
                     <span className="text-white font-medium">
                       {typeof service.price === 'number' ? `₹${service.price.toLocaleString()}` : service.price}
+                      {service.duration ? ` / ${service.duration} mins` : (service.deliveryTime ? ` / ${service.deliveryTime}` : '')}
                     </span>
                   </div>
-                ))}
-              </div>
-              {booking.paymentMethod === 'cod' && (
-                <div className="mt-4 pt-4 border-t border-white/10 flex items-center justify-between">
-                  <span className="text-white/60 text-sm">Payment Method</span>
-                  <span className="text-xs font-medium px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                    Cash on Delivery
-                  </span>
+                ))
+              ) : (
+                <div className="flex items-center justify-between py-2 border-b border-white/5 last:border-0">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full bg-purple-500"></div>
+                    <span className="text-white/90">{booking.service || 'Standard Session'}</span>
+                  </div>
+                  <span className="text-white font-medium">{booking.price}</span>
                 </div>
               )}
             </div>
-          )}
+            {booking.paymentMethod === 'cod' && (
+              <div className="mt-4 pt-4 border-t border-white/10 flex items-center justify-between">
+                <span className="text-white/60 text-sm">Payment Method</span>
+                <span className="text-xs font-medium px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                  Cash on Delivery
+                </span>
+              </div>
+            )}
+          </div>
 
-          {/* OTP Verification Card - Show for confirmed bookings */}
-          {booking.status === 'confirmed' && booking.otp && (
+          {/* OTP Verification Card - Show for confirmed/upcoming bookings */}
+          {(booking.status === 'confirmed' || booking.status === 'pending') && booking.otp && (
             <div className="mt-8 rounded-2xl border border-purple-500/30 bg-gradient-to-br from-purple-500/10 via-blue-500/5 to-purple-500/10 p-6 backdrop-blur-xl">
               <div className="text-center">
                 <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-purple-500/20 flex items-center justify-center">
@@ -346,7 +393,7 @@ export default function BookingDetailPage() {
                 </div>
                 <div className="flex-1">
                   <h3 className="text-md font-semibold text-white mb-2">Your Notes</h3>
-                  <p className="text-sm text-white/70 leading-relaxed">{booking.notes}</p>
+                  <p className="text-sm text-white/70 leading-relaxed">{booking.notes.replace(/\s*\[OTP:\s*\d+\]/g, '')}</p>
                 </div>
               </div>
             </div>
@@ -377,7 +424,7 @@ export default function BookingDetailPage() {
               </div>
 
               <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-                <p className="text-sm font-semibold text-white mb-2">Coach assurances</p>
+                <p className="text-sm font-semibold text-white mb-2">Expert assurances</p>
                 <ul className="space-y-2 text-sm text-white/70">
                   <li className="flex items-center gap-2">
                     <Shield className="w-4 h-4 text-purple-300" />
@@ -433,37 +480,48 @@ export default function BookingDetailPage() {
       </div>
 
       {/* Action Bar */}
-      <div className="sticky bottom-0 z-20 border-t border-white/10 bg-gradient-to-t from-[#111111] via-[#0b0b0b] to-transparent px-4 py-4 backdrop-blur-xl">
-        {booking.status === 'confirmed' || booking.status === 'ongoing' ? (
+      <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-white/10 bg-[#111111]/95 backdrop-blur-md px-4 py-4">
+        {booking.status === 'ongoing' ? (
           <div className="grid grid-cols-2 gap-3">
             <Button
-              variant="ghost"
-              className="text-red-400 hover:text-red-300 hover:bg-transparent"
+              variant="outline"
+              className="border-white/20 bg-white/5 text-red-400 hover:bg-white/10 hover:text-red-300"
               onClick={handleCancelBooking}
             >
               <X className="mr-2 h-4 w-4" />
               Cancel
             </Button>
-            <Button className="bg-green-600 hover:bg-green-700" onClick={handleMarkComplete}>
+            <Button className="bg-green-600 hover:bg-green-700 text-white" onClick={handleMarkComplete}>
               <CheckCircle className="mr-2 h-4 w-4" />
               Mark Complete
             </Button>
           </div>
-        ) : (
-          <div className="flex flex-col gap-3 sm:flex-row">
+        ) : booking.status === 'confirmed' ? (
+          <div className="grid grid-cols-2 gap-3">
             <Button
               variant="outline"
-              className="flex-1 border-white/20 bg-white/5 text-white hover:bg-white/10"
-              onClick={() => router.push(`/client/inbox?booking=${encodeURIComponent(booking["#"])}`)}
+              className="border-white/20 bg-white/5 text-red-400 hover:bg-white/10 hover:text-red-300"
+              onClick={handleCancelBooking}
             >
-              <MessageSquare className="mr-2 h-4 w-4" />
-              Message coach
+              <X className="mr-2 h-4 w-4" />
+              Cancel
             </Button>
-            <Button className="flex-1 bg-purple-600 hover:bg-purple-700">
+            <Button
+              className="bg-purple-600 hover:bg-purple-700"
+              onClick={() => setShowRescheduleModal(true)}
+            >
               <Calendar className="mr-2 h-4 w-4" />
-              Reschedule session
+              Reschedule
             </Button>
           </div>
+        ) : (
+          <Button
+            className="w-full bg-purple-600 hover:bg-purple-700"
+            onClick={() => setShowRescheduleModal(true)}
+          >
+            <Calendar className="mr-2 h-4 w-4" />
+            Reschedule session
+          </Button>
         )}
       </div>
 
@@ -471,24 +529,36 @@ export default function BookingDetailPage() {
       {showCancelDialog && (
         <div className="fixed inset-0 z-50 bg-gradient-to-br from-[#111111] to-[#0a0a0a] overflow-y-auto">
           {/* Header */}
-          <div className="fixed top-0 left-0 right-0 z-50 bg-[#111111]/95 backdrop-blur-sm border-b border-gray-800/80 p-4 flex items-center">
-            <button
-              onClick={() => {
-                setShowCancelDialog(false);
-                setCancelNotes('');
-              }}
-              className="p-2 rounded-full hover:bg-white/10 transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5 text-white/80" />
-            </button>
-            <div className="ml-4">
-              <div className="text-sm font-medium text-white">Cancel Booking</div>
-              <div className="text-xs font-mono text-white/60">ID: {booking?.["#"]}</div>
+          <div className="fixed top-0 left-0 right-0 z-50 bg-[#0F0F0F]/95 backdrop-blur-md border-b border-white/5">
+            <div className="container mx-auto px-4 py-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setShowCancelDialog(false);
+                      setCancelNotes('');
+                    }}
+                    className="inline-flex items-center p-0 hover:bg-transparent text-sm text-purple-400 hover:text-purple-300 transition-colors duration-200"
+                    aria-label="Back"
+                  >
+                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors duration-200">
+                      <ArrowLeft className="h-4 w-4" />
+                    </div>
+                  </Button>
+
+                  <div className="ml-3">
+                    <h1 className="text-lg font-semibold text-white">Cancel Booking</h1>
+                    <p className="text-white/50 text-xs">{booking?.["#"]}</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
           {/* Main Content */}
-          <div className="min-h-[100dvh] w-full pt-20 pb-24">
+          <div className="min-h-[100dvh] w-full pt-[64px] pb-24">
             <div className="max-w-3xl mx-auto p-4 md:p-6">
               <div className="space-y-6">
                 {/* Header Section */}
@@ -549,30 +619,32 @@ export default function BookingDetailPage() {
                     <span className="text-xs text-gray-500">{cancelNotes.length}/500</span>
                   </div>
                 </div>
-
-                {/* Action Buttons */}
-                <div className="flex gap-3 pt-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="flex-1 h-12 border-gray-600/50 text-white/90 hover:bg-[#111111] hover:text-white transition-all duration-200 text-sm"
-                    onClick={() => {
-                      setShowCancelDialog(false);
-                      setCancelNotes('');
-                    }}
-                  >
-                    Go Back
-                  </Button>
-                  <Button
-                    type="button"
-                    className="flex-1 h-12 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-medium shadow-lg shadow-red-600/25 transition-all duration-200 text-sm whitespace-nowrap"
-                    onClick={confirmCancelBooking}
-                    disabled={!cancelNotes.trim()}
-                  >
-                    Cancel Booking
-                  </Button>
-                </div>
               </div>
+            </div>
+          </div>
+
+          {/* Fixed Bottom Action Bar */}
+          <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-white/10 bg-[#111111]/95 backdrop-blur-md px-4 py-4">
+            <div className="max-w-3xl mx-auto grid grid-cols-2 gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                className="border-white/20 bg-white/5 text-white hover:bg-white/10"
+                onClick={() => {
+                  setShowCancelDialog(false);
+                  setCancelNotes('');
+                }}
+              >
+                Go Back
+              </Button>
+              <Button
+                type="button"
+                className="bg-red-600 hover:bg-red-700 text-white"
+                onClick={confirmCancelBooking}
+                disabled={!cancelNotes.trim()}
+              >
+                Confirm Cancellation
+              </Button>
             </div>
           </div>
         </div>
@@ -582,26 +654,38 @@ export default function BookingDetailPage() {
       {showCompleteDialog && (
         <div className="fixed inset-0 z-50 bg-gradient-to-br from-[#111111] to-[#0a0a0a] overflow-y-auto">
           {/* Header */}
-          <div className="fixed top-0 left-0 right-0 z-50 bg-[#111111]/95 backdrop-blur-sm border-b border-gray-800/80 p-4 flex items-center">
-            <button
-              onClick={() => {
-                setShowCompleteDialog(false);
-                setReview('');
-                setRating(0);
-                setSelectedChips([]);
-              }}
-              className="p-2 rounded-full hover:bg-white/10 transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5 text-white/80" />
-            </button>
-            <div className="ml-4">
-              <div className="text-sm font-medium text-white">Mark Booking Complete</div>
-              <div className="text-xs font-mono text-white/60">ID: {booking?.["#"]}</div>
+          <div className="fixed top-0 left-0 right-0 z-50 bg-[#0F0F0F]/95 backdrop-blur-md border-b border-white/5">
+            <div className="container mx-auto px-4 py-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setShowCompleteDialog(false);
+                      setReview('');
+                      setRating(0);
+                      setSelectedChips([]);
+                    }}
+                    className="inline-flex items-center p-0 hover:bg-transparent text-sm text-purple-400 hover:text-purple-300 transition-colors duration-200"
+                    aria-label="Back"
+                  >
+                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors duration-200">
+                      <ArrowLeft className="h-4 w-4" />
+                    </div>
+                  </Button>
+
+                  <div className="ml-3">
+                    <h1 className="text-lg font-semibold text-white">Mark Complete</h1>
+                    <p className="text-white/50 text-xs">{booking?.["#"]}</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
           {/* Main Content */}
-          <div className="min-h-[100dvh] w-full pt-20 pb-24">
+          <div className="min-h-[100dvh] w-full pt-[64px] pb-24">
             <div className="max-w-3xl mx-auto p-4 md:p-6">
               <div className="space-y-6">
                 {/* Header Section */}
@@ -657,11 +741,10 @@ export default function BookingDetailPage() {
                         <button
                           key={star}
                           onClick={() => setRating(star)}
-                          className={`transition-all duration-200 ${
-                            star <= rating
-                              ? 'text-yellow-400 scale-110 drop-shadow-sm'
-                              : 'hover:text-yellow-400/50 hover:scale-105'
-                          }`}
+                          className={`transition-all duration-200 ${star <= rating
+                            ? 'text-yellow-400 scale-110 drop-shadow-sm'
+                            : 'hover:text-yellow-400/50 hover:scale-105'
+                            }`}
                           style={star <= rating ? {} : { color: '#404040' }}
                         >
                           <Star className="w-12 h-12 fill-current" />
@@ -674,16 +757,15 @@ export default function BookingDetailPage() {
                           <span className="text-lg">
                             {rating === 1 ? '😞' : rating === 2 ? '😐' : rating === 3 ? '😊' : rating === 4 ? '😄' : '🤩'}
                           </span>
-                          <span className={`font-bold text-sm tracking-wider ${
-                            rating === 1 ? 'text-red-400' :
+                          <span className={`font-bold text-sm tracking-wider ${rating === 1 ? 'text-red-400' :
                             rating === 2 ? 'text-orange-400' :
-                            rating === 3 ? 'text-yellow-400' :
-                            rating === 4 ? 'text-blue-400' : 'text-green-400'
-                          }`}>
+                              rating === 3 ? 'text-yellow-400' :
+                                rating === 4 ? 'text-blue-400' : 'text-green-400'
+                            }`}>
                             {rating === 1 ? 'Poor' :
-                             rating === 2 ? 'Fair' :
-                             rating === 3 ? 'Good' :
-                             rating === 4 ? 'Very Good' : 'Excellent'}
+                              rating === 2 ? 'Fair' :
+                                rating === 3 ? 'Good' :
+                                  rating === 4 ? 'Very Good' : 'Excellent'}
                           </span>
                         </div>
                       ) : (
@@ -718,11 +800,10 @@ export default function BookingDetailPage() {
                               : [...prev, chip]
                           );
                         }}
-                        className={`px-3 py-2 text-sm rounded-lg border transition-all duration-200 ${
-                          selectedChips.includes(chip)
-                            ? 'bg-purple-500/10 border-purple-500/50 text-purple-300'
-                            : 'bg-[#111111] border-gray-600/50 text-gray-300 hover:bg-[#1E1E1E]'
-                        }`}
+                        className={`px-3 py-2 text-sm rounded-lg border transition-all duration-200 ${selectedChips.includes(chip)
+                          ? 'bg-purple-500/10 border-purple-500/50 text-purple-300'
+                          : 'bg-[#111111] border-gray-600/50 text-gray-300 hover:bg-[#1E1E1E]'
+                          }`}
                       >
                         {chip}
                       </button>
@@ -746,36 +827,45 @@ export default function BookingDetailPage() {
                     <span className="text-xs text-gray-500">{review.length}/500</span>
                   </div>
                 </div>
-
-                {/* Action Buttons */}
-                <div className="flex gap-3 pt-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="flex-1 h-12 border-gray-600/50 text-white/90 hover:bg-[#111111] hover:text-white transition-all duration-200 text-sm"
-                    onClick={() => {
-                      setShowCompleteDialog(false);
-                      setReview('');
-                      setRating(0);
-                      setSelectedChips([]);
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="button"
-                    className="flex-1 h-12 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-medium shadow-lg shadow-green-600/25 transition-all duration-200 text-sm whitespace-nowrap"
-                    onClick={confirmMarkComplete}
-                    disabled={rating === 0}
-                  >
-                    Complete
-                  </Button>
-                </div>
               </div>
+            </div>
+          </div>
+
+          {/* Fixed Bottom Action Bar */}
+          <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-white/10 bg-[#111111]/95 backdrop-blur-md px-4 py-4">
+            <div className="max-w-3xl mx-auto flex gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1 border-white/20 bg-white/5 text-white hover:bg-white/10"
+                onClick={() => {
+                  setShowCompleteDialog(false);
+                  setReview('');
+                  setRating(0);
+                  setSelectedChips([]);
+                }}
+              >
+                Go Back
+              </Button>
+              <Button
+                type="button"
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                onClick={confirmMarkComplete}
+                disabled={rating === 0}
+              >
+                Complete Booking
+              </Button>
             </div>
           </div>
         </div>
       )}
+      <RescheduleModal
+        isOpen={showRescheduleModal}
+        onClose={() => setShowRescheduleModal(false)}
+        booking={booking}
+        onReschedule={handleRescheduleSubmit}
+        mode="reschedule"
+      />
     </div>
   );
 }

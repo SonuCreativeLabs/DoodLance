@@ -21,290 +21,28 @@ interface ChatViewProps {
   online: boolean;
   onBack?: () => void;
   className?: string;
+  messages?: Message[]; // Messages should be passed as prop or fetched from API
 }
 
-const mockMessages: Record<string, Message[]> = {
-  // Cricket Coach
-  'DLSP1234': [
-    {
-      id: '1',
-      content: 'Hi Rajesh, I came across your coaching profile. We need a cricket coach for our U-16 team. Are you available?',
-      timestamp: new Date(Date.now() - 1000 * 60 * 120),
-      sender: 'other',
-      status: 'read'
-    },
-    {
-      id: '2',
-      content: 'Yes, I have 5+ years of experience coaching junior teams. What are the training timings?',
-      timestamp: new Date(Date.now() - 1000 * 60 * 115),
-      sender: 'user',
-      status: 'read'
-    },
-    {
-      id: '3',
-      content: 'We train on weekends, 8-10 AM at the City Sports Complex. Would you be available for a trial session this Saturday?',
-      timestamp: new Date(Date.now() - 1000 * 60 * 100),
-      sender: 'other',
-      status: 'read'
-    },
-    {
-      id: '4',
-      content: 'This Saturday works for me. How many players are in the team currently?',
-      timestamp: new Date(Date.now() - 1000 * 60 * 90),
-      sender: 'user',
-      status: 'read'
-    },
-    {
-      id: '5',
-      content: 'We have 12 players. Most are beginners with basic skills. We\'re looking to improve their batting and fielding techniques.',
-      timestamp: new Date(Date.now() - 1000 * 60 * 60),
-      sender: 'other',
-      status: 'read'
-    },
-  ],
-  
-  // Corporate Yoga
-  'DLSP5678': [
-    {
-      id: '1',
-      content: 'Hello, I\'m Priya from TechCorp HR. We\'re starting a corporate wellness program and need a yoga instructor. Your profile looks perfect!',
-      timestamp: new Date(Date.now() - 1000 * 60 * 180),
-      sender: 'other',
-      status: 'read'
-    },
-    {
-      id: '2',
-      content: 'Thank you, Priya! I\'d love to help. Could you share more about the program schedule and employee fitness levels?',
-      timestamp: new Date(Date.now() - 1000 * 60 * 175),
-      sender: 'user',
-      status: 'read'
-    },
-    {
-      id: '3',
-      content: 'We\'re looking for 3 sessions per week - Mon, Wed, Fri from 7-8 AM. Most employees are beginners with desk jobs, so we need sessions focused on back pain and stress relief.',
-      timestamp: new Date(Date.now() - 1000 * 60 * 160),
-      sender: 'other',
-      status: 'read'
-    },
-    {
-      id: '4',
-      content: 'That sounds great! I specialize in therapeutic yoga for office workers. I can bring mats, but we\'ll need a well-ventilated space. Do you have a conference room or should we look into a nearby studio?',
-      timestamp: new Date(Date.now() - 1000 * 60 * 150),
-      sender: 'user',
-      status: 'read'
-    },
-  ],
-  
-  // Wedding Dance Choreography
-  'DLSP9012': [
-    {
-      id: '1',
-      content: 'Hi, we\'re planning our wedding sangeet and need a dance instructor. We saw your work at the Sharma wedding - loved it!',
-      timestamp: new Date(Date.now() - 1000 * 60 * 300),
-      sender: 'other',
-      status: 'read'
-    },
-    {
-      id: '2',
-      content: 'Thank you! I remember the Sharma wedding fondly. I\'d be happy to help with your sangeet. What style of dance are you interested in?',
-      timestamp: new Date(Date.now() - 1000 * 60 * 290),
-      sender: 'user',
-      status: 'read'
-    },
-    {
-      id: '3',
-      content: 'We love Bollywood fusion! There will be 8 of us with mixed experience levels. The wedding is in 3 months - is that enough time to prepare?',
-      timestamp: new Date(Date.now() - 1000 * 60 * 280),
-      sender: 'other',
-      status: 'read'
-    },
-    {
-      id: '4',
-      content: '3 months is perfect! We can start with basic steps and build up to a 5-minute routine. How about we schedule a free trial session to discuss song choices and choreography ideas?',
-      timestamp: new Date(Date.now() - 1000 * 60 * 270),
-      sender: 'user',
-      status: 'read'
-    },
-  ],
-  // Piano Lessons for Kids
-  'DLSP3456': [
-    {
-      id: '1',
-      content: 'Hello, we\'re looking for a piano teacher for our 8-year-old daughter. She\'s a complete beginner. Do you have experience with young children?',
-      timestamp: new Date(Date.now() - 1000 * 60 * 420),
-      sender: 'other',
-      status: 'read'
-    },
-    {
-      id: '2',
-      content: 'Yes, I specialize in teaching children ages 5-12. I use a fun, interactive method that keeps young learners engaged. Do you have a keyboard or piano at home?',
-      timestamp: new Date(Date.now() - 1000 * 60 * 410),
-      sender: 'user',
-      status: 'read'
-    },
-    {
-      id: '3',
-      content: 'We have a basic keyboard. What materials will we need to purchase? Also, what\'s your availability for lessons?',
-      timestamp: new Date(Date.now() - 1000 * 60 * 400),
-      sender: 'other',
-      status: 'read'
-    },
-    {
-      id: '4',
-      content: 'For beginners, I recommend the "Piano Adventures" book series. I have Tuesday and Thursday afternoons open. Would 4 PM work for you? Each lesson is 45 minutes.',
-      timestamp: new Date(Date.now() - 1000 * 60 * 390),
-      sender: 'user',
-      status: 'read'
-    },
-    {
-      id: '5',
-      content: 'Thursday at 4 PM would be perfect. Should we start next week? Also, do we need to buy any additional materials like a metronome?',
-      timestamp: new Date(Date.now() - 1000 * 60 * 380),
-      sender: 'other',
-      status: 'read'
-    },
-    {
-      id: '6',
-      content: 'Yes, let\'s start next Thursday. A metronome would be helpful, but there are free phone apps we can use initially. I\'ll send you a confirmation with the address and what to bring to the first lesson.',
-      timestamp: new Date(Date.now() - 1000 * 60 * 370),
-      sender: 'user',
-      status: 'read'
-    }
-  ],
-  
-  // Outdoor Fitness Trainer
-  'DLSP7890': [
-    {
-      id: '1',
-      content: 'Hi, we\'re organizing a 6-week fitness bootcamp at Central Park starting next month. We need experienced trainers - are you available?',
-      timestamp: new Date(Date.now() - 1000 * 60 * 1440),
-      sender: 'other',
-      status: 'read'
-    },
-    {
-      id: '2',
-      content: 'I\'d be interested! Could you share more details about the bootcamp format, expected group size, and compensation?',
-      timestamp: new Date(Date.now() - 1000 * 60 * 1430),
-      sender: 'user',
-      status: 'read'
-    },
-    {
-      id: '3',
-      content: 'It\'s a high-energy outdoor bootcamp, 5 days a week. Groups of 15-20 participants per trainer. We pay $40/hour, and sessions are 6-7 AM. We provide all equipment.',
-      timestamp: new Date(Date.now() - 1000 * 60 * 1420),
-      sender: 'other',
-      status: 'read'
-    },
-    {
-      id: '4',
-      content: 'That schedule works for me. I have experience with outdoor bootcamps and can bring creative circuit training ideas. Should we schedule a quick call to discuss the exercise programming?',
-      timestamp: new Date(Date.now() - 1000 * 60 * 1400),
-      sender: 'user',
-      status: 'read'
-    },
-    {
-      id: '5',
-      content: 'That would be great! How about a 15-minute call tomorrow at 2 PM? Also, we\'d like to do a trial session with you next week. Would Monday work?',
-      timestamp: new Date(Date.now() - 1000 * 60 * 1380),
-      sender: 'other',
-      status: 'read'
-    },
-    {
-      id: '6',
-      content: 'Tomorrow at 2 PM works perfectly. For the trial, I can do Monday at 6 AM. Looking forward to discussing the program structure and sharing some of my training philosophy with you!',
-      timestamp: new Date(Date.now() - 1000 * 60 * 1370),
-      sender: 'user',
-      status: 'read'
-    }
-  ],
-  
-  // Web Development Project
-  'DLWD5678': [
-    {
-      id: '1',
-      content: 'Hi, we need a full-stack developer for our e-commerce platform. The project involves building a React frontend with Node.js backend. Are you available for a 3-month contract?',
-      timestamp: new Date(Date.now() - 1000 * 60 * 2000),
-      sender: 'other',
-      status: 'read'
-    },
-    {
-      id: '2',
-      content: 'Thanks for reaching out! I\'d be interested in learning more. Could you share the tech stack you\'re using and any specific requirements for the e-commerce features?',
-      timestamp: new Date(Date.now() - 1000 * 60 * 1980),
-      sender: 'user',
-      status: 'read'
-    },
-    {
-      id: '3',
-      content: 'We\'re using MERN stack (MongoDB, Express, React, Node.js) with TypeScript. Key features needed: User auth, product catalog, cart/checkout, and payment integration with Stripe.',
-      timestamp: new Date(Date.now() - 1000 * 60 * 1950),
-      sender: 'other',
-      status: 'read'
-    },
-    {
-      id: '4',
-      content: 'I have extensive experience with the MERN stack and TypeScript. I recently built a similar e-commerce platform. Would you like to see my portfolio? Also, do you have a preferred state management solution?',
-      timestamp: new Date(Date.now() - 1000 * 60 * 1900),
-      sender: 'user',
-      status: 'read'
-    }
-  ],
-  
-  // AC Service
-  'DLAC3456': [
-    {
-      id: '1',
-      content: 'Hi, our office AC unit isn\'t cooling properly. It makes a strange noise when starting up. Are you available for a service call?',
-      timestamp: new Date(Date.now() - 1000 * 60 * 3000),
-      sender: 'other',
-      status: 'read'
-    },
-    {
-      id: '2',
-      content: 'I can help with that! Could you tell me the make and model of your AC unit? Also, when did you first notice the cooling issue?',
-      timestamp: new Date(Date.now() - 1000 * 60 * 2950),
-      sender: 'user',
-      status: 'read'
-    },
-    {
-      id: '3',
-      content: 'It\'s a Daikin FTKF Series, installed about 3 years ago. The problem started last week. It cools for a while, then stops. The noise is new as of yesterday.',
-      timestamp: new Date(Date.now() - 1000 * 60 * 2900),
-      sender: 'other',
-      status: 'read'
-    },
-    {
-      id: '4',
-      content: 'Based on your description, it might be a refrigerant issue or a problem with the compressor. I can come by tomorrow between 9 AM - 12 PM. Would that work? The service call fee is ₹800, including basic diagnostics.',
-      timestamp: new Date(Date.now() - 1000 * 60 * 2850),
-      sender: 'user',
-      status: 'read'
-    }
-  ]
-};
-
-export function ChatView({ 
-  chatId, 
-  recipientName, 
-  recipientAvatar, 
-  recipientJobTitle, 
+export function ChatView({
+  chatId,
+  recipientName,
+  recipientAvatar,
+  recipientJobTitle,
   online,
   onBack,
-  className = '' 
-}: ChatViewProps) {
+  className = '',
+  messages: propMessages,
+  currentUserId // Add currentUserId prop
+}: ChatViewProps & { currentUserId?: string }) { // Add currentUserId type
   const [newMessage, setNewMessage] = useState('');
-  const messages = mockMessages[chatId] || [{
-    id: '1',
-    content: `Hi there! This is the start of your conversation about the ${recipientJobTitle} position.`,
-    timestamp: new Date(),
-    sender: 'other' as const,
-    status: 'read' as const
-  }];
+  const [activeMessages, setActiveMessages] = useState<Message[]>([]);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
     setTimeout(() => {
-      messagesEndRef.current?.scrollIntoView({ 
+      messagesEndRef.current?.scrollIntoView({
         behavior,
         block: 'end',
         inline: 'nearest'
@@ -312,35 +50,74 @@ export function ChatView({
     }, 0);
   };
 
+  // Fetch messages
+  const fetchMessages = async () => {
+    if (!chatId) return;
+    try {
+      const url = currentUserId
+        ? `/api/messages?conversationId=${chatId}&userId=${currentUserId}`
+        : `/api/messages?conversationId=${chatId}`;
+
+      const res = await fetch(url);
+      if (res.ok) {
+        const data = await res.json();
+        // Transform to UI format
+        const formattedMessages: Message[] = data.map((msg: any) => ({
+          id: msg.id,
+          content: msg.content,
+          timestamp: new Date(msg.createdAt),
+          sender: msg.senderId === currentUserId ? 'user' : 'other',
+          status: msg.isRead ? 'read' : msg.isDelivered ? 'delivered' : 'sent'
+        }));
+        setActiveMessages(formattedMessages);
+      }
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+    }
+  };
+
+  // Polling for messages
   useEffect(() => {
-    // Use 'auto' behavior for initial load
-    scrollToBottom('auto');
-  }, []);
+    fetchMessages();
+    const interval = setInterval(fetchMessages, 3000); // Poll every 3 seconds
+    return () => clearInterval(interval);
+  }, [chatId, currentUserId]);
 
   useEffect(() => {
-    // Use smooth behavior for new messages
-    if (messages.length > 0) {
+    // Only scroll if we have messages
+    if (activeMessages.length > 0) {
       scrollToBottom('smooth');
     }
-  }, [messages]);
+  }, [activeMessages]);
 
-  const handleSend = () => {
-    if (!newMessage.trim()) return;
-    // In a real app, this would send the message to the backend
-    const newMsg: Message = {
-      id: Date.now().toString(),
-      content: newMessage,
-      timestamp: new Date(),
-      sender: 'user',
-      status: 'sent'
-    };
-    messages.push(newMsg);
-    setNewMessage('');
-    scrollToBottom();
+  const handleSend = async () => {
+    if (!newMessage.trim() || !currentUserId) return;
+
+    const content = newMessage;
+    setNewMessage(''); // Optimistic clear
+
+    try {
+      const res = await fetch('/api/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          conversationId: chatId,
+          senderId: currentUserId,
+          content
+        })
+      });
+
+      if (res.ok) {
+        fetchMessages(); // Refresh immediately
+      }
+    } catch (error) {
+      console.error("Error sending message:", error);
+      setNewMessage(content); // Restore on error
+    }
   };
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       className={`flex flex-col h-full bg-[#111111] overflow-hidden ${className}`}
@@ -359,9 +136,9 @@ export function ChatView({
           <div className="flex items-center gap-4">
             <div className="relative">
               <div className="relative h-10 w-10 rounded-xl overflow-hidden ring-2 ring-purple-500/30 group-hover:ring-purple-500/50 transition-all duration-300">
-                <img 
-                  src={recipientAvatar} 
-                  alt={recipientName} 
+                <img
+                  src={recipientAvatar}
+                  alt={recipientName}
                   className="w-full h-full object-cover"
                 />
                 {online && (
@@ -388,7 +165,7 @@ export function ChatView({
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 pb-6" style={{ scrollBehavior: 'smooth' }}>
         <div className="space-y-4">
-          {messages.map((message) => (
+          {activeMessages.map((message) => (
             <motion.div
               key={message.id}
               initial={{ opacity: 0, y: 20 }}
@@ -396,33 +173,31 @@ export function ChatView({
               className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               <div
-                className={`max-w-[80%] rounded-2xl px-4 py-2 ${
-                  message.sender === 'user'
-                    ? 'bg-purple-600 text-white rounded-br-none'
-                    : 'bg-white/5 text-white rounded-bl-none'
-                }`}
+                className={`max-w-[80%] rounded-2xl px-4 py-2 ${message.sender === 'user'
+                  ? 'bg-purple-600 text-white rounded-br-none'
+                  : 'bg-white/5 text-white rounded-bl-none'
+                  }`}
               >
                 <p className="text-sm break-words">{message.content}</p>
                 <div className="flex items-center justify-end mt-1 space-x-1">
                   <span className="text-xs opacity-50">
                     {format(message.timestamp, 'h:mm a')}
                   </span>
-                {message.sender === 'user' && (
-                  <span className={`text-xs ${
-                    message.status === 'sent' ? 'text-white/50' : 
-                    message.status === 'delivered' ? 'text-white/70' : 
-                    'text-purple-darker' // read
-                  }`}>
-                    {message.status === 'sent' && '✓'}
-                    {message.status === 'delivered' && '✓✓'}
-                    {message.status === 'read' && (
-                      <span className="relative">
-                        <span className="absolute left-0">✓</span>
-                        <span className="ml-1">✓</span>
-                      </span>
-                    )}
-                  </span>
-                )}
+                  {message.sender === 'user' && (
+                    <span className={`text-xs ${message.status === 'sent' ? 'text-white/50' :
+                      message.status === 'delivered' ? 'text-white/70' :
+                        'text-purple-darker' // read
+                      }`}>
+                      {message.status === 'sent' && '✓'}
+                      {message.status === 'delivered' && '✓✓'}
+                      {message.status === 'read' && (
+                        <span className="relative">
+                          <span className="absolute left-0">✓</span>
+                          <span className="ml-1">✓</span>
+                        </span>
+                      )}
+                    </span>
+                  )}
                 </div>
               </div>
             </motion.div>

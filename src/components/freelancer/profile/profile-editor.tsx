@@ -15,14 +15,18 @@ interface ProfileData {
   avatar: string;
 }
 
+import { useAuth } from "@/contexts/AuthContext";
+
 export function ProfileEditor() {
+  const { user } = useAuth();
+
   const [profile, setProfile] = useState<ProfileData>({
-    name: "John Doe",
-    email: "john@example.com",
-    phone: "+91 9876543210",
-    bio: "Experienced freelancer with 5+ years in plumbing and electrical work.",
-    location: "Mumbai, India",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=John"
+    name: user?.name || "",
+    email: user?.email || "",
+    phone: user?.phone || "",
+    bio: "", // Bio not yet in basic Auth context
+    location: "",
+    avatar: user?.avatar || ""
   });
 
   const handleChange = (field: keyof ProfileData, value: string) => {

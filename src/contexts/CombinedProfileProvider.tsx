@@ -19,17 +19,20 @@ interface CombinedProfileProviderProps {
  * CombinedProfileProvider wraps all profile-related context providers
  * Use this in your root layout instead of individual providers
  */
+import { FreelancerDataLoader } from '@/components/freelancer/FreelancerDataLoader';
+
 export function CombinedProfileProvider({ children }: CombinedProfileProviderProps) {
   return (
     <PersonalDetailsProvider>
-      <SkillsProvider>
+      <SkillsProvider skipInitialFetch={true}>
         <ForYouJobsProvider>
-          <PortfolioProvider>
-            <ExperienceProvider>
+          <PortfolioProvider skipInitialFetch={true}>
+            <ExperienceProvider skipInitialFetch={true}>
               <ServicesProvider>
-                <ReviewsProvider>
-                  <BankAccountProvider>
+                <ReviewsProvider skipInitialFetch={true}>
+                  <BankAccountProvider skipInitialFetch={true}>
                     <SettingsProvider>
+                      <FreelancerDataLoader />
                       {children}
                     </SettingsProvider>
                   </BankAccountProvider>

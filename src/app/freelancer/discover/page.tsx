@@ -6,95 +6,64 @@ import { LocalMap } from '@/components/map/local-map';
 import NeighborhoodFeed from '@/components/freelancer/feed/neighborhood-feed';
 import { categorizeJob } from '@/lib/services/job-categorization';
 
-// Mock data for demonstration
-const mockGigs = [
-  {
-    id: '1',
-    title: 'House Cleaning Needed',
-    description: 'Looking for a reliable cleaner for a 2-bedroom apartment',
-    distance: 0.5,
-    postedTime: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
-    budget: {
-      min: 500,
-      max: 1000
-    },
-    category: 'Cleaning',
-    location: {
-      lat: 13.0827,
-      lng: 80.2707,
-      address: 'Anna Nagar, Chennai, Tamil Nadu'
-    },
-    client: {
-      id: 'c1',
-      name: 'Priya Kumar',
-      rating: 4.8,
-      completedJobs: 12
-    }
-  },
-  {
-    id: '2',
-    title: 'Garden Maintenance',
-    description: 'Need help with weekly garden maintenance and pruning',
-    distance: 1.2,
-    postedTime: new Date(Date.now() - 7200000).toISOString(), // 2 hours ago
-    budget: {
-      min: 800,
-      max: 1500
-    },
-    category: 'Gardening',
-    location: {
-      lat: 13.0500,
-      lng: 80.2121,
-      address: 'T. Nagar, Chennai, Tamil Nadu'
-    },
-    client: {
-      id: 'c2',
-      name: 'Raj Sharma',
-      rating: 4.9,
-      completedJobs: 8
-    }
-  }
-];
-
 export default function DiscoverPage() {
   const [selectedGig, setSelectedGig] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'map' | 'feed'>('map');
-  const [gigs, setGigs] = useState(mockGigs);
-  const [isLoading, setIsLoading] = useState(false); // Start with false since we have mock data
+  const [gigs, setGigs] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Skip categorization in development if there's an issue with the API
-    if (process.env.NODE_ENV === 'development') {
-      setIsLoading(false);
-      return;
-    }
-
-    // Categorize jobs when they're loaded
-    const categorizeJobs = async () => {
+    const fetchJobs = async () => {
       try {
-        const categorizedGigs = await Promise.all(
-          gigs.map(async (gig) => {
-            try {
-              const category = await categorizeJob(gig.description);
-              return {
-                ...gig,
-                category
-              };
-            } catch (error) {
-              console.error(`Error categorizing gig ${gig.id}:`, error);
-              return gig; // Keep the original category if categorization fails
+        const response = await fetch('/api/jobs');
+        if (response.ok) {
+          const apiJobs = await response.json();
+
+          // Transform API jobs to the format expected by Discover components
+          const transformedGigs = apiJobs.map((job: any) => {
+            let coords = { lat: 13.0827, lng: 80.2707 }; // Default Chennai
+            if (job.coords && Array.isArray(job.coords) && job.coords.length === 2) {
+              coords = { lat: job.coords[1], lng: job.coords[0] };
+            } else if (job.coordinates && Array.isArray(job.coordinates) && job.coordinates.length === 2) {
+              coords = { lat: job.coordinates[1], lng: job.coordinates[0] };
             }
-          })
-        );
-        setGigs(categorizedGigs);
+
+            return {
+              id: job.id,
+              title: job.title,
+              description: job.description,
+              distance: job.distance || 0, // Distance might need calculation if not provided
+              postedTime: job.createdAt || job.postedAt || new Date().toISOString(),
+              budget: {
+                min: job.budgetMin || job.budget || 0,
+                max: job.budgetMax || job.budget || 0
+              },
+              category: job.category || 'General',
+              location: {
+                ...coords,
+                address: job.location || 'Chennai, India'
+              },
+              client: {
+                id: job.clientId || job.client?.id || 'unknown',
+                name: job.clientName || job.client?.name || 'Anonymous',
+                rating: job.clientRating || job.client?.rating || 0,
+                completedJobs: job.clientJobs || job.client?.completedJobs || 0
+              }
+            };
+          });
+
+          setGigs(transformedGigs);
+        } else {
+          console.error('Failed to fetch jobs');
+        }
       } catch (error) {
-        console.error('Error categorizing jobs:', error);
+        console.error('Error fetching jobs:', error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    categorizeJobs();
+    fetchJobs();
   }, []);
 
   const handleGigClick = (gig: any) => {
@@ -121,21 +90,19 @@ export default function DiscoverPage() {
         <div className="flex space-x-2">
           <button
             onClick={() => setViewMode('map')}
-            className={`px-4 py-2 rounded-lg transition-colors ${
-              viewMode === 'map'
+            className={`px-4 py-2 rounded-lg transition-colors ${viewMode === 'map'
                 ? 'bg-blue-500 text-white'
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
+              }`}
           >
             Map
           </button>
           <button
             onClick={() => setViewMode('feed')}
-            className={`px-4 py-2 rounded-lg transition-colors ${
-              viewMode === 'feed'
+            className={`px-4 py-2 rounded-lg transition-colors ${viewMode === 'feed'
                 ? 'bg-blue-500 text-white'
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
+              }`}
           >
             Feed
           </button>
@@ -170,4 +137,4 @@ export default function DiscoverPage() {
       </div>
     </div>
   );
-} 
+}

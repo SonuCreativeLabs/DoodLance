@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef } from 'react';
+import { createClient } from '@/lib/supabase/client';
 
 export interface Experience {
   id: string;
@@ -19,85 +20,115 @@ interface ExperienceContextType {
   addExperience: (experience: Experience) => void;
   removeExperience: (experienceId: string) => void;
   updateExperience: (experienceId: string, updates: Partial<Experience>) => void;
+  hydrateExperiences: (experiences: Experience[]) => void;
   hydrated: boolean;
 }
 
-const initialExperiences: Experience[] = [
-  {
-    id: '1',
-    role: 'Cricketer (All-Rounder)',
-    company: 'Professional Cricket',
-    location: 'India',
-    startDate: '2015-01-01',
-    endDate: undefined,
-    isCurrent: true,
-    description: 'Professional cricketer specializing in top-order batting and off-spin bowling. Experienced in high-pressure matches with a focus on building strong team performances.'
-  },
-  {
-    id: '2',
-    role: 'Cricket Performance Consultant',
-    company: 'Freelance Cricket Services',
-    location: 'India',
-    startDate: '2020-01-01',
-    endDate: undefined,
-    isCurrent: true,
-    description: 'Providing cricket performance analysis and consulting services. Specializing in match strategy, player development, and team performance optimization. Working with clubs and individual players to enhance their cricket skills and competitive edge.'
-  },
-  {
-    id: '3',
-    role: 'Cricket Coach',
-    company: 'Local Academy',
-    location: 'India',
-    startDate: '2018-01-01',
-    endDate: '2020-12-31',
-    isCurrent: false,
-    description: 'Coached young cricketers in batting techniques, bowling skills, and match strategies. Helped develop the next generation of cricket talent with a focus on both technical skills and mental toughness.'
-  }
-];
+const initialExperiences: Experience[] = [];
 
 const ExperienceContext = createContext<ExperienceContextType | undefined>(undefined);
 
-export function ExperienceProvider({ children }: { children: ReactNode }) {
+export interface ExperienceProviderProps {
+  children: ReactNode;
+  skipInitialFetch?: boolean;
+}
+
+export function ExperienceProvider({ children, skipInitialFetch = false }: ExperienceProviderProps) {
   const [experiences, setExperiences] = useState<Experience[]>(initialExperiences);
   const hasHydrated = useRef(false);
+  const supabase = createClient();
+
+  const hydrateExperiences = useCallback((newExperiences: Experience[]) => {
+    setExperiences(newExperiences);
+    hasHydrated.current = true;
+  }, []);
+
+  // Load from Supabase on mount
+  useEffect(() => {
+    if (skipInitialFetch) return;
+
+    const fetchExperiences = async () => {
+      try {
+        // Fetch from API
+        const response = await fetch('/api/freelancer/experience');
+        if (response.ok) {
+          const { experiences: dbExperiences } = await response.json();
+          if (dbExperiences && dbExperiences.length > 0) {
+            const mapped = dbExperiences.map((exp: any) => ({
+              id: exp.id,
+              role: exp.title,
+              company: exp.company,
+              location: exp.location,
+              startDate: exp.startDate,
+              endDate: exp.endDate,
+              isCurrent: exp.current,
+              description: exp.description
+            }));
+            setExperiences(mapped);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load experiences:', error);
+      } finally {
+        hasHydrated.current = true;
+      }
+    };
+
+    fetchExperiences();
+  }, [skipInitialFetch]);
+
+  const addExperience = useCallback(async (experience: Experience) => {
+    setExperiences(prev => [...prev, experience]);
+
+    try {
+      await fetch('/api/freelancer/experience', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: experience.role,
+          company: experience.company,
+          location: experience.location,
+          startDate: experience.startDate,
+          endDate: experience.endDate,
+          current: experience.isCurrent,
+          description: experience.description
+        })
+      });
+    } catch (e) {
+      console.error("Failed to add experience", e);
+    }
+  }, []);
+
+  const removeExperience = useCallback(async (experienceId: string) => {
+    setExperiences(prev => prev.filter(exp => exp.id !== experienceId));
+    try {
+      await fetch(`/api/freelancer/experience?id=${experienceId}`, { method: 'DELETE' });
+    } catch (e) {
+      console.error("Failed to delete experience", e);
+    }
+  }, []);
+
+  const updateExperience = useCallback(async (experienceId: string, updates: Partial<Experience>) => {
+    setExperiences(prev => prev.map(exp =>
+      exp.id === experienceId ? { ...exp, ...updates } : exp
+    ));
+    try {
+      await fetch('/api/freelancer/experience', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: experienceId, ...updates })
+      });
+    } catch (e) {
+      console.error("Failed to update experience", e);
+    }
+  }, []);
 
   const updateExperiences = useCallback((newExperiences: Experience[]) => {
     setExperiences(newExperiences);
   }, []);
 
-  const addExperience = useCallback((experience: Experience) => {
-    setExperiences(prev => [...prev, experience]);
-  }, []);
-
-  const removeExperience = useCallback((experienceId: string) => {
-    setExperiences(prev => prev.filter(exp => exp.id !== experienceId));
-  }, []);
-
-  const updateExperience = useCallback((experienceId: string, updates: Partial<Experience>) => {
-    setExperiences(prev => prev.map(exp => 
-      exp.id === experienceId ? { ...exp, ...updates } : exp
-    ));
-  }, []);
-
-  // Load from localStorage on mount
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem('experiences');
-      if (saved) {
-        setExperiences(JSON.parse(saved));
-      }
-    } catch (error) {
-      console.error('Failed to parse experiences:', error);
-    } finally {
-      hasHydrated.current = true;
-    }
-  }, []);
-
   // Save to localStorage whenever it changes (skip first paint)
-  useEffect(() => {
-    if (!hasHydrated.current) return;
-    localStorage.setItem('experiences', JSON.stringify(experiences));
-  }, [experiences]);
+  // No localStorage side effects needed. Data is persisted to DB.
 
   const value: ExperienceContextType = {
     experiences,
@@ -105,6 +136,7 @@ export function ExperienceProvider({ children }: { children: ReactNode }) {
     addExperience,
     removeExperience,
     updateExperience,
+    hydrateExperiences,
     hydrated: hasHydrated.current,
   };
 

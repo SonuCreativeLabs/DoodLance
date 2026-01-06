@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { mockTickets } from '@/lib/mock/support-data';
+import prisma from '@/lib/db';
+import { Prisma } from '@prisma/client';
+import { createTicketSchema, validateRequest } from '@/lib/validations/admin';
+import { logAdminAction } from '@/lib/audit-log';
 
-// Use mock tickets data
-let tickets = [...mockTickets];
+export const dynamic = 'force-dynamic';
 
-// GET /api/admin/support/tickets - Get all tickets with filtering
+// GET /api/admin/support - List all tickets
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -15,204 +17,130 @@ export async function GET(request: NextRequest) {
     const priority = searchParams.get('priority') || 'all';
     const category = searchParams.get('category') || 'all';
 
-    // Filter tickets
-    let filteredTickets = [...tickets];
-    
+    const skip = (page - 1) * limit;
+    const where: any = {};
+
+    // Search
     if (search) {
-      filteredTickets = filteredTickets.filter(ticket => 
-        ticket.subject.toLowerCase().includes(search.toLowerCase()) ||
-        ticket.description.toLowerCase().includes(search.toLowerCase()) ||
-        ticket.userName.toLowerCase().includes(search.toLowerCase()) ||
-        ticket.id.toLowerCase().includes(search.toLowerCase())
-      );
-    }
-    
-    if (status !== 'all') {
-      filteredTickets = filteredTickets.filter(ticket => ticket.status === status);
-    }
-    
-    if (priority !== 'all') {
-      filteredTickets = filteredTickets.filter(ticket => ticket.priority === priority);
-    }
-    
-    if (category !== 'all') {
-      filteredTickets = filteredTickets.filter(ticket => ticket.category === category);
+      where.OR = [
+        { subject: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
+        { ticketNumber: { contains: search, mode: 'insensitive' } },
+      ];
     }
 
-    // Sort by priority and created date
-    filteredTickets.sort((a, b) => {
-      const priorityOrder = { urgent: 0, high: 1, medium: 2, low: 3 };
-      const priorityDiff = priorityOrder[a.priority as keyof typeof priorityOrder] - 
-                           priorityOrder[b.priority as keyof typeof priorityOrder];
-      if (priorityDiff !== 0) return priorityDiff;
-      
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-    });
+    // Filters
+    if (status !== 'all') where.status = status.toUpperCase();
+    if (priority !== 'all') where.priority = priority.toUpperCase();
+    if (category !== 'all') where.type = category.toUpperCase();
 
-    // Pagination
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedTickets = filteredTickets.slice(startIndex, endIndex);
+    // Fetch tickets
+    const [tickets, total] = await Promise.all([
+      prisma.supportTicket.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { updatedAt: 'desc' },
+      }),
+      prisma.supportTicket.count({ where })
+    ]);
 
-    // Calculate stats
-    const stats = {
-      totalTickets: tickets.length,
-      openTickets: tickets.filter(t => t.status === 'open').length,
-      inProgress: tickets.filter(t => t.status === 'in_progress').length,
-      resolved: tickets.filter(t => t.status === 'resolved').length,
-      closed: tickets.filter(t => t.status === 'closed').length,
-      urgentTickets: tickets.filter(t => t.priority === 'urgent').length,
-      avgResponseTime: '2.5 hours'
-    };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const mappedTickets = await Promise.all(tickets.map(async (t: any) => {
+      let userName = 'Unknown User';
+      let userEmail = 'N/A';
+      let userRole = 'user';
+
+      if (t.userId) {
+        const user = await prisma.user.findUnique({
+          where: { id: t.userId },
+          select: { name: true, email: true, role: true }
+        });
+        if (user) {
+          userName = user.name;
+          userEmail = user.email;
+          userRole = user.role;
+        }
+      }
+
+      return {
+        ...t,
+        category: t.type.toLowerCase(), // Map type to category (frontend expects category)
+        userName,
+        userEmail,
+        userRole,
+        messages: t.messages ? JSON.parse(t.messages) : [],
+        createdAt: t.createdAt.toLocaleString(),
+        updatedAt: t.updatedAt.toLocaleString()
+      };
+    }));
 
     return NextResponse.json({
-      tickets: paginatedTickets,
-      total: filteredTickets.length,
+      tickets: mappedTickets,
+      total,
       page,
-      totalPages: Math.ceil(filteredTickets.length / limit),
-      stats
+      totalPages: Math.ceil(total / limit)
     });
+
   } catch (error) {
-    console.error('Get tickets error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    console.error('Fetch tickets error:', error);
+    return NextResponse.json({ error: 'Failed to fetch tickets' }, { status: 500 });
   }
 }
 
-// PUT /api/admin/support/tickets/:id - Update ticket
-export async function PUT(request: NextRequest) {
-  try {
-    const body = await request.json();
-    const { ticketId, updates } = body;
-
-    const ticketIndex = tickets.findIndex(t => t.id === ticketId);
-    if (ticketIndex === -1) {
-      return NextResponse.json(
-        { error: 'Ticket not found' },
-        { status: 404 }
-      );
-    }
-
-    // Update ticket
-    tickets[ticketIndex] = { 
-      ...tickets[ticketIndex], 
-      ...updates,
-      updatedAt: new Date().toLocaleString()
-    };
-
-    // If status is resolved, set resolved timestamp
-    if (updates.status === 'resolved') {
-      tickets[ticketIndex].resolvedAt = new Date().toLocaleString();
-    }
-
-    // Log audit action
-    console.log(`Ticket ${ticketId} updated:`, updates);
-
-    return NextResponse.json({
-      success: true,
-      ticket: tickets[ticketIndex]
-    });
-  } catch (error) {
-    console.error('Update ticket error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
-
-// POST /api/admin/support/tickets/message - Send message in ticket
+// POST /api/admin/support - Create NEW ticket
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { ticketId, message, senderId = 'Admin', senderType = 'admin' } = body;
 
-    const ticketIndex = tickets.findIndex(t => t.id === ticketId);
-    if (ticketIndex === -1) {
-      return NextResponse.json(
-        { error: 'Ticket not found' },
-        { status: 404 }
-      );
+    // Validate request
+    const validation = validateRequest(createTicketSchema, body);
+    if (!validation.success) {
+      return NextResponse.json({ error: validation.error }, { status: 400 });
     }
 
-    // Add new message
-    const newMessage = {
-      id: `MSG${Date.now()}`,
-      sender: senderId,
-      senderType,
-      message,
-      timestamp: new Date().toLocaleString()
-    };
+    const {
+      subject,
+      description,
+      category,
+      priority,
+      userId
+    } = validation.data;
 
-    if (!tickets[ticketIndex].messages) {
-      tickets[ticketIndex].messages = [];
-    }
-    
-    tickets[ticketIndex].messages.push(newMessage);
-    tickets[ticketIndex].updatedAt = newMessage.timestamp;
+    // Verify user exists if provided/required
+    // userEmail check logic from original code might be useful if userId is not certain,
+    // but schema says userId is required. Assuming userId is passed.
 
-    // Auto update status if it's open
-    if (tickets[ticketIndex].status === 'open' && senderType === 'admin') {
-      tickets[ticketIndex].status = 'in_progress';
-    }
+    const adminEmail = 'admin@doodlance.com';
+    const adminId = 'admin-1';
 
-    // Log audit action
-    console.log(`Message sent to ticket ${ticketId}:`, message);
-
-    return NextResponse.json({
-      success: true,
-      ticket: tickets[ticketIndex],
-      message: newMessage
+    const newTicket = await prisma.supportTicket.create({
+      data: {
+        userId,
+        subject,
+        description,
+        type: category ? category.toUpperCase() : 'GENERAL',
+        priority: priority ? priority.toUpperCase() : 'MEDIUM',
+        status: 'OPEN',
+        messages: JSON.stringify([]), // Initialize empty conversation
+      }
     });
-  } catch (error) {
-    console.error('Send message error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
 
-// DELETE /api/admin/support/tickets/:id - Delete ticket
-export async function DELETE(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const ticketId = searchParams.get('id');
-
-    if (!ticketId) {
-      return NextResponse.json(
-        { error: 'Ticket ID required' },
-        { status: 400 }
-      );
-    }
-
-    const ticketIndex = tickets.findIndex(t => t.id === ticketId);
-    if (ticketIndex === -1) {
-      return NextResponse.json(
-        { error: 'Ticket not found' },
-        { status: 404 }
-      );
-    }
-
-    // Remove ticket
-    const deletedTicket = tickets[ticketIndex];
-    tickets = tickets.filter(t => t.id !== ticketId);
-
-    // Log audit action
-    console.log(`Ticket deleted: ${ticketId}`);
-
-    return NextResponse.json({
-      success: true,
-      message: 'Ticket deleted',
-      ticket: deletedTicket
+    // Log action
+    await logAdminAction({
+      adminId,
+      adminEmail,
+      action: 'CREATE',
+      resource: 'SUPPORT_TICKET',
+      resourceId: newTicket.id,
+      details: { subject },
+      request
     });
+
+    return NextResponse.json(newTicket, { status: 201 });
+
   } catch (error) {
-    console.error('Delete ticket error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    console.error('Create ticket error:', error);
+    return NextResponse.json({ error: 'Failed to create ticket' }, { status: 500 });
   }
 }

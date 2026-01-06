@@ -25,61 +25,8 @@ interface HistoryJobsContextType {
 
 const HistoryJobsContext = createContext<HistoryJobsContextType | undefined>(undefined);
 
-// Initial mock data - this would typically come from an API
-const initialHistoryJobs: HistoryJob[] = [
-  {
-    "#": "#TNCHE101",
-    title: "Fast Bowling Training",
-    freelancer: {
-      name: "Jasprit Bumrah",
-      image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Bumrah",
-      rating: 4.9,
-    },
-    completedDate: "2024-03-10",
-    status: "Completed",
-    yourRating: 5,
-    earnedMoney: "₹12,500"
-  },
-  {
-    "#": "#TNCHE102",
-    title: "Batting Practice Session",
-    freelancer: {
-      name: "KL Rahul",
-      image: "https://api.dicebear.com/7.x/avataaars/svg?seed=KL",
-      rating: 4.7,
-    },
-    completedDate: "2024-03-08",
-    status: "Cancelled",
-    yourRating: 4,
-    earnedMoney: "₹10,000"
-  },
-  {
-    "#": "#TNCHE103",
-    title: "Wicket Keeping Training",
-    freelancer: {
-      name: "MS Dhoni",
-      image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Dhoni",
-      rating: 4.8,
-    },
-    completedDate: "2024-03-08",
-    status: "Completed",
-    yourRating: 5,
-    earnedMoney: "₹15,000"
-  },
-  {
-    "#": "#TNCHE104",
-    title: "Cricket Match Analysis",
-    freelancer: {
-      name: "Anil Kumble",
-      image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Kumble",
-      rating: 4.8,
-    },
-    completedDate: "2024-03-05",
-    status: "Completed",
-    yourRating: 5,
-    earnedMoney: "₹16,500"
-  }
-];
+// Initial state
+const initialHistoryJobs: HistoryJob[] = [];
 
 export function HistoryJobsProvider({ children }: { children: ReactNode }) {
   const [historyJobs, setHistoryJobs] = useState<HistoryJob[]>(initialHistoryJobs);

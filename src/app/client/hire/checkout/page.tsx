@@ -7,12 +7,15 @@ import { Button } from '@/components/ui/button';
 import { useHire } from '@/contexts/HireContext';
 import { useNavbar } from '@/contexts/NavbarContext';
 import { useBookings } from '@/contexts/BookingsContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function CheckoutPage() {
   const router = useRouter();
   const { state, getTotalPrice, clearCart, resetHireState } = useHire();
   const { addBooking } = useBookings();
   const { setNavbarVisibility } = useNavbar();
+  const { user } = useAuth();
+
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
   const [discountAmount, setDiscountAmount] = useState(0);
@@ -26,6 +29,9 @@ export default function CheckoutPage() {
   const generateOtp = () => {
     return Math.floor(1000 + Math.random() * 9000).toString();
   };
+
+  // Auth check removed - will validate when user clicks payment button instead
+
 
   // Hide navbar when component mounts
   useEffect(() => {
@@ -43,69 +49,72 @@ export default function CheckoutPage() {
       : item.service.price;
     return total + (price * (item.quantity || 1));
   }, 0);
-  const serviceFee = 10; // Fixed service fee of ₹10
+  const serviceFee = Math.round(subtotal * 0.05); // 5% platform fee
   const discount = appliedCoupon ? Math.round(subtotal * 0.1) : 0; // 10% discount for demo
   const total = subtotal + serviceFee - discount;
 
-  const handleCODBooking = () => {
+  const handleCODBooking = async () => {
     setIsProcessing(true);
-    
+
     // Generate OTP for this booking
     const otp = generateOtp();
-    
+
     // Simulate processing delay
-    setTimeout(() => {
-      // Create the booking
-      const serviceNames = state.cartItems.map(item => item.service.title).join(', ');
-      // Use the date in YYYY-MM-DD format for proper filtering
-      const bookingDate = state.selectedDate || new Date().toISOString().split('T')[0];
-      
-      const bookingId = addBooking({
-        service: serviceNames,
-        provider: state.freelancerName || 'Freelancer',
-        image: state.freelancerImage || '',
-        date: bookingDate,
-        time: state.selectedTime || '10:00 AM',
-        status: 'confirmed',
-        location: state.selectedLocation || 'Location TBD',
-        price: `₹${total.toLocaleString()}`,
-        rating: state.freelancerRating || 4.5,
-        completedJobs: state.freelancerReviewCount || 50,
-        description: `Booking for ${serviceNames}`,
-        category: 'cricket',
-        paymentMethod: 'cod',
-        notes: state.bookingNotes || undefined, // Include notes from booking details
-        otp: otp, // Include OTP for verification
-        services: state.cartItems.map(item => ({
-          id: item.service.id,
-          title: item.service.title,
-          price: item.service.price,
-          quantity: item.quantity || 1
-        }))
-      });
-      
-      // Store OTP in localStorage for the freelancer side to access
+    setTimeout(async () => {
       try {
-        const otpStore = JSON.parse(localStorage.getItem('bookingOtps') || '{}');
-        otpStore[bookingId] = otp;
-        localStorage.setItem('bookingOtps', JSON.stringify(otpStore));
-      } catch (e) {
-        console.error('Error storing OTP:', e);
+        // Create the booking
+        const serviceNames = state.cartItems.map(item => item.service.title).join(', ');
+        // Use the date in YYYY-MM-DD format for proper filtering
+        const bookingDate = state.selectedDate || new Date().toISOString().split('T')[0];
+
+        const bookingId = await addBooking({
+          service: serviceNames,
+          provider: state.freelancerName || 'Freelancer',
+          image: state.freelancerImage || '',
+          date: bookingDate,
+          time: state.selectedTime || '10:00 AM',
+          status: 'confirmed',
+          location: state.selectedLocation || 'Location TBD',
+          price: `₹${total.toLocaleString()}`,
+          rating: state.freelancerRating || 4.5,
+          completedJobs: state.freelancerReviewCount || 50,
+          description: `Booking for ${serviceNames}`,
+          category: 'cricket',
+          paymentMethod: 'cod',
+          notes: (state.bookingNotes || '') + ` [OTP: ${otp}]`, // Append OTP to notes for now
+          otp: otp,
+          services: state.cartItems.map(item => ({
+            id: item.service.id,
+            title: item.service.title,
+            price: item.service.price,
+            quantity: item.quantity || 1,
+            duration: item.duration || (item.service as any).duration,
+            deliveryTime: item.service.deliveryTime
+          }))
+        });
+
+        // Store OTP in localStorage for the freelancer side to access - REMOVED
+        // Ideally handled by backend. We appended to notes for persistence context.
+
+        setNewBookingId(bookingId);
+        setGeneratedOtp(otp);
+        setBookingSuccess(true);
+
+        // Clear cart and hire state
+        clearCart();
+        resetHireState();
+
+        // Redirect to bookings after showing success
+        setTimeout(() => {
+          router.push('/client/bookings');
+        }, 3500);
+
+      } catch (error) {
+        console.error("Booking creation failed:", error);
+        // Handle error UI?
+      } finally {
+        setIsProcessing(false);
       }
-      
-      setNewBookingId(bookingId);
-      setGeneratedOtp(otp);
-      setBookingSuccess(true);
-      setIsProcessing(false);
-      
-      // Clear cart and hire state
-      clearCart();
-      resetHireState();
-      
-      // Redirect to bookings after showing success
-      setTimeout(() => {
-        router.push('/client/bookings');
-      }, 3500); // Extended to show OTP longer
     }, 1500);
   };
 
@@ -119,7 +128,7 @@ export default function CheckoutPage() {
           </div>
           <h2 className="text-2xl font-bold text-white mb-2">Booking Confirmed!</h2>
           <p className="text-white/60 mb-4">Your booking {newBookingId} has been placed successfully.</p>
-          
+
           {/* OTP Display Card */}
           {generatedOtp && (
             <div className="mb-6 p-6 rounded-2xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 border border-purple-500/30">
@@ -136,7 +145,7 @@ export default function CheckoutPage() {
               </p>
             </div>
           )}
-          
+
           <p className="text-white/40 text-sm mb-4">Payment: Cash on Delivery</p>
           <p className="text-white/50 text-sm">Redirecting to your bookings...</p>
         </div>
@@ -235,7 +244,7 @@ export default function CheckoutPage() {
                   <span className="text-white">₹{subtotal.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-white/70">Platform Fee</span>
+                  <span className="text-white/70">Platform Fee (5%)</span>
                   <span className="text-white">₹{serviceFee.toLocaleString()}</span>
                 </div>
                 {appliedCoupon && (
@@ -251,7 +260,7 @@ export default function CheckoutPage() {
 
         {/* Payment Methods */}
         <div className="space-y-8">
-          <h3 className="text-white font-semibold text-lg">Choose Payment Method</h3>
+          <h3 className="text-white font-semibold text-lg">Payment Method</h3>
 
           {/* Cash on Delivery - Top Priority */}
           <div className="space-y-3">
@@ -262,7 +271,7 @@ export default function CheckoutPage() {
                 <p className="text-white/60 text-sm">Pay when service is completed</p>
               </div>
             </div>
-            <button 
+            <button
               onClick={handleCODBooking}
               disabled={isProcessing}
               className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white font-medium transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
@@ -284,60 +293,7 @@ export default function CheckoutPage() {
             </div>
           </div>
 
-          {/* UPI Payment */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <Smartphone className="w-5 h-5 text-white/60" />
-              <div>
-                <h4 className="text-white font-semibold">UPI Payment</h4>
-                <p className="text-white/60 text-sm">Instant payment via UPI apps</p>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <button className="py-3 px-4 rounded-xl bg-white/5 hover:bg-white/10 text-white text-sm font-medium transition-all duration-200">
-                Google Pay
-              </button>
-              <button className="py-3 px-4 rounded-xl bg-white/5 hover:bg-white/10 text-white text-sm font-medium transition-all duration-200">
-                PhonePe
-              </button>
-              <button className="py-3 px-4 rounded-xl bg-white/5 hover:bg-white/10 text-white text-sm font-medium transition-all duration-200">
-                Paytm
-              </button>
-              <button className="py-3 px-4 rounded-xl bg-white/5 hover:bg-white/10 text-white text-sm font-medium transition-all duration-200">
-                Other UPI
-              </button>
-            </div>
-          </div>
 
-          {/* Card Payment */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <CreditCard className="w-5 h-5 text-white/60" />
-              <div>
-                <h4 className="text-white font-semibold">Card Payment</h4>
-                <p className="text-white/60 text-sm">Credit & Debit cards</p>
-              </div>
-            </div>
-            <button className="w-full py-3 px-6 rounded-xl bg-white/5 hover:bg-white/10 text-white font-medium transition-all duration-200 flex items-center justify-center gap-3">
-              <CreditCard className="w-5 h-5" />
-              Pay with Card
-            </button>
-          </div>
-
-          {/* Wallets - Simplified */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <Wallet className="w-5 h-5 text-white/60" />
-              <div>
-                <h4 className="text-white font-semibold">Digital Wallets</h4>
-                <p className="text-white/60 text-sm">Paytm, Mobikwik & more</p>
-              </div>
-            </div>
-            <button className="w-full py-3 px-6 rounded-xl bg-white/5 hover:bg-white/10 text-white font-medium transition-all duration-200 flex items-center justify-center gap-3">
-              <Wallet className="w-5 h-5" />
-              Pay with Wallet
-            </button>
-          </div>
         </div>
       </div>
     </div>

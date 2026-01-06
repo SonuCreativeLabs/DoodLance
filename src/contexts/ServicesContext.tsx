@@ -22,166 +22,120 @@ interface ServicesContextType {
   updateService: (serviceId: string, updates: Partial<ServicePackage>) => void;
 }
 
-const initialServices: ServicePackage[] = [
-  {
-    id: '1',
-    title: 'Net Bowling Sessions',
-    description: 'Professional net bowling sessions with personalized coaching',
-    price: '₹500',
-    type: 'online',
-    deliveryTime: '1 hour',
-    features: [
-      '1-hour net session',
-      'Ball analysis',
-      'Technique improvement',
-      'Q&A session'
-    ],
-    category: 'Net Bowler'
-  },
-  {
-    id: '2',
-    title: 'Match Player',
-    description: 'Professional match player ready to play for your team per match',
-    price: '₹1,500',
-    type: 'in-person',
-    deliveryTime: 'Per match',
-    features: [
-      'Full match participation',
-      'Team contribution',
-      'Match commitment',
-      'Performance guarantee'
-    ],
-    category: 'Match Player'
-  },
-  {
-    id: '3',
-    title: 'Match Videography',
-    description: 'Professional match videography and reel content creation during games',
-    price: '₹800',
-    type: 'in-person',
-    deliveryTime: 'Same day',
-    features: [
-      'Full match recording',
-      'Highlight reel creation',
-      'Social media content',
-      'Priority editing'
-    ],
-    category: 'Cricket Photo / Videography'
-  },
-  {
-    id: '4',
-    title: 'Sidearm Bowling',
-    description: 'Professional sidearm bowler delivering 140km/h+ speeds for practice sessions',
-    price: '₹1,500',
-    type: 'in-person',
-    deliveryTime: 'per hour',
-    features: [
-      '140km/h+ sidearm bowling',
-      'Practice session delivery',
-      'Consistent speed & accuracy',
-      'Training session support'
-    ],
-    category: 'Sidearm specialist'
-  },
-  {
-    id: '5',
-    title: 'Batting Coaching',
-    description: 'Professional batting technique training and skill development',
-    price: '₹1,200',
-    type: 'in-person',
-    deliveryTime: 'per hour',
-    features: [
-      'Batting technique analysis',
-      'Footwork drills',
-      'Shot selection training',
-      'Mental preparation coaching'
-    ],
-    category: 'Batting coach'
-  },
-  {
-    id: '6',
-    title: 'Performance Analysis',
-    description: 'Comprehensive cricket performance analysis and improvement recommendations',
-    price: '₹2,000',
-    type: 'online',
-    deliveryTime: '2-3 weeks',
-    features: [
-      'Match statistics review',
-      'Strength/weakness analysis',
-      'Improvement recommendations',
-      'Progress tracking'
-    ],
-    category: 'Analyst'
-  }
-];
+const initialServices: ServicePackage[] = [];
 
 const ServicesContext = createContext<ServicesContextType | undefined>(undefined);
 
+import { createClient } from '@/lib/supabase/client';
+
 export function ServicesProvider({ children }: { children: ReactNode }) {
   const [services, setServices] = useState<ServicePackage[]>(initialServices);
-  const hasHydrated = useRef(false);
+  const [isHydrated, setIsHydrated] = useState(false);
+  const supabase = createClient();
 
-  const updateServices = useCallback((newServices: ServicePackage[]) => {
+  const updateServices = useCallback(async (newServices: ServicePackage[]) => {
+    // This method is less useful now that we have individual CRUD.
+    // If used for reordering, we need an endpoint.
+    // For now, we'll just set local state.
     setServices(newServices);
   }, []);
 
-  const addService = useCallback((service: ServicePackage) => {
-    setServices(prev => [...prev, service]);
-  }, []);
-
-  const removeService = useCallback((serviceId: string) => {
-    setServices(prev => prev.filter(svc => svc.id !== serviceId));
-  }, []);
-
-  const updateService = useCallback((serviceId: string, updates: Partial<ServicePackage>) => {
-    setServices(prev => prev.map(svc => 
-      svc.id === serviceId ? { ...svc, ...updates } : svc
-    ));
-  }, []);
-
-  // Load from localStorage on mount
-  useEffect(() => {
+  const addService = useCallback(async (service: ServicePackage) => {
     try {
-      const saved = localStorage.getItem('services');
-      if (saved) {
-        setServices(JSON.parse(saved));
+      console.log('🚀 Sending service to API:', service);
+      setServices(prev => [...prev, service]); // Optimistic UI
+
+      const response = await fetch('/api/freelancer/services', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(service),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('✅ Service created successfully:', data);
+        // Replace the optimistic one (with temp ID) with real one
+        setServices(prev => prev.map(s => s.id === service.id ? { ...s, id: data.service.id } : s));
       } else {
-        // Fallback: hydrate from legacy 'userPackages' if present
-        const legacy = localStorage.getItem('userPackages');
-        if (legacy) {
-          try {
-            const pkgArr = JSON.parse(legacy);
-            if (Array.isArray(pkgArr)) {
-              const mapped = pkgArr.map((pkg: any) => ({
-                id: String(pkg.id ?? crypto.randomUUID?.() ?? Date.now().toString()),
-                title: String(pkg.name ?? pkg.title ?? 'Package'),
-                description: String(pkg.description ?? ''),
-                price: String(pkg.price ?? '' ).startsWith('₹') ? String(pkg.price) : `₹${pkg.price ?? ''}`,
-                deliveryTime: String(pkg.deliveryTime ?? ''),
-                features: Array.isArray(pkg.features) ? pkg.features : [],
-                type: pkg.type === 'online' || pkg.type === 'in-person' || pkg.type === 'hybrid' ? pkg.type : undefined,
-                category: pkg.category,
-                skill: pkg.skill,
-              })) as ServicePackage[];
-              setServices(mapped);
-            }
-          } catch (e) {
-            console.error('Failed to parse legacy userPackages:', e);
-          }
-        }
+        const errorData = await response.json();
+        console.error('❌ Service creation failed:', errorData);
+        // Revert on failure
+        setServices(prev => prev.filter(s => s.id !== service.id));
+        console.error('Failed to add service');
       }
     } catch (error) {
-      console.error('Failed to parse services:', error);
-    } finally {
-      hasHydrated.current = true;
+      console.error('Error adding service:', error);
+      setServices(prev => prev.filter(s => s.id !== service.id));
     }
   }, []);
 
-  // Save to localStorage whenever it changes (skip first paint)
-  useEffect(() => {
-    if (!hasHydrated.current) return;
-    localStorage.setItem('services', JSON.stringify(services));
+  const removeService = useCallback(async (serviceId: string) => {
+    // Find the service to potentially restore later
+    const serviceToRemove = services.find(s => s.id === serviceId);
+    if (!serviceToRemove) return;
+
+    // Optimistic delete
+    setServices(prev => prev.filter(svc => svc.id !== serviceId));
+
+    try {
+      const response = await fetch(`/api/freelancer/services/${serviceId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        // Revert: Add it back if API failed
+        setServices(prev => [...prev, serviceToRemove]);
+        console.error('Failed to delete service, reverting UI');
+      }
+    } catch (error) {
+      // Revert: Add it back if network error
+      setServices(prev => [...prev, serviceToRemove]);
+      console.error('Error removing service:', error);
+    }
   }, [services]);
+
+  const updateService = useCallback(async (serviceId: string, updates: Partial<ServicePackage>) => {
+    // Optimistic
+    const previousServices = [...services];
+    setServices(prev => prev.map(svc => svc.id === serviceId ? { ...svc, ...updates } : svc));
+
+    try {
+      const response = await fetch(`/api/freelancer/services/${serviceId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates),
+      });
+      if (!response.ok) {
+        setServices(previousServices); // Revert
+      }
+    } catch (error) {
+      setServices(previousServices); // Revert
+      console.error('Error updating service:', error);
+    }
+  }, [services]);
+
+  // Load from API on mount
+  useEffect(() => {
+    const fetchServices = async () => {
+      try {
+        const response = await fetch('/api/freelancer/services', {
+          cache: 'no-store'
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setServices(data.services || []);
+        }
+      } catch (error) {
+        console.error('Failed to load services:', error);
+      } finally {
+        setIsHydrated(true);
+      }
+    };
+
+    fetchServices();
+  }, []);
+
+  // Removed localStorage usage completely
 
   const value: ServicesContextType = {
     services,

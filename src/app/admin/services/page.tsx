@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -36,81 +36,107 @@ import {
   ChevronLeft, ChevronRight, Image, BarChart, Shield
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { mockServices } from '@/lib/mock/services-data';
 import { ServiceDetailsModal } from '@/components/admin/ServiceDetailsModal';
 
 export default function ServiceManagementPage() {
-  const [services, setServices] = useState(mockServices);
+  const [services, setServices] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('all');
   const [activeFilter, setActiveFilter] = useState('all');
   const [selectedService, setSelectedService] = useState<any>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [showAddService, setShowAddService] = useState(false);
-  const [newService, setNewService] = useState({
-    title: '',
-    description: '',
-    category: 'Net Bowler',
-    price: '',
-    duration: '60',
-    location: '',
-    providerName: '',
-  });
   const itemsPerPage = 10;
 
-  // Filter services
-  const filteredServices = services.filter(service => {
-    const matchesSearch = 
-      service.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      service.providerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      service.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = categoryFilter === 'all' || service.category === categoryFilter;
-    const matchesStatus = statusFilter === 'all' || service.status === statusFilter;
-    const matchesActive = activeFilter === 'all' || 
-                         (activeFilter === 'active' && service.isActive) ||
-                         (activeFilter === 'inactive' && !service.isActive);
-    
-    return matchesSearch && matchesCategory && matchesStatus && matchesActive;
+  // Debounce search
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+      setCurrentPage(1);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Stats state
+  const [stats, setStats] = useState({
+    totalServices: 0,
+    activeServices: 0,
+    pendingApproval: 0,
+    totalRevenue: 0,
+    avgRating: '0.0',
+    totalOrders: 0,
   });
 
-  const totalPages = Math.ceil(filteredServices.length / itemsPerPage);
-  const paginatedServices = filteredServices.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
-  const handleApprove = (serviceId: string) => {
-    setServices(services.map(s => 
-      s.id === serviceId ? { ...s, status: 'approved', isActive: true } : s
-    ));
+  const fetchServices = async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams({
+        page: currentPage.toString(),
+        limit: itemsPerPage.toString(),
+        search: debouncedSearch,
+        category: categoryFilter,
+        active: activeFilter
+      });
+      const res = await fetch(`/api/admin/services?${params}`);
+      if (res.ok) {
+        const data = await res.json();
+        setServices(data.services);
+        setTotalPages(data.totalPages);
+        if (data.stats) {
+          setStats(data.stats);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching services:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleReject = (serviceId: string) => {
-    setServices(services.map(s => 
-      s.id === serviceId ? { ...s, status: 'rejected', isActive: false } : s
-    ));
+  useEffect(() => {
+    fetchServices();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, debouncedSearch, categoryFilter, activeFilter]);
+
+  const handleApprove = async (serviceId: string) => {
+    try {
+      const res = await fetch(`/api/admin/services/${serviceId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'approve' })
+      });
+      if (res.ok) fetchServices();
+    } catch (e) { console.error(e); }
   };
 
-  const toggleActive = (serviceId: string) => {
-    setServices(services.map(s => 
-      s.id === serviceId ? { ...s, isActive: !s.isActive } : s
-    ));
+  const handleReject = async (serviceId: string) => {
+    try {
+      const res = await fetch(`/api/admin/services/${serviceId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'reject' })
+      });
+      if (res.ok) fetchServices();
+    } catch (e) { console.error(e); }
   };
 
-  // Stats
-  const stats = {
-    totalServices: services.length,
-    activeServices: services.filter(s => s.isActive).length,
-    pendingApproval: services.filter(s => s.status === 'pending').length,
-    totalRevenue: services.reduce((sum, s) => sum + (s.price * s.totalOrders), 0),
-    avgRating: (services.reduce((sum, s) => sum + s.rating, 0) / services.length).toFixed(1),
-    totalOrders: services.reduce((sum, s) => sum + s.totalOrders, 0),
-  };
+  const toggleActive = async (serviceId: string) => {
+    const service = services.find(s => s.id === serviceId);
+    if (!service) return;
 
-  // Get unique categories
-  const categories = Array.from(new Set(services.map(s => s.category)));
+    try {
+      const res = await fetch(`/api/admin/services/${serviceId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isActive: !service.isActive })
+      });
+      if (res.ok) fetchServices();
+    } catch (e) { console.error(e); }
+  };
 
   const statusColors: Record<string, string> = {
     approved: 'bg-green-500',
@@ -131,13 +157,6 @@ export default function ServiceManagementPage() {
           <Button variant="outline" className="text-gray-300 w-full sm:w-auto">
             <Download className="w-4 h-4 mr-2" />
             Export
-          </Button>
-          <Button 
-            onClick={() => setShowAddService(true)}
-            className="bg-purple-600 hover:bg-purple-700 w-full sm:w-auto"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Add Service
           </Button>
         </div>
       </div>
@@ -214,31 +233,6 @@ export default function ServiceManagementPage() {
               />
             </div>
           </div>
-          
-          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger className="w-[180px] bg-[#2a2a2a] border-gray-700 text-white">
-              <SelectValue placeholder="Category" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Categories</SelectItem>
-              {categories.map(category => (
-                <SelectItem key={category} value={category}>{category}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[150px] bg-[#2a2a2a] border-gray-700 text-white">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="approved">Approved</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="under-review">Under Review</SelectItem>
-              <SelectItem value="rejected">Rejected</SelectItem>
-            </SelectContent>
-          </Select>
 
           <Select value={activeFilter} onValueChange={setActiveFilter}>
             <SelectTrigger className="w-[150px] bg-[#2a2a2a] border-gray-700 text-white">
@@ -256,7 +250,6 @@ export default function ServiceManagementPage() {
             onClick={() => {
               setSearchTerm('');
               setCategoryFilter('all');
-              setStatusFilter('all');
               setActiveFilter('all');
             }}
             className="text-gray-300"
@@ -284,7 +277,9 @@ export default function ServiceManagementPage() {
               </tr>
             </thead>
             <tbody>
-              {paginatedServices.map((service, index) => (
+              {loading ? (
+                <tr><td colSpan={8} className="p-4 text-center text-gray-400">Loading...</td></tr>
+              ) : services.map((service, index) => (
                 <motion.tr
                   key={service.id}
                   initial={{ opacity: 0, y: 20 }}
@@ -295,7 +290,7 @@ export default function ServiceManagementPage() {
                   <td className="p-4">
                     <div>
                       <p className="text-white font-medium line-clamp-1">{service.title}</p>
-                      <p className="text-xs text-gray-400">ID: {service.id}</p>
+                      <p className="text-xs text-gray-400">ID: {service.id.substring(0, 8)}</p>
                     </div>
                   </td>
                   <td className="p-4">
@@ -304,7 +299,7 @@ export default function ServiceManagementPage() {
                         <p className="text-white text-sm">{service.providerName}</p>
                         <div className="flex items-center gap-1 mt-1">
                           <Star className="w-3 h-3 text-yellow-500" />
-                          <span className="text-xs text-gray-400">{service.providerRating}</span>
+                          <span className="text-xs text-gray-400">{service.providerRating.toFixed(1)}</span>
                           {service.providerVerified && (
                             <Shield className="w-3 h-3 text-green-500" />
                           )}
@@ -317,9 +312,6 @@ export default function ServiceManagementPage() {
                   </td>
                   <td className="p-4">
                     <p className="text-white">₹{service.price}</p>
-                    {service.packages && (
-                      <p className="text-xs text-gray-400">{service.packages.length} packages</p>
-                    )}
                   </td>
                   <td className="p-4">
                     <div className="flex flex-col gap-1">
@@ -335,7 +327,7 @@ export default function ServiceManagementPage() {
                     <div className="space-y-1">
                       <div className="flex items-center gap-1">
                         <Star className="w-3 h-3 text-yellow-500" />
-                        <span className="text-sm text-white">{service.rating}</span>
+                        <span className="text-sm text-white">{service.rating.toFixed(1)}</span>
                         <span className="text-xs text-gray-400">({service.reviewCount})</span>
                       </div>
                       <p className="text-xs text-gray-400">{service.totalOrders} orders</p>
@@ -367,96 +359,55 @@ export default function ServiceManagementPage() {
                           <Eye className="w-4 h-4 mr-2" />
                           View Details
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="cursor-pointer">
-                          <Edit className="w-4 h-4 mr-2" />
-                          Edit Service
-                        </DropdownMenuItem>
-                        {service.status === 'pending' && (
-                          <>
-                            <DropdownMenuItem 
-                              className="cursor-pointer text-green-400"
-                              onClick={() => handleApprove(service.id)}
-                            >
-                              <CheckCircle className="w-4 h-4 mr-2" />
-                              Approve
-                            </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              className="cursor-pointer text-red-400"
-                              onClick={() => handleReject(service.id)}
-                            >
-                              <XCircle className="w-4 h-4 mr-2" />
-                              Reject
-                            </DropdownMenuItem>
-                          </>
-                        )}
-                        {service.status === 'approved' && (
-                          <DropdownMenuItem 
-                            className="cursor-pointer"
-                            onClick={() => toggleActive(service.id)}
+                        {!service.isActive && (
+                          <DropdownMenuItem
+                            className="cursor-pointer text-green-400"
+                            onClick={() => handleApprove(service.id)}
                           >
-                            {service.isActive ? (
-                              <>
-                                <XCircle className="w-4 h-4 mr-2" />
-                                Deactivate
-                              </>
-                            ) : (
-                              <>
-                                <CheckCircle className="w-4 h-4 mr-2" />
-                                Activate
-                              </>
-                            )}
+                            <CheckCircle className="w-4 h-4 mr-2" />
+                            Approve
                           </DropdownMenuItem>
                         )}
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem className="cursor-pointer text-red-400">
-                          <AlertCircle className="w-4 h-4 mr-2" />
-                          Flag Service
-                        </DropdownMenuItem>
+                        {service.isActive && (
+                          <DropdownMenuItem
+                            className="cursor-pointer text-red-400"
+                            onClick={() => handleReject(service.id)}
+                          >
+                            <XCircle className="w-4 h-4 mr-2" />
+                            Deactivate
+                          </DropdownMenuItem>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </td>
                 </motion.tr>
               ))}
+              {!loading && services.length === 0 && (
+                <tr><td colSpan={8} className="p-4 text-center text-gray-400">No services found.</td></tr>
+              )}
             </tbody>
           </table>
         </div>
 
         {/* Pagination */}
-        <div className="flex items-center justify-between p-4 border-t border-gray-800">
-          <p className="text-sm text-gray-400">
-            Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredServices.length)} of {filteredServices.length} services
-          </p>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-              disabled={currentPage === 1}
-              className="text-gray-300"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </Button>
-            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => i + 1).map(page => (
-              <Button
-                key={page}
-                variant={currentPage === page ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setCurrentPage(page)}
-                className={currentPage === page ? 'bg-purple-600' : 'text-gray-300'}
-              >
-                {page}
-              </Button>
-            ))}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-              disabled={currentPage === totalPages}
-              className="text-gray-300"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </Button>
-          </div>
+        <div className="flex items-center justify-center gap-2 p-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+            disabled={currentPage === 1}
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </Button>
+          <span className="text-gray-400">Page {currentPage} of {totalPages}</span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+            disabled={currentPage === totalPages}
+          >
+            <ChevronRight className="w-4 h-4" />
+          </Button>
         </div>
       </Card>
 
@@ -471,156 +422,6 @@ export default function ServiceManagementPage() {
         onApprove={handleApprove}
         onReject={handleReject}
       />
-
-      {/* Add Service Dialog */}
-      <Dialog open={showAddService} onOpenChange={setShowAddService}>
-        <DialogContent className="bg-[#1a1a1a] border-gray-800 max-w-2xl">
-          <DialogHeader>
-            <DialogTitle className="text-white">Add New Service</DialogTitle>
-            <DialogDescription className="text-gray-400">
-              Add a new service to the platform
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4">
-            <div>
-              <Label className="text-gray-300">Service Title</Label>
-              <Input
-                value={newService.title}
-                onChange={(e) => setNewService({ ...newService, title: e.target.value })}
-                className="bg-[#2a2a2a] border-gray-700 text-white mt-1"
-                placeholder="Enter service title"
-              />
-            </div>
-            
-            <div>
-              <Label className="text-gray-300">Provider Name</Label>
-              <Input
-                value={newService.providerName}
-                onChange={(e) => setNewService({ ...newService, providerName: e.target.value })}
-                className="bg-[#2a2a2a] border-gray-700 text-white mt-1"
-                placeholder="Enter provider name"
-              />
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label className="text-gray-300">Category</Label>
-                <Select value={newService.category} onValueChange={(value) => setNewService({ ...newService, category: value })}>
-                  <SelectTrigger className="bg-[#2a2a2a] border-gray-700 text-white mt-1">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Net Bowler">Net Bowler</SelectItem>
-                    <SelectItem value="Coach">Coach</SelectItem>
-                    <SelectItem value="Match Player">Match Player</SelectItem>
-                    <SelectItem value="Physio">Physio</SelectItem>
-                    <SelectItem value="Analyst">Analyst</SelectItem>
-                    <SelectItem value="Cricket Photo/Videography">Cricket Photo/Videography</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div>
-                <Label className="text-gray-300">Price (₹)</Label>
-                <Input
-                  type="number"
-                  value={newService.price}
-                  onChange={(e) => setNewService({ ...newService, price: e.target.value })}
-                  className="bg-[#2a2a2a] border-gray-700 text-white mt-1"
-                  placeholder="Enter price"
-                />
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label className="text-gray-300">Duration (minutes)</Label>
-                <Input
-                  type="number"
-                  value={newService.duration}
-                  onChange={(e) => setNewService({ ...newService, duration: e.target.value })}
-                  className="bg-[#2a2a2a] border-gray-700 text-white mt-1"
-                  placeholder="60"
-                />
-              </div>
-              
-              <div>
-                <Label className="text-gray-300">Location</Label>
-                <Input
-                  value={newService.location}
-                  onChange={(e) => setNewService({ ...newService, location: e.target.value })}
-                  className="bg-[#2a2a2a] border-gray-700 text-white mt-1"
-                  placeholder="Enter location"
-                />
-              </div>
-            </div>
-            
-            <div>
-              <Label className="text-gray-300">Description</Label>
-              <Textarea
-                value={newService.description}
-                onChange={(e) => setNewService({ ...newService, description: e.target.value })}
-                className="bg-[#2a2a2a] border-gray-700 text-white mt-1"
-                placeholder="Enter service description"
-                rows={4}
-              />
-            </div>
-          </div>
-          
-          <div className="flex justify-end gap-2 mt-4">
-            <Button variant="outline" onClick={() => setShowAddService(false)}>
-              Cancel
-            </Button>
-            <Button 
-              className="bg-purple-600 hover:bg-purple-700"
-              onClick={() => {
-                const serviceId = `SRV${String(services.length + 1).padStart(3, '0')}`;
-                const service = {
-                  id: serviceId,
-                  title: newService.title,
-                  description: newService.description,
-                  category: newService.category,
-                  categoryId: newService.category.toLowerCase().replace(' ', '-'),
-                  price: parseFloat(newService.price) || 0,
-                  duration: parseInt(newService.duration) || 60,
-                  location: newService.location,
-                  providerName: newService.providerName,
-                  providerId: `PRV${Math.floor(Math.random() * 100)}`,
-                  providerRating: 0,
-                  providerVerified: false,
-                  status: 'pending',
-                  isActive: false,
-                  isFlagged: false,
-                  isFeatured: false,
-                  rating: 0,
-                  totalOrders: 0,
-                  completionRate: 0,
-                  responseTime: '0 mins',
-                  tags: [newService.category],
-                  images: [],
-                  coords: [0, 0],
-                  createdAt: new Date().toISOString(),
-                  updatedAt: new Date().toISOString()
-                } as any;
-                setServices([service, ...services]);
-                setShowAddService(false);
-                setNewService({
-                  title: '',
-                  description: '',
-                  category: 'Net Bowler',
-                  price: '',
-                  duration: '60',
-                  location: '',
-                  providerName: '',
-                });
-              }}
-            >
-              Add Service
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

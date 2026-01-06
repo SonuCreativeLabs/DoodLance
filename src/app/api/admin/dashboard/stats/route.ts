@@ -1,10 +1,11 @@
+export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 
 // Mock data - In production, fetch from database
 const generateStats = () => {
   const now = new Date();
   const todayStart = new Date(now.setHours(0, 0, 0, 0));
-  
+
   return {
     users: {
       total: 523,
@@ -56,10 +57,10 @@ const generateChartData = () => {
 
 const generateCategoryPerformance = () => {
   const categories = [
-    'Net Bowler', 'Coach', 'Match Player', 'Physio', 
+    'Net Bowler', 'Coach', 'Match Player', 'Physio',
     'Analyst', 'Cricket Photo/Videography'
   ];
-  
+
   return categories.map(name => ({
     name,
     bookings: Math.floor(Math.random() * 100) + 20,
@@ -76,8 +77,8 @@ const generateRecentActivity = () => {
     { type: 'service', message: 'New service approved', service: 'Net Bowling Session' },
     { type: 'withdrawal', message: 'Withdrawal request', amount: 15000 },
   ];
-  
-  return activities.map((activity, i) => ({
+
+  return activities.map((activity: any, i: number) => ({
     ...activity,
     timestamp: new Date(Date.now() - i * 3600000).toISOString(),
     id: `ACT${1000 + i}`

@@ -137,7 +137,7 @@ const nextConfig = {
         hostname: 'images.unsplash.com',
       },
     ],
-    domains: ['localhost', '127.0.0.1', 'atmxiuindyakhqmdqzal.supabase.co', 'umeqaqwidjdgnwkxedaw.supabase.co', 'api.dicebear.com', 'images.unsplash.com', 'ui-avatars.com', 'i.pravatar.cc'],
+    domains: ['localhost', '127.0.0.1', 'atmxiuindyakhqmdqzal.supabase.co', 'umeqaqwidjdgnwkxedaw.supabase.co', 'ykbvbtegmxawgrqctddt.supabase.co', 'api.dicebear.com', 'images.unsplash.com', 'ui-avatars.com', 'i.pravatar.cc'],
   },
 
   // Static asset handling
@@ -153,7 +153,7 @@ const nextConfig = {
 
   // Add compression
   compress: true,
-  
+
   // TypeScript and ESLint configurations
   typescript: {
     ignoreBuildErrors: false,
@@ -161,10 +161,10 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  
+
   // Page extensions
   pageExtensions: ['tsx', 'ts', 'jsx', 'js'],
-  
+
   // Custom webpack configuration
   webpack: (config, { isServer, dev }) => {
     config.resolve.alias['@'] = path.join(__dirname, 'src');
@@ -192,12 +192,12 @@ const nextConfig = {
 
     return config;
   },
-  
+
   // Environment variables
   env: {
     // Add any environment variables that should be available at build time
   },
-  
+
   // Headers configuration
   async headers() {
     const previewOrigins = "http://localhost:* http://127.0.0.1:*";
@@ -235,7 +235,7 @@ const nextConfig = {
       },
     ];
   },
-  
+
   // Custom rewrites
   async rewrites() {
     return [
@@ -247,7 +247,7 @@ const nextConfig = {
       // },
     ];
   },
-  
+
   // Server Actions are enabled by default in Next.js 14+
   experimental: {
     // Add any experimental features here
@@ -264,20 +264,20 @@ const sentryWebpackPluginOptions = {
 
   // Suppresses source map uploading logs during build
   silent: true,
-  
+
   // Organization and project from your Sentry account
   org: process.env.SENTRY_ORG || 'doodlance',
   project: process.env.SENTRY_PROJECT || 'doodlance-app',
-  
+
   // Auth token for uploading source maps
   authToken: process.env.SENTRY_AUTH_TOKEN,
-  
+
   // Only upload source maps in production
   dryRun: process.env.NODE_ENV !== 'production',
-  
+
   // Hides source maps from generated client bundles
   hideSourceMaps: true,
-  
+
   // Automatically tree-shake Sentry logger statements to reduce bundle size
   disableLogger: true,
 };

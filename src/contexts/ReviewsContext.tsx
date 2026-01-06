@@ -1,7 +1,8 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef } from 'react';
-import { getInitialRatingStats, reviews as reviewsData } from '@/data/reviewsData';
+import { getInitialRatingStats, reviews as reviewsDataMock } from '@/data/reviewsData';
+import { createClient } from '@/lib/supabase/client';
 
 export interface Review {
   id: string;
@@ -25,22 +26,74 @@ interface ReviewsContextType {
   updateRating: (rating: number, reviewCount: number) => void;
   addReview: (review: Review) => void;
   removeReview: (reviewId: string) => void;
+  hydrateReviews: (reviews: Review[]) => void;
 }
-
-const initialReviewsData: ReviewsData = (() => {
-  const { averageRating, totalReviews } = getInitialRatingStats();
-  return {
-    reviews: reviewsData as Review[],
-    averageRating,
-    totalReviews,
-  };
-})();
 
 const ReviewsContext = createContext<ReviewsContextType | undefined>(undefined);
 
-export function ReviewsProvider({ children }: { children: ReactNode }) {
-  const [reviewsData, setReviewsData] = useState<ReviewsData>(initialReviewsData);
+export interface ReviewsProviderProps {
+  children: ReactNode;
+  skipInitialFetch?: boolean;
+}
+
+export function ReviewsProvider({ children, skipInitialFetch = false }: ReviewsProviderProps) {
+  const [reviewsData, setReviewsData] = useState<ReviewsData>({
+    reviews: [],
+    averageRating: 0,
+    totalReviews: 0,
+  });
   const hasHydrated = useRef(false);
+  const supabase = createClient();
+
+  const hydrateReviews = useCallback((reviews: Review[]) => {
+    const totalRating = reviews.reduce((acc, curr) => acc + curr.rating, 0);
+    const avgRating = reviews.length > 0 ? totalRating / reviews.length : 0;
+
+    setReviewsData({
+      reviews,
+      averageRating: parseFloat(avgRating.toFixed(1)),
+      totalReviews: reviews.length
+    });
+    hasHydrated.current = true;
+  }, []);
+
+  useEffect(() => {
+    if (skipInitialFetch) return;
+
+    const fetchReviews = async () => {
+      try {
+        const response = await fetch('/api/freelancer/reviews');
+        if (!response.ok) return;
+
+        const { reviews: data } = await response.json();
+
+        if (data) {
+          const formattedReviews: Review[] = data.map((r: any) => ({
+            id: r.id,
+            author: r.client?.name || 'Anonymous', // Use joined client data
+            rating: r.rating,
+            comment: r.comment,
+            date: new Date(r.createdAt).toISOString().split('T')[0],
+            role: 'Client', // Default role since clientRole is not in schema often
+            isVerified: r.isVerified
+          }));
+
+          const totalRating = formattedReviews.reduce((acc, curr) => acc + curr.rating, 0);
+          const avgRating = formattedReviews.length > 0 ? totalRating / formattedReviews.length : 0;
+
+          setReviewsData({
+            reviews: formattedReviews,
+            averageRating: parseFloat(avgRating.toFixed(1)),
+            totalReviews: formattedReviews.length
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching reviews:', error);
+      }
+    };
+
+    fetchReviews();
+  }, [skipInitialFetch]);
 
   const updateReviews = useCallback((reviews: Review[]) => {
     setReviewsData(prev => ({
@@ -71,32 +124,13 @@ export function ReviewsProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
-  // Load from localStorage on mount
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem('reviewsData');
-      if (saved) {
-        setReviewsData(JSON.parse(saved));
-      }
-    } catch (error) {
-      console.error('Failed to parse reviews data:', error);
-    } finally {
-      hasHydrated.current = true;
-    }
-  }, []);
-
-  // Save to localStorage whenever it changes (skip first paint)
-  useEffect(() => {
-    if (!hasHydrated.current) return;
-    localStorage.setItem('reviewsData', JSON.stringify(reviewsData));
-  }, [reviewsData]);
-
   const value: ReviewsContextType = {
     reviewsData,
     updateReviews,
     updateRating,
     addReview,
     removeReview,
+    hydrateReviews,
   };
 
   return (

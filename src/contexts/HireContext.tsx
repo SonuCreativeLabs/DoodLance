@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 
 export interface ServiceItem {
   id: string;
@@ -44,6 +44,7 @@ interface HireContextType {
   state: HireState;
   setFreelancer: (id: string, name: string, image: string, rating?: number | null, reviewCount?: number | null, services?: ServiceItem[]) => void;
   addService: (service: ServiceItem) => void;
+  setSelectedService: (service: ServiceItem) => void;
   removeService: (serviceId: string) => void;
   increaseSelectedServiceQuantity: (serviceId: string) => void;
   decreaseSelectedServiceQuantity: (serviceId: string) => void;
@@ -56,6 +57,7 @@ interface HireContextType {
   clearCart: () => void;
   resetHireState: () => void;
   getTotalPrice: () => number;
+  isLoaded: boolean;
 }
 
 const initialState: HireState = {
@@ -78,6 +80,60 @@ const HireContext = createContext<HireContextType | undefined>(undefined);
 
 export function HireProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<HireState>(initialState);
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Load from localStorage on mount
+  useEffect(() => {
+    const savedState = localStorage.getItem('doodlance_hire_state');
+    if (savedState) {
+      try {
+        const parsedState = JSON.parse(savedState);
+        // Sanitization Layer: Ensure deeply nested fields are safe
+        // This fixes legacy corrupted data (where price might be an object)
+        if (parsedState.freelancerName && typeof parsedState.freelancerName === 'object') {
+          parsedState.freelancerName = String(parsedState.freelancerName);
+        }
+        if (parsedState.freelancerImage && typeof parsedState.freelancerImage === 'object') {
+          parsedState.freelancerImage = String(parsedState.freelancerImage);
+        }
+
+        // Sanitize selectedServices
+        if (Array.isArray(parsedState.selectedServices)) {
+          parsedState.selectedServices = parsedState.selectedServices.map((s: any) => ({
+            ...s,
+            price: typeof s.price === 'object' ? String(s.price) : s.price,
+            title: typeof s.title === 'object' ? String(s.title) : s.title,
+            deliveryTime: typeof s.deliveryTime === 'object' ? String(s.deliveryTime) : s.deliveryTime
+          }));
+        }
+
+        // Sanitize Cart Items
+        if (Array.isArray(parsedState.cartItems)) {
+          parsedState.cartItems = parsedState.cartItems.map((item: any) => ({
+            ...item,
+            service: {
+              ...item.service,
+              price: typeof item.service?.price === 'object' ? String(item.service.price) : item.service?.price,
+              title: typeof item.service?.title === 'object' ? String(item.service.title) : item.service?.title
+            }
+          }));
+        }
+
+        // Ensure all required fields exist (merge with initial state for safety)
+        setState({ ...initialState, ...parsedState });
+      } catch (error) {
+        console.error('Failed to parse hire state from localStorage', error);
+      }
+    }
+    setIsInitialized(true);
+  }, []);
+
+  // Save to localStorage whenever state changes
+  useEffect(() => {
+    if (isInitialized) {
+      localStorage.setItem('doodlance_hire_state', JSON.stringify(state));
+    }
+  }, [state, isInitialized]);
 
   const setFreelancer = useCallback((id: string, name: string, image: string, rating: number | null = null, reviewCount: number | null = null, services: ServiceItem[] = []) => {
     setState(prev => ({
@@ -95,6 +151,13 @@ export function HireProvider({ children }: { children: ReactNode }) {
     setState(prev => ({
       ...prev,
       selectedServices: [...prev.selectedServices, { ...service, quantity: 1 }],
+    }));
+  }, []);
+
+  const setSelectedService = useCallback((service: ServiceItem) => {
+    setState(prev => ({
+      ...prev,
+      selectedServices: [{ ...service, quantity: 1 }],
     }));
   }, []);
 
@@ -219,6 +282,7 @@ export function HireProvider({ children }: { children: ReactNode }) {
     state,
     setFreelancer,
     addService,
+    setSelectedService,
     removeService,
     increaseSelectedServiceQuantity,
     decreaseSelectedServiceQuantity,
@@ -231,6 +295,7 @@ export function HireProvider({ children }: { children: ReactNode }) {
     clearCart,
     resetHireState,
     getTotalPrice,
+    isLoaded: isInitialized,
   };
 
   return (

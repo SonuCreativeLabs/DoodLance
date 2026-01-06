@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, ArrowRight, FileText, Check, X, UploadCloud, AlertCircle, Loader2, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -17,18 +17,120 @@ type VerificationStep = 'document' | 'selfie' | 'review';
 
 export default function IdUploadPage() {
   const router = useRouter();
-  
+
   // Form state
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedIdType, setSelectedIdType] = useState<string>('');
   const [idNumber, setIdNumber] = useState('');
   const [selfieImage, setSelfieImage] = useState<string | null>(null);
-  
+
   // UI state
   const [isUploading, setIsUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState<VerificationStep>('document');
+
+  const [verificationStatus, setVerificationStatus] = useState<'idle' | 'in_review' | 'verified' | 'rejected'>('idle');
+  const [rejectionReason, setRejectionReason] = useState('');
+
+  // Fetch current status
+  useEffect(() => {
+    const fetchStatus = async () => {
+      try {
+        const response = await fetch('/api/freelancer/profile');
+        if (response.ok) {
+          const data = await response.json();
+          // Check if docs exist and what the status is
+          if (data.profile?.isVerified) {
+            setVerificationStatus('verified');
+          } else if (data.profile?.verificationDocs) {
+            // If docs exist but not verified, it's likely in review
+            // (unless we add a specific 'rejected' flag in the future)
+            // For now, we assume 'in_review' if docs exist.
+            // You can parse data.verificationDocs to check for a 'status' field if you added one.
+            try {
+              const docs = JSON.parse(data.profile.verificationDocs);
+              if (docs.status === 'rejected') {
+                setVerificationStatus('rejected');
+                setRejectionReason(docs.rejectionReason || 'Documents were not clear.');
+              } else {
+                setVerificationStatus('in_review');
+              }
+            } catch (e) {
+              setVerificationStatus('in_review');
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch verification status:', error);
+      }
+    };
+    fetchStatus();
+  }, []);
+
+  if (verificationStatus === 'in_review') {
+    return (
+      <div className="min-h-screen bg-[#0F0F0F] text-white flex flex-col items-center justify-center p-4">
+        <div className="bg-[#1E1E1E] p-8 rounded-2xl border border-white/10 max-w-md w-full text-center">
+          <div className="w-16 h-16 bg-yellow-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Loader2 className="w-8 h-8 text-yellow-500 animate-spin" />
+          </div>
+          <h2 className="text-2xl font-bold mb-2">Under Review</h2>
+          <p className="text-white/60 mb-6">
+            Your documents have been submitted and are currently being reviewed by our team. This usually takes 24-48 hours.
+          </p>
+          <Button
+            variant="outline"
+            className="w-full border-white/10 hover:bg-white/5"
+            onClick={() => router.push('/freelancer/profile')}
+          >
+            Back to Profile
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (verificationStatus === 'verified') {
+    return (
+      <div className="min-h-screen bg-[#0F0F0F] text-white flex flex-col items-center justify-center p-4">
+        <div className="bg-[#1E1E1E] p-8 rounded-2xl border border-green-500/20 max-w-md w-full text-center">
+          <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Check className="w-8 h-8 text-green-500" />
+          </div>
+          <h2 className="text-2xl font-bold mb-2 text-green-500">Verified</h2>
+          <p className="text-white/60 mb-6">
+            Your identity has been successfully verified. You now have a verified badge on your profile.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (verificationStatus === 'rejected') {
+    return (
+      <div className="min-h-screen bg-[#0F0F0F] text-white flex flex-col items-center justify-center p-4">
+        <div className="bg-[#1E1E1E] p-8 rounded-2xl border border-red-500/20 max-w-md w-full text-center">
+          <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+            <X className="w-8 h-8 text-red-500" />
+          </div>
+          <h2 className="text-2xl font-bold mb-2 text-red-500">Verification Failed</h2>
+          <p className="text-white/60 mb-2">
+            Your verification request was rejected.
+          </p>
+          <div className="bg-red-500/10 p-3 rounded-lg border border-red-500/20 mb-6 text-sm text-red-200">
+            Reason: {rejectionReason}
+          </div>
+          <Button
+            className="w-full bg-red-600 hover:bg-red-700 text-white"
+            onClick={() => setVerificationStatus('idle')}
+          >
+            Try Again
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   const idTypes: IdType[] = [
     { value: 'aadhaar', label: 'Aadhaar Card', description: '12-digit unique identity number' },
@@ -60,7 +162,7 @@ export default function IdUploadPage() {
     }
 
     setSelectedFile(file);
-    
+
     // Create preview for images
     if (file.type.startsWith('image/')) {
       const reader = new FileReader();
@@ -75,48 +177,125 @@ export default function IdUploadPage() {
 
   const handleDocumentSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!selectedFile) {
       toast.error('Please select a file to upload');
       return;
     }
-    
+
     if (!selectedIdType) {
       toast.error('Please select an ID type');
       return;
     }
-    
+
     if (!idNumber.trim()) {
       toast.error('Please enter your ID number');
       return;
     }
-    
+
     // Move to selfie verification step
     setCurrentStep('selfie');
   };
-  
+
   const handleSelfieCapture = (imageData: string) => {
     setSelfieImage(imageData);
     setCurrentStep('review');
   };
-  
+
   const handleRetakeSelfie = () => {
     setSelfieImage(null);
     setCurrentStep('selfie');
   };
-  
+
+  const uploadFile = async (file: File, path: string) => {
+    const { createClient } = await import('@/lib/supabase/client');
+    const supabase = createClient();
+
+    // Convert to distinct file name to avoid collisions
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Math.random().toString(36).substring(7)}_${Date.now()}.${fileExt}`;
+    const filePath = `${path}/${fileName}`;
+
+    const { error: uploadError, data } = await supabase.storage
+      .from('verification-docs')
+      .upload(filePath, file);
+
+    if (uploadError) {
+      throw uploadError;
+    }
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('verification-docs')
+      .getPublicUrl(filePath);
+
+    return publicUrl;
+  };
+
+  const uploadBase64 = async (base64Data: string, path: string) => {
+    const { createClient } = await import('@/lib/supabase/client');
+    const supabase = createClient();
+
+    // Convert base64 to blob
+    const res = await fetch(base64Data);
+    const blob = await res.blob();
+
+    const fileName = `${Math.random().toString(36).substring(7)}_${Date.now()}.jpg`;
+    const filePath = `${path}/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('verification-docs')
+      .upload(filePath, blob, {
+        contentType: 'image/jpeg'
+      });
+
+    if (uploadError) {
+      throw uploadError;
+    }
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('verification-docs')
+      .getPublicUrl(filePath);
+
+    return publicUrl;
+  };
+
   const handleSubmit = async () => {
-    if (!selfieImage) {
-      toast.error('Please complete the selfie verification');
+    if (!selfieImage || !selectedFile) {
+      toast.error('Please complete all verification steps');
       return;
     }
-    
+
     setIsUploading(true);
-    
+
     try {
-      // Simulate API call with both document and selfie
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
+      const { createClient } = await import('@/lib/supabase/client');
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (!user) throw new Error('User not authenticated');
+
+      // 1. Upload Document
+      const documentUrl = await uploadFile(selectedFile, `${user.id}/documents`);
+
+      // 2. Upload Selfie
+      const selfieUrl = await uploadBase64(selfieImage, `${user.id}/selfies`);
+
+      // 3. Submit to API
+      const response = await fetch('/api/freelancer/verification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          idType: selectedIdType,
+          idNumber,
+          documentUrl,
+          selfieUrl
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to submit verification');
+      }
+
       // On success
       toast.success('Verification submitted successfully! Your documents are under review.');
       router.push('/freelancer/profile/verification/status?status=in_review');
@@ -147,18 +326,17 @@ export default function IdUploadPage() {
               const isCompleted = index < currentStepIndex;
               const isActive = index === currentStepIndex;
               const isLast = index === steps.length - 1;
-              
+
               return (
                 <div key={step.id} className="relative flex-1 flex flex-col items-center">
                   {/* Step circle */}
-                  <div 
-                    className={`w-7 h-7 rounded-full flex items-center justify-center relative z-10 transition-all duration-300 ${
-                      isCompleted 
-                        ? 'bg-primary/90 text-white' 
-                        : isActive 
-                          ? 'bg-white border-2 border-primary text-primary' 
-                          : 'bg-white/5 border border-white/10 text-white/40'
-                    }`}
+                  <div
+                    className={`w-7 h-7 rounded-full flex items-center justify-center relative z-10 transition-all duration-300 ${isCompleted
+                      ? 'bg-primary/90 text-white'
+                      : isActive
+                        ? 'bg-white border-2 border-primary text-primary'
+                        : 'bg-white/5 border border-white/10 text-white/40'
+                      }`}
                   >
                     {isCompleted ? (
                       <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
@@ -168,20 +346,19 @@ export default function IdUploadPage() {
                       </span>
                     )}
                   </div>
-                  
+
                   {/* Step label */}
-                  <span 
-                    className={`mt-2 text-xs whitespace-nowrap transition-colors ${
-                      isActive ? 'text-white font-medium' : 'text-white/60'
-                    }`}
+                  <span
+                    className={`mt-2 text-xs whitespace-nowrap transition-colors ${isActive ? 'text-white font-medium' : 'text-white/60'
+                      }`}
                   >
                     {step.label}
                   </span>
-                  
+
                   {/* Connecting line */}
                   {!isLast && (
                     <div className="absolute top-3.5 left-full w-16 h-0.5 bg-white/10 overflow-hidden -translate-x-1/2">
-                      <div 
+                      <div
                         className="h-full bg-primary/80 transition-all duration-500 ease-out"
                         style={{
                           width: isCompleted ? '100%' : index < currentStepIndex ? '100%' : '0%'
@@ -213,7 +390,7 @@ export default function IdUploadPage() {
 
     return (
       <div className="flex items-center py-3">
-        <button 
+        <button
           onClick={() => currentStep === 'document' ? router.back() : setCurrentStep('document')}
           className="inline-flex items-center text-sm text-purple-400 hover:text-purple-300 transition-colors duration-200"
           aria-label="Go back"
@@ -241,9 +418,8 @@ export default function IdUploadPage() {
           <button
             type="button"
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            className={`w-full flex items-center justify-between p-2.5 text-left rounded-xl border ${
-              isDropdownOpen ? 'border-purple-500' : 'border-white/10'
-            } bg-[#1E1E1E] hover:border-white/20 transition-colors text-sm`}
+            className={`w-full flex items-center justify-between p-2.5 text-left rounded-xl border ${isDropdownOpen ? 'border-purple-500' : 'border-white/10'
+              } bg-[#1E1E1E] hover:border-white/20 transition-colors text-sm`}
           >
             <div>
               {selectedIdType ? (
@@ -260,9 +436,8 @@ export default function IdUploadPage() {
               )}
             </div>
             <svg
-              className={`h-5 w-5 text-white/60 transform transition-transform ${
-                isDropdownOpen ? 'rotate-180' : ''
-              }`}
+              className={`h-5 w-5 text-white/60 transform transition-transform ${isDropdownOpen ? 'rotate-180' : ''
+                }`}
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -286,9 +461,8 @@ export default function IdUploadPage() {
                       setSelectedIdType(type.value);
                       setIsDropdownOpen(false);
                     }}
-                    className={`px-4 py-2 text-sm cursor-pointer hover:bg-white/5 ${
-                      selectedIdType === type.value ? 'bg-purple-500/10 text-purple-400' : 'text-white/90'
-                    }`}
+                    className={`px-4 py-2 text-sm cursor-pointer hover:bg-white/5 ${selectedIdType === type.value ? 'bg-purple-500/10 text-purple-400' : 'text-white/90'
+                      }`}
                   >
                     <div className="font-medium">{type.label}</div>
                     <div className="text-xs text-white/60">{type.description}</div>
@@ -329,9 +503,9 @@ export default function IdUploadPage() {
               <div className="space-y-2 w-full">
                 <p className="text-xs font-medium text-white/80">Document Preview</p>
                 <div className="relative mx-auto">
-                  <img 
-                    src={previewUrl} 
-                    alt="Document preview" 
+                  <img
+                    src={previewUrl}
+                    alt="Document preview"
                     className="max-h-40 mx-auto rounded border border-white/10"
                   />
                   <button
@@ -376,7 +550,7 @@ export default function IdUploadPage() {
           </div>
         </div>
       </div>
-      
+
       <div className="bg-[#1E1E1E] rounded-xl border border-white/10 p-3">
         <div className="flex items-start gap-2">
           <AlertCircle className="h-4 w-4 text-yellow-400 flex-shrink-0 mt-0.5" />
@@ -405,8 +579,8 @@ export default function IdUploadPage() {
       </div>
 
       <div className="pt-2">
-        <Button 
-          type="submit" 
+        <Button
+          type="submit"
           disabled={!selectedFile || !selectedIdType || !idNumber}
           className="w-full h-10 rounded-xl text-sm bg-primary hover:bg-primary/90 text-white transition-all duration-200 font-medium"
         >
@@ -419,13 +593,13 @@ export default function IdUploadPage() {
 
   const renderSelfieStep = () => (
     <div className="space-y-6 pt-4">
-      <SelfieCapture 
+      <SelfieCapture
         onCapture={handleSelfieCapture}
         onRetake={handleRetakeSelfie}
         capturedImage={selfieImage}
         isUploading={isUploading}
       />
-      
+
       <div className="flex justify-between items-center pt-4 border-t border-white/5">
         <Button
           type="button"
@@ -437,7 +611,7 @@ export default function IdUploadPage() {
           <ArrowLeft className="h-4 w-4 mr-1.5" />
           Back
         </Button>
-        <Button 
+        <Button
           type="button"
           onClick={() => setCurrentStep('review')}
           disabled={!selfieImage}
@@ -455,7 +629,7 @@ export default function IdUploadPage() {
       <div className="bg-[#1E1E1E] rounded-xl border border-white/10 p-6 space-y-6">
         <div>
           <h2 className="text-lg font-medium text-white mb-4">Review Your Information</h2>
-          
+
           <div className="space-y-4">
             <div className="border-b border-white/5 pb-4">
               <h3 className="text-sm font-medium text-white/80 mb-2">Document Details</h3>
@@ -470,14 +644,14 @@ export default function IdUploadPage() {
                 </div>
               </div>
             </div>
-            
+
             <div className="border-b border-white/5 pb-4">
               <h3 className="text-sm font-medium text-white/80 mb-2">Document Preview</h3>
               {previewUrl ? (
                 <div className="relative w-full max-w-xs aspect-[3/2] bg-black/20 rounded-lg overflow-hidden border border-white/10">
-                  <img 
-                    src={previewUrl} 
-                    alt="Document preview" 
+                  <img
+                    src={previewUrl}
+                    alt="Document preview"
                     className="w-full h-full object-contain"
                   />
                 </div>
@@ -487,14 +661,14 @@ export default function IdUploadPage() {
                 </div>
               )}
             </div>
-            
+
             <div>
               <h3 className="text-sm font-medium text-white/80 mb-2">Selfie</h3>
               <div className="relative w-24 h-24 rounded-full overflow-hidden border-2 border-green-500/50">
                 {selfieImage ? (
-                  <img 
-                    src={selfieImage} 
-                    alt="Selfie preview" 
+                  <img
+                    src={selfieImage}
+                    alt="Selfie preview"
                     className="w-full h-full object-cover"
                   />
                 ) : (
@@ -507,7 +681,7 @@ export default function IdUploadPage() {
           </div>
         </div>
       </div>
-      
+
       <div className="flex justify-between pt-6">
         <Button
           type="button"
@@ -519,7 +693,7 @@ export default function IdUploadPage() {
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back
         </Button>
-        <Button 
+        <Button
           type="button"
           onClick={handleSubmit}
           disabled={isUploading}
@@ -547,7 +721,7 @@ export default function IdUploadPage() {
       <div className="sticky top-0 z-20 bg-[#0F0F0F] border-b border-white/5">
         <div className="px-4 py-3">
           <div className="flex items-start">
-            <button 
+            <button
               onClick={() => currentStep === 'document' ? router.back() : setCurrentStep('document')}
               className="inline-flex items-center text-sm text-purple-400 hover:text-purple-300 transition-colors duration-200 mt-1"
               aria-label="Go back"
@@ -559,19 +733,19 @@ export default function IdUploadPage() {
             </button>
             <div className="ml-3">
               <h1 className="text-lg font-semibold text-white">
-                {currentStep === 'document' ? 'Document Verification' : 
-                 currentStep === 'selfie' ? 'Take a Selfie' : 'Review & Submit'}
+                {currentStep === 'document' ? 'Document Verification' :
+                  currentStep === 'selfie' ? 'Take a Selfie' : 'Review & Submit'}
               </h1>
               <p className="text-sm text-white/60 mt-1">
-                {currentStep === 'document' ? 'Verify your identity with a valid ID' : 
-                 currentStep === 'selfie' ? 'We need to match your selfie with your ID' : 
-                 'Verify your information before submission'}
+                {currentStep === 'document' ? 'Verify your identity with a valid ID' :
+                  currentStep === 'selfie' ? 'We need to match your selfie with your ID' :
+                    'Verify your information before submission'}
               </p>
             </div>
           </div>
         </div>
       </div>
-      
+
       {/* Main Content */}
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-md mx-auto w-full px-4 py-4">
@@ -579,7 +753,7 @@ export default function IdUploadPage() {
           <div className="mb-6">
             {renderStepIndicator()}
           </div>
-          
+
           {/* Dynamic Step Content */}
           <div className="animate-fade-in">
             {currentStep === 'document' ? (

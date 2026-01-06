@@ -1,6 +1,6 @@
 // Status Types
 import { JobDuration } from '@/app/freelancer/feed/types';
-export type JobStatus = 'pending' | 'completed' | 'cancelled' | 'upcoming' | 'started' | 'ongoing';
+export type JobStatus = 'pending' | 'completed' | 'cancelled' | 'upcoming' | 'started' | 'ongoing' | 'delivered';
 export type ApplicationStatus = 'pending' | 'accepted' | 'rejected' | 'withdrawn' | 'interview' | 'hired' | 'completed' | 'cancelled' | 'expired' | 'archived';
 export type TransactionStatus = 'pending' | 'failed' | 'completed';
 
@@ -48,6 +48,7 @@ export interface ClientInfo {
   jobsCompleted?: number;
   memberSince?: string;
   phoneNumber?: string;
+  phone?: string;
   image?: string;
   moneySpent?: number;
   location?: string;
@@ -99,8 +100,6 @@ export interface Job {
   client?: ClientInfo;
   cancellationDetails?: CancellationDetails;
   rating?: Rating;
-  clientRating?: Rating;
-  freelancerRating?: FreelancerRating;
   review?: string; // Direct review property for backward compatibility
   feedbackChips?: string[]; // Direct feedback chips property for backward compatibility
   otp?: string; // 4-digit verification code for starting job
@@ -150,8 +149,18 @@ export interface Job {
     title: string;
     price: string | number;
     quantity: number;
+    duration?: number;
+    deliveryTime?: string;
   }[];
   paymentMethod?: 'cod' | 'upi' | 'card' | 'wallet';
+  clientRating?: JobRatingType;
+  freelancerRating?: JobRatingType;
+}
+
+export interface JobRatingType {
+  stars: number;
+  review?: string;
+  feedbackChips?: string[];
 }
 
 export interface Proposal {
@@ -164,6 +173,7 @@ export interface Proposal {
 
 export interface Application {
   "#": string;
+  jobId?: string;
   jobTitle: string;
   appliedDate: string;
   status: 'pending' | 'accepted' | 'rejected' | 'withdrawn' | 'interview' | 'hired' | 'completed' | 'cancelled' | 'expired' | 'archived';

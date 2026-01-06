@@ -78,7 +78,7 @@ export function CollapsibleTimeline({ items, title = "Timeline", defaultExpanded
             <div key={index} className="relative pl-4">
               {/* Tooltip positioned above timeline item */}
               <div className="absolute z-50 -top-12 left-1/2 transform -translate-x-1/2 px-3 py-2 bg-black border border-gray-600 rounded-lg shadow-xl hidden max-w-xs w-max"
-                   style={{ pointerEvents: 'none' }}>
+                style={{ pointerEvents: 'none' }}>
                 <div className="text-xs text-gray-300 leading-relaxed text-center whitespace-nowrap">
                   {getTimelineTooltipContent(item.label)}
                 </div>
@@ -302,8 +302,8 @@ export const createTimelineItems = (type: 'proposal' | 'job', item: any) => {
     } else {
       // For jobs without proposal history (direct assignments)
       timelineItems.push({
-        label: '🏏 Session Announced!',
-        date: item.date || item.createdAt || item.postedAt || new Date().toISOString(),
+        label: item.isDirectHire ? '📅 Booking Confirmed' : '🏏 Session Announced!',
+        date: item.createdAt || item.date || item.postedAt || new Date().toISOString(),
         completed: true,
         icon: CheckCircle,
         color: 'bg-purple-500'
@@ -311,34 +311,47 @@ export const createTimelineItems = (type: 'proposal' | 'job', item: any) => {
     }
 
     // Add job-specific timeline items based on status
-    if (item.status === 'started' || item.status === 'ongoing') {
+    if (item.status === 'started' || item.status === 'ongoing' || item.status === 'completed') {
       timelineItems.push({
         label: '🏃 Game On - Work Started!',
-        date: item.startedAt || (item.date ? new Date(new Date(item.date).getTime() + 7200000).toISOString() : new Date(Date.now() + 7200000).toISOString()),
+        date: item.startedAt || item.scheduledAt || (item.date ? new Date(new Date(item.date).getTime() + 7200000).toISOString() : new Date(Date.now() + 7200000).toISOString()),
         completed: true,
         icon: CheckCircle,
         color: 'bg-blue-500'
       });
-    } else if (item.status === 'completed') {
-      timelineItems.push({
-        label: '🏃 Game On - Work Started!',
-        date: item.startedAt || (item.date ? new Date(new Date(item.date).getTime() + 7200000).toISOString() : new Date(Date.now() + 7200000).toISOString()),
-        completed: true,
-        icon: CheckCircle,
-        color: 'bg-blue-500'
-      });
+    }
 
+    if (item.status === 'delivered') {
+      // Freelancer marked as delivered
+      timelineItems.push({
+        label: '📝 Work Delivered - Waiting for Confirmation',
+        date: item.deliveredAt || new Date().toISOString(),
+        completed: true,
+        icon: CheckCircle,
+        color: 'bg-indigo-500'
+      });
+      // Add waiting item
+      timelineItems.push({
+        label: '⏳ Waiting for Client Approval',
+        date: null,
+        completed: false,
+        icon: CheckCircle,
+        color: 'bg-white/10'
+      });
+    }
+
+    if (item.status === 'completed') {
       // Add who marked job complete first (typically freelancer)
       timelineItems.push({
-        label: 'Job marked completed by freelancer',
-        date: item.completedAt ? new Date(new Date(item.completedAt).getTime() - 3600000).toISOString() : new Date(Date.now() - 3600000).toISOString(),
+        label: '📝 Work Delivered',
+        date: item.deliveredAt ? item.deliveredAt : (item.completedAt ? new Date(new Date(item.completedAt).getTime() - 900000).toISOString() : new Date(Date.now() - 3600000).toISOString()),
         completed: true,
         icon: CheckCircle,
-        color: 'bg-orange-500'
+        color: 'bg-indigo-500'
       });
 
       timelineItems.push({
-        label: '🎯 Deal Secured - Job Completed!',
+        label: '🎯 Deal Secured - Client Confirmed!',
         date: item.completedAt || new Date().toISOString(),
         completed: true,
         icon: CheckCircle,

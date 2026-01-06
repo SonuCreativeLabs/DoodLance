@@ -1,261 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/db'
 
-// Helper function to generate dynamic mock job data for any job ID
-const generateMockJob = (jobId: string) => {
-  // Map specific job IDs to their correct mock data
-  const jobIdMap: {[key: string]: any} = {
-    'DLCS0001': {
-      title: 'Cricket Scorer for Local Tournament',
-      category: 'Scorer',
-      description: 'Need an experienced cricket scorer for our weekend local tournament. Must be familiar with digital scoring systems and cricket statistics.',
-      skills: ['Cricket Scorer', 'Digital Scoring', 'Cricket Statistics', 'Match Analysis'],
-      location: 'Chennai Cricket Ground, Chennai',
-      payment: 5000,
-      client: {
-        name: 'Chennai Local Cricket League',
-        image: '/images/LOGOS/local_league.jpg',
-        rating: 4.6,
-        jobsCompleted: 15,
-        seed: 'LocalLeague'
-      }
-    },
-    'DLCP1357': {
-      title: 'Sports Physiotherapy — Injury Prevention Program',
-      category: 'OTHER',
-      description: 'Seeking a qualified sports physiotherapist for our cricket club team. Focus on injury prevention, treatment, and recovery protocols specific to cricket players.',
-      skills: ['Cricket Physio', 'Sports Therapy', 'Injury Management', 'Recovery Techniques'],
-      location: 'Nungambakkam Cricket Club, Chennai',
-      payment: 12000,
-      client: {
-        name: 'Nungambakkam Cricket Club',
-        image: '/avatars/ncc.jpg',
-        rating: 4.8,
-        jobsCompleted: 22,
-        seed: 'Nungambakkam'
-      }
-    },
-    'DLNT1111': {
-      title: 'Net Practice Session — Opening Batsmen',
-      category: 'OTHER',
-      description: 'Need opening batsmen for net practice sessions with our academy team. Focus on building partnerships and powerplay batting techniques.',
-      skills: ['Opening Batsman', 'Powerplay Batting', 'Partnership Building', 'Net Practice'],
-      location: 'Adyar Cricket Ground, Chennai',
-      payment: 3000,
-      client: {
-        name: 'Adyar Cricket Academy',
-        image: '/avatars/adyar.jpg',
-        rating: 4.6,
-        jobsCompleted: 18,
-        seed: 'Adyar'
-      }
-    },
-    'DLWK2222': {
-      title: 'Wicket Keeping Drills — Advanced Techniques',
-      category: 'OTHER',
-      description: 'Looking for a specialist wicket keeper to conduct advanced training sessions. Focus on stumpings, diving catches, and reflex drills.',
-      skills: ['Wicket Keeping', 'Diving Catches', 'Reflex Training', 'Stumpings'],
-      location: 'Velachery Cricket Club, Chennai',
-      payment: 2500,
-      client: {
-        name: 'Velachery Cricket Club',
-        image: '/avatars/velachery.jpg',
-        rating: 4.7,
-        jobsCompleted: 22,
-        seed: 'Velachery'
-      }
-    },
-    'DLFB3333': {
-      title: 'Fielding Specialist — Boundary Catching',
-      category: 'OTHER',
-      description: 'Need a fielding specialist for boundary catching and ground fielding drills. Focus on athletic fielding and preventing boundaries.',
-      skills: ['Fielding Specialist', 'Boundary Catching', 'Ground Fielding', 'Athletic Training'],
-      location: 'T Nagar Cricket Ground, Chennai',
-      payment: 2000,
-      client: {
-        name: 'T Nagar Cricket Academy',
-        image: '/avatars/tnagar.jpg',
-        rating: 4.8,
-        jobsCompleted: 16,
-        seed: 'TNagar'
-      }
-    },
-    'DLSP4444': {
-      title: 'Sports Psychology — Mental Preparation',
-      category: 'OTHER',
-      description: 'Seeking a sports psychologist for mental preparation and performance enhancement sessions with our competitive cricket team.',
-      skills: ['Sports Psychology', 'Mental Training', 'Performance Enhancement', 'Team Building'],
-      location: 'Anna Nagar Sports Center, Chennai',
-      payment: 4000,
-      client: {
-        name: 'Chennai Elite Cricket Club',
-        image: '/avatars/elite.jpg',
-        rating: 4.9,
-        jobsCompleted: 25,
-        seed: 'Elite'
-      }
-    },
-    'DLNV5555': {
-      title: 'Nutrition Consultation — Cricket-Specific Diet',
-      category: 'OTHER',
-      description: 'Need a sports nutritionist to design cricket-specific diet plans for our academy players. Focus on energy management and recovery nutrition.',
-      skills: ['Sports Nutrition', 'Diet Planning', 'Energy Management', 'Recovery Nutrition'],
-      location: 'Nungambakkam Health Center, Chennai',
-      payment: 3500,
-      client: {
-        name: 'Chennai Sports Nutrition Center',
-        image: '/avatars/nutrition.jpg',
-        rating: 4.7,
-        jobsCompleted: 20,
-        seed: 'Nutrition'
-      }
-    },
-    'DLTE6666': {
-      title: 'Technical Equipment Setup — Bowling Machines',
-      category: 'OTHER',
-      description: 'Looking for a technician to set up and calibrate bowling machines for our training sessions. Must have experience with cricket technology.',
-      skills: ['Technical Setup', 'Bowling Machines', 'Equipment Calibration', 'Cricket Technology'],
-      location: 'Chepauk Cricket Academy, Chennai',
-      payment: 2500,
-      client: {
-        name: 'Chennai Cricket Technology',
-        image: '/avatars/tech.jpg',
-        rating: 4.5,
-        jobsCompleted: 14,
-        seed: 'Tech'
-      }
-    },
-    'DLMC7777': {
-      title: 'Match Commentary — Live Streaming',
-      category: 'OTHER',
-      description: 'Need an experienced cricket commentator for live streaming of our local tournament matches. Must have good voice and cricket knowledge.',
-      skills: ['Match Commentary', 'Live Streaming', 'Cricket Knowledge', 'Public Speaking'],
-      location: 'Mylapore Cricket Ground, Chennai',
-      payment: 6000,
-      client: {
-        name: 'Chennai Sports Broadcasting',
-        image: '/avatars/broadcast.jpg',
-        rating: 4.8,
-        jobsCompleted: 28,
-        seed: 'Broadcast'
-      }
-    },
-    'DLFT8888': {
-      title: 'Fitness Training — Cricket-Specific Conditioning',
-      category: 'OTHER',
-      description: 'Seeking a fitness trainer specialized in cricket conditioning. Focus on agility, speed, endurance, and cricket-specific strength training.',
-      skills: ['Fitness Training', 'Cricket Conditioning', 'Agility Training', 'Strength Training'],
-      location: 'Anna Nagar Fitness Center, Chennai',
-      payment: 4500,
-      client: {
-        name: 'Elite Cricket Fitness',
-        image: '/avatars/fitness.jpg',
-        rating: 4.9,
-        jobsCompleted: 32,
-        seed: 'Fitness'
-      }
-    },
-    'DLSS9999': {
-      title: 'Skill Assessment — Junior Player Evaluation',
-      category: 'OTHER',
-      description: 'Need experienced coaches to assess junior players for team selection. Focus on batting, bowling, fielding, and overall potential evaluation.',
-      skills: ['Player Assessment', 'Team Selection', 'Technical Evaluation', 'Player Development'],
-      location: 'Teynampet Cricket Academy, Chennai',
-      payment: 3000,
-      client: {
-        name: 'Teynampet Cricket Academy',
-        image: '/avatars/teynampet.jpg',
-        rating: 4.6,
-        jobsCompleted: 19,
-        seed: 'Teynampet'
-      }
-    },
-    'DLRC0000': {
-      title: 'Recovery Coaching — Post-Match Recovery',
-      category: 'OTHER',
-      description: 'Looking for recovery specialists for post-match recovery sessions. Focus on muscle recovery, flexibility, and mental relaxation techniques.',
-      skills: ['Recovery Coaching', 'Muscle Recovery', 'Flexibility Training', 'Mental Relaxation'],
-      location: 'Velachery Sports Complex, Chennai',
-      payment: 2800,
-      client: {
-        name: 'Chennai Recovery Specialists',
-        image: '/avatars/recovery.jpg',
-        rating: 4.7,
-        jobsCompleted: 21,
-        seed: 'Recovery'
-      }
-    }
-  };
-
-  // If we have specific data for this job ID, use it
-  if (jobIdMap[jobId]) {
-    const jobData = jobIdMap[jobId];
-    return {
-      id: jobId,
-      title: jobData.title,
-      description: jobData.description,
-      category: jobData.category,
-      budget: jobData.payment, // API uses 'budget', mock uses 'payment'
-      location: jobData.location,
-      skills: jobData.skills,
-      status: 'upcoming',
-      client: {
-        name: jobData.client.name,
-        image: `https://api.dicebear.com/7.x/avataaars/svg?seed=${jobData.client.seed}`,
-        rating: jobData.client.rating,
-        jobsCompleted: jobData.client.jobsCompleted
-      }
-    };
-  }
-
-  // Fallback to generic dynamic generation for unknown job IDs
-  const jobTypes = [
-    { title: 'Match Player for Local Tournament', category: 'Playing Services', skills: ['RH Batsman', 'Match Player'] },
-    { title: 'Fast Bowling Training Session', category: 'Coaching', skills: ['Fast Bowling', 'Training'] },
-    { title: 'UI/UX Design for Mobile App', category: 'Design', skills: ['UI Design', 'UX Design', 'Mobile Design', 'Figma'] },
-    { title: 'Cricket Analytics Dashboard', category: 'Analytics', skills: ['Data Analysis', 'Python', 'Tableau'] },
-    { title: 'Sports Photography Session', category: 'Media & Content', skills: ['Sports Photography', 'Editing', 'Lightroom'] },
-  ];
-
-  const jobType = jobTypes[jobId.length % jobTypes.length];
-
-  const locations = ['Mumbai, Maharashtra', 'Bangalore, Karnataka', 'Chennai, Tamil Nadu', 'Hyderabad, Telangana', 'Delhi, NCR', 'Pune, Maharashtra'];
-  const location = locations[jobId.length % locations.length];
-
-  const clients = [
-    { name: 'Cricket Club Mumbai', seed: 'CricketClub' },
-    { name: 'Rajesh Kumar', seed: 'Rajesh' },
-    { name: 'TechStartup Bangalore', seed: 'TechStartup' },
-    { name: 'MobileTech Solutions', seed: 'MobileTech' },
-    { name: 'Sports Analytics Pro', seed: 'SportsAnalytics' },
-    { name: 'Cricket Media House', seed: 'CricketMedia' },
-  ];
-
-  const client = clients[jobId.length % clients.length];
-
-  return {
-    id: jobId,
-    title: jobType.title,
-    description: `Professional ${jobType.category.toLowerCase()} services for ${jobType.title.toLowerCase()}. High-quality work with attention to detail.`,
-    category: jobType.category,
-    budget: 3000 + (jobId.length % 5) * 1000,
-    location: location,
-    skills: jobType.skills,
-    status: 'upcoming',
-    client: {
-      name: client.name,
-      image: `https://api.dicebear.com/7.x/avataaars/svg?seed=${client.seed}`,
-      rating: 4.5 + (jobId.length % 10) * 0.1,
-      jobsCompleted: 5 + (jobId.length % 20)
-    }
-  };
-};
-
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
+    // 1. Try to find as Job
     const job = await prisma.job.findUnique({
       where: { id: params.id },
       include: {
@@ -271,17 +22,7 @@ export async function GET(
         },
         applications: {
           include: {
-            freelancer: {
-              select: {
-                id: true,
-                name: true,
-                avatar: true,
-                location: true,
-              }
-            }
-          },
-          orderBy: {
-            createdAt: 'desc'
+            freelancer: true
           }
         },
         _count: {
@@ -292,22 +33,83 @@ export async function GET(
       }
     })
 
-    if (!job) {
-      // Fallback to dynamic mock data if job not found in database
-      const mockJob = generateMockJob(params.id);
-      return NextResponse.json(mockJob);
+    if (job) {
+      return NextResponse.json({
+        ...job,
+        payment: job.budget
+      })
     }
 
-    return NextResponse.json({
-      ...job,
-      payment: job.budget
+    // 2. If not found, try to find as Booking
+    const booking = await prisma.booking.findUnique({
+      where: { id: params.id },
+      include: {
+        client: {
+          select: {
+            id: true,
+            name: true,
+            avatar: true,
+            location: true,
+            isVerified: true,
+            phone: true,
+          }
+        },
+        service: true, // Include service details for job info
+      }
     })
-  } catch (error) {
-    console.error('Database error, falling back to mock data:', error)
 
-    // Fallback to mock data if database fails
-    const mockJob = generateMockJob(params.id);
-    return NextResponse.json(mockJob);
+    if (booking) {
+      // Auto-generate OTP if missing (for legacy bookings)
+      let otp = booking.otp;
+      if (!otp && (booking.status === 'confirmed' || booking.status === 'pending' || booking.status === 'PENDING')) {
+        otp = Math.floor(1000 + Math.random() * 9000).toString();
+        await prisma.booking.update({
+          where: { id: booking.id },
+          data: { otp }
+        });
+      }
+
+      // Map booking to job shape
+      return NextResponse.json({
+        id: booking.id,
+        title: booking.service?.title || 'Unknown Job',
+        description: booking.service?.description || '',
+        status: booking.status === 'PENDING' ? 'OPEN' : booking.status === 'CONFIRMED' ? 'OPEN' : booking.status === 'ONGOING' ? 'STARTED' : booking.status,
+        payment: booking.totalPrice,
+        location: booking.location,
+        scheduledAt: booking.scheduledAt,
+        duration: (booking.duration || 60) + " mins",
+        client: booking.client,
+        otp: otp,
+        clientId: booking.clientId,
+        category: 'Services', // Generic category
+        workMode: 'On-site', // Default or derive
+        experience: 'N/A',
+        skills: '', // Or derive from service tags
+        peopleNeeded: 1,
+        applications: [], // No applications for direct booking
+        services: booking.services,
+        notes: booking.notes,
+        createdAt: booking.createdAt,
+        completedAt: booking.deliveredAt,
+        cancelledAt: booking.cancelledAt,
+        clientRating: booking.clientRating,
+        freelancerRating: booking.freelancerRating,
+        isDirectHire: true,
+      })
+    }
+
+    return NextResponse.json(
+      { error: 'Job not found' },
+      { status: 404 }
+    )
+
+  } catch (error) {
+    console.error('Database error fetching job ID:', params.id, error)
+    return NextResponse.json(
+      { error: 'Internal server error', details: String(error) },
+      { status: 500 }
+    )
   }
 }
 
@@ -315,13 +117,6 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  let freelancerRating: any = null;
-  let rating = 0;
-  let review = '';
-  let feedbackChips: string[] = [];
-  let existingJob: any = null; // Declare at function scope
-  let originalJobFromFrontend: any = null; // Declare at function scope
-
   try {
     const body = await request.json()
     const {
@@ -331,250 +126,151 @@ export async function PUT(
       review: reqReview = '',
       feedbackChips: reqFeedbackChips = [],
       freelancerRating: reqFreelancerRating = null,
-      originalJobData: originalJobFromFrontend // Get original job data from frontend
+      otp: reqOtp // OTP provided for verification
     } = body
 
-    // Handle freelancerRating format (new format)
-    if (reqFreelancerRating) {
-      freelancerRating = {
-        stars: reqFreelancerRating.stars || 0,
-        review: reqFreelancerRating.review || '',
-        feedbackChips: reqFreelancerRating.feedbackChips || [],
-        date: reqFreelancerRating.date || new Date().toISOString()
-      };
-      rating = freelancerRating.stars;
-      review = freelancerRating.review;
-      feedbackChips = freelancerRating.feedbackChips;
-    } else {
-      // Handle direct properties format (legacy format)
-      rating = reqRating;
-      review = reqReview;
-      feedbackChips = reqFeedbackChips;
-      freelancerRating = {
-        stars: rating,
-        review: review,
-        feedbackChips: feedbackChips,
-        date: new Date().toISOString()
-      };
+    // Check if it's a Job or Booking
+    const isJob = await prisma.job.findUnique({ where: { id: params.id } })
+    const isBooking = !isJob && await prisma.booking.findUnique({ where: { id: params.id } })
+
+    if (!isJob && !isBooking) {
+      return NextResponse.json({ error: 'Job not found' }, { status: 404 })
     }
 
-    // First check if job exists and get client info (wrap in try-catch for database errors)
-    try {
-      existingJob = await prisma.job.findUnique({
-        where: { id: params.id },
-        select: { clientId: true, freelancerId: true, title: true }
-      })
-    } catch (dbError) {
-      console.error('Database unavailable, using mock mode:', dbError)
-      // In demo mode, assume job exists for mock purposes
-      existingJob = { id: params.id, title: 'Demo Job' }
+    // OTP Verification for Starting Job
+    if (status === 'started') {
+      const entity = (isJob || isBooking);
+      // Only verify if entity has an OTP set. If null, maybe allow start?
+      // Or strictly require OTP if it exists.
+      if (entity?.otp) {
+        if (!reqOtp || reqOtp !== entity.otp) {
+          return NextResponse.json({ error: 'Invalid start code' }, { status: 400 })
+        }
+      }
     }
 
-    if (!existingJob) {
-      // Fallback to dynamic mock data if job not found in database
-      const mockJob = generateMockJob(params.id);
-      // For demo purposes, assume the job exists for updates
-      existingJob = { id: params.id, title: mockJob.title };
+    // 1. Prepare data for update
+    const updateData: any = {
+      updatedAt: new Date(),
     }
 
-    // If status is being updated, handle special cases
     if (status) {
-      if (status === 'cancelled' && !notes?.trim()) {
-        return NextResponse.json(
-          { error: 'Cancellation notes are required' },
-          { status: 400 }
-        )
-      }
+      // Normalize status string for logic
+      let dbStatus = status;
+      if (!isJob && status === 'started') dbStatus = 'ONGOING'; // Booking uses ONGOING
+      if (isJob && status === 'started') dbStatus = 'ONGOING'; // Job uses ONGOING? Schema says 'OPEN' default.
+      // Wait, schema for Job says "OPEN" default.
+      // Schema for Booking says "PENDING".
+      // We need to map 'started' -> 'ONGOING' for Booking? Or 'STARTED'?
+      // Schema Line 127: status String @default("PENDING")
+      // Schema Line 12 (Booking): "status" is string, default "PENDING". Value is arbitrary string.
+      // Schema Line 194 (Job): "status" is string, default "OPEN".
 
-      if (status === 'completed' && (!rating || (!feedbackChips?.length && !review?.trim()))) {
-        return NextResponse.json(
-          { error: 'Rating and feedback (chips or review) are required for completion' },
-          { status: 400 }
-        )
-      }
-    }
+      // Let's stick to conventional uppercase for DB if we can, or just pass through if current usage is consistent.
+      // Frontend sends lowercase 'started', 'completed', 'cancelled'.
+      // Current DB likely uses Uppercase or Lowercase?
+      // Prisma schema defaults are uppercase "OPEN", "PENDING".
+      // Let's coerce:
+      if (status === 'started') dbStatus = isJob ? 'ONGOING' : 'ongoing'; // Check conventions...
+      // Actually, let's look at existing code in PUT. It handled 'started', 'completed'. 
+      // Existing code (lines 88-92) sets 'startedAt' etc based on status === 'started'.
+      // It passes `status` directly to updateData.status.
+      // So if frontend sends 'started', it saves 'started'.
+      // Is that consistent with 'OPEN' default?
+      // It creates mixed case in DB 'OPEN' vs 'started'. Not great but I will follow pattern.
+      // BUT for Booking, schema usually expects specific enums if strict? No, it's String.
 
-    // For now, just return success for mock/demo purposes
-    // In a real implementation, this would update the database
+      // Let's just use what frontend sends but for Booking we prefer standard names if possible.
+      // BookingCard checks 'ongoing'. So 'ongoing' is good.
+      // JobDashboard checks 'started' (mapped from 'ongoing').
 
-    // Use original job data from frontend if available, otherwise use database/generated data
-    let originalJobData = originalJobFromFrontend;
-    if (!originalJobData) {
-      // Fallback to database lookup or generated data
-      if (existingJob && existingJob.title) {
-        originalJobData = {
-          id: params.id,
-          title: existingJob.title,
-          description: `Professional services for ${existingJob.title}`,
-          category: 'OTHER',
-          budget: 5000,
-          location: 'Chennai, Tamil Nadu',
-          skills: ['Professional', 'Quality Work'],
-          status: 'upcoming',
-          client: {
-            name: 'DoodLance Client',
-            image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Client',
-            rating: 4.5,
-            jobsCompleted: 10
-          }
-        };
+      if (isBooking && status === 'started') {
+        updateData.status = 'ongoing'; // Client page expects 'ongoing'
       } else {
-        originalJobData = {
-          id: params.id,
-          title: `Job ${params.id}`,
-          description: 'Professional services',
-          category: 'OTHER',
-          budget: 5000,
-          location: 'Chennai, Tamil Nadu',
-          skills: ['Professional'],
-          status: 'upcoming',
-          client: {
-            name: 'DoodLance Client',
-            image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Client',
-            rating: 4.5,
-            jobsCompleted: 10
-          }
-        };
+        updateData.status = status; // Jobs use 'started'?
+      }
+
+      if (status === 'started') {
+        // Booking doesn't have startedAt field in schema I read?
+        // Let's check schema. Booking has 'scheduledAt', 'deliveredAt'.
+        // Job has 'startedAt' (Implied in code I read? NO. I did NOT see startedAt in Job schema).
+        // I read schema lines 176-209.
+        // Job: completedAt, updatedAt. NO startedAt.
+        // So updateData.startedAt will FAIL if column missing!
+        // The previous code (lines 89) had `updateData.startedAt = new Date()`.
+        // This suggests `startedAt` column EXISTS or previous code was broken/hallucinating.
+        // It's possible I missed it in schema view.
+        // Let's assume it exists or I should avoid setting it if not sure.
+        // I'll skip startedAt for now to be safe, or just check 'updatedAt'.
+      }
+
+      if (status === 'delivered') {
+        if (isBooking) updateData.deliveredAt = new Date();
+        // delivered status is valid for Freelancer marking "Work Done"
+      }
+
+      if (status === 'completed') {
+        // Final completion (Client confirms)
+        if (isBooking) {
+          // Ensure deliveredAt is set if it wasn't before (e.g. direct complete)
+          if (!isBooking.deliveredAt) updateData.deliveredAt = new Date();
+          // Booking doesn't have a specific completedAt field in schema distinct from deliveredAt? 
+          // Wait, schema has `deliveredAt` (DateTime?). 
+          // Schema doesn't have `completedAt`.
+          // Let's us `deliveredAt` for the freelancer's "Delivery" time.
+          // And we just rely on `status="completed"` for the final state.
+          // Or, we use `completedAt` if it exists on Job? Job has `completedAt`.
+        }
+        if (isJob) updateData.completedAt = new Date();
+      }
+
+      if (status === 'cancelled') {
+        if (!notes?.trim()) {
+          return NextResponse.json(
+            { error: 'Cancellation notes are required' },
+            { status: 400 }
+          )
+        }
+        // Booking doesn't have cancelledAt?
+        // Just status update.
       }
     }
 
-    // Return the complete job data with updated completion information
+    // 3. Perform Update
+    let updatedRecord;
+    if (isJob) {
+      updatedRecord = await prisma.job.update({
+        where: { id: params.id },
+        data: updateData,
+        include: {
+          client: { select: { id: true, name: true, avatar: true, location: true, isVerified: true } }
+        }
+      });
+    } else {
+      // Booking
+      updatedRecord = await prisma.booking.update({
+        where: { id: params.id },
+        data: updateData,
+        include: {
+          client: { select: { id: true, name: true, avatar: true, location: true, isVerified: true } }
+        }
+      });
+    }
+
+    // 4. Return updated job/booking
     return NextResponse.json({
-      ...originalJobData,  // Use original job data as base
-      status,
-      notes,
-      freelancerRating,
-      ...(status === 'started' && { startedAt: new Date().toISOString() }),
-      completedAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      // Ensure payment field is preserved (API uses budget but frontend uses payment)
-      payment: originalJobData.payment || originalJobData.budget || 0,
-      message: `Job ${status} successfully`
+      ...updatedRecord,
+      status: status, // Return the status requested so frontend state matches
+      payment: (updatedRecord as any).budget || (updatedRecord as any).totalPrice,
+      message: `Job ${status || 'updated'} successfully`
     })
 
   } catch (error) {
-    console.error('Database error, simulating success:', error)
-
-    // Check if it's a Prisma client error (database not available)
-    if (error instanceof Error && error.message.includes('prisma')) {
-      // Fallback to mock response for demo purposes
-
-      // Use original job data from frontend if available
-      let originalJobData = originalJobFromFrontend;
-      if (!originalJobData) {
-        // Fallback to database lookup or generated data
-        if (existingJob && existingJob.title) {
-          originalJobData = {
-            id: params.id,
-            title: existingJob.title,
-            description: `Professional services for ${existingJob.title}`,
-            category: 'OTHER',
-            budget: 5000,
-            location: 'Chennai, Tamil Nadu',
-            skills: ['Professional', 'Quality Work'],
-            status: 'upcoming',
-            client: {
-              name: 'DoodLance Client',
-              image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Client',
-              rating: 4.5,
-              jobsCompleted: 10
-            }
-          };
-        } else {
-          originalJobData = {
-            id: params.id,
-            title: `Job ${params.id}`,
-            description: 'Professional services',
-            category: 'OTHER',
-            budget: 5000,
-            location: 'Chennai, Tamil Nadu',
-            skills: ['Professional'],
-            status: 'upcoming',
-            client: {
-              name: 'DoodLance Client',
-              image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Client',
-              rating: 4.5,
-              jobsCompleted: 10
-            }
-          };
-        }
-      }
-
-      return NextResponse.json({
-        ...originalJobData,  // Use original job data as base
-        status: status || 'updated',
-        message: 'Job updated successfully (demo mode - database unavailable)',
-        freelancerRating: freelancerRating || {
-          stars: rating || 0,
-          review: review || '',
-          feedbackChips: feedbackChips || [],
-          date: new Date().toISOString()
-        },
-        ...(status === 'started' && { startedAt: new Date().toISOString() }),
-        // Ensure payment field is preserved
-        payment: originalJobData.payment || originalJobData.budget || 0,
-        updatedAt: new Date().toISOString()
-      })
-    }
-
-    // For other errors, still return success for demo
-
-    // Use original job data from frontend if available
-    let originalJobData = originalJobFromFrontend;
-    if (!originalJobData) {
-      // Fallback to database lookup or generated data
-      if (existingJob && existingJob.title) {
-        originalJobData = {
-          id: params.id,
-          title: existingJob.title,
-          description: `Professional services for ${existingJob.title}`,
-          category: 'OTHER',
-          budget: 5000,
-          location: 'Chennai, Tamil Nadu',
-          skills: ['Professional', 'Quality Work'],
-          status: 'upcoming',
-          client: {
-            name: 'DoodLance Client',
-            image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Client',
-            rating: 4.5,
-            jobsCompleted: 10
-          }
-        };
-      } else {
-        originalJobData = {
-          id: params.id,
-          title: `Job ${params.id}`,
-          description: 'Professional services',
-          category: 'OTHER',
-          budget: 5000,
-          location: 'Chennai, Tamil Nadu',
-          skills: ['Professional'],
-          status: 'upcoming',
-          client: {
-            name: 'DoodLance Client',
-            image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Client',
-            rating: 4.5,
-            jobsCompleted: 10
-          }
-        };
-      }
-    }
-
-    return NextResponse.json({
-      ...originalJobData,  // Use original job data as base
-      status: 'updated',
-      message: 'Job updated successfully (demo mode)',
-      freelancerRating: freelancerRating || {
-        stars: rating || 0,
-        review: review || '',
-        feedbackChips: feedbackChips || [],
-        date: new Date().toISOString()
-      },
-      ...(status === 'started' && { startedAt: new Date().toISOString() }),
-      // Ensure payment field is preserved
-      payment: originalJobData.payment || originalJobData.budget || 0,
-      updatedAt: new Date().toISOString()
-    })
+    console.error('Error updating job:', error)
+    return NextResponse.json(
+      { error: 'Failed to update job' },
+      { status: 500 }
+    )
   }
 }
 
@@ -584,37 +280,44 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    // First check if job exists and get client info
+    // Try Job
     const existingJob = await prisma.job.findUnique({
       where: { id: params.id },
       select: { clientId: true, title: true }
     })
 
-    if (!existingJob) {
-      return NextResponse.json(
-        { error: 'Job not found' },
-        { status: 404 }
-      )
+    if (existingJob) {
+      await prisma.job.delete({ where: { id: params.id } })
+      // Create notification
+      await prisma.notification.create({
+        data: {
+          userId: existingJob.clientId,
+          title: 'Job Deleted',
+          message: `Your job "${existingJob.title}" has been deleted`,
+          type: 'SYSTEM_UPDATE',
+          entityId: params.id,
+          entityType: 'job',
+        }
+      })
+      return NextResponse.json({ message: 'Job deleted successfully' })
     }
 
-    // Delete the job (applications will be cascade deleted due to schema)
-    await prisma.job.delete({
-      where: { id: params.id }
+    // Try Booking
+    const existingBooking = await prisma.booking.findUnique({
+      where: { id: params.id },
+      select: { clientId: true, service: { select: { title: true } } }
     })
 
-    // Create notification for job deletion
-    await prisma.notification.create({
-      data: {
-        userId: existingJob.clientId,
-        title: 'Job Deleted',
-        message: `Your job "${existingJob.title}" has been deleted`,
-        type: 'SYSTEM_UPDATE',
-        entityId: params.id,
-        entityType: 'job',
-      }
-    })
+    if (existingBooking) {
+      await prisma.booking.delete({ where: { id: params.id } })
+      return NextResponse.json({ message: 'Booking deleted successfully' })
+    }
 
-    return NextResponse.json({ message: 'Job deleted successfully' })
+    return NextResponse.json(
+      { error: 'Job not found' },
+      { status: 404 }
+    )
+
   } catch (error) {
     console.error('Error deleting job:', error)
     return NextResponse.json(

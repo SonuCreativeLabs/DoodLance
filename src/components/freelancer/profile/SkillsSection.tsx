@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, memo, useEffect } from 'react';
-import { Plus, GripVertical, Pencil, ChevronDown, Clock, Trash2 } from "lucide-react";
+import { Code, Plus, GripVertical, Pencil, ChevronDown, Clock, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,6 +13,7 @@ import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, us
 import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
 import { cn } from "@/lib/utils";
 import { useSkills } from '@/contexts/SkillsContext';
+import { EmptyState } from '@/components/freelancer/profile/EmptyState';
 
 interface SkillItemType {
   id: string;
@@ -47,7 +48,7 @@ const SkillItem = memo(function SkillItem({ id, skill, description = '', experie
   const [editedDescription, setEditedDescription] = useState(description || '');
   const [editedExperience, setEditedExperience] = useState(experience ? experience.replace(' years', '').replace(' year', '') : '');
   const [editedLevel, setEditedLevel] = useState(level || 'Intermediate');
-  
+
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
 
   const style = {
@@ -55,7 +56,7 @@ const SkillItem = memo(function SkillItem({ id, skill, description = '', experie
     transition,
     opacity: isDragging ? 0.5 : 1,
   };
-  
+
   const openDetails = () => {
     console.log('Opening details dialog'); // Debug log
     setIsDetailsOpen(true);
@@ -93,7 +94,7 @@ const SkillItem = memo(function SkillItem({ id, skill, description = '', experie
                 onKeyDown={(e) => e.key === 'Enter' && handleSave()}
               />
             </div>
-            
+
             <div className="grid grid-cols-5 gap-4">
               <div className="col-span-2">
                 <Label htmlFor={`experience-${id}`} className="text-xs font-medium text-foreground/80 mb-1.5 block">
@@ -122,7 +123,7 @@ const SkillItem = memo(function SkillItem({ id, skill, description = '', experie
                   </span>
                 </div>
               </div>
-              
+
               <div className="col-span-3">
                 <Label htmlFor={`level-${id}`} className="text-xs font-medium text-foreground/80 mb-1.5 block">
                   Skill Level
@@ -142,7 +143,7 @@ const SkillItem = memo(function SkillItem({ id, skill, description = '', experie
                 </div>
               </div>
             </div>
-            
+
             <div>
               <Label htmlFor={`description-${id}`} className="text-xs font-medium text-foreground/80 mb-1.5 block">
                 Description <span className="text-muted-foreground">(optional)</span>
@@ -156,9 +157,9 @@ const SkillItem = memo(function SkillItem({ id, skill, description = '', experie
               />
             </div>
           </div>
-          
+
           <div className="flex justify-center gap-3 pt-2">
-            <Button 
+            <Button
               variant="ghost"
               size="sm"
               onClick={() => setIsEditing(false)}
@@ -166,7 +167,7 @@ const SkillItem = memo(function SkillItem({ id, skill, description = '', experie
             >
               Cancel
             </Button>
-            <Button 
+            <Button
               variant="default"
               size="sm"
               onClick={handleSave}
@@ -182,13 +183,13 @@ const SkillItem = memo(function SkillItem({ id, skill, description = '', experie
   }
 
   return (
-    <div 
+    <div
       ref={setNodeRef}
       style={style}
       {...attributes}
       className="group relative flex flex-col w-full bg-gradient-to-r from-[#2A2A2A] to-[#252525] rounded-xl border border-white/5 hover:border-white/10 transition-all duration-200 hover:shadow-lg hover:shadow-black/10 overflow-hidden"
     >
-      <div 
+      <div
         className="flex items-center gap-3 p-3 w-full cursor-pointer"
         onClick={handleClick}
       >
@@ -201,7 +202,7 @@ const SkillItem = memo(function SkillItem({ id, skill, description = '', experie
             <GripVertical className="h-5 w-5" />
           </Button>
         </div>
-        
+
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-3">
             <div className="space-y-2">
@@ -210,13 +211,12 @@ const SkillItem = memo(function SkillItem({ id, skill, description = '', experie
                   {skill}
                 </h3>
               </div>
-              
+
               <div className="flex flex-wrap items-center gap-2">
                 {level && (
-                  <span className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full ${
-                    level === 'Expert' ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20' :
+                  <span className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full ${level === 'Expert' ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20' :
                     level === 'Intermediate' ? 'bg-blue-500/10 text-blue-500 border border-blue-500/20' :
-                    'bg-green-500/10 text-green-500 border border-green-500/20'}`}>
+                      'bg-green-500/10 text-green-500 border border-green-500/20'}`}>
                     <span>{level}</span>
                   </span>
                 )}
@@ -228,7 +228,7 @@ const SkillItem = memo(function SkillItem({ id, skill, description = '', experie
                 )}
               </div>
             </div>
-            
+
             <div className="flex items-center gap-1.5 self-center">
               <Button
                 variant="ghost"
@@ -257,7 +257,7 @@ const SkillItem = memo(function SkillItem({ id, skill, description = '', experie
 
         </div>
       </div>
-      
+
       {/* Skill Details Dialog */}
       <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
         <DialogContent aria-describedby={undefined} className="w-[90vw] max-w-[400px] bg-[#1E1E1E] border border-white/10 rounded-xl overflow-hidden p-0">
@@ -273,7 +273,7 @@ const SkillItem = memo(function SkillItem({ id, skill, description = '', experie
                 </p>
               </DialogHeader>
             </div>
-            
+
             {/* Content */}
             <div className="p-6 pt-4">
               <div className="space-y-6">
@@ -287,7 +287,7 @@ const SkillItem = memo(function SkillItem({ id, skill, description = '', experie
                     )}
                   </div>
                 </div>
-                
+
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <h4 className="text-sm font-medium text-gray-400">EXPERIENCE</h4>
@@ -298,22 +298,21 @@ const SkillItem = memo(function SkillItem({ id, skill, description = '', experie
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="space-y-2">
                     <h4 className="text-sm font-medium text-gray-400">SKILL LEVEL</h4>
                     <div className="bg-[#252525] rounded-lg p-3">
                       <div className="flex items-center gap-2">
-                        <div className={`h-2 w-2 rounded-full ${
-                          level === 'Expert' ? 'bg-yellow-400' :
+                        <div className={`h-2 w-2 rounded-full ${level === 'Expert' ? 'bg-yellow-400' :
                           level === 'Intermediate' ? 'bg-blue-400' : 'bg-green-400'
-                        }`} />
+                          }`} />
                         <span className="text-gray-200">{level}</span>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
-              
+
               <div className="mt-6 pt-4 border-t border-white/5">
                 <p className="text-xs text-gray-500">
                   Last updated: {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
@@ -329,58 +328,15 @@ const SkillItem = memo(function SkillItem({ id, skill, description = '', experie
 
 SkillItem.displayName = 'SkillItem';
 
-const defaultSkills: SkillItemType[] = [
-  {
-    id: '1',
-    name: "RH Batsman",
-    description: "Right-handed batsman specializing in top-order batting with solid technique and aggressive stroke play.",
-    experience: "5 years",
-    level: "Expert"
-  },
-  {
-    id: '2',
-    name: "Sidearm Specialist",
-    description: "Expert sidearm bowler with unique delivery angles and deceptive variations.",
-    experience: "4 years",
-    level: "Expert"
-  },
-  {
-    id: '3',
-    name: "Off Spin",
-    description: "Skilled off-spin bowler with excellent control, flight, and mystery variations.",
-    experience: "3 years",
-    level: "Expert"
-  },
-  {
-    id: '4',
-    name: "Batting Coach",
-    description: "Professional batting coach with expertise in technique, mental approach, and match situations.",
-    experience: "6 years",
-    level: "Expert"
-  },
-  {
-    id: '5',
-    name: "Analyst",
-    description: "Cricket performance analyst specializing in match statistics, player metrics, and strategic insights.",
-    experience: "2 years",
-    level: "Intermediate"
-  },
-  {
-    id: '6',
-    name: "Mystery Spin",
-    description: "Specialist in mystery spin variations including doosra, carrom ball, and other deceptive deliveries.",
-    experience: "3 years",
-    level: "Expert"
-  }
-];
+const defaultSkills: SkillItemType[] = [];
 
-export function SkillsSection({ 
+export function SkillsSection({
   initialSkills = defaultSkills,
-  className 
+  className
 }: { initialSkills?: Array<string | SkillItemType>; className?: string }) {
   const { skills: contextSkills, updateSkills } = useSkills();
-  
-  // Use context skills if available and not empty, otherwise use initialSkills or defaultSkills
+
+  // Use context skills if available and not empty, otherwise use initialSkills
   const [skills, setSkills] = useState<SkillItemType[]>(() => {
     if (contextSkills && contextSkills.length > 0) {
       return contextSkills as SkillItemType[];
@@ -400,24 +356,24 @@ export function SkillsSection({
     }
     return defaultSkills;
   });
-  
+
   // Keep local state in sync with context when it hydrates/changes, but only if context has detailed skills
   useEffect(() => {
-    if (contextSkills && contextSkills.length > 0 && contextSkills[0].description) {
+    if (contextSkills && contextSkills.length > 0) {
       setSkills(contextSkills as SkillItemType[]);
     }
   }, [contextSkills]);
-  
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newSkill, setNewSkill] = useState('');
   const [newExperience, setNewExperience] = useState('');
   const [newDescription, setNewDescription] = useState('');
   const [newLevel, setNewLevel] = useState<'Beginner' | 'Intermediate' | 'Expert'>('Intermediate');
 
-  // Sync skills with SkillsContext whenever skills change
-  useEffect(() => {
-    updateSkills(skills);
-  }, [skills, updateSkills]);
+  // Sync skills with SkillsContext whenever skills change - REMOVED to prevent overwrite
+  // useEffect(() => {
+  //   updateSkills(skills);
+  // }, [skills, updateSkills]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -427,16 +383,19 @@ export function SkillsSection({
   const handleAddSkill = () => {
     if (newSkill.trim() && !skills.some(s => s.name.toLowerCase() === newSkill.toLowerCase())) {
       const formattedExp = newExperience ? formatExperience(newExperience) : '';
-      setSkills(prev => [
-        ...prev,
-        {
-          id: Math.random().toString(36).substr(2, 9),
-          name: newSkill.trim(),
-          description: newDescription.trim() || undefined,
-          experience: formattedExp,
-          level: newLevel
-        }
-      ]);
+      const skillToAdd: SkillItemType = {
+        id: Math.random().toString(36).substr(2, 9),
+        name: newSkill.trim(),
+        description: newDescription.trim() || undefined,
+        experience: formattedExp,
+        level: newLevel
+      };
+
+      const updatedSkills = [...skills, skillToAdd];
+      setSkills(updatedSkills);
+      // Explicitly update context to ensure persistence
+      updateSkills(updatedSkills);
+
       setNewSkill('');
       setNewExperience('');
       setNewDescription('');
@@ -447,31 +406,39 @@ export function SkillsSection({
 
   const handleEditSkill = (id: string, newName: string, newDescription?: string, newExperience?: string, newLevel?: string) => {
     const formattedExp = newExperience ? formatExperience(newExperience) : '';
-    setSkills(prev => 
-      prev.map(skill => 
-        skill.id === id ? { 
-          ...skill, 
-          name: newName, 
-          description: newDescription,
-          experience: formattedExp,
-          level: (newLevel || 'Intermediate') as 'Beginner' | 'Intermediate' | 'Expert'
-        } : skill
-      )
+    const updatedSkills = skills.map(skill =>
+      skill.id === id ? {
+        ...skill,
+        name: newName,
+        description: newDescription,
+        experience: formattedExp,
+        level: (newLevel || 'Intermediate') as 'Beginner' | 'Intermediate' | 'Expert'
+      } : skill
     );
+
+    setSkills(updatedSkills);
+    updateSkills(updatedSkills);
   };
 
   const handleDeleteSkill = (id: string) => {
-    setSkills(prev => prev.filter(skill => skill.id !== id));
+    const updatedSkills = skills.filter(skill => skill.id !== id);
+    setSkills(updatedSkills);
+    updateSkills(updatedSkills);
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-    
+
     if (over && active.id !== over.id) {
       setSkills((items) => {
         const oldIndex = items.findIndex((item: SkillItemType) => item.id === active.id.toString());
         const newIndex = items.findIndex((item: SkillItemType) => item.id === over.id.toString());
-        return arrayMove(items, oldIndex, newIndex);
+        const reorderedSkills = arrayMove(items, oldIndex, newIndex);
+
+        // Sync with context
+        updateSkills(reorderedSkills);
+
+        return reorderedSkills;
       });
     }
   };
@@ -480,9 +447,9 @@ export function SkillsSection({
     <div className={cn("space-y-3", className)}>
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogTrigger asChild>
-          <Button 
-            variant="default" 
-            size="sm" 
+          <Button
+            variant="default"
+            size="sm"
             className="w-full h-10 gap-2 bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-700 hover:to-purple-600 shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center rounded-xl"
             onClick={() => setIsDialogOpen(true)}
           >
@@ -490,7 +457,7 @@ export function SkillsSection({
             <span>Add Skill</span>
           </Button>
         </DialogTrigger>
-        
+
         <DialogContent aria-describedby={undefined} className="sm:max-w-[600px] w-[calc(100%-2rem)] max-h-[90vh] flex flex-col p-0 bg-[#1E1E1E] border-0 rounded-xl shadow-xl overflow-hidden">
           {/* Header */}
           <div className="border-b border-white/10 bg-[#1E1E1E] px-5 py-3">
@@ -522,7 +489,7 @@ export function SkillsSection({
                   required
                 />
               </div>
-              
+
               <div className="grid grid-cols-5 gap-4">
                 <div className="col-span-2">
                   <Label htmlFor="experience" className="text-xs font-medium text-foreground/80 mb-1.5 block">
@@ -548,7 +515,7 @@ export function SkillsSection({
                     </span>
                   </div>
                 </div>
-                
+
                 <div className="col-span-3">
                   <Label htmlFor="level" className="text-xs font-medium text-foreground/80 mb-1.5 block">
                     Skill Level <span className="text-red-500">*</span>
@@ -556,7 +523,7 @@ export function SkillsSection({
                   <div className="relative">
                     <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="m6 9 6 6 6-6"/>
+                        <path d="m6 9 6 6 6-6" />
                       </svg>
                     </div>
                     <select
@@ -573,7 +540,7 @@ export function SkillsSection({
                   </div>
                 </div>
               </div>
-              
+
               <div>
                 <Label htmlFor="description" className="text-xs font-medium text-foreground/80 mb-1.5 block">
                   Description <span className="text-red-500">*</span>
@@ -589,7 +556,7 @@ export function SkillsSection({
               </div>
             </div>
           </div>
-          
+
           {/* Fixed Footer with Actions */}
           <div className="border-t border-white/10 p-4 bg-[#1E1E1E] flex-shrink-0">
             <div className="flex justify-center gap-4">
@@ -613,18 +580,18 @@ export function SkillsSection({
           </div>
         </DialogContent>
       </Dialog>
-      
+
       {skills.length > 0 ? (
         <div className="space-y-3">
           <div className="mt-4 mb-2 text-xs text-muted-foreground text-center">
             <p>Drag <GripVertical className="h-3 w-3 inline-block mx-0.5" /> to reorder your skills - list your strongest skills first</p>
           </div>
-          <DndContext 
+          <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
             onDragEnd={handleDragEnd}
           >
-            <SortableContext 
+            <SortableContext
               items={skills.map(skill => skill.id)}
               strategy={verticalListSortingStrategy}
             >
@@ -646,15 +613,22 @@ export function SkillsSection({
           </DndContext>
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center py-8 text-center">
-          <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center mb-3">
-            <Plus className="h-5 w-5 text-muted-foreground" />
-          </div>
-          <h3 className="text-foreground font-medium mb-1">No skills added yet</h3>
-          <p className="text-muted-foreground text-sm max-w-xs">
-            Start by adding your top skills to highlight your expertise
-          </p>
-        </div>
+        <EmptyState
+          icon={Code}
+          title="No skills added yet"
+          description="Start by adding your top skills to highlight your expertise"
+          action={
+            <Button
+              variant="default"
+              size="sm"
+              className="gap-2 bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-700 hover:to-purple-600 shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center rounded-xl"
+              onClick={() => setIsDialogOpen(true)}
+            >
+              <Plus className="h-4 w-4" />
+              <span>Add Skill</span>
+            </Button>
+          }
+        />
       )}
     </div>
   );

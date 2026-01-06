@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
         await prisma.$connect();
         dbStatus = 'connected';
       } else {
-        dbStatus = 'mock';
+        dbStatus = 'disconnected';
       }
     } catch (error) {
       dbStatus = 'error';
@@ -31,13 +31,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Check AuthKit status
-    let authStatus = 'unknown';
-    try {
-      authStatus = process.env.WORKOS_CLIENT_ID ? 'configured' : 'not-configured';
-    } catch (error) {
-      authStatus = 'error';
-    }
+    const authStatus = 'not-configured'; // AuthKit removed
 
     // Check Sentry status
     let sentryStatus = 'unknown';
@@ -93,17 +87,17 @@ export async function POST(request: NextRequest) {
 
     if (type === 'message') {
       captureMessage('Test message from health endpoint', 'warning', {
-        testData: 'This is test data',
+
       });
       return NextResponse.json({ message: 'Test message sent to Sentry' });
     }
 
-    return NextResponse.json({ message: 'No test performed' });
+    return NextResponse.json({ status: 'ok', timestamp: new Date().toISOString() });
   } catch (error) {
     Sentry.captureException(error, {
-      tags: { test: true },
+
     });
-    
+
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }

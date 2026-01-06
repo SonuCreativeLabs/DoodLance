@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { mockPromoCodes } from '@/lib/mock/promo-data';
-
-// Use mock promo codes data
-const promoCodes = [...mockPromoCodes];
+import prisma from '@/lib/db';
 
 // POST /api/admin/promos/validate - Validate promo code
 export async function POST(request: NextRequest) {
@@ -10,8 +7,10 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { code, userId, amount, serviceId } = body;
 
-    const promo = promoCodes.find(p => p.code === code);
-    
+    const promo = await prisma.promoCode.findUnique({
+      where: { code: code }
+    });
+
     if (!promo) {
       return NextResponse.json({
         valid: false,
@@ -30,15 +29,15 @@ export async function POST(request: NextRequest) {
     // Check validity dates
     const now = new Date();
     const validFrom = new Date(promo.validFrom);
-    const validTo = new Date(promo.validTo);
-    
+    const validTo = new Date(promo.validUntil);
+
     if (now < validFrom) {
       return NextResponse.json({
         valid: false,
         error: 'Promo code not yet valid'
       });
     }
-    
+
     if (now > validTo) {
       return NextResponse.json({
         valid: false,
@@ -47,7 +46,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check usage limits
-    if (promo.usageLimit && promo.usageCount >= promo.usageLimit) {
+    if (promo.maxUses && promo.usedCount >= promo.maxUses) {
       return NextResponse.json({
         valid: false,
         error: 'Promo code usage limit reached'
@@ -55,26 +54,39 @@ export async function POST(request: NextRequest) {
     }
 
     // Check minimum amount
-    if (amount < promo.minAmount) {
+    if (promo.minOrderValue && amount < promo.minOrderValue) {
       return NextResponse.json({
         valid: false,
-        error: `Minimum amount required: ₹${promo.minAmount}`
+        error: `Minimum amount required: ₹${promo.minOrderValue}`
       });
     }
 
     // Calculate discount
     let discount = 0;
-    if (promo.type === 'percentage') {
-      discount = Math.min((amount * promo.value) / 100, promo.maxDiscount);
+    // Assuming discountType is 'PERCENTAGE' or 'FIXED' - check consistency with creation logic (usually 'percentage')
+    const type = promo.discountType.toLowerCase();
+
+    if (type === 'percentage') {
+      discount = (amount * promo.discountValue) / 100;
+      if (promo.maxDiscount) {
+        discount = Math.min(discount, promo.maxDiscount);
+      }
     } else {
-      discount = Math.min(promo.value, amount);
+      discount = Math.min(promo.discountValue, amount);
     }
 
     return NextResponse.json({
       valid: true,
       discount,
       finalAmount: amount - discount,
-      promoCode: promo
+      promoCode: {
+        ...promo,
+        // Map back keys if frontend expects specific structure
+        validTo: promo.validUntil,
+        type: promo.discountType,
+        value: promo.discountValue,
+        minAmount: promo.minOrderValue
+      }
     });
   } catch (error) {
     console.error('Validate promo code error:', error);

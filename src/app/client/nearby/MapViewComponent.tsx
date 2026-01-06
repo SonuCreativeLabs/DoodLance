@@ -29,10 +29,10 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({ professionals: propProfe
             data.popup.remove();
           }
         });
-        
+
         // Open the specific popup
         markerData.popup.addTo((markerData.marker as any).getMap()!);
-        
+
         // Center map on the marker
         const map = (markerData.marker as any).getMap()!;
         map.flyTo({
@@ -44,8 +44,32 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({ professionals: propProfe
     }
   }));
 
+  // Fetch user location
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setUserLocation([longitude, latitude]);
+        },
+        (error) => {
+          console.error("Error getting location:", error);
+        }
+      );
+    }
+  }, []);
+
   // Function to calculate center of professionals
   const calculateCenter = (professionals: any[]) => {
+    // If we have user location and no professionals or many professionals (to keep user context), preferred user location
+    if (userLocation) {
+      // If there are professionals, we could stick to them, but the requirement is "open default from client user geolocation"
+      // So we prioritize userLocation if available.
+      // However, if we are opening a specific pin (pinId), that is handled by openPin.
+      // For general view, let's Start with User Location.
+      return userLocation;
+    }
+
     if (!professionals || professionals.length === 0) {
       return [80.2707, 13.0827]; // Default Chennai center
     }
@@ -71,22 +95,40 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({ professionals: propProfe
 
   // Function to calculate appropriate zoom level
   const calculateZoom = (professionals: any[]) => {
+    if (userLocation && (!professionals || professionals.length > 1)) return 13; // Good zoom for user location
     if (!professionals || professionals.length === 0) return 11;
-    if (professionals.length === 1) return 14; // Zoom in closer for single professional
-    if (professionals.length <= 3) return 12;
-    if (professionals.length <= 6) return 11;
-    return 10; // Zoom out for many professionals
+    if (professionals.length === 1) return 14;
+    return 11;
   };
 
-  // Re-render map when professionals change
+  // Re-render map when professionals change or userLocation is found (only if map doesn't exist yet?)
+  // Actually, we want to update the map if userLocation loads later.
   useEffect(() => {
     if (!mapContainer.current) return;
 
-    // Import default professionals as fallback
-    const { professionals: defaultProfessionals } = require('./mockData');
-    const professionals = propProfessionals || defaultProfessionals;
+    // Check if map already exists
+    if ((mapContainer.current as any)._mapboxMap) {
+      // Map exists, handle updates
+      const map = (mapContainer.current as any)._mapboxMap;
 
-    if (!professionals) return;
+      // If user location loaded and we are not focusing on a specific single professional (unless specifically requested), maybe fly to user?
+      // Let's rely on the requirement: "open default from client user geolocation"
+      // If this useEffect runs due to userLocation update:
+      if (userLocation) {
+        // We might want to check if the map is already centered meaningfully. 
+        // But simply flying to user location when it becomes available is a safe default for "opening".
+        // To avoid annoying jumps if the user has panned, we could check initialization state.
+        // For simplicity and meeting the req:
+        map.flyTo({
+          center: userLocation,
+          zoom: 13
+        });
+      }
+      return; // Don't re-initialize
+    }
+
+    // Mock data removed
+    const professionals = propProfessionals || [];
 
     // Calculate center and zoom for filtered professionals
     const center = calculateCenter(professionals);
@@ -234,7 +276,7 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({ professionals: propProfe
       const currentIndex = index;
       const hasNext = currentIndex < professionals.length - 1;
       const hasPrev = currentIndex > 0;
-      
+
       // Create a popup with more information
       const popup = new mapboxgl.Popup({
         offset: [0, -2], // Moved 5% down (from -5 to -2)
@@ -339,7 +381,7 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({ professionals: propProfe
       // Add click event to show popup
       marker.getElement().addEventListener('click', (e) => {
         e.stopPropagation();
-        
+
         // Remove any existing popups with fade out
         const existingPopups = document.getElementsByClassName('mapboxgl-popup');
         Array.from(existingPopups).forEach(popup => {
@@ -347,15 +389,15 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({ professionals: propProfe
           (popup as HTMLElement).style.transform = 'translateY(5px) scale(0.98)';
           setTimeout(() => popup.remove(), 200);
         });
-        
+
         // Show new popup
         popup.setLngLat(pro.coords).addTo(map);
-        
+
         // Add navigation button event listeners
         setTimeout(() => {
           const prevBtn = document.querySelector('.custom-popup .prev-btn');
           const nextBtn = document.querySelector('.custom-popup .next-btn');
-          
+
           if (prevBtn && !prevBtn.hasAttribute('disabled')) {
             prevBtn.addEventListener('click', (e) => {
               e.stopPropagation();
@@ -371,7 +413,7 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({ professionals: propProfe
               }
             });
           }
-          
+
           if (nextBtn && !nextBtn.hasAttribute('disabled')) {
             nextBtn.addEventListener('click', (e) => {
               e.stopPropagation();
@@ -388,7 +430,7 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({ professionals: propProfe
             });
           }
         }, 100);
-        
+
         // Move map to center on marker
         moveToMarker(pro.coords);
       });
@@ -566,7 +608,7 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({ professionals: propProfe
       document.head.removeChild(style);
       document.head.removeChild(mapStyle);
     };
-  }, [propProfessionals]); // Re-run when professionals prop changes
+  }, [propProfessionals, userLocation]); // Re-run when professionals prop changes or user location is found
 
   return (
     <div

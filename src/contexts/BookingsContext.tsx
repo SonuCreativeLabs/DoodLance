@@ -1,232 +1,241 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 
 export interface Booking {
-  "#": string;
-  service: string;
-  provider: string;
-  image: string;
-  date: string;
-  time: string;
-  status: 'confirmed' | 'ongoing' | 'completed' | 'cancelled';
-  location: string;
-  price: string;
-  rating: number;
-  completedJobs: number;
-  description: string;
-  category: string;
-  paymentMethod?: 'cod' | 'upi' | 'card' | 'wallet';
-  notes?: string; // Client notes for the freelancer
-  otp?: string; // 4-digit OTP for job verification
-  services?: {
-    id: string;
-    title: string;
-    price: string | number;
-    quantity: number;
-  }[];
+    "#": string;
+    service: string;
+    provider: string;
+    freelancerId?: string;
+    image: string;
+    date: string;
+    time: string;
+    status: 'pending' | 'confirmed' | 'ongoing' | 'completed' | 'cancelled';
+    location: string;
+    price: string;
+    rating: number;
+    completedJobs: number;
+    description: string;
+    category: string;
+    providerPhone?: string;
+    paymentMethod?: 'cod' | 'upi' | 'card' | 'wallet';
+    notes?: string; // Client notes for the freelancer
+    otp?: string; // 4-digit OTP for job verification
+    services?: {
+        id: string;
+        title: string;
+        price: string | number;
+        quantity: number;
+        duration?: number;
+        deliveryTime?: string;
+    }[];
+    completedAt?: string;
 }
 
 interface BookingsContextType {
-  bookings: Booking[];
-  loading: boolean;
-  error: string | null;
-  refreshBookings: () => void;
-  addBooking: (booking: Omit<Booking, '#'>) => string;
+    bookings: Booking[];
+    loading: boolean;
+    error: string | null;
+    refreshBookings: () => Promise<void>;
+    addBooking: (booking: Omit<Booking, "#">) => Promise<string>;
+    rescheduleBooking: (id: string, newDate: string, newTime: string) => Promise<void>;
 }
 
 const BookingsContext = createContext<BookingsContextType | undefined>(undefined);
 
-// Initial mock data - this would typically come from an API
-const initialBookings: Booking[] = [
-  {
-    "#": "#TNCHE001",
-    service: "Batting Coaching",
-    provider: "Rahul Sharma",
-    image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Rahul",
-    date: new Date().toISOString().split('T')[0], // Today's date
-    time: new Date().getHours() < 11 ? "11:00 AM" : "5:00 PM", // Future time today
-    status: "ongoing",
-    location: "Chepauk Stadium, Chennai",
-    price: "₹1,200/session",
-    rating: 4.8,
-    completedJobs: 342,
-    description: "Advanced batting technique and shot selection coaching",
-    category: "cricket"
-  },
-  {
-    "#": "#TNCHE002",
-    service: "Bowling Training",
-    provider: "Irfan Pathan",
-    image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Irfan",
-    date: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0], // Tomorrow
-    time: "5:00 PM",
-    status: "confirmed",
-    location: "MA Chidambaram Stadium, Chennai",
-    price: "₹800/hr",
-    rating: 4.9,
-    completedJobs: 234,
-    description: "Fast bowling technique and pace bowling mastery",
-    category: "cricket"
-  },
-  {
-    "#": "#TNCHE003",
-    service: "Fielding Practice",
-    provider: "Virat Kohli",
-    image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Virat",
-    date: new Date().toISOString().split('T')[0], // Today
-    time: new Date().getHours() < 16 ? "4:30 PM" : "8:30 PM", // Future time today
-    status: "ongoing",
-    location: "Chepauk Stadium, Chennai",
-    price: "₹1,000/session",
-    rating: 4.6,
-    completedJobs: 145,
-    description: "Advanced fielding drills and catching techniques",
-    category: "cricket"
-  },
-  {
-    "#": "#TNALWA001",
-    service: "Cricket Fitness Training",
-    provider: "Sachin Tendulkar",
-    image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sachin",
-    date: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString().split('T')[0], // Day after tomorrow
-    time: "5:30 PM",
-    status: "confirmed",
-    location: "Alwarpet Cricket Academy, Chennai",
-    price: "₹1,500/month",
-    rating: 5.0,
-    completedJobs: 312,
-    description: "Cricket-specific fitness and endurance training",
-    category: "cricket"
-  }
-];
-
-// Generate a unique booking ID
-const generateBookingId = (): string => {
-  const prefix = '#TNCHE';
-  const randomNum = Math.floor(Math.random() * 900) + 100; // 3 digit number
-  return `${prefix}${randomNum}`;
-};
-
-// LocalStorage key for client bookings (shared with freelancer side)
-const CLIENT_BOOKINGS_KEY = 'clientBookings';
+// Initial state
+const initialBookings: Booking[] = [];
 
 export function BookingsProvider({ children }: { children: ReactNode }) {
-  const [bookings, setBookings] = useState<Booking[]>(initialBookings);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+    const [bookings, setBookings] = useState<Booking[]>(initialBookings);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
-  // Load bookings from localStorage on mount
-  useEffect(() => {
-    try {
-      const storedBookings = localStorage.getItem(CLIENT_BOOKINGS_KEY);
-      if (storedBookings) {
-        const parsedBookings = JSON.parse(storedBookings) as Booking[];
-        // Merge stored bookings with initial bookings, avoiding duplicates
-        const mergedBookings = [...parsedBookings];
-        initialBookings.forEach(initial => {
-          if (!mergedBookings.some(b => b['#'] === initial['#'])) {
-            mergedBookings.push(initial);
-          }
-        });
-        setBookings(mergedBookings);
-      }
-    } catch (err) {
-      console.error('Error loading bookings from localStorage:', err);
-    }
-  }, []);
+    const { user, isAuthenticated } = useAuth();
 
-  // Save bookings to localStorage whenever they change
-  useEffect(() => {
-    try {
-      // Only save non-initial bookings (user-created ones)
-      const userBookings = bookings.filter(b => 
-        !initialBookings.some(initial => initial['#'] === b['#'])
-      );
-      localStorage.setItem(CLIENT_BOOKINGS_KEY, JSON.stringify(userBookings));
-      
-      // Dispatch custom event so freelancer side can listen
-      window.dispatchEvent(new CustomEvent('clientBookingUpdated', { 
-        detail: { bookings: userBookings } 
-      }));
-    } catch (err) {
-      console.error('Error saving bookings to localStorage:', err);
-    }
-  }, [bookings]);
+    const fetchBookings = async () => {
+        if (!user) {
+            console.log('⏳ BookingsContext: Waiting for user auth...');
+            return;
+        }
 
-  const refreshBookings = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      // Load from localStorage
-      const storedBookings = localStorage.getItem(CLIENT_BOOKINGS_KEY);
-      if (storedBookings) {
-        const parsedBookings = JSON.parse(storedBookings) as Booking[];
-        const mergedBookings = [...parsedBookings];
-        initialBookings.forEach(initial => {
-          if (!mergedBookings.some(b => b['#'] === initial['#'])) {
-            mergedBookings.push(initial);
-          }
-        });
-        setBookings(mergedBookings);
-      } else {
-        setBookings(initialBookings);
-      }
-    } catch (err) {
-      setError('Failed to load bookings');
-    } finally {
-      setLoading(false);
-    }
-  };
+        // Only show loading state if we don't have data yet
+        // This prevents the flicker when refreshing data
+        if (bookings.length === 0) {
+            setLoading(true);
+        }
 
-  // Add a new booking
-  const addBooking = (bookingData: Omit<Booking, '#'>): string => {
-    const bookingId = generateBookingId();
-    const newBooking: Booking = {
-      '#': bookingId,
-      ...bookingData
+        try {
+            console.log('🔄 Fetching bookings for user:', user.email);
+            const response = await fetch('/api/bookings');
+            if (response.ok) {
+                const data = await response.json();
+                console.log('✅ Bookings API Data:', data);
+
+                const mapped: Booking[] = (data.bookings || []).map((b: any) => {
+                    const dateObj = b.date ? new Date(b.date) : null;
+                    return {
+                        "#": b.id, // Ensure this matches the Booking interface
+                        service: b.title,
+                        provider: b.freelancerName || 'Unknown',
+                        image: b.freelancerAvatar || '/images/default-avatar.svg',
+                        date: dateObj ? dateObj.toISOString().split('T')[0] : '', // YYYY-MM-DD
+                        time: b.time || (dateObj ? dateObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }) : ''),
+                        status: (b.status?.toLowerCase() as any) || 'pending',
+                        location: b.location || 'Remote',
+                        price: `₹${b.price}`,
+                        rating: 0,
+                        completedJobs: 0,
+                        description: '',
+                        category: 'General',
+                        otp: b.otp,
+                        completedAt: b.completedAt ? new Date(b.completedAt).toLocaleDateString() : undefined,
+                        notes: b.notes,
+                        services: b.services,
+                        providerPhone: b.freelancerPhone,
+                        freelancerId: b.freelancerId,
+                    };
+                });
+
+                // Only update state if JSON stringified data is different to avoid re-renders
+                // or just set it (React handles ref equality check usually, but new array always triggers)
+                // For now, simple setBookings is fine as long as we don't flicker loading
+                setBookings(mapped);
+            } else {
+                if (response.status === 401) {
+                    console.log('⚠️ 401 fetching bookings - User might be logged out or session invalid');
+                    setBookings([]);
+                }
+                else setError('Failed to fetch bookings');
+            }
+        } catch (err) {
+            console.error('Error fetching bookings:', err);
+            setError('Failed to load bookings');
+        } finally {
+            setLoading(false);
+        }
     };
-    
-    // Add to the beginning of the list so it shows first
-    setBookings(prev => [newBooking, ...prev]);
-    
-    // Immediately save to localStorage so freelancer side can access it
-    try {
-      const storedBookings = localStorage.getItem(CLIENT_BOOKINGS_KEY);
-      const existingBookings = storedBookings ? JSON.parse(storedBookings) : [];
-      const updatedBookings = [newBooking, ...existingBookings];
-      localStorage.setItem(CLIENT_BOOKINGS_KEY, JSON.stringify(updatedBookings));
-      
-      // Dispatch event to notify freelancer side immediately
-      window.dispatchEvent(new CustomEvent('clientBookingUpdated', { 
-        detail: { bookings: updatedBookings, action: 'added', newBooking } 
-      }));
-    } catch (err) {
-      console.error('Error saving new booking to localStorage:', err);
-    }
-    
-    return bookingId;
-  };
 
-  const value = {
-    bookings,
-    loading,
-    error,
-    refreshBookings,
-    addBooking
-  };
+    // Load bookings on mount or when user changes
+    useEffect(() => {
+        if (user) {
+            fetchBookings();
+        } else {
+            setBookings([]); // Clear bookings on logout
+        }
+    }, [user]);
 
-  return (
-    <BookingsContext.Provider value={value}>
-      {children}
-    </BookingsContext.Provider>
-  );
+    const refreshBookings = fetchBookings;
+
+    // Add a new booking
+    const addBooking = async (bookingData: Omit<Booking, '#'>): Promise<string> => {
+        // Note: The caller might expect synchronous return of ID. 
+        // We changed signature to Promise<string> to handle API.
+        // Ensure consumers await this.
+
+        // Convert context data to API payload
+        // bookingData has 'service' (title), 'provider', etc.
+        // API needs 'serviceId'. 
+        // PROBLEM: The current 'addBooking' in frontend works with pre-defined Booking object that might NOT have serviceId!
+        // We need to pass serviceId. The `Booking` interface needs to support `serviceId`.
+
+        // For now, assume bookingData contains `serviceId` or we can't create it meaningfully in DB.
+        // Looking at `Booking` interface:
+        // services?: { id, ... }[]
+
+        // If the Caller passes `services` array (cart?), we pick the first one?
+        const serviceId = bookingData.services?.[0]?.id || (bookingData as any).serviceId;
+
+        if (!serviceId) {
+            throw new Error("Service ID missing for booking");
+        }
+
+        try {
+            console.log('Sending booking request with serviceId:', serviceId);
+            const response = await fetch('/api/bookings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    serviceId,
+                    scheduledAt: bookingData.date ? new Date(`${bookingData.date} ${bookingData.time}`) : undefined,
+                    notes: bookingData.notes,
+                    otp: bookingData.otp, // Pass the client-generated OTP
+                    location: bookingData.location, // Pass the location
+                    services: bookingData.services,
+                    // Pass other fields if API supports
+                }),
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                const newId = data.booking.id;
+                await refreshBookings(); // Reload to get full state
+                return newId;
+            } else {
+                const err = await response.json();
+                throw new Error(err.error || 'Failed to create booking');
+            }
+        } catch (err) {
+            console.error('Error adding booking:', err);
+            throw err;
+        }
+    };
+
+    // Reschedule an existing booking
+    const rescheduleBooking = async (id: string, newDate: string, newTime: string) => {
+        try {
+            // Optimistic
+            setBookings(prev => prev.map(booking => {
+                if (booking['#'] === id) {
+                    return {
+                        ...booking,
+                        date: newDate,
+                        time: newTime,
+                        status: 'confirmed'
+                    };
+                }
+                return booking;
+            }));
+
+            const response = await fetch(`/api/bookings/${id}`, {
+                method: 'PUT', // or PATCH
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    status: 'confirmed',
+                    scheduledAt: new Date(`${newDate} ${newTime}`),
+                    // We might need a specific 'reschedule' field or just update logic.
+                }),
+            });
+
+            if (!response.ok) fetchBookings(); // Revert/Reload
+        } catch (err) {
+            console.error('Error rescheduling:', err);
+            fetchBookings();
+        }
+    };
+
+    const value = {
+        bookings,
+        loading,
+        error,
+        refreshBookings: fetchBookings,
+        // Cast appropriately or update Interface in Step 1
+        addBooking: addBooking,
+        rescheduleBooking,
+    };
+
+    return (
+        <BookingsContext.Provider value={value}>
+            {children}
+        </BookingsContext.Provider>
+    );
 }
 
 export function useBookings() {
-  const context = useContext(BookingsContext);
-  if (context === undefined) {
-    throw new Error('useBookings must be used within a BookingsProvider');
-  }
-  return context;
+    const context = useContext(BookingsContext);
+    if (context === undefined) {
+        throw new Error('useBookings must be used within a BookingsProvider');
+    }
+    return context;
 }

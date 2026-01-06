@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { usePortfolio, PortfolioItem } from '@/contexts/PortfolioContext';
 import { CategorySelect } from '@/components/common/CategoryBadge';
+import { EmptyState } from '@/components/freelancer/profile/EmptyState';
 
 interface PortfolioFormProps {
   portfolio: PortfolioItem | null;
@@ -83,20 +84,38 @@ export function PortfolioForm({ portfolio, onSave, onCancel, onValidationChange,
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
-    
+
     setIsUploading(true);
-    
+
     try {
-      // In a real app, you would upload the image to a server here
-      // For now, we'll just use the file URL
       const file = files[0];
-      const imageUrl = URL.createObjectURL(file);
-      setImage(imageUrl);
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;
+      const filePath = `portfolio/${fileName}`;
+
+      // Upload to Supabase Storage
+      const { createClient } = require('@/lib/supabase/client'); // Dynamic import to avoid SSR issues if any
+      const supabase = createClient();
+
+      const { error: uploadError } = await supabase.storage
+        .from('images') // Assuming 'images' bucket exists, standard in most setups or 'public'
+        .upload(filePath, file);
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      // Get Public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('images')
+        .getPublicUrl(filePath);
+
+      setImage(publicUrl);
     } catch (error) {
       console.error('Error uploading image:', error);
+      alert('Failed to upload image. Please try again.');
     } finally {
       setIsUploading(false);
-      // Clear the input to allow selecting the same file again
       e.target.value = '';
     }
   };
@@ -174,7 +193,7 @@ export function PortfolioForm({ portfolio, onSave, onCancel, onValidationChange,
             </div>
           )}
         </div>
-        
+
         {!image && (
           <div className="mt-4">
             <div className="space-y-2 w-full">
@@ -243,8 +262,8 @@ export function PortfolioForm({ portfolio, onSave, onCancel, onValidationChange,
             >
               Cancel
             </Button>
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               className="h-10 px-6 rounded-xl bg-[var(--primary)] text-white hover:bg-[var(--primary)]/90 shadow-md transition-all"
               disabled={!isFormValid}
             >
@@ -257,7 +276,7 @@ export function PortfolioForm({ portfolio, onSave, onCancel, onValidationChange,
   );
 }
 
-export function PortfolioSection({ 
+export function PortfolioSection({
   initialPortfolio = []
 }: PortfolioSectionProps) {
   const { portfolio, addPortfolioItem, removePortfolioItem, updatePortfolioItem } = usePortfolio();
@@ -326,7 +345,7 @@ export function PortfolioSection({
 
           {/* Scrollable Content */}
           <div className="flex-1 overflow-y-auto px-5 py-3">
-            <PortfolioForm 
+            <PortfolioForm
               portfolio={editingItem}
               onSave={handleSaveWork}
               onCancel={() => setIsDialogOpen(false)}
@@ -334,7 +353,7 @@ export function PortfolioSection({
               hideActions={true}
             />
           </div>
-          
+
           {/* Fixed Footer with Actions */}
           <div className="border-t border-white/10 p-4 bg-[#1E1E1E] flex-shrink-0">
             <div className="flex justify-center gap-4">
@@ -386,7 +405,7 @@ export function PortfolioSection({
                       priority
                       sizes="(max-width: 768px) 100vw, 80vw"
                     />
-                    
+
                     {/* Category */}
                     <div className="absolute top-4 left-4 z-10">
                       <div className="bg-white/10 text-white/80 border-white/20 px-2 py-0.5 text-xs rounded-full border">
@@ -399,7 +418,7 @@ export function PortfolioSection({
                   </div>
                 </div>
               </div>
-              
+
               {/* Content with smooth scrolling */}
               <div className="flex-1 overflow-y-auto p-8 space-y-8">
                 {/* Description */}
@@ -422,7 +441,7 @@ export function PortfolioSection({
                     </h3>
                     <div className="flex flex-wrap gap-3">
                       {viewingItem.skills.map((skill, index) => (
-                        <span 
+                        <span
                           key={index}
                           className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-white/5 text-white/80 hover:bg-white/10 transition-colors"
                         >
@@ -435,8 +454,8 @@ export function PortfolioSection({
 
                 {/* Action Buttons */}
                 <div className="flex flex-wrap gap-4 pt-4">
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     className="bg-transparent border-white/20 hover:bg-white/5 hover:border-white/30"
                     onClick={() => {
                       setViewingItem(null);
@@ -455,27 +474,27 @@ export function PortfolioSection({
 
       {/* Portfolio Items Grid */}
       {portfolio.length === 0 ? (
-        <div className="text-center py-12 border border-dashed border-white/10 rounded-lg">
-          <ImageIcon className="mx-auto h-12 w-12 text-white/30 mb-2" />
-          <h3 className="text-white/80 font-medium">No portfolio items yet</h3>
-          <p className="text-sm text-white/50 mt-1 max-w-md mx-auto">
-            Showcase your best work to attract potential clients. Add your first project to get started.
-          </p>
-          <Button 
-            variant="default" 
-            size="lg" 
-            className="mt-4 bg-[var(--primary)] text-white hover:bg-[var(--primary)]/90 transition-colors rounded-xl h-11 px-6"
-            onClick={handleAddWork}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add Your First Project
-          </Button>
-        </div>
+        <EmptyState
+          icon={ImageIcon}
+          title="No portfolio items yet"
+          description="Showcase your best work to attract potential clients. Add your first project to get started."
+          action={
+            <Button
+              variant="default"
+              size="lg"
+              className="mt-4 bg-[var(--primary)] text-white hover:bg-[var(--primary)]/90 transition-colors rounded-xl h-11 px-6"
+              onClick={handleAddWork}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Your First Project
+            </Button>
+          }
+        />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {portfolio.map((item) => (
-            <div 
-              key={item.id} 
+            <div
+              key={item.id}
               className="group relative aspect-video rounded-xl overflow-hidden cursor-pointer border border-white/10 hover:border-white/20 transition-all duration-300"
               onClick={() => handleViewWork(item)}
             >

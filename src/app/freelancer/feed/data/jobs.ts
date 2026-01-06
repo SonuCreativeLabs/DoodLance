@@ -10,10 +10,10 @@ const generateNearbyCoords = (baseCoords: [number, number], radiusKm = 0.5): [nu
   const t = 2 * Math.PI * v;
   const x = w * Math.cos(t);
   const y = w * Math.sin(t);
-  
+
   // Adjust the x-coordinate for the shrinking of the east-west distances
   const newX = x / Math.cos(baseCoords[1] * Math.PI / 180);
-  
+
   return [
     parseFloat((baseCoords[0] + newX).toFixed(6)),
     parseFloat((baseCoords[1] + y).toFixed(6))
@@ -134,43 +134,43 @@ const generateJobs = (): Job[] => {
     workMode: 'remote' | 'onsite';
   }) => {
     // Determine category and get base rate
-    const categoryKey = Object.keys(categoryRates).find(key => 
+    const categoryKey = Object.keys(categoryRates).find(key =>
       category.toLowerCase().includes(key)
     ) || 'data';
-    
+
     const rateInfo = categoryRates[categoryKey as keyof typeof categoryRates] || { min: 300, max: 2000, unit: 'hour' };
-    
+
     // Generate a more realistic rate based on experience
     const experience = experienceLevels[Math.floor(Math.random() * experienceLevels.length)];
-    
+
     // Adjust base rate based on experience
     let experienceMultiplier = 1;
     if (experience === 'Intermediate') experienceMultiplier = 1.5;
     if (experience === 'Expert') experienceMultiplier = 2.5;
-    
+
     // Apply work mode multiplier (remote work often pays more)
     const workModeMultiplier = workModeMultipliers[workMode] || 1;
-    
+
     // Select a random pricing period for this job
     const periods = (rateInfo as any).periods || [
       { type: 'fixed', min: rateInfo.min, max: rateInfo.max, multiplier: 1 }
     ];
     const period = periods[Math.floor(Math.random() * periods.length)];
-    
+
     // Calculate base rate with all multipliers
     const baseRate = Math.floor(
-      (Math.random() * (period.max - period.min) + period.min) * 
+      (Math.random() * (period.max - period.min) + period.min) *
       (period.multiplier || 1) *
-      experienceMultiplier * 
+      experienceMultiplier *
       workModeMultiplier
     );
-    
+
     // Round to nearest 50 for non-hourly rates
     const rate = period.type === 'hourly' ? baseRate : Math.round(baseRate / 50) * 50;
-      
+
     // Set price unit based on category
     const priceUnit = rateInfo.unit;
-    
+
     // Calculate budget based on the unit
     let budget = rate;
     if (priceUnit === 'job' || priceUnit === 'service' || priceUnit === 'event' || priceUnit === 'room' || priceUnit === 'project') {
@@ -189,7 +189,7 @@ const generateJobs = (): Job[] => {
       // For monthly or session-based work, keep as is
       budget = rate;
     }
-    
+
     // Ensure budget is reasonable for the category
     const maxBudget = rateInfo.max || 50000; // Use category max or default to 50,000
     budget = Math.min(Math.round(budget), maxBudget);
@@ -201,10 +201,10 @@ const generateJobs = (): Job[] => {
     // Set default company info (simplified for demo)
     const company = 'DoodLance';
     const companyLogo = '/images/logo.png';
-    
+
     // Determine specific duration based on job characteristics
     let duration: JobDuration = 'hourly';
-    
+
     // Check title for specific duration hints first
     const titleLower = title.toLowerCase();
     if (titleLower.includes('90-minute') || titleLower.includes('90 minute')) {
@@ -232,7 +232,7 @@ const generateJobs = (): Job[] => {
         duration = 'hourly'; // Default to hourly for most cricket services
       }
     }
-    
+
     const job: Job = {
       id,
       title,
@@ -252,7 +252,11 @@ const generateJobs = (): Job[] => {
       companyLogo,
       clientName,
       clientImage: `https://i.pravatar.cc/150?img=${getClientImageId(clientName)}`,
-      clientRating: (Math.floor(Math.random() * 10) / 2 + 3).toFixed(1),
+      clientRating: {
+        stars: Math.floor(Math.random() * 5) + 1,
+        feedback: "Great freelancer to work with!",
+        feedbackChips: ["Professional", "Skilled", "Punctual"]
+      },
       clientJobs: Math.floor(Math.random() * 50) + 1,
       proposals: Math.floor(Math.random() * 30),
       duration,
@@ -293,7 +297,7 @@ const generateJobs = (): Job[] => {
     const jobType = skills[0].includes('Coach') ? 'Coach' : 'Fitness Trainer';
     const title = `Cricket ${jobType} - ${skills[1]}`;
     const description = `Professional cricket ${jobType.toLowerCase()} with expertise in ${skills.slice(1, 3).join(' and ')}. ${skills[3] ? `Specializes in ${skills[3]}.` : ''} Local candidates preferred.`;
-    
+
     jobs.push(createJobWithClient({
       id: `cricket-${index + 1}`,
       title,

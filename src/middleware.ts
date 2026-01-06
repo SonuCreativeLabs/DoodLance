@@ -1,117 +1,113 @@
-import { authkitMiddleware } from '@workos-inc/authkit-nextjs';
 import { NextResponse } from 'next/server';
-import type { NextFetchEvent, NextRequest } from 'next/server';
-import jwt from 'jsonwebtoken';
+import type { NextRequest } from 'next/server';
+import { jwtVerify } from 'jose';
+import { updateSession } from '@/lib/supabase/middleware';
 
-const authkit = authkitMiddleware({
-  redirectUri: process.env.WORKOS_REDIRECT_URI,
-});
+// Rate limiting storage (in-memory for development, use Redis in production)
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 
-// JWT Secret for verification
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+function rateLimit(ip: string, limit: number, windowMs: number): boolean {
+    const now = Date.now();
+    const record = rateLimitMap.get(ip);
 
-// Protected API routes that require authentication
-const protectedApiRoutes = [
-  '/api/bookings',
-  '/api/services/create',
-  '/api/users/profile',
-  '/api/wallet',
-  '/api/payments',
-];
-
-// Admin-only API routes (except login/auth endpoints)
-const adminOnlyRoutes = [
-  '/api/admin',
-];
-
-// Public auth routes (no authentication required)
-const publicAuthRoutes = [
-  '/api/admin/auth/login',
-  '/api/admin/auth/verify',
-];
-
-export function middleware(request: NextRequest, event: NextFetchEvent) {
-  const pathname = request.nextUrl.pathname;
-  
-  // Handle /post redirect
-  if (pathname === '/post') {
-    const response = NextResponse.redirect(new URL('/client/post', request.url));
-    for (const [key, value] of request.headers) {
-      response.headers.append(key, value);
-    }
-    return response;
-  }
-
-  // Skip auth middleware for IDE preview requests
-  const userAgent = request.headers.get('user-agent') || '';
-  const isIDEPreview = userAgent.includes('vscode') || 
-                      request.url.includes('vscodeBrowserReqId') ||
-                      request.headers.get('referer')?.includes('vscode') ||
-                      false;
-
-  if (isIDEPreview) {
-    return NextResponse.next();
-  }
-
-  // Check if this is a protected API route
-  const isProtectedApiRoute = protectedApiRoutes.some(route => pathname.startsWith(route));
-  const isAdminRoute = adminOnlyRoutes.some(route => pathname.startsWith(route));
-  const isPublicAuthRoute = publicAuthRoutes.some(route => pathname.startsWith(route));
-
-  // Skip authentication for public auth routes
-  if (isPublicAuthRoute) {
-    return NextResponse.next();
-  }
-
-  if (isProtectedApiRoute) {
-    // Get token from Authorization header or cookies
-    const authHeader = request.headers.get('authorization');
-    const token = authHeader?.startsWith('Bearer ') 
-      ? authHeader.slice(7) 
-      : request.cookies.get('access_token')?.value;
-
-    if (!token) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
+    if (!record || now > record.resetTime) {
+        rateLimitMap.set(ip, { count: 1, resetTime: now + windowMs });
+        return true;
     }
 
-    try {
-      // Verify JWT token
-      const decoded = jwt.verify(token, JWT_SECRET) as any;
-      
-      // Check admin permission for admin routes
-      if (isAdminRoute && decoded.role !== 'admin' && decoded.role !== 'super_admin') {
-        return NextResponse.json(
-          { error: 'Admin access required' },
-          { status: 403 }
-        );
-      }
-
-      // Add user info to headers for use in API routes
-      const requestHeaders = new Headers(request.headers);
-      requestHeaders.set('x-user-id', decoded.userId);
-      requestHeaders.set('x-user-email', decoded.email);
-      requestHeaders.set('x-user-role', decoded.role);
-
-      return NextResponse.next({
-        request: {
-          headers: requestHeaders,
-        },
-      });
-    } catch (error) {
-      return NextResponse.json(
-        { error: 'Invalid or expired token' },
-        { status: 401 }
-      );
+    if (record.count >= limit) {
+        return false;
     }
-  }
 
-  // For non-API routes, use authkit middleware
-  return authkit(request, event);
+    record.count++;
+    return true;
+}
+
+export async function middleware(request: NextRequest) {
+    const ip = request.ip || request.headers.get('x-forwarded-for') || 'unknown';
+
+    // Rate limiting for API routes
+    if (request.nextUrl.pathname.startsWith('/api/')) {
+
+        const isAdminApi = request.nextUrl.pathname.startsWith('/api/admin/');
+        const isAuthApi = request.nextUrl.pathname.startsWith('/api/auth/');
+
+        let limit = 30; // Default: 30 req/min
+        const windowMs = 60 * 1000; // 1 minute
+
+        if (isAdminApi) {
+            limit = 1000; // Admin: 100 req/min
+        } else if (isAuthApi) {
+            limit = 600; // Auth: 60 req/min
+        } else {
+            limit = 1000 // Default increased for debugging
+        }
+
+        if (!rateLimit(ip, limit, windowMs)) {
+            return NextResponse.json(
+                { error: 'Too many requests. Please try again later.' },
+                { status: 429 }
+            );
+        }
+    }
+
+    // Admin route protection (except login page and auth endpoints)
+    if ((request.nextUrl.pathname.startsWith('/admin') ||
+        request.nextUrl.pathname.startsWith('/api/admin')) &&
+        request.nextUrl.pathname !== '/admin/login' &&
+        !request.nextUrl.pathname.startsWith('/api/admin/auth')) {
+
+        // Get auth token from cookie or header
+        const token = request.cookies.get('auth-token')?.value;
+
+        if (!token) {
+            if (request.nextUrl.pathname.startsWith('/api/admin')) {
+                return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+            }
+            const redirectUrl = new URL('/login', request.url);
+            redirectUrl.searchParams.set('redirect', request.nextUrl.pathname);
+            return NextResponse.redirect(redirectUrl);
+        }
+
+        // Verify token and check admin role
+        try {
+            const secret = new TextEncoder().encode(
+                process.env.JWT_SECRET || 'fallback-secret-for-dev'
+            );
+
+            const { payload } = await jwtVerify(token, secret);
+
+            // Check for admin role in metadata or root
+            const role = payload.role || (payload.user_metadata as any)?.role;
+
+            if (role !== 'ADMIN') {
+                console.warn('Unauthorized access attempt: User is not an ADMIN', { role, ip });
+                if (request.nextUrl.pathname.startsWith('/api/admin')) {
+                    return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
+                }
+                // Redirect to login if accessing page
+                const redirectUrl = new URL('/login', request.url);
+                return NextResponse.redirect(redirectUrl);
+            }
+
+            // Token is valid and user is admin -> Allow
+        } catch (error) {
+            console.error('Token verification failed:', error);
+            if (request.nextUrl.pathname.startsWith('/api/admin')) {
+                return NextResponse.json({ error: 'Unauthorized: Invalid token' }, { status: 401 });
+            }
+            const redirectUrl = new URL('/login', request.url);
+            redirectUrl.searchParams.set('redirect', request.nextUrl.pathname);
+            return NextResponse.redirect(redirectUrl);
+        }
+    }
+
+    return await updateSession(request);
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
+    matcher: [
+        '/admin/:path*',
+        '/api/:path*'
+    ],
 };

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -60,60 +60,90 @@ const settingsCategories = [
   },
 ];
 
+const defaultSettings = {
+  // General
+  platformName: 'DoodLance',
+  platformUrl: 'https://doodlance.com',
+  supportEmail: 'support@doodlance.com',
+  timezone: 'Asia/Kolkata',
+  language: 'en',
+  currency: 'INR',
+
+  // Security
+  twoFactorAuth: true,
+  sessionTimeout: '30',
+  maxLoginAttempts: '5',
+  passwordMinLength: '8',
+  requireEmailVerification: true,
+  requireKyc: true,
+
+  // Notifications
+  emailNotifications: true,
+  pushNotifications: true,
+  smsNotifications: false,
+  marketingEmails: false,
+  systemAlerts: true,
+
+  // Payments
+  platformCommission: '15',
+  minWithdrawal: '500',
+  maxWithdrawal: '50000',
+  withdrawalFrequency: 'weekly',
+  paymentGateway: 'razorpay',
+  autoApproveWithdrawals: false,
+
+  // Performance
+  enableCache: true,
+  cacheExpiry: '3600',
+  enableCdn: true,
+  compressionEnabled: true,
+  lazyLoading: true,
+
+  // Database
+  autoBackup: true,
+  backupFrequency: 'daily',
+  backupRetention: '30',
+  maintenanceMode: false,
+};
+
 export default function SettingsPage() {
   const [activeCategory, setActiveCategory] = useState('general');
-  const [settings, setSettings] = useState({
-    // General
-    platformName: 'DoodLance',
-    platformUrl: 'https://doodlance.com',
-    supportEmail: 'support@doodlance.com',
-    timezone: 'Asia/Kolkata',
-    language: 'en',
-    currency: 'INR',
-    
-    // Security
-    twoFactorAuth: true,
-    sessionTimeout: '30',
-    maxLoginAttempts: '5',
-    passwordMinLength: '8',
-    requireEmailVerification: true,
-    requireKyc: true,
-    
-    // Notifications
-    emailNotifications: true,
-    pushNotifications: true,
-    smsNotifications: false,
-    marketingEmails: false,
-    systemAlerts: true,
-    
-    // Payments
-    platformCommission: '15',
-    minWithdrawal: '500',
-    maxWithdrawal: '50000',
-    withdrawalFrequency: 'weekly',
-    paymentGateway: 'razorpay',
-    autoApproveWithdrawals: false,
-    
-    // Performance
-    enableCache: true,
-    cacheExpiry: '3600',
-    enableCdn: true,
-    compressionEnabled: true,
-    lazyLoading: true,
-    
-    // Database
-    autoBackup: true,
-    backupFrequency: 'daily',
-    backupRetention: '30',
-    maintenanceMode: false,
-  });
-
+  const [settings, setSettings] = useState(defaultSettings);
   const [saved, setSaved] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  const handleSave = () => {
-    console.log('Saving settings:', settings);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
+  const fetchSettings = async () => {
+    try {
+      const res = await fetch('/api/admin/settings');
+      if (res.ok) {
+        const data = await res.json();
+        setSettings({ ...defaultSettings, ...data.settings });
+      }
+    } catch (error) {
+      console.error('Error fetching settings:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    try {
+      const res = await fetch('/api/admin/settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ settings })
+      });
+      if (res.ok) {
+        setSaved(true);
+        setTimeout(() => setSaved(false), 3000);
+      }
+    } catch (error) {
+      console.error('Error saving settings:', error);
+    }
   };
 
   const renderSettingsContent = () => {
@@ -377,7 +407,7 @@ export default function SettingsPage() {
             <RefreshCw className="w-4 h-4 mr-2" />
             Reset
           </Button>
-          <Button 
+          <Button
             onClick={handleSave}
             className="bg-purple-600 hover:bg-purple-700 flex-1 sm:flex-none"
             disabled={saved}
@@ -402,14 +432,12 @@ export default function SettingsPage() {
         {settingsCategories.map((category) => (
           <Card
             key={category.id}
-            className={`bg-[#1a1a1a] border-gray-800 p-4 cursor-pointer transition-all ${
-              activeCategory === category.id ? 'border-purple-600 bg-purple-600/10' : 'hover:border-gray-700'
-            }`}
+            className={`bg-[#1a1a1a] border-gray-800 p-4 cursor-pointer transition-all ${activeCategory === category.id ? 'border-purple-600 bg-purple-600/10' : 'hover:border-gray-700'
+              }`}
             onClick={() => setActiveCategory(category.id)}
           >
-            <category.icon className={`w-6 h-6 mb-2 ${
-              activeCategory === category.id ? 'text-purple-400' : 'text-gray-400'
-            }`} />
+            <category.icon className={`w-6 h-6 mb-2 ${activeCategory === category.id ? 'text-purple-400' : 'text-gray-400'
+              }`} />
             <h3 className="text-sm font-medium text-white">{category.title}</h3>
           </Card>
         ))}

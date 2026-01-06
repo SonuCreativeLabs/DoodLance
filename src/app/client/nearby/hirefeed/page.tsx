@@ -26,12 +26,52 @@ export default function IntegratedExplorePage() {
   useEffect(() => {
     const view = searchParams.get('view');
     const pinId = searchParams.get('pinId');
-    
-    if (view === 'list') {
+    const search = searchParams.get('search');
+    const category = searchParams.get('category');
+
+    if (view === 'list' || search || category) {
       setIsSheetCollapsed(false);
       setIsDragTextVisible(false);
     }
-    
+
+    if (search) {
+      setSearchQuery(search);
+    }
+
+    if (category) {
+      // Map basic categories to the display categories
+      const categoryMap: { [key: string]: string } = {
+        'playing': 'Players',
+        'coaching': 'Coaching & Training',
+        'support': 'Support Staff & Others',
+        'media': 'Media & Content',
+        // Popular Services IDs mappings
+        'net-bowler': 'Players',
+        'sidearm-thrower': 'Players',
+        'cricket-coach': 'Coaching & Training',
+        'physio': 'Support Staff & Others',
+        'umpire': 'Support Staff & Others',
+
+        // Other ClientServices IDs
+        'net-batter': 'Players',
+        'match-player': 'Players',
+        'cricket-trainer': 'Coaching & Training',
+        'scorer': 'Support Staff & Others',
+        'analyst': 'Support Staff & Others', // Mapped here because keywords are in Support
+        'commentator': 'Media & Content',
+        'photographer': 'Media & Content',
+        'influencer': 'Media & Content',
+
+        'other': 'All' // Fallback
+      };
+
+      const mappedCategory = categoryMap[category.toLowerCase()] || category;
+      // Verify if valid category, otherwise default or keep current
+      if (['All', 'Players', 'Coaching & Training', 'Support Staff & Others', 'Media & Content'].includes(mappedCategory)) {
+        setSelectedCategory(mappedCategory);
+      }
+    }
+
     // If there's a pinId, we need to open that specific pin on the map
     if (pinId && mapViewRef.current) {
       // Trigger the pin opening after a short delay to ensure map is loaded
@@ -52,7 +92,7 @@ export default function IntegratedExplorePage() {
   const [selectedTimeOptions, setSelectedTimeOptions] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredProfessionals, setFilteredProfessionals] = useState<BaseProfessional[]>([]);
-  
+
   // Map Freelancer to BaseProfessional - pricing is handled by ProfessionalsFeed using services array
   const mapToProfessional = (freelancer: Professional): BaseProfessional => {
     // Map service to cricket role
@@ -78,12 +118,12 @@ export default function IntegratedExplorePage() {
         'Sports Physiotherapist': 'Physiotherapist',
         'Cricket Commentator': 'Commentator'
       };
-      
+
       return roleMapping[service] || 'All Rounder';
     };
 
     const cricketRole = freelancer.cricketRole || getCricketRole(freelancer.service);
-    
+
     return {
       ...freelancer, // This includes the services array for pricing calculation
       id: freelancer.id.toString(),
@@ -105,7 +145,7 @@ export default function IntegratedExplorePage() {
       experience: freelancer.experience
     };
   };
-  
+
   // Helper function to sort professionals by distance (nearest first)
   const sortByDistance = (profs: BaseProfessional[]) => {
     return [...profs].sort((a, b) => (a.distance || 999) - (b.distance || 999));
@@ -121,7 +161,7 @@ export default function IntegratedExplorePage() {
   // Filter professionals based on selected category - matches against service card categories
   useEffect(() => {
     let result: BaseProfessional[] = [];
-    
+
     if (selectedCategory && selectedCategory !== "All") {
       // Map filter categories to service card category keywords
       const categoryKeywords: { [key: string]: string[] } = {
@@ -130,7 +170,7 @@ export default function IntegratedExplorePage() {
         'Support Staff & Others': ['analyst', 'analysis', 'physio', 'scorer', 'umpire', 'groundsman'],
         'Media & Content': ['photo', 'video', 'videography', 'content', 'commentator', 'media']
       };
-      
+
       const keywords = categoryKeywords[selectedCategory] || [];
       if (keywords.length > 0) {
         // Filter by checking if freelancer has ANY service with matching category
@@ -140,7 +180,7 @@ export default function IntegratedExplorePage() {
             return pro.services.some((svc: any) => {
               const svcCategory = (svc.category || '').toLowerCase();
               const svcTitle = (svc.title || '').toLowerCase();
-              return keywords.some(keyword => 
+              return keywords.some(keyword =>
                 svcCategory.includes(keyword) || svcTitle.includes(keyword)
               );
             });
@@ -164,14 +204,20 @@ export default function IntegratedExplorePage() {
         (pro.name && pro.name.toLowerCase().includes(query)) ||
         (pro.service && pro.service.toLowerCase().includes(query)) ||
         pro.expertise?.some(skill => skill.toLowerCase().includes(query)) ||
-        (pro.description && pro.description.toLowerCase().includes(query))
+        (pro.description && pro.description.toLowerCase().includes(query)) ||
+        // Deep search in services
+        pro.services?.some((svc: any) =>
+          (svc.title && svc.title.toLowerCase().includes(query)) ||
+          (svc.description && svc.description.toLowerCase().includes(query)) ||
+          svc.features?.some((f: string) => f.toLowerCase().includes(query))
+        )
       );
     }
 
     // Sort by distance (nearest first) and update state
     setFilteredProfessionals(sortByDistance(result));
   }, [selectedCategory, professionals, searchQuery]);
-  
+
   // Set initial sheet position to collapsed state (responsive to screen size)
   const getInitialSheetY = () => {
     if (typeof window === 'undefined') return 0;
@@ -196,7 +242,7 @@ export default function IntegratedExplorePage() {
   const handleSaveFilters = () => {
     // Apply filters to professionals
     let filtered = [...professionals];
-    
+
     // Apply category filter first (if not "All") - matches against service card categories
     if (selectedCategory && selectedCategory !== "All") {
       const categoryKeywords: { [key: string]: string[] } = {
@@ -205,7 +251,7 @@ export default function IntegratedExplorePage() {
         'Support Staff & Others': ['analyst', 'analysis', 'physio', 'scorer', 'umpire', 'groundsman'],
         'Media & Content': ['photo', 'video', 'videography', 'content', 'commentator', 'media']
       };
-      
+
       const keywords = categoryKeywords[selectedCategory] || [];
       if (keywords.length > 0) {
         filtered = filtered.filter(pro => {
@@ -214,7 +260,7 @@ export default function IntegratedExplorePage() {
             return pro.services.some((svc: any) => {
               const svcCategory = (svc.category || '').toLowerCase();
               const svcTitle = (svc.title || '').toLowerCase();
-              return keywords.some(keyword => 
+              return keywords.some(keyword =>
                 svcCategory.includes(keyword) || svcTitle.includes(keyword)
               );
             });
@@ -225,14 +271,14 @@ export default function IntegratedExplorePage() {
         });
       }
     }
-    
+
     // Apply area filter
     if (selectedArea && selectedArea !== "All") {
-      filtered = filtered.filter(pro => 
+      filtered = filtered.filter(pro =>
         pro.location && pro.location.toLowerCase().includes(selectedArea.toLowerCase())
       );
     }
-    
+
     // Apply service filter (only if specific service selected and not already filtered by category)
     if (selectedService && selectedService !== "All") {
       filtered = filtered.filter(pro => {
@@ -241,19 +287,19 @@ export default function IntegratedExplorePage() {
         return proService.includes(filterService) || filterService.includes(proService);
       });
     }
-    
+
     // Apply distance filter
     if (range[0]) {
       filtered = filtered.filter(pro => pro.distance <= range[0]);
     }
-    
+
     // Apply rating filter
     if (minRating > 0) {
       filtered = filtered.filter(pro => pro.rating >= minRating);
     }
-    
+
     // Apply price range filter
-    filtered = filtered.filter(pro => 
+    filtered = filtered.filter(pro =>
       pro.price >= priceRange[0] && pro.price <= priceRange[1]
     );
 
@@ -261,13 +307,19 @@ export default function IntegratedExplorePage() {
     if (searchQuery && searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
       filtered = filtered.filter(pro =>
-        pro.name.toLowerCase().includes(query) ||
-        pro.service.toLowerCase().includes(query) ||
+        (pro.name && pro.name.toLowerCase().includes(query)) ||
+        (pro.service && pro.service.toLowerCase().includes(query)) ||
         pro.expertise?.some(skill => skill.toLowerCase().includes(query)) ||
-        (pro.description && pro.description.toLowerCase().includes(query))
+        (pro.description && pro.description.toLowerCase().includes(query)) ||
+        // Deep search in services
+        pro.services?.some((svc: any) =>
+          (svc.title && svc.title.toLowerCase().includes(query)) ||
+          (svc.description && svc.description.toLowerCase().includes(query)) ||
+          svc.features?.some((f: string) => f.toLowerCase().includes(query))
+        )
       );
     }
-    
+
     // Map filtered professionals and sort by distance (nearest first)
     const mappedFiltered = filtered.map(mapToProfessional);
     setFilteredProfessionals(sortByDistance(mappedFiltered));
@@ -298,18 +350,16 @@ export default function IntegratedExplorePage() {
       <MapView ref={mapViewRef} professionals={filteredProfessionals} />
 
       {/* Fixed Header - Always at top */}
-      <div className={`fixed top-0 left-0 right-0 z-[3] px-0 pt-3 flex flex-col items-center transition-all duration-200 ${
-        isSheetCollapsed 
-          ? 'bg-transparent' 
-          : 'bg-[#111111]'
-      }`}>
+      <div className={`fixed top-0 left-0 right-0 z-[3] px-0 pt-3 flex flex-col items-center transition-all duration-200 ${isSheetCollapsed
+        ? 'bg-transparent'
+        : 'bg-[#111111]'
+        }`}>
         <div className="w-full max-w-md mb-2 px-3">
           <div className="flex gap-2">
-            <div className={`flex-1 flex items-center gap-2 px-3 py-2 rounded-full border shadow transition-all duration-200 ${
-              isSheetCollapsed
-                ? 'bg-black/60 backdrop-blur-sm border-white/20'
-                : 'bg-[#111111] border-white/30'
-            }`}>
+            <div className={`flex-1 flex items-center gap-2 px-3 py-2 rounded-full border shadow transition-all duration-200 ${isSheetCollapsed
+              ? 'bg-black/60 backdrop-blur-sm border-white/20'
+              : 'bg-[#111111] border-white/30'
+              }`}>
               <Search className="w-4 h-4 text-purple-400 flex-shrink-0" />
               <input
                 type="text"
@@ -319,18 +369,17 @@ export default function IntegratedExplorePage() {
                 className="flex-1 bg-transparent outline-none text-sm text-white font-medium placeholder:text-white/60"
               />
             </div>
-            <button 
+            <button
               onClick={() => setShowFilterModal(true)}
-              className={`w-10 h-10 flex items-center justify-center rounded-full backdrop-blur-sm transition-all duration-300 border ${
-                isSheetCollapsed
-                  ? 'bg-black/60 border-white/20 hover:bg-black/70'
-                  : 'bg-[#111111] border-white/30 hover:bg-[#111111]/80'
-              }`}
+              className={`w-10 h-10 flex items-center justify-center rounded-full backdrop-blur-sm transition-all duration-300 border ${isSheetCollapsed
+                ? 'bg-black/60 border-white/20 hover:bg-black/70'
+                : 'bg-[#111111] border-white/30 hover:bg-[#111111]/80'
+                }`}
             >
-              <svg 
-                className="w-4 h-4 text-white/90" 
-                fill="none" 
-                viewBox="0 0 24 24" 
+              <svg
+                className="w-4 h-4 text-white/90"
+                fill="none"
+                viewBox="0 0 24 24"
                 stroke="currentColor"
               >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
@@ -344,13 +393,12 @@ export default function IntegratedExplorePage() {
               {categories.map((cat) => (
                 <button
                   key={cat.name}
-                  className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-sm whitespace-nowrap border transition-all duration-200 font-medium ${
-                    selectedCategory === cat.name
-                      ? 'bg-purple-600 text-white border-purple-600'
-                      : isSheetCollapsed
-                        ? 'bg-black/60 text-white border-white/20 hover:bg-black/70 backdrop-blur-sm'
-                        : 'bg-[#111111] text-white border-white/30 hover:bg-[#111111]/80'
-                  }`}
+                  className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-sm whitespace-nowrap border transition-all duration-200 font-medium ${selectedCategory === cat.name
+                    ? 'bg-purple-600 text-white border-purple-600'
+                    : isSheetCollapsed
+                      ? 'bg-black/60 text-white border-white/20 hover:bg-black/70 backdrop-blur-sm'
+                      : 'bg-[#111111] text-white border-white/30 hover:bg-[#111111]/80'
+                    }`}
                   onClick={() => setSelectedCategory(cat.name)}
                 >
                   <span>{cat.name}</span>
@@ -393,7 +441,7 @@ export default function IntegratedExplorePage() {
         onDragEnd={(event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
           const dragDistance = info.offset.y;
           const dragVelocity = info.velocity.y;
-          
+
           if (dragDistance > 50 || dragVelocity > 300) {
             setIsSheetCollapsed(true);
           } else if (dragDistance < -50 || dragVelocity < -300) {
@@ -408,7 +456,7 @@ export default function IntegratedExplorePage() {
           <div className="w-10 h-1 bg-white/20 rounded-full" />
           <AnimatePresence>
             {isDragTextVisible && (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
                 className="text-white/50 text-xs py-1"
@@ -506,7 +554,7 @@ export default function IntegratedExplorePage() {
             )}
             {!isSheetCollapsed && (
               <div className="space-y-2.5 px-1">
-                <ProfessionalsFeed 
+                <ProfessionalsFeed
                   filteredProfessionals={filteredProfessionals}
                   searchQuery={searchQuery}
                   selectedCategory={selectedCategory}
@@ -543,13 +591,13 @@ export default function IntegratedExplorePage() {
 
       {/* Floating Map Button - Only visible when list is expanded */}
       {!isSheetCollapsed && (
-        <motion.div 
+        <motion.div
           className="fixed bottom-[10%] inset-x-0 mx-auto flex justify-center z-10"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 20 }}
         >
-          <button 
+          <button
             onClick={() => setIsSheetCollapsed(true)}
             className="inline-flex items-center h-10 px-4 bg-white/95 backdrop-blur-sm text-gray-700 rounded-full shadow-lg hover:bg-white transition-all border border-gray-100"
           >

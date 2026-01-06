@@ -5,8 +5,14 @@ import Link from "next/link"
 import { useRole } from "@/contexts/role-context"
 import { ArrowLeftCircle } from "lucide-react"
 
+import { useAuth } from "@/contexts/AuthContext"
+
 export function FreelancerHeader() {
   const { switchRole } = useRole()
+  const { user } = useAuth()
+
+  const displayName = user?.name || "Freelancer"
+  const avatarUrl = user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.id || 'default'}`
 
   const handleSwitchToClient = () => {
     switchRole()
@@ -23,7 +29,7 @@ export function FreelancerHeader() {
             <div className="flex items-center gap-2">
               <div className="relative h-8 w-8 rounded-full overflow-hidden">
                 <Image
-                  src="https://api.dicebear.com/7.x/avataaars/svg?seed=John"
+                  src={avatarUrl}
                   alt="Profile"
                   fill
                   className="object-cover"
@@ -31,7 +37,7 @@ export function FreelancerHeader() {
               </div>
               <div>
                 <p className="text-sm text-gray-500">Freelancer</p>
-                <p className="text-sm font-medium">John Doe</p>
+                <p className="text-sm font-medium">{displayName}</p>
               </div>
             </div>
           </div>

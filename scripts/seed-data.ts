@@ -7,7 +7,7 @@ async function seedData() {
   
   try {
     await prisma.$connect()
-    console.log('✅ Connected to MongoDB')
+    console.log('✅ Connected to database')
     
     // 1. Create Categories
     console.log('\n📂 Creating categories...')

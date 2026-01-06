@@ -3,12 +3,12 @@ import { PrismaClient } from '@prisma/client'
 const prisma = new PrismaClient()
 
 async function main() {
-  console.log('🚀 Setting up MongoDB database...')
+  console.log('🚀 Setting up Database...')
 
   try {
     // Test the connection
     await prisma.$connect()
-    console.log('✅ Connected to MongoDB')
+    console.log('✅ Connected to Database')
 
     // Create initial categories with required fields
     const categories: Array<{ name: string; slug: string; description: string; icon: string }> = [

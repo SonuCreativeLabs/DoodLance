@@ -1,48 +1,233 @@
 "use client"
 
-import React, { useState } from 'react'
-import { User, Camera, ArrowLeft, Trash2, Check } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+import { User, Camera, ArrowLeft, Trash2, Check, Loader2 } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useNavbar } from '@/contexts/NavbarContext'
+import { useAuth } from '@/contexts/AuthContext'
+import { createClient } from '@/lib/supabase/client'
+import { toast } from 'sonner'
 
 export default function EditProfile() {
   const { setNavbarVisibility } = useNavbar()
+  const { user, signIn } = useAuth()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const returnTo = searchParams.get('returnTo') // Get the return path if exists
+  const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const supabase = createClient()
 
-  // Mock data - in real app, this would come from your user context/API
   const [formData, setFormData] = useState({
-    name: 'Sonu',
-    email: 'sonu@email.com',
-    phone: '+91 98765 43210',
-    location: 'Chennai, TN',
-    avatar: '/images/profile-sonu.jpg'
+    name: '',
+    email: '',
+    phone: '',
+    location: '',
+    avatar: ''
   })
 
-  React.useEffect(() => {
+  // Initialize form data from AuthContext user
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        name: user.name || '',
+        email: user.email || '',
+        phone: user.phone || '',
+        location: (user as any)?.location || '', // Cast as any if location isn't on User type in AuthContext yet
+        avatar: user.avatar || ''
+      })
+    }
+  }, [user])
+
+  useEffect(() => {
     setNavbarVisibility(false)
     return () => setNavbarVisibility(true)
   }, [setNavbarVisibility])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!user) return
 
+    setSaving(true)
     try {
-      // Simulate API call - replace with actual API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      console.log('💾 Saving profile with data:', formData)
+
+      // 1. Update User table via API (Bypasses RLS issues)
+      const response = await fetch('/api/user/update', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name,
+          phone: formData.phone,
+          location: formData.location,
+          avatarUrl: formData.avatar
+        })
+      });
+
+      if (!response.ok) throw new Error('Failed to update profile');
+
+      console.log('✅ Database updated successfully')
+
+      // 2. Update Supabase Auth Metadata (to reflect in other parts of app immediately)
+      const { error: authError } = await supabase.auth.updateUser({
+        data: {
+          full_name: formData.name,
+          avatar_url: formData.avatar,
+          location: formData.location,
+          phone: formData.phone // Custom metadata or standard? Standard phone is separate, but we can store in metadata too for easy access
+        }
+      })
+
+      if (authError) {
+        console.error('❌ Auth update error:', authError)
+        throw authError
+      }
+
+      console.log('✅ Auth metadata updated successfully')
+
+      // Manually update AuthContext instead of reloading
+      if (user) {
+        user.name = formData.name
+        user.phone = formData.phone
+        user.location = formData.location
+        user.avatar = formData.avatar
+      }
 
       // Show success state
       setSaved(true)
+      toast.success("Profile updated successfully")
 
-      // Navigate back after a short delay
+      // Navigate back after delay
       setTimeout(() => {
-        router.push('/client/profile')
+        router.push(returnTo ? decodeURIComponent(returnTo) : '/client/profile')
       }, 1500)
     } catch (error) {
       console.error('Failed to save profile:', error)
-      // Handle error state here
+      toast.error("Failed to save profile")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  // Compress image before upload
+  const compressImage = (file: File): Promise<File> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.readAsDataURL(file)
+      reader.onload = (event) => {
+        const img = new window.Image()
+        img.src = event.target?.result as string
+        img.onload = () => {
+          const canvas = document.createElement('canvas')
+          const ctx = canvas.getContext('2d')!
+
+          // Max width/height for profile pictures
+          const MAX_SIZE = 400
+          let width = img.width
+          let height = img.height
+
+          // Calculate new dimensions
+          if (width > height) {
+            if (width > MAX_SIZE) {
+              height = (height * MAX_SIZE) / width
+              width = MAX_SIZE
+            }
+          } else {
+            if (height > MAX_SIZE) {
+              width = (width * MAX_SIZE) / height
+              height = MAX_SIZE
+            }
+          }
+
+          canvas.width = width
+          canvas.height = height
+          ctx.drawImage(img, 0, 0, width, height)
+
+          // Convert to blob with compression
+          canvas.toBlob(
+            (blob) => {
+              if (blob) {
+                const compressedFile = new File([blob], file.name, {
+                  type: 'image/jpeg',
+                  lastModified: Date.now()
+                })
+                resolve(compressedFile)
+              } else {
+                reject(new Error('Canvas to Blob conversion failed'))
+              }
+            },
+            'image/jpeg',
+            0.7 // 70% quality - good balance between size and quality
+          )
+        }
+        img.onerror = reject
+      }
+      reader.onerror = reject
+    })
+  }
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !user) return
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please upload an image file')
+      return
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image size must be less than 5MB')
+      return
+    }
+
+    setUploading(true)
+    setUploadProgress(20)
+    try {
+      // Compress image first
+      toast.info('Compressing image...')
+      const compressedFile = await compressImage(file)
+      setUploadProgress(60)
+
+      // Create unique filename
+      const fileExt = 'jpg' // Always use jpg after compression
+      const fileName = `${user.id}-${Date.now()}.${fileExt}`
+      const filePath = `avatars/${fileName}`
+
+      // Upload to Supabase storage
+      toast.info('Uploading...')
+      setUploadProgress(80)
+      const { error: uploadError } = await supabase.storage
+        .from('profile-pictures')
+        .upload(filePath, compressedFile, {
+          cacheControl: '3600',
+          upsert: false
+        })
+
+      if (uploadError) throw uploadError
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('profile-pictures')
+        .getPublicUrl(filePath)
+
+      setUploadProgress(100)
+      // Update form data with optimistic update
+      setFormData({ ...formData, avatar: publicUrl })
+      toast.success('Profile picture uploaded!')
+    } catch (error) {
+      console.error('Upload error:', error)
+      toast.error('Failed to upload image')
+    } finally {
+      setTimeout(() => {
+        setUploading(false)
+        setUploadProgress(0)
+      }, 300)
     }
   }
 
@@ -71,25 +256,42 @@ export default function EditProfile() {
           <div className="flex flex-col items-center gap-4">
             <div className="relative group">
               <Image
-                src={formData.avatar}
+                src={formData.avatar || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="120" height="120"%3E%3Crect width="120" height="120" fill="%23333"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-size="48" fill="%23999"%3E%F0%9F%91%A4%3C/text%3E%3C/svg%3E'}
                 alt="Profile"
                 width={120}
                 height={120}
-                className="rounded-full border-2 border-purple-400/50 object-cover shadow-lg"
+                className="rounded-full border-2 border-purple-400/50 object-cover shadow-lg bg-[#18181b]"
+                onError={(e) => {
+                  e.currentTarget.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="120" height="120"%3E%3Crect width="120" height="120" fill="%23333"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-size="48" fill="%23999"%3E%F0%9F%91%A4%3C/text%3E%3C/svg%3E';
+                }}
               />
+              <label
+                htmlFor="avatar-upload"
+                className="absolute bottom-2 right-2 p-2 bg-[#18181b] border border-white/20 rounded-full shadow-lg hover:bg-white/10 transition-colors group-hover:scale-110 cursor-pointer"
+              >
+                {uploading ? (
+                  <Loader2 className="w-5 h-5 text-white animate-spin" />
+                ) : (
+                  <Camera className="w-5 h-5 text-white" />
+                )}
+              </label>
+              <input
+                id="avatar-upload"
+                type="file"
+                accept="image/*"
+                onChange={handleAvatarUpload}
+                className="hidden"
+              />
+            </div>
+            {formData.avatar && (
               <button
                 type="button"
-                className="absolute bottom-2 right-2 p-2 bg-[#18181b] border border-white/20 rounded-full shadow-lg hover:bg-white/10 transition-colors group-hover:scale-110"
+                onClick={() => setFormData({ ...formData, avatar: '' })}
+                className="text-red-400 text-sm hover:text-red-300 transition-colors flex items-center gap-2"
               >
-                <Camera className="w-5 h-5 text-white" />
+                <Trash2 className="w-4 h-4" /> Remove Photo
               </button>
-            </div>
-            <button
-              type="button"
-              className="text-red-400 text-sm hover:text-red-300 transition-colors flex items-center gap-2"
-            >
-              <Trash2 className="w-4 h-4" /> Remove Photo
-            </button>
+            )}
           </div>
 
           {/* Form Fields */}
@@ -104,12 +306,12 @@ export default function EditProfile() {
                 id="name"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-4 py-3 rounded-xl bg-[#18181b] border border-white/10 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-400/40 focus:border-purple-400/50"
+                className="w-full px-4 py-3 rounded-xl bg-[#18181b] border border-white/10 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-400/40 focus:border-purple-400/50 transition-all"
                 placeholder="Enter your full name"
               />
             </div>
 
-            {/* Email */}
+            {/* Email - Read Only */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-white/70 mb-2">
                 Email Address
@@ -118,9 +320,9 @@ export default function EditProfile() {
                 type="email"
                 id="email"
                 value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="w-full px-4 py-3 rounded-xl bg-[#18181b] border border-white/10 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-400/40 focus:border-purple-400/50"
-                placeholder="Enter your email"
+                disabled
+                className="w-full px-4 py-3 rounded-xl bg-[#18181b]/50 border border-white/5 text-white/50 cursor-not-allowed"
+                title="Email cannot be changed"
               />
             </div>
 
@@ -134,7 +336,7 @@ export default function EditProfile() {
                 id="phone"
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                className="w-full px-4 py-3 rounded-xl bg-[#18181b] border border-white/10 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-400/40 focus:border-purple-400/50"
+                className="w-full px-4 py-3 rounded-xl bg-[#18181b] border border-white/10 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-400/40 focus:border-purple-400/50 transition-all"
                 placeholder="Enter your phone number"
               />
             </div>
@@ -149,7 +351,7 @@ export default function EditProfile() {
                 id="location"
                 value={formData.location}
                 onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                className="w-full px-4 py-3 rounded-xl bg-[#18181b] border border-white/10 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-400/40 focus:border-purple-400/50"
+                className="w-full px-4 py-3 rounded-xl bg-[#18181b] border border-white/10 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-400/40 focus:border-purple-400/50 transition-all"
                 placeholder="Enter your location"
               />
             </div>
@@ -159,12 +361,18 @@ export default function EditProfile() {
           <div className="pt-6">
             <button
               type="submit"
-              className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-purple-400 hover:from-purple-700 hover:to-purple-500 text-white py-3 rounded-lg font-medium transition-all"
+              disabled={saving}
+              className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-purple-400 hover:from-purple-700 hover:to-purple-500 text-white py-3 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {saved ? (
+              {saving ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Saving...
+                </>
+              ) : saved ? (
                 <>
                   <Check className="w-5 h-5" />
-                  Profile Updated Successfully!
+                  Saved!
                 </>
               ) : (
                 'Save Changes'
@@ -177,6 +385,7 @@ export default function EditProfile() {
             <h2 className="text-red-400 font-medium mb-4">Danger Zone</h2>
             <button
               type="button"
+              onClick={() => toast.error("Account deletion is not available in demo")}
               className="px-4 py-3 rounded-xl border border-red-500/20 text-red-400 hover:bg-red-500/10 transition-colors text-sm font-medium w-full"
             >
               Delete Account

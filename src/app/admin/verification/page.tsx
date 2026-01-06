@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -35,107 +35,85 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-// Mock KYC data
-const mockKYCRequests = [
-  {
-    id: 'KYC001',
-    userId: 'USR001',
-    userName: 'Rohit Sharma',
-    userEmail: 'rohit@example.com',
-    userRole: 'freelancer',
-    documents: {
-      idProof: { type: 'Aadhar Card', status: 'verified', file: 'aadhar_rohit.pdf' },
-      addressProof: { type: 'Utility Bill', status: 'verified', file: 'utility_rohit.pdf' },
-      panCard: { type: 'PAN Card', status: 'verified', file: 'pan_rohit.pdf' },
-    },
-    status: 'verified',
-    submittedAt: '2024-03-15 10:30 AM',
-    verifiedAt: '2024-03-16 2:00 PM',
-    verifiedBy: 'Admin',
-    notes: 'All documents verified successfully'
-  },
-  {
-    id: 'KYC002',
-    userId: 'USR003',
-    userName: 'Virat Singh',
-    userEmail: 'virat@example.com',
-    userRole: 'freelancer',
-    documents: {
-      idProof: { type: 'Passport', status: 'pending', file: 'passport_virat.pdf' },
-      addressProof: { type: 'Bank Statement', status: 'pending', file: 'bank_virat.pdf' },
-      panCard: { type: 'PAN Card', status: 'pending', file: 'pan_virat.pdf' },
-    },
-    status: 'pending',
-    submittedAt: '2024-03-25 3:45 PM',
-    verifiedAt: null,
-    verifiedBy: null,
-    notes: 'Awaiting review'
-  },
-  {
-    id: 'KYC003',
-    userId: 'USR004',
-    userName: 'Ananya Reddy',
-    userEmail: 'ananya@example.com',
-    userRole: 'freelancer',
-    documents: {
-      idProof: { type: 'Voter ID', status: 'rejected', file: 'voter_ananya.pdf' },
-      addressProof: { type: 'Rental Agreement', status: 'pending', file: 'rental_ananya.pdf' },
-      panCard: { type: 'PAN Card', status: 'verified', file: 'pan_ananya.pdf' },
-    },
-    status: 'rejected',
-    submittedAt: '2024-03-20 11:15 AM',
-    verifiedAt: '2024-03-21 9:30 AM',
-    verifiedBy: 'Support Team',
-    notes: 'Voter ID image is not clear, please resubmit'
-  },
-];
-
 export default function KYCVerificationPage() {
-  const [kycRequests, setKYCRequests] = useState(mockKYCRequests);
+  const [kycRequests, setKYCRequests] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedRequest, setSelectedRequest] = useState<any>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(true);
   const itemsPerPage = 10;
 
-  // Filter KYC requests
-  const filteredRequests = kycRequests.filter(request => {
-    const matchesSearch = 
-      request.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      request.userEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      request.userId.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || request.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  // Debounce search
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+      setCurrentPage(1);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
-  // Pagination
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredRequests.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(filteredRequests.length / itemsPerPage);
+  useEffect(() => {
+    fetchKYCRequests();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, debouncedSearch, statusFilter]);
 
-  const handleVerify = (requestId: string) => {
-    setKYCRequests(prev => prev.map(req => 
-      req.id === requestId 
-        ? { ...req, status: 'verified', verifiedAt: new Date().toLocaleString(), verifiedBy: 'Admin' }
-        : req
-    ));
+  const fetchKYCRequests = async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams({
+        page: currentPage.toString(),
+        limit: itemsPerPage.toString(),
+        search: debouncedSearch,
+        status: statusFilter
+      });
+      const res = await fetch(`/api/admin/verification?${params}`);
+      if (res.ok) {
+        const data = await res.json();
+        setKYCRequests(data.requests);
+        setTotalPages(data.totalPages);
+      }
+    } catch (error) {
+      console.error('Error fetching KYC requests:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleReject = (requestId: string, reason: string) => {
-    setKYCRequests(prev => prev.map(req => 
-      req.id === requestId 
-        ? { ...req, status: 'rejected', notes: reason, verifiedAt: new Date().toLocaleString(), verifiedBy: 'Admin' }
-        : req
-    ));
+  const handleVerify = async (requestId: string) => {
+    try {
+      const res = await fetch(`/api/admin/verification/${requestId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'verify' })
+      });
+      if (res.ok) fetchKYCRequests();
+    } catch (e) { console.error(e); }
   };
+
+  const handleReject = async (requestId: string, reason: string) => {
+    try {
+      const res = await fetch(`/api/admin/verification/${requestId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'reject', notes: reason })
+      });
+      if (res.ok) fetchKYCRequests();
+    } catch (e) { console.error(e); }
+  };
+
+  // Filter KYC requests (client-side filtering for current page)
+  const filteredRequests = kycRequests;
+  const currentItems = filteredRequests;
 
   const stats = {
     total: kycRequests.length,
-    pending: kycRequests.filter(r => r.status === 'pending').length,
-    verified: kycRequests.filter(r => r.status === 'verified').length,
-    rejected: kycRequests.filter(r => r.status === 'rejected').length,
+    pending: kycRequests.filter((r: any) => r.status === 'pending').length,
+    verified: kycRequests.filter((r: any) => r.status === 'verified').length,
+    rejected: kycRequests.filter((r: any) => r.status === 'rejected').length,
   };
 
   return (
@@ -212,7 +190,7 @@ export default function KYCVerificationPage() {
               />
             </div>
           </div>
-          
+
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-[150px] bg-[#2a2a2a] border-gray-700 text-white">
               <SelectValue placeholder="Status" />
@@ -243,7 +221,7 @@ export default function KYCVerificationPage() {
             </thead>
             <tbody>
               {currentItems.map((request, index) => (
-                <motion.tr 
+                <motion.tr
                   key={request.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -260,13 +238,13 @@ export default function KYCVerificationPage() {
                   <td className="p-4">
                     <div className="flex gap-2">
                       {Object.entries(request.documents).map(([key, doc]: [string, any]) => (
-                        <Badge 
+                        <Badge
                           key={key}
                           variant={doc.status === 'verified' ? 'default' : doc.status === 'pending' ? 'secondary' : 'destructive'}
                           className={
                             doc.status === 'verified' ? 'bg-green-500/20 text-green-400' :
-                            doc.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
-                            'bg-red-500/20 text-red-400'
+                              doc.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
+                                'bg-red-500/20 text-red-400'
                           }
                         >
                           {doc.type}
@@ -275,12 +253,12 @@ export default function KYCVerificationPage() {
                     </div>
                   </td>
                   <td className="p-4">
-                    <Badge 
+                    <Badge
                       variant={request.status === 'verified' ? 'default' : request.status === 'pending' ? 'secondary' : 'destructive'}
                       className={
                         request.status === 'verified' ? 'bg-green-500/20 text-green-400' :
-                        request.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
-                        'bg-red-500/20 text-red-400'
+                          request.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
+                            'bg-red-500/20 text-red-400'
                       }
                     >
                       {request.status}
@@ -332,7 +310,7 @@ export default function KYCVerificationPage() {
         {/* Pagination */}
         <div className="flex items-center justify-between p-4 border-t border-gray-800">
           <p className="text-sm text-gray-400">
-            Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredRequests.length)} of {filteredRequests.length} requests
+            Showing page {currentPage} of {totalPages}
           </p>
           <div className="flex gap-2">
             <Button
@@ -358,7 +336,7 @@ export default function KYCVerificationPage() {
               size="sm"
               variant="outline"
               onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-              disabled={currentPage === totalPages}
+              disabled={currentPage === totalPages || totalPages === 0}
             >
               <ChevronRight className="w-4 h-4" />
             </Button>
@@ -375,7 +353,7 @@ export default function KYCVerificationPage() {
               Review user documents and verification status
             </DialogDescription>
           </DialogHeader>
-          
+
           {selectedRequest && (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
@@ -393,12 +371,12 @@ export default function KYCVerificationPage() {
                 </div>
                 <div>
                   <p className="text-sm text-gray-400">Status</p>
-                  <Badge 
+                  <Badge
                     variant={selectedRequest.status === 'verified' ? 'default' : selectedRequest.status === 'pending' ? 'secondary' : 'destructive'}
                     className={
                       selectedRequest.status === 'verified' ? 'bg-green-500/20 text-green-400' :
-                      selectedRequest.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
-                      'bg-red-500/20 text-red-400'
+                        selectedRequest.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
+                          'bg-red-500/20 text-red-400'
                     }
                   >
                     {selectedRequest.status}
@@ -419,12 +397,12 @@ export default function KYCVerificationPage() {
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Badge 
+                        <Badge
                           variant={doc.status === 'verified' ? 'default' : doc.status === 'pending' ? 'secondary' : 'destructive'}
                           className={
                             doc.status === 'verified' ? 'bg-green-500/20 text-green-400' :
-                            doc.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
-                            'bg-red-500/20 text-red-400'
+                              doc.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
+                                'bg-red-500/20 text-red-400'
                           }
                         >
                           {doc.status}
@@ -447,14 +425,14 @@ export default function KYCVerificationPage() {
 
               {selectedRequest.status === 'pending' && (
                 <div className="flex justify-end gap-2 pt-4 border-t border-gray-800">
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     onClick={() => handleReject(selectedRequest.id, 'Documents not clear')}
                     className="text-red-400 border-red-400 hover:bg-red-400/20"
                   >
                     Reject
                   </Button>
-                  <Button 
+                  <Button
                     onClick={() => {
                       handleVerify(selectedRequest.id);
                       setDetailsModalOpen(false);

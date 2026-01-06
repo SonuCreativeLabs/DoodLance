@@ -71,12 +71,6 @@ export default function SettingsPage() {
   const [showDeactivateConfirm, setShowDeactivateConfirm] = useState(false);
 
   // Form states
-  const [passwordForm, setPasswordForm] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: ''
-  });
-
   const [emailForm, setEmailForm] = useState({
     newEmail: settings?.email || '',
     confirmEmail: ''
@@ -95,27 +89,6 @@ export default function SettingsPage() {
     const updated = { ...notificationSettings, [key]: !notificationSettings[key] };
     setNotificationSettings(updated);
     updateNotificationSettings(updated);
-  };
-
-  const handlePasswordChange = async () => {
-    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      alert('New passwords do not match');
-      return;
-    }
-
-    if (passwordForm.newPassword.length < 8) {
-      alert('Password must be at least 8 characters long');
-      return;
-    }
-
-    // Simulate API call
-    try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      alert('Password changed successfully!');
-      setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
-    } catch (error) {
-      alert('Failed to change password. Please try again.');
-    }
   };
 
   const handleEmailChange = async () => {
@@ -236,63 +209,7 @@ export default function SettingsPage() {
             {renderNotificationSettings()}
           </SectionCard>
 
-          {/* Password Change */}
-          <SectionCard
-            title="Change Password"
-            icon={Lock}
-          >
-            <div className="space-y-4">
-              <FormField label="Current Password" required>
-                <Input
-                  type="password"
-                  value={passwordForm.currentPassword}
-                  onChange={(e) => setPasswordForm(prev => ({ ...prev, currentPassword: e.target.value }))}
-                  className="bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50"
-                  placeholder="Enter current password"
-                />
-              </FormField>
 
-              <FormField label="New Password" required>
-                <Input
-                  type="password"
-                  value={passwordForm.newPassword}
-                  onChange={(e) => setPasswordForm(prev => ({ ...prev, newPassword: e.target.value }))}
-                  className="bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50"
-                  placeholder="Enter new password (min 8 characters)"
-                />
-              </FormField>
-
-              <FormField label="Confirm New Password" required>
-                <Input
-                  type="password"
-                  value={passwordForm.confirmPassword}
-                  onChange={(e) => setPasswordForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                  className="bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50"
-                  placeholder="Confirm new password"
-                />
-              </FormField>
-
-              <div className="flex justify-center gap-4 pt-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
-                  }}
-                  className="h-10 px-8 rounded-xl border-white/10 text-white/80 hover:bg-white/5 hover:text-white transition-colors"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="button"
-                  onClick={handlePasswordChange}
-                  className="h-10 px-8 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-700 hover:to-purple-600 shadow-md hover:shadow-purple-500/30 transition-all whitespace-nowrap"
-                >
-                  Change Password
-                </Button>
-              </div>
-            </div>
-          </SectionCard>
 
           {/* Email Change */}
           <SectionCard

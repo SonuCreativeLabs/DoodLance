@@ -1,10 +1,10 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { professionals as mockProfessionals } from '@/app/client/nearby/mockData';
+
 
 export interface Professional {
-  id: number;
+  id: string | number;
   name: string;
   service: string;
   rating: number;
@@ -23,7 +23,7 @@ export interface Professional {
   experience: string;
   description?: string;
   cricketRole?: string;
-  
+
   // Additional fields
   services?: {
     id: string;
@@ -46,7 +46,7 @@ interface NearbyProfessionalsContextType {
   professionals: Professional[];
   loading: boolean;
   error: string | null;
-  refreshProfessionals: () => void;
+  refreshProfessionals: (lat?: number, lng?: number) => void;
 }
 
 const NearbyProfessionalsContext = createContext<NearbyProfessionalsContextType | undefined>(undefined);
@@ -56,34 +56,69 @@ const defaultValue: NearbyProfessionalsContextType = {
   professionals: [],
   loading: false,
   error: null,
-  refreshProfessionals: () => {}
+  refreshProfessionals: () => { }
 };
 
-// Use professionals from mockData - this would typically come from an API
-const initialProfessionals: Professional[] = mockProfessionals as Professional[];
+// Initial state
+// Data import removed
+const initialProfessionals: Professional[] = [];
 
 export function NearbyProfessionalsProvider({ children }: { children: ReactNode }) {
-  const [professionals, setProfessionals] = useState<Professional[]>(initialProfessionals);
-  const [loading, setLoading] = useState(false);
+  const [professionals, setProfessionals] = useState<Professional[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const refreshProfessionals = async () => {
+  const refreshProfessionals = async (lat?: number, lng?: number) => {
     setLoading(true);
     setError(null);
     try {
-      // In a real app, this would fetch from an API
-      // For now, we'll just reset to initial data
-      setProfessionals(initialProfessionals);
+      // Build query params
+      const params = new URLSearchParams();
+      if (lat) params.append('lat', lat.toString());
+      if (lng) params.append('lng', lng.toString());
+
+      const queryString = params.toString();
+      const url = `/api/freelancers${queryString ? `?${queryString}` : ''}`;
+
+      // Fetch from API
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error('Failed to fetch professionals');
+      }
+      const data = await response.json();
+
+      if (data && Array.isArray(data)) {
+        setProfessionals(data);
+      } else {
+        setProfessionals([]);
+      }
+
     } catch (err) {
+      console.error('Error fetching professionals:', err);
       setError('Failed to load professionals');
+      setProfessionals([]);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    // Initial load
-    refreshProfessionals();
+    // Get location first, then fetch
+    if (typeof window !== 'undefined' && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          refreshProfessionals(latitude, longitude);
+        },
+        (error) => {
+          console.warn('Geolocation error:', error);
+          refreshProfessionals(); // Fallback to default (Chennai in API)
+        },
+        { timeout: 5000 }
+      );
+    } else {
+      refreshProfessionals();
+    }
   }, []);
 
   const value = {

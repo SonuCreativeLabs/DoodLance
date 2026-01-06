@@ -1,12 +1,20 @@
 'use client'
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { createClient } from '@/lib/supabase/client'
+import { useRouter } from 'next/navigation'
 
 interface User {
   id: string
   email?: string
   name?: string
   avatar?: string
+  profileImage?: string
+  phone?: string
+  location?: string
+  phoneVerified?: boolean
+  role?: string
+  createdAt?: string
 }
 
 interface AuthContextType {
@@ -14,94 +22,150 @@ interface AuthContextType {
   isLoading: boolean
   isAuthenticated: boolean
   signIn: (provider?: string) => void
-  signOut: () => void
+  signOut: () => Promise<void>
   verifyOTP: (identifier: string, code: string, type?: 'email' | 'phone') => Promise<void>
   sendOTP: (identifier: string, type?: 'email' | 'phone') => Promise<void>
+  refreshUser: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
 
-  // Check for existing session on mount
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        // Check for mock session in localStorage for dev flow
-        const storedUser = localStorage.getItem('doodlance_mock_user')
-        if (storedUser) {
-          setUser(JSON.parse(storedUser))
+    if (user) console.log('👤 AuthContext User Updated:', user.id, user.name);
+  }, [user]);
+
+  const [isLoading, setIsLoading] = useState(true)
+  const [supabase] = useState(() => createClient())
+  const router = useRouter()
+
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        // Set user immediately to unblock login
+        setUser({
+          id: session.user.id,
+          email: session.user.email,
+          phone: session.user.user_metadata?.phone || '',
+          role: session.user.user_metadata?.role || 'client',
+          name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || 'User',
+          avatar: session.user.user_metadata?.avatar_url || session.user.user_metadata?.avatar || '',
+          profileImage: session.user.user_metadata?.avatar_url || session.user.user_metadata?.avatar || '',
+          location: session.user.user_metadata?.location || '',
+          createdAt: session.user.created_at,
+        })
+        setIsLoading(false)
+
+        //Fetch DB data in background via API
+        // Fetch DB data in background via API - only if needed or after 5 minutes
+        const lastAuthFetch = parseInt(sessionStorage.getItem('lastAuthFetch') || '0');
+        const now = Date.now();
+        const shouldFetch = !user?.phone || (now - lastAuthFetch > 5 * 60 * 1000);
+
+        if (shouldFetch) {
+          setTimeout(async () => {
+            try {
+              console.log('🔍 Fetching user data from API...');
+              const response = await fetch('/api/user/profile');
+
+              if (response.ok) {
+                const data = await response.json();
+                console.log('✅ Updating user with API data:', {
+                  phone: data.phone,
+                  name: data.name
+                });
+
+                setUser(prev => ({
+                  ...prev!,
+                  phone: data.phone || prev!.phone,
+                  name: data.name || prev!.name,
+                  avatar: data.avatar || prev!.avatar,
+                  profileImage: data.avatar || prev!.profileImage,
+                  location: data.location || prev!.location,
+                  email: data.email || prev!.email || '',
+                  createdAt: data.createdAt || prev!.createdAt,
+                }));
+
+                sessionStorage.setItem('lastAuthFetch', Date.now().toString());
+              } else if (response.status === 404) {
+                console.log('👤 User not found in DB - will be created on first profile update');
+              }
+            } catch (dbError) {
+              console.warn('Failed to fetch user data:', dbError);
+            }
+          }, 0);
+        } else {
+          console.log('📦 Using cached auth user data');
         }
-        // TODO: Check AuthKit session state
-      } catch (error) {
-        console.error('Auth check failed:', error)
-      } finally {
+
+        // Sync session
+        try {
+          await fetch('/api/auth/session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              user: {
+                id: session.user.id,
+                email: session.user.email,
+                role: session.user.user_metadata?.role || 'client'
+              }
+            })
+          });
+        } catch (err) {
+          console.error('Failed to sync session:', err);
+        }
+      } else {
+        setUser(null)
         setIsLoading(false)
       }
+    })
+
+    return () => {
+      subscription.unsubscribe()
     }
+  }, [supabase])
 
-    checkAuth()
-  }, [])
-
-  const signIn = (provider?: string) => {
-    // Redirect to AuthKit login (will redirect to client home after auth)
-    const url = provider ? `/api/auth/login?provider=${provider}&returnTo=/client` : '/api/auth/login?returnTo=/client'
-    window.location.href = url
+  const signIn = async (provider?: string) => {
+    // Legacy support or OAuth
+    if (provider === 'google') {
+      await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${location.origin}/auth/callback`,
+        },
+      })
+    }
   }
 
   const sendOTP = async (identifier: string, type: 'email' | 'phone' = 'email') => {
-    const payload = type === 'email' ? { email: identifier } : { phone: identifier }
-    
-    const response = await fetch('/api/auth/otp/send', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
+    // Only support email OTP
+    const { error } = await supabase.auth.signInWithOtp({
+      email: identifier,
+      options: {
+        shouldCreateUser: true,
+      }
     })
-
-    if (!response.ok) {
-      throw new Error('Failed to send OTP')
-    }
+    if (error) throw error
   }
 
   const verifyOTP = async (identifier: string, code: string, type: 'email' | 'phone' = 'email') => {
-    const payload = type === 'email' ? { email: identifier, code } : { phone: identifier, code }
-    
-    const response = await fetch('/api/auth/otp/verify', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
+    // Only support email OTP verification
+    const { error } = await supabase.auth.verifyOtp({
+      email: identifier,
+      token: code,
+      type: 'email'
     })
+    if (error) throw error
 
-    if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || 'Verification failed')
-    }
-
-    const data = await response.json()
-    const verifiedUser = data.user
-
-    // Set user session
-    setUser(verifiedUser)
-    localStorage.setItem('doodlance_mock_user', JSON.stringify(verifiedUser))
+    // User is set automatically by onAuthStateChange
   }
 
   const signOut = async () => {
-    try {
-      // Clear mock session
-      localStorage.removeItem('doodlance_mock_user')
-      
-      // Call AuthKit logout and redirect to home
-      await fetch('/api/auth/logout?returnTo=/', { method: 'POST' })
-      setUser(null)
-      // Redirect to home page
-      window.location.href = '/'
-    } catch (error) {
-      console.error('Sign out failed:', error)
-      // Fallback redirect
-      window.location.href = '/'
-    }
+    await supabase.auth.signOut()
+    setUser(null)
+    router.push('/')
   }
 
   const value = {
@@ -112,6 +176,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signOut,
     verifyOTP,
     sendOTP,
+    refreshUser: async () => {
+      // Allow manual refresh of user data
+      if (user?.id) {
+        try {
+          console.log('🔍 Manually refreshing user data...')
+          const response = await fetch('/api/user/profile')
+
+          if (response.ok) {
+            const data = await response.json()
+            console.log('✅ Updating user with API data:', {
+              phone: data.phone,
+              name: data.name,
+              location: data.location
+            })
+            setUser(prev => {
+              if (!prev) return null;
+              return {
+                ...prev,
+                phone: data.phone || prev.phone,
+                name: data.name || prev.name,
+                avatar: data.avatar || prev.avatar,
+                profileImage: data.avatar || prev.profileImage, // Sync both fields
+                location: data.location || prev.location,
+                email: data.email || prev.email || '',
+                createdAt: data.createdAt || prev.createdAt,
+              }
+            })
+          }
+        } catch (error) {
+          console.error('Failed to refresh user data:', error)
+        }
+      }
+    }
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
@@ -128,7 +225,7 @@ export function useAuth() {
 // Legacy export for backward compatibility
 export const signUp = async () => ({
   error: {
-    message: 'Use AuthKit for authentication.',
+    message: 'Use Supabase for authentication.',
     status: 501,
   },
   data: null,

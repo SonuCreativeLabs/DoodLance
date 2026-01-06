@@ -2,21 +2,34 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Clock, Calendar, ArrowRight, ShoppingCart, Star, MapPin, MessageSquare } from 'lucide-react';
+import { ArrowLeft, Clock, Calendar, ArrowRight, ShoppingCart, Star, MapPin, MessageSquare, Plus, Minus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useHire } from '@/contexts/HireContext';
 import { useNavbar } from '@/contexts/NavbarContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function BookingDatePage() {
   const router = useRouter();
-  const { state, setBookingDetails, setBookingNotes, addToCart, clearCart } = useHire();
+  const { state, setBookingDetails, setBookingNotes, addToCart, clearCart, isLoaded, increaseSelectedServiceQuantity, decreaseSelectedServiceQuantity } = useHire();
   const { setNavbarVisibility } = useNavbar();
+  const { user } = useAuth();
+
+  console.log('🔍 [BOOKING-DATE] Component render:', {
+    isLoaded,
+    hasUser: !!user,
+    userId: user?.id,
+    selectedServicesCount: state.selectedServices.length
+  });
+
+  // Auth check removed - only validate when user clicks Continue button to avoid infinite loops
+
+
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);
   const [location, setLocation] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
 
-  // Hide navbar when component mounts
+  // Hide navbar when component mounts - MUST be before early return
   useEffect(() => {
     setNavbarVisibility(false);
 
@@ -25,6 +38,15 @@ export default function BookingDatePage() {
       setNavbarVisibility(true);
     };
   }, [setNavbarVisibility]);
+
+  // Wait for hydration - early return AFTER all hooks
+  if (!isLoaded) {
+    return (
+      <div className="h-screen bg-[#0F0F0F] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   // Generate next 7 days starting from tomorrow
   const generateDates = () => {
@@ -55,20 +77,36 @@ export default function BookingDatePage() {
 
   const handleContinue = () => {
     if (selectedDate && selectedTimeSlot && location.trim()) {
-      // Set the booking details in context including location and notes
-      setBookingDetails(selectedDate, selectedTimeSlot, 1, location, notes); // Default to 1 hour
-      
-      // Also explicitly set the notes
+      // Try to parse duration from service deliveryTime (e.g. "60 mins", "1 hour") or default to 60 mins
+      const duration = 60; // Default to 60 if parsing fails
+
+      // Set the booking details
+      setBookingDetails(selectedDate, selectedTimeSlot, duration, location, notes);
+
       if (notes.trim()) {
         setBookingNotes(notes.trim());
       }
 
-      // Clear existing cart items to prevent duplicates
       clearCart();
 
-      // Add all selected services to cart with the selected date/time and their quantities
+      // Add services to cart
       state.selectedServices.forEach(service => {
-        addToCart(service, selectedDate, selectedTimeSlot, 1); // Default to 1 hour
+        // Attempt to parse duration from deliveryTime string if possible
+        // Simple heuristic: "X hour" -> X * 60, "X mins" -> X
+        let serviceDuration = 60;
+        if (service.deliveryTime) {
+          const lower = service.deliveryTime.toLowerCase();
+          const match = lower.match(/(\d+)\s*(hour|min|day)/);
+          if (match) {
+            const val = parseInt(match[1]);
+            const unit = match[2];
+            if (unit.startsWith('hour')) serviceDuration = val * 60;
+            else if (unit.startsWith('date') || unit.startsWith('day')) serviceDuration = val * 60 * 24; // Maybe too long for 'duration' field which is usually session length?
+            else serviceDuration = val; // mins
+          }
+        }
+
+        addToCart(service, selectedDate, selectedTimeSlot, serviceDuration);
       });
 
       router.push('/client/hire/cart');
@@ -102,29 +140,28 @@ export default function BookingDatePage() {
         <div className="flex items-center gap-4 p-4 bg-white/5 rounded-xl border border-white/10">
           <div className="w-12 h-12 rounded-full overflow-hidden bg-white/10">
             <img
-              src={state.freelancerImage || ''}
-              alt={state.freelancerName || ''}
+              src={String(state.freelancerImage || '')}
+              alt={String(state.freelancerName || '')}
               className="w-full h-full object-cover"
             />
           </div>
           <div>
-            <h3 className="font-medium text-white">{state.freelancerName}</h3>
-            {state.freelancerRating && (
+            <h3 className="font-medium text-white">{String(state.freelancerName)}</h3>
+            {(state.freelancerRating || 0) > 0 && (
               <div className="flex items-center gap-1 mt-1">
                 <div className="flex items-center gap-0.5">
                   {[...Array(5)].map((_, i) => (
                     <Star
                       key={i}
-                      className={`w-3 h-3 ${
-                        i < Math.floor(state.freelancerRating!)
-                          ? 'text-yellow-400 fill-yellow-400'
-                          : 'text-white/20'
-                      }`}
+                      className={`w-3 h-3 ${i < Math.floor(Number(state.freelancerRating) || 0)
+                        ? 'text-yellow-400 fill-yellow-400'
+                        : 'text-white/20'
+                        }`}
                     />
                   ))}
                 </div>
                 <span className="text-sm text-white/70 ml-1">
-                  {state.freelancerRating.toFixed(1)} ({state.freelancerReviewCount || 0} reviews)
+                  {String((state.freelancerRating || 0))} ({String(state.freelancerReviewCount || 0)} reviews)
                 </span>
               </div>
             )}
@@ -142,12 +179,36 @@ export default function BookingDatePage() {
           <div className="space-y-2">
             {state.selectedServices.map((service) => (
               <div key={service.id}>
-                <div className="py-2">
-                  <h5 className="font-medium text-white text-sm">{service.title}</h5>
-                  <div className="text-sm font-semibold text-white/80 mt-0.5">
-                    ₹{typeof service.price === 'string'
-                      ? parseFloat(service.price.replace(/[^\d.]/g, ''))
-                      : service.price} / {service.deliveryTime}
+                <div className="py-2 flex items-center justify-between">
+                  <div className="flex-1">
+                    <h5 className="font-medium text-white text-sm">{String(service.title)}</h5>
+                    <div className="text-sm font-semibold text-white/80 mt-0.5">
+                      ₹{typeof service.price === 'string'
+                        ? parseFloat(service.price.replace(/[^\d.]/g, ''))
+                        : String(service.price)} / {String(service.deliveryTime)}
+                    </div>
+                  </div>
+
+                  {/* Quantity Controls */}
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => decreaseSelectedServiceQuantity(service.id)}
+                      disabled={(service.quantity || 1) <= 1}
+                      className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                    >
+                      <Minus className="w-4 h-4 text-white" />
+                    </button>
+
+                    <span className="text-white font-medium w-8 text-center">
+                      {service.quantity || 1}
+                    </span>
+
+                    <button
+                      onClick={() => increaseSelectedServiceQuantity(service.id)}
+                      className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors"
+                    >
+                      <Plus className="w-4 h-4 text-white" />
+                    </button>
                   </div>
                 </div>
                 {state.selectedServices.indexOf(service) < state.selectedServices.length - 1 && (
@@ -170,11 +231,10 @@ export default function BookingDatePage() {
               <button
                 key={date.date}
                 onClick={() => setSelectedDate(date.date)}
-                className={`flex-shrink-0 w-16 h-16 rounded-xl border transition-all flex flex-col items-center justify-center ${
-                  selectedDate === date.date
-                    ? 'border-purple-500 bg-purple-500/20 text-white'
-                    : 'border-white/20 bg-white/5 text-white/70 hover:border-white/30 hover:bg-white/10'
-                }`}
+                className={`flex-shrink-0 w-16 h-16 rounded-xl border transition-all flex flex-col items-center justify-center ${selectedDate === date.date
+                  ? 'border-purple-500 bg-purple-500/20 text-white'
+                  : 'border-white/20 bg-white/5 text-white/70 hover:border-white/30 hover:bg-white/10'
+                  }`}
               >
                 <span className="text-sm font-medium">{date.day}</span>
                 <span className="text-xs">{date.weekday}</span>
@@ -195,11 +255,10 @@ export default function BookingDatePage() {
               <button
                 key={time}
                 onClick={() => setSelectedTimeSlot(time)}
-                className={`flex-shrink-0 px-4 py-3 rounded-xl border transition-all text-center whitespace-nowrap ${
-                  selectedTimeSlot === time
-                    ? 'border-purple-500 bg-purple-500/20 text-white'
-                    : 'border-white/20 bg-white/5 text-white/70 hover:border-white/30 hover:bg-white/10'
-                }`}
+                className={`flex-shrink-0 px-4 py-3 rounded-xl border transition-all text-center whitespace-nowrap ${selectedTimeSlot === time
+                  ? 'border-purple-500 bg-purple-500/20 text-white'
+                  : 'border-white/20 bg-white/5 text-white/70 hover:border-white/30 hover:bg-white/10'
+                  }`}
               >
                 <span className="text-sm font-medium">{time}</span>
               </button>
