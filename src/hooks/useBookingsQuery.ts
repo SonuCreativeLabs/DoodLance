@@ -63,7 +63,7 @@ async function fetchBookings(): Promise<Booking[]> {
  * - Request deduplication
  */
 export function useBookingsQuery(): UseBookingsQueryReturn {
-    const { authUser } = useAuth()
+    const { authUser } = useAuth()  // 🎯 Use stable identity instead of full user
     const queryClient = useQueryClient()
 
     // 🔍 Debug: Log authUser to see if it's actually stable
@@ -77,7 +77,9 @@ export function useBookingsQuery(): UseBookingsQueryReturn {
         error,
         refetch,
     } = useQuery({
-        queryKey: ['bookings', authUser?.id],
+        // 🎯 FIXED: Use static key instead of dynamic authUser.id
+        // This prevents cache invalidation when authUser briefly becomes undefined on remount
+        queryKey: ['bookings'],
         queryFn: fetchBookings,
         enabled: !!authUser?.id, // Only fetch when user is authenticated
     })
@@ -111,7 +113,7 @@ export function useBookingsQuery(): UseBookingsQueryReturn {
             }
 
             // Invalidate and refetch bookings after reschedule
-            await queryClient.invalidateQueries({ queryKey: ['bookings', authUser?.id] })
+            await queryClient.invalidateQueries({ queryKey: ['bookings'] })  // 🎯 Static key
             console.log('✅ [React Query] Booking rescheduled successfully')
         } catch (err) {
             console.error('❌ [React Query] Reschedule failed:', err)
