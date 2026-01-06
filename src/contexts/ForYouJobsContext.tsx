@@ -31,6 +31,12 @@ export function ForYouJobsProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    // ✅ Guard: Prevent concurrent fetches
+    if (isLoading) {
+      console.log('⏭️ Skipping fetch - already loading For You jobs');
+      return;
+    }
+
     setIsLoading(true);
     try {
       // Pass skills as query parameter for server-side filtering

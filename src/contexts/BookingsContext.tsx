@@ -60,6 +60,12 @@ export function BookingsProvider({ children }: { children: ReactNode }) {
             return;
         }
 
+        // ✅ Guard: Prevent concurrent fetches
+        if (loading) {
+            console.log('⏭️ Skipping fetch - already loading bookings');
+            return;
+        }
+
         // Only show loading state if we don't have data yet
         // This prevents the flicker when refreshing data
         if (bookings.length === 0) {
