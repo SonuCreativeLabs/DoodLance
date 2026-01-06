@@ -75,7 +75,7 @@ export default function LoginDialog({ open, onOpenChange, onSuccess, redirectTo 
     if (showOTP) {
         return (
             <Dialog open={open} onOpenChange={handleDialogChange}>
-                <DialogContent className="sm:max-w-md bg-[#111111] border-white/10">
+                <DialogContent className="sm:max-w-md bg-[#111111] border-white/10 z-[10000]">
                     <DialogDescription className="sr-only">
                         Enter the verification code sent to your email to log in
                     </DialogDescription>
@@ -92,7 +92,7 @@ export default function LoginDialog({ open, onOpenChange, onSuccess, redirectTo 
 
     return (
         <Dialog open={open} onOpenChange={handleDialogChange}>
-            <DialogContent className="sm:max-w-md bg-[#111111] border-white/10">
+            <DialogContent className="sm:max-w-md bg-[#111111] border-white/10 z-[10000]">
                 <DialogHeader>
                     <DialogTitle className="text-white text-2xl font-bold text-center">Welcome to DoodLance</DialogTitle>
                     <DialogDescription className="text-white/50 text-sm text-center">

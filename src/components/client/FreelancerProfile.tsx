@@ -2,7 +2,7 @@
 
 import { CricketLoader } from '@/components/ui/cricket-loader';
 import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
-import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { useParams, useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from "@/components/ui/badge";
@@ -25,6 +25,8 @@ import {
 import { useNavbar } from '@/contexts/NavbarContext';
 import { useAuth } from '@/contexts/AuthContext';
 import LoginDialog from '@/components/auth/LoginDialog';
+import ProfileCompletionDialog from '@/components/auth/ProfileCompletionDialog';
+import { useRequireAuth, usePendingActionCheck } from '@/hooks/useRequireAuth';
 
 import { IdVerifiedBadge } from '@/components/freelancer/profile/IdVerifiedBadge';
 import { SkillInfoDialog } from '@/components/common/SkillInfoDialog';
@@ -123,6 +125,19 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
     const searchParams = useSearchParams();
     const { setNavbarVisibility } = useNavbar();
     const { user } = useAuth();
+    const pathname = usePathname();
+    const {
+        requireAuth,
+        isAuthenticated,
+        isProfileComplete,
+        openLoginDialog,
+        setOpenLoginDialog,
+        openProfileDialog,
+        setOpenProfileDialog,
+        handleCompleteProfile,
+        isRedirectingToProfile
+    } = useRequireAuth();
+
     const [freelancer, setFreelancer] = useState<FreelancerDetail | null>(null);
     const [loading, setLoading] = useState(true);
     const [isSkillDialogOpen, setIsSkillDialogOpen] = useState(false);
@@ -133,12 +148,23 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
     const [selectedPortfolioItem, setSelectedPortfolioItem] = useState<any>(null);
     const [isPortfolioModalOpen, setIsPortfolioModalOpen] = useState(false);
     const [isHireBottomSheetOpen, setIsHireBottomSheetOpen] = useState(false);
-    const [showLoginDialog, setShowLoginDialog] = useState(false);
+    // showLoginDialog removed in favor of hook state
+
     const tabsContainerRef = useRef<HTMLDivElement>(null);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
 
     // Prioritize propId, fallback to params.id
     const freelancerId = propId || (params.id as string);
+
+    // Auto-open hire sheet if returning from a completed auth/profile flow
+    usePendingActionCheck(
+        `hire_${freelancerId}`,
+        () => {
+            setIsHireBottomSheetOpen(true);
+        },
+        isAuthenticated,
+        isProfileComplete
+    );
 
     const tabs = [
         { id: 'top', label: 'Profile' },
@@ -1186,23 +1212,13 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                         <div className="fixed bottom-0 left-0 right-0 p-4 bg-[#0F0F0F]/95 backdrop-blur-sm border-t border-white/10">
                             <button
                                 onClick={() => {
-                                    console.log('🔍 [PROFILE] Hire button clicked:', {
-                                        hasUser: !!user,
-                                        userId: user?.id,
-                                        userName: user?.name,
-                                        userEmail: user?.email
-                                    });
-
-                                    // Simple check: if no user, show login dialog
-                                    if (!user) {
-                                        console.log('⚠️ [PROFILE] No user, showing login dialog');
-                                        setShowLoginDialog(true);
-                                        return;
+                                    if (isAuthenticated && isProfileComplete) {
+                                        setIsHireBottomSheetOpen(true);
+                                    } else {
+                                        requireAuth(`hire_${freelancerId}`, {
+                                            redirectTo: pathname || window.location.pathname
+                                        });
                                     }
-
-                                    // If user exists, open hire sheet
-                                    console.log('✅ [PROFILE] User authenticated, opening hire sheet');
-                                    setIsHireBottomSheetOpen(true);
                                 }}
                                 className="w-full py-2.5 bg-gradient-to-r from-purple-600 to-purple-500 text-white font-medium rounded-xl hover:from-purple-700 hover:to-purple-600 transition-all flex items-center justify-center gap-2 shadow-lg"
                             >
@@ -1212,8 +1228,19 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                         </div>
                     )}
 
-                    {/* Simple LoginDialog */}
-                    <LoginDialog open={showLoginDialog} onOpenChange={setShowLoginDialog} />
+                    {/* Auth Dialogs */}
+                    <ProfileCompletionDialog
+                        open={openProfileDialog}
+                        onOpenChange={setOpenProfileDialog}
+                        onCompleteProfile={handleCompleteProfile}
+                        actionLoading={isRedirectingToProfile}
+                    />
+
+                    <LoginDialog
+                        open={openLoginDialog}
+                        onOpenChange={setOpenLoginDialog}
+                        redirectTo={pathname || undefined}
+                    />
                 </div >
             )
             }

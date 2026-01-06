@@ -22,6 +22,7 @@ interface UseRequireAuthReturn {
     openProfileDialog: boolean
     setOpenProfileDialog: (open: boolean) => void
     handleCompleteProfile: () => void
+    user: any // Expose user for consumers
 }
 
 export function useRequireAuth(): UseRequireAuthReturn {
@@ -32,6 +33,7 @@ export function useRequireAuth(): UseRequireAuthReturn {
     const [openProfileDialog, setOpenProfileDialog] = useState(false)
     const [pendingRedirectPath, setPendingRedirectPath] = useState<string | null>(null)
     const [pendingActionId, setPendingActionId] = useState<string | null>(null)
+    const [isRedirectingToProfile, setIsRedirectingToProfile] = useState(false)
 
     // Check if profile is complete
     const checkProfileCompletion = useCallback((): boolean => {
@@ -65,25 +67,45 @@ export function useRequireAuth(): UseRequireAuthReturn {
     useEffect(() => {
         if (typeof window === 'undefined') return
 
-        if (isAuthenticated && isProfileComplete) {
-            const storedActionId = localStorage.getItem(PENDING_ACTION_KEY)
-            const returnTo = localStorage.getItem(RETURN_TO_KEY)
+        const storedActionId = localStorage.getItem(PENDING_ACTION_KEY)
 
-            if (returnTo && pathname !== returnTo) {
-                // Clear before navigating to prevent loops
-                clearPendingAction()
-                // Navigate to the intended destination
-                router.push(returnTo)
-            } else if (storedActionId) {
-                // User is on the right page, clear the stored action
-                // The page itself should handle re-executing the action if needed
-                clearPendingAction()
+        // If nothing pending, do nothing
+        if (!storedActionId) return
+
+        if (isAuthenticated) {
+            if (isProfileComplete) {
+                const returnTo = localStorage.getItem(RETURN_TO_KEY)
+
+                if (returnTo && pathname !== returnTo) {
+                    // Clear before navigating to prevent loops
+                    clearPendingAction()
+                    // Navigate to the intended destination
+                    router.push(returnTo)
+                } else {
+                    // User is on the right page, clear the stored action
+                    // The page itself should handle re-executing the action if needed
+                    clearPendingAction()
+                }
+            } else {
+                // User is authenticated but profile is INCOMPLETE
+                // And they have a pending action
+                // So we must prompt them to complete it
+
+                // Ensure we have the return path set for the dialog logic
+                const returnTo = localStorage.getItem(RETURN_TO_KEY)
+                if (returnTo) {
+                    setPendingRedirectPath(returnTo)
+                }
+                setPendingActionId(storedActionId)
+                setOpenProfileDialog(true)
             }
         }
     }, [isAuthenticated, isProfileComplete, pathname, clearPendingAction, router])
 
     const handleCompleteProfile = useCallback(() => {
         if (!pendingRedirectPath) return
+
+        setIsRedirectingToProfile(true)
 
         // Redirect to profile with return param
         // Determine context based on the return path - if user is trying to access freelancer pages, send to freelancer profile
@@ -95,6 +117,8 @@ export function useRequireAuth(): UseRequireAuthReturn {
         const actionQuery = pendingActionId ? `&action=${pendingActionId}` : ''
         router.push(`${profilePath}?returnTo=${encodeURIComponent(pendingRedirectPath)}${actionQuery}`)
         setOpenProfileDialog(false)
+        // Reset loading after a delay (or it will unmount)
+        setTimeout(() => setIsRedirectingToProfile(false), 2000)
     }, [pendingRedirectPath, pendingActionId, router])
 
     /**
@@ -161,14 +185,23 @@ export function useRequireAuth(): UseRequireAuthReturn {
         // Profile Dialog props
         openProfileDialog,
         setOpenProfileDialog,
-        handleCompleteProfile
+        handleCompleteProfile,
+        user
     }
 }
 
 // Helper to check if we should auto-trigger an action
-export function usePendingActionCheck(actionId: string, callback: () => void) {
+export function usePendingActionCheck(
+    actionId: string,
+    callback: () => void,
+    isAuthenticated: boolean,
+    isProfileComplete: boolean
+) {
     useEffect(() => {
         if (typeof window === 'undefined') return
+
+        // key fix: Don't do anything if not authenticated or profile incomplete
+        if (!isAuthenticated || !isProfileComplete) return
 
         const pendingActionId = localStorage.getItem(PENDING_ACTION_KEY)
 
@@ -182,5 +215,5 @@ export function usePendingActionCheck(actionId: string, callback: () => void) {
                 callback()
             }, 100)
         }
-    }, [actionId, callback])
+    }, [actionId, callback, isAuthenticated, isProfileComplete])
 }
