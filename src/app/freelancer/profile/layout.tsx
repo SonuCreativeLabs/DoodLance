@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation';
 import { useEffect } from 'react';
 import { useLayout } from '@/contexts/LayoutContext';
 import { ModalProvider } from '@/contexts/ModalContext';
+import { FreelancerProfileProvider } from '@/contexts/FreelancerProfileContext';
 
 export default function ProfileLayout({
   children,
@@ -26,5 +27,9 @@ export default function ProfileLayout({
     };
   }, [hideHeader, hideNavbar, showHeader, showNavbar]);
 
-  return <ModalProvider>{children}</ModalProvider>;
+  return (
+    <FreelancerProfileProvider>
+      <ModalProvider>{children}</ModalProvider>
+    </FreelancerProfileProvider>
+  );
 }

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Clock, Calendar, ArrowRight, ShoppingCart, Star, MapPin, MessageSquare } from 'lucide-react';
+import { ArrowLeft, Clock, Calendar, ArrowRight, ShoppingCart, Star, MapPin, MessageSquare, Plus, Minus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useHire } from '@/contexts/HireContext';
 import { useNavbar } from '@/contexts/NavbarContext';
@@ -10,7 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 
 export default function BookingDatePage() {
   const router = useRouter();
-  const { state, setBookingDetails, setBookingNotes, addToCart, clearCart, isLoaded } = useHire();
+  const { state, setBookingDetails, setBookingNotes, addToCart, clearCart, isLoaded, increaseSelectedServiceQuantity, decreaseSelectedServiceQuantity } = useHire();
   const { setNavbarVisibility } = useNavbar();
   const { user } = useAuth();
 
@@ -179,12 +179,36 @@ export default function BookingDatePage() {
           <div className="space-y-2">
             {state.selectedServices.map((service) => (
               <div key={service.id}>
-                <div className="py-2">
-                  <h5 className="font-medium text-white text-sm">{String(service.title)}</h5>
-                  <div className="text-sm font-semibold text-white/80 mt-0.5">
-                    ₹{typeof service.price === 'string'
-                      ? parseFloat(service.price.replace(/[^\d.]/g, ''))
-                      : String(service.price)} / {String(service.deliveryTime)}
+                <div className="py-2 flex items-center justify-between">
+                  <div className="flex-1">
+                    <h5 className="font-medium text-white text-sm">{String(service.title)}</h5>
+                    <div className="text-sm font-semibold text-white/80 mt-0.5">
+                      ₹{typeof service.price === 'string'
+                        ? parseFloat(service.price.replace(/[^\d.]/g, ''))
+                        : String(service.price)} / {String(service.deliveryTime)}
+                    </div>
+                  </div>
+
+                  {/* Quantity Controls */}
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => decreaseSelectedServiceQuantity(service.id)}
+                      disabled={(service.quantity || 1) <= 1}
+                      className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                    >
+                      <Minus className="w-4 h-4 text-white" />
+                    </button>
+
+                    <span className="text-white font-medium w-8 text-center">
+                      {service.quantity || 1}
+                    </span>
+
+                    <button
+                      onClick={() => increaseSelectedServiceQuantity(service.id)}
+                      className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors"
+                    >
+                      <Plus className="w-4 h-4 text-white" />
+                    </button>
                   </div>
                 </div>
                 {state.selectedServices.indexOf(service) < state.selectedServices.length - 1 && (

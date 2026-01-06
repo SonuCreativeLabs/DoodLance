@@ -59,35 +59,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setIsLoading(false)
 
         //Fetch DB data in background via API
-        setTimeout(async () => {
-          try {
-            console.log('🔍 Fetching user data from API...')
-            const response = await fetch('/api/user/profile')
+        // Fetch DB data in background via API - only if needed or after 5 minutes
+        const lastAuthFetch = parseInt(sessionStorage.getItem('lastAuthFetch') || '0');
+        const now = Date.now();
+        const shouldFetch = !user?.phone || (now - lastAuthFetch > 5 * 60 * 1000);
 
-            if (response.ok) {
-              const data = await response.json()
-              console.log('✅ Updating user with API data:', {
-                phone: data.phone,
-                name: data.name,
-                location: data.location
-              })
-              setUser(prev => ({
-                ...prev!,
-                phone: data.phone || prev!.phone,
-                name: data.name || prev!.name,
-                avatar: data.avatar || prev!.avatar,
-                profileImage: data.avatar || prev!.profileImage,
-                location: data.location || prev!.location,
-                email: data.email || prev!.email || '',
-                createdAt: data.createdAt || prev!.createdAt,
-              }))
-            } else if (response.status === 404) {
-              console.log('👤 User not found in DB - will be created on first profile update')
+        if (shouldFetch) {
+          setTimeout(async () => {
+            try {
+              console.log('🔍 Fetching user data from API...');
+              const response = await fetch('/api/user/profile');
+
+              if (response.ok) {
+                const data = await response.json();
+                console.log('✅ Updating user with API data:', {
+                  phone: data.phone,
+                  name: data.name
+                });
+
+                setUser(prev => ({
+                  ...prev!,
+                  phone: data.phone || prev!.phone,
+                  name: data.name || prev!.name,
+                  avatar: data.avatar || prev!.avatar,
+                  profileImage: data.avatar || prev!.profileImage,
+                  location: data.location || prev!.location,
+                  email: data.email || prev!.email || '',
+                  createdAt: data.createdAt || prev!.createdAt,
+                }));
+
+                sessionStorage.setItem('lastAuthFetch', Date.now().toString());
+              } else if (response.status === 404) {
+                console.log('👤 User not found in DB - will be created on first profile update');
+              }
+            } catch (dbError) {
+              console.warn('Failed to fetch user data:', dbError);
             }
-          } catch (dbError) {
-            console.warn('Failed to fetch user data:', dbError)
-          }
-        }, 0)
+          }, 0);
+        } else {
+          console.log('📦 Using cached auth user data');
+        }
 
         // Sync session
         try {

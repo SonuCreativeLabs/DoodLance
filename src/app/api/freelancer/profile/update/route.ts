@@ -101,11 +101,43 @@ export async function PATCH(request: NextRequest) {
         if (state !== undefined) addressUpdates.state = state;
         if (postalCode !== undefined) addressUpdates.postalCode = postalCode;
 
+        // Geocode address to coordinates for map display
+        let coords: string | undefined;
         if (Object.keys(addressUpdates).length > 0) {
             await prisma.user.update({
                 where: { id: dbUser.id },
                 data: addressUpdates
             });
+
+            // After updating address, geocode it to get coordinates
+            try {
+                // Build full address string from updates or existing data
+                const currentUser = await prisma.user.findUnique({ where: { id: dbUser.id } });
+                const fullAddress = [
+                    addressUpdates.address || currentUser?.address,
+                    addressUpdates.city || currentUser?.city,
+                    addressUpdates.state || currentUser?.state,
+                    addressUpdates.postalCode || currentUser?.postalCode
+                ].filter(Boolean).join(', ');
+
+                if (fullAddress) {
+                    const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
+                    if (mapboxToken) {
+                        const geocodeUrl = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(fullAddress)}.json?access_token=${mapboxToken}&limit=1`;
+                        const geocodeResponse = await fetch(geocodeUrl);
+                        const geocodeData = await geocodeResponse.json();
+
+                        if (geocodeData.features && geocodeData.features.length > 0) {
+                            const [lng, lat] = geocodeData.features[0].center;
+                            coords = JSON.stringify([lng, lat]);
+                            console.log(`✅ Geocoded address "${fullAddress}" to coordinates:`, coords);
+                        }
+                    }
+                }
+            } catch (geocodeError) {
+                console.error('Error geocoding address:', geocodeError);
+                // Don't fail the entire update if geocoding fails
+            }
         }
 
         // 2. Update Freelancer Profile
@@ -139,7 +171,10 @@ export async function PATCH(request: NextRequest) {
                 data.specializations = typeof specializations === 'string' ? specializations : JSON.stringify(specializations);
             }
 
-            if (Object.keys(data).length > 0) {
+            if (Object.keys(data).length > 0 || coords) {
+                if (coords) {
+                    data.coords = coords;
+                }
                 await prisma.freelancerProfile.update({
                     where: { userId: dbUser.id },
                     data

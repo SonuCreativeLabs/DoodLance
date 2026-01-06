@@ -18,6 +18,8 @@ import { getSessionFlag, removeSessionItem } from '@/utils/sessionStorage';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
 import { useAuth } from '@/contexts/AuthContext';
 import FreelancerProfileLogin from '@/components/freelancer/FreelancerProfileLogin';
+import CricketBallLoader from '@/components/ui/CricketBallLoader';
+import { useFreelancerProfile } from '@/contexts/FreelancerProfileContext';
 
 // Types
 type Experience = {
@@ -94,9 +96,8 @@ export default function ProfilePage() {
   const portfolioRef = useRef<HTMLDivElement>(null);
   const skillsRef = useRef<HTMLDivElement>(null);
 
-  const [loading, setLoading] = useState(true);
-  const [profileData, setProfileData] = useState<any>(null);
-  const supabase = createClient();
+  // Use cached profile data from context
+  const { profileData, loading } = useFreelancerProfile();
   const { requireAuth, openLoginDialog, setOpenLoginDialog, isAuthenticated } = useRequireAuth();
 
   useEffect(() => {
@@ -106,33 +107,6 @@ export default function ProfilePage() {
       skipProfileCheck: true // Allow viewing profile dashboard even if incomplete
     });
   }, [requireAuth]);
-
-  useEffect(() => {
-    async function fetchProfile() {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-          setLoading(false);
-          return;
-        }
-
-        // Fetch essential profile data from API
-        const response = await fetch('/api/freelancer/profile');
-        if (!response.ok) {
-          throw new Error('Failed to fetch profile');
-        }
-
-        const { profile } = await response.json();
-        setProfileData(profile);
-      } catch (err) {
-        console.error('Unexpected error fetching profile:', err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchProfile();
-    fetchProfile();
-  }, []); // Empty dependency array to run only once on mount
 
   const scrollToSection = (ref: React.RefObject<HTMLElement>) => {
     if (ref.current) {
@@ -211,11 +185,7 @@ export default function ProfilePage() {
   }
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-[#0f0f0f] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-500"></div>
-      </div>
-    );
+    return <CricketBallLoader />;
   }
 
   return (

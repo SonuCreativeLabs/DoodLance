@@ -51,7 +51,7 @@ export default function CartPage() {
       : item.service.price;
     return total + (price * (item.quantity || 1));
   }, 0);
-  const serviceFee = 10; // Fixed service fee of ₹10
+  const serviceFee = Math.round(subtotal * 0.05); // 5% platform fee
   const discount = appliedCoupon ? Math.round(subtotal * 0.1) : 0; // 10% discount for demo
   const total = subtotal + serviceFee - discount;
 
@@ -297,7 +297,7 @@ export default function CartPage() {
             </div>
 
             <div className="flex justify-between text-sm">
-              <span className="text-white/70">Platform Fee</span>
+              <span className="text-white/70">Platform Fee (5%)</span>
               <span className="text-white">₹{serviceFee.toLocaleString()}</span>
             </div>
 

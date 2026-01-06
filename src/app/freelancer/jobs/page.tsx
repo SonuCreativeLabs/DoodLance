@@ -20,8 +20,7 @@ export default function JobsPage({ searchParams: initialSearchParams }: PageProp
 
   // Get the current tab and status from URL or use defaults
   const tab = searchParamsObj?.get('tab') || initialSearchParams?.tab || 'upcoming';
-  const status = searchParamsObj?.get('status') || initialSearchParams?.status ||
-    (tab === 'upcoming' ? 'ongoing' : 'pending');
+  const status = searchParamsObj?.get('status') || initialSearchParams?.status || 'ongoing';
 
   // Create a stable searchParams object to pass to JobDashboard
   const stableSearchParams = React.useMemo(() => ({
