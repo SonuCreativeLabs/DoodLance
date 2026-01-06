@@ -152,7 +152,7 @@ export default function FreelancerLayout({ children }: FreelancerLayoutProps) {
         </div>
       )}
       {!fullChatView && !isModalOpen && isHeaderVisible && <div className="h-16" />}
-      <main className={`flex flex-col relative z-10 ${isHeaderVisible ? 'min-h-[calc(100vh-4rem)]' : 'min-h-screen'}`}>
+      <main className={`flex flex-col relative z-10 ${isHeaderVisible ? 'min-h-[calc(100vh-4rem)]' : 'min-h-screen'} ${isNavbarVisible ? 'pb-24 md:pb-0' : 'pb-6'}`}>
         {children}
       </main>
     </div>

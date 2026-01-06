@@ -204,7 +204,13 @@ export default function IntegratedExplorePage() {
         (pro.name && pro.name.toLowerCase().includes(query)) ||
         (pro.service && pro.service.toLowerCase().includes(query)) ||
         pro.expertise?.some(skill => skill.toLowerCase().includes(query)) ||
-        (pro.description && pro.description.toLowerCase().includes(query))
+        (pro.description && pro.description.toLowerCase().includes(query)) ||
+        // Deep search in services
+        pro.services?.some((svc: any) =>
+          (svc.title && svc.title.toLowerCase().includes(query)) ||
+          (svc.description && svc.description.toLowerCase().includes(query)) ||
+          svc.features?.some((f: string) => f.toLowerCase().includes(query))
+        )
       );
     }
 
@@ -301,10 +307,16 @@ export default function IntegratedExplorePage() {
     if (searchQuery && searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
       filtered = filtered.filter(pro =>
-        pro.name.toLowerCase().includes(query) ||
-        pro.service.toLowerCase().includes(query) ||
+        (pro.name && pro.name.toLowerCase().includes(query)) ||
+        (pro.service && pro.service.toLowerCase().includes(query)) ||
         pro.expertise?.some(skill => skill.toLowerCase().includes(query)) ||
-        (pro.description && pro.description.toLowerCase().includes(query))
+        (pro.description && pro.description.toLowerCase().includes(query)) ||
+        // Deep search in services
+        pro.services?.some((svc: any) =>
+          (svc.title && svc.title.toLowerCase().includes(query)) ||
+          (svc.description && svc.description.toLowerCase().includes(query)) ||
+          svc.features?.some((f: string) => f.toLowerCase().includes(query))
+        )
       );
     }
 

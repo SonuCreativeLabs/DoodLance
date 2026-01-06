@@ -350,6 +350,11 @@ export default function ClientHome() {
                     placeholder={searchQuery ? `Find services in Chennai...` : placeholder || `Find services in Chennai...`}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && searchQuery.trim()) {
+                        router.push(`/client/nearby?search=${encodeURIComponent(searchQuery.trim())}`);
+                      }
+                    }}
                     className="w-full bg-white/20 border border-white/40 text-white placeholder-white/80 rounded-2xl py-3 sm:py-4 pl-10 sm:pl-12 pr-4 text-sm sm:text-base focus:outline-none focus:border-purple-400 transition-all shadow-lg drop-shadow-[0_4px_12px_rgba(0,0,0,0.15)]"
                   />
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/70">

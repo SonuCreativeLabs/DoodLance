@@ -70,19 +70,26 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const removeService = useCallback(async (serviceId: string) => {
-    // Optimistic
-    const previousServices = [...services];
+    // Find the service to potentially restore later
+    const serviceToRemove = services.find(s => s.id === serviceId);
+    if (!serviceToRemove) return;
+
+    // Optimistic delete
     setServices(prev => prev.filter(svc => svc.id !== serviceId));
 
     try {
       const response = await fetch(`/api/freelancer/services/${serviceId}`, {
         method: 'DELETE',
       });
+
       if (!response.ok) {
-        setServices(previousServices); // Revert
+        // Revert: Add it back if API failed
+        setServices(prev => [...prev, serviceToRemove]);
+        console.error('Failed to delete service, reverting UI');
       }
     } catch (error) {
-      setServices(previousServices); // Revert
+      // Revert: Add it back if network error
+      setServices(prev => [...prev, serviceToRemove]);
       console.error('Error removing service:', error);
     }
   }, [services]);
@@ -111,7 +118,9 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const fetchServices = async () => {
       try {
-        const response = await fetch('/api/freelancer/services');
+        const response = await fetch('/api/freelancer/services', {
+          cache: 'no-store'
+        });
         if (response.ok) {
           const data = await response.json();
           setServices(data.services || []);
