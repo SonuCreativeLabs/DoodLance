@@ -60,6 +60,11 @@ export async function GET(request: Request) {
             // Services come from the User relation now
             const userServices = p.user.services || [];
 
+            // Calculate starting price from services
+            const servicePrices = userServices.map((s: any) => s.price).filter((price: any) => typeof price === 'number' && price > 0);
+            const minServicePrice = servicePrices.length > 0 ? Math.min(...servicePrices) : 0;
+            const finalPrice = minServicePrice || p.hourlyRate || 0;
+
             // Primary service
             const primaryService = userServices[0]?.title || p.title || 'Freelancer';
 
@@ -94,12 +99,12 @@ export async function GET(request: Request) {
                 rating: p.rating || rating || 0,
                 reviews: p.reviews.length, // Bug fix: previously p.reviews.length || p.reviews.length ?
                 completedJobs: p.completedJobs || 0,
-                location: p.user.city ? `${p.user.city}, ${p.user.state || ''}` : (p.location || p.user.location || 'Chennai, India'),
+                location: p.user.location || (p.user.city ? `${p.user.city}, ${p.user.state || ''}` : 'Chennai, India'),
                 responseTime: p.responseTime || '1 hour',
                 image: p.user.avatar || p.user.profileImage || '/placeholder-user.jpg',
                 avatar: p.user.avatar || p.user.profileImage || '/placeholder-user.jpg',
                 distance: distance,
-                price: p.hourlyRate || userServices[0]?.price || 0,
+                price: finalPrice,
                 priceUnit: 'hr',
                 coords: coords,
                 expertise: skills,
