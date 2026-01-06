@@ -117,14 +117,14 @@ export function BookingsProvider({ children }: { children: ReactNode }) {
         }
     };
 
-    // Load bookings on mount or when user changes
+    // Load bookings only when user ID changes (login/logout), not when user object reference changes
     useEffect(() => {
-        if (user) {
+        if (user?.id) {
             fetchBookings();
         } else {
             setBookings([]); // Clear bookings on logout
         }
-    }, [user]);
+    }, [user?.id]); // ✅ Stable dependency
 
     const refreshBookings = fetchBookings;
 

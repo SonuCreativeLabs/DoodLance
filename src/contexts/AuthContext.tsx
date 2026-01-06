@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, ReactNode, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 
@@ -168,7 +168,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     router.push('/')
   }
 
-  const value = {
+  // ✅ Memoize value to prevent cascade refetches when user object reference changes
+  const value = useMemo(() => ({
     user,
     isLoading,
     isAuthenticated: !!user,
@@ -209,7 +210,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
     }
-  }
+  }), [user?.id, user?.email, isLoading]) // Only recreate when user ID changes (login/logout)
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
