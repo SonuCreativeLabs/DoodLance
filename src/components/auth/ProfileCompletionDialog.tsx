@@ -24,7 +24,7 @@ export default function ProfileCompletionDialog({
 }: ProfileCompletionDialogProps) {
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[425px] bg-[#111111] border-white/20 text-white">
+            <DialogContent className="sm:max-w-[425px] bg-[#111111] border-white/20 text-white z-[10000]">
                 <DialogHeader>
                     <div className="mx-auto bg-purple-500/10 p-4 rounded-full mb-4 border border-purple-500/20">
                         <UserCircle className="w-10 h-10 text-purple-400" />
