@@ -17,8 +17,15 @@ interface User {
   createdAt?: string
 }
 
+// 🎯 Stable auth identity (never changes except on login/logout)
+interface AuthUser {
+  id: string
+  email: string
+}
+
 interface AuthContextType {
   user: User | null
+  authUser: AuthUser | null  // 🆕 Stable identity for React Query keys
   isLoading: boolean
   isAuthenticated: boolean
   signIn: (provider?: string) => void
@@ -168,9 +175,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     router.push('/')
   }
 
+  // 🎯 Create stable auth identity (only recreates when id/email changes)
+  const authUser = useMemo<AuthUser | null>(
+    () => user ? { id: user.id, email: user.email || '' } : null,
+    [user?.id, user?.email]
+  )
+
   // ✅ Memoize value to prevent cascade refetches when user object reference changes
   const value = useMemo(() => ({
     user,
+    authUser,  // 🆕 Expose stable identity
     isLoading,
     isAuthenticated: !!user,
     signIn,

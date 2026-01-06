@@ -62,7 +62,7 @@ async function fetchBookings(): Promise<Booking[]> {
  * - Request deduplication
  */
 export function useBookingsQuery(): UseBookingsQueryReturn {
-    const { user } = useAuth()
+    const { authUser } = useAuth()
     const queryClient = useQueryClient()
 
     const {
@@ -71,9 +71,9 @@ export function useBookingsQuery(): UseBookingsQueryReturn {
         error,
         refetch,
     } = useQuery({
-        queryKey: ['bookings', user?.id],
+        queryKey: ['bookings', authUser?.id],
         queryFn: fetchBookings,
-        enabled: !!user?.id, // Only fetch when user is authenticated
+        enabled: !!authUser?.id, // Only fetch when user is authenticated
     })
 
     const refreshBookings = async () => {
@@ -96,7 +96,7 @@ export function useBookingsQuery(): UseBookingsQueryReturn {
             }
 
             // Invalidate and refetch bookings after reschedule
-            await queryClient.invalidateQueries({ queryKey: ['bookings', user?.id] })
+            await queryClient.invalidateQueries({ queryKey: ['bookings', authUser?.id] })
             console.log('✅ [React Query] Booking rescheduled successfully')
         } catch (err) {
             console.error('❌ [React Query] Reschedule failed:', err)
