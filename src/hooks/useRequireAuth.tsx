@@ -23,6 +23,7 @@ interface UseRequireAuthReturn {
     setOpenProfileDialog: (open: boolean) => void
     handleCompleteProfile: () => void
     user: any // Expose user for consumers
+    isRedirectingToProfile: boolean
 }
 
 export function useRequireAuth(): UseRequireAuthReturn {
@@ -186,7 +187,8 @@ export function useRequireAuth(): UseRequireAuthReturn {
         openProfileDialog,
         setOpenProfileDialog,
         handleCompleteProfile,
-        user
+        user,
+        isRedirectingToProfile
     }
 }
 
