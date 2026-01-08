@@ -34,6 +34,7 @@ import {
   RefreshCw, ChevronLeft, ChevronRight, ShieldCheck, ShieldAlert
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function KYCVerificationPage() {
   const [kycRequests, setKYCRequests] = useState<any[]>([]);
@@ -212,42 +213,58 @@ export default function KYCVerificationPage() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="bg-[#1a1a1a] border-gray-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-400">Total Requests</p>
-              <p className="text-2xl font-bold text-white">{stats.total}</p>
-            </div>
-            <FileText className="w-8 h-8 text-gray-600" />
-          </div>
-        </Card>
-        <Card className="bg-[#1a1a1a] border-gray-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-400">Pending</p>
-              <p className="text-2xl font-bold text-yellow-400">{stats.pending}</p>
-            </div>
-            <Clock className="w-8 h-8 text-yellow-600" />
-          </div>
-        </Card>
-        <Card className="bg-[#1a1a1a] border-gray-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-400">Verified</p>
-              <p className="text-2xl font-bold text-green-400">{stats.verified}</p>
-            </div>
-            <ShieldCheck className="w-8 h-8 text-green-600" />
-          </div>
-        </Card>
-        <Card className="bg-[#1a1a1a] border-gray-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-400">Rejected</p>
-              <p className="text-2xl font-bold text-red-400">{stats.rejected}</p>
-            </div>
-            <ShieldAlert className="w-8 h-8 text-red-600" />
-          </div>
-        </Card>
+        {loading ? (
+          Array.from({ length: 4 }).map((_, i) => (
+            <Card key={i} className="bg-[#1a1a1a] border-gray-800 p-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-24 bg-[#2a2a2a]" />
+                  <Skeleton className="h-8 w-16 bg-[#2a2a2a]" />
+                </div>
+                <Skeleton className="h-8 w-8 rounded-full bg-[#2a2a2a]" />
+              </div>
+            </Card>
+          ))
+        ) : (
+          <>
+            <Card className="bg-[#1a1a1a] border-gray-800 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-400">Total Requests</p>
+                  <p className="text-2xl font-bold text-white">{stats.total}</p>
+                </div>
+                <FileText className="w-8 h-8 text-gray-600" />
+              </div>
+            </Card>
+            <Card className="bg-[#1a1a1a] border-gray-800 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-400">Pending</p>
+                  <p className="text-2xl font-bold text-yellow-400">{stats.pending}</p>
+                </div>
+                <Clock className="w-8 h-8 text-yellow-600" />
+              </div>
+            </Card>
+            <Card className="bg-[#1a1a1a] border-gray-800 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-400">Verified</p>
+                  <p className="text-2xl font-bold text-green-400">{stats.verified}</p>
+                </div>
+                <ShieldCheck className="w-8 h-8 text-green-600" />
+              </div>
+            </Card>
+            <Card className="bg-[#1a1a1a] border-gray-800 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-400">Rejected</p>
+                  <p className="text-2xl font-bold text-red-400">{stats.rejected}</p>
+                </div>
+                <ShieldAlert className="w-8 h-8 text-red-600" />
+              </div>
+            </Card>
+          </>
+        )}
       </div>
 
       {/* Filters */}
@@ -294,113 +311,143 @@ export default function KYCVerificationPage() {
               </tr>
             </thead>
             <tbody>
-              {currentItems.map((request, index) => (
-                <motion.tr
-                  key={request.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  className="border-b border-gray-800 hover:bg-[#2a2a2a] transition-colors"
-                >
-                  <td className="p-4">
-                    <div>
-                      <p className="text-white font-medium">{request.userName}</p>
-                      <p className="text-xs text-gray-400">{request.userEmail}</p>
-                      <p className="text-xs text-gray-500">{request.userId}</p>
-                    </div>
-                  </td>
-                  <td className="p-4">
-                    <div className="flex gap-2">
-                      {Object.entries(request.documents).map(([key, doc]: [string, any]) => (
-                        <Badge
-                          key={key}
-                          variant={doc.status === 'verified' ? 'default' : doc.status === 'pending' ? 'secondary' : 'destructive'}
-                          className={
-                            doc.status === 'verified' ? 'bg-green-500/20 text-green-400' :
-                              doc.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
-                                'bg-red-500/20 text-red-400'
-                          }
-                        >
-                          {doc.type}
-                        </Badge>
-                      ))}
-                    </div>
-                  </td>
-                  <td className="p-4">
-                    <Badge
-                      variant={request.status === 'verified' ? 'default' : request.status === 'pending' ? 'secondary' : 'destructive'}
-                      className={
-                        request.status === 'verified' ? 'bg-green-500/20 text-green-400' :
-                          request.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
-                            'bg-red-500/20 text-red-400'
-                      }
-                    >
-                      {request.status}
-                    </Badge>
-                  </td>
-                  <td className="p-4 text-sm text-gray-300">{request.submittedAt}</td>
-                  <td className="p-4 text-sm text-gray-300">{request.verifiedBy || '-'}</td>
-                  <td className="p-4">
-                    <div className="flex items-center gap-2">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="text-gray-400 hover:text-white"
-                        onClick={() => {
-                          setSelectedRequest(request);
-                          setDetailsModalOpen(true);
-                        }}
+              {loading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={i} className="border-b border-gray-800">
+                    <td className="p-4">
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-32 bg-[#2a2a2a]" />
+                        <Skeleton className="h-3 w-48 bg-[#2a2a2a]" />
+                        <Skeleton className="h-3 w-20 bg-[#2a2a2a]" />
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <div className="flex gap-2">
+                        <Skeleton className="h-6 w-16 bg-[#2a2a2a]" />
+                        <Skeleton className="h-6 w-16 bg-[#2a2a2a]" />
+                      </div>
+                    </td>
+                    <td className="p-4"><Skeleton className="h-6 w-20 bg-[#2a2a2a] rounded-full" /></td>
+                    <td className="p-4"><Skeleton className="h-4 w-24 bg-[#2a2a2a]" /></td>
+                    <td className="p-4"><Skeleton className="h-4 w-20 bg-[#2a2a2a]" /></td>
+                    <td className="p-4">
+                      <div className="flex gap-2">
+                        <Skeleton className="h-8 w-8 bg-[#2a2a2a] rounded" />
+                        <Skeleton className="h-8 w-8 bg-[#2a2a2a] rounded" />
+                        <Skeleton className="h-8 w-8 bg-[#2a2a2a] rounded" />
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                currentItems.map((request, index) => (
+                  <motion.tr
+                    key={request.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="border-b border-gray-800 hover:bg-[#2a2a2a] transition-colors"
+                  >
+                    <td className="p-4">
+                      <div>
+                        <p className="text-white font-medium">{request.userName}</p>
+                        <p className="text-xs text-gray-400">{request.userEmail}</p>
+                        <p className="text-xs text-gray-500">{request.userId}</p>
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <div className="flex gap-2">
+                        {Object.entries(request.documents).map(([key, doc]: [string, any]) => (
+                          <Badge
+                            key={key}
+                            variant={doc.status === 'verified' ? 'default' : doc.status === 'pending' ? 'secondary' : 'destructive'}
+                            className={
+                              doc.status === 'verified' ? 'bg-green-500/20 text-green-400' :
+                                doc.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
+                                  'bg-red-500/20 text-red-400'
+                            }
+                          >
+                            {doc.type}
+                          </Badge>
+                        ))}
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <Badge
+                        variant={request.status === 'verified' ? 'default' : request.status === 'pending' ? 'secondary' : 'destructive'}
+                        className={
+                          request.status === 'verified' ? 'bg-green-500/20 text-green-400' :
+                            request.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
+                              'bg-red-500/20 text-red-400'
+                        }
                       >
-                        <Eye className="w-4 h-4" />
-                      </Button>
-                      {request.status === 'pending' && (
-                        <>
+                        {request.status}
+                      </Badge>
+                    </td>
+                    <td className="p-4 text-sm text-gray-300">{request.submittedAt}</td>
+                    <td className="p-4 text-sm text-gray-300">{request.verifiedBy || '-'}</td>
+                    <td className="p-4">
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-gray-400 hover:text-white"
+                          onClick={() => {
+                            setSelectedRequest(request);
+                            setDetailsModalOpen(true);
+                          }}
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                        {request.status === 'pending' && (
+                          <>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="text-green-400 hover:text-green-300"
+                              onClick={() => initiateVerify(request)}
+                              title="Verify"
+                            >
+                              <CheckCircle className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="text-red-400 hover:text-red-300"
+                              onClick={() => initiateReject(request, 'Documents not clear')}
+                              title="Reject"
+                            >
+                              <XCircle className="w-4 h-4" />
+                            </Button>
+                          </>
+                        )}
+                        {request.status === 'verified' && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="text-red-400 hover:text-red-300"
+                            onClick={() => initiateReject(request, 'Verification Revoked')}
+                            title="Revoke Verification"
+                          >
+                            <XCircle className="w-4 h-4" />
+                          </Button>
+                        )}
+                        {request.status === 'rejected' && (
                           <Button
                             size="sm"
                             variant="ghost"
                             className="text-green-400 hover:text-green-300"
                             onClick={() => initiateVerify(request)}
-                            title="Verify"
+                            title="Re-Verify"
                           >
                             <CheckCircle className="w-4 h-4" />
                           </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="text-red-400 hover:text-red-300"
-                            onClick={() => initiateReject(request, 'Documents not clear')}
-                            title="Reject"
-                          >
-                            <XCircle className="w-4 h-4" />
-                          </Button>
-                        </>
-                      )}
-                      {request.status === 'verified' && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="text-red-400 hover:text-red-300"
-                          onClick={() => initiateReject(request, 'Verification Revoked')}
-                          title="Revoke Verification"
-                        >
-                          <XCircle className="w-4 h-4" />
-                        </Button>
-                      )}
-                      {request.status === 'rejected' && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="text-green-400 hover:text-green-300"
-                          onClick={() => initiateVerify(request)}
-                          title="Re-Verify"
-                        >
-                          <CheckCircle className="w-4 h-4" />
-                        </Button>
-                      )}
-                    </div>
-                  </td>
-                </motion.tr>
-              ))}
+                        )}
+                      </div>
+                    </td>
+                  </motion.tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

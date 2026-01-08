@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Select,
   SelectContent,
@@ -426,52 +427,76 @@ export default function SupportPage() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-        <Card className="bg-[#1a1a1a] border-gray-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-400">Total Tickets</p>
-              <p className="text-2xl font-bold text-white">{stats.totalTickets}</p>
-            </div>
-            <Inbox className="w-8 h-8 text-blue-500" />
-          </div>
-        </Card>
-        {/* ... More stats cards ... */}
-        <Card className="bg-[#1a1a1a] border-gray-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-400">Open</p>
-              <p className="text-2xl font-bold text-white">{stats.openTickets}</p>
-            </div>
-            <MessageCircle className="w-8 h-8 text-yellow-500" />
-          </div>
-        </Card>
-        <Card className="bg-[#1a1a1a] border-gray-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-400">In Progress</p>
-              <p className="text-2xl font-bold text-white">{stats.inProgress}</p>
-            </div>
-            <Clock className="w-8 h-8 text-orange-500" />
-          </div>
-        </Card>
-        <Card className="bg-[#1a1a1a] border-gray-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-400">Resolved</p>
-              <p className="text-2xl font-bold text-white">{stats.resolved}</p>
-            </div>
-            <CheckCircle className="w-8 h-8 text-green-500" />
-          </div>
-        </Card>
-        <Card className="bg-[#1a1a1a] border-gray-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-400">Urgent</p>
-              <p className="text-2xl font-bold text-white">{stats.urgentTickets}</p>
-            </div>
-            <AlertCircle className="w-8 h-8 text-red-500" />
-          </div>
-        </Card>
+        {loading ? (
+          Array.from({ length: 6 }).map((_, i) => (
+            <Card key={i} className="bg-[#1a1a1a] border-gray-800 p-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-20 bg-[#2a2a2a]" />
+                  <Skeleton className="h-8 w-16 bg-[#2a2a2a]" />
+                </div>
+                <Skeleton className="h-8 w-8 rounded-full bg-[#2a2a2a]" />
+              </div>
+            </Card>
+          ))
+        ) : (
+          <>
+            <Card className="bg-[#1a1a1a] border-gray-800 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-400">Total Tickets</p>
+                  <p className="text-2xl font-bold text-white">{stats.totalTickets}</p>
+                </div>
+                <Inbox className="w-8 h-8 text-blue-500" />
+              </div>
+            </Card>
+            <Card className="bg-[#1a1a1a] border-gray-800 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-400">Avg Response</p>
+                  <p className="text-2xl font-bold text-white">{stats.avgResponseTime}</p>
+                </div>
+                <Clock className="w-8 h-8 text-purple-500" />
+              </div>
+            </Card>
+            <Card className="bg-[#1a1a1a] border-gray-800 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-400">Open</p>
+                  <p className="text-2xl font-bold text-white">{stats.openTickets}</p>
+                </div>
+                <MessageCircle className="w-8 h-8 text-yellow-500" />
+              </div>
+            </Card>
+            <Card className="bg-[#1a1a1a] border-gray-800 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-400">In Progress</p>
+                  <p className="text-2xl font-bold text-white">{stats.inProgress}</p>
+                </div>
+                <Clock className="w-8 h-8 text-orange-500" />
+              </div>
+            </Card>
+            <Card className="bg-[#1a1a1a] border-gray-800 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-400">Resolved</p>
+                  <p className="text-2xl font-bold text-white">{stats.resolved}</p>
+                </div>
+                <CheckCircle className="w-8 h-8 text-green-500" />
+              </div>
+            </Card>
+            <Card className="bg-[#1a1a1a] border-gray-800 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-400">Urgent</p>
+                  <p className="text-2xl font-bold text-white">{stats.urgentTickets}</p>
+                </div>
+                <AlertCircle className="w-8 h-8 text-red-500" />
+              </div>
+            </Card>
+          </>
+        )}
       </div>
 
       {/* Filters */}
@@ -535,7 +560,28 @@ export default function SupportPage() {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={8} className="p-4 text-center text-gray-400">Loading...</td></tr>
+                Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={i} className="border-b border-gray-800">
+                    <td className="p-4"><Skeleton className="h-4 w-20 bg-[#2a2a2a]" /></td>
+                    <td className="p-4">
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-48 bg-[#2a2a2a]" />
+                        <Skeleton className="h-3 w-32 bg-[#2a2a2a]" />
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-24 bg-[#2a2a2a]" />
+                        <Skeleton className="h-4 w-12 rounded-full bg-[#2a2a2a]" />
+                      </div>
+                    </td>
+                    <td className="p-4"><Skeleton className="h-4 w-20 bg-[#2a2a2a]" /></td>
+                    <td className="p-4"><Skeleton className="h-6 w-16 rounded-full bg-[#2a2a2a]" /></td>
+                    <td className="p-4"><Skeleton className="h-6 w-20 rounded-full bg-[#2a2a2a]" /></td>
+                    <td className="p-4"><Skeleton className="h-4 w-24 bg-[#2a2a2a]" /></td>
+                    <td className="p-4"><Skeleton className="h-8 w-8 rounded bg-[#2a2a2a]" /></td>
+                  </tr>
+                ))
               ) : tickets.map((ticket, index) => {
                 const CategoryIcon = categoryIcons[ticket.category] || MessageCircle;
                 return (

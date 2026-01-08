@@ -9,13 +9,14 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+} from '../../../components/ui/alert-dialog';
 
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Select,
   SelectContent,
@@ -26,7 +27,8 @@ import {
 import {
   Tag, Plus, Search, Filter, Copy, Edit, Trash2,
   TrendingUp, Gift, Percent, Users, DollarSign,
-  Calendar, RefreshCw, ChevronLeft, ChevronRight
+  Calendar, RefreshCw, ChevronLeft, ChevronRight,
+  CheckCircle, XCircle, BarChart
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { CreatePromoModal } from '@/components/admin/CreatePromoModal';
@@ -169,10 +171,11 @@ export default function PromoCodesPage() {
   // Stats (Calculated on frontend for now based on current view/API response if available, 
   // ideally API should return this summary)
   const stats = {
-    totalPromos: promoCodes.length, // Only current page? Should fetch total from API.
+    totalPromos: promoCodes.length,
     activePromos: promoCodes.filter(p => p.isActive).length,
-    totalUsage: promoCodes.reduce((sum, p) => sum + (p.usedCount || 0), 0),
+    totalUses: promoCodes.reduce((sum, p) => sum + (p.usedCount || 0), 0),
     totalRevenue: promoCodes.reduce((sum, p) => sum + (p.stats?.totalRevenue || 0), 0),
+    totalDiscountValue: promoCodes.reduce((sum, p) => sum + (p.discountValue || 0), 0), // Approx calculation
     avgConversion: 0,
     totalSaved: 0
   };
@@ -196,25 +199,76 @@ export default function PromoCodesPage() {
 
       {/* Stats Cards - Simplified for now */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-        <Card className="bg-[#1a1a1a] border-gray-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-400">Total Promos</p>
-              <p className="text-2xl font-bold text-white">{stats.totalPromos}</p>
-            </div>
-            <Tag className="w-8 h-8 text-blue-500" />
-          </div>
-        </Card>
-        {/* ... Other stats cards ... */}
-        <Card className="bg-[#1a1a1a] border-gray-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-400">Active</p>
-              <p className="text-2xl font-bold text-white">{stats.activePromos}</p>
-            </div>
-            <Gift className="w-8 h-8 text-green-500" />
-          </div>
-        </Card>
+        {loading ? (
+          Array.from({ length: 6 }).map((_, i) => (
+            <Card key={i} className="bg-[#1a1a1a] border-gray-800 p-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-24 bg-[#2a2a2a]" />
+                  <Skeleton className="h-8 w-16 bg-[#2a2a2a]" />
+                </div>
+                <Skeleton className="h-8 w-8 rounded-full bg-[#2a2a2a]" />
+              </div>
+            </Card>
+          ))
+        ) : (
+          <>
+            <Card className="bg-[#1a1a1a] border-gray-800 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-400">Total Promos</p>
+                  <p className="text-2xl font-bold text-white">{stats.totalPromos}</p>
+                </div>
+                <Tag className="w-8 h-8 text-blue-500" />
+              </div>
+            </Card>
+            <Card className="bg-[#1a1a1a] border-gray-800 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-400">Active</p>
+                  <p className="text-2xl font-bold text-white">{stats.activePromos}</p>
+                </div>
+                <CheckCircle className="w-8 h-8 text-green-500" />
+              </div>
+            </Card>
+            <Card className="bg-[#1a1a1a] border-gray-800 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-400">Total Uses</p>
+                  <p className="text-2xl font-bold text-white">{stats.totalUses}</p>
+                </div>
+                <BarChart className="w-8 h-8 text-purple-500" />
+              </div>
+            </Card>
+            <Card className="bg-[#1a1a1a] border-gray-800 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-400">Total Discount</p>
+                  <p className="text-2xl font-bold text-white">₹{stats.totalDiscountValue.toLocaleString()}</p>
+                </div>
+                <Percent className="w-8 h-8 text-yellow-500" />
+              </div>
+            </Card>
+            <Card className="bg-[#1a1a1a] border-gray-800 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-400">Revenue</p>
+                  <p className="text-2xl font-bold text-white">₹{stats.totalRevenue.toLocaleString()}</p>
+                </div>
+                <DollarSign className="w-8 h-8 text-green-500" />
+              </div>
+            </Card>
+            <Card className="bg-[#1a1a1a] border-gray-800 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-400">Saved</p>
+                  <p className="text-2xl font-bold text-white">₹{stats.totalSaved.toLocaleString()}</p>
+                </div>
+                <Gift className="w-8 h-8 text-orange-500" />
+              </div>
+            </Card>
+          </>
+        )}
       </div>
 
       {/* Filters */}
@@ -258,9 +312,27 @@ export default function PromoCodesPage() {
       </Card>
 
       {/* Promo Codes Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {loading ? (
-          <p className="text-gray-400 p-4">Loading promos...</p>
+          Array.from({ length: 6 }).map((_, i) => (
+            <Card key={i} className="bg-[#1a1a1a] border-gray-800 p-6 space-y-4">
+              <div className="flex justify-between items-start">
+                <div className="space-y-2">
+                  <Skeleton className="h-6 w-32 bg-[#2a2a2a]" />
+                  <Skeleton className="h-4 w-48 bg-[#2a2a2a]" />
+                </div>
+                <Skeleton className="h-6 w-16 rounded-full bg-[#2a2a2a]" />
+              </div>
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-full bg-[#2a2a2a]" />
+                <Skeleton className="h-4 w-2/3 bg-[#2a2a2a]" />
+              </div>
+              <div className="flex justify-between items-center pt-4 border-t border-gray-800">
+                <Skeleton className="h-4 w-24 bg-[#2a2a2a]" />
+                <Skeleton className="h-8 w-24 bg-[#2a2a2a]" />
+              </div>
+            </Card>
+          ))
         ) : promoCodes.map((promo, index) => (
           <motion.div
             key={promo.id}

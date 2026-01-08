@@ -5,6 +5,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Select,
   SelectContent,
@@ -289,74 +290,98 @@ export default function TransactionManagementPage() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-        <Card className="bg-[#1a1a1a] border-gray-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-400">Total Revenue</p>
-              <p className="text-2xl font-bold text-white">₹{(stats.totalVolume).toLocaleString()}</p>
-            </div>
-            <DollarSign className="w-8 h-8 text-green-500" />
-          </div>
-        </Card>
-        <Card className="bg-[#1a1a1a] border-gray-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-400">Platform Fees</p>
-              <p className="text-2xl font-bold text-white">₹{(stats.platformFees).toLocaleString()}</p>
-            </div>
-            <TrendingUp className="w-8 h-8 text-purple-500" />
-          </div>
-        </Card>
-        <Card className="bg-[#1a1a1a] border-gray-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-400">Transactions</p>
-              <p className="text-2xl font-bold text-white">{stats.totalTransactions}</p>
-            </div>
-            <CreditCard className="w-8 h-8 text-blue-500" />
-          </div>
-        </Card>
-        <Card className="bg-[#1a1a1a] border-gray-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-400">Pending</p>
-              <p className="text-2xl font-bold text-white">₹{(stats.pendingWithdrawals).toLocaleString()}</p>
-            </div>
-            <Clock className="w-8 h-8 text-yellow-500" />
-          </div>
-        </Card>
-        <Card className="bg-[#1a1a1a] border-gray-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-400">Failed</p>
-              <p className="text-2xl font-bold text-white">{stats.failedTransactions}</p>
-            </div>
-            <XCircle className="w-8 h-8 text-red-500" />
-          </div>
-        </Card>
+        {loading ? (
+          Array.from({ length: 5 }).map((_, i) => (
+            <Card key={i} className="bg-[#1a1a1a] border-gray-800 p-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-24 bg-[#2a2a2a]" />
+                  <Skeleton className="h-8 w-32 bg-[#2a2a2a]" />
+                </div>
+                <Skeleton className="h-8 w-8 rounded-full bg-[#2a2a2a]" />
+              </div>
+            </Card>
+          ))
+        ) : (
+          <>
+            <Card className="bg-[#1a1a1a] border-gray-800 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-400">Total Revenue</p>
+                  <p className="text-2xl font-bold text-white">₹{(stats.totalVolume).toLocaleString()}</p>
+                </div>
+                <DollarSign className="w-8 h-8 text-green-500" />
+              </div>
+            </Card>
+            <Card className="bg-[#1a1a1a] border-gray-800 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-400">Platform Fees</p>
+                  <p className="text-2xl font-bold text-white">₹{(stats.platformFees).toLocaleString()}</p>
+                </div>
+                <TrendingUp className="w-8 h-8 text-purple-500" />
+              </div>
+            </Card>
+            <Card className="bg-[#1a1a1a] border-gray-800 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-400">Transactions</p>
+                  <p className="text-2xl font-bold text-white">{stats.totalTransactions}</p>
+                </div>
+                <CreditCard className="w-8 h-8 text-blue-500" />
+              </div>
+            </Card>
+            <Card className="bg-[#1a1a1a] border-gray-800 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-400">Pending</p>
+                  <p className="text-2xl font-bold text-white">₹{(stats.pendingWithdrawals).toLocaleString()}</p>
+                </div>
+                <Clock className="w-8 h-8 text-yellow-500" />
+              </div>
+            </Card>
+            <Card className="bg-[#1a1a1a] border-gray-800 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-400">Failed</p>
+                  <p className="text-2xl font-bold text-white">{stats.failedTransactions}</p>
+                </div>
+                <XCircle className="w-8 h-8 text-red-500" />
+              </div>
+            </Card>
+          </>
+        )}
       </div>
 
       {/* Revenue Chart */}
       <Card className="bg-[#1a1a1a] border-gray-800 p-6">
         <h3 className="text-lg font-semibold text-white mb-4">Revenue Overview</h3>
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={revenueChartData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-            <XAxis dataKey="date" stroke="#9CA3AF" />
-            <YAxis stroke="#9CA3AF" />
-            <Tooltip
-              contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #374151' }}
-              labelStyle={{ color: '#fff' }}
-            />
-            <Line
-              type="monotone"
-              dataKey="revenue"
-              stroke="#8B5CF6"
-              strokeWidth={2}
-              dot={{ fill: '#8B5CF6' }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
+        {loading ? (
+          <div className="w-full h-[300px] flex items-end justify-between gap-2 px-4">
+            {Array.from({ length: 12 }).map((_, i) => (
+              <Skeleton key={i} className="w-full bg-[#2a2a2a] rounded-t" style={{ height: `${Math.random() * 60 + 20}%` }} />
+            ))}
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={revenueChartData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+              <XAxis dataKey="date" stroke="#9CA3AF" />
+              <YAxis stroke="#9CA3AF" />
+              <Tooltip
+                contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #374151' }}
+                labelStyle={{ color: '#fff' }}
+              />
+              <Line
+                type="monotone"
+                dataKey="revenue"
+                stroke="#8B5CF6"
+                strokeWidth={2}
+                dot={{ fill: '#8B5CF6' }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        )}
       </Card>
 
       {/* Filters */}
@@ -434,7 +459,25 @@ export default function TransactionManagementPage() {
               </tr>
             </thead>
             <tbody>
-              {transactions.length === 0 && !loading ? (
+              {loading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={i} className="border-b border-gray-800">
+                    <td className="p-4"><Skeleton className="h-4 w-24 bg-[#2a2a2a]" /></td>
+                    <td className="p-4">
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-32 bg-[#2a2a2a]" />
+                        <Skeleton className="h-3 w-20 bg-[#2a2a2a]" />
+                      </div>
+                    </td>
+                    <td className="p-4"><Skeleton className="h-4 w-20 bg-[#2a2a2a]" /></td>
+                    <td className="p-4"><Skeleton className="h-5 w-16 bg-[#2a2a2a]" /></td>
+                    <td className="p-4"><Skeleton className="h-6 w-24 rounded-full bg-[#2a2a2a]" /></td>
+                    <td className="p-4"><Skeleton className="h-4 w-24 bg-[#2a2a2a]" /></td>
+                    <td className="p-4"><Skeleton className="h-4 w-32 bg-[#2a2a2a]" /></td>
+                    <td className="p-4"><Skeleton className="h-8 w-8 rounded bg-[#2a2a2a]" /></td>
+                  </tr>
+                ))
+              ) : transactions.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="p-8 text-center text-gray-400">
                     No transactions found

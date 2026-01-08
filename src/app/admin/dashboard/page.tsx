@@ -19,7 +19,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-// Skeleton component for loading states
+import { Skeleton } from "@/components/ui/skeleton";
+
+// Skeleton component for loading states (Keeping the custom MetricSkeleton if specifically needed, but importing generic Skeleton too)
 function MetricSkeleton() {
   return (
     <Card className="bg-[#1a1a1a] border-gray-800 p-4 sm:p-6 h-[120px] animate-pulse">
@@ -215,15 +217,101 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="space-y-4 sm:space-y-6 p-4 sm:p-6 text-white">
-        <h1 className="text-2xl font-bold mb-4">Dashboard</h1>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          <MetricSkeleton />
-          <MetricSkeleton />
-          <MetricSkeleton />
-          <MetricSkeleton />
+      <div className="space-y-4 sm:space-y-6 p-4 sm:p-6 text-white text-left">
+        {/* Header Skeleton */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div>
+            <Skeleton className="h-8 w-48 bg-[#2a2a2a] mb-2" />
+            <Skeleton className="h-4 w-64 bg-[#2a2a2a]" />
+          </div>
+          <div className="flex gap-2">
+            <Skeleton className="h-9 w-16 bg-[#2a2a2a]" />
+            <Skeleton className="h-9 w-16 bg-[#2a2a2a]" />
+            <Skeleton className="h-9 w-16 bg-[#2a2a2a]" />
+          </div>
         </div>
-        <div className="text-gray-400">Loading dashboard data...</div>
+
+        {/* Stats Grid Skeleton */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i} className="bg-[#1a1a1a] border-gray-800 p-4 sm:p-6 h-[120px] flex flex-col justify-between">
+              <div className="flex justify-between items-start">
+                <Skeleton className="h-4 w-24 bg-[#2a2a2a]" />
+                <Skeleton className="h-8 w-8 rounded-lg bg-[#2a2a2a]" />
+              </div>
+              <div className="space-y-2">
+                <Skeleton className="h-8 w-32 bg-[#2a2a2a]" />
+                <Skeleton className="h-4 w-16 bg-[#2a2a2a]" />
+              </div>
+            </Card>
+          ))}
+        </div>
+
+        {/* Charts Section Skeleton */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
+          <Card className="bg-[#1a1a1a] border-gray-800 p-4 sm:p-6 h-[400px]">
+            <div className="flex justify-between items-center mb-6">
+              <Skeleton className="h-6 w-32 bg-[#2a2a2a]" />
+              <Skeleton className="h-8 w-24 bg-[#2a2a2a]" />
+            </div>
+            <div className="flex items-end gap-2 h-[280px] mt-4">
+              {[...Array(7)].map((_, i) => (
+                <Skeleton key={i} className="flex-1 bg-[#2a2a2a] rounded-t-lg" style={{ height: `${Math.random() * 60 + 20}%` }} />
+              ))}
+            </div>
+          </Card>
+          <Card className="bg-[#1a1a1a] border-gray-800 p-6 h-[400px]">
+            <Skeleton className="h-6 w-40 bg-[#2a2a2a] mb-6" />
+            <div className="space-y-4">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="flex items-center justify-between p-3 bg-[#2a2a2a]/50 rounded-lg border border-gray-800/50">
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-32 bg-[#2a2a2a]" />
+                    <Skeleton className="h-3 w-48 bg-[#2a2a2a]" />
+                  </div>
+                  <Skeleton className="h-4 w-12 bg-[#2a2a2a]" />
+                </div>
+              ))}
+            </div>
+          </Card>
+        </div>
+
+        {/* Additional Metrics Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[...Array(3)].map((_, i) => (
+            <Card key={i} className="bg-[#1a1a1a] border-gray-800 p-6">
+              <div className="flex items-center gap-4">
+                <Skeleton className="h-12 w-12 rounded-lg bg-[#2a2a2a]" />
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-24 bg-[#2a2a2a]" />
+                  <Skeleton className="h-6 w-32 bg-[#2a2a2a]" />
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+
+        {/* Recent Activity Skeleton */}
+        <Card className="bg-[#1a1a1a] border-gray-800 p-6">
+          <div className="flex justify-between items-center mb-4">
+            <Skeleton className="h-6 w-32 bg-[#2a2a2a]" />
+            <Skeleton className="h-8 w-20 bg-[#2a2a2a]" />
+          </div>
+          <div className="space-y-3">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="flex items-center justify-between p-3 bg-[#2a2a2a]/50 rounded-lg">
+                <div className="flex items-center gap-3 w-full">
+                  <Skeleton className="h-8 w-8 rounded-lg bg-[#2a2a2a]" />
+                  <div className="space-y-2 flex-1">
+                    <Skeleton className="h-4 w-3/4 bg-[#2a2a2a]" />
+                    <Skeleton className="h-3 w-1/4 bg-[#2a2a2a]" />
+                  </div>
+                </div>
+                <Skeleton className="h-8 w-16 bg-[#2a2a2a]" />
+              </div>
+            ))}
+          </div>
+        </Card>
       </div>
     );
   }

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -599,14 +600,47 @@ export default function SettingsPage() {
       </div>
 
       {/* Settings Content */}
+      {/* Settings Content */}
       <Card className="bg-[#1a1a1a] border-gray-800 p-6">
-        <h2 className="text-xl font-semibold text-white mb-4">
-          {settingsCategories.find(c => c.id === activeCategory)?.title}
-        </h2>
-        <p className="text-sm text-gray-400 mb-6">
-          {settingsCategories.find(c => c.id === activeCategory)?.description}
-        </p>
-        {renderSettingsContent()}
+        {loading ? (
+          <div className="space-y-6">
+            <div className="space-y-2 mb-6">
+              <Skeleton className="h-8 w-48 bg-[#2a2a2a]" />
+              <Skeleton className="h-4 w-64 bg-[#2a2a2a]" />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Skeleton className="h-5 w-32 bg-[#2a2a2a]" />
+                <Skeleton className="h-10 w-full bg-[#2a2a2a]" />
+              </div>
+              <div className="space-y-2">
+                <Skeleton className="h-5 w-32 bg-[#2a2a2a]" />
+                <Skeleton className="h-10 w-full bg-[#2a2a2a]" />
+              </div>
+              <div className="space-y-2">
+                <Skeleton className="h-5 w-32 bg-[#2a2a2a]" />
+                <Skeleton className="h-10 w-full bg-[#2a2a2a]" />
+              </div>
+              <div className="space-y-2">
+                <Skeleton className="h-5 w-32 bg-[#2a2a2a]" />
+                <Skeleton className="h-10 w-full bg-[#2a2a2a]" />
+              </div>
+            </div>
+            <div className="flex justify-end pt-6 border-t border-gray-800">
+              <Skeleton className="h-10 w-32 bg-[#2a2a2a]" />
+            </div>
+          </div>
+        ) : (
+          <>
+            <h2 className="text-xl font-semibold text-white mb-4">
+              {settingsCategories.find(c => c.id === activeCategory)?.title}
+            </h2>
+            <p className="text-sm text-gray-400 mb-6">
+              {settingsCategories.find(c => c.id === activeCategory)?.description}
+            </p>
+            {renderSettingsContent()}
+          </>
+        )}
       </Card>
 
       {/* Stats Cards */}

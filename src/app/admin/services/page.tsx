@@ -15,6 +15,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Select,
   SelectContent,
@@ -325,7 +326,9 @@ export default function ServiceManagementPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-400">Total Services</p>
-              <p className="text-2xl font-bold text-white">{stats.totalServices}</p>
+              {loading ? <Skeleton className="h-8 w-16 bg-[#2a2a2a] mt-1" /> : (
+                <p className="text-2xl font-bold text-white">{stats.totalServices}</p>
+              )}
             </div>
             <Package className="w-8 h-8 text-blue-500" />
           </div>
@@ -334,7 +337,9 @@ export default function ServiceManagementPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-400">Active</p>
-              <p className="text-2xl font-bold text-white">{stats.activeServices}</p>
+              {loading ? <Skeleton className="h-8 w-16 bg-[#2a2a2a] mt-1" /> : (
+                <p className="text-2xl font-bold text-white">{stats.activeServices}</p>
+              )}
             </div>
             <CheckCircle className="w-8 h-8 text-green-500" />
           </div>
@@ -343,7 +348,9 @@ export default function ServiceManagementPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-400">Pending</p>
-              <p className="text-2xl font-bold text-white">{stats.pendingApproval}</p>
+              {loading ? <Skeleton className="h-8 w-16 bg-[#2a2a2a] mt-1" /> : (
+                <p className="text-2xl font-bold text-white">{stats.pendingApproval}</p>
+              )}
             </div>
             <Clock className="w-8 h-8 text-yellow-500" />
           </div>
@@ -352,7 +359,9 @@ export default function ServiceManagementPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-400">Revenue</p>
-              <p className="text-2xl font-bold text-white">₹{stats.totalRevenue.toLocaleString()}</p>
+              {loading ? <Skeleton className="h-8 w-24 bg-[#2a2a2a] mt-1" /> : (
+                <p className="text-2xl font-bold text-white">₹{stats.totalRevenue.toLocaleString()}</p>
+              )}
             </div>
             <DollarSign className="w-8 h-8 text-purple-500" />
           </div>
@@ -361,7 +370,9 @@ export default function ServiceManagementPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-400">Avg Rating</p>
-              <p className="text-2xl font-bold text-white">{stats.avgRating}</p>
+              {loading ? <Skeleton className="h-8 w-12 bg-[#2a2a2a] mt-1" /> : (
+                <p className="text-2xl font-bold text-white">{stats.avgRating}</p>
+              )}
             </div>
             <Star className="w-8 h-8 text-yellow-500" />
           </div>
@@ -370,7 +381,9 @@ export default function ServiceManagementPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-400">Total Orders</p>
-              <p className="text-2xl font-bold text-white">{stats.totalOrders}</p>
+              {loading ? <Skeleton className="h-8 w-16 bg-[#2a2a2a] mt-1" /> : (
+                <p className="text-2xl font-bold text-white">{stats.totalOrders}</p>
+              )}
             </div>
             <TrendingUp className="w-8 h-8 text-cyan-500" />
           </div>
@@ -435,7 +448,40 @@ export default function ServiceManagementPage() {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={7} className="p-4 text-center text-gray-400">Loading...</td></tr>
+                Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={i} className="border-b border-gray-800">
+                    <td className="p-4">
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-32 bg-[#2a2a2a]" />
+                        <Skeleton className="h-3 w-16 bg-[#2a2a2a]" />
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-24 bg-[#2a2a2a]" />
+                        <div className="flex gap-2">
+                          <Skeleton className="h-3 w-8 bg-[#2a2a2a]" />
+                          <Skeleton className="h-3 w-4 bg-[#2a2a2a]" />
+                        </div>
+                      </div>
+                    </td>
+                    <td className="p-4"><Skeleton className="h-5 w-20 bg-[#2a2a2a] rounded-full" /></td>
+                    <td className="p-4"><Skeleton className="h-4 w-16 bg-[#2a2a2a]" /></td>
+                    <td className="p-4">
+                      <div className="space-y-1">
+                        <Skeleton className="h-5 w-16 bg-[#2a2a2a] rounded-full" />
+                        <Skeleton className="h-5 w-16 bg-[#2a2a2a] rounded-full" />
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <div className="space-y-1">
+                        <Skeleton className="h-4 w-24 bg-[#2a2a2a]" />
+                        <Skeleton className="h-3 w-16 bg-[#2a2a2a]" />
+                      </div>
+                    </td>
+                    <td className="p-4"><Skeleton className="h-8 w-8 bg-[#2a2a2a] rounded" /></td>
+                  </tr>
+                ))
               ) : services.map((service, index) => (
                 <motion.tr
                   key={service.id}

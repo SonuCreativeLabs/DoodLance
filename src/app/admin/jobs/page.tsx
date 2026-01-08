@@ -15,6 +15,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Select,
   SelectContent,
@@ -293,7 +294,9 @@ export default function JobsPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-400">Total Jobs</p>
-              <p className="text-2xl font-bold text-white">{stats.totalJobs}</p>
+              {loading ? <Skeleton className="h-8 w-16 bg-[#2a2a2a] mt-1" /> : (
+                <p className="text-2xl font-bold text-white">{stats.totalJobs}</p>
+              )}
             </div>
             <Briefcase className="w-8 h-8 text-blue-500" />
           </div>
@@ -302,7 +305,9 @@ export default function JobsPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-400">Active Jobs</p>
-              <p className="text-2xl font-bold text-white">{stats.activeJobs}</p>
+              {loading ? <Skeleton className="h-8 w-16 bg-[#2a2a2a] mt-1" /> : (
+                <p className="text-2xl font-bold text-white">{stats.activeJobs}</p>
+              )}
             </div>
             <CheckCircle className="w-8 h-8 text-green-500" />
           </div>
@@ -311,7 +316,9 @@ export default function JobsPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-400">Applications</p>
-              <p className="text-2xl font-bold text-white">{stats.totalApplications}</p>
+              {loading ? <Skeleton className="h-8 w-16 bg-[#2a2a2a] mt-1" /> : (
+                <p className="text-2xl font-bold text-white">{stats.totalApplications}</p>
+              )}
             </div>
             <Users className="w-8 h-8 text-purple-500" />
           </div>
@@ -320,7 +327,9 @@ export default function JobsPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-400">Avg Budget</p>
-              <p className="text-2xl font-bold text-white">₹{(stats.avgBudget / 1000).toFixed(0)}k</p>
+              {loading ? <Skeleton className="h-8 w-24 bg-[#2a2a2a] mt-1" /> : (
+                <p className="text-2xl font-bold text-white">₹{(stats.avgBudget / 1000).toFixed(0)}k</p>
+              )}
             </div>
             <DollarSign className="w-8 h-8 text-orange-500" />
           </div>
@@ -372,8 +381,35 @@ export default function JobsPage() {
         <div className="p-6">
           <h2 className="text-lg font-semibold text-white mb-4">Job Listings</h2>
           <div className="space-y-4">
+
             {loading ? (
-              <p className="text-gray-400 text-center py-8">Loading jobs...</p>
+              Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="border border-gray-800 rounded-lg p-4 bg-[#1a1a1a]">
+                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                    <div className="flex-1">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="space-y-3 w-full">
+                          <Skeleton className="h-6 w-1/3 bg-[#2a2a2a]" />
+                          <Skeleton className="h-4 w-1/4 bg-[#2a2a2a]" />
+                          <div className="flex gap-4">
+                            <Skeleton className="h-4 w-20 bg-[#2a2a2a]" />
+                            <Skeleton className="h-4 w-20 bg-[#2a2a2a]" />
+                            <Skeleton className="h-4 w-20 bg-[#2a2a2a]" />
+                          </div>
+                          <div className="flex gap-2">
+                            <Skeleton className="h-6 w-16 bg-[#2a2a2a] rounded-full" />
+                            <Skeleton className="h-6 w-16 bg-[#2a2a2a] rounded-full" />
+                          </div>
+                        </div>
+                        <div className="text-right space-y-2">
+                          <Skeleton className="h-8 w-24 bg-[#2a2a2a]" />
+                          <Skeleton className="h-6 w-20 bg-[#2a2a2a] rounded-full ml-auto" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))
             ) : jobs.map((job, index) => (
               <motion.div
                 key={job.id}
@@ -415,23 +451,24 @@ export default function JobsPage() {
                         <Badge className={`${statusColors[job.status as JobStatus]} text-white mt-2`}>
                           {job.status}
                         </Badge>
+
                       </div>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-2 mt-4 lg:mt-0">
-                    <Button variant="outline" size="sm" className="text-gray-300">
-                      View Applications ({job.applications})
-                    </Button>
-                    <Button
-                      size="sm"
-                      className="bg-purple-600 hover:bg-purple-700"
-                      onClick={() => {
-                        setJobToEdit(job);
-                        setEditModalOpen(true);
-                      }}
-                    >
-                      Edit
-                    </Button>
+                    <div className="flex items-center gap-2 mt-4 lg:mt-0">
+                      <Button variant="outline" size="sm" className="text-gray-300">
+                        View Applications ({job.applications})
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="bg-purple-600 hover:bg-purple-700"
+                        onClick={() => {
+                          setJobToEdit(job);
+                          setEditModalOpen(true);
+                        }}
+                      >
+                        Edit
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </motion.div>
