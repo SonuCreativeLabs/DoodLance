@@ -11,13 +11,14 @@ import { useAuth } from '@/contexts/AuthContext';
 
 export default function CartPage() {
   const router = useRouter();
-  const { state, getTotalPrice, increaseQuantity, decreaseQuantity, clearCart, isLoaded } = useHire();
+  const { state, getTotalPrice, increaseQuantity, decreaseQuantity, clearCart, isLoaded, setAppliedCoupon } = useHire();
   const { setNavbarVisibility } = useNavbar();
   const { user } = useAuth();
   const [showAdditionalServices, setShowAdditionalServices] = useState(false);
   const [couponCode, setCouponCode] = useState('');
-  const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
   const [discountAmount, setDiscountAmount] = useState(0);
+  const [couponError, setCouponError] = useState('');
+  const [validatingCoupon, setValidatingCoupon] = useState(false);
 
   console.log('🔍 [CART] Component render:', {
     isLoaded,
@@ -46,22 +47,58 @@ export default function CartPage() {
   }
 
   const subtotal = state.cartItems.reduce((total, item) => {
-    const price = typeof item.service.price === 'string'
-      ? parseFloat(item.service.price.replace(/[^\d.]/g, ''))
-      : item.service.price;
+    const rawPrice = item.service.price;
+    const price = typeof rawPrice === 'string'
+      ? parseFloat(rawPrice.replace(/[^\d.]/g, '')) || 0
+      : Number(rawPrice) || 0;
     return total + (price * (item.quantity || 1));
   }, 0);
   const serviceFee = Math.round(subtotal * 0.05); // 5% platform fee
-  const discount = appliedCoupon ? Math.round(subtotal * 0.1) : 0; // 10% discount for demo
-  const total = subtotal + serviceFee - discount;
 
-  const handleApplyCoupon = () => {
-    if (couponCode.toLowerCase() === 'dood10') {
-      setAppliedCoupon('DOOD10');
-      setDiscountAmount(Math.round(subtotal * 0.1));
+  // Recalculate discount based on applied coupon in state
+  useEffect(() => {
+    if (state.appliedCoupon) {
+      // In a real app we'd need to store the discount value/type in context too
+      // For now, re-validating or assuming the demo coupon logic
+      // Ideally context should hold the discount structure, but let's stick to simple string for now
+      // and re-verify or just calculate simple 10% for the known demo code
+      if (state.appliedCoupon === 'DOOD10') {
+        setDiscountAmount(Math.round(subtotal * 0.1));
+        setCouponCode(state.appliedCoupon);
+      }
     } else {
-      setAppliedCoupon(null);
       setDiscountAmount(0);
+    }
+  }, [state.appliedCoupon, subtotal]);
+
+  const discount = discountAmount || 0;
+  const total = Math.max(0, (subtotal || 0) + (serviceFee || 0) - discount);
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode) return;
+    setValidatingCoupon(true);
+    setCouponError('');
+
+    try {
+      const res = await fetch('/api/promos/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: couponCode, orderAmount: subtotal }),
+      });
+      const data = await res.json();
+
+      if (!res.ok || !data.valid) {
+        setCouponError(data.error || 'Invalid coupon');
+        setAppliedCoupon(null);
+        setDiscountAmount(0);
+      } else {
+        setAppliedCoupon(data.promo.code);
+        setDiscountAmount(data.promo.calculatedDiscount);
+      }
+    } catch (err) {
+      setCouponError('Failed to validate coupon');
+    } finally {
+      setValidatingCoupon(false);
     }
   };
 
@@ -248,11 +285,7 @@ export default function CartPage() {
           </div>
         </div>
 
-        {/* Additional Services Card */}
-        <AdditionalServicesCard
-          freelancerId={state.freelancerId || ''}
-          freelancerServices={state.freelancerServices}
-        />
+
 
         {/* Coupon Section */}
         <div className="p-4 bg-white/5 rounded-xl border border-white/10">
@@ -273,15 +306,27 @@ export default function CartPage() {
               onClick={handleApplyCoupon}
               variant="outline"
               className="px-6 py-2 border-white/20 text-white/70 hover:bg-white/10"
+              disabled={validatingCoupon}
             >
-              Apply
+              {validatingCoupon ? (
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                'Apply'
+              )}
             </Button>
           </div>
 
-          {appliedCoupon && (
+          {state.appliedCoupon && (
             <div className="mt-2 text-sm text-green-400 flex items-center gap-2">
               <AlertCircle className="w-4 h-4" />
-              Coupon {appliedCoupon} applied! You saved ₹{discountAmount}
+              Coupon {state.appliedCoupon} applied! You saved ₹{discountAmount}
+            </div>
+          )}
+
+          {couponError && (
+            <div className="mt-2 text-sm text-red-400 flex items-center gap-2">
+              <AlertCircle className="w-4 h-4" />
+              {couponError}
             </div>
           )}
         </div>
@@ -301,9 +346,9 @@ export default function CartPage() {
               <span className="text-white">₹{serviceFee.toLocaleString()}</span>
             </div>
 
-            {appliedCoupon && (
+            {state.appliedCoupon && (
               <div className="flex justify-between text-sm">
-                <span className="text-green-400">Discount ({appliedCoupon})</span>
+                <span className="text-green-400">Discount ({state.appliedCoupon})</span>
                 <span className="text-green-400">-₹{discountAmount.toLocaleString()}</span>
               </div>
             )}
@@ -345,6 +390,8 @@ export default function CartPage() {
         </div>
       </div>
 
+
+
       {/* Checkout Button */}
       <div className="fixed bottom-0 left-0 right-0 p-6 bg-[#0F0F0F]/95 backdrop-blur-sm border-t border-white/10">
         <Button
@@ -357,6 +404,6 @@ export default function CartPage() {
       </div>
 
 
-    </div>
+    </div >
   );
 }

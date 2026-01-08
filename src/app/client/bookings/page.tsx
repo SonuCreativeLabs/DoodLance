@@ -112,13 +112,20 @@ const BookingCard = ({ booking, showActions = true }: BookingCardProps) => {
                 <div className="text-sm text-white/90">
                   {(() => {
                     // Format date from YYYY-MM-DD to readable format
-                    const [year, month, day] = booking.date.split('-').map(Number);
-                    const date = new Date(year, month - 1, day);
-                    return date.toLocaleDateString('en-US', {
-                      weekday: 'short',
-                      month: 'short',
-                      day: 'numeric'
-                    });
+                    if (!booking.date) return 'Date not set';
+                    try {
+                      const [year, month, day] = booking.date.split('-').map(Number);
+                      const date = new Date(year, month - 1, day);
+                      if (isNaN(date.getTime())) return booking.date;
+
+                      return date.toLocaleDateString('en-US', {
+                        weekday: 'short',
+                        month: 'short',
+                        day: 'numeric'
+                      });
+                    } catch (e) {
+                      return booking.date;
+                    }
                   })()} at {booking.time}
                 </div>
               </div>
@@ -622,12 +629,21 @@ function BookingsPageContent() {
       if (!bookingMatchesSearch) return false;
 
       // Parse the time properly considering AM/PM
-      const timeStr = booking.time
-      const [time, period] = timeStr.split(' ')
-      const [hours, minutes] = time.split(':').map(Number)
-      let bookingHours = hours
-      if (period === 'PM' && hours !== 12) bookingHours += 12
-      if (period === 'AM' && hours === 12) bookingHours = 0
+      // Parse the time properly considering AM/PM
+      const timeStr = booking.time || ''
+      let minutes = 0;
+      let bookingHours = 0;
+
+      if (timeStr) {
+        const [time, period] = timeStr.split(' ')
+        if (time) {
+          const [hours, mins] = time.split(':').map(Number)
+          minutes = mins || 0
+          bookingHours = hours || 0
+          if (period === 'PM' && hours !== 12) bookingHours += 12
+          if (period === 'AM' && hours === 12) bookingHours = 0
+        }
+      }
 
       // Create booking date with proper time
       const [bookingYear, bookingMonth, bookingDay] = booking.date.split('-').map(Number)
@@ -669,12 +685,22 @@ function BookingsPageContent() {
     }).sort((a, b) => {
       // Parse dates for sorting
       const parseDateTime = (date: string, time: string) => {
+        if (!date) return 0;
         const [year, month, day] = date.split('-').map(Number)
-        const [timeStr, period] = time.split(' ')
-        const [hours, minutes] = timeStr.split(':').map(Number)
-        let adjustedHours = hours
-        if (period === 'PM' && hours !== 12) adjustedHours += 12
-        if (period === 'AM' && hours === 12) adjustedHours = 0
+
+        let adjustedHours = 0;
+        let minutes = 0;
+
+        if (time) {
+          const [timeStr, period] = time.split(' ')
+          if (timeStr) {
+            const [hours, mins] = timeStr.split(':').map(Number)
+            minutes = mins || 0
+            adjustedHours = hours || 0
+            if (period === 'PM' && hours !== 12) adjustedHours += 12
+            if (period === 'AM' && hours === 12) adjustedHours = 0
+          }
+        }
         return new Date(year, month - 1, day, adjustedHours, minutes).getTime()
       }
 

@@ -226,7 +226,8 @@ export async function POST(request: NextRequest) {
             location, // Extract location
             notes,
             otp,
-            services // Extract services
+            services = [], // Default to empty array
+            couponCode // Extract couponCode
         } = body;
 
         if (!serviceId) {
@@ -253,9 +254,11 @@ export async function POST(request: NextRequest) {
         // Calculate price
         let finalPrice = 0;
 
+        // Calculate base total first
+        let baseTotal = 0;
         if (body.services && body.services.length > 0) {
             // Calculate total from services array
-            finalPrice = body.services.reduce((total: number, s: any) => {
+            baseTotal = body.services.reduce((total: number, s: any) => {
                 const price = typeof s.price === 'string'
                     ? parseFloat(s.price.replace(/[^\d.]/g, ''))
                     : s.price;
@@ -263,8 +266,79 @@ export async function POST(request: NextRequest) {
             }, 0);
         } else {
             // Fallback to single service price
-            finalPrice = service.price;
+            baseTotal = service.price;
         }
+
+        // Apply Coupon if present
+        let discountAmount = 0;
+        let appliedPromoCodeId: string | null = null;
+        let appliedPromoCodeCode: string | null = null;
+
+        if (couponCode) {
+            console.log(`Checking coupon: ${couponCode}`);
+            const promo = await prisma.promoCode.findUnique({
+                where: { code: couponCode }
+            });
+
+            if (promo) {
+                // Validation Logic
+                const now = new Date();
+                const isValid =
+                    promo.status === 'active' &&
+                    (!promo.startDate || promo.startDate <= now) &&
+                    (!promo.endDate || promo.endDate >= now) &&
+                    (!promo.usageLimit || promo.usedCount < promo.usageLimit);
+
+                if (isValid) {
+                    // Check user limit if needed
+                    if (promo.perUserLimit) {
+                        const userUsage = await prisma.promoUsage.count({
+                            where: {
+                                promoCodeId: promo.id,
+                                userId: userId
+                            }
+                        });
+                        if (userUsage >= promo.perUserLimit) {
+                            console.warn(`Coupon ${couponCode} usage limit reached for user ${userId}`);
+                            // Treat as invalid or just ignore discount?
+                            // Let's ignore discount but proceed with booking
+                        } else {
+                            // Valid
+                            appliedPromoCodeId = promo.id;
+                            appliedPromoCodeCode = promo.code;
+                        }
+                    } else {
+                        // Valid (no user limit)
+                        appliedPromoCodeId = promo.id;
+                        appliedPromoCodeCode = promo.code;
+                    }
+                } else {
+                    console.warn(`Coupon ${couponCode} is invalid or expired.`);
+                }
+            } else {
+                console.warn(`Coupon ${couponCode} not found.`);
+            }
+        }
+
+        if (appliedPromoCodeId && appliedPromoCodeCode) {
+            const promo = await prisma.promoCode.findUnique({ where: { id: appliedPromoCodeId } });
+            if (promo) {
+                if (promo.discountType === 'PERCENTAGE') {
+                    let calculatedDiscount = baseTotal * (promo.discountValue / 100);
+                    if (promo.maxDiscount && calculatedDiscount > promo.maxDiscount) {
+                        calculatedDiscount = promo.maxDiscount;
+                    }
+                    discountAmount = Math.round(calculatedDiscount);
+                } else if (promo.discountType === 'FIXED') {
+                    discountAmount = promo.discountValue;
+                }
+            }
+        }
+
+        // Subtract discount from base total BEFORE platform fee? or AFTER?
+        // Usually platform fee is on the subtotal.
+        // Let's assume Discount reduces the subtotal.
+        const discountedSubtotal = Math.max(0, baseTotal - discountAmount);
 
         // Fetch platform commission settings
         const commissionConfig = await prisma.systemConfig.findUnique({
@@ -272,9 +346,21 @@ export async function POST(request: NextRequest) {
         });
         const commissionRate = commissionConfig ? parseFloat(commissionConfig.value) / 100 : 0.05;
 
-        // Add platform fee
+        // Add platform fee (calculated on the discounted total or original? Usually original to protect platform revenue, but verified earlier flows suggested fee is added last. Let's assume fee is on discounted amount for better UX, or standard is on base. 
+        // Standard in this app seems to be fee added on top.
+        // Let's calc fee on discountedSubtotal to be nice, or baseTotal? 
+        // Using baseTotal for fee protects revenue. 
+        // Let's stick to baseTotal for fee calculation to match industry standards often, OR discountedSubtotal if we want to be generous.
+        // Let's use discountedSubtotal for now as it makes "Total" match what user sees if they expect fee to scale.
+        // Actually, earlier checkout page calc: `const total = Math.max(0, subtotal + serviceFee - discountAmount);`
+        // Setup: Subtotal + Fee - Discount.
+        // So Fee is based on Subtotal. Discount is subtracted from (Subtotal + Fee).
+
+        finalPrice = baseTotal;
         const platformFee = Math.round(finalPrice * commissionRate);
         finalPrice += platformFee;
+        finalPrice -= discountAmount;
+        finalPrice = Math.max(0, finalPrice);
 
         const bookingData = {
             clientId: userId,
@@ -296,7 +382,9 @@ export async function POST(request: NextRequest) {
         console.log('Attempting to create booking with data:', JSON.stringify({
             ...bookingData,
             clientId: userId, // Ensure we see the ID
-            scheduledAt: bookingData.scheduledAt?.toString()
+            scheduledAt: bookingData.scheduledAt?.toString(),
+            discountAmount,
+            appliedCoupon: appliedPromoCodeCode
         }, null, 2));
 
         try {
@@ -307,11 +395,34 @@ export async function POST(request: NextRequest) {
                 return NextResponse.json({ error: 'User profile not found. Please complete your profile.' }, { status: 400 });
             }
 
-            const booking = await prisma.booking.create({
-                data: bookingData
+            // Use transaction to create booking and promo usage together
+            const result = await prisma.$transaction(async (tx: any) => {
+                const booking = await tx.booking.create({
+                    data: bookingData
+                });
+
+                if (appliedPromoCodeId) {
+                    await tx.promoUsage.create({
+                        data: {
+                            promoCodeId: appliedPromoCodeId,
+                            userId: userId,
+                            orderId: booking.id,
+                            orderAmount: baseTotal, // Original amount before discount
+                            discountAmount: discountAmount
+                        }
+                    });
+
+                    await tx.promoCode.update({
+                        where: { id: appliedPromoCodeId },
+                        data: { usedCount: { increment: 1 } }
+                    });
+                }
+
+                return booking;
             });
-            console.log('Booking created successfully:', booking.id);
-            return NextResponse.json({ success: true, booking });
+
+            console.log('Booking created successfully:', result.id);
+            return NextResponse.json({ success: true, booking: result });
         } catch (dbError: any) {
             console.error('Prisma Create Error:', dbError);
             console.error('Error Code:', dbError.code);
