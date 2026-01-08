@@ -131,7 +131,10 @@ export async function PUT(
 
     // Check if it's a Job or Booking
     const isJob = await prisma.job.findUnique({ where: { id: params.id } })
-    const isBooking = !isJob && await prisma.booking.findUnique({ where: { id: params.id } })
+    let isBooking = null;
+    if (!isJob) {
+      isBooking = await prisma.booking.findUnique({ where: { id: params.id } })
+    }
 
     if (!isJob && !isBooking) {
       return NextResponse.json({ error: 'Job not found' }, { status: 404 })
@@ -139,7 +142,7 @@ export async function PUT(
 
     // OTP Verification for Starting Job
     if (status === 'started') {
-      const entity = (isJob || isBooking);
+      const entity = isJob || isBooking;
       // Only verify if entity has an OTP set. If null, maybe allow start?
       // Or strictly require OTP if it exists.
       if (entity?.otp) {

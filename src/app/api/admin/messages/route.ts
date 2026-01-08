@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
         const where = search ? {
             OR: [
                 { id: { contains: search } },
-                { lastMessage: { contains: search, mode: 'insensitive' } },
+                { lastMessage: { contains: search, mode: 'insensitive' as const } },
                 // Simple search on conversation ID or message content
             ]
         } : {};

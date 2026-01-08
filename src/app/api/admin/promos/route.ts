@@ -62,8 +62,8 @@ export async function GET(request: NextRequest) {
         totalPromos: totalPromosCount,
         activePromos: activeCount,
         totalUsage,
-        totalRevenue: totalRevenueStr._sum.orderAmount || 0,
-        totalSaved: totalRevenueStr._sum.discountAmount || 0
+        totalRevenue: totalRevenueStr._sum?.orderAmount || 0,
+        totalSaved: totalRevenueStr._sum?.discountAmount || 0
       }
     });
 

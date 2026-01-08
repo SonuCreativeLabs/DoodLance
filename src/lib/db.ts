@@ -1,24 +1,27 @@
+
+import { PrismaClient } from '@prisma/client';
+
 // Dynamic import for Prisma client to handle cases where it's not generated
-let PrismaClient: any;
+let PrismaClientClass: any;
 
 try {
   // Try to import PrismaClient using require (works better in some environments)
-  PrismaClient = require('@prisma/client').PrismaClient;
+  PrismaClientClass = require('@prisma/client').PrismaClient;
 } catch (error) {
   console.warn('⚠️ Prisma client not available, using mock mode:', error);
-  PrismaClient = null;
+  PrismaClientClass = null;
 }
 
 const globalForPrisma = globalThis as unknown as {
-  prisma: any | undefined
+  prisma: PrismaClient | undefined
 }
 
 // Try to create Prisma client, but fall back gracefully if it fails
-let prisma: any;
+let prisma: PrismaClient;
 
-if (PrismaClient) {
+if (PrismaClientClass) {
   try {
-    prisma = globalForPrisma.prisma ?? new PrismaClient({
+    prisma = globalForPrisma.prisma ?? new PrismaClientClass({
       log: ['query'],
     });
 
@@ -27,11 +30,11 @@ if (PrismaClient) {
     }
   } catch (error) {
     console.warn('⚠️ Prisma client creation failed, using mock mode:', error);
-    prisma = createMockPrismaClient();
+    prisma = createMockPrismaClient() as unknown as PrismaClient;
   }
 } else {
   console.warn('⚠️ Prisma client not available, using mock mode');
-  prisma = createMockPrismaClient();
+  prisma = createMockPrismaClient() as unknown as PrismaClient;
 }
 
 function createMockPrismaClient() {
@@ -70,6 +73,8 @@ function createMockPrismaClient() {
       delete: async () => ({}),
     },
     // Add other models as needed for the demo
+    // We add explicit any here to allow arbitrary property access in mock mode if needed,
+    // though the cast to PrismaClient makes TypeScript assume strictly typed.
   };
 }
 
@@ -95,4 +100,4 @@ export async function disconnectDB() {
   }
 }
 
-export default prisma
+export default prisma;

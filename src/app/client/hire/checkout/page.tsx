@@ -145,7 +145,7 @@ export default function CheckoutPage() {
             duration: item.duration || (item.service as any).duration,
             deliveryTime: item.service.deliveryTime
           })),
-          couponCode: state.appliedCoupon, // Pass the coupon code for backend processing
+          couponCode: state.appliedCoupon || undefined, // Pass the coupon code for backend processing
         });
 
         // Store OTP in localStorage for the freelancer side to access - REMOVED

@@ -144,12 +144,7 @@ type EditSection = 'personal' | 'contact' | 'location' | 'cricket' | 'username' 
 
 import { Skeleton } from "@/components/ui/skeleton";
 
-type PersonalInfo = {
-  fullName: string;
-  gender: string;
-  dateOfBirth: string;
-  bio: string;
-};
+
 
 // ... existing types ...
 

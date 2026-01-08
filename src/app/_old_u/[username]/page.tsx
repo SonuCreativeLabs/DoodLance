@@ -24,8 +24,8 @@ async function getFreelancerByUsername(username: string) {
         include: {
             freelancerProfile: {
                 include: {
-                    experience: true,
-                    portfolio: true,
+                    experiences: true,
+                    portfolios: true,
                     reviews: true,
                 },
             },
@@ -46,10 +46,10 @@ export async function generateMetadata({ params }: PageProps) {
 
     return {
         title: `${user.name || user.username} - ${user.freelancerProfile.title || 'Freelancer'} | DoodLance`,
-        description: user.freelancerProfile.bio || `Hire ${user.name} on DoodLance`,
+        description: user.freelancerProfile.about || `Hire ${user.name} on DoodLance`,
         openGraph: {
             title: user.name || user.username,
-            description: user.freelancerProfile.bio,
+            description: user.freelancerProfile.about,
             images: user.avatar ? [user.avatar] : [],
         },
     };
@@ -132,7 +132,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
                                             <Star className="h-5 w-5 text-yellow-400 fill-yellow-400" />
                                             <span className="font-semibold">{avgRating.toFixed(1)}</span>
                                             <span className="text-gray-400">
-                                                ({profile.totalReviews || 0} reviews)
+                                                ({profile.reviews ? profile.reviews.length : 0} reviews)
                                             </span>
                                         </div>
                                         <div className="flex items-center gap-2">
@@ -161,10 +161,10 @@ export default async function PublicProfilePage({ params }: PageProps) {
                     {/* Left Column */}
                     <div className="lg:col-span-2 space-y-8">
                         {/* About */}
-                        {profile.bio && (
+                        {profile.about && (
                             <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
                                 <h2 className="text-2xl font-bold mb-4">About</h2>
-                                <p className="text-gray-300 whitespace-pre-line">{profile.bio}</p>
+                                <p className="text-gray-300 whitespace-pre-line">{profile.about}</p>
                             </div>
                         )}
 
@@ -187,14 +187,14 @@ export default async function PublicProfilePage({ params }: PageProps) {
                         )}
 
                         {/* Experience */}
-                        {profile.experience && profile.experience.length > 0 && (
+                        {profile.experiences && profile.experiences.length > 0 && (
                             <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
                                 <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
                                     <Award className="h-6 w-6 text-purple-400" />
                                     Experience
                                 </h2>
                                 <div className="space-y-6">
-                                    {profile.experience.map((exp: any) => (
+                                    {profile.experiences.map((exp: any) => (
                                         <div key={exp.id} className="border-l-2 border-purple-500/30 pl-4">
                                             <h3 className="font-semibold text-lg">{exp.title}</h3>
                                             <p className="text-purple-400">{exp.company}</p>
@@ -212,11 +212,11 @@ export default async function PublicProfilePage({ params }: PageProps) {
                         )}
 
                         {/* Portfolio */}
-                        {profile.portfolio && profile.portfolio.length > 0 && (
+                        {profile.portfolios && profile.portfolios.length > 0 && (
                             <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
                                 <h2 className="text-2xl font-bold mb-6">Portfolio</h2>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {profile.portfolio.map((item: any) => (
+                                    {profile.portfolios.map((item: any) => (
                                         <div
                                             key={item.id}
                                             className="bg-white/5 rounded-lg overflow-hidden border border-white/10 hover:border-purple-500/30 transition-colors"
@@ -292,15 +292,15 @@ export default async function PublicProfilePage({ params }: PageProps) {
                                 </div>
                                 <div>
                                     <p className="text-sm text-gray-400">Response Time</p>
-                                    <p className="font-semibold">{profile.responseTime || 'N/A'}</p>
+                                    <p className="font-semibold">{profile.deliveryTime || 'N/A'}</p>
                                 </div>
                                 <div>
                                     <p className="text-sm text-gray-400">Availability</p>
                                     <p className="font-semibold">
-                                        {profile.isAvailable ? (
+                                        {profile.availability === 'Available' ? (
                                             <span className="text-green-400">Available Now</span>
                                         ) : (
-                                            <span className="text-gray-400">Not Available</span>
+                                            <span className="text-gray-400">{profile.availability || 'Not Available'}</span>
                                         )}
                                     </p>
                                 </div>

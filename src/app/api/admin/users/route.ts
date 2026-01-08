@@ -302,18 +302,22 @@ export async function POST(request: NextRequest) {
           data: {
             userId: newUser.id,
             title: 'New Freelancer',
-            bio: 'No bio yet',
-            experience: '0 years',
+            about: 'No bio yet',
+            // experience: '0 years', // Removed as it is not in schema
             availability: 'Available',
             hourlyRate: 0,
+            skills: '',
+            specializations: '',
+            coords: '0,0'
           }
         });
       } else if (role === 'client') {
         await prisma.clientProfile.create({
           data: {
             userId: newUser.id,
-            companyName: 'N/A',
+            company: 'N/A',
             industry: 'N/A',
+            preferredSkills: ''
           }
         });
       }

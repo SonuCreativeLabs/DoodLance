@@ -1,5 +1,5 @@
+import { PrismaClient } from '@prisma/client';
 
-const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 async function main() {
@@ -25,7 +25,7 @@ async function main() {
         where: { status: 'PENDING' }
     });
     const pendingLowerCount = await prisma.booking.count({
-        where: { status: 'pending' }
+        where: { status: 'pending' } // This might error if enum is strict, but prisma usually handles it or errors. We'll see.
     });
 
     console.log(`Count exact 'PENDING': ${pendingCount}`);

@@ -36,10 +36,10 @@ export async function generateMetadata({ params }: PageProps) {
 
     return {
         title: `${user.name || user.username} - ${user.freelancerProfile.title || 'Freelancer'} | DoodLance`,
-        description: user.freelancerProfile.bio || `Hire ${user.name} on DoodLance`,
+        description: user.freelancerProfile.about || `Hire ${user.name} on DoodLance`,
         openGraph: {
             title: user.name || user.username,
-            description: user.freelancerProfile.bio,
+            description: user.freelancerProfile.about,
             images: user.avatar ? [user.avatar] : [],
         },
     };
