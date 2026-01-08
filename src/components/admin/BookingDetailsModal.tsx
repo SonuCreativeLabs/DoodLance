@@ -158,7 +158,7 @@ export function BookingDetailsModal({ booking, open, onClose, onStatusChange }: 
               <h3 className="text-sm font-medium text-gray-400 mb-3">Progress</h3>
               <Progress value={booking.progress} className="mb-2" />
               <p className="text-sm text-gray-400">{booking.progress}% Complete</p>
-              
+
               {booking.milestones && (
                 <div className="mt-4 space-y-2">
                   {booking.milestones.map((milestone: any, index: number) => (
@@ -192,7 +192,7 @@ export function BookingDetailsModal({ booking, open, onClose, onStatusChange }: 
               <h3 className="text-sm font-medium text-red-400 mb-3">Dispute Details</h3>
               <p className="text-sm text-white mb-2">{booking.disputeReason}</p>
               <p className="text-xs text-gray-400">Raised at: {booking.disputeRaisedAt}</p>
-              
+
               <div className="mt-4 space-y-2">
                 <Label className="text-gray-300">Resolution Notes</Label>
                 <Textarea
@@ -239,7 +239,7 @@ export function BookingDetailsModal({ booking, open, onClose, onStatusChange }: 
                   <SelectItem value="REFUNDED">Refunded</SelectItem>
                 </SelectContent>
               </Select>
-              <Button 
+              <Button
                 onClick={handleStatusUpdate}
                 className="bg-purple-600 hover:bg-purple-700"
               >
@@ -249,12 +249,30 @@ export function BookingDetailsModal({ booking, open, onClose, onStatusChange }: 
           </Card>
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Close</Button>
-          <Button className="bg-purple-600 hover:bg-purple-700">
-            <MessageSquare className="w-4 h-4 mr-2" />
-            Contact Parties
-          </Button>
+        <DialogFooter className="flex-col sm:flex-row gap-2">
+          <Button variant="outline" onClick={onClose} className="w-full sm:w-auto">Close</Button>
+
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            {booking.clientPhone && booking.clientPhone !== 'N/A' && (
+              <Button
+                className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto"
+                onClick={() => window.location.href = `tel:${booking.clientPhone}`}
+              >
+                <Phone className="w-4 h-4 mr-2" />
+                Call Client
+              </Button>
+            )}
+
+            {booking.freelancerPhone && booking.freelancerPhone !== 'N/A' && (
+              <Button
+                className="bg-green-600 hover:bg-green-700 w-full sm:w-auto"
+                onClick={() => window.location.href = `tel:${booking.freelancerPhone}`}
+              >
+                <Phone className="w-4 h-4 mr-2" />
+                Call Freelancer
+              </Button>
+            )}
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

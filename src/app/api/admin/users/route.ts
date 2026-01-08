@@ -242,3 +242,106 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to fetch users', details: error instanceof Error ? error.message : String(error) }, { status: 500 });
   }
 }
+
+import { createAdminClient } from '@/lib/supabase/admin';
+
+// Create a new user
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { name, email, password, role } = body;
+
+    if (!name || !email || !password || !role) {
+      return NextResponse.json(
+        { error: 'Missing required fields' },
+        { status: 400 }
+      );
+    }
+
+    // 1. Create in Supabase Auth
+    const supabase = createAdminClient();
+    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: { name, role }
+    });
+
+    if (authError) {
+      console.error('Supabase Auth error:', authError);
+      return NextResponse.json(
+        { error: authError.message },
+        { status: 400 }
+      );
+    }
+
+    if (!authData.user) {
+      return NextResponse.json(
+        { error: 'Failed to create user in Auth' },
+        { status: 500 }
+      );
+    }
+
+    // 2. Create in Prisma DB
+    try {
+      const newUser = await prisma.user.create({
+        data: {
+          id: authData.user.id,
+          email: authData.user.email!,
+          name,
+          role,
+          status: 'active',
+          isVerified: true,
+          coords: '0,0', // Default
+        }
+      });
+
+      // 3. Create Profile based on role
+      if (role === 'freelancer') {
+        await prisma.freelancerProfile.create({
+          data: {
+            userId: newUser.id,
+            title: 'New Freelancer',
+            bio: 'No bio yet',
+            experience: '0 years',
+            availability: 'Available',
+            hourlyRate: 0,
+          }
+        });
+      } else if (role === 'client') {
+        await prisma.clientProfile.create({
+          data: {
+            userId: newUser.id,
+            companyName: 'N/A',
+            industry: 'N/A',
+          }
+        });
+      }
+
+      return NextResponse.json({
+        success: true,
+        user: newUser,
+        message: 'User created successfully'
+      });
+
+    } catch (dbError) {
+      // Rollback Auth if DB fails? 
+      // Ideally yes, but for now just report error. Manual cleanup might be needed.
+      console.error('Database creation error:', dbError);
+      // Try to delete auth user to keep sync
+      await supabase.auth.admin.deleteUser(authData.user.id);
+
+      return NextResponse.json(
+        { error: 'Failed to create user record in database' },
+        { status: 500 }
+      );
+    }
+
+  } catch (error) {
+    console.error('Create user error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}

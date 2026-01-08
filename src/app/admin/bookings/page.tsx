@@ -74,10 +74,12 @@ export default function BookingManagementPage() {
 
   // Stats state
   const [stats, setStats] = useState({
-    total: 0,
+    totalBookings: 0,
     pending: 0,
+    confirmed: 0,
     inProgress: 0,
     completed: 0,
+    cancelled: 0,
     disputed: 0,
     totalRevenue: 0,
     platformEarnings: 0,
@@ -120,8 +122,52 @@ export default function BookingManagementPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus })
       });
-      if (res.ok) fetchBookings();
+      if (res.ok) {
+        await fetchBookings(); // Refresh list to get new stats and data
+        // Update selectedBooking if it's open, so modal reflects new status immediately
+        if (selectedBooking && selectedBooking.id === bookingId) {
+          setSelectedBooking((prev: any) => ({ ...prev, status: newStatus }));
+        }
+      }
     } catch (e) { console.error(e); }
+  };
+
+  const handleExport = () => {
+    // Define headers
+    const headers = [
+      'Booking ID', 'Service', 'Client', 'Freelancer', 'Status',
+      'Total Price', 'Platform Fee', 'Scheduled At', 'Created At'
+    ];
+
+    // Convert bookings to CSV rows
+    const rows = bookings.map(b => [
+      b.id,
+      `"${b.serviceTitle}"`,
+      `"${b.clientName}"`,
+      `"${b.freelancerName}"`,
+      b.status,
+      b.totalPrice,
+      b.platformFee,
+      b.scheduledAt,
+      b.createdAt
+    ]);
+
+    // Combine headers and rows
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.join(','))
+    ].join('\n');
+
+    // Create blob and download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `bookings_export_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
@@ -133,35 +179,29 @@ export default function BookingManagementPage() {
           <p className="text-gray-400 mt-1 text-sm sm:text-base">Monitor and manage all platform bookings</p>
         </div>
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-          <Button variant="outline" className="text-gray-300 w-full sm:w-auto">
+          <Button
+            variant="outline"
+            className="text-gray-300 w-full sm:w-auto"
+            onClick={handleExport}
+            disabled={bookings.length === 0}
+          >
             <Download className="w-4 h-4 mr-2" />
             Export
           </Button>
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Stats Overview */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Card className="bg-[#1a1a1a] border-gray-800 p-4">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-400">Total Bookings</p>
               {loading ? <Skeleton className="h-8 w-16 bg-gray-800" /> : (
-                <p className="text-2xl font-bold text-white">{stats.total}</p>
+                <p className="text-2xl font-bold text-white">{stats.totalBookings}</p>
               )}
             </div>
             <Calendar className="w-8 h-8 text-blue-500" />
-          </div>
-        </Card>
-        <Card className="bg-[#1a1a1a] border-gray-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-400">In Progress</p>
-              {loading ? <Skeleton className="h-8 w-16 bg-gray-800" /> : (
-                <p className="text-2xl font-bold text-white">{stats.inProgress}</p>
-              )}
-            </div>
-            <TrendingUp className="w-8 h-8 text-purple-500" />
           </div>
         </Card>
         <Card className="bg-[#1a1a1a] border-gray-800 p-4">
@@ -175,15 +215,52 @@ export default function BookingManagementPage() {
             <DollarSign className="w-8 h-8 text-green-500" />
           </div>
         </Card>
+      </div>
+
+      {/* Status Breakdown */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="bg-[#1a1a1a] border-gray-800 p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-400">Disputes</p>
+              <p className="text-sm text-gray-400">Completed</p>
               {loading ? <Skeleton className="h-8 w-16 bg-gray-800" /> : (
-                <p className="text-2xl font-bold text-white">{stats.disputed}</p>
+                <p className="text-xl font-bold text-white">{stats.completed}</p>
               )}
             </div>
-            <AlertTriangle className="w-8 h-8 text-red-500" />
+            <CheckCircle className="w-6 h-6 text-green-500" />
+          </div>
+        </Card>
+        <Card className="bg-[#1a1a1a] border-gray-800 p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-400">Upcoming</p>
+              {loading ? <Skeleton className="h-8 w-16 bg-gray-800" /> : (
+                <p className="text-xl font-bold text-white">{stats.confirmed}</p>
+              )}
+            </div>
+            <Clock className="w-6 h-6 text-blue-500" />
+          </div>
+        </Card>
+        <Card className="bg-[#1a1a1a] border-gray-800 p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-400">Ongoing</p>
+              {loading ? <Skeleton className="h-8 w-16 bg-gray-800" /> : (
+                <p className="text-xl font-bold text-white">{stats.inProgress}</p>
+              )}
+            </div>
+            <TrendingUp className="w-6 h-6 text-purple-500" />
+          </div>
+        </Card>
+        <Card className="bg-[#1a1a1a] border-gray-800 p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-400">Cancelled</p>
+              {loading ? <Skeleton className="h-8 w-16 bg-gray-800" /> : (
+                <p className="text-xl font-bold text-white">{stats.cancelled}</p>
+              )}
+            </div>
+            <XCircle className="w-6 h-6 text-red-500" />
           </div>
         </Card>
       </div>

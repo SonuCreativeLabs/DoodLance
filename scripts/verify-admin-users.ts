@@ -27,8 +27,10 @@ async function verifyAdminUsers() {
         }
 
         console.log('--- Admin Users API Verification ---');
-        console.log('1. Stats:');
+
+        console.log(`\n1. Stats:`);
         console.table(data.stats);
+        console.log('Total Users in DB:', data.total);
 
         console.log('\n2. Users (First 3):');
         if (data.users && data.users.length > 0) {
