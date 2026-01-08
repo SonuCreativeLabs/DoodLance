@@ -266,8 +266,14 @@ export async function POST(request: NextRequest) {
             finalPrice = service.price;
         }
 
-        // Add 5% platform fee
-        const platformFee = Math.round(finalPrice * 0.05);
+        // Fetch platform commission settings
+        const commissionConfig = await prisma.systemConfig.findUnique({
+            where: { key: 'clientCommission' }
+        });
+        const commissionRate = commissionConfig ? parseFloat(commissionConfig.value) / 100 : 0.05;
+
+        // Add platform fee
+        const platformFee = Math.round(finalPrice * commissionRate);
         finalPrice += platformFee;
 
         const bookingData = {

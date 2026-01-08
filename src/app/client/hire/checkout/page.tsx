@@ -43,13 +43,26 @@ export default function CheckoutPage() {
     };
   }, [setNavbarVisibility]);
 
+  const [commissionRate, setCommissionRate] = useState(0.05);
+
+  useEffect(() => {
+    fetch('/api/public-config')
+      .then(res => res.json())
+      .then(data => {
+        if (data.clientCommission) {
+          setCommissionRate(Number(data.clientCommission) / 100);
+        }
+      })
+      .catch(err => console.error('Failed to load config', err));
+  }, []);
+
   const subtotal = state.cartItems.reduce((total, item) => {
     const price = typeof item.service.price === 'string'
       ? parseFloat(item.service.price.replace(/[^\d.]/g, ''))
       : item.service.price;
     return total + (price * (item.quantity || 1));
   }, 0);
-  const serviceFee = Math.round(subtotal * 0.05); // 5% platform fee
+  const serviceFee = Math.round(subtotal * commissionRate); // Dynamic platform fee
   const discount = appliedCoupon ? Math.round(subtotal * 0.1) : 0; // 10% discount for demo
   const total = subtotal + serviceFee - discount;
 
@@ -244,7 +257,7 @@ export default function CheckoutPage() {
                   <span className="text-white">₹{subtotal.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-white/70">Platform Fee (5%)</span>
+                  <span className="text-white/70">Platform Fee ({(commissionRate * 100).toFixed(0)}%)</span>
                   <span className="text-white">₹{serviceFee.toLocaleString()}</span>
                 </div>
                 {appliedCoupon && (

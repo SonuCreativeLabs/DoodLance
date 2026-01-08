@@ -88,6 +88,18 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
   const [isClientProfileExpanded, setIsClientProfileExpanded] = useState(false);
   const [showFreelancerRating, setShowFreelancerRating] = useState(false);
   const [showClientRating, setShowClientRating] = useState(false);
+  const [commissionRate, setCommissionRate] = useState(0.25);
+
+  useEffect(() => {
+    fetch('/api/public-config')
+      .then(res => res.json())
+      .then(data => {
+        if (data.freelancerCommission) {
+          setCommissionRate(Number(data.freelancerCommission) / 100);
+        }
+      })
+      .catch(err => console.error('Failed to load config', err));
+  }, []);
 
   // Success message states
   const [successMessage, setSuccessMessage] = useState<{
@@ -592,7 +604,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
           <div className="mt-2 mb-2">
             {/* Calculate earnings preview for the job */}
             {(() => {
-              const earningsPreview = calculateJobEarnings(job);
+              const earningsPreview = calculateJobEarnings(job, commissionRate);
 
               return (
                 <>
@@ -788,7 +800,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                                   <div className="absolute z-50 bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-[#111111] border border-gray-600 rounded-lg shadow-xl hidden tooltip-container"
                                     style={{ left: '50%', transform: 'translateX(-50%)' }}>
                                     <div className="text-xs text-gray-300 leading-relaxed text-center whitespace-nowrap">
-                                      Service charge deducted by<br />DoodLance platform (25% of earnings)
+                                      Service charge deducted by<br />DoodLance platform ({(commissionRate * 100).toFixed(0)}% of earnings)
                                     </div>
                                     <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-2 h-2 bg-[#111111] border-r border-b border-gray-600 rotate-45 tooltip-arrow"></div>
                                   </div>
