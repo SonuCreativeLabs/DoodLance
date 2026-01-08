@@ -12,13 +12,13 @@ export async function GET(request: NextRequest) {
         const search = searchParams.get('search') || '';
         const status = searchParams.get('status') || 'all';
 
-        const skip = (page - 1) * limit;
+        // 1. Base Filters
         const where: any = {};
 
-        // We focus on Freelancers for now as they are the primary targets for KYC
-        // But we can also include Clients if they have verification docs
+        // Always require docs to be present to be considered a "Request"
+        where.verificationDocs = { not: null };
 
-        // Search logic needs to search on related User model
+        // Search logic
         if (search) {
             where.user = {
                 OR: [
@@ -28,87 +28,140 @@ export async function GET(request: NextRequest) {
             };
         }
 
-        // Status logic
-        if (status === 'verified') {
-            where.isVerified = true;
-        } else if (status === 'pending') {
-            where.isVerified = false;
-            where.verificationDocs = { not: null }; // Only those who submitted docs
-        } else if (status === 'rejected') {
-            // We don't have a specific 'rejected' status column, 
-            // usually rejection assumes clearing docs or setting a flag.
-            // For now, we'll skip 'rejected' or assume validation fails lead to null docs?
-            // Let's rely on 'pending' and 'verified' mostly.
+        // 2. Fetch ALL matching docs (lightweight) to calculate real stats & precise pagination
+        // Since we can't query inside the JSON string easily for 'rejected', we have to fetch-and-filter
+        const allCandidates = await prisma.freelancerProfile.findMany({
+            where,
+            select: {
+                id: true,
+                isVerified: true,
+                verificationDocs: true,
+                updatedAt: true
+            },
+            orderBy: { updatedAt: 'desc' }
+        });
+
+        // 3. Process & Categorize
+        const processed = allCandidates.map((p: any) => {
+            let kycStatus = 'pending';
+            if (p.isVerified) {
+                kycStatus = 'verified';
+            } else {
+                try {
+                    const docs = JSON.parse(p.verificationDocs || '{}');
+                    if (docs.kycStatus === 'rejected') {
+                        kycStatus = 'rejected';
+                    }
+                } catch (e) { /* default pending */ }
+            }
+            return { ...p, kycStatus };
+        });
+
+        // 4. Calculate Stats
+        const stats = {
+            total: processed.length,
+            verified: processed.filter((p: any) => p.kycStatus === 'verified').length,
+            pending: processed.filter((p: any) => p.kycStatus === 'pending').length,
+            rejected: processed.filter((p: any) => p.kycStatus === 'rejected').length
+        };
+
+        // 5. Apply Status Filter (Page-level)
+        let filtered = processed;
+        if (status !== 'all') {
+            filtered = processed.filter((p: any) => p.kycStatus === status);
         }
 
-        // If status is 'all', we probably want validation requests (docs not null)
-        if (status === 'all') {
-            where.verificationDocs = { not: null };
-        }
+        const totalFiltered = filtered.length;
+        const totalPages = Math.ceil(totalFiltered / limit);
 
-        const [profiles, total] = await Promise.all([
-            prisma.freelancerProfile.findMany({
-                where,
-                skip,
-                take: limit,
-                orderBy: { updatedAt: 'desc' },
-                include: {
-                    user: {
-                        select: {
-                            id: true,
-                            name: true,
-                            email: true,
-                            role: true,
-                        }
+        // 6. Pagination Slice
+        const startIndex = (page - 1) * limit;
+        const pageItems = filtered.slice(startIndex, startIndex + limit);
+
+        // 7. Hydrate Full Data for Page Items
+        // We only have minimal data in pageItems, need to fetch full details including User
+        const pageIds = pageItems.map((p: any) => p.id);
+
+        const fullProfiles = await prisma.freelancerProfile.findMany({
+            where: { id: { in: pageIds } },
+            include: {
+                user: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        role: true,
                     }
                 }
-            }),
-            prisma.freelancerProfile.count({ where })
-        ]);
+            }
+        });
 
-        // Map to KYC format
-        const kycRequests = profiles.map((p: any) => {
+        // Sort back to match 'pageItems' order (desc updatedAt)
+        const sortedProfiles = pageIds.map((id: string) => fullProfiles.find((p: any) => p.id === id)!);
+
+        // 8. Map to Response Format
+        const kycRequests = sortedProfiles.map((p: any) => {
             let docs = {};
+            let isRejected = false;
+            let rejectionReason = '';
             try {
                 docs = p.verificationDocs ? JSON.parse(p.verificationDocs) : {};
+                // @ts-ignore
+                if (docs.kycStatus === 'rejected') {
+                    isRejected = true;
+                    // @ts-ignore
+                    rejectionReason = docs.rejectionReason;
+                }
             } catch (e) {
                 docs = { raw: p.verificationDocs };
             }
 
-            // Normalize docs structure for frontend
-            // Expecting object with keys like idProof, addressProof etc.
-            // If docs is just an array or string, map it to a generic 'Document'
+            // Determine final status display
+            const finalStatus = p.isVerified ? 'verified' : (isRejected ? 'rejected' : 'pending');
+
+            // Normalize docs for UI
             if (typeof docs !== 'object' || Array.isArray(docs)) {
-                docs = { document: { type: 'Upload', file: docs, status: p.isVerified ? 'verified' : 'pending' } };
+                // @ts-ignore
+                docs = { document: { type: 'Upload', file: docs, status: finalStatus } };
             } else {
-                // Add status to each doc if missing
+                // Handle Object structure: convert plain strings to objects and filter metadata
+                const newDocs: any = {};
                 Object.keys(docs).forEach(key => {
-                    if (docs[key] && !docs[key].status) {
-                        docs[key] = { ...docs[key], status: p.isVerified ? 'verified' : 'pending' };
+                    // Skip metadata keys
+                    if (['kycStatus', 'rejectionReason', 'rejectedAt'].includes(key)) return;
+
+                    // @ts-ignore
+                    const val = docs[key];
+                    if (typeof val === 'string') {
+                        newDocs[key] = { type: key, file: val, status: finalStatus };
+                    } else if (typeof val === 'object' && val !== null) {
+                        newDocs[key] = { ...val, status: val.status || finalStatus };
                     }
                 });
+                docs = newDocs;
             }
 
             return {
-                id: p.id, // Profile ID as Request ID
+                id: p.id,
                 userId: p.userId,
                 userName: p.user.name || 'Unknown',
                 userEmail: p.user.email,
                 userRole: p.user.role,
                 documents: docs,
-                status: p.isVerified ? 'verified' : 'pending',
-                submittedAt: p.updatedAt.toLocaleString(), // Using update time as submission time
+                status: finalStatus,
+                submittedAt: p.updatedAt.toLocaleString(),
                 verifiedAt: p.verifiedAt ? p.verifiedAt.toLocaleString() : null,
                 verifiedBy: p.isVerified ? 'Admin' : null,
-                notes: p.isVerified ? 'Verified' : 'Pending Review'
+                notes: isRejected ? rejectionReason : (p.isVerified ? 'Verified' : 'Pending Review')
             };
         });
 
         return NextResponse.json({
             requests: kycRequests,
-            total,
+            stats, // Return calculated real stats
+            total: totalFiltered,
             page,
-            totalPages: Math.ceil(total / limit)
+            totalPages
         });
 
     } catch (error) {

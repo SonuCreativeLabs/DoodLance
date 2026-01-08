@@ -41,11 +41,35 @@ export async function PATCH(
 
             return NextResponse.json(updatedProfile);
         } else if (action === 'reject') {
+            // Fetch current docs first to preserve them avoiding data loss
+            const currentProfile = await prisma.freelancerProfile.findUnique({
+                where: { id: profileId },
+                select: { verificationDocs: true }
+            });
+
+            let currentDocs = {};
+            try {
+                if (currentProfile?.verificationDocs) {
+                    currentDocs = JSON.parse(currentProfile.verificationDocs);
+                }
+            } catch (e) {
+                // If it was a raw string? wrap it
+                currentDocs = { raw: currentProfile?.verificationDocs };
+            }
+
+            // Mark as rejected in the JSON blob
+            const updatedDocs = {
+                ...currentDocs,
+                kycStatus: 'rejected',
+                rejectionReason: notes,
+                rejectedAt: new Date().toISOString()
+            };
+
             const updatedProfile = await prisma.freelancerProfile.update({
                 where: { id: profileId },
                 data: {
                     isVerified: false,
-                    verificationDocs: null,
+                    verificationDocs: JSON.stringify(updatedDocs),
                     user: {
                         update: {
                             isVerified: false
