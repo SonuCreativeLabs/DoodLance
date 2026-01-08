@@ -44,13 +44,14 @@ interface EditServiceModalProps {
   open: boolean;
   onClose: () => void;
   onSave: (serviceId: string, data: any) => Promise<void>;
+  categories: any[];
 }
 
-function EditServiceModal({ service, open, onClose, onSave }: EditServiceModalProps) {
+function EditServiceModal({ service, open, onClose, onSave, categories }: EditServiceModalProps) {
   const [formData, setFormData] = useState({
     title: '',
     price: '',
-    category: '',
+    categoryId: '',
     description: '',
     deliveryTime: ''
   });
@@ -61,7 +62,7 @@ function EditServiceModal({ service, open, onClose, onSave }: EditServiceModalPr
       setFormData({
         title: service.title || '',
         price: service.price ? service.price.toString() : '',
-        category: service.category || '',
+        categoryId: service.categoryId || '',
         description: service.description || '',
         deliveryTime: service.deliveryTime || ''
       });
@@ -126,11 +127,21 @@ function EditServiceModal({ service, open, onClose, onSave }: EditServiceModalPr
           </div>
           <div className="space-y-2">
             <Label className="text-gray-300">Category</Label>
-            <Input
-              value={formData.category}
-              onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-              className="bg-[#2a2a2a] border-gray-700 text-white"
-            />
+            <Select
+              value={formData.categoryId}
+              onValueChange={(val) => setFormData({ ...formData, categoryId: val })}
+            >
+              <SelectTrigger className="bg-[#2a2a2a] border-gray-700 text-white">
+                <SelectValue placeholder="Select Category" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((cat) => (
+                  <SelectItem key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-2">
             <Label className="text-gray-300">Description</Label>
@@ -218,8 +229,23 @@ export default function ServiceManagementPage() {
     }
   };
 
+  const [categories, setCategories] = useState<any[]>([]);
+
+  const fetchCategories = async () => {
+    try {
+      const res = await fetch('/api/categories');
+      // Assuming a public categories endpoint exists, if not we might need /api/admin/categories
+      // Checking existing codebase, usually /api/categories is used for dropdowns.
+      if (res.ok) {
+        const data = await res.json();
+        setCategories(data);
+      }
+    } catch (e) { console.error(e); }
+  };
+
   useEffect(() => {
     fetchServices();
+    fetchCategories();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, debouncedSearch, categoryFilter, activeFilter]);
 
@@ -326,7 +352,7 @@ export default function ServiceManagementPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-400">Revenue</p>
-              <p className="text-2xl font-bold text-white">₹{(stats.totalRevenue / 1000).toFixed(0)}k</p>
+              <p className="text-2xl font-bold text-white">₹{stats.totalRevenue.toLocaleString()}</p>
             </div>
             <DollarSign className="w-8 h-8 text-purple-500" />
           </div>
@@ -404,13 +430,12 @@ export default function ServiceManagementPage() {
                 <th className="p-4 text-sm font-medium text-gray-400">Price</th>
                 <th className="p-4 text-sm font-medium text-gray-400">Status</th>
                 <th className="p-4 text-sm font-medium text-gray-400">Performance</th>
-                <th className="p-4 text-sm font-medium text-gray-400">Location</th>
                 <th className="p-4 text-sm font-medium text-gray-400">Actions</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={8} className="p-4 text-center text-gray-400">Loading...</td></tr>
+                <tr><td colSpan={7} className="p-4 text-center text-gray-400">Loading...</td></tr>
               ) : services.map((service, index) => (
                 <motion.tr
                   key={service.id}
@@ -465,12 +490,7 @@ export default function ServiceManagementPage() {
                       <p className="text-xs text-gray-400">{service.totalOrders} orders</p>
                     </div>
                   </td>
-                  <td className="p-4">
-                    <div className="flex items-center gap-1">
-                      <MapPin className="w-3 h-3 text-gray-400" />
-                      <span className="text-sm text-white">{service.location}</span>
-                    </div>
-                  </td>
+
                   <td className="p-4">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -572,6 +592,7 @@ export default function ServiceManagementPage() {
           setServiceToEdit(null);
         }}
         onSave={handleUpdateService}
+        categories={categories}
       />
     </div>
   );

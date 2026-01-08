@@ -94,9 +94,11 @@ export async function GET(request: NextRequest) {
             return acc;
         }, {} as Record<string, number>);
 
+        const globalTotal = Object.values(statusCounts).reduce((a: any, b: any) => a + b, 0);
+
         const stats = {
-            totalJobs: total,
-            activeJobs: statusCounts['OPEN'] || 0, // 'OPEN' is likely the active status in DB
+            totalJobs: globalTotal, // Global total from status counts
+            activeJobs: statusCounts['OPEN'] || 0,
             totalApplications: totalApplications,
             avgBudget: statsBudget._avg.budget || 0
         };

@@ -242,6 +242,31 @@ export default function TransactionManagementPage() {
     } catch (e) { console.error(e); }
   };
 
+  const handleExport = () => {
+    const csvContent = [
+      ['Date', 'Transaction ID', 'User', 'Type', 'Amount', 'Status', 'Payment Method'],
+      ...transactions.map(t => [
+        t.createdAt,
+        t.id,
+        t.userName,
+        t.type,
+        t.amount,
+        t.status,
+        t.paymentMethod
+      ])
+    ].map(e => e.join(',')).join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'transactions_report.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -255,7 +280,7 @@ export default function TransactionManagementPage() {
             <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
-          <Button variant="outline" className="text-gray-300 w-full sm:w-auto">
+          <Button variant="outline" className="text-gray-300 w-full sm:w-auto" onClick={handleExport}>
             <Download className="w-4 h-4 mr-2" />
             Export Report
           </Button>

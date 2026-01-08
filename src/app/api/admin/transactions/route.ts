@@ -77,13 +77,9 @@ export async function GET(request: NextRequest) {
       prisma.transaction.count({ where }),
       // Calculate aggregations
       prisma.$transaction([
-        prisma.transaction.aggregate({
-          _sum: { amount: true },
-          where: { type: 'EARNING' }
-        }),
-        prisma.transaction.aggregate({
-          _sum: { amount: true },
-          where: { type: 'PLATFORM_FEE' }
+        prisma.booking.aggregate({
+          where: { status: 'COMPLETED' },
+          _sum: { totalPrice: true }
         }),
         prisma.transaction.aggregate({
           _sum: { amount: true },
@@ -106,18 +102,18 @@ export async function GET(request: NextRequest) {
       const nextMonth = new Date(date);
       nextMonth.setMonth(nextMonth.getMonth() + 1);
 
-      const monthStats = await prisma.transaction.aggregate({
+      const monthStats = await prisma.booking.aggregate({
         where: {
-          type: 'EARNING',
+          status: 'COMPLETED',
           createdAt: { gte: date, lt: nextMonth }
         },
-        _sum: { amount: true },
+        _sum: { totalPrice: true },
         _count: { id: true }
       });
 
       revenueChartData.push({
         date: date.toLocaleDateString('en-US', { month: 'short' }),
-        revenue: monthStats._sum.amount || 0,
+        revenue: monthStats._sum.totalPrice || 0,
         transactions: monthStats._count.id || 0
       });
     }
@@ -147,10 +143,10 @@ export async function GET(request: NextRequest) {
         limit
       },
       stats: {
-        totalVolume: stats[0]._sum.amount || 0,
-        platformFees: stats[1]._sum.amount || 0,
-        pendingWithdrawals: stats[2]._sum.amount || 0,
-        failedTransactions: stats[3]
+        totalVolume: stats[0]._sum.totalPrice || 0,
+        platformFees: (stats[0]._sum.totalPrice || 0) * 0.30, // 30% platform fee assumption
+        pendingWithdrawals: stats[1]._sum.amount || 0,
+        failedTransactions: stats[2]
       },
       revenueChartData
     });

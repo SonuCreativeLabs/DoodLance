@@ -169,6 +169,52 @@ export default function JobsPage() {
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
+  const handleExport = () => {
+    // Define headers
+    const headers = [
+      'Job ID', 'Title', 'Client', 'Category', 'Budget', 'Status',
+      'Applications', 'Posted Date', 'Deadline', 'Location'
+    ];
+
+    // Convert jobs to CSV rows
+    const rows = jobs.map(j => [
+      j.id,
+      `"${j.title}"`,
+      `"${j.client}"`,
+      `"${j.category}"`,
+      j.budget,
+      j.status,
+      j.applications,
+      j.postedDate,
+      j.deadline,
+      `"${j.location}"`
+    ]);
+
+    // Combine headers and rows
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.join(','))
+    ].join('\n');
+
+    // Create blob and download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `jobs_export_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const [stats, setStats] = useState({
+    totalJobs: 0,
+    activeJobs: 0,
+    totalApplications: 0,
+    avgBudget: 0
+  });
+
   const fetchJobs = async () => {
     setLoading(true);
     try {
@@ -184,6 +230,9 @@ export default function JobsPage() {
         const data = await res.json();
         setJobs(data.jobs);
         setTotalPages(data.totalPages);
+        if (data.stats) {
+          setStats(data.stats);
+        }
       }
     } catch (error) {
       console.error('Error fetching jobs:', error);
@@ -217,13 +266,6 @@ export default function JobsPage() {
     }
   };
 
-  const stats = {
-    totalJobs: jobs.length,
-    activeJobs: jobs.filter(j => j.status === 'active').length,
-    totalApplications: jobs.reduce((sum, j) => sum + (j.applications || 0), 0),
-    avgBudget: jobs.length > 0 ? Math.round(jobs.reduce((sum, j) => sum + (j.budget || 0), 0) / jobs.length) : 0
-  };
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -233,7 +275,12 @@ export default function JobsPage() {
           <p className="text-gray-400 mt-1 text-sm sm:text-base">Manage job postings and applications</p>
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
-          <Button variant="outline" className="text-gray-300 w-full sm:w-auto">
+          <Button
+            variant="outline"
+            className="text-gray-300 w-full sm:w-auto"
+            onClick={handleExport}
+            disabled={jobs.length === 0}
+          >
             <Download className="w-4 h-4 mr-2" />
             Export
           </Button>

@@ -25,6 +25,8 @@ export async function GET(request: NextRequest) {
     const category = searchParams.get('category') || 'all';
     const active = searchParams.get('active') || 'all';
 
+    console.log('API Params:', { page, limit, search, category, active });
+
     const skip = (page - 1) * limit;
     const where: any = {};
 
@@ -76,6 +78,17 @@ export async function GET(request: NextRequest) {
       prisma.service.count({ where })
     ]);
 
+    // Helper for safe JSON parsing
+    const safeParse = (str: string | null, fallback: any) => {
+      if (!str) return fallback;
+      try {
+        return JSON.parse(str);
+      } catch (e) {
+        console.warn('JSON parse error for string:', str);
+        return fallback;
+      }
+    };
+
     // Map to frontend format
     const mappedServices = services.map((s: any) => ({
       id: s.id,
@@ -90,14 +103,14 @@ export async function GET(request: NextRequest) {
       providerId: s.providerId,
       providerRating: s.provider?.freelancerProfile?.rating || 0,
       providerVerified: s.provider?.isVerified || false,
-      status: s.isActive ? 'approved' : 'pending', // Mapped status
+      status: s.isActive ? 'approved' : 'pending',
       isActive: s.isActive,
       rating: s.rating,
       reviewCount: s.reviewCount,
       totalOrders: s.totalOrders,
-      packages: s.packages ? JSON.parse(s.packages) : null,
-      images: s.images ? JSON.parse(s.images) : [],
-      tags: s.tags ? JSON.parse(s.tags) : [],
+      packages: safeParse(s.packages, null),
+      images: safeParse(s.images, []),
+      tags: safeParse(s.tags, []),
       createdAt: s.createdAt.toISOString(),
       updatedAt: s.updatedAt.toISOString()
     }));
@@ -134,7 +147,7 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('Fetch services error:', error);
-    return NextResponse.json({ error: 'Failed to fetch services' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to fetch services', details: (error as Error).message }, { status: 500 });
   }
 }
 
