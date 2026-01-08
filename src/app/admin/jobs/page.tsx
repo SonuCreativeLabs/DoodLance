@@ -5,6 +5,16 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import {
   Select,
   SelectContent,
@@ -27,6 +37,116 @@ const statusColors: Record<JobStatus, string> = {
   draft: 'bg-yellow-500',
 };
 
+interface EditJobModalProps {
+  job: any;
+  open: boolean;
+  onClose: () => void;
+  onSave: (jobId: string, data: any) => Promise<void>;
+}
+
+function EditJobModal({ job, open, onClose, onSave }: EditJobModalProps) {
+  const [formData, setFormData] = useState({
+    title: '',
+    budget: '',
+    status: '',
+    description: ''
+  });
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (job) {
+      setFormData({
+        title: job.title || '',
+        budget: job.budget ? job.budget.toString() : '',
+        status: job.status || 'active',
+        description: job.description || ''
+      });
+    }
+  }, [job]);
+
+  const handleSubmit = async () => {
+    setLoading(true);
+    try {
+      await onSave(job.id, {
+        ...formData,
+        budget: parseFloat(formData.budget) || 0
+      });
+      onClose();
+    } catch (error) {
+      console.error('Failed to save:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!job) return null;
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-md bg-[#1a1a1a] border-gray-800">
+        <DialogHeader>
+          <DialogTitle className="text-white">Edit Job</DialogTitle>
+          <DialogDescription className="text-gray-400">
+            Update job details for {job.title}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4 py-4">
+          <div className="space-y-2">
+            <Label className="text-gray-300">Title</Label>
+            <Input
+              value={formData.title}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              className="bg-[#2a2a2a] border-gray-700 text-white"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-gray-300">Budget (₹)</Label>
+            <Input
+              type="number"
+              value={formData.budget}
+              onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
+              className="bg-[#2a2a2a] border-gray-700 text-white"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-gray-300">Status</Label>
+            <Select value={formData.status} onValueChange={(val) => setFormData({ ...formData, status: val })}>
+              <SelectTrigger className="bg-[#2a2a2a] border-gray-700 text-white">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="closed">Closed</SelectItem>
+                <SelectItem value="draft">Draft</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label className="text-gray-300">Description</Label>
+            <Textarea
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              className="bg-[#2a2a2a] border-gray-700 text-white"
+            />
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose} disabled={loading}>Cancel</Button>
+          <Button
+            className="bg-purple-600 hover:bg-purple-700"
+            onClick={handleSubmit}
+            disabled={loading}
+          >
+            {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : 'Save Changes'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export default function JobsPage() {
   const [jobs, setJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -35,6 +155,8 @@ export default function JobsPage() {
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [jobToEdit, setJobToEdit] = useState<any>(null);
   const itemsPerPage = 10;
 
   // Debounce search
@@ -74,6 +196,26 @@ export default function JobsPage() {
     fetchJobs();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, debouncedSearch, statusFilter, categoryFilter]);
+
+  const handleUpdateJob = async (jobId: string, data: any) => {
+    try {
+      const res = await fetch(`/api/admin/jobs/${jobId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+
+      if (res.ok) {
+        fetchJobs();
+      } else {
+        const error = await res.json();
+        alert(error.error || 'Failed to update job');
+      }
+    } catch (e) {
+      console.error('Update job error:', e);
+      alert('Failed to update job');
+    }
+  };
 
   const stats = {
     totalJobs: jobs.length,
@@ -233,7 +375,14 @@ export default function JobsPage() {
                     <Button variant="outline" size="sm" className="text-gray-300">
                       View Applications ({job.applications})
                     </Button>
-                    <Button size="sm" className="bg-purple-600 hover:bg-purple-700">
+                    <Button
+                      size="sm"
+                      className="bg-purple-600 hover:bg-purple-700"
+                      onClick={() => {
+                        setJobToEdit(job);
+                        setEditModalOpen(true);
+                      }}
+                    >
                       Edit
                     </Button>
                   </div>
@@ -269,6 +418,15 @@ export default function JobsPage() {
           </div>
         )}
       </Card>
+      <EditJobModal
+        job={jobToEdit}
+        open={editModalOpen}
+        onClose={() => {
+          setEditModalOpen(false);
+          setJobToEdit(null);
+        }}
+        onSave={handleUpdateJob}
+      />
     </div>
   );
 }

@@ -34,7 +34,7 @@ export default function AdminLoginPage() {
     <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center p-4">
       {/* Background pattern */}
       <div className="absolute inset-0 bg-grid-white/[0.02]" />
-      
+
       {/* Purple gradient orbs */}
       <div className="absolute top-20 left-20 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl" />
       <div className="absolute bottom-20 right-20 w-96 h-96 bg-purple-800/20 rounded-full blur-3xl" />
@@ -71,7 +71,7 @@ export default function AdminLoginPage() {
                 </Label>
                 <Input
                   id="email"
-                  type="email"
+                  type="text"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="admin@doodlance.com"
@@ -111,12 +111,8 @@ export default function AdminLoginPage() {
               </Button>
             </form>
 
-            {/* Demo Credentials */}
-            <div className="mt-6 p-4 bg-purple-600/10 rounded-lg border border-purple-600/20">
-              <p className="text-xs text-gray-400 mb-2">Demo Credentials:</p>
-              <p className="text-xs text-gray-300">Email: admin@doodlance.com</p>
-              <p className="text-xs text-gray-300">Password: admin123</p>
-            </div>
+
+
           </div>
         </Card>
       </motion.div>

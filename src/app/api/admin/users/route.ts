@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '10');
     const search = searchParams.get('search') || '';
     const role = searchParams.get('role') || 'all';
-    const status = searchParams.get('status') || 'all'; // status in User might not strictly exist as enum, using simple logic
+    const status = searchParams.get('status') || 'all';
     const verification = searchParams.get('verification') || 'all';
 
     const skip = (page - 1) * limit;
@@ -26,9 +26,14 @@ export async function GET(request: NextRequest) {
       ];
     }
 
-    // Role filter
-    if (role !== 'all') {
-      where.role = role;
+    // Role filter - complex because role logic is now derived
+    if (role === 'freelancer') {
+      where.freelancerProfile = { isNot: null };
+    } else if (role === 'client') {
+      where.OR = [
+        { clientProfile: { isNot: null } },
+        { role: 'client' } // Fallback for basic users
+      ];
     }
 
     // Status filter
@@ -43,20 +48,20 @@ export async function GET(request: NextRequest) {
       where.isVerified = false;
     }
 
-    // Fetch users
+    // Fetch users with profiles
     const [users, total] = await Promise.all([
       prisma.user.findMany({
         where,
         skip,
         take: limit,
-        orderBy: { createdAt: 'desc' },
+        orderBy: { updatedAt: 'desc' }, // Order by recently active/updated
         include: {
           freelancerProfile: true,
           clientProfile: true,
           _count: {
             select: {
-              clientJobs: true, // Projects posted
-              freelancerJobs: true, // Jobs taken (accepted)
+              clientJobs: true,
+              freelancerJobs: true,
             }
           }
         }
@@ -64,28 +69,122 @@ export async function GET(request: NextRequest) {
       prisma.user.count({ where })
     ]);
 
-    // Map to response format
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const mappedUsers = users.map((user: any) => {
-      // Determine effective status
-      const status = user.status || 'active';
+    // Optimize: Fetch financial data separately to avoid "Can't reach DB" due to query complexity
+    const userIds = users.map((u: any) => u.id);
 
-      // Stats
-      let completedJobs = 0;
-      let totalEarnings = 0;
+    // 1. Calculate Total Spent (as Client) AND Count Orders
+    // bookings where clientId IN userIds AND status = COMPLETED
+    let clientSpentMap = new Map();
+    let clientCountMap = new Map();
+    if (userIds.length > 0) {
+      const clientBookings = await prisma.booking.groupBy({
+        by: ['clientId'],
+        where: {
+          clientId: { in: userIds },
+          status: 'COMPLETED'
+        },
+        _sum: {
+          totalPrice: true
+        },
+        _count: {
+          _all: true
+        }
+      });
+      clientBookings.forEach((b: any) => {
+        clientSpentMap.set(b.clientId, b._sum.totalPrice || 0);
+        clientCountMap.set(b.clientId, b._count._all || 0);
+      });
+    }
+
+    // 2. Calculate Total Earnings (as Freelancer) AND Count Jobs
+    // Fetch bookings for services provided by these users
+    let freelancerEarningsMap = new Map();
+    let freelancerJobCountMap = new Map();
+    if (userIds.length > 0) {
+      const freelancerBookings = await prisma.booking.findMany({
+        where: {
+          service: {
+            providerId: { in: userIds }
+          },
+          status: 'COMPLETED'
+        },
+        select: {
+          totalPrice: true,
+          service: {
+            select: { providerId: true }
+          }
+        }
+      });
+      freelancerBookings.forEach((b: any) => {
+        const providerId = b.service.providerId;
+
+        const currentEarnings = freelancerEarningsMap.get(providerId) || 0;
+        freelancerEarningsMap.set(providerId, currentEarnings + (b.totalPrice || 0));
+
+        const currentJobs = freelancerJobCountMap.get(providerId) || 0;
+        freelancerJobCountMap.set(providerId, currentJobs + 1);
+      });
+    }
+
+    // Map to response format
+    const mappedUsers = users.map((user: any) => {
+      // Determine Role
+      const hasFreelancerProfile = !!user.freelancerProfile;
+      const hasClientProfile = !!user.clientProfile;
+
+      let derivedRole = user.role;
+      if (hasFreelancerProfile && hasClientProfile) {
+        derivedRole = 'both';
+      } else if (hasFreelancerProfile) {
+        derivedRole = 'freelancer';
+      } else if (hasClientProfile) {
+        derivedRole = 'client';
+      }
+
+      // Stats aggregation (Prefer aggregated values, fallback to profile)
+      // Client Spent
       let totalSpent = 0;
+      if (clientSpentMap.has(user.id)) {
+        totalSpent = clientSpentMap.get(user.id);
+      } else if (user.clientProfile?.totalSpent) {
+        totalSpent = user.clientProfile.totalSpent;
+      }
+
+      // Freelancer Earnings
+      let totalEarnings = 0;
+      if (freelancerEarningsMap.has(user.id)) {
+        totalEarnings = freelancerEarningsMap.get(user.id);
+      } else if (user.freelancerProfile?.totalEarnings) {
+        totalEarnings = user.freelancerProfile.totalEarnings;
+      }
+
+      let completedJobs = 0;
       let rating = 0;
 
-      if (user.role === 'freelancer' && user.freelancerProfile) {
-        completedJobs = user.freelancerProfile.completedJobs;
-        totalEarnings = user.freelancerProfile.totalEarnings;
+      if (user.freelancerProfile) {
+        // Use aggregated booking count if available, otherwise fallback
+        if (freelancerJobCountMap.has(user.id)) {
+          completedJobs = freelancerJobCountMap.get(user.id);
+        } else {
+          completedJobs = user.freelancerProfile.completedJobs || user._count.freelancerJobs;
+        }
         rating = user.freelancerProfile.rating;
-        // If profile stats are 0, maybe use relation counts as fallback if needed
-        if (completedJobs === 0) completedJobs = user._count.freelancerJobs;
-      } else if (user.role === 'client' && user.clientProfile) {
-        totalSpent = user.clientProfile.totalSpent;
-        // projectsPosted can come from profile or relation count
-        // user.clientProfile.projectsPosted might be more accurate if updated
+      }
+
+      // Last Active: Use updatedAt or a specific field if you track logins
+      const lastActiveDate = new Date(user.updatedAt);
+      const formattedLastActive = lastActiveDate.toLocaleString('en-US', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+
+      // Client Projects/Orders
+      let projectsPosted = user._count.clientJobs || 0;
+      if (clientCountMap.has(user.id)) {
+        projectsPosted += clientCountMap.get(user.id);
       }
 
       return {
@@ -93,29 +192,34 @@ export async function GET(request: NextRequest) {
         name: user.name || 'Unknown',
         email: user.email,
         phone: user.phone || 'N/A',
-        role: user.role,
-        currentRole: user.currentRole,
+        role: derivedRole, // 'client', 'freelancer', 'both'
+        originalRole: user.role, // Keep track of DB role column if needed
         location: user.location || 'Unknown',
         isVerified: user.isVerified,
         rating: rating,
         completedJobs: completedJobs,
         totalEarnings: totalEarnings,
         totalSpent: totalSpent,
-        projectsPosted: user._count.clientJobs,
+        projectsPosted: projectsPosted,
         joinedAt: user.createdAt.toISOString().split('T')[0],
-        lastActive: 'Recently', // We don't track last active strictly in this schema yet (AdminUser has lastLogin)
-        status: status,
+        lastActive: formattedLastActive,
+        status: user.status || 'active',
         avatar: user.avatar,
         services: user.freelancerProfile?.specializations ? user.freelancerProfile.specializations.split(',') : [],
       };
     });
 
-    // Calculate stats
+    // Calculate Real Stats
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
     const [statsTotalUsers, statsActiveUsers, statsVerifiedUsers, statsFreelancers] = await Promise.all([
-      prisma.user.count(),
-      prisma.user.count({ where: { status: 'active' } }),
-      prisma.user.count({ where: { isVerified: true } }),
-      prisma.user.count({ where: { role: 'freelancer' } })
+      prisma.user.count(), // Total
+      prisma.user.count({
+        where: { updatedAt: { gte: thirtyDaysAgo } }
+      }), // Active in last 30 days
+      prisma.user.count({ where: { isVerified: true } }), // Verified
+      prisma.freelancerProfile.count() // Freelancers (users with profile)
     ]);
 
     const stats = {
@@ -135,6 +239,6 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('Fetch users error:', error);
-    return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to fetch users', details: error instanceof Error ? error.message : String(error) }, { status: 500 });
   }
 }

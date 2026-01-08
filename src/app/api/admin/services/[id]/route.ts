@@ -1,99 +1,62 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/db';
-import { updateServiceSchema, validateRequest } from '@/lib/validations/admin';
-import { logAdminAction } from '@/lib/audit-log';
 
-// PATCH /api/admin/services/[id] - Update service (approve, reject, toggle active)
+export const dynamic = 'force-dynamic';
+
 export async function PATCH(
     request: NextRequest,
     { params }: { params: { id: string } }
 ) {
     try {
-        const { id } = params;
+        const serviceId = params.id;
         const body = await request.json();
-
-        // Validate request
-        const validation = validateRequest(updateServiceSchema, body);
-        if (!validation.success) {
-            return NextResponse.json({ error: validation.error }, { status: 400 });
-        }
-
-        const { action, title, description, price, isActive } = validation.data;
-        const adminEmail = 'admin@doodlance.com';
-        const adminId = 'admin-1';
+        const { action, isActive, title, price, description, category, deliveryTime } = body;
 
         let updateData: any = {};
-        let logAction = 'UPDATE';
 
+        // Handle Status Actions
         if (action === 'approve') {
             updateData.isActive = true;
-            logAction = 'APPROVE';
         } else if (action === 'reject') {
             updateData.isActive = false;
-            logAction = 'REJECT';
-        } else if (action === 'toggle_active') {
-            // We need current status to toggle
-            const current = await prisma.service.findUnique({ where: { id }, select: { isActive: true } });
-            if (current) updateData.isActive = !current.isActive;
-            logAction = 'UPDATE';
-        } else {
-            // Regular update
-            if (title) updateData.title = title;
-            if (description) updateData.description = description;
-            if (price) updateData.price = price;
-            if (isActive !== undefined) updateData.isActive = isActive;
+        } else if (typeof isActive !== 'undefined') {
+            updateData.isActive = isActive;
         }
 
-        const updated = await prisma.service.update({
-            where: { id },
+        // Handle Field Updates
+        if (title) updateData.title = title;
+        if (price) updateData.price = parseFloat(price);
+        if (description) updateData.description = description;
+        if (category) updateData.category = category;
+        if (deliveryTime) updateData.deliveryTime = deliveryTime;
+
+        if (Object.keys(updateData).length === 0) {
+            return NextResponse.json({ error: 'No valid fields provided' }, { status: 400 });
+        }
+
+        const updatedService = await prisma.service.update({
+            where: { id: serviceId },
             data: updateData
         });
 
-        // Log action
-        await logAdminAction({
-            adminId,
-            adminEmail,
-            action: logAction as any,
-            resource: 'SERVICE',
-            resourceId: id,
-            details: updateData,
-            request
-        });
+        return NextResponse.json(updatedService);
 
-        return NextResponse.json(updated);
     } catch (error) {
         console.error('Update service error:', error);
         return NextResponse.json({ error: 'Failed to update service' }, { status: 500 });
     }
 }
 
-// DELETE /api/admin/services/[id] - Delete service
 export async function DELETE(
     request: NextRequest,
     { params }: { params: { id: string } }
 ) {
     try {
-        const { id } = params;
-        const adminEmail = 'admin@doodlance.com';
-        const adminId = 'admin-1';
-
         await prisma.service.delete({
-            where: { id }
+            where: { id: params.id }
         });
-
-        // Log action
-        await logAdminAction({
-            adminId,
-            adminEmail,
-            action: 'DELETE',
-            resource: 'SERVICE',
-            resourceId: id,
-            request
-        });
-
         return NextResponse.json({ success: true });
     } catch (error) {
-        console.error('Delete service error:', error);
-        return NextResponse.json({ error: 'Failed to delete service' }, { status: 500 });
+        return NextResponse.json({ error: 'Failed to delete' }, { status: 500 });
     }
 }

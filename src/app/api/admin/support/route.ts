@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/db';
-import { Prisma } from '@prisma/client';
 import { createTicketSchema, validateRequest } from '@/lib/validations/admin';
 import { logAdminAction } from '@/lib/audit-log';
 
@@ -32,54 +31,91 @@ export async function GET(request: NextRequest) {
     // Filters
     if (status !== 'all') where.status = status.toUpperCase();
     if (priority !== 'all') where.priority = priority.toUpperCase();
-    if (category !== 'all') where.type = category.toUpperCase();
+    if (category !== 'all') where.category = category.toUpperCase(); // Schema uses 'category'
 
-    // Fetch tickets
+    // Fetch tickets with relations
     const [tickets, total] = await Promise.all([
       prisma.supportTicket.findMany({
         where,
         skip,
         take: limit,
         orderBy: { updatedAt: 'desc' },
+        include: {
+          user: {
+            select: {
+              name: true,
+              email: true,
+              role: true
+            }
+          },
+          messages: {
+            orderBy: { createdAt: 'asc' }
+          }
+        }
       }),
       prisma.supportTicket.count({ where })
     ]);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const mappedTickets = await Promise.all(tickets.map(async (t: any) => {
-      let userName = 'Unknown User';
-      let userEmail = 'N/A';
-      let userRole = 'user';
-
-      if (t.userId) {
-        const user = await prisma.user.findUnique({
-          where: { id: t.userId },
-          select: { name: true, email: true, role: true }
-        });
-        if (user) {
-          userName = user.name;
-          userEmail = user.email;
-          userRole = user.role;
-        }
-      }
-
-      return {
-        ...t,
-        category: t.type.toLowerCase(), // Map type to category (frontend expects category)
-        userName,
-        userEmail,
-        userRole,
-        messages: t.messages ? JSON.parse(t.messages) : [],
-        createdAt: t.createdAt.toLocaleString(),
-        updatedAt: t.updatedAt.toLocaleString()
-      };
+    const mappedTickets = tickets.map((t: any) => ({
+      id: t.id,
+      ticketNumber: t.ticketNumber,
+      subject: t.subject,
+      description: t.description,
+      category: t.category.toLowerCase(), // Schema uses 'category'
+      priority: t.priority,
+      status: t.status,
+      assignedToId: t.assignedTo,
+      userName: t.user?.name || 'Unknown',
+      userEmail: t.user?.email || 'N/A',
+      userRole: t.user?.role || 'user',
+      messages: t.messages.map((m: any) => ({
+        id: m.id,
+        sender: m.isAdminReply ? 'Admin' : 'User', // Simplified logic, ideally check senderId
+        senderType: m.isAdminReply ? 'admin' : 'user',
+        message: m.message,
+        timestamp: m.createdAt.toLocaleString()
+      })),
+      createdAt: t.createdAt.toLocaleString(),
+      updatedAt: t.updatedAt.toLocaleString()
     }));
+
+    // Calculate Stats
+    const [statsStatus, statsPriority] = await Promise.all([
+      prisma.supportTicket.groupBy({
+        by: ['status'],
+        _count: { status: true }
+      }),
+      prisma.supportTicket.groupBy({
+        by: ['priority'],
+        _count: { priority: true }
+      })
+    ]);
+
+    const statusCounts = statsStatus.reduce((acc: any, curr: any) => {
+      acc[curr.status] = curr._count.status;
+      return acc;
+    }, {} as Record<string, number>);
+
+    const priorityCounts = statsPriority.reduce((acc: any, curr: any) => {
+      acc[curr.priority] = curr._count.priority;
+      return acc;
+    }, {} as Record<string, number>);
+
+    const stats = {
+      totalTickets: total,
+      openTickets: statusCounts['OPEN'] || 0,
+      inProgress: statusCounts['IN_PROGRESS'] || 0,
+      resolved: statusCounts['RESOLVED'] || 0,
+      urgentTickets: priorityCounts['URGENT'] || 0,
+      avgResponseTime: '2.5 hours' // Placeholder
+    };
 
     return NextResponse.json({
       tickets: mappedTickets,
       total,
       page,
-      totalPages: Math.ceil(total / limit)
+      totalPages: Math.ceil(total / limit),
+      stats
     });
 
   } catch (error) {
@@ -92,52 +128,39 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    // Find user by email (as Admin UI sends email)
+    const user = await prisma.user.findUnique({
+      where: { email: body.userEmail } // UI sends userEmail
+    });
 
-    // Validate request
-    const validation = validateRequest(createTicketSchema, body);
-    if (!validation.success) {
-      return NextResponse.json({ error: validation.error }, { status: 400 });
+    if (!user) {
+      return NextResponse.json({ error: 'User not found with this email' }, { status: 404 });
     }
 
-    const {
-      subject,
-      description,
-      category,
-      priority,
-      userId
-    } = validation.data;
-
-    // Verify user exists if provided/required
-    // userEmail check logic from original code might be useful if userId is not certain,
-    // but schema says userId is required. Assuming userId is passed.
-
-    const adminEmail = 'admin@doodlance.com';
-    const adminId = 'admin-1';
-
-    const newTicket = await prisma.supportTicket.create({
+    const ticket = await prisma.supportTicket.create({
       data: {
-        userId,
-        subject,
-        description,
-        type: category ? category.toUpperCase() : 'GENERAL',
-        priority: priority ? priority.toUpperCase() : 'MEDIUM',
+        userId: user.id,
+        subject: body.subject,
+        description: body.description,
+        category: body.category.toUpperCase(),
+        priority: body.priority.toUpperCase(),
         status: 'OPEN',
-        messages: JSON.stringify([]), // Initialize empty conversation
+        ticketNumber: `TKT-${Date.now().toString().slice(-6)}`
       }
     });
 
-    // Log action
+    // Log Action
     await logAdminAction({
-      adminId,
-      adminEmail,
+      adminId: 'admin-1', // Simplified
+      adminEmail: 'admin@doodlance.com',
       action: 'CREATE',
       resource: 'SUPPORT_TICKET',
-      resourceId: newTicket.id,
-      details: { subject },
+      resourceId: ticket.id,
+      details: body,
       request
     });
 
-    return NextResponse.json(newTicket, { status: 201 });
+    return NextResponse.json(ticket);
 
   } catch (error) {
     console.error('Create ticket error:', error);

@@ -13,6 +13,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from '@/components/ui/dialog';
 import {
   Select,
@@ -38,6 +39,124 @@ import {
 import { motion } from 'framer-motion';
 import { ServiceDetailsModal } from '@/components/admin/ServiceDetailsModal';
 
+interface EditServiceModalProps {
+  service: any;
+  open: boolean;
+  onClose: () => void;
+  onSave: (serviceId: string, data: any) => Promise<void>;
+}
+
+function EditServiceModal({ service, open, onClose, onSave }: EditServiceModalProps) {
+  const [formData, setFormData] = useState({
+    title: '',
+    price: '',
+    category: '',
+    description: '',
+    deliveryTime: ''
+  });
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (service) {
+      setFormData({
+        title: service.title || '',
+        price: service.price ? service.price.toString() : '',
+        category: service.category || '',
+        description: service.description || '',
+        deliveryTime: service.deliveryTime || ''
+      });
+    }
+  }, [service]);
+
+  const handleSubmit = async () => {
+    setLoading(true);
+    try {
+      await onSave(service.id, {
+        ...formData,
+        price: parseFloat(formData.price) || 0
+      });
+      onClose();
+    } catch (error) {
+      console.error('Failed to save:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!service) return null;
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-md bg-[#1a1a1a] border-gray-800">
+        <DialogHeader>
+          <DialogTitle className="text-white">Edit Service</DialogTitle>
+          <DialogDescription className="text-gray-400">
+            Update service details for {service.title}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4 py-4">
+          <div className="space-y-2">
+            <Label className="text-gray-300">Title</Label>
+            <Input
+              value={formData.title}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              className="bg-[#2a2a2a] border-gray-700 text-white"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label className="text-gray-300">Price (₹)</Label>
+              <Input
+                type="number"
+                value={formData.price}
+                onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                className="bg-[#2a2a2a] border-gray-700 text-white"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-gray-300">Delivery Time</Label>
+              <Input
+                value={formData.deliveryTime}
+                onChange={(e) => setFormData({ ...formData, deliveryTime: e.target.value })}
+                className="bg-[#2a2a2a] border-gray-700 text-white"
+                placeholder="e.g. 3 days"
+              />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label className="text-gray-300">Category</Label>
+            <Input
+              value={formData.category}
+              onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+              className="bg-[#2a2a2a] border-gray-700 text-white"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-gray-300">Description</Label>
+            <Textarea
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              className="bg-[#2a2a2a] border-gray-700 text-white"
+            />
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose} disabled={loading}>Cancel</Button>
+          <Button
+            className="bg-purple-600 hover:bg-purple-700"
+            onClick={handleSubmit}
+            disabled={loading}
+          >
+            {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : 'Save Changes'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export default function ServiceManagementPage() {
   const [services, setServices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -49,6 +168,8 @@ export default function ServiceManagementPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [showAddService, setShowAddService] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [serviceToEdit, setServiceToEdit] = useState<any>(null);
   const itemsPerPage = 10;
 
   // Debounce search
@@ -133,6 +254,17 @@ export default function ServiceManagementPage() {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ isActive: !service.isActive })
+      });
+      if (res.ok) fetchServices();
+    } catch (e) { console.error(e); }
+  };
+
+  const handleUpdateService = async (serviceId: string, data: any) => {
+    try {
+      const res = await fetch(`/api/admin/services/${serviceId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
       });
       if (res.ok) fetchServices();
     } catch (e) { console.error(e); }
@@ -359,6 +491,16 @@ export default function ServiceManagementPage() {
                           <Eye className="w-4 h-4 mr-2" />
                           View Details
                         </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setServiceToEdit(service);
+                            setEditModalOpen(true);
+                          }}
+                          className="cursor-pointer"
+                        >
+                          <Edit className="w-4 h-4 mr-2" />
+                          Edit Service
+                        </DropdownMenuItem>
                         {!service.isActive && (
                           <DropdownMenuItem
                             className="cursor-pointer text-green-400"
@@ -421,6 +563,15 @@ export default function ServiceManagementPage() {
         }}
         onApprove={handleApprove}
         onReject={handleReject}
+      />
+      <EditServiceModal
+        service={serviceToEdit}
+        open={editModalOpen}
+        onClose={() => {
+          setEditModalOpen(false);
+          setServiceToEdit(null);
+        }}
+        onSave={handleUpdateService}
       />
     </div>
   );

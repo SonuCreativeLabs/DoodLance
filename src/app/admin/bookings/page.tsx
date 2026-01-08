@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Select,
   SelectContent,
@@ -25,7 +26,7 @@ import {
   Calendar, Clock, MapPin, DollarSign, User, Shield,
   MoreVertical, Eye, Edit, XCircle, CheckCircle, AlertTriangle,
   MessageSquare, FileText, TrendingUp, Filter, Download,
-  ChevronLeft, ChevronRight, RefreshCw, Phone, Mail, Search
+  ChevronLeft, ChevronRight, RefreshCw, Phone, Mail, Search, HelpCircle
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { BookingDetailsModal } from '@/components/admin/BookingDetailsModal';
@@ -145,7 +146,9 @@ export default function BookingManagementPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-400">Total Bookings</p>
-              <p className="text-2xl font-bold text-white">{stats.total}</p>
+              {loading ? <Skeleton className="h-8 w-16 bg-gray-800" /> : (
+                <p className="text-2xl font-bold text-white">{stats.total}</p>
+              )}
             </div>
             <Calendar className="w-8 h-8 text-blue-500" />
           </div>
@@ -154,7 +157,9 @@ export default function BookingManagementPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-400">In Progress</p>
-              <p className="text-2xl font-bold text-white">{stats.inProgress}</p>
+              {loading ? <Skeleton className="h-8 w-16 bg-gray-800" /> : (
+                <p className="text-2xl font-bold text-white">{stats.inProgress}</p>
+              )}
             </div>
             <TrendingUp className="w-8 h-8 text-purple-500" />
           </div>
@@ -163,7 +168,9 @@ export default function BookingManagementPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-400">Total Revenue</p>
-              <p className="text-2xl font-bold text-white">₹{stats.totalRevenue.toLocaleString()}</p>
+              {loading ? <Skeleton className="h-8 w-24 bg-gray-800" /> : (
+                <p className="text-2xl font-bold text-white">₹{stats.totalRevenue.toLocaleString()}</p>
+              )}
             </div>
             <DollarSign className="w-8 h-8 text-green-500" />
           </div>
@@ -172,7 +179,9 @@ export default function BookingManagementPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-400">Disputes</p>
-              <p className="text-2xl font-bold text-white">{stats.disputed}</p>
+              {loading ? <Skeleton className="h-8 w-16 bg-gray-800" /> : (
+                <p className="text-2xl font-bold text-white">{stats.disputed}</p>
+              )}
             </div>
             <AlertTriangle className="w-8 h-8 text-red-500" />
           </div>
@@ -242,9 +251,36 @@ export default function BookingManagementPage() {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={9} className="p-4 text-center text-gray-400">Loading...</td></tr>
+                Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={i} className="border-b border-gray-800">
+                    <td className="p-4"><Skeleton className="h-4 w-20 bg-gray-800" /></td>
+                    <td className="p-4">
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-32 bg-gray-800" />
+                        <Skeleton className="h-3 w-24 bg-gray-800" />
+                      </div>
+                    </td>
+                    <td className="p-4"><Skeleton className="h-4 w-24 bg-gray-800" /></td>
+                    <td className="p-4"><Skeleton className="h-4 w-24 bg-gray-800" /></td>
+                    <td className="p-4">
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-24 bg-gray-800" />
+                        <Skeleton className="h-3 w-16 bg-gray-800" />
+                      </div>
+                    </td>
+                    <td className="p-4"><Skeleton className="h-6 w-20 rounded-full bg-gray-800" /></td>
+                    <td className="p-4"><Skeleton className="h-2 w-20 bg-gray-800" /></td>
+                    <td className="p-4">
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-16 bg-gray-800" />
+                        <Skeleton className="h-3 w-12 bg-gray-800" />
+                      </div>
+                    </td>
+                    <td className="p-4"><Skeleton className="h-8 w-8 rounded bg-gray-800" /></td>
+                  </tr>
+                ))
               ) : bookings.map((booking, index) => {
-                const StatusIcon = statusIcons[booking.status];
+                const StatusIcon = statusIcons[booking.status] || HelpCircle;
                 return (
                   <motion.tr
                     key={booking.id}
@@ -275,7 +311,7 @@ export default function BookingManagementPage() {
                       </div>
                     </td>
                     <td className="p-4">
-                      <Badge className={`${statusColors[booking.status]} text-white`}>
+                      <Badge className={`${statusColors[booking.status] || 'bg-gray-600'} text-white`}>
                         <StatusIcon className="w-3 h-3 mr-1" />
                         {booking.status}
                       </Badge>

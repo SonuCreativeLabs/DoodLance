@@ -1,61 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getAdminLogs, logAdminAction } from '@/lib/audit-log';
 
-// Mock audit log storage - In production, save to database
-const auditLogs: any[] = [];
+export const dynamic = 'force-dynamic';
 
-export async function POST(req: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
-    const body = await req.json();
-    
-    // Get admin info from token (simplified for demo)
-    const authHeader = req.headers.get('authorization');
-    const token = authHeader?.replace('Bearer ', '') || 
-                 req.headers.get('x-admin-token') ||
-                 req.headers.get('authorization')?.split(' ')[1] || '';
-    
-    // Create audit log entry
-    const auditEntry = {
-      id: `audit-${Date.now()}`,
-      adminId: body.adminId || 'admin-1',
-      action: body.action,
-      entityType: body.entityType,
-      entityId: body.entityId,
-      oldValue: body.oldValue,
-      newValue: body.newValue,
-      metadata: body.metadata,
-      ipAddress: req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown',
-      userAgent: req.headers.get('user-agent') || 'unknown',
-      createdAt: new Date().toISOString(),
-    };
+    const searchParams = request.nextUrl.searchParams;
+    const resource = searchParams.get('resource') as any;
+    const limit = parseInt(searchParams.get('limit') || '50');
 
-    // Store audit log (in production, save to database)
-    auditLogs.push(auditEntry);
+    const logs = await getAdminLogs({
+      resource: resource !== 'all' ? resource : undefined,
+      limit
+    });
 
-    return NextResponse.json({ success: true, audit: auditEntry });
+    return NextResponse.json({ logs });
   } catch (error) {
-    console.error('Audit log error:', error);
-    return NextResponse.json(
-      { error: 'Failed to create audit log' },
-      { status: 500 }
-    );
+    console.error('Error fetching logs:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
-export async function GET(req: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
-    // Return recent audit logs (in production, query from database)
-    const recentLogs = auditLogs.slice(-100).reverse();
-    
-    return NextResponse.json({ 
-      success: true, 
-      logs: recentLogs,
-      total: auditLogs.length 
+    const body = await request.json();
+    // Assume simplified recording from frontend or other services
+    await logAdminAction({
+      adminId: body.adminId || 'unknown',
+      adminEmail: body.adminEmail || 'unknown',
+      action: body.action,
+      resource: body.resource,
+      resourceId: body.resourceId,
+      details: body.details,
+      request
     });
-  } catch (error) {
-    console.error('Audit fetch error:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch audit logs' },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: true });
+  } catch (e) {
+    return NextResponse.json({ error: 'Failed to log' }, { status: 500 });
   }
 }

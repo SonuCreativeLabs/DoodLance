@@ -13,62 +13,96 @@ export async function GET(request: NextRequest) {
         const status = searchParams.get('status') || 'all';
 
         const skip = (page - 1) * limit;
-
-        // For now, we'll use User.isVerified field
-        // In production, you'd have a separate KYCRequest table
         const where: any = {};
 
+        // We focus on Freelancers for now as they are the primary targets for KYC
+        // But we can also include Clients if they have verification docs
+
+        // Search logic needs to search on related User model
         if (search) {
-            where.OR = [
-                { name: { contains: search, mode: 'insensitive' } },
-                { email: { contains: search, mode: 'insensitive' } },
-            ];
+            where.user = {
+                OR: [
+                    { name: { contains: search, mode: 'insensitive' } },
+                    { email: { contains: search, mode: 'insensitive' } },
+                ]
+            };
         }
 
-        // Map status filter to isVerified
+        // Status logic
         if (status === 'verified') {
             where.isVerified = true;
-        } else if (status === 'pending' || status === 'rejected') {
+        } else if (status === 'pending') {
             where.isVerified = false;
+            where.verificationDocs = { not: null }; // Only those who submitted docs
+        } else if (status === 'rejected') {
+            // We don't have a specific 'rejected' status column, 
+            // usually rejection assumes clearing docs or setting a flag.
+            // For now, we'll skip 'rejected' or assume validation fails lead to null docs?
+            // Let's rely on 'pending' and 'verified' mostly.
         }
 
-        const [users, total] = await Promise.all([
-            prisma.user.findMany({
+        // If status is 'all', we probably want validation requests (docs not null)
+        if (status === 'all') {
+            where.verificationDocs = { not: null };
+        }
+
+        const [profiles, total] = await Promise.all([
+            prisma.freelancerProfile.findMany({
                 where,
                 skip,
                 take: limit,
-                orderBy: { createdAt: 'desc' },
-                select: {
-                    id: true,
-                    name: true,
-                    email: true,
-                    role: true,
-                    isVerified: true,
-                    createdAt: true,
-                    updatedAt: true
+                orderBy: { updatedAt: 'desc' },
+                include: {
+                    user: {
+                        select: {
+                            id: true,
+                            name: true,
+                            email: true,
+                            role: true,
+                        }
+                    }
                 }
             }),
-            prisma.user.count({ where })
+            prisma.freelancerProfile.count({ where })
         ]);
 
         // Map to KYC format
-        const kycRequests = users.map((u: any) => ({
-            id: `KYC${u.id.substring(0, 6).toUpperCase()}`,
-            userId: u.id,
-            userName: u.name,
-            userEmail: u.email,
-            userRole: u.role.toLowerCase(),
-            documents: {
-                idProof: { type: 'Placeholder', status: u.isVerified ? 'verified' : 'pending', file: 'doc.pdf' },
-                addressProof: { type: 'Placeholder', status: u.isVerified ? 'verified' : 'pending', file: 'doc.pdf' },
-                panCard: { type: 'Placeholder', status: u.isVerified ? 'verified' : 'pending', file: 'doc.pdf' }
-            },
-            status: u.isVerified ? 'verified' : 'pending',
-            submittedAt: u.createdAt.toLocaleString(),
-            verifiedAt: u.isVerified ? u.updatedAt.toLocaleString() : null,
-            verifiedBy: u.isVerified ? 'Admin' : null,
-            notes: u.isVerified ? 'Verified successfully' : 'Awaiting verification'
-        }));
+        const kycRequests = profiles.map((p: any) => {
+            let docs = {};
+            try {
+                docs = p.verificationDocs ? JSON.parse(p.verificationDocs) : {};
+            } catch (e) {
+                docs = { raw: p.verificationDocs };
+            }
+
+            // Normalize docs structure for frontend
+            // Expecting object with keys like idProof, addressProof etc.
+            // If docs is just an array or string, map it to a generic 'Document'
+            if (typeof docs !== 'object' || Array.isArray(docs)) {
+                docs = { document: { type: 'Upload', file: docs, status: p.isVerified ? 'verified' : 'pending' } };
+            } else {
+                // Add status to each doc if missing
+                Object.keys(docs).forEach(key => {
+                    if (docs[key] && !docs[key].status) {
+                        docs[key] = { ...docs[key], status: p.isVerified ? 'verified' : 'pending' };
+                    }
+                });
+            }
+
+            return {
+                id: p.id, // Profile ID as Request ID
+                userId: p.userId,
+                userName: p.user.name || 'Unknown',
+                userEmail: p.user.email,
+                userRole: p.user.role,
+                documents: docs,
+                status: p.isVerified ? 'verified' : 'pending',
+                submittedAt: p.updatedAt.toLocaleString(), // Using update time as submission time
+                verifiedAt: p.verifiedAt ? p.verifiedAt.toLocaleString() : null,
+                verifiedBy: p.isVerified ? 'Admin' : null,
+                notes: p.isVerified ? 'Verified' : 'Pending Review'
+            };
+        });
 
         return NextResponse.json({
             requests: kycRequests,

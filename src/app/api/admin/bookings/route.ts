@@ -19,6 +19,7 @@ export async function GET(request: NextRequest) {
     if (search) {
       where.OR = [
         { id: { contains: search, mode: 'insensitive' } },
+        // Also allow searching by client name potentially, but ID is safest for now
       ];
     }
 
@@ -37,16 +38,17 @@ export async function GET(request: NextRequest) {
           service: {
             select: {
               title: true,
-              categoryId: true
+              categoryId: true,
+              provider: { // Fetch freelancer via service provider
+                select: {
+                  id: true,
+                  name: true,
+                  email: true
+                }
+              }
             }
           },
           client: {
-            select: {
-              name: true,
-              email: true
-            }
-          },
-          freelancer: {
             select: {
               name: true,
               email: true
@@ -61,18 +63,18 @@ export async function GET(request: NextRequest) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const mappedBookings = bookings.map((b: any) => ({
       id: b.id,
-      serviceTitle: b.service.title,
-      serviceCategory: b.service.categoryId,
-      clientName: b.client.name,
+      serviceTitle: b.service?.title || 'Unknown Service',
+      serviceCategory: b.service?.categoryId || 'Unknown',
+      clientName: b.client?.name || 'Unknown Client',
       clientId: b.clientId,
-      freelancerName: b.freelancer.name,
-      freelancerId: b.freelancerId,
-      scheduledAt: b.scheduledAt.toLocaleDateString(),
+      freelancerName: b.service?.provider?.name || 'Unknown Freelancer',
+      freelancerId: b.service?.provider?.id,
+      scheduledAt: b.scheduledAt ? b.scheduledAt.toLocaleDateString() : 'Not Scheduled',
       duration: b.duration,
       status: b.status,
       progress: b.status === 'COMPLETED' ? 100 : b.status === 'IN_PROGRESS' ? 50 : b.status === 'CONFIRMED' ? 25 : 0,
       totalPrice: b.totalPrice,
-      platformFee: b.totalPrice * 0.1, // Estimated 10%
+      platformFee: b.totalPrice * 0.3, // Platform Commission (30%)
       createdAt: b.createdAt.toISOString(),
       updatedAt: b.updatedAt.toISOString()
     }));
@@ -101,7 +103,7 @@ export async function GET(request: NextRequest) {
       completed: statusCounts['COMPLETED'] || 0,
       disputed: statusCounts['DISPUTED'] || 0,
       totalRevenue: statsFinancial._sum.totalPrice || 0,
-      platformEarnings: (statsFinancial._sum.totalPrice || 0) * 0.1, // Estimated 10%
+      platformEarnings: (statsFinancial._sum.totalPrice || 0) * 0.3, // Platform Commission (30%)
     };
 
     return NextResponse.json({

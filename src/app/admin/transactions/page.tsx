@@ -60,9 +60,11 @@ interface TransactionDetailsModalProps {
   transaction: any;
   open: boolean;
   onClose: () => void;
+  onStatusChange: (id: string, status: string) => void;
 }
 
-function TransactionDetailsModal({ transaction, open, onClose }: TransactionDetailsModalProps) {
+
+function TransactionDetailsModal({ transaction, open, onClose, onStatusChange }: TransactionDetailsModalProps) {
   if (!transaction) return null;
 
   return (
@@ -142,8 +144,18 @@ function TransactionDetailsModal({ transaction, open, onClose }: TransactionDeta
           <Button variant="outline" onClick={onClose}>Close</Button>
           {transaction.status === 'PENDING' && (
             <>
-              <Button variant="destructive">Cancel</Button>
-              <Button className="bg-green-600 hover:bg-green-700">Approve</Button>
+              <Button
+                variant="destructive"
+                onClick={() => onStatusChange(transaction.id, 'FAILED')}
+              >
+                Reject
+              </Button>
+              <Button
+                className="bg-green-600 hover:bg-green-700"
+                onClick={() => onStatusChange(transaction.id, 'COMPLETED')}
+              >
+                Approve
+              </Button>
             </>
           )}
         </DialogFooter>
@@ -214,6 +226,20 @@ export default function TransactionManagementPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleStatusChange = async (id: string, newStatus: string) => {
+    try {
+      const res = await fetch(`/api/admin/transactions/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus })
+      });
+      if (res.ok) {
+        setDetailsModalOpen(false);
+        fetchTransactions();
+      }
+    } catch (e) { console.error(e); }
   };
 
   return (
@@ -456,11 +482,17 @@ export default function TransactionManagementPage() {
                           </DropdownMenuItem>
                           {transaction.status === 'PENDING' && (
                             <>
-                              <DropdownMenuItem className="cursor-pointer text-green-400">
+                              <DropdownMenuItem
+                                className="cursor-pointer text-green-400"
+                                onClick={() => handleStatusChange(transaction.id, 'COMPLETED')}
+                              >
                                 <CheckCircle className="w-4 h-4 mr-2" />
                                 Approve
                               </DropdownMenuItem>
-                              <DropdownMenuItem className="cursor-pointer text-red-400">
+                              <DropdownMenuItem
+                                className="cursor-pointer text-red-400"
+                                onClick={() => handleStatusChange(transaction.id, 'FAILED')}
+                              >
                                 <XCircle className="w-4 h-4 mr-2" />
                                 Reject
                               </DropdownMenuItem>
@@ -512,6 +544,7 @@ export default function TransactionManagementPage() {
           setDetailsModalOpen(false);
           setSelectedTransaction(null);
         }}
+        onStatusChange={handleStatusChange}
       />
     </div>
   );

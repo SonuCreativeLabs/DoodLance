@@ -94,8 +94,52 @@ export default function ReportsPage() {
   };
 
   const handleExport = (format: string) => {
-    console.log(`Exporting ${selectedReport} report as ${format}`);
-    // In production, this would generate and download the report
+    if (format !== 'csv') {
+      alert('Only CSV export is currently supported.');
+      return;
+    }
+
+    // Determine data to export based on selectedReport or just export Revenue Data for now
+    // A more complex implementation would switch based on selectedReport
+
+    let dataToExport = revenueData;
+    let filename = 'revenue-report.csv';
+
+    if (selectedReport === 'users') {
+      dataToExport = userGrowthData;
+      filename = 'user-growth-report.csv';
+    } else if (selectedReport === 'performance') {
+      dataToExport = categoryData;
+      filename = 'category-performance.csv';
+    }
+
+    if (!dataToExport || dataToExport.length === 0) {
+      alert('No data to export');
+      return;
+    }
+
+    // Convert to CSV
+    const headers = Object.keys(dataToExport[0]);
+    const csvContent = [
+      headers.join(','),
+      ...dataToExport.map(row => headers.map(header => {
+        const value = row[header];
+        return typeof value === 'string' && value.includes(',') ? `"${value}"` : value;
+      }).join(','))
+    ].join('\n');
+
+    // Download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    if (link.download !== undefined) {
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', filename);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
   };
 
   return (
