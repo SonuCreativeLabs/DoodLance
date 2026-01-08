@@ -22,6 +22,7 @@ interface ExperienceContextType {
   updateExperience: (experienceId: string, updates: Partial<Experience>) => void;
   hydrateExperiences: (experiences: Experience[]) => void;
   hydrated: boolean;
+  isLoading: boolean;
 }
 
 const initialExperiences: Experience[] = [];
@@ -35,12 +36,12 @@ export interface ExperienceProviderProps {
 
 export function ExperienceProvider({ children, skipInitialFetch = false }: ExperienceProviderProps) {
   const [experiences, setExperiences] = useState<Experience[]>(initialExperiences);
-  const hasHydrated = useRef(false);
+  const [isLoading, setIsLoading] = useState(true);
   const supabase = createClient();
 
   const hydrateExperiences = useCallback((newExperiences: Experience[]) => {
     setExperiences(newExperiences);
-    hasHydrated.current = true;
+    setIsLoading(false);
   }, []);
 
   // Load from Supabase on mount
@@ -70,7 +71,7 @@ export function ExperienceProvider({ children, skipInitialFetch = false }: Exper
       } catch (error) {
         console.error('Failed to load experiences:', error);
       } finally {
-        hasHydrated.current = true;
+        setIsLoading(false);
       }
     };
 
@@ -137,7 +138,8 @@ export function ExperienceProvider({ children, skipInitialFetch = false }: Exper
     removeExperience,
     updateExperience,
     hydrateExperiences,
-    hydrated: hasHydrated.current,
+    hydrated: !isLoading,
+    isLoading,
   };
 
   return (

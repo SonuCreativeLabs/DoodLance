@@ -14,6 +14,7 @@ import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrate
 import { cn } from "@/lib/utils";
 import { useSkills } from '@/contexts/SkillsContext';
 import { EmptyState } from '@/components/freelancer/profile/EmptyState';
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface SkillItemType {
   id: string;
@@ -334,7 +335,20 @@ export function SkillsSection({
   initialSkills = defaultSkills,
   className
 }: { initialSkills?: Array<string | SkillItemType>; className?: string }) {
-  const { skills: contextSkills, updateSkills } = useSkills();
+  const { skills: contextSkills, updateSkills, isLoading } = useSkills();
+
+  if (isLoading) {
+    return (
+      <div className={cn("space-y-3", className)}>
+        <Skeleton className="w-full h-10 rounded-xl mb-4" />
+        <div className="space-y-4">
+          <Skeleton className="w-full h-20 rounded-xl" />
+          <Skeleton className="w-full h-20 rounded-xl" />
+          <Skeleton className="w-full h-20 rounded-xl" />
+        </div>
+      </div>
+    );
+  }
 
   // Use context skills if available and not empty, otherwise use initialSkills
   const [skills, setSkills] = useState<SkillItemType[]>(() => {

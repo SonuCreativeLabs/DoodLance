@@ -22,6 +22,7 @@ interface AvailabilityContextType {
   updateDays: (days: DayAvailability[]) => void;
   getAvailableDays: () => DayAvailability[];
   getWorkingHoursText: () => string;
+  isLoading: boolean;
 }
 
 const initialDays: DayAvailability[] = [
@@ -128,6 +129,7 @@ export function AvailabilityProvider({ children }: { children: ReactNode }) {
     updateDays,
     getAvailableDays,
     getWorkingHoursText,
+    isLoading: !isHydrated,
   };
 
   return (

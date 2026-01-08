@@ -41,6 +41,7 @@ interface PersonalDetailsContextType {
   updatePersonalDetails: (updates: Partial<PersonalDetails>) => void;
   toggleReadyToWork: () => void;
   refreshUser: () => Promise<void>;
+  isLoading: boolean;
 }
 
 const initialPersonalDetails: PersonalDetails = {
@@ -85,6 +86,7 @@ import { useAuth } from './AuthContext';
 
 export function PersonalDetailsProvider({ children }: { children: ReactNode }) {
   const [personalDetails, setPersonalDetails] = useState<PersonalDetails>(initialPersonalDetails);
+  const [isLoading, setIsLoading] = useState(true);
   const hasHydrated = useRef(false);
   const supabase = createClient();
   const { refreshUser: refreshAuthUser } = useAuth();
@@ -148,6 +150,7 @@ export function PersonalDetailsProvider({ children }: { children: ReactNode }) {
   // Refactored fetch logic to be reusable
   const fetchUserData = useCallback(async () => {
     try {
+      setIsLoading(true);
       // Fetch user data from API (bypasses RLS issues)
       const userResponse = await fetch('/api/user/profile');
       if (!userResponse.ok) {
@@ -202,6 +205,9 @@ export function PersonalDetailsProvider({ children }: { children: ReactNode }) {
       }));
     } catch (error) {
       console.error('Failed to fetch user data:', error);
+    } finally {
+      setIsLoading(false);
+      hasHydrated.current = true;
     }
   }, []);
 
@@ -215,6 +221,7 @@ export function PersonalDetailsProvider({ children }: { children: ReactNode }) {
     updatePersonalDetails,
     toggleReadyToWork,
     refreshUser: fetchUserData,
+    isLoading,
   };
 
   return (

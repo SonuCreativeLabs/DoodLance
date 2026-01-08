@@ -12,6 +12,7 @@ import { CategorySelect } from "@/components/common/CategoryBadge";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { EmptyState } from '@/components/freelancer/profile/EmptyState';
+import { Skeleton } from "@/components/ui/skeleton";
 
 // Local form interface (different from context ServicePackage)
 interface ServicePackage {
@@ -415,7 +416,7 @@ interface ServicePackagesProps {
 }
 
 export function ServicePackages({ services = [] }: ServicePackagesProps) {
-  const { services: ctxServices, addService, updateService, removeService } = useServices();
+  const { services: ctxServices, addService, updateService, removeService, isLoading } = useServices();
 
   // Use context services as the source of truth
   const packages = ctxServices.map(mapToUI);
@@ -425,6 +426,33 @@ export function ServicePackages({ services = [] }: ServicePackagesProps) {
   const [packageToDelete, setPackageToDelete] = useState<string | null>(null);
   const [editingPackage, setEditingPackage] = useState<ServicePackage | null>(null);
   const [isFormValid, setIsFormValid] = useState(false);
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-end">
+          <Skeleton className="h-10 w-32 rounded-lg" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="relative rounded-xl border border-white/5 bg-[#1E1E1E] pt-12 pb-6 px-6 space-y-4">
+              <div className="space-y-2 text-center">
+                <Skeleton className="h-6 w-3/4 mx-auto" />
+                <Skeleton className="h-8 w-1/2 mx-auto" />
+                <Skeleton className="h-4 w-5/6 mx-auto" />
+              </div>
+              <div className="space-y-2 mt-6">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-3/4" />
+              </div>
+              <Skeleton className="h-9 w-full rounded-md mt-6" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   const handleSavePackage = (pkg: Partial<ServicePackage>) => {
     // Ensure features is always an array and filter out empty strings

@@ -232,13 +232,6 @@ export default function ProfilePage() {
           </div>
 
           <ProfileSectionCard
-            title="Experience"
-            description="List your professional experience and achievements"
-            href="/freelancer/profile/experience"
-            icon={<Award className="h-4 w-4" />}
-          />
-
-          <ProfileSectionCard
             title="Service Packages"
             description="Define your service offerings and pricing"
             href="/freelancer/profile/services"
@@ -246,17 +239,10 @@ export default function ProfilePage() {
           />
 
           <ProfileSectionCard
-            title="Client Reviews"
-            description="View and manage client feedback"
-            href="/freelancer/profile/reviews"
-            icon={<Star className="h-4 w-4" />}
-          />
-
-          <ProfileSectionCard
-            title="Performance Activity"
-            description="Track your performance metrics and analytics"
-            href="/freelancer/profile/performance"
-            icon={<BarChart2 className="h-4 w-4" />}
+            title="Experience"
+            description="List your professional experience and achievements"
+            href="/freelancer/profile/experience"
+            icon={<Award className="h-4 w-4" />}
           />
 
           <ProfileSectionCard
@@ -278,6 +264,20 @@ export default function ProfilePage() {
             description="Complete your KYC verification to unlock all features"
             href="/freelancer/profile/verification"
             icon={<CheckCircle className="h-4 w-4" />}
+          />
+
+          <ProfileSectionCard
+            title="Client Reviews"
+            description="View and manage client feedback"
+            href="/freelancer/profile/reviews"
+            icon={<Star className="h-4 w-4" />}
+          />
+
+          <ProfileSectionCard
+            title="Performance Activity"
+            description="Track your performance metrics and analytics"
+            href="/freelancer/profile/performance"
+            icon={<BarChart2 className="h-4 w-4" />}
           />
 
           <ProfileSectionCard

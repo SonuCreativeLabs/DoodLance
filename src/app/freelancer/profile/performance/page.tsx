@@ -6,6 +6,7 @@ import { MonthlyActivities } from '@/components/freelancer/profile/MonthlyActivi
 import { TimeRangeSelector } from '@/components/freelancer/profile/TimeRangeSelector';
 import { ArrowLeft, Download } from 'lucide-react';
 import Link from 'next/link';
+import { Skeleton } from "@/components/ui/skeleton";
 import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns';
 
 // StatCard component for the quick stats section
@@ -99,23 +100,39 @@ export default function PerformancePage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-[#1E1E1E] p-4 rounded-xl border border-white/10">
                 <p className="text-sm text-white/50">Total Earnings</p>
-                <p className="text-2xl font-bold text-white mt-1">₹{stats.totalEarnings}</p>
+                {isLoading ? (
+                  <Skeleton className="h-8 w-24 mt-1" />
+                ) : (
+                  <p className="text-2xl font-bold text-white mt-1">₹{stats.totalEarnings}</p>
+                )}
               </div>
               <div className="bg-[#1E1E1E] p-4 rounded-xl border border-white/10">
                 <p className="text-sm text-white/50">Completed Jobs</p>
-                <p className="text-2xl font-bold text-white mt-1">{stats.completedJobs}</p>
+                {isLoading ? (
+                  <Skeleton className="h-8 w-12 mt-1" />
+                ) : (
+                  <p className="text-2xl font-bold text-white mt-1">{stats.completedJobs}</p>
+                )}
               </div>
               <div className="bg-[#1E1E1E] p-4 rounded-xl border border-white/10">
                 <p className="text-sm text-white/50">Avg. Rating</p>
-                <div className="flex items-center gap-1 mt-1">
-                  <span className="text-2xl font-bold text-white">{stats.rating.toFixed(1)}</span>
-                  <span className="text-sm text-yellow-500">★</span>
-                  <span className="text-xs text-white/40 ml-1">({stats.reviewCount})</span>
-                </div>
+                {isLoading ? (
+                  <Skeleton className="h-8 w-16 mt-1" />
+                ) : (
+                  <div className="flex items-center gap-1 mt-1">
+                    <span className="text-2xl font-bold text-white">{stats.rating.toFixed(1)}</span>
+                    <span className="text-sm text-yellow-500">★</span>
+                    <span className="text-xs text-white/40 ml-1">({stats.reviewCount})</span>
+                  </div>
+                )}
               </div>
               <div className="bg-[#1E1E1E] p-4 rounded-xl border border-white/10">
                 <p className="text-sm text-white/50">Completion Rate</p>
-                <p className="text-2xl font-bold text-white mt-1">{stats.completionRate}%</p>
+                {isLoading ? (
+                  <Skeleton className="h-8 w-20 mt-1" />
+                ) : (
+                  <p className="text-2xl font-bold text-white mt-1">{stats.completionRate}%</p>
+                )}
               </div>
             </div>
 

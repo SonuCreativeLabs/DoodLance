@@ -142,17 +142,115 @@ const FormField = ({
 
 type EditSection = 'personal' | 'contact' | 'location' | 'cricket' | 'username' | null;
 
+import { Skeleton } from "@/components/ui/skeleton";
+
+type PersonalInfo = {
+  fullName: string;
+  gender: string;
+  dateOfBirth: string;
+  bio: string;
+};
+
+// ... existing types ...
+
 export default function PersonalDetailsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const returnTo = searchParams.get('returnTo'); // Get return path from query params
-  const { personalDetails, updatePersonalDetails, refreshUser } = usePersonalDetails();
+  const { personalDetails, updatePersonalDetails, refreshUser, isLoading } = usePersonalDetails();
   const [editingSection, setEditingSection] = useState<EditSection>(null);
 
   // Refresh user data on mount to ensure we have latest updates from Client profile
   useEffect(() => {
     refreshUser();
   }, [refreshUser]);
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        {/* Personal Information Skeleton */}
+        <div className="bg-[#1E1E1E] rounded-2xl p-6 border border-white/10">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <Skeleton className="h-5 w-5 rounded-full" />
+              <Skeleton className="h-6 w-48" />
+            </div>
+            <Skeleton className="h-8 w-8 rounded-md" />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-6 w-full" />
+              </div>
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-6 w-full" />
+              </div>
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-6 w-full" />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-24 w-full" />
+            </div>
+          </div>
+        </div>
+
+        {/* Contact Information Skeleton */}
+        <div className="bg-[#1E1E1E] rounded-2xl p-6 border border-white/10">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <Skeleton className="h-5 w-5 rounded-full" />
+              <Skeleton className="h-6 w-48" />
+            </div>
+            <Skeleton className="h-8 w-8 rounded-md" />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-6 w-full" />
+            </div>
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-6 w-full" />
+            </div>
+          </div>
+        </div>
+
+        {/* Location Skeleton */}
+        <div className="bg-[#1E1E1E] rounded-2xl p-6 border border-white/10">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <Skeleton className="h-5 w-5 rounded-full" />
+              <Skeleton className="h-6 w-48" />
+            </div>
+            <Skeleton className="h-8 w-8 rounded-md" />
+          </div>
+          <div className="space-y-2">
+            <Skeleton className="h-6 w-3/4" />
+            <Skeleton className="h-4 w-1/2" />
+          </div>
+        </div>
+
+        {/* Username Skeleton */}
+        <div className="bg-[#1E1E1E] rounded-2xl p-6 border border-white/10">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <Skeleton className="h-5 w-5 rounded-full" />
+              <Skeleton className="h-6 w-48" />
+            </div>
+            <Skeleton className="h-8 w-8 rounded-md" />
+          </div>
+          <div className="space-y-4">
+            <Skeleton className="h-10 w-full" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Initialize state from context
   const [username, setUsername] = useState(personalDetails.username || '');

@@ -6,6 +6,7 @@ import { ArrowLeft, ArrowRight, FileText, Check, X, UploadCloud, AlertCircle, Lo
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { SelfieCapture } from '@/components/verification/SelfieCapture';
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface IdType {
   value: string;
@@ -29,6 +30,7 @@ export default function IdUploadPage() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState<VerificationStep>('document');
+  const [isLoading, setIsLoading] = useState(true);
 
   const [verificationStatus, setVerificationStatus] = useState<'idle' | 'in_review' | 'verified' | 'rejected'>('idle');
   const [rejectionReason, setRejectionReason] = useState('');
@@ -63,10 +65,56 @@ export default function IdUploadPage() {
         }
       } catch (error) {
         console.error('Failed to fetch verification status:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchStatus();
   }, []);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#0F0F0F] text-white flex flex-col">
+        {/* Sticky Header */}
+        <div className="sticky top-0 z-20 bg-[#0F0F0F] border-b border-white/5">
+          <div className="px-4 py-3">
+            <div className="flex items-start">
+              <Skeleton className="h-8 w-8 rounded-full" />
+              <div className="ml-3">
+                <Skeleton className="h-6 w-48 mb-1" />
+                <Skeleton className="h-4 w-64" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-y-auto">
+          <div className="max-w-md mx-auto w-full px-4 py-4 space-y-8">
+            <div className="flex justify-between px-4">
+              <Skeleton className="h-8 w-8 rounded-full" />
+              <Skeleton className="h-8 w-8 rounded-full" />
+              <Skeleton className="h-8 w-8 rounded-full" />
+            </div>
+
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-12 w-full rounded-xl" />
+              </div>
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-10 w-full rounded-xl" />
+              </div>
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-40 w-full rounded-xl" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (verificationStatus === 'in_review') {
     return (

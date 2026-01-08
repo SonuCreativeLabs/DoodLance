@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useExperience } from '@/contexts/ExperienceContext';
 import { EmptyState } from '@/components/freelancer/profile/EmptyState';
+import { Skeleton } from "@/components/ui/skeleton";
 
 export interface Experience {
   id: string;
@@ -23,7 +24,7 @@ export interface Experience {
 }
 
 export function ExperienceSection() {
-  const { experiences, addExperience, updateExperience, removeExperience } = useExperience();
+  const { experiences, addExperience, updateExperience, removeExperience, isLoading } = useExperience();
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -39,6 +40,30 @@ export function ExperienceSection() {
     description: '',
     isCurrent: true
   });
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="w-full h-10 rounded-xl mb-6" />
+        <div className="space-y-6">
+          {[1, 2].map((i) => (
+            <div key={i} className="flex gap-4">
+              <div className="flex flex-col items-center">
+                <Skeleton className="w-10 h-10 rounded-full" />
+                <div className="w-px h-full bg-white/10 my-2"></div>
+              </div>
+              <div className="flex-1 space-y-3 pb-6">
+                <Skeleton className="h-6 w-48" />
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-4 w-60" />
+                <Skeleton className="h-16 w-full rounded-md" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   const handleAddExperience = (e: React.FormEvent) => {
     e.preventDefault(); // Prevent default form submission
