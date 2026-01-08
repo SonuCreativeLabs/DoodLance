@@ -67,6 +67,32 @@ export default function AnalyticsPage() {
     }
   };
 
+  const handleExport = () => {
+    if (!performanceData.length) return;
+
+    // Create CSV content
+    const headers = ['Date', 'Users', 'Revenue', 'Bookings'];
+    const csvContent = [
+      headers.join(','),
+      ...performanceData.map(row =>
+        `"${row.name}",${row.users},${row.revenue},${row.bookings}`
+      )
+    ].join('\n');
+
+    // Create and click download link
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    if (link.download !== undefined) {
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `analytics_report_${timeRange}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -91,7 +117,7 @@ export default function AnalyticsPage() {
             <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
-          <Button className="bg-purple-600 hover:bg-purple-700">
+          <Button className="bg-purple-600 hover:bg-purple-700" onClick={handleExport}>
             <Download className="w-4 h-4 mr-2" />
             Export
           </Button>
