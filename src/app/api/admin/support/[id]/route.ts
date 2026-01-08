@@ -10,11 +10,15 @@ export async function PATCH(
     try {
         const ticketId = params.id;
         const body = await request.json();
-        const { status } = body;
+        const { status, assignedTo } = body;
+
+        const updateData: any = {};
+        if (status) updateData.status = status;
+        if (assignedTo !== undefined) updateData.assignedTo = assignedTo;
 
         const updatedTicket = await prisma.supportTicket.update({
             where: { id: ticketId },
-            data: { status }
+            data: updateData
         });
 
         return NextResponse.json(updatedTicket);

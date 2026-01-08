@@ -73,12 +73,16 @@ export default function ReportsPage() {
 
   useEffect(() => {
     fetchReports();
-  }, [reportType]);
+  }, [reportType, dateRange.from, dateRange.to]);
 
   const fetchReports = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/admin/reports?type=${reportType}`);
+      const params = new URLSearchParams({ type: reportType });
+      if (dateRange.from) params.append('from', dateRange.from);
+      if (dateRange.to) params.append('to', dateRange.to);
+
+      const res = await fetch(`/api/admin/reports?${params.toString()}`);
       if (res.ok) {
         const data = await res.json();
         setRevenueData(data.revenueData || []);
@@ -93,32 +97,29 @@ export default function ReportsPage() {
     }
   };
 
-  const handleExport = (format: string) => {
-    if (format !== 'csv') {
-      alert('Only CSV export is currently supported.');
-      return;
-    }
+  const generateReport = (type: string = 'overview') => {
+    // Reuse export logic but force type
+    let dataToExport;
+    let filename = 'report.csv';
 
-    // Determine data to export based on selectedReport or just export Revenue Data for now
-    // A more complex implementation would switch based on selectedReport
-
-    let dataToExport = revenueData;
-    let filename = 'revenue-report.csv';
-
-    if (selectedReport === 'users') {
+    // Default to revenue data if overview
+    if (type === 'overview' || type === 'revenue' || type === 'all' || type === 'bookings') {
+      dataToExport = revenueData;
+      filename = `${type}-report.csv`;
+    } else if (type === 'users') {
       dataToExport = userGrowthData;
       filename = 'user-growth-report.csv';
-    } else if (selectedReport === 'performance') {
+    } else if (type === 'performance') {
       dataToExport = categoryData;
-      filename = 'category-performance.csv';
+      filename = 'performance-report.csv';
     }
 
     if (!dataToExport || dataToExport.length === 0) {
-      alert('No data to export');
+      alert('No data to generate report for ' + type);
       return;
     }
 
-    // Convert to CSV
+    // Convert and Download
     const headers = Object.keys(dataToExport[0]);
     const csvContent = [
       headers.join(','),
@@ -128,7 +129,6 @@ export default function ReportsPage() {
       }).join(','))
     ].join('\n');
 
-    // Download
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     if (link.download !== undefined) {
@@ -142,6 +142,14 @@ export default function ReportsPage() {
     }
   };
 
+  const handleExport = (format: string) => {
+    if (format !== 'csv') {
+      alert('Only CSV export is currently supported.');
+      return;
+    }
+    generateReport(selectedReport || reportType);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -151,11 +159,14 @@ export default function ReportsPage() {
           <p className="text-gray-400 mt-1 text-sm sm:text-base">Generate comprehensive reports and insights</p>
         </div>
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-          <Button variant="outline" className="text-gray-300 w-full sm:w-auto">
+          <Button variant="outline" className="text-gray-300 w-full sm:w-auto" onClick={fetchReports}>
             <RefreshCw className="w-4 h-4 mr-2" />
             Refresh
           </Button>
-          <Button className="bg-purple-600 hover:bg-purple-700 w-full sm:w-auto">
+          <Button
+            className="bg-purple-600 hover:bg-purple-700 w-full sm:w-auto"
+            onClick={() => generateReport(reportType === 'all' ? 'overview' : reportType)}
+          >
             <FilePlus className="w-4 h-4 mr-2" />
             Generate Report
           </Button>
@@ -227,6 +238,10 @@ export default function ReportsPage() {
                     variant="ghost"
                     size="sm"
                     className="mt-2 text-purple-400 hover:text-purple-300 p-0"
+                    onClick={(e) => {
+                      e.stopPropagation(); // prevent card click
+                      generateReport(report.id);
+                    }}
                   >
                     Generate Report →
                   </Button>

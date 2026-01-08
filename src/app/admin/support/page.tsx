@@ -30,6 +30,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+
 import {
   MessageSquare, Search, Filter, MoreVertical, Eye,
   Clock, CheckCircle, AlertCircle, XCircle, Send,
@@ -38,6 +39,12 @@ import {
   Inbox, Archive, Star, Plus, DollarSign, Shield
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+const CricketBallLoader = () => (
+  <div className="w-5 h-5 rounded-full bg-red-600 border border-red-800 relative animate-spin">
+    <div className="absolute inset-0 border-2 border-white rounded-full border-dashed opacity-70"></div>
+    <div className="absolute top-1/2 left-0 w-full h-[1px] bg-white opacity-50 transform -translate-y-1/2"></div>
+  </div>
+);
 
 const priorityColors: Record<string, string> = {
   LOW: 'bg-gray-500',
@@ -68,15 +75,20 @@ interface TicketDetailsModalProps {
   onClose: () => void;
   onSendMessage: (ticketId: string, message: string) => void;
   onUpdateStatus: (ticketId: string, status: string) => void;
+  onAssign: (ticketId: string, assignee: string) => void;
 }
 
-function TicketDetailsModal({ ticket, open, onClose, onSendMessage, onUpdateStatus }: TicketDetailsModalProps) {
+function TicketDetailsModal({ ticket, open, onClose, onSendMessage, onUpdateStatus, onAssign }: TicketDetailsModalProps) {
   const [message, setMessage] = useState('');
   const [status, setStatus] = useState(ticket?.status || '');
+  const [assignedTo, setAssignedTo] = useState(ticket?.assignedToId || '');
 
   // Update local status when ticket changes
   useEffect(() => {
-    if (ticket) setStatus(ticket.status);
+    if (ticket) {
+      setStatus(ticket.status);
+      setAssignedTo(ticket.assignedToId || '');
+    }
   }, [ticket]);
 
   if (!ticket) return null;
@@ -90,6 +102,10 @@ function TicketDetailsModal({ ticket, open, onClose, onSendMessage, onUpdateStat
 
   const handleStatusUpdate = () => {
     onUpdateStatus(ticket.id, status);
+  };
+
+  const handleAssign = () => {
+    onAssign(ticket.id, assignedTo);
   };
 
   return (
@@ -132,8 +148,8 @@ function TicketDetailsModal({ ticket, open, onClose, onSendMessage, onUpdateStat
                     <div
                       key={msg.id}
                       className={`p-3 rounded-lg ${msg.senderType === 'admin'
-                          ? 'bg-purple-600/20 border border-purple-600/50 ml-8'
-                          : 'bg-[#1a1a1a] border border-gray-700 mr-8'
+                        ? 'bg-purple-600/20 border border-purple-600/50 ml-8'
+                        : 'bg-[#1a1a1a] border border-gray-700 mr-8'
                         }`}
                     >
                       <div className="flex items-center justify-between mb-2">
@@ -247,6 +263,15 @@ export default function SupportPage() {
     userName: '',
     userEmail: '',
   });
+  const [isCreating, setIsCreating] = useState(false);
+  const [stats, setStats] = useState({
+    totalTickets: 0,
+    openTickets: 0,
+    inProgress: 0,
+    resolved: 0,
+    urgentTickets: 0,
+    avgResponseTime: '0h'
+  });
   const itemsPerPage = 10;
 
   // Debounce search
@@ -275,6 +300,7 @@ export default function SupportPage() {
         const data = await res.json();
         setTickets(data.tickets);
         setTotalPages(data.totalPages);
+        setStats(data.stats);
       }
     } catch (error) {
       console.error('Error fetching tickets:', error);
@@ -320,8 +346,6 @@ export default function SupportPage() {
       });
       if (res.ok) {
         fetchTickets();
-        // Close modal if resolved/closed? Or keep open?
-        // Optionally refresh selectedTicket if open
         if (selectedTicket && selectedTicket.id === ticketId) {
           const updated = await res.json();
           setSelectedTicket({ ...selectedTicket, status: updated.status });
@@ -330,7 +354,25 @@ export default function SupportPage() {
     } catch (e) { console.error(e); }
   };
 
+  const handleAssign = async (ticketId: string, assignee: string) => {
+    try {
+      const res = await fetch(`/api/admin/support/${ticketId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ assignedTo: assignee })
+      });
+      if (res.ok) {
+        fetchTickets();
+        if (selectedTicket && selectedTicket.id === ticketId) {
+          setSelectedTicket({ ...selectedTicket, assignedToId: assignee });
+        }
+      }
+    } catch (e) { console.error(e); }
+  };
+
   const handleCreateTicket = async () => {
+    if (isCreating) return;
+    setIsCreating(true);
     try {
       const res = await fetch('/api/admin/support', {
         method: 'POST',
@@ -339,7 +381,15 @@ export default function SupportPage() {
       });
       if (res.ok) {
         setShowCreateTicket(false);
+        // Reset filters so the new ticket (likely OPEN/ALL) appears
+        setSearchTerm('');
+        setStatusFilter('all');
+        setPriorityFilter('all');
+        setCategoryFilter('all');
+        setCurrentPage(1);
+
         fetchTickets();
+
         setNewTicket({
           subject: '',
           description: '',
@@ -350,17 +400,10 @@ export default function SupportPage() {
         });
       }
     } catch (e) { console.error(e); }
+    finally { setIsCreating(false); }
   };
 
-  // Stats (Fetch from API or calc from view)
-  const stats = {
-    totalTickets: tickets.length, // Should be total from API ideally
-    openTickets: tickets.filter(t => t.status === 'OPEN').length,
-    inProgress: tickets.filter(t => t.status === 'IN_PROGRESS').length,
-    resolved: tickets.filter(t => t.status === 'RESOLVED').length,
-    urgentTickets: tickets.filter(t => t.priority === 'URGENT').length,
-    avgResponseTime: '2.5 hours' // Placeholder
-  };
+
 
   return (
     <div className="space-y-6">
@@ -400,6 +443,33 @@ export default function SupportPage() {
               <p className="text-2xl font-bold text-white">{stats.openTickets}</p>
             </div>
             <MessageCircle className="w-8 h-8 text-yellow-500" />
+          </div>
+        </Card>
+        <Card className="bg-[#1a1a1a] border-gray-800 p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-400">In Progress</p>
+              <p className="text-2xl font-bold text-white">{stats.inProgress}</p>
+            </div>
+            <Clock className="w-8 h-8 text-orange-500" />
+          </div>
+        </Card>
+        <Card className="bg-[#1a1a1a] border-gray-800 p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-400">Resolved</p>
+              <p className="text-2xl font-bold text-white">{stats.resolved}</p>
+            </div>
+            <CheckCircle className="w-8 h-8 text-green-500" />
+          </div>
+        </Card>
+        <Card className="bg-[#1a1a1a] border-gray-800 p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-400">Urgent</p>
+              <p className="text-2xl font-bold text-white">{stats.urgentTickets}</p>
+            </div>
+            <AlertCircle className="w-8 h-8 text-red-500" />
           </div>
         </Card>
       </div>
@@ -574,6 +644,7 @@ export default function SupportPage() {
         }}
         onSendMessage={handleSendMessage}
         onUpdateStatus={handleUpdateStatus}
+        onAssign={handleAssign}
       />
 
       {/* Create Ticket Dialog */}
@@ -649,10 +720,18 @@ export default function SupportPage() {
               Cancel
             </Button>
             <Button
-              className="bg-purple-600 hover:bg-purple-700"
+              className="bg-purple-600 hover:bg-purple-700 min-w-[140px]"
               onClick={handleCreateTicket}
+              disabled={isCreating}
             >
-              Create Ticket
+              {isCreating ? (
+                <>
+                  <CricketBallLoader />
+                  <span className="ml-2">Creating...</span>
+                </>
+              ) : (
+                'Create Ticket'
+              )}
             </Button>
           </div>
         </DialogContent>
