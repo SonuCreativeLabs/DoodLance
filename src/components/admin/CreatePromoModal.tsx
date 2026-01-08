@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -28,7 +28,7 @@ interface CreatePromoModalProps {
   onCreate: (promo: any) => void;
 }
 
-export function CreatePromoModal({ open, onClose, onCreate }: CreatePromoModalProps) {
+export function CreatePromoModal({ open, onClose, onCreate, initialData }: CreatePromoModalProps & { initialData?: any }) {
   const [formData, setFormData] = useState({
     code: '',
     description: '',
@@ -44,23 +44,55 @@ export function CreatePromoModal({ open, onClose, onCreate }: CreatePromoModalPr
     isActive: true
   });
 
+  useEffect(() => {
+    if (open && initialData) {
+      setFormData({
+        code: initialData.code,
+        description: initialData.description || '',
+        type: initialData.discountType?.toLowerCase() || 'percentage',
+        value: initialData.discountValue?.toString() || '',
+        minAmount: initialData.minOrderAmount?.toString() || '',
+        maxDiscount: initialData.maxDiscount?.toString() || '',
+        usageLimit: initialData.usageLimit?.toString() || '',
+        userLimit: initialData.perUserLimit?.toString() || '1',
+        validFrom: initialData.startDate ? new Date(initialData.startDate).toISOString().split('T')[0] : '',
+        validTo: initialData.endDate ? new Date(initialData.endDate).toISOString().split('T')[0] : '',
+        applicableTo: 'all', // TODO: Implement applicableTo mapping
+        isActive: initialData.isActive
+      });
+    } else if (open && !initialData) {
+      // Reset when opening in create mode
+      setFormData({
+        code: '',
+        description: '',
+        type: 'percentage',
+        value: '',
+        minAmount: '',
+        maxDiscount: '',
+        usageLimit: '',
+        userLimit: '1',
+        validFrom: '',
+        validTo: '',
+        applicableTo: 'all',
+        isActive: true
+      });
+    }
+  }, [open, initialData]);
+
   const handleSubmit = () => {
+    // Map to API structure
     const newPromo = {
-      id: `PROMO${Date.now()}`,
-      ...formData,
-      value: Number(formData.value),
-      minAmount: Number(formData.minAmount),
-      maxDiscount: Number(formData.maxDiscount),
+      code: formData.code,
+      description: formData.description,
+      discountType: formData.type.toUpperCase(),
+      discountValue: Number(formData.value),
+      minOrderAmount: formData.minAmount ? Number(formData.minAmount) : null,
+      maxDiscount: formData.maxDiscount ? Number(formData.maxDiscount) : null,
       usageLimit: formData.usageLimit ? Number(formData.usageLimit) : null,
-      userLimit: Number(formData.userLimit),
-      usageCount: 0,
-      createdBy: 'Admin',
-      createdAt: new Date().toISOString().split('T')[0],
-      stats: {
-        totalRevenue: 0,
-        averageOrderValue: 0,
-        conversionRate: 0
-      }
+      perUserLimit: formData.userLimit ? Number(formData.userLimit) : 1,
+      validFrom: formData.validFrom || new Date().toISOString(),
+      validTo: formData.validTo || null,
+      isActive: formData.isActive
     };
     onCreate(newPromo);
     onClose();
@@ -70,9 +102,9 @@ export function CreatePromoModal({ open, onClose, onCreate }: CreatePromoModalPr
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl bg-[#1a1a1a] border-gray-800">
         <DialogHeader>
-          <DialogTitle className="text-white">Create Promo Code</DialogTitle>
+          <DialogTitle className="text-white">{initialData ? 'Edit Promo Code' : 'Create Promo Code'}</DialogTitle>
           <DialogDescription className="text-gray-400">
-            Create a new promotional code for customers
+            {initialData ? 'Update existing promo code details' : 'Create a new promotional code for customers'}
           </DialogDescription>
         </DialogHeader>
 
@@ -89,8 +121,8 @@ export function CreatePromoModal({ open, onClose, onCreate }: CreatePromoModalPr
             </div>
             <div>
               <Label className="text-gray-300">Type</Label>
-              <Select 
-                value={formData.type} 
+              <Select
+                value={formData.type}
                 onValueChange={(value) => setFormData({ ...formData, type: value })}
               >
                 <SelectTrigger className="bg-[#2a2a2a] border-gray-700 text-white mt-1">
@@ -196,8 +228,8 @@ export function CreatePromoModal({ open, onClose, onCreate }: CreatePromoModalPr
 
           <div>
             <Label className="text-gray-300">Applies To</Label>
-            <Select 
-              value={formData.applicableTo} 
+            <Select
+              value={formData.applicableTo}
               onValueChange={(value) => setFormData({ ...formData, applicableTo: value })}
             >
               <SelectTrigger className="bg-[#2a2a2a] border-gray-700 text-white mt-1">
@@ -224,11 +256,11 @@ export function CreatePromoModal({ open, onClose, onCreate }: CreatePromoModalPr
 
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button 
+          <Button
             onClick={handleSubmit}
             className="bg-purple-600 hover:bg-purple-700"
           >
-            Create Promo Code
+            {initialData ? 'Update Promo Code' : 'Create Promo Code'}
           </Button>
         </DialogFooter>
       </DialogContent>

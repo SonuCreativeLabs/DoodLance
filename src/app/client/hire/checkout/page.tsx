@@ -17,44 +17,16 @@ export default function CheckoutPage() {
   const { user } = useAuth();
 
   const [couponCode, setCouponCode] = useState('');
-  const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
-  const [discountAmount, setDiscountAmount] = useState(0);
-  const [showOrderDetails, setShowOrderDetails] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [bookingSuccess, setBookingSuccess] = useState(false);
-  const [newBookingId, setNewBookingId] = useState<string | null>(null);
-  const [generatedOtp, setGeneratedOtp] = useState<string | null>(null);
+  const [appliedCoupon, setAppliedCoupon] = useState<{
+    code: string;
+    discountType: string;
+    discountValue: number;
+    calculatedDiscount: number;
+  } | null>(null);
+  const [couponError, setCouponError] = useState('');
+  const [validatingCoupon, setValidatingCoupon] = useState(false);
 
-  // Generate OTP function
-  const generateOtp = () => {
-    return Math.floor(1000 + Math.random() * 9000).toString();
-  };
-
-  // Auth check removed - will validate when user clicks payment button instead
-
-
-  // Hide navbar when component mounts
-  useEffect(() => {
-    setNavbarVisibility(false);
-
-    // Show navbar when component unmounts
-    return () => {
-      setNavbarVisibility(true);
-    };
-  }, [setNavbarVisibility]);
-
-  const [commissionRate, setCommissionRate] = useState(0.05);
-
-  useEffect(() => {
-    fetch('/api/public-config')
-      .then(res => res.json())
-      .then(data => {
-        if (data.clientCommission) {
-          setCommissionRate(Number(data.clientCommission) / 100);
-        }
-      })
-      .catch(err => console.error('Failed to load config', err));
-  }, []);
+  // ... (previous state variables) ...
 
   const subtotal = state.cartItems.reduce((total, item) => {
     const price = typeof item.service.price === 'string'
@@ -63,8 +35,70 @@ export default function CheckoutPage() {
     return total + (price * (item.quantity || 1));
   }, 0);
   const serviceFee = Math.round(subtotal * commissionRate); // Dynamic platform fee
-  const discount = appliedCoupon ? Math.round(subtotal * 0.1) : 0; // 10% discount for demo
-  const total = subtotal + serviceFee - discount;
+
+  // Calculate discount dynamically
+  const getDiscountAmount = () => {
+    if (!appliedCoupon) return 0;
+    // Recalculate based on current subtotal if needed, or use API provided calculation if simple
+    // The API provided 'calculatedDiscount' for the orderAmount we sent.
+    // If orderAmount changed (unlikely in checkout step easily), we might need to re-validate.
+    // For now, simple percentage/fixed math:
+    if (appliedCoupon.discountType === 'PERCENTAGE') {
+      // Cap logic is in API, but simpler to use the API returned calculatedDiscount 
+      // IF we passed the correct amount.
+      // Let's rely on the appliedCoupon state storing the result or logic.
+      // Actually better to re-run math if we can or just use the value.
+      return appliedCoupon.calculatedDiscount;
+    }
+    return appliedCoupon.calculatedDiscount;
+  };
+
+  const discount = getDiscountAmount();
+  const total = Math.max(0, subtotal + serviceFee - discount);
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) return;
+    setValidatingCoupon(true);
+    setCouponError('');
+
+    try {
+      const res = await fetch('/api/promos/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code: couponCode,
+          orderAmount: subtotal,
+          userId: user?.id
+        })
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.valid) {
+        setAppliedCoupon({
+          code: data.promo.code,
+          discountType: data.promo.discountType,
+          discountValue: data.promo.discountValue,
+          calculatedDiscount: data.promo.calculatedDiscount
+        });
+        setCouponCode(''); // Clear input on success
+      } else {
+        setCouponError(data.error || 'Invalid coupon code');
+        setAppliedCoupon(null);
+      }
+    } catch (error) {
+      console.error('Coupon validation failed', error);
+      setCouponError('Failed to validate coupon');
+    } finally {
+      setValidatingCoupon(false);
+    }
+  };
+
+  const removeCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCode('');
+    setCouponError('');
+  };
 
   const handleCODBooking = async () => {
     setIsProcessing(true);
@@ -262,11 +296,70 @@ export default function CheckoutPage() {
                 </div>
                 {appliedCoupon && (
                   <div className="flex justify-between text-sm">
-                    <span className="text-green-400">Discount ({appliedCoupon})</span>
-                    <span className="text-green-400">-₹{discountAmount.toLocaleString()}</span>
+                    <span className="text-green-400">Discount ({appliedCoupon.code})</span>
+                    <span className="text-green-400">-₹{discount.toLocaleString()}</span>
                   </div>
                 )}
               </div>
+            </div>
+          )}
+        </div>
+
+        {/* Coupon Code Section */}
+        <div className="bg-[#1a1a1a] rounded-xl border border-white/10 p-4">
+          <h3 className="text-white font-medium mb-3 flex items-center gap-2">
+            <Tag className="w-4 h-4 text-purple-400" />
+            Apply Coupon
+          </h3>
+
+          {!appliedCoupon ? (
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <input
+                  type="text"
+                  value={couponCode}
+                  onChange={(e) => {
+                    setCouponCode(e.target.value.toUpperCase());
+                    setCouponError('');
+                  }}
+                  placeholder="Enter Code"
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white placeholder-white/30 focus:outline-none focus:border-purple-500/50 uppercase"
+                />
+                {couponError && (
+                  <p className="absolute -bottom-5 left-0 text-xs text-red-400 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" /> {couponError}
+                  </p>
+                )}
+              </div>
+              <Button
+                onClick={handleApplyCoupon}
+                disabled={validatingCoupon || !couponCode.trim()}
+                className="bg-white/10 hover:bg-white/20 text-white border border-white/10"
+              >
+                {validatingCoupon ? (
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                ) : 'Apply'}
+              </Button>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between bg-green-500/10 border border-green-500/20 rounded-lg px-3 py-2">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center">
+                  <CheckCircle className="w-3.5 h-3.5 text-green-400" />
+                </div>
+                <div>
+                  <p className="text-white font-medium text-sm">{appliedCoupon.code}</p>
+                  <p className="text-green-400 text-xs">
+                    ₹{appliedCoupon.calculatedDiscount.toLocaleString()} saved
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={removeCoupon}
+                className="text-white/40 hover:text-white transition-colors text-xs"
+              >
+                Remove
+              </button>
             </div>
           )}
         </div>

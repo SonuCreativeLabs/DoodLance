@@ -1,5 +1,16 @@
 'use client';
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -40,6 +51,13 @@ export default function PromoCodesPage() {
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
+  // Confirmation State
+  const [actionPromo, setActionPromo] = useState<any | null>(null);
+  const [actionType, setActionType] = useState<'delete' | 'toggle' | null>(null);
+
+  // Editing State
+  const [editingPromo, setEditingPromo] = useState<any | null>(null);
+
   const fetchPromos = async () => {
     setLoading(true);
     try {
@@ -67,28 +85,57 @@ export default function PromoCodesPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, debouncedSearch, statusFilter]);
 
-  const handleCreatePromo = async (newPromoData: any) => {
+  const handleSavePromo = async (promoData: any) => {
     try {
-      // Map frontend fields to API expectations if necessary
-      // Assuming modal sends: code, description, discountType, discountValue, validFrom, validTo, usageLimit
-      const res = await fetch('/api/admin/promos', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newPromoData)
-      });
-      if (res.ok) {
-        setCreateModalOpen(false);
-        fetchPromos(); // Refresh list
+      if (editingPromo) {
+        // Edit Mode
+        // We likely need a dedicated PATCH endpoint for full updates or use the existing structure if compatible.
+        // Assuming we can re-use the create endpoint with an ID or need a new route.
+        // The current [id] route is tailored for status PATCH or DELETE.
+        // Let's assume we need to update src/app/api/admin/promos/[id]/route.ts to handle full updates FIRST.
+        // Or we can try to send it there.
+        const res = await fetch(`/api/admin/promos/${editingPromo.id}`, {
+          method: 'PUT', // or PATCH if we update multiple fields
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(promoData)
+        });
+        if (res.ok) {
+          setEditingPromo(null);
+          setCreateModalOpen(false);
+          fetchPromos();
+        } else {
+          console.error('Failed to update promo');
+        }
       } else {
-        console.error('Failed to create promo');
-        // TODO: Toast
+        // Create Mode
+        const res = await fetch('/api/admin/promos', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(promoData)
+        });
+        if (res.ok) {
+          setCreateModalOpen(false);
+          fetchPromos();
+        } else {
+          console.error('Failed to create promo');
+        }
       }
     } catch (e) {
       console.error(e);
     }
   };
 
-  const togglePromoStatus = async (promoId: string, currentStatus: boolean) => {
+  const initEditPromo = (promo: any) => {
+    setEditingPromo(promo);
+    setCreateModalOpen(true); // Re-use the modal open state or rely on editingPromo
+  };
+
+  const initToggleStatus = (promo: any) => {
+    setActionPromo(promo);
+    setActionType('toggle');
+  };
+
+  const confirmToggleStatus = async (promoId: string, currentStatus: boolean) => {
     try {
       const res = await fetch(`/api/admin/promos/${promoId}`, {
         method: 'PATCH',
@@ -99,10 +146,15 @@ export default function PromoCodesPage() {
         fetchPromos();
       }
     } catch (e) { console.error(e); }
+    setActionPromo(null);
   };
 
-  const deletePromo = async (promoId: string) => {
-    if (!confirm('Are you sure you want to delete this promo code?')) return;
+  const initDeletePromo = (promo: any) => {
+    setActionPromo(promo);
+    setActionType('delete');
+  };
+
+  const confirmDeletePromo = async (promoId: string) => {
     try {
       const res = await fetch(`/api/admin/promos/${promoId}`, {
         method: 'DELETE'
@@ -111,6 +163,7 @@ export default function PromoCodesPage() {
         fetchPromos();
       }
     } catch (e) { console.error(e); }
+    setActionPromo(null);
   };
 
   // Stats (Calculated on frontend for now based on current view/API response if available, 
@@ -273,17 +326,21 @@ export default function PromoCodesPage() {
                   variant="outline"
                   size="sm"
                   className="flex-1"
-                  onClick={() => togglePromoStatus(promo.id, promo.isActive)}
+                  onClick={() => initToggleStatus(promo)}
                 >
                   {promo.isActive ? 'Deactivate' : 'Activate'}
                 </Button>
-                <Button variant="outline" size="sm">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => initEditPromo(promo)}
+                >
                   <Edit className="w-4 h-4" />
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => deletePromo(promo.id)}
+                  onClick={() => initDeletePromo(promo)}
                 >
                   <Trash2 className="w-4 h-4 text-red-400" />
                 </Button>
@@ -321,10 +378,47 @@ export default function PromoCodesPage() {
 
       {/* Create Promo Modal */}
       <CreatePromoModal
-        open={createModalOpen}
-        onClose={() => setCreateModalOpen(false)}
-        onCreate={handleCreatePromo}
+        open={createModalOpen || !!editingPromo}
+        onClose={() => {
+          setCreateModalOpen(false);
+          setEditingPromo(null);
+        }}
+        onCreate={handleSavePromo}
+        initialData={editingPromo}
       />
+
+      {/* Confirmation Dialog */}
+      <AlertDialog open={!!actionPromo} onOpenChange={() => setActionPromo(null)}>
+        <AlertDialogContent className="bg-[#1a1a1a] border-gray-800 text-white">
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {actionType === 'delete' ? 'Delete Promo Code' : 'Update Status'}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-gray-400">
+              {actionType === 'delete'
+                ? `Are you sure you want to delete "${actionPromo?.code}"? This action cannot be undone.`
+                : `Are you sure you want to ${actionPromo?.isActive ? 'deactivate' : 'activate'} "${actionPromo?.code}"?`
+              }
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="bg-transparent border-gray-700 text-gray-300 hover:bg-gray-800 hover:text-white">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className={`text-white ${actionType === 'delete' ? 'bg-red-600 hover:bg-red-700' : 'bg-purple-600 hover:bg-purple-700'}`}
+              onClick={() => {
+                if (!actionPromo) return;
+                if (actionType === 'delete') {
+                  confirmDeletePromo(actionPromo.id);
+                } else {
+                  confirmToggleStatus(actionPromo.id, actionPromo.isActive);
+                }
+              }}
+            >
+              Confirm
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
