@@ -30,22 +30,78 @@ export async function GET(request: NextRequest) {
             return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
         }
 
-        // Fetch ALL completed jobs to calculate total stats dynamically
-        const allCompletedJobs = await prisma.job.findMany({
+        // Fetch ALL completed bookings for services provided by this user
+        const userServices = await prisma.service.findMany({
+            where: { providerId: user.id },
+            select: { id: true }
+        });
+
+        const serviceIds = userServices.map((s: { id: string }) => s.id);
+
+        const allCompletedBookings = await prisma.booking.findMany({
             where: {
-                freelancerId: user.id,
-                status: 'COMPLETED'
+                serviceId: { in: serviceIds },
+                status: { in: ['completed', 'delivered'] } // Lowercase status values
             },
             select: {
-                budget: true,
-                completedAt: true
+                totalPrice: true,
+                duration: true,
+                scheduledAt: true,
+                deliveredAt: true,
+                updatedAt: true
             }
         });
 
-        const calculatedStats = allCompletedJobs.reduce((acc: { totalEarnings: number; completedJobs: number }, job: { budget: number }) => ({
-            totalEarnings: acc.totalEarnings + job.budget,
-            completedJobs: acc.completedJobs + 1
-        }), { totalEarnings: 0, completedJobs: 0 });
+        const calculatedStats = allCompletedBookings.reduce((acc: { totalEarnings: number; completedJobs: number; activeHours: number }, booking: any) => {
+            // Calculate duration from scheduledAt and deliveredAt in hours
+            // Only count hours if deliveredAt is after scheduledAt (avoid negative hours)
+            let durationHours = 0;
+            if (booking.scheduledAt && booking.deliveredAt) {
+                const start = new Date(booking.scheduledAt);
+                const end = new Date(booking.deliveredAt);
+                const duration = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
+                // Only add positive durations
+                if (duration > 0) {
+                    durationHours = duration;
+                }
+            }
+
+            return {
+                totalEarnings: acc.totalEarnings + booking.totalPrice,
+                completedJobs: acc.completedJobs + 1,
+                activeHours: acc.activeHours + durationHours
+            };
+        }, { totalEarnings: 0, completedJobs: 0, activeHours: 0 });
+
+        // Calculate today's earnings and jobs
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
+
+        const todayBookings = allCompletedBookings.filter((booking: any) => {
+            const completedDate = booking.deliveredAt || booking.updatedAt;
+            return completedDate && new Date(completedDate) >= todayStart;
+        });
+
+        const todayStats = todayBookings.reduce((acc: { earnings: number; jobs: number; hours: number }, booking: any) => {
+            // Calculate duration from scheduledAt and deliveredAt in hours
+            // Only count hours if deliveredAt is after scheduledAt (avoid negative hours)
+            let durationHours = 0;
+            if (booking.scheduledAt && booking.deliveredAt) {
+                const start = new Date(booking.scheduledAt);
+                const end = new Date(booking.deliveredAt);
+                const duration = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
+                // Only add positive durations
+                if (duration > 0) {
+                    durationHours = duration;
+                }
+            }
+
+            return {
+                earnings: acc.earnings + booking.totalPrice,
+                jobs: acc.jobs + 1,
+                hours: acc.hours + durationHours
+            };
+        }, { earnings: 0, jobs: 0, hours: 0 });
 
         // Filter for last 6 months for the chart
         const sixMonthsAgo = new Date();
@@ -53,9 +109,10 @@ export async function GET(request: NextRequest) {
         sixMonthsAgo.setDate(1);
         sixMonthsAgo.setHours(0, 0, 0, 0);
 
-        const chartJobs = allCompletedJobs.filter((job: { completedAt: Date | null }) =>
-            job.completedAt && new Date(job.completedAt) >= sixMonthsAgo
-        );
+        const chartBookings = allCompletedBookings.filter((booking: any) => {
+            const completedDate = booking.deliveredAt || booking.updatedAt;
+            return completedDate && new Date(completedDate) >= sixMonthsAgo;
+        });
 
         // Initialize last 6 months with 0
         const monthlyStatsMap = new Map<string, { earnings: number, jobs: number }>();
@@ -67,13 +124,15 @@ export async function GET(request: NextRequest) {
         }
 
         // Aggregate data for chart
-        chartJobs.forEach((job: { budget: number; completedAt: Date | null }) => {
-            if (job.completedAt) {
-                const monthName = job.completedAt.toLocaleString('default', { month: 'short' });
+        chartBookings.forEach((booking: any) => {
+            const completedDate = booking.deliveredAt || booking.updatedAt;
+            if (completedDate) {
+                const date = new Date(completedDate);
+                const monthName = date.toLocaleString('default', { month: 'short' });
                 if (monthlyStatsMap.has(monthName)) {
                     const current = monthlyStatsMap.get(monthName)!;
                     monthlyStatsMap.set(monthName, {
-                        earnings: current.earnings + job.budget,
+                        earnings: current.earnings + booking.totalPrice,
                         jobs: current.jobs + 1
                     });
                 }
@@ -94,10 +153,38 @@ export async function GET(request: NextRequest) {
             });
         }
 
+        // Calculate this week's active hours
+        const weekStart = new Date();
+        weekStart.setDate(weekStart.getDate() - weekStart.getDay()); // Start of week (Sunday)
+        weekStart.setHours(0, 0, 0, 0);
+
+        const thisWeekBookings = allCompletedBookings.filter((booking: any) => {
+            const completedDate = booking.deliveredAt || booking.updatedAt;
+            return completedDate && new Date(completedDate) >= weekStart;
+        });
+
+        const thisWeekHours = thisWeekBookings.reduce((total: number, booking: any) => {
+            let durationHours = 0;
+            if (booking.scheduledAt && booking.deliveredAt) {
+                const start = new Date(booking.scheduledAt);
+                const end = new Date(booking.deliveredAt);
+                const duration = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
+                // Only add positive durations
+                if (duration > 0) {
+                    durationHours = duration;
+                }
+            }
+            return total + durationHours;
+        }, 0);
+
         return NextResponse.json({
             ...profile,
             totalEarnings: calculatedStats.totalEarnings,
-            completedJobs: calculatedStats.completedJobs,
+            totalJobs: calculatedStats.completedJobs, // Frontend expects 'totalJobs'
+            completedJobs: calculatedStats.completedJobs, // Keep for compatibility
+            activeHours: Math.round(thisWeekHours), // This week's hours, rounded
+            todayEarnings: todayStats.earnings,
+            todayJobs: todayStats.jobs,
             monthlyStats
         });
 
