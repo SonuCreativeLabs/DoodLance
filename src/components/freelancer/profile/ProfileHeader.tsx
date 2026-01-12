@@ -46,14 +46,20 @@ interface ProfileHeaderProps {
   isPreview?: boolean;
   avatarUrl?: string;
   coverImageUrl?: string;
+  personalDetails?: any; // Optional override for personal details
 }
 
 export function ProfileHeader({
   isPreview = false,
   avatarUrl,
-  coverImageUrl
+  coverImageUrl,
+  personalDetails: propPersonalDetails
 }: ProfileHeaderProps) {
-  const { personalDetails } = usePersonalDetails();
+  const { personalDetails: contextPersonalDetails } = usePersonalDetails();
+
+  // Use prop if available (for preview/public view), otherwise context
+  const personalDetails = propPersonalDetails || contextPersonalDetails;
+
   const { skills } = useSkills();
   const { reviewsData } = useReviews();
   const { portfolio } = usePortfolio();
@@ -77,8 +83,10 @@ export function ProfileHeader({
   // Calculate age from personal details
   const age = (() => {
     try {
-      if (personalDetails.dateOfBirth && typeof personalDetails.dateOfBirth === 'string') {
-        const calculatedAge = calculateAge(personalDetails.dateOfBirth);
+      if (personalDetails.dateOfBirth) {
+        // Handle various date formats including string and Date object
+        const dob = personalDetails.dateOfBirth;
+        const calculatedAge = calculateAge(dob);
         return isNaN(calculatedAge) ? null : calculatedAge;
       }
       return null;
@@ -385,7 +393,7 @@ export function ProfileHeader({
 
         <div className="text-center mb-4">
           <div className="flex items-center justify-center gap-2">
-            <h1 className="text-2xl font-bold text-white">{personalDetails.name}</h1>
+            <h1 className="text-2xl font-bold text-white">{personalDetails.name?.split(' ')[0] || personalDetails.name}</h1>
             {age && (
               <span className="text-lg font-semibold text-white/70">{age}</span>
             )}

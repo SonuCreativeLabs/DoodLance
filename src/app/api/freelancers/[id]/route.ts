@@ -82,6 +82,7 @@ export async function GET(
       bio: profile.user.bio,
       avatar: profile.user.avatar,
       coverImage: profile.coverImage,
+      dateOfBirth: profile.user.dateOfBirth,
       phone: profile.user.phone,
       email: profile.user.email,
       hourlyRate: profile.hourlyRate,

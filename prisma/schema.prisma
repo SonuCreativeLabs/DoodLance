@@ -25,6 +25,7 @@ model User {
   coords                 String
   bio                    String?
   gender                 String?
+  dateOfBirth            String?
   address                String?
   city                   String?
   state                  String?

@@ -16,6 +16,8 @@ export interface PersonalDetails {
   cricketRole?: string;
   battingStyle?: string;
   bowlingStyle?: string;
+  firstName?: string;
+  lastName?: string;
   // Stats
   responseTime?: string;
   deliveryTime?: string;
@@ -46,6 +48,8 @@ interface PersonalDetailsContextType {
 
 const initialPersonalDetails: PersonalDetails = {
   name: "",
+  firstName: "",
+  lastName: "",
   title: "",
   location: "",
   about: "",
@@ -170,6 +174,8 @@ export function PersonalDetailsProvider({ children }: { children: ReactNode }) {
       // Map all fields from both sources
       const newDetails = {
         name: userData?.name || "",
+        firstName: userData?.name?.split(' ')[0] || "",
+        lastName: userData?.name?.split(' ').slice(1).join(' ') || "",
         title: profile?.title || "",
         location: userData?.location || "",
         about: profile?.about || "",

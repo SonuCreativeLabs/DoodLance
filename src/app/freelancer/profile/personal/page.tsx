@@ -24,7 +24,8 @@ import { usePersonalDetails } from '@/contexts/PersonalDetailsContext';
 import { UsernameInput } from '@/components/freelancer/profile/UsernameInput';
 
 type PersonalInfo = {
-  fullName: string;
+  firstName: string;
+  lastName: string;
   gender: string;
   dateOfBirth: string;
   bio: string;
@@ -160,92 +161,7 @@ export default function PersonalDetailsPage() {
     refreshUser();
   }, [refreshUser]);
 
-  if (isLoading) {
-    return (
-      <div className="space-y-6">
-        {/* Personal Information Skeleton */}
-        <div className="bg-[#1E1E1E] rounded-2xl p-6 border border-white/10">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <Skeleton className="h-5 w-5 rounded-full" />
-              <Skeleton className="h-6 w-48" />
-            </div>
-            <Skeleton className="h-8 w-8 rounded-md" />
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Skeleton className="h-4 w-20" />
-                <Skeleton className="h-6 w-full" />
-              </div>
-              <div className="space-y-2">
-                <Skeleton className="h-4 w-20" />
-                <Skeleton className="h-6 w-full" />
-              </div>
-              <div className="space-y-2">
-                <Skeleton className="h-4 w-20" />
-                <Skeleton className="h-6 w-full" />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Skeleton className="h-4 w-20" />
-              <Skeleton className="h-24 w-full" />
-            </div>
-          </div>
-        </div>
-
-        {/* Contact Information Skeleton */}
-        <div className="bg-[#1E1E1E] rounded-2xl p-6 border border-white/10">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <Skeleton className="h-5 w-5 rounded-full" />
-              <Skeleton className="h-6 w-48" />
-            </div>
-            <Skeleton className="h-8 w-8 rounded-md" />
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <Skeleton className="h-4 w-20" />
-              <Skeleton className="h-6 w-full" />
-            </div>
-            <div className="space-y-2">
-              <Skeleton className="h-4 w-20" />
-              <Skeleton className="h-6 w-full" />
-            </div>
-          </div>
-        </div>
-
-        {/* Location Skeleton */}
-        <div className="bg-[#1E1E1E] rounded-2xl p-6 border border-white/10">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <Skeleton className="h-5 w-5 rounded-full" />
-              <Skeleton className="h-6 w-48" />
-            </div>
-            <Skeleton className="h-8 w-8 rounded-md" />
-          </div>
-          <div className="space-y-2">
-            <Skeleton className="h-6 w-3/4" />
-            <Skeleton className="h-4 w-1/2" />
-          </div>
-        </div>
-
-        {/* Username Skeleton */}
-        <div className="bg-[#1E1E1E] rounded-2xl p-6 border border-white/10">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <Skeleton className="h-5 w-5 rounded-full" />
-              <Skeleton className="h-6 w-48" />
-            </div>
-            <Skeleton className="h-8 w-8 rounded-md" />
-          </div>
-          <div className="space-y-4">
-            <Skeleton className="h-10 w-full" />
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // ... (content will be generated in the next step after I verify the end of the file)
 
   // Initialize state from context
   const [username, setUsername] = useState(personalDetails.username || '');
@@ -254,7 +170,8 @@ export default function PersonalDetailsPage() {
   const [usernameMessage, setUsernameMessage] = useState('');
 
   const [personalInfo, setPersonalInfo] = useState<PersonalInfo>({
-    fullName: personalDetails.name || "",
+    firstName: personalDetails.firstName || "",
+    lastName: personalDetails.lastName || "",
     gender: personalDetails.gender || "",
     dateOfBirth: personalDetails.dateOfBirth || "",
     bio: personalDetails.bio || "",
@@ -284,7 +201,8 @@ export default function PersonalDetailsPage() {
     setUsername(personalDetails.username || '');
     setPersonalInfo(prev => ({
       ...prev,
-      fullName: personalDetails.name || "",
+      firstName: personalDetails.firstName || "",
+      lastName: personalDetails.lastName || "",
       gender: personalDetails.gender || "",
       dateOfBirth: personalDetails.dateOfBirth || "",
       bio: personalDetails.bio || ""
@@ -359,7 +277,9 @@ export default function PersonalDetailsPage() {
       setPersonalInfo(newPersonalInfo);
       // Sync name, title, and dateOfBirth with PersonalDetailsContext
       updatePersonalDetails({
-        name: editPersonalInfo.fullName,
+        name: `${editPersonalInfo.firstName} ${editPersonalInfo.lastName}`.trim(),
+        firstName: editPersonalInfo.firstName,
+        lastName: editPersonalInfo.lastName,
         title: cricketInfo.cricketRole || 'Cricketer',
         location: locationInfo.city + ', ' + locationInfo.country,
         dateOfBirth: editPersonalInfo.dateOfBirth,
@@ -378,7 +298,7 @@ export default function PersonalDetailsPage() {
       setLocationInfo(newLocationInfo);
       // Sync location with PersonalDetailsContext when location changes
       updatePersonalDetails({
-        name: personalInfo.fullName,
+        name: `${personalInfo.firstName} ${personalInfo.lastName}`.trim(),
         title: cricketInfo.cricketRole || 'Cricketer',
         location: `${editLocation.city}, ${editLocation.country}`,
         dateOfBirth: personalInfo.dateOfBirth,
@@ -392,7 +312,7 @@ export default function PersonalDetailsPage() {
       setCricketInfo(newCricketInfo);
       // Sync cricket role with PersonalDetailsContext
       updatePersonalDetails({
-        name: personalInfo.fullName,
+        name: `${personalInfo.firstName} ${personalInfo.lastName}`.trim(),
         title: editCricket.cricketRole || 'Cricketer',
         cricketRole: editCricket.cricketRole,
         battingStyle: editCricket.battingStyle,
@@ -490,34 +410,42 @@ export default function PersonalDetailsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {isEditing ? (
               <>
-                <div className="space-y-4">
-                  <FormField label="Full Name" required>
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField label="First Name" required>
                     <Input
-                      value={editPersonalInfo.fullName}
-                      onChange={(e) => handleInputChange(e, 'personal', 'fullName')}
+                      value={editPersonalInfo.firstName}
+                      onChange={(e) => handleInputChange(e, 'personal', 'firstName')}
                       className="bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50"
                     />
                   </FormField>
-                  <FormField label="Gender" required>
-                    <div className="relative">
-                      <select
-                        value={editPersonalInfo.gender}
-                        onChange={(e) => handleInputChange(e, 'personal', 'gender')}
-                        className="flex h-10 w-full rounded-lg bg-white/5 border border-white/10 text-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1E1E1E] transition-colors cursor-pointer appearance-none pr-10"
-                      >
-                        <option value="Male" className="bg-[#1E1E1E] text-white">Male</option>
-                        <option value="Female" className="bg-[#1E1E1E] text-white">Female</option>
-                        <option value="Other" className="bg-[#1E1E1E] text-white">Other</option>
-                        <option value="Prefer not to say" className="bg-[#1E1E1E] text-white">Prefer not to say</option>
-                      </select>
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
-                          <polyline points="6 9 12 15 18 9"></polyline>
-                        </svg>
-                      </div>
-                    </div>
+                  <FormField label="Last Name" required>
+                    <Input
+                      value={editPersonalInfo.lastName}
+                      onChange={(e) => handleInputChange(e, 'personal', 'lastName')}
+                      className="bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50"
+                    />
                   </FormField>
                 </div>
+                <FormField label="Gender" required>
+                  <div className="relative">
+                    <select
+                      value={editPersonalInfo.gender}
+                      onChange={(e) => handleInputChange(e, 'personal', 'gender')}
+                      className="flex h-10 w-full rounded-lg bg-white/5 border border-white/10 text-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1E1E1E] transition-colors cursor-pointer appearance-none pr-10"
+                    >
+                      <option value="Male" className="bg-[#1E1E1E] text-white">Male</option>
+                      <option value="Female" className="bg-[#1E1E1E] text-white">Female</option>
+                      <option value="Other" className="bg-[#1E1E1E] text-white">Other</option>
+                      <option value="Prefer not to say" className="bg-[#1E1E1E] text-white">Prefer not to say</option>
+                    </select>
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                      </svg>
+                    </div>
+                  </div>
+                </FormField>
+
 
                 <div className="space-y-4">
                   <FormField label="Date of Birth" required>
@@ -560,10 +488,18 @@ export default function PersonalDetailsPage() {
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-1">
-                    <p className="text-sm font-medium text-white/70 mb-0.5">Full Name</p>
+                    <p className="text-sm font-medium text-white/70 mb-0.5">First Name</p>
                     <div className="flex items-center gap-2">
-                      <span className={cn("text-white/90 font-medium text-base", !personalInfo.fullName && "text-white/50 italic")}>
-                        {personalInfo.fullName || "Not specified"}
+                      <span className={cn("text-white/90 font-medium text-base", !personalInfo.firstName && "text-white/50 italic")}>
+                        {personalInfo.firstName || "Not specified"}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-white/70 mb-0.5">Last Name</p>
+                    <div className="flex items-center gap-2">
+                      <span className={cn("text-white/90 font-medium text-base", !personalInfo.lastName && "text-white/50 italic")}>
+                        {personalInfo.lastName || "Not specified"}
                       </span>
                     </div>
                   </div>
@@ -599,7 +535,7 @@ export default function PersonalDetailsPage() {
               </>
             )}
           </div>
-        </SectionCard>
+        </SectionCard >
       );
     } else if (section === 'contact') {
       return (
@@ -1052,7 +988,90 @@ export default function PersonalDetailsPage() {
       {/* Scrollable Content */}
       <div className="flex-1 overflow-y-auto">
         <div className="container mx-auto px-4 py-6 space-y-6">
-          {editingSection === null ? (
+          {isLoading ? (
+            <div className="space-y-6">
+              {/* Personal Information Skeleton */}
+              <div className="bg-[#1E1E1E] rounded-2xl p-6 border border-white/10">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="h-5 w-5 rounded-full" />
+                    <Skeleton className="h-6 w-48" />
+                  </div>
+                  <Skeleton className="h-8 w-8 rounded-md" />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-20" />
+                      <Skeleton className="h-6 w-full" />
+                    </div>
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-20" />
+                      <Skeleton className="h-6 w-full" />
+                    </div>
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-20" />
+                      <Skeleton className="h-6 w-full" />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-20" />
+                    <Skeleton className="h-24 w-full" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Contact Information Skeleton */}
+              <div className="bg-[#1E1E1E] rounded-2xl p-6 border border-white/10">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="h-5 w-5 rounded-full" />
+                    <Skeleton className="h-6 w-48" />
+                  </div>
+                  <Skeleton className="h-8 w-8 rounded-md" />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-20" />
+                    <Skeleton className="h-6 w-full" />
+                  </div>
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-20" />
+                    <Skeleton className="h-6 w-full" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Location Skeleton */}
+              <div className="bg-[#1E1E1E] rounded-2xl p-6 border border-white/10">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="h-5 w-5 rounded-full" />
+                    <Skeleton className="h-6 w-48" />
+                  </div>
+                  <Skeleton className="h-8 w-8 rounded-md" />
+                </div>
+                <div className="space-y-2">
+                  <Skeleton className="h-6 w-3/4" />
+                  <Skeleton className="h-4 w-1/2" />
+                </div>
+              </div>
+
+              {/* Username Skeleton */}
+              <div className="bg-[#1E1E1E] rounded-2xl p-6 border border-white/10">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="h-5 w-5 rounded-full" />
+                    <Skeleton className="h-6 w-48" />
+                  </div>
+                  <Skeleton className="h-8 w-8 rounded-md" />
+                </div>
+                <div className="space-y-4">
+                  <Skeleton className="h-10 w-full" />
+                </div>
+              </div>
+            </div>
+          ) : editingSection === null ? (
             // Show all sections in view mode
             <>
               {renderSection('personal')}

@@ -682,6 +682,13 @@ const ProfilePreview = memo(({
               isPreview={true}
               avatarUrl={undefined}
               coverImageUrl={undefined}
+              personalDetails={{
+                name: profileData.name,
+                jobTitle: profileData.title,
+                dateOfBirth: profileData.dateOfBirth,
+                bio: profileData.bio || profileData.about,
+                location: profileData.location
+              }}
             />
           </div>
         </section>

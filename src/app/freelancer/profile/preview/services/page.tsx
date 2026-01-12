@@ -17,6 +17,21 @@ export type Service = {
   category?: string;
 };
 
+// Helper to safely parse features
+const parseFeatures = (features: any): string[] => {
+  if (!features) return [];
+  if (Array.isArray(features)) return features;
+  if (typeof features === 'string') {
+    try {
+      const parsed = JSON.parse(features);
+      return Array.isArray(parsed) ? parsed : [features];
+    } catch (e) {
+      return [features];
+    }
+  }
+  return [];
+};
+
 export default function ServicesPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -27,6 +42,7 @@ export default function ServicesPage() {
   const [freelancerImage, setFreelancerImage] = useState('');
   const [isHireSheetOpen, setIsHireSheetOpen] = useState(false);
   const [isViewOnly, setIsViewOnly] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Check if we are in view only mode
   useEffect(() => {
@@ -34,6 +50,61 @@ export default function ServicesPage() {
       setIsViewOnly(window.location.hash.includes('fromPreview'));
     }
   }, []);
+
+  // Fetch services if freelancerId is present
+  useEffect(() => {
+    async function fetchServices() {
+      if (!freelancerId) {
+        // Try fallback to session storage if from preview
+        try {
+          const storedServices = sessionStorage.getItem('servicesPreviewData');
+          const storedName = sessionStorage.getItem('freelancerName');
+          if (storedServices) {
+            setServices(JSON.parse(storedServices));
+          }
+          if (storedName) {
+            setFreelancerName(storedName);
+          }
+        } catch (e) {
+          console.error('Error loading from session:', e);
+        }
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/freelancers/${freelancerId}`);
+        if (!res.ok) throw new Error('Failed to fetch profile');
+
+        const data = await res.json();
+        const profile = data.profile;
+
+        if (profile) {
+          setFreelancerName(profile.name || 'Freelancer');
+          setFreelancerImage(profile.avatar || '');
+
+          if (profile.services && Array.isArray(profile.services)) {
+            const mappedServices: Service[] = profile.services.map((s: any) => ({
+              id: s.id,
+              title: s.title,
+              description: s.description,
+              price: s.price,
+              deliveryTime: s.deliveryTime || 'Flexible',
+              features: parseFeatures(s.features),
+              category: s.category?.name
+            }));
+            setServices(mappedServices);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching services:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchServices();
+  }, [freelancerId]);
 
   // Hide header and navbar for this page
   useEffect(() => {
@@ -117,7 +188,40 @@ export default function ServicesPage() {
 
       {/* Services List */}
       <div className="container mx-auto px-4 py-6">
-        {services.length > 0 ? (
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div
+                key={i}
+                className="p-5 rounded-3xl border border-white/5 bg-white/5 flex flex-col h-full animate-pulse"
+              >
+                <div className="flex-1">
+                  <div className="flex justify-between mb-4">
+                    <div className="h-6 bg-white/10 rounded w-2/3"></div>
+                    <div className="h-5 bg-white/10 rounded-full w-20"></div>
+                  </div>
+                  <div className="space-y-2 mb-6">
+                    <div className="h-4 bg-white/10 rounded w-full"></div>
+                    <div className="h-4 bg-white/10 rounded w-5/6"></div>
+                    <div className="h-4 bg-white/10 rounded w-4/6"></div>
+                  </div>
+                  <div className="space-y-3 mb-6">
+                    {[1, 2, 3].map((j) => (
+                      <div key={j} className="flex items-center gap-2">
+                        <div className="w-4 h-4 rounded-full bg-white/10"></div>
+                        <div className="h-3 bg-white/10 rounded w-1/2"></div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="mt-4 pt-4 border-t border-white/5 flex justify-between items-center">
+                  <div className="h-8 bg-white/10 rounded w-24"></div>
+                  <div className="h-6 bg-white/10 rounded-full w-20"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : services.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {services.map((service) => (
               <div
@@ -130,6 +234,11 @@ export default function ServicesPage() {
                   <div className="flex-1">
                     <div className="flex items-start justify-between mb-3">
                       <h3 className="text-lg font-semibold text-white">{service.title}</h3>
+                      {service.category && (
+                        <span className="px-2 py-0.5 rounded-full bg-white/10 text-white/60 text-xs border border-white/10 whitespace-nowrap ml-2">
+                          {service.category}
+                        </span>
+                      )}
                     </div>
 
                     <p className="text-white/70 text-sm mb-4">{service.description}</p>

@@ -32,6 +32,7 @@ import { IdVerifiedBadge } from '@/components/freelancer/profile/IdVerifiedBadge
 import { SkillInfoDialog } from '@/components/common/SkillInfoDialog';
 import { getSkillInfo, type SkillInfo } from '@/utils/skillUtils';
 import { formatTime } from '@/utils/profileUtils';
+import { calculateAge } from '@/utils/personalUtils';
 import Image from 'next/image';
 import { IconButton } from '@/components/ui/icon-button';
 import { PortfolioItemModal } from '@/components/common/PortfolioItemModal';
@@ -71,6 +72,7 @@ interface FreelancerDetail {
     completionRate?: number;
     skills?: string[];
     coverImage?: string; // New field for unique cover images
+    dateOfBirth?: string;
 
     // Services data
     services?: {
@@ -260,6 +262,7 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                     completionRate: 0,
                     skills: skills,
                     coverImage: String(profile.coverImage || ''),
+                    dateOfBirth: profile.dateOfBirth,
 
                     services: profile.services?.map((s: any) => ({
                         id: String(s.id),
@@ -646,6 +649,11 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                                     <div className="text-center mb-4">
                                         <div className="flex items-center justify-center gap-2">
                                             <h1 className="text-2xl font-bold text-white">{freelancer.name}</h1>
+                                            {freelancer.dateOfBirth && (
+                                                <span className="text-lg font-semibold text-white/70">
+                                                    {calculateAge(freelancer.dateOfBirth)}
+                                                </span>
+                                            )}
                                         </div>
                                         <p className="text-purple-400 mt-0.5">{freelancer.cricketRole || 'All Rounder'}</p>
 

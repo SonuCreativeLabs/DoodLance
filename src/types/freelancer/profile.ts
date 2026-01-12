@@ -67,6 +67,7 @@ export interface ProfileData {
   cricketRole?: string;
   battingStyle?: string;
   bowlingStyle?: string;
+  dateOfBirth?: string;
 }
 
 export interface ProfilePreviewProps {

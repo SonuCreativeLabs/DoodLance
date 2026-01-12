@@ -2,7 +2,7 @@
 
 // import { motion } from 'framer-motion' // Unused
 import ClientLayout from '@/components/layouts/client-layout'
-import { Search, ArrowLeft, Clock, Video, Dumbbell, Cpu, Package, Camera, Clapperboard, Brain, Briefcase, Sparkles } from 'lucide-react'
+import { Search, ArrowLeft, Clock, Video, Dumbbell, Cpu, Package, Camera, Clapperboard, Brain, Briefcase, Sparkles, GraduationCap, HeartHandshake, Grid, Circle } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -17,12 +17,22 @@ export default function ServicesPage() {
   // Add 'For You' to categories if not present (it's a frontend pseudo-category)
   const displayCategories = [
     { id: 'for-you', name: 'For You', icon: <Sparkles className="w-6 h-6" />, slug: 'for-you' },
-    ...categories.map(cat => ({
-      id: cat.slug, // Use slug as ID for selection matching
-      name: cat.name,
-      icon: <span className="text-2xl">{cat.icon}</span>, // Render emoji/icon string 
-      slug: cat.slug
-    }))
+    ...categories.map(cat => {
+      let iconNode;
+      switch (cat.id) {
+        case 'playing': iconNode = <Circle className="w-6 h-6" />; break; // Cricket Ball proxy
+        case 'coaching': iconNode = <GraduationCap className="w-6 h-6" />; break;
+        case 'support': iconNode = <HeartHandshake className="w-6 h-6" />; break;
+        case 'media': iconNode = <Camera className="w-6 h-6" />; break;
+        default: iconNode = <Grid className="w-6 h-6" />;
+      }
+      return {
+        id: cat.slug,
+        name: cat.name,
+        icon: iconNode,
+        slug: cat.slug
+      }
+    })
   ];
 
   // Function to scroll selected category into view
