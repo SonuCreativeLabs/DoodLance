@@ -471,10 +471,14 @@ export function ProfileHeader({
         profileData={{
           name: personalDetails.name,
           title: personalDetails.cricketRole || '',
+          avatar: personalDetails.avatarUrl || profileImage || undefined,
+          coverImage: personalDetails.coverImageUrl || coverImage || undefined,
           rating: reviewsData?.averageRating || 0,
           reviewCount: reviewsData?.totalReviews || 0,
           location: personalDetails.location,
           online: personalDetails.online,
+          username: personalDetails.username,
+          dateOfBirth: personalDetails.dateOfBirth,
           skills: Array.isArray(skills) ? skills.map((s: any) => s.name) : [],
           about: personalDetails.about,
           bio: personalDetails.bio,
@@ -505,6 +509,7 @@ export function ProfileHeader({
             type: svc.type || 'online',
             deliveryTime: svc.deliveryTime,
             features: svc.features || [],
+            videoUrls: svc.videoUrls || [],
             category: svc.category
           })) : [],
           portfolio: Array.isArray(portfolio) ? portfolio.map((item: any) => ({

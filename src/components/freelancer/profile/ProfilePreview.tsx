@@ -680,14 +680,19 @@ const ProfilePreview = memo(({
           <div className="w-full bg-[#0f0f0f]">
             <ProfileHeader
               isPreview={true}
-              avatarUrl={undefined}
-              coverImageUrl={undefined}
+              avatarUrl={profileData.avatar}
+              coverImageUrl={profileData.coverImage}
               personalDetails={{
                 name: profileData.name,
                 jobTitle: profileData.title,
                 dateOfBirth: profileData.dateOfBirth,
                 bio: profileData.bio || profileData.about,
-                location: profileData.location
+                location: profileData.location,
+                cricketRole: profileData.cricketRole,
+                online: profileData.online,
+                username: profileData.username,
+                // Pass username/displayId if available in profileData, otherwise ProfileHeader might show defaults
+                // ProfileHeader uses 'cricketRole' for the role display
               }}
             />
           </div>
@@ -872,14 +877,37 @@ const ProfilePreview = memo(({
                   <div className="flex -mx-2 overflow-x-auto scrollbar-hide pb-2">
                     <div className="flex gap-4 px-2">
                       {profileData.services.map((service) => (
-                        <div key={service.id} className="w-80 flex-shrink-0 p-5 pt-8 rounded-3xl border border-white/10 bg-white/5 hover:border-purple-500/30 transition-colors flex flex-col h-full relative">
-                          {service.category && (
-                            <div className="absolute top-3 left-3 bg-white/10 text-white/80 border-white/20 px-2 py-0.5 text-xs rounded-full border">
-                              {service.category}
-                            </div>
-                          )}
-                          <div className="flex flex-col h-full">
-                            <div className="flex-1 mt-2">
+                        <div key={service.id} className="w-80 flex-shrink-0 rounded-3xl border border-white/10 bg-white/5 hover:border-purple-500/30 transition-colors flex flex-col h-full relative overflow-hidden">
+                          {/* Video/Image Area */}
+                          <div className="relative aspect-video w-full bg-black/20 group/video">
+                            {service.videoUrls && service.videoUrls.length > 0 && service.videoUrls[0] ? (
+                              <video
+                                src={service.videoUrls[0]}
+                                className="w-full h-full object-cover"
+                                muted
+                                loop
+                                playsInline
+                                onMouseOver={e => e.currentTarget.play()}
+                                onMouseOut={e => e.currentTarget.pause()}
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center bg-white/5">
+                                <div className="text-white/20">
+                                  <Briefcase className="h-8 w-8" />
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="flex flex-col h-full p-5">
+                            {service.category && (
+                              <div className="mb-3 flex justify-start">
+                                <div className="bg-white/10 text-white/80 border-white/20 px-2 py-0.5 text-xs rounded-full border">
+                                  {service.category}
+                                </div>
+                              </div>
+                            )}
+                            <div className="flex-1">
                               <div className="flex items-start justify-between">
                                 <h3 className="text-lg font-semibold text-white">{service.title}</h3>
                               </div>
@@ -888,7 +916,7 @@ const ProfilePreview = memo(({
 
                               {service.features && service.features.length > 0 && (
                                 <ul className="mt-3 space-y-2">
-                                  {service.features.map((feature, i) => (
+                                  {service.features.map((feature: string, i: number) => (
                                     <li key={i} className="flex items-start text-sm text-white/80">
                                       <Check className="h-4 w-4 text-green-400 mr-2 mt-0.5 flex-shrink-0" />
                                       <span>{feature}</span>

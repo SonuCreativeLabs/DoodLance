@@ -17,6 +17,7 @@ export interface Service {
   type?: 'online' | 'in-person';
   deliveryTime: string;
   features?: string[];
+  videoUrls?: string[];
   category?: string;
 }
 
@@ -64,10 +65,13 @@ export interface ProfileData {
   workingHours?: string;
   completedJobs?: number;
   activeJobs?: number;
+  username?: string;
   cricketRole?: string;
   battingStyle?: string;
   bowlingStyle?: string;
   dateOfBirth?: string;
+  avatar?: string;
+  coverImage?: string;
 }
 
 export interface ProfilePreviewProps {
