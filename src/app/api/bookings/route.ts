@@ -418,8 +418,62 @@ export async function POST(request: NextRequest) {
                     });
                 }
 
+                // Create notifications for Booking
+                // 1. Notify Client
+                await tx.notification.create({
+                    data: {
+                        userId: userId,
+                        title: 'Booking Confirmed',
+                        message: `You have successfully booked ${service.title} with ${service.providerId === userId ? 'yourself' : 'a pro'}.`,
+                        type: 'BOOKING_CREATED',
+                        entityId: booking.id,
+                        entityType: 'booking',
+                        actionUrl: `/client/bookings/${booking.id}`,
+                    }
+                });
+
+                // 2. Notify Freelancer
+                await tx.notification.create({
+                    data: {
+                        userId: service.providerId,
+                        title: 'New Booking Request',
+                        message: `You have a new booking request for ${service.title}.`,
+                        type: 'BOOKING_REQUEST',
+                        entityId: booking.id,
+                        entityType: 'booking',
+                        actionUrl: `/freelancer/jobs/${booking.id}`,
+                    }
+                });
+
                 return booking;
             });
+
+            // Re-fetch booking with related data for return
+            const fullBooking = await prisma.booking.findUnique({
+                where: { id: result.id },
+                include: {
+                    service: {
+                        include: {
+                            provider: true
+                        }
+                    },
+                    client: true
+                }
+            });
+
+            // Update client notification message with actual provider name
+            if (fullBooking && fullBooking.service.provider) {
+                await prisma.notification.updateMany({
+                    where: {
+                        entityId: result.id,
+                        userId: userId,
+                        type: 'BOOKING_CREATED'
+                    },
+                    data: {
+                        message: `You have booked a session with ${fullBooking.service.provider.name}.`
+                    }
+                });
+            }
 
             console.log('Booking created successfully:', result.id);
             return NextResponse.json({ success: true, booking: result });

@@ -1,31 +1,10 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Menu, Bell, X, Wallet, LogOut, LogIn, User } from 'lucide-react'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
-
-const notifications = [
-  {
-    id: 1,
-    title: 'New Application',
-    message: 'John applied for your plumbing job',
-    time: '5m ago',
-  },
-  {
-    id: 2,
-    title: 'Booking Confirmed',
-    message: 'Your tutoring session is confirmed for tomorrow',
-    time: '1h ago',
-  },
-  {
-    id: 3,
-    title: 'Payment Received',
-    message: 'You received $75 for the plumbing service',
-    time: '2h ago',
-  },
-]
 
 const menuItems = [
   { name: 'Settings', href: '/settings' },
@@ -41,8 +20,45 @@ export default function Header() {
   const { user, isAuthenticated, signOut } = useAuth()
   const router = useRouter()
 
+  const [notifications, setNotifications] = useState<any[]>([])
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [loading, setLoading] = useState(false)
+
   // Robust check: isAuthenticated AND user object must exist
   const showAuth = isAuthenticated && !!user;
+
+  // Fetch notifications
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      if (showAuth) {
+        try {
+          const res = await fetch('/api/notifications')
+          if (res.ok) {
+            const data = await res.json()
+            setNotifications(data.notifications || [])
+            // Calculate unread count
+            const unread = (data.notifications || []).filter((n: any) => !n.isRead).length
+            setUnreadCount(unread)
+          }
+        } catch (error) {
+          console.error('Failed to load notifications', error)
+        }
+      }
+    }
+
+    fetchNotifications()
+    // Poll every minute
+    const interval = setInterval(fetchNotifications, 60000)
+    return () => clearInterval(interval)
+  }, [showAuth])
+
+  const handleNotificationClick = (notification: any) => {
+    // Mark as read logic could go here
+    if (notification.actionUrl) {
+      router.push(notification.actionUrl)
+      setIsNotificationsOpen(false)
+    }
+  }
 
   const handleLogout = async () => {
     try {
@@ -94,7 +110,7 @@ export default function Header() {
 
         {/* Notifications Dropdown */}
         {isNotificationsOpen && showAuth && (
-          <div className="absolute right-0 mt-2 w-80 sm:w-96 max-w-[calc(100vw-2rem)] bg-white rounded-lg shadow-lg border border-gray-200 top-16 right-4 sm:right-8">
+          <div className="absolute right-0 mt-2 w-80 sm:w-96 max-w-[calc(100vw-2rem)] bg-white rounded-lg shadow-lg border border-gray-200 top-16 right-4 sm:right-8 z-50">
             <div className="p-4 border-b">
               <div className="flex items-center justify-between">
                 <h3 className="font-semibold">Notifications</h3>
@@ -107,24 +123,31 @@ export default function Header() {
               </div>
             </div>
             <div className="max-h-96 overflow-y-auto">
-              {notifications.map((notification) => (
-                <div
-                  key={notification.id}
-                  className="p-4 border-b last:border-b-0 hover:bg-gray-50"
-                >
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h4 className="font-medium">{notification.title}</h4>
-                      <p className="text-sm text-gray-600">
-                        {notification.message}
-                      </p>
-                    </div>
-                    <span className="text-xs text-gray-500">
-                      {notification.time}
-                    </span>
-                  </div>
+              {notifications.length === 0 ? (
+                <div className="p-8 text-center text-gray-500">
+                  <p>No new updates currently.</p>
                 </div>
-              ))}
+              ) : (
+                notifications.map((notification) => (
+                  <div
+                    key={notification.id}
+                    className="p-4 border-b last:border-b-0 hover:bg-gray-50 cursor-pointer transition-colors"
+                    onClick={() => handleNotificationClick(notification)}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h4 className="font-medium text-sm sm:text-base">{notification.title}</h4>
+                        <p className="text-sm text-gray-600 mt-1">
+                          {notification.message}
+                        </p>
+                      </div>
+                      <span className="text-xs text-gray-400 whitespace-nowrap ml-2">
+                        {new Date(notification.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         )}
