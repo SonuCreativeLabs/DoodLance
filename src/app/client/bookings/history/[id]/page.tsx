@@ -103,7 +103,7 @@ export default function BookingHistoryDetailPage() {
             {/* Chat/Call only for Completed or Active (not Cancelled) - assuming we still want to contact after completion? */}
             {historyItem.status !== 'cancelled' && (
               <div className="flex items-center gap-2">
-                <Button
+                {/* <Button
                   variant="ghost"
                   size="sm"
                   className="h-8 w-8 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 p-0 transition-all duration-200"
@@ -111,7 +111,7 @@ export default function BookingHistoryDetailPage() {
                   aria-label="Message"
                 >
                   <MessageSquare className="h-4 w-4 text-purple-400" />
-                </Button>
+                </Button> */}
                 <Button
                   variant="ghost"
                   size="sm"

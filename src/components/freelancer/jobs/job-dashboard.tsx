@@ -12,6 +12,7 @@ import { JobCard, ApplicationCard } from './index';
 import { Job, Application, EarningsData, JobCategory } from './types';
 import { CricketComingSoon } from '@/components/common/CricketComingSoon';
 import { JobCardSkeleton } from '@/components/skeletons/JobCardSkeleton';
+import { useAuth } from '@/contexts/AuthContext';
 
 // LocalStorage key for client bookings
 const CLIENT_BOOKINGS_KEY = 'clientBookings';
@@ -211,14 +212,24 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
     };
   };
 
+  // Use cached auth context instead of fetching session repeatedly
+  const { user, isLoading: authLoading } = useAuth();
+
   // Initialize with API data
   useEffect(() => {
     const fetchData = async () => {
+      // If auth is still loading, don't fetch yet
+      if (authLoading) return;
+
+      // If no user after loading, just stop loading local state
+      if (!user?.id) {
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
       try {
-        const sessionRes = await fetch('/api/auth/session');
-        const session = await sessionRes.json();
-        const userId = session?.user?.id;
+        const userId = user.id;
 
         if (userId) {
           // Fetch applications
@@ -264,8 +275,9 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
         setLoading(false);
       }
     };
+
     fetchData();
-  }, []);
+  }, [user, authLoading]);
 
 
 

@@ -154,19 +154,7 @@ const BookingCard = ({ booking, showActions = true }: BookingCardProps) => {
               <Button
                 size="sm"
                 variant="outline"
-                disabled
-                className="flex-1 border-white/10 text-white/30 hover:bg-transparent hover:border-white/10 cursor-not-allowed transition-all duration-300 !rounded-lg"
-                onClick={(event) => {
-                  event.stopPropagation()
-                  event.preventDefault()
-                }}
-              >
-                Message
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                className="flex-1 border-white/20 text-white/70 hover:bg-white/10 hover:border-white/30 transition-all duration-300 !rounded-lg"
+                className="w-full border-white/20 text-white/70 hover:bg-white/10 hover:border-white/30 transition-all duration-300 !rounded-lg"
                 onClick={(event) => {
                   event.stopPropagation()
                   if (booking.providerPhone) {

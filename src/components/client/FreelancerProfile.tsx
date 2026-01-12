@@ -198,10 +198,8 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                 try {
                     const parsed = JSON.parse(cachedData);
                     setFreelancer(parsed);
-                    setLoading(false);
-                    // verified - we can return here, or fetch in background to update
-                    // returning here is faster and meets "keep infos solid" requirement
-                    // we can do a background SWR-like revalidation if needed, but for now simple cache is best
+                    // Don't set loading false yet - wait for fresh data
+                    // setLoading(false);
                 } catch (e) {
                     console.error("Cache parse error", e);
                 }

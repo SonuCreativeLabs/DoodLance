@@ -197,23 +197,11 @@ export const JobCard: React.FC<JobCardProps> = ({ job, index, onStatusChange }) 
           {/* Action Buttons - Show for upcoming, pending, confirmed, and ongoing jobs */}
           {(job.status === 'upcoming' || job.status === 'pending' || job.status === 'ongoing') && (
             <div className="flex gap-2 pt-2">
-              {/* Chat Button */}
-              <Button
-                variant="default"
-                size="sm"
-                disabled
-                className="flex-1 bg-gradient-to-r from-[#643cb5]/50 to-[#4a1c91]/50 text-white/50 h-9 text-xs font-medium shadow-none cursor-not-allowed flex items-center justify-center gap-1.5"
-              // onClick={handleMessageClick}
-              >
-                <MessageCircle className="w-3.5 h-3.5" />
-                <span>Message</span>
-              </Button>
-
               {/* Call Button */}
               <Button
                 variant="default"
                 size="sm"
-                className="flex-1 text-white h-9 text-xs font-medium shadow-md transition-all duration-200 flex items-center justify-center gap-1.5"
+                className="w-full text-white h-9 text-xs font-medium shadow-md transition-all duration-200 flex items-center justify-center gap-1.5"
                 style={{
                   background: 'linear-gradient(135deg, #2131e2 0%, #1d59eb 100%)',
                   boxShadow: '0 4px 14px 0 rgba(33, 49, 226, 0.25)'

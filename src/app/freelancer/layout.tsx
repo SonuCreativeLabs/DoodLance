@@ -64,7 +64,7 @@ export default function FreelancerLayout({ children }: FreelancerLayoutProps) {
     { href: '/freelancer', label: 'Home', icon: Home },
     { href: '/freelancer/jobs', label: 'My Jobs', icon: Briefcase },
     { href: '/freelancer/feed', label: 'Feed', icon: Compass },
-    { href: '/freelancer/inbox', label: 'Inbox', icon: Inbox },
+    // { href: '/freelancer/inbox', label: 'Inbox', icon: Inbox },
     { href: '/freelancer/profile', label: 'Profile', icon: User },
   ]
 
@@ -129,7 +129,7 @@ export default function FreelancerLayout({ children }: FreelancerLayoutProps) {
       {isNavbarVisible && !fullChatView && !isModalOpen && (
         <div className="md:hidden fixed bottom-0 left-0 right-0 border-t border-white/10 bg-[#111111]/95 backdrop-blur-lg z-50">
           <div className="container mx-auto px-4">
-            <div className="grid grid-cols-5 items-center h-16">
+            <div className="grid grid-cols-4 items-center h-16">
               {navItems.map((item) => {
                 const Icon = item.icon
                 const active = isActive(item.href)

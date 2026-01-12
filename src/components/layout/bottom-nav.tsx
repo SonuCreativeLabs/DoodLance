@@ -10,7 +10,7 @@ const navigation = [
   { name: 'HOME', href: '/client', icon: Home },
   { name: 'Bookings', href: '/client/bookings', icon: Briefcase },
   { name: 'Hire', href: '/client/nearby/hirefeed', icon: PlusCircle },
-  { name: 'Profile', href: '/client/inbox', icon: MessageSquare },
+  // { name: 'Profile', href: '/client/inbox', icon: MessageSquare },
 ]
 
 export function BottomNav() {
