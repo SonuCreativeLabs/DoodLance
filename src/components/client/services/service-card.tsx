@@ -43,13 +43,22 @@ export default function ServiceCard({
         </div>
 
         {/* Background Image */}
-        <img
+        <Image
           src={image}
           alt={title}
-          className={`absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out z-[1] ${title === 'Sidearm' ? 'object-right' : ''}`}
-          onError={(e) => {
-            const target = e.currentTarget as HTMLImageElement;
-            if (target.src !== '/images/cover-placeholder.svg') {
+          fill
+          className={cn(
+            "object-cover group-hover:scale-105 transition-transform duration-700 ease-out z-[1]",
+            title === 'Sidearm' ? 'object-right' : ''
+          )}
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 20vw"
+          priority={false}
+          onError={(e: any) => {
+            // Next/image handles error differently, usually needs fallback handling in state or specialized component
+            // For now, we rely on valid URLs or parent component validation
+            const target = e.target as HTMLImageElement;
+            if (target.src.indexOf('cover-placeholder.svg') === -1) {
+              target.srcset = '';
               target.src = '/images/cover-placeholder.svg';
             }
           }}

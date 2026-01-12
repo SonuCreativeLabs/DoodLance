@@ -1,12 +1,13 @@
 "use client"
 
 // import { motion } from 'framer-motion' // Unused
+import { useState, useRef, useEffect } from 'react'
 import ClientLayout from '@/components/layouts/client-layout'
 import { Search, ArrowLeft, Clock, Video, Dumbbell, Cpu, Package, Camera, Clapperboard, Brain, Briefcase, Sparkles, GraduationCap, HeartHandshake, Grid, Circle } from 'lucide-react'
-import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useClientServices } from '@/contexts/ClientServicesContext'
+import { CricketWickets } from '@/components/icons/CricketWickets'
 
 export default function ServicesPage() {
   const [selectedCategory, setSelectedCategory] = useState('for-you')
@@ -20,7 +21,7 @@ export default function ServicesPage() {
     ...categories.map(cat => {
       let iconNode;
       switch (cat.id) {
-        case 'playing': iconNode = <Circle className="w-6 h-6" />; break; // Cricket Ball proxy
+        case 'playing': iconNode = <CricketWickets className="w-6 h-6" />; break; // Custom Cricket Wickets
         case 'coaching': iconNode = <GraduationCap className="w-6 h-6" />; break;
         case 'support': iconNode = <HeartHandshake className="w-6 h-6" />; break;
         case 'media': iconNode = <Camera className="w-6 h-6" />; break;
@@ -147,13 +148,16 @@ export default function ServicesPage() {
                                   )}
                                 </div>
 
-                                <img
+                                <Image
                                   src={service.image}
                                   alt={service.name}
-                                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out z-[1]"
-                                  onError={(e) => {
-                                    const target = e.currentTarget as HTMLImageElement;
-                                    if (target.src !== '/images/cover-placeholder.svg') {
+                                  fill
+                                  className="object-cover group-hover:scale-105 transition-transform duration-700 ease-out z-[1]"
+                                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                                  onError={(e: any) => {
+                                    const target = e.target as HTMLImageElement;
+                                    if (target.src.indexOf('cover-placeholder.svg') === -1) {
+                                      target.srcset = '';
                                       target.src = '/images/cover-placeholder.svg';
                                     }
                                   }}
