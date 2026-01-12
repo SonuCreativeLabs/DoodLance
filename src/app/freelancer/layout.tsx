@@ -106,12 +106,7 @@ export default function FreelancerLayout({ children }: FreelancerLayoutProps) {
               </div>
             </div>
             <div className="flex items-center space-x-4">
-              <div className="relative">
-                <a href="/freelancer/wallet" className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-l from-purple-600 to-purple-400 hover:from-purple-500 hover:to-purple-300 transition-all duration-300 shadow-lg shadow-purple-600/20 hover:shadow-purple-600/30 group">
-                  <Wallet className="w-4 h-4 text-white transition-colors duration-300" />
-                  <span className="text-sm font-medium text-white transition-colors duration-300">₹0</span>
-                </a>
-              </div>
+              {/* Wallet Hidden */}
               <div className="relative">
                 <a href="/freelancer/notifications" className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 backdrop-blur-lg transition-all duration-300 border border-white/5 hover:border-purple-500/30 group relative">
                   <Bell className="w-5 h-5 text-white/80 group-hover:text-purple-400 transition-colors duration-300" />

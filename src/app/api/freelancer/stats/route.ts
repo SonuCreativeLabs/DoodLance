@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
         const allCompletedBookings = await prisma.booking.findMany({
             where: {
                 serviceId: { in: serviceIds },
-                status: { in: ['completed', 'delivered'] } // Lowercase status values
+                status: { in: ['completed', 'delivered', 'COMPLETED', 'DELIVERED'] } // Include both cases
             },
             select: {
                 totalPrice: true,
@@ -103,25 +103,17 @@ export async function GET(request: NextRequest) {
             };
         }, { earnings: 0, jobs: 0, hours: 0 });
 
-        // Filter for last 6 months for the chart
-        const sixMonthsAgo = new Date();
-        sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
-        sixMonthsAgo.setDate(1);
-        sixMonthsAgo.setHours(0, 0, 0, 0);
+        // Filter for chart - Start from Jan 1, 2026
+        const chartStartDate = new Date('2026-01-01T00:00:00');
 
         const chartBookings = allCompletedBookings.filter((booking: any) => {
             const completedDate = booking.deliveredAt || booking.updatedAt;
-            return completedDate && new Date(completedDate) >= sixMonthsAgo;
+            return completedDate && new Date(completedDate) >= chartStartDate;
         });
 
-        // Initialize last 6 months with 0
+        // Initialize monthly stats map
         const monthlyStatsMap = new Map<string, { earnings: number, jobs: number }>();
-        for (let i = 0; i < 6; i++) {
-            const d = new Date();
-            d.setMonth(d.getMonth() - i);
-            const monthName = d.toLocaleString('default', { month: 'short' });
-            monthlyStatsMap.set(monthName, { earnings: 0, jobs: 0 });
-        }
+        // No need to pre-fill specific months here as we will generate array later based on date range
 
         // Aggregate data for chart
         chartBookings.forEach((booking: any) => {
@@ -139,18 +131,22 @@ export async function GET(request: NextRequest) {
             }
         });
 
-        // Convert to array and reverse to show chronological order
+        // Calculate months from Jan 2026 to now
+        const startDate = new Date('2026-01-01T00:00:00');
+        const now = new Date();
+
         const monthlyStats = [];
-        for (let i = 5; i >= 0; i--) {
-            const d = new Date();
-            d.setMonth(d.getMonth() - i);
-            const monthName = d.toLocaleString('default', { month: 'short' });
+        let currentDate = new Date(startDate);
+
+        while (currentDate <= now) {
+            const monthName = currentDate.toLocaleString('default', { month: 'short' });
             const stats = monthlyStatsMap.get(monthName) || { earnings: 0, jobs: 0 };
             monthlyStats.push({
                 name: monthName,
                 earnings: stats.earnings,
                 jobs: stats.jobs
             });
+            currentDate.setMonth(currentDate.getMonth() + 1);
         }
 
         // Calculate this week's active hours
@@ -177,11 +173,20 @@ export async function GET(request: NextRequest) {
             return total + durationHours;
         }, 0);
 
+        // Count upcoming jobs (confirmed or pending)
+        const upcomingJobsCount = await prisma.booking.count({
+            where: {
+                serviceId: { in: serviceIds },
+                status: { in: ['confirmed', 'pending', 'CONFIRMED', 'PENDING'] }
+            }
+        });
+
         return NextResponse.json({
             ...profile,
             totalEarnings: calculatedStats.totalEarnings,
             totalJobs: calculatedStats.completedJobs, // Frontend expects 'totalJobs'
             completedJobs: calculatedStats.completedJobs, // Keep for compatibility
+            upcomingJobs: upcomingJobsCount,
             activeHours: Math.round(thisWeekHours), // This week's hours, rounded
             todayEarnings: todayStats.earnings,
             todayJobs: todayStats.jobs,

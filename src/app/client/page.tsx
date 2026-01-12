@@ -226,13 +226,7 @@ export default function ClientHome() {
                       My Profile
                     </button>
                     {/* Skill Coins */}
-                    <button
-                      className="flex items-center gap-3 px-6 py-2 text-left text-white/90 hover:bg-white/10 hover:text-white transition-colors"
-                      onClick={() => router.push('/client/wallet')}
-                    >
-                      <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" /><polyline points="7.5,4.27 12,6.11 16.5,4.27" /><polyline points="7.5,9.73 12,11.57 16.5,9.73" /><polyline points="12,2.27 12,11.57" /></svg>
-                      <span className="text-white/90">Skill Coins</span>
-                    </button>
+                    {/* Skill Coins Removed */}
                     {/* My Bookings */}
                     <button
                       className="flex items-center gap-3 px-6 py-3 text-left text-white/90 hover:bg-white/10 hover:text-white transition-colors"
@@ -313,13 +307,7 @@ export default function ClientHome() {
           </div>
 
           <div className="flex items-center space-x-3 sm:space-x-4">
-            <div className="relative">
-              <Link href="/client/wallet" className="relative group" aria-label="Wallet">
-                <span className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/10 hover:bg-white/20 transition-colors">
-                  <Wallet className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-                </span>
-              </Link>
-            </div>
+            {/* Wallet Hidden */}
             <div className="relative">
               <Link href="/client/notifications" className="relative group" aria-label="Notifications">
                 <span className="relative inline-flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/10 hover:bg-white/20 transition-colors">
@@ -383,45 +371,6 @@ export default function ClientHome() {
         </div>
 
         <div className="container mx-auto px-4 py-4 bg-[#111111] mb-8 relative z-0">
-          {/* Service Categories */}
-          <section className="mb-4 relative z-0">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-semibold text-white tracking-wide text-left">Popular Services in your area</h2>
-              <Link href="/client/services" className="text-white/80 hover:text-white text-xs font-medium flex items-center transition-colors">
-                View All
-                <ChevronRight className="w-3 h-3 ml-1" />
-              </Link>
-            </div>
-            <div className="relative -mx-4">
-              <div className="overflow-x-auto scrollbar-hide px-4 pr-8">
-                <div className="flex space-x-4 pb-2">
-                  {popularServices.map((service) => (
-                    <ServiceCard
-                      key={service.id}
-                      id={service.id}
-                      title={service.title}
-                      image={service.image}
-                      icon={service.icon}
-                      providerCount={service.providerCount}
-                      className="w-[140px] flex-shrink-0"
-                    />
-                  ))}
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* Add scrollbar-hide utility to tailwind config */}
-          <style jsx global>{`
-            .scrollbar-hide::-webkit-scrollbar {
-              display: none;
-            }
-            .scrollbar-hide {
-              -ms-overflow-style: none;
-              scrollbar-width: none;
-            }
-          `}</style>
-
           {/* Top Rated Experts Section */}
           <section className="mb-4 relative z-0">
             <div className="flex items-center justify-between mb-4">
@@ -457,12 +406,12 @@ export default function ClientHome() {
                         <button
                           key={expert.id}
                           onClick={() => router.push(`/client/freelancer/${expert.id}`)}
-                          className="flex-shrink-0 w-[130px] cursor-pointer"
+                          className="flex-shrink-0 w-[140px] cursor-pointer"
                         >
                           {/* Outer Layer Card */}
-                          <div className="relative group">
+                          <div className="relative group h-full">
                             {/* Card Background */}
-                            <div className="absolute inset-0 rounded-2xl border border-purple-400/10 transition-all duration-300 group-hover:border-purple-400/20"></div>
+                            <div className="absolute inset-0 rounded-2xl border border-purple-400/10 transition-all duration-300 group-hover:border-purple-400/20 bg-[#161616]"></div>
 
                             {/* Rating Badge - positioned at top corner of card */}
                             <div className="absolute top-2 left-2 z-30 bg-gradient-to-r from-yellow-400 to-yellow-600 px-2 py-0.5 rounded-full flex items-center gap-1 shadow-lg">
@@ -471,12 +420,12 @@ export default function ClientHome() {
                             </div>
 
                             {/* Card Content */}
-                            <div className="relative p-2.5">
+                            <div className="relative p-3">
                               <div className="relative group">
                                 {/* Rating Badge - moved to outer card */}
 
-                                {/* Profile Picture */}
-                                <div className="relative w-[80px] h-[80px] mx-auto">
+                                {/* Profile Picture - Larger size */}
+                                <div className="relative w-[100px] h-[100px] mx-auto">
                                   <img
                                     src={expert.image}
                                     alt={expert.name}
@@ -484,14 +433,14 @@ export default function ClientHome() {
                                   />
                                 </div>
 
-                                {/* Expert Info with Reduced Spacing */}
-                                <div className="mt-1.5 text-center">
-                                  <h3 className="font-semibold text-white text-xs leading-tight truncate">{expert.name}</h3>
-                                  <p className="text-purple-400 text-[10px] font-medium truncate mt-0.5">{expert.cricketRole || expert.service}</p>
-                                  <p className="text-white/70 text-[9px] mt-0.5 truncate">
+                                {/* Expert Info with Adjusted Spacing */}
+                                <div className="mt-2 text-center">
+                                  <h3 className="font-semibold text-white text-xs leading-tight truncate px-1">{expert.name}</h3>
+                                  <p className="text-purple-400 text-[10px] font-medium truncate mt-0.5 px-1">{expert.cricketRole || expert.service || 'Expert'}</p>
+                                  <p className="text-white/70 text-[9px] mt-0.5 truncate px-1">
                                     {expert.location}
                                   </p>
-                                  <p className="text-white/50 text-[9px] font-medium mt-0.5 truncate">
+                                  <p className="text-white/50 text-[9px] font-medium mt-0.5 truncate px-1">
                                     {expert.distance ? (
                                       <>
                                         {expert.distance < 1
@@ -511,6 +460,45 @@ export default function ClientHome() {
                       <p className="text-white/60 text-sm">No experts found nearby</p>
                     </div>
                   )}
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Add scrollbar-hide utility to tailwind config */}
+          <style jsx global>{`
+            .scrollbar-hide::-webkit-scrollbar {
+              display: none;
+            }
+            .scrollbar-hide {
+              -ms-overflow-style: none;
+              scrollbar-width: none;
+            }
+          `}</style>
+
+          {/* Service Categories */}
+          <section className="mb-4 relative z-0">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-base font-semibold text-white tracking-wide text-left">Popular Services in your area</h2>
+              <Link href="/client/services" className="text-white/80 hover:text-white text-xs font-medium flex items-center transition-colors">
+                View All
+                <ChevronRight className="w-3 h-3 ml-1" />
+              </Link>
+            </div>
+            <div className="relative -mx-4">
+              <div className="overflow-x-auto scrollbar-hide px-4 pr-8">
+                <div className="flex space-x-4 pb-2">
+                  {popularServices.map((service) => (
+                    <ServiceCard
+                      key={service.id}
+                      id={service.id}
+                      title={service.title}
+                      image={service.image}
+                      icon={service.icon}
+                      providerCount={service.providerCount}
+                      className="w-[140px] flex-shrink-0"
+                    />
+                  ))}
                 </div>
               </div>
             </div>

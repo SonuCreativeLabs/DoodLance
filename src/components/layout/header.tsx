@@ -68,13 +68,7 @@ export default function Header() {
 
         {isAuthenticated && (
           <div className="flex items-center gap-2">
-            <div className="relative">
-              <Link href="/client/wallet">
-                <button className="p-2 hover:bg-gray-100 rounded-lg relative">
-                  <Wallet className="w-6 h-6" />
-                </button>
-              </Link>
-            </div>
+            {/* Wallet Link Removed */}
 
             <div className="relative">
               <button
