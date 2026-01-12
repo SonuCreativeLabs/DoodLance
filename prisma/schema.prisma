@@ -97,6 +97,7 @@ model Service {
   categoryId   String
   providerId   String
   images       String
+  videoUrl     String[]  @default([])
   tags         String
   location     String?
   coords       String

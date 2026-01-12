@@ -8,6 +8,7 @@ export interface ServicePackage {
   description: string;
   price: string;
   deliveryTime: string;
+  videoUrls?: string[]; // Changed to array to support multiple videos
   type?: 'online' | 'in-person' | 'hybrid';
   features?: string[];
   category?: string;
@@ -66,6 +67,7 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
 
       const response = await fetch('/api/freelancer/services', {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(service),
       });
@@ -94,6 +96,7 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
     try {
       const response = await fetch(`/api/freelancer/services/${serviceId}`, {
         method: 'DELETE',
+        credentials: 'include',
       });
 
       if (!response.ok) {
@@ -113,6 +116,7 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
     try {
       const response = await fetch(`/api/freelancer/services/${serviceId}`, {
         method: 'PATCH',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates),
       });

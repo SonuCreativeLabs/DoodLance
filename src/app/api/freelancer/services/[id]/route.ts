@@ -29,8 +29,11 @@ export async function DELETE(
             return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
         }
 
-        await prisma.service.delete({
-            where: { id }
+        // Soft delete: mark as inactive instead of deleting
+        // This preserves all existing bookings and history
+        await prisma.service.update({
+            where: { id },
+            data: { isActive: false }
         });
 
         return NextResponse.json({ success: true });
@@ -79,6 +82,7 @@ export async function PATCH(
         if (body.type) updates.serviceType = body.type;
         if (body.features) updates.packages = JSON.stringify(body.features);
         if (body.skill) updates.tags = body.skill;
+        if (body.videoUrls !== undefined) updates.videoUrl = body.videoUrls;
 
         // Handle Category update if needed
         if (body.category) {
@@ -117,7 +121,8 @@ export async function PATCH(
             type: updatedService.serviceType,
             features: updatedService.packages ? JSON.parse(updatedService.packages) : [],
             category: updatedService.category.name,
-            skill: updatedService.tags
+            skill: updatedService.tags,
+            videoUrls: updatedService.videoUrl || []
         };
 
         return NextResponse.json({ service: formattedService });

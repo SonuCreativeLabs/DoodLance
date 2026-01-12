@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { CheckCircle2, Clock, Trash2, Plus, Star, FileText } from "lucide-react";
+import { CheckCircle2, Clock, Trash2, Plus, Star, FileText, CheckCircle, XCircle, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -13,7 +13,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { EmptyState } from '@/components/freelancer/profile/EmptyState';
 import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
+import { VideoEmbed } from '@/components/common/VideoEmbed';
 
+// Local form interface (different from context ServicePackage)
 // Local form interface (different from context ServicePackage)
 interface ServicePackage {
   id: string;
@@ -21,7 +24,7 @@ interface ServicePackage {
   price: string;
   description: string;
   features: string[];
-  popular?: boolean;
+  videoUrls?: string[];
   deliveryTime: string;
   revisions: string;
   type?: 'online' | 'in-person' | 'hybrid';
@@ -57,6 +60,7 @@ const mapToCtx = (pkg: ServicePackage): CtxService => ({
   price: pkg.price.startsWith('₹') ? pkg.price : `₹${pkg.price}`,
   deliveryTime: pkg.deliveryTime,
   features: Array.isArray(pkg.features) ? pkg.features : [],
+  videoUrls: pkg.videoUrls || [],
   type: pkg.type,
   category: pkg.category,
   skill: pkg.skill,
@@ -68,9 +72,9 @@ const mapToUI = (svc: CtxService): ServicePackage => ({
   price: (svc.price || '').replace(/^₹\s?/, '').replace(/,/g, ''),
   description: svc.description,
   features: Array.isArray(svc.features) ? svc.features : [],
+  videoUrls: (svc.videoUrls && svc.videoUrls.length > 0) ? svc.videoUrls : [''],
   deliveryTime: svc.deliveryTime,
   revisions: '1 revision',
-  popular: false,
   type: svc.type,
   category: normalizeCategory((svc as any).category),
   skill: (svc as any).skill,
@@ -97,9 +101,9 @@ function PackageForm({
       price: '',
       description: '',
       features: [''],
+      videoUrls: [''],
       deliveryTime: '',
       revisions: '1 revision',
-      popular: false,
       type: 'online' as const,
       category: '',
       skill: '', // Add skill field
@@ -110,9 +114,40 @@ function PackageForm({
       ...initialData,
       features: Array.isArray(initialData?.features) && initialData.features.length > 0
         ? initialData.features
-        : defaultData.features
+        : defaultData.features,
+      videoUrls: Array.isArray(initialData?.videoUrls) && initialData.videoUrls.length > 0
+        ? initialData.videoUrls
+        : defaultData.videoUrls
     };
   });
+
+  // Form validation state
+  const [isFormValid, setIsFormValid] = useState(false);
+  const [urlValidation, setUrlValidation] = useState<{ isValid: boolean; message: string } | null>(null);
+
+  // URL validation function
+  const validateVideoUrl = (url: string): { isValid: boolean; message: string } => {
+    if (!url.trim()) {
+      return { isValid: false, message: '' };
+    }
+
+    const urlPatterns = {
+      youtube: /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^#&?]*)/,
+      instagram: /instagram\.com\/(p|reel)\/([^/?#&]+)/,
+      facebook: /facebook\.com/,
+      twitter: /(?:twitter\.com|x\.com)/,
+      tiktok: /tiktok\.com/,
+      googleDrive: /drive\.google\.com\/file\/d\/([^/]+)/
+    };
+
+    for (const [platform, pattern] of Object.entries(urlPatterns)) {
+      if (pattern.test(url)) {
+        return { isValid: true, message: `Valid ${platform.charAt(0).toUpperCase() + platform.slice(1)} URL` };
+      }
+    }
+
+    return { isValid: false, message: 'URL not from supported platforms' };
+  };
 
   // Update form data when initialData changes (for edit mode)
   useEffect(() => {
@@ -127,15 +162,21 @@ function PackageForm({
 
   // Form validation
   useEffect(() => {
+    // Validate at least one URL is valid
+    const hasValidUrl = formData.videoUrls?.some(url => url.trim() && validateVideoUrl(url).isValid) || false;
+
     const isValid = Boolean(
       formData.name?.trim() &&
       formData.category?.trim() &&
       formData.price?.trim() &&
       formData.deliveryTime?.trim() &&
       formData.description?.trim() &&
+      formData.videoUrls?.some(url => url.trim()) &&
+      hasValidUrl &&
       (!String(formData.category || '').toLowerCase().includes('analytic') || formData.type) &&
       (!String(formData.category || '').toLowerCase().includes('match player') || formData.skill?.trim())
     );
+    setIsFormValid(isValid);
     onValidationChange?.(isValid);
   }, [formData, onValidationChange]);
 
@@ -177,8 +218,39 @@ function PackageForm({
     }));
   };
 
+  const handleVideoUrlChange = (index: number, value: string) => {
+    const newUrls = [...(formData.videoUrls || [''])];
+    newUrls[index] = value;
+    setFormData(prev => ({
+      ...prev,
+      videoUrls: newUrls
+    }));
+  };
+
+  const addVideoUrl = () => {
+    setFormData((prev: Partial<ServicePackage>) => ({
+      ...prev,
+      videoUrls: [...(Array.isArray(prev.videoUrls) ? prev.videoUrls : ['']), '']
+    }));
+  };
+
+  const removeVideoUrl = (index: number) => {
+    const newUrls = [...(formData.videoUrls || [''])];
+    newUrls.splice(index, 1);
+    setFormData(prev => ({
+      ...prev,
+      videoUrls: newUrls.length ? newUrls : ['']
+    }));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!formData.videoUrls?.some(url => url.trim())) {
+      toast.error("At least one video URL is required");
+      return;
+    }
+
     const cleanedData = {
       ...formData,
       name: formData.name?.trim() || 'New Package',
@@ -188,6 +260,9 @@ function PackageForm({
       revisions: formData.revisions || '1 revision',
       features: Array.isArray(formData.features)
         ? formData.features.filter((f): f is string => Boolean(f && typeof f === 'string' && f.trim() !== ''))
+        : [],
+      videoUrls: Array.isArray(formData.videoUrls)
+        ? formData.videoUrls.filter((u): u is string => Boolean(u && typeof u === 'string' && u.trim() !== ''))
         : [],
       type: formData.type,
       category: formData.category?.trim() || undefined,
@@ -205,7 +280,8 @@ function PackageForm({
           value={formData.name || ''}
           onChange={handleChange}
           placeholder="Cricket Coaching - Batting Basics"
-          className="h-11 bg-[#2A2A2A] border-white/10 text-white placeholder-white/40 focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 transition-all focus:outline-none rounded-lg"
+          style={{ borderRadius: '0.5rem' }}
+          className="h-11 bg-[#2A2A2A] border-white/10 text-white placeholder-white/40 focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 transition-all focus:outline-none"
           required
         />
       </div>
@@ -231,7 +307,8 @@ function PackageForm({
               name="type"
               value={formData.type || 'online'}
               onChange={handleChange}
-              className="flex h-11 w-full appearance-none rounded-lg border border-white/10 bg-[#2D2D2D] px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/30"
+              style={{ borderRadius: '0.5rem' }}
+              className="flex h-11 w-full appearance-none border border-white/10 bg-[#2D2D2D] px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/30"
               required
             >
               <option value="online">Online</option>
@@ -251,7 +328,8 @@ function PackageForm({
               name="skill"
               value={formData.skill || ''}
               onChange={handleChange}
-              className="flex h-11 w-full appearance-none rounded-lg border border-white/10 bg-[#2D2D2D] px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/30 cursor-pointer"
+              style={{ borderRadius: '0.5rem' }}
+              className="flex h-11 w-full appearance-none border border-white/10 bg-[#2D2D2D] px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/30 cursor-pointer"
               required
             >
               <option value="" disabled>Select player skill</option>
@@ -273,6 +351,148 @@ function PackageForm({
         </div>
       )}
 
+      {/* Coach Specialization (only for Coach) */}
+      {String(formData.category || '').toLowerCase().includes('coach') && (
+        <div className="space-y-2">
+          <Label className="text-sm font-medium text-white/80">Coaching Specialization <span className="text-red-500">*</span></Label>
+          <div className="relative">
+            <select
+              name="skill"
+              value={formData.skill || ''}
+              onChange={handleChange}
+              style={{ borderRadius: '0.5rem' }}
+              className="flex h-11 w-full appearance-none border border-white/10 bg-[#2D2D2D] px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/30 cursor-pointer"
+              required
+            >
+              <option value="" disabled>Select coaching type</option>
+              <option value="Batting Coach">Batting Coach</option>
+              <option value="Bowling Coach">Bowling Coach</option>
+              <option value="Fielding Coach">Fielding Coach</option>
+              <option value="Mental Coach">Mental Coach</option>
+              <option value="Fitness Coach">Fitness Coach</option>
+              <option value="General Coach">General Coach</option>
+            </select>
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="m6 9 6 6 6-6" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Analyst Specialization */}
+      {String(formData.category || '').toLowerCase().includes('analyst') && (
+        <div className="space-y-2">
+          <Label className="text-sm font-medium text-white/80">Analyst Type <span className="text-red-500">*</span></Label>
+          <div className="relative">
+            <select
+              name="skill"
+              value={formData.skill || ''}
+              onChange={handleChange}
+              style={{ borderRadius: '0.5rem' }}
+              className="flex h-11 w-full appearance-none border border-white/10 bg-[#2D2D2D] px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/30 cursor-pointer"
+              required
+            >
+              <option value="" disabled>Select analyst type</option>
+              <option value="Performance Analyst">Performance Analyst</option>
+              <option value="Video Analyst">Video Analyst</option>
+              <option value="Data Analyst">Data Analyst</option>
+              <option value="Technical Analyst">Technical Analyst</option>
+            </select>
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="m6 9 6 6 6-6" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Trainer Specialization */}
+      {String(formData.category || '').toLowerCase().includes('trainer') && (
+        <div className="space-y-2">
+          <Label className="text-sm font-medium text-white/80">Trainer Type <span className="text-red-500">*</span></Label>
+          <div className="relative">
+            <select
+              name="skill"
+              value={formData.skill || ''}
+              onChange={handleChange}
+              style={{ borderRadius: '0.5rem' }}
+              className="flex h-11 w-full appearance-none border border-white/10 bg-[#2D2D2D] px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/30 cursor-pointer"
+              required
+            >
+              <option value="" disabled>Select trainer type</option>
+              <option value="Strength & Conditioning">Strength & Conditioning</option>
+              <option value="Speed & Agility">Speed & Agility</option>
+              <option value="Flexibility Trainer">Flexibility Trainer</option>
+              <option value="Injury Prevention">Injury Prevention</option>
+            </select>
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="m6 9 6 6 6-6" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Commentator Specialization */}
+      {String(formData.category || '').toLowerCase().includes('commentator') && (
+        <div className="space-y-2">
+          <Label className="text-sm font-medium text-white/80">Commentator Type <span className="text-red-500">*</span></Label>
+          <div className="relative">
+            <select
+              name="skill"
+              value={formData.skill || ''}
+              onChange={handleChange}
+              style={{ borderRadius: '0.5rem' }}
+              className="flex h-11 w-full appearance-none border border-white/10 bg-[#2D2D2D] px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/30 cursor-pointer"
+              required
+            >
+              <option value="" disabled>Select commentator type</option>
+              <option value="TV Commentator">TV Commentator</option>
+              <option value="Radio Commentator">Radio Commentator</option>
+              <option value="Digital/Streaming">Digital/Streaming</option>
+              <option value="Regional Language">Regional Language</option>
+            </select>
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="m6 9 6 6 6-6" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Physio Specialization */}
+      {String(formData.category || '').toLowerCase().includes('physio') && (
+        <div className="space-y-2">
+          <Label className="text-sm font-medium text-white/80">Physio Type <span className="text-red-500">*</span></Label>
+          <div className="relative">
+            <select
+              name="skill"
+              value={formData.skill || ''}
+              onChange={handleChange}
+              style={{ borderRadius: '0.5rem' }}
+              className="flex h-11 w-full appearance-none border border-white/10 bg-[#2D2D2D] px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/30 cursor-pointer"
+              required
+            >
+              <option value="" disabled>Select physio type</option>
+              <option value="Sports Physiotherapist">Sports Physiotherapist</option>
+              <option value="Injury Rehabilitation">Injury Rehabilitation</option>
+              <option value="Sports Massage Therapist">Sports Massage Therapist</option>
+            </select>
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="m6 9 6 6 6-6" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      )}
+
+
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label>Price <span className="text-red-500">*</span></Label>
@@ -290,6 +510,7 @@ function PackageForm({
               placeholder="2500"
               inputMode="numeric"
               pattern="[0-9]*"
+              style={{ borderRadius: '0.5rem' }}
               className="pl-8 bg-[#2D2D2D] border-white/10 text-white placeholder-white/40 focus:border-white/50 focus:ring-1 focus:ring-white/30 transition-all w-full [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               required
             />
@@ -303,6 +524,7 @@ function PackageForm({
             value={formData.deliveryTime || ''}
             onChange={handleChange}
             placeholder="2 hours"
+            style={{ borderRadius: '0.5rem' }}
             className="bg-[#2D2D2D] border-white/10 text-white placeholder-white/40 focus:border-white/50 focus:ring-1 focus:ring-white/30 transition-all w-full"
             required
           />
@@ -316,67 +538,119 @@ function PackageForm({
           value={formData.description || ''}
           onChange={handleChange}
           placeholder="Personalized cricket coaching with drills, footwork, and technique refinement"
-          className="bg-[#2A2A2A] border-white/10 text-white placeholder-white/40 focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 transition-all min-h-[100px] rounded-lg"
+          style={{ borderRadius: '0.5rem' }}
+          className="bg-[#2A2A2A] border-white/10 text-white placeholder-white/40 focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 transition-all min-h-[100px]"
           required
         />
       </div>
 
       <div className="space-y-2">
         <div className="flex items-center gap-2">
-          <Label className="text-sm font-medium text-white/80">Features</Label>
+          <Label className="text-sm font-medium text-white/80">Video URLs <span className="text-red-500">*</span></Label>
+        </div>
+        <div className="space-y-2">
+          {formData.videoUrls?.map((url, index) => (
+            <div key={index} className="flex items-center gap-2">
+              <div className="flex-1 relative">
+                <Input
+                  value={url}
+                  onChange={(e) => handleVideoUrlChange(index, e.target.value)}
+                  placeholder="https://instagram.com/p/..."
+                  style={{ borderRadius: '0.5rem' }}
+                  className={`h-11 bg-[#2A2A2A] border-white/10 text-white placeholder-white/40 focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 transition-all pr-10 ${url.trim() && validateVideoUrl(url).isValid ? 'border-green-500/50' :
+                    url.trim() && !validateVideoUrl(url).isValid ? 'border-red-500/50' : ''
+                    }`}
+                  required={index === 0}
+                />
+                {url.trim() && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    {validateVideoUrl(url).isValid ? (
+                      <CheckCircle className="h-5 w-5 text-green-500" />
+                    ) : (
+                      <XCircle className="h-5 w-5 text-red-500" />
+                    )}
+                  </div>
+                )}
+              </div>
+              {index === 0 ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="text-white bg-white/10 hover:bg-white/20 transition-colors h-11 w-11 rounded-lg border border-white/20"
+                  onClick={addVideoUrl}
+                >
+                  <Plus className="h-5 w-5" />
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-colors h-11 w-11 rounded-lg"
+                  onClick={() => removeVideoUrl(index)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+          ))}
+        </div>
+        {formData.videoUrls && formData.videoUrls[0]?.trim() && (
+          <p className={`text-xs ${validateVideoUrl(formData.videoUrls[0]).isValid ? 'text-green-500' : 'text-red-500'
+            }`}>
+            {validateVideoUrl(formData.videoUrls[0]).message}
+          </p>
+        )}
+        {!formData.videoUrls?.[0]?.trim() && (
+          <p className="text-xs text-white/40">Supported: YouTube, Instagram, Facebook, Twitter, TikTok, Google Drive (Public)</p>
+        )}
+      </div>
+
+      <div className="space-y-2">
+        <div className="flex items-center gap-2">
+          <Label className="text-sm font-medium text-white/80">What's Included</Label>
           <span className="text-xs text-white/40">(Optional)</span>
         </div>
         <div className="space-y-2">
           {formData.features?.map((feature, index) => (
             <div key={index} className="flex items-center gap-2">
-              <Input
-                value={feature}
-                onChange={(e) => handleFeatureChange(index, e.target.value)}
-                placeholder={`Footwork drills`}
-                className="bg-[#2A2A2A] border-white/10 text-white placeholder-white/40 focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 transition-all rounded-lg h-10"
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-colors h-9 w-9 rounded-lg"
-                onClick={() => removeFeature(index)}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
+              <div className="flex-1">
+                <Input
+                  value={feature}
+                  onChange={(e) => handleFeatureChange(index, e.target.value)}
+                  placeholder={`Footwork drills`}
+                  style={{ borderRadius: '0.5rem' }}
+                  className="bg-[#2A2A2A] border-white/10 text-white placeholder-white/40 focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 transition-all h-11"
+                />
+              </div>
+              {index === 0 ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="text-white bg-white/10 hover:bg-white/20 transition-colors h-11 w-11 rounded-lg border border-white/20"
+                  onClick={addFeature}
+                >
+                  <Plus className="h-5 w-5" />
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-colors h-11 w-11 rounded-lg"
+                  onClick={() => removeFeature(index)}
+                >
+                  <Trash2 className="h-5 w-5" />
+                </Button>
+              )}
             </div>
           ))}
-          <div className="mt-2">
-            <button
-              type="button"
-              onClick={addFeature}
-              className="text-sm text-purple-400 hover:text-purple-300 flex items-center gap-2 mt-2 px-3 py-1.5 rounded-lg hover:bg-purple-500/10 transition-colors w-auto"
-            >
-              <Plus className="h-4 w-4" />
-              Add another feature
-            </button>
-          </div>
         </div>
       </div>
 
-      <div className="flex items-center space-x-3">
-        <button
-          type="button"
-          role="switch"
-          aria-checked={formData.popular || false}
-          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 ${formData.popular ? 'bg-purple-600' : 'bg-[#2D2D2D]'}`}
-          onClick={() => setFormData(prev => ({ ...prev, popular: !prev.popular }))}
-        >
-          <span
-            aria-hidden="true"
-            className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${formData.popular ? 'translate-x-6' : 'translate-x-0'
-              }`}
-          />
-        </button>
-        <Label htmlFor="popular" className="text-sm font-medium text-white/80 cursor-pointer">
-          Mark as Popular
-        </Label>
-      </div>
+
 
       {!hideActions && (
         <div className="pt-4 border-t border-white/5">
@@ -391,7 +665,8 @@ function PackageForm({
             </Button>
             <Button
               type="submit"
-              className="h-10 px-6 rounded-lg bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-700 hover:to-purple-600 shadow-md hover:shadow-purple-500/30 transition-all"
+              disabled={!isFormValid}
+              className="h-10 px-6 rounded-lg bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-700 hover:to-purple-600 shadow-md hover:shadow-purple-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:from-purple-600 disabled:hover:to-purple-500"
             >
               {initialData?.id ? 'Update Package' : 'Create Package'}
             </Button>
@@ -426,6 +701,8 @@ export function ServicePackages({ services = [] }: ServicePackagesProps) {
   const [packageToDelete, setPackageToDelete] = useState<string | null>(null);
   const [editingPackage, setEditingPackage] = useState<ServicePackage | null>(null);
   const [isFormValid, setIsFormValid] = useState(false);
+  const [videoModalOpen, setVideoModalOpen] = useState(false);
+  const [selectedVideoUrl, setSelectedVideoUrl] = useState<string>('');
 
   if (isLoading) {
     return (
@@ -473,7 +750,7 @@ export function ServicePackages({ services = [] }: ServicePackagesProps) {
           price: pkg.price?.trim() || existingPkg.price,
           deliveryTime: pkg.deliveryTime?.trim() || existingPkg.deliveryTime,
           revisions: pkg.revisions || existingPkg.revisions,
-          popular: pkg.popular !== undefined ? pkg.popular : existingPkg.popular,
+          videoUrls: pkg.videoUrls !== undefined && pkg.videoUrls.length > 0 ? pkg.videoUrls : existingPkg.videoUrls,
           skill: pkg.skill || existingPkg.skill,
         } as ServicePackage;
 
@@ -489,7 +766,7 @@ export function ServicePackages({ services = [] }: ServicePackagesProps) {
         features: cleanFeatures,
         deliveryTime: pkg.deliveryTime?.trim() || '',
         revisions: '1 revision',
-        popular: Boolean(pkg.popular),
+        videoUrls: pkg.videoUrls || [''],
         type: (pkg.type as any) || 'online',
         category: (pkg.category as any) || '',
         skill: (pkg.skill as any) || '',
@@ -569,9 +846,35 @@ export function ServicePackages({ services = [] }: ServicePackagesProps) {
             {packages.map((pkg) => (
               <div
                 key={pkg.id}
-                className={`relative rounded-xl border ${pkg.popular ? 'border-purple-500/30 ring-1 ring-purple-500/20' : 'border-white/5'} bg-[#1E1E1E] pt-12 pb-6 px-6`}
+                className="relative rounded-xl border border-white/5 bg-[#1E1E1E] overflow-hidden"
               >
-                <div className="absolute -top-3 right-3">
+                {/* Video Cover */}
+                {pkg.videoUrls && pkg.videoUrls.length > 0 && pkg.videoUrls[0] && (
+                  <div
+                    className="relative w-full h-48 bg-gradient-to-br from-purple-900/20 to-black cursor-pointer group overflow-hidden"
+                    onClick={() => {
+                      setSelectedVideoUrl(pkg.videoUrls![0]);
+                      setVideoModalOpen(true);
+                    }}
+                  >
+                    <div className="absolute inset-0 bg-black/50 group-hover:bg-black/30 transition-all duration-300 flex items-center justify-center">
+                      <div className="w-16 h-16 rounded-full bg-purple-600/80 group-hover:bg-purple-500 group-hover:scale-110 transition-all duration-300 flex items-center justify-center shadow-lg">
+                        <Play className="h-8 w-8 text-white ml-1" fill="currentColor" />
+                      </div>
+                    </div>
+                    <div className="absolute inset-0 opacity-30">
+                      <VideoEmbed url={pkg.videoUrls[0]} />
+                    </div>
+                    {pkg.videoUrls.length > 1 && (
+                      <div className="absolute bottom-2 right-2 bg-black/70 text-white px-2 py-1 rounded text-xs">
+                        +{pkg.videoUrls.length - 1} more
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Delete Button */}
+                <div className="absolute top-3 right-3 z-20">
                   <button
                     type="button"
                     className="group h-7 w-7 rounded-full flex items-center justify-center bg-red-500/80 hover:bg-red-600 border border-red-500 hover:border-red-400 transition-all duration-200 shadow-md hover:shadow-red-500/30"
@@ -585,44 +888,49 @@ export function ServicePackages({ services = [] }: ServicePackagesProps) {
                   </button>
                 </div>
 
-                <div className="absolute top-3 left-3">
-                  {pkg.category && (
-                    <Badge className="bg-white/10 text-white/80 border-white/20 px-2 py-0.5 text-xs">
-                      {pkg.category}
-                    </Badge>
-                  )}
-                </div>
+                {/* Category Badge */}
 
-                <div className="text-center">
-                  <h3 className="text-lg font-semibold text-white">{pkg.name}</h3>
-                  <div className="mt-2 space-y-1">
-                    <div className="flex items-baseline justify-center gap-1">
-                      <p className="text-2xl font-bold text-white">
-                        ₹{pkg.price.replace(/^₹/, '')}
-                      </p>
-                      <span className="text-sm font-normal text-white/60">/ {pkg.deliveryTime}</span>
+
+                {/* Content */}
+                <div className="pt-6 pb-6 px-6">
+                  <div className="text-center">
+                    {pkg.category && (
+                      <div className="mb-4 flex justify-start">
+                        <Badge className="bg-white/10 text-white/80 border-white/20 px-2 py-0.5 text-xs">
+                          {pkg.category}
+                        </Badge>
+                      </div>
+                    )}
+                    <h3 className="text-lg font-semibold text-white">{pkg.name}</h3>
+                    <div className="mt-2 space-y-1">
+                      <div className="flex items-baseline justify-center gap-1">
+                        <p className="text-2xl font-bold text-white">
+                          ₹{pkg.price.replace(/^₹/, '')}
+                        </p>
+                        <span className="text-sm font-normal text-white/60">/ {pkg.deliveryTime}</span>
+                      </div>
                     </div>
+                    <p className="mt-2 text-sm text-white/60">{pkg.description}</p>
                   </div>
-                  <p className="mt-2 text-sm text-white/60">{pkg.description}</p>
-                </div>
 
-                <ul className="mt-6 space-y-3">
-                  {pkg.features.map((feature, index) => (
-                    <li key={index} className="flex items-start">
-                      <CheckCircle2 className="h-5 w-5 flex-shrink-0 text-purple-400 mr-2 mt-0.5" />
-                      <span className="text-sm text-white/80">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
+                  <ul className="mt-6 space-y-3">
+                    {pkg.features.map((feature, index) => (
+                      <li key={index} className="flex items-start">
+                        <CheckCircle2 className="h-5 w-5 flex-shrink-0 text-purple-400 mr-2 mt-0.5" />
+                        <span className="text-sm text-white/80">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
 
-                <div className="mt-6 space-y-2">
-                  <Button
-                    className={`w-full ${pkg.popular ? 'bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800' : 'bg-white/5 hover:bg-white/10'}`}
-                    size="sm"
-                    onClick={() => handleEditPackage(pkg)}
-                  >
-                    Edit Package
-                  </Button>
+                  <div className="mt-6 space-y-2">
+                    <Button
+                      className="w-full bg-white/5 hover:bg-white/10"
+                      size="sm"
+                      onClick={() => handleEditPackage(pkg)}
+                    >
+                      Edit Package
+                    </Button>
+                  </div>
                 </div>
               </div>
             ))}
@@ -644,7 +952,22 @@ export function ServicePackages({ services = [] }: ServicePackagesProps) {
             </CardContent>
           </Card>
         </>
-      )}
+      )
+      }
+
+      {/* Video Modal */}
+      <Dialog open={videoModalOpen} onOpenChange={setVideoModalOpen}>
+        <DialogContent className="max-w-4xl w-full bg-[#1E1E1E] border-white/10 p-0">
+          <DialogHeader className="p-6 pb-0">
+            <DialogTitle className="text-white">Video Preview</DialogTitle>
+          </DialogHeader>
+          <div className="p-6">
+            {selectedVideoUrl && (
+              <VideoEmbed url={selectedVideoUrl} className="w-full" />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
@@ -732,6 +1055,6 @@ export function ServicePackages({ services = [] }: ServicePackagesProps) {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </div >
   );
 }

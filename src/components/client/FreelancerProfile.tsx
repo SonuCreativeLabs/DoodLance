@@ -37,6 +37,7 @@ import Image from 'next/image';
 import { IconButton } from '@/components/ui/icon-button';
 import { PortfolioItemModal } from '@/components/common/PortfolioItemModal';
 import { HireBottomSheet } from '@/components/hire/HireBottomSheet';
+import { VideoEmbed } from '@/components/common/VideoEmbed';
 
 interface FreelancerDetail {
     id: string;
@@ -83,6 +84,7 @@ interface FreelancerDetail {
         deliveryTime: string;
         features?: string[];
         category?: string;
+        videoUrls?: string[];
     }[];
 
     // Portfolio data
@@ -270,7 +272,9 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                         description: String(s.description),
                         price: String(s.price), // Force string as per interface expectation or UI usage
                         category: String(s.category?.name || 'Service'),
-                        deliveryTime: String(s.deliveryTime)
+                        deliveryTime: String(s.deliveryTime),
+                        videoUrls: Array.isArray(s.videoUrl) ? s.videoUrl : (s.videoUrl ? [s.videoUrl] : []),
+                        features: s.features ? (typeof s.features === 'string' ? JSON.parse(s.features) : s.features) : []
                     })) || [],
 
                     experienceDetails: profile.experiences?.map((exp: any) => ({
@@ -940,6 +944,14 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                                                                             </ul>
                                                                         )}
                                                                     </div>
+
+                                                                    {service.videoUrls && service.videoUrls.length > 0 && (
+                                                                        <div className="mt-4 mb-2 space-y-2">
+                                                                            {service.videoUrls.map((videoUrl, idx) => (
+                                                                                <VideoEmbed key={idx} url={videoUrl} className="rounded-lg shadow-md" />
+                                                                            ))}
+                                                                        </div>
+                                                                    )}
 
                                                                     <div className="mt-4 pt-4 relative">
                                                                         <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
