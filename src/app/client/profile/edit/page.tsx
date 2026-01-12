@@ -9,6 +9,7 @@ import { useNavbar } from '@/contexts/NavbarContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
+import { compressImage } from '@/utils/compression'
 import {
   Dialog,
   DialogContent,
@@ -173,62 +174,7 @@ export default function EditProfile() {
     }
   }
 
-  // Compress image before upload
-  const compressImage = (file: File): Promise<File> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader()
-      reader.readAsDataURL(file)
-      reader.onload = (event) => {
-        const img = new window.Image()
-        img.src = event.target?.result as string
-        img.onload = () => {
-          const canvas = document.createElement('canvas')
-          const ctx = canvas.getContext('2d')!
 
-          // Max width/height for profile pictures
-          const MAX_SIZE = 400
-          let width = img.width
-          let height = img.height
-
-          // Calculate new dimensions
-          if (width > height) {
-            if (width > MAX_SIZE) {
-              height = (height * MAX_SIZE) / width
-              width = MAX_SIZE
-            }
-          } else {
-            if (height > MAX_SIZE) {
-              width = (width * MAX_SIZE) / height
-              height = MAX_SIZE
-            }
-          }
-
-          canvas.width = width
-          canvas.height = height
-          ctx.drawImage(img, 0, 0, width, height)
-
-          // Convert to blob with compression
-          canvas.toBlob(
-            (blob) => {
-              if (blob) {
-                const compressedFile = new File([blob], file.name, {
-                  type: 'image/jpeg',
-                  lastModified: Date.now()
-                })
-                resolve(compressedFile)
-              } else {
-                reject(new Error('Canvas to Blob conversion failed'))
-              }
-            },
-            'image/jpeg',
-            0.7 // 70% quality - good balance between size and quality
-          )
-        }
-        img.onerror = reject
-      }
-      reader.onerror = reject
-    })
-  }
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -240,18 +186,17 @@ export default function EditProfile() {
       return
     }
 
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image size must be less than 5MB')
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('Image size must be less than 2MB')
       return
     }
 
     setUploading(true)
     setUploadProgress(20)
     try {
-      // Compress image first
       toast.info('Compressing image...')
-      const compressedFile = await compressImage(file)
+      const compressedFile = await compressImage(file, 0.7, 400) // Keep original settings: 0.7 quality, 400px max size
       setUploadProgress(60)
 
       // Create unique filename

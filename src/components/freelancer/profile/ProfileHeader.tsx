@@ -19,6 +19,7 @@ import { useAvailability } from '@/contexts/AvailabilityContext';
 import { SkillInfoDialog } from '@/components/common/SkillInfoDialog';
 import { getSkillInfo, type SkillInfo } from '@/utils/skillUtils';
 import { calculateAge } from '@/utils/personalUtils';
+import { compressImage } from '@/utils/compression';
 import { IdVerifiedBadge } from './IdVerifiedBadge';
 import { useRoleSwitch } from '@/contexts/RoleSwitchContext';
 
@@ -176,16 +177,20 @@ export function ProfileHeader({
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image size should be less than 5MB');
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('Image size should be less than 2MB');
       return;
     }
 
     setIsUploading(true);
 
     try {
+      toast.info('Compressing image...');
+      // Compress: 0.7 quality, 1200px max width (covers are wider)
+      const compressedFile = await compressImage(file, 0.7, 1200);
+
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append('file', compressedFile);
       formData.append('bucket', 'images'); // Assuming 'images' bucket exists
       formData.append('path', 'covers');
 
@@ -224,16 +229,20 @@ export function ProfileHeader({
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image size should be less than 5MB');
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('Image size should be less than 2MB');
       return;
     }
 
     setIsProfileUploading(true);
 
     try {
+      toast.info('Compressing image...');
+      // Compress: 0.7 quality, 400px max size for avatars
+      const compressedFile = await compressImage(file, 0.7, 400);
+
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append('file', compressedFile);
       formData.append('bucket', 'images');
       formData.append('path', 'avatars');
 
