@@ -6,18 +6,23 @@ import { createPortal } from 'react-dom';
 import {
   Share2,
   X,
-  Check,
-  CheckCircle,
-  ArrowRight,
-  MessageSquare,
-  Briefcase,
   MapPin,
-  Calendar,
   Star,
   ChevronDown,
   Clock,
-  Award
+  Award,
+  Play,
+  CheckCircle2,
+  ArrowRight,
+  Briefcase,
+  Calendar,
+  CheckCircle,
+  MessageSquare
 } from 'lucide-react';
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { ServiceVideoCarousel } from '@/components/common/ServiceVideoCarousel';
+import { VideoEmbed, getVideoAspectRatio } from '@/components/common/VideoEmbed';
 import { SkillInfoDialog } from '@/components/common/SkillInfoDialog';
 import { getSkillInfo, type SkillInfo } from '@/utils/skillUtils';
 import { IconButton } from '@/components/ui/icon-button';
@@ -875,87 +880,57 @@ const ProfilePreview = memo(({
 
                 <div className="relative">
                   <div className="flex -mx-2 overflow-x-auto scrollbar-hide pb-2">
-                    <div className="flex gap-4 px-2">
+                    <div className="flex gap-4 px-2 items-start">
                       {profileData.services.map((service) => (
-                        <div key={service.id} className="w-80 flex-shrink-0 rounded-3xl border border-white/10 bg-white/5 hover:border-purple-500/30 transition-colors flex flex-col h-full relative overflow-hidden">
-                          {/* Video/Image Area */}
-                          <div className="relative aspect-video w-full bg-black/20 group/video">
-                            {service.videoUrls && service.videoUrls.length > 0 && service.videoUrls[0] ? (
-                              <video
-                                src={service.videoUrls[0]}
-                                className="w-full h-full object-cover"
-                                muted
-                                loop
-                                playsInline
-                                onMouseOver={e => e.currentTarget.play()}
-                                onMouseOut={e => e.currentTarget.pause()}
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center bg-white/5">
-                                <div className="text-white/20">
-                                  <Briefcase className="h-8 w-8" />
-                                </div>
-                              </div>
-                            )}
-                          </div>
+                        <div key={service.id} className="w-80 flex-shrink-0 rounded-xl border border-white/5 bg-[#1E1E1E] flex flex-col relative overflow-hidden text-left">
+                          <ServiceVideoCarousel
+                            videoUrls={service.videoUrls?.filter(url => url) || []}
+                            onVideoClick={(url) => window.open(url, '_blank')}
+                            className="rounded-t-xl"
+                          />
 
-                          <div className="flex flex-col h-full p-5">
+                          <div className="pt-6 pb-6 px-6 flex flex-col flex-1">
                             {service.category && (
-                              <div className="mb-3 flex justify-start">
-                                <div className="bg-white/10 text-white/80 border-white/20 px-2 py-0.5 text-xs rounded-full border">
+                              <div className="mb-4 flex justify-start">
+                                <Badge className="bg-white/10 text-white/80 border-white/20 px-2 py-0.5 text-xs">
                                   {service.category}
-                                </div>
+                                </Badge>
                               </div>
                             )}
-                            <div className="flex-1">
-                              <div className="flex items-start justify-between">
-                                <h3 className="text-lg font-semibold text-white">{service.title}</h3>
-                              </div>
 
-                              <p className="text-white/70 mt-2 text-sm">{service.description}</p>
+                            <h3 className="text-lg font-semibold text-white mb-3 line-clamp-2">{service.title}</h3>
 
-                              {service.features && service.features.length > 0 && (
-                                <ul className="mt-3 space-y-2">
-                                  {service.features.map((feature: string, i: number) => (
-                                    <li key={i} className="flex items-start text-sm text-white/80">
-                                      <Check className="h-4 w-4 text-green-400 mr-2 mt-0.5 flex-shrink-0" />
-                                      <span>{feature}</span>
-                                    </li>
-                                  ))}
-                                </ul>
-                              )}
-                            </div>
+                            <p className="text-sm text-white/60 line-clamp-3 mb-6">{service.description}</p>
 
-                            <div className="mt-4 pt-4 relative">
+                            {service.features && service.features.length > 0 && (
+                              <ul className="space-y-2.5 text-left mb-6">
+                                {service.features.map((feature: string, i: number) => (
+                                  <li key={i} className="flex items-start">
+                                    <CheckCircle2 className="h-4.5 w-4.5 flex-shrink-0 text-purple-400 mr-2.5 mt-0.5" />
+                                    <span className="text-sm text-white/80 leading-tight">{feature}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
+
+                            <div className="mt-6 pt-4 relative mt-auto">
                               <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
-                              <div className="flex flex-col gap-3">
-                                <div className="flex items-center justify-between">
-                                  <div className="text-xl font-bold text-white">
-                                    {service.price}
-                                  </div>
-                                  <div className="text-sm text-white/60 bg-white/5 px-3 py-1 rounded-full">
-                                    {service.deliveryTime}
-                                  </div>
+                              <div className="flex items-center justify-between">
+                                <div className="text-xl font-bold text-white">
+                                  ₹{String(service.price).replace(/^₹/, '')}
                                 </div>
-                                <div className="flex items-center gap-2">
-                                  <button
-                                    disabled={!profileData.online}
-                                    className={`flex-1 py-2 px-4 rounded-xl text-sm font-medium transition-colors ${profileData.online
-                                      ? 'bg-purple-600 hover:bg-purple-700 text-white'
-                                      : 'bg-white/10 text-white/40 cursor-not-allowed'
-                                      }`}
-                                  >
-                                    {profileData.online ? 'Hire Me' : 'Currently Not Available'}
-                                  </button>
+                                <div className="text-sm text-white/60 bg-white/5 px-3 py-1 rounded-full border border-white/5">
+                                  {service.deliveryTime}
                                 </div>
                               </div>
                             </div>
                           </div>
                         </div>
+
                       ))}
                     </div>
                   </div>
-                </div>
+                </div >
                 <button
                   onClick={handleViewAllServices}
                   className="w-full mt-4 py-3 px-4 border border-white/30 hover:bg-white/5 transition-colors text-sm font-medium flex items-center justify-center gap-2 text-white rounded-[6px]"
@@ -963,7 +938,7 @@ const ProfilePreview = memo(({
                   View All {profileData.services.length} Services
                   <ArrowRight className="h-4 w-4" />
                 </button>
-              </section>
+              </section >
 
               {/* Portfolio Section */}
 
@@ -1107,20 +1082,20 @@ const ProfilePreview = memo(({
                   </div>
                 )}
               </section>
-            </div>
-          </div>
-        </div>
-      </div>
+            </div >
+          </div >
+        </div >
+      </div >
 
       {/* Skill Info Dialog */}
-      <SkillInfoDialog
+      < SkillInfoDialog
         isOpen={isSkillDialogOpen}
         onClose={() => setIsSkillDialogOpen(false)}
         skillInfo={selectedSkillInfo}
       />
 
       {/* Portfolio Modal */}
-      <PortfolioItemModal
+      < PortfolioItemModal
         item={selectedPortfolioItem}
         isOpen={isPortfolioModalOpen}
         onClose={() => {
@@ -1128,7 +1103,7 @@ const ProfilePreview = memo(({
           setSelectedPortfolioItem(null);
         }}
       />
-    </div>
+    </div >
   ), document.body);
 }, (prevProps, nextProps) => {
   // Only re-render if isOpen or profileData changes

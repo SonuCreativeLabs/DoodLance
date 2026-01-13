@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { ServiceVideoCarousel } from '@/components/common/ServiceVideoCarousel';
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { CheckCircle2, Clock, Trash2, Plus, Star, FileText, CheckCircle, XCircle, Play } from "lucide-react";
+import { CheckCircle2, Clock, Trash2, Plus, Star, FileText, CheckCircle, XCircle, Play, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -14,7 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { EmptyState } from '@/components/freelancer/profile/EmptyState';
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { VideoEmbed } from '@/components/common/VideoEmbed';
+import { VideoEmbed, getVideoAspectRatio } from '@/components/common/VideoEmbed';
 
 // Local form interface (different from context ServicePackage)
 // Local form interface (different from context ServicePackage)
@@ -132,8 +133,9 @@ function PackageForm({
     }
 
     const urlPatterns = {
-      youtube: /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^#&?]*)/,
-      instagram: /instagram\.com\/(p|reel)\/([^/?#&]+)/,
+      youtube: /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([^#&?]*)/,
+      vimeo: /vimeo\.com/,
+      instagram: /instagram\.com\/(?:p|reel|stories)\//,
       facebook: /facebook\.com/,
       twitter: /(?:twitter\.com|x\.com)/,
       tiktok: /tiktok\.com/,
@@ -146,7 +148,13 @@ function PackageForm({
       }
     }
 
-    return { isValid: false, message: 'URL not from supported platforms' };
+    // Generic valid URL check for any other platform
+    try {
+      new URL(url);
+      return { isValid: true, message: 'Valid Video URL' };
+    } catch {
+      return { isValid: false, message: 'Please enter a valid URL' };
+    }
   };
 
   // Update form data when initialData changes (for edit mode)
@@ -846,35 +854,29 @@ export function ServicePackages({ services = [] }: ServicePackagesProps) {
             {packages.map((pkg) => (
               <div
                 key={pkg.id}
-                className="relative rounded-xl border border-white/5 bg-[#1E1E1E] overflow-hidden"
+                className="relative rounded-xl border border-white/5 bg-[#1E1E1E] overflow-hidden cursor-pointer hover:border-white/10 transition-colors"
+                onClick={() => handleEditPackage(pkg)}
               >
                 {/* Video Cover */}
-                {pkg.videoUrls && pkg.videoUrls.length > 0 && pkg.videoUrls[0] && (
-                  <div
-                    className="relative w-full h-48 bg-gradient-to-br from-purple-900/20 to-black cursor-pointer group overflow-hidden"
-                    onClick={() => {
-                      setSelectedVideoUrl(pkg.videoUrls![0]);
-                      setVideoModalOpen(true);
-                    }}
-                  >
-                    <div className="absolute inset-0 bg-black/50 group-hover:bg-black/30 transition-all duration-300 flex items-center justify-center">
-                      <div className="w-16 h-16 rounded-full bg-purple-600/80 group-hover:bg-purple-500 group-hover:scale-110 transition-all duration-300 flex items-center justify-center shadow-lg">
-                        <Play className="h-8 w-8 text-white ml-1" fill="currentColor" />
-                      </div>
-                    </div>
-                    <div className="absolute inset-0 opacity-30">
-                      <VideoEmbed url={pkg.videoUrls[0]} />
-                    </div>
-                    {pkg.videoUrls.length > 1 && (
-                      <div className="absolute bottom-2 right-2 bg-black/70 text-white px-2 py-1 rounded text-xs">
-                        +{pkg.videoUrls.length - 1} more
-                      </div>
-                    )}
-                  </div>
-                )}
+                <ServiceVideoCarousel
+                  videoUrls={pkg.videoUrls?.filter(url => url) || []}
+                  onVideoClick={(url) => window.open(url, '_blank')}
+                  className="rounded-t-xl"
+                />
 
-                {/* Delete Button */}
-                <div className="absolute top-3 right-3 z-20">
+                {/* Action Buttons */}
+                <div className="absolute top-3 right-3 z-20 flex items-center gap-2">
+                  <button
+                    type="button"
+                    className="group h-7 w-7 rounded-full flex items-center justify-center bg-white/10 hover:bg-white/20 border border-white/10 hover:border-white/20 transition-all duration-200 backdrop-blur-sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEditPackage(pkg);
+                    }}
+                    title="Edit package"
+                  >
+                    <Pencil className="h-3.5 w-3.5 text-white/90 group-hover:text-white transition-colors" />
+                  </button>
                   <button
                     type="button"
                     className="group h-7 w-7 rounded-full flex items-center justify-center bg-red-500/80 hover:bg-red-600 border border-red-500 hover:border-red-400 transition-all duration-200 shadow-md hover:shadow-red-500/30"
@@ -893,7 +895,7 @@ export function ServicePackages({ services = [] }: ServicePackagesProps) {
 
                 {/* Content */}
                 <div className="pt-6 pb-6 px-6">
-                  <div className="text-center">
+                  <div className="text-left">
                     {pkg.category && (
                       <div className="mb-4 flex justify-start">
                         <Badge className="bg-white/10 text-white/80 border-white/20 px-2 py-0.5 text-xs">
@@ -901,35 +903,30 @@ export function ServicePackages({ services = [] }: ServicePackagesProps) {
                         </Badge>
                       </div>
                     )}
-                    <h3 className="text-lg font-semibold text-white">{pkg.name}</h3>
-                    <div className="mt-2 space-y-1">
-                      <div className="flex items-baseline justify-center gap-1">
-                        <p className="text-2xl font-bold text-white">
-                          ₹{pkg.price.replace(/^₹/, '')}
-                        </p>
-                        <span className="text-sm font-normal text-white/60">/ {pkg.deliveryTime}</span>
-                      </div>
-                    </div>
-                    <p className="mt-2 text-sm text-white/60">{pkg.description}</p>
+                    <h3 className="text-lg font-semibold text-white mb-3 line-clamp-2">{pkg.name}</h3>
+
+                    <p className="text-sm text-white/60 mb-6 line-clamp-3">{pkg.description}</p>
                   </div>
 
-                  <ul className="mt-6 space-y-3">
+                  <ul className="mb-6 space-y-2.5">
                     {pkg.features.map((feature, index) => (
                       <li key={index} className="flex items-start">
-                        <CheckCircle2 className="h-5 w-5 flex-shrink-0 text-purple-400 mr-2 mt-0.5" />
-                        <span className="text-sm text-white/80">{feature}</span>
+                        <CheckCircle2 className="h-4.5 w-4.5 flex-shrink-0 text-purple-400 mr-2.5 mt-0.5" />
+                        <span className="text-sm text-white/80 leading-tight">{feature}</span>
                       </li>
                     ))}
                   </ul>
 
-                  <div className="mt-6 space-y-2">
-                    <Button
-                      className="w-full bg-white/5 hover:bg-white/10"
-                      size="sm"
-                      onClick={() => handleEditPackage(pkg)}
-                    >
-                      Edit Package
-                    </Button>
+                  <div className="mt-6 pt-4 relative mt-auto">
+                    <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
+                    <div className="flex items-center justify-between">
+                      <div className="text-xl font-bold text-white">
+                        ₹{pkg.price.replace(/^₹/, '')}
+                      </div>
+                      <div className="text-sm text-white/60 bg-white/5 px-3 py-1 rounded-full border border-white/5">
+                        {pkg.deliveryTime}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -952,9 +949,7 @@ export function ServicePackages({ services = [] }: ServicePackagesProps) {
             </CardContent>
           </Card>
         </>
-      )
-      }
-
+      )}
       {/* Video Modal */}
       <Dialog open={videoModalOpen} onOpenChange={setVideoModalOpen}>
         <DialogContent className="max-w-4xl w-full bg-[#1E1E1E] border-white/10 p-0">

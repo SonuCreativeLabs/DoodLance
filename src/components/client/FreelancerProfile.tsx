@@ -20,7 +20,9 @@ import {
     CheckCircle,
     ArrowRight,
     UserPlus,
-    User
+    User,
+    Play,
+    CheckCircle2
 } from 'lucide-react';
 import { useNavbar } from '@/contexts/NavbarContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -38,6 +40,7 @@ import { IconButton } from '@/components/ui/icon-button';
 import { PortfolioItemModal } from '@/components/common/PortfolioItemModal';
 import { HireBottomSheet } from '@/components/hire/HireBottomSheet';
 import { VideoEmbed } from '@/components/common/VideoEmbed';
+import { ServiceVideoCarousel } from '@/components/common/ServiceVideoCarousel';
 
 interface FreelancerDetail {
     id: string;
@@ -266,16 +269,20 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                     coverImage: String(profile.coverImage || ''),
                     dateOfBirth: profile.dateOfBirth,
 
-                    services: profile.services?.map((s: any) => ({
-                        id: String(s.id),
-                        title: String(s.title),
-                        description: String(s.description),
-                        price: String(s.price), // Force string as per interface expectation or UI usage
-                        category: String(s.category?.name || 'Service'),
-                        deliveryTime: String(s.deliveryTime),
-                        videoUrls: Array.isArray(s.videoUrl) ? s.videoUrl : (s.videoUrl ? [s.videoUrl] : []),
-                        features: s.features ? (typeof s.features === 'string' ? JSON.parse(s.features) : s.features) : []
-                    })) || [],
+                    services: profile.services?.map((s: any) => {
+                        // DEBUG LOG
+                        console.log('FreelancerProfile Service Raw:', s.id, s.title, s.videoUrl, s.videoUrls);
+                        return {
+                            id: String(s.id),
+                            title: String(s.title),
+                            description: String(s.description),
+                            price: String(s.price), // Force string as per interface expectation or UI usage
+                            category: String(s.category?.name || 'Service'),
+                            deliveryTime: String(s.deliveryTime),
+                            videoUrls: (Array.isArray(s.videoUrls) ? s.videoUrls : (Array.isArray(s.videoUrl) ? s.videoUrl : [])).filter((u: any) => typeof u === 'string' && u.trim().length > 0),
+                            features: s.features ? (typeof s.features === 'string' ? JSON.parse(s.features) : Array.isArray(s.features) ? s.features : []) : []
+                        };
+                    }) || [],
 
                     experienceDetails: profile.experiences?.map((exp: any) => ({
                         id: String(exp.id),
@@ -914,55 +921,49 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
 
                                             <div className="relative">
                                                 <div className="flex -mx-2 overflow-x-auto scrollbar-hide pb-2">
-                                                    <div className="flex gap-4 px-2">
+                                                    <div className="flex gap-4 px-2 items-start">
                                                         {freelancer.services.map((service) => (
-                                                            <div key={service.id} className="w-80 flex-shrink-0 p-5 pt-8 rounded-3xl border border-white/10 bg-white/5 hover:border-purple-500/30 transition-colors flex flex-col h-full relative">
-                                                                {/* Category badge */}
-                                                                {service.category && (
-                                                                    <div className="absolute top-3 left-3 z-10">
-                                                                        <Badge className="bg-white/10 text-white/80 border-white/20 px-2 py-0.5 text-xs">
-                                                                            {service.category}
-                                                                        </Badge>
-                                                                    </div>
-                                                                )}
-                                                                <div className="flex flex-col h-full">
-                                                                    <div className="flex-1 mt-2">
-                                                                        <div className="flex items-start justify-between">
-                                                                            <h3 className="text-lg font-semibold text-white">{service.title}</h3>
-                                                                        </div>
+                                                            <div key={service.id} className="w-80 flex-shrink-0 rounded-xl border border-white/5 bg-[#1E1E1E] overflow-hidden flex flex-col relative group hover:border-white/10 transition-colors">
+                                                                {/* Video Cover */}
+                                                                <ServiceVideoCarousel
+                                                                    videoUrls={service.videoUrls?.filter(url => url) || []}
+                                                                    onVideoClick={(url) => window.open(url, '_blank')}
+                                                                    className="w-full"
+                                                                />
 
-                                                                        <p className="text-white/70 mt-2 text-sm">{service.description}</p>
-
-                                                                        {service.features && service.features.length > 0 && (
-                                                                            <ul className="mt-3 space-y-2">
-                                                                                {service.features.map((feature, i) => (
-                                                                                    <li key={i} className="flex items-start text-sm text-white/80">
-                                                                                        <Check className="h-4 w-4 text-green-400 mr-2 mt-0.5 flex-shrink-0" />
-                                                                                        <span>{feature}</span>
-                                                                                    </li>
-                                                                                ))}
-                                                                            </ul>
-                                                                        )}
-                                                                    </div>
-
-                                                                    {service.videoUrls && service.videoUrls.length > 0 && (
-                                                                        <div className="mt-4 mb-2 space-y-2">
-                                                                            {service.videoUrls.map((videoUrl, idx) => (
-                                                                                <VideoEmbed key={idx} url={videoUrl} className="rounded-lg shadow-md" />
-                                                                            ))}
+                                                                {/* Content */}
+                                                                <div className="p-5 flex flex-col flex-1">
+                                                                    {service.category && (
+                                                                        <div className="mb-3 flex justify-start">
+                                                                            <Badge className="bg-white/10 text-white/80 border-white/20 px-2 py-0.5 text-xs">
+                                                                                {service.category}
+                                                                            </Badge>
                                                                         </div>
                                                                     )}
 
-                                                                    <div className="mt-4 pt-4 relative">
+                                                                    <h3 className="text-lg font-semibold text-white mb-3 line-clamp-2">{service.title}</h3>
+
+                                                                    <p className="text-sm text-white/60 line-clamp-3 mb-6">{service.description}</p>
+
+                                                                    {service.features && service.features.length > 0 && (
+                                                                        <ul className="space-y-2.5 text-left mb-6">
+                                                                            {service.features.map((feature, i) => (
+                                                                                <li key={i} className="flex items-start">
+                                                                                    <CheckCircle2 className="h-4.5 w-4.5 flex-shrink-0 text-purple-400 mr-2.5 mt-0.5" />
+                                                                                    <span className="text-sm text-white/80 leading-tight">{feature}</span>
+                                                                                </li>
+                                                                            ))}
+                                                                        </ul>
+                                                                    )}
+
+                                                                    <div className="mt-6 pt-4 relative mt-auto">
                                                                         <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
-                                                                        <div className="flex flex-col gap-3">
-                                                                            <div className="flex items-center justify-between">
-                                                                                <div className="text-xl font-bold text-white">
-                                                                                    {service.price}
-                                                                                </div>
-                                                                                <div className="text-sm text-white/60 bg-white/5 px-3 py-1 rounded-full">
-                                                                                    {service.deliveryTime}
-                                                                                </div>
+                                                                        <div className="flex items-center justify-between">
+                                                                            <div className="text-xl font-bold text-white">
+                                                                                ₹{String(service.price).replace(/^₹/, '')}
+                                                                            </div>
+                                                                            <div className="text-sm text-white/60 bg-white/5 px-3 py-1 rounded-full border border-white/5">
+                                                                                {service.deliveryTime}
                                                                             </div>
                                                                         </div>
                                                                     </div>

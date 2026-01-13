@@ -71,7 +71,7 @@ export default function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
+    <header className="sticky top-0 z-[999] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <button
           className="p-2 hover:bg-gray-100 rounded-lg"
