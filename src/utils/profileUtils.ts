@@ -106,7 +106,6 @@ export const formatExperienceDuration = (startDate: string, endDate?: string): s
  * @returns Array of most recent experiences
  */
 export const getRecentExperiences = (experiences: Experience[], limit: number = 3): Experience[] => {
-  return [...experiences]
-    .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime())
-    .slice(0, limit);
+  // Data is already sorted by API
+  return [...experiences].slice(0, limit);
 };
