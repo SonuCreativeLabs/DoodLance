@@ -109,7 +109,11 @@ export default function BookingDatePage() {
         addToCart(service, selectedDate, selectedTimeSlot, serviceDuration);
       });
 
-      router.push('/client/hire/cart');
+      // Wrapped in setTimeout to ensure state updates settle before navigation
+      // This prevents potential race conditions or crashes during the transition
+      setTimeout(() => {
+        router.push('/client/hire/cart');
+      }, 100);
     }
   };
 
