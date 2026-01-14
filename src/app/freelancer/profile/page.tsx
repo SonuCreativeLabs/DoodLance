@@ -240,8 +240,8 @@ export default function ProfilePage() {
           </div>
 
           <ProfileSectionCard
-            title="Experience"
-            description="List your professional experience and achievements"
+            title="Achievements"
+            description="Showcase your sports achievements and highlights"
             href="/freelancer/profile/experience"
             icon={<Award className="h-4 w-4" />}
           />

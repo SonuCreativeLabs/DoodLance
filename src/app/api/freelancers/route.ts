@@ -29,8 +29,8 @@ export async function GET(request: Request) {
                     }
                 },
                 reviews: true,
-                experiences: {
-                    orderBy: { startDate: 'desc' }
+                achievements: {
+                    orderBy: { createdAt: 'desc' }
                 }
             }
         });
@@ -82,13 +82,23 @@ export async function GET(request: Request) {
             }
 
             // Experience
-            const experience = p.experiences && p.experiences.length > 0
-                ? `${p.experiences.length} roles`
-                : (p.experience || 'New Talent');
+            const experience = p.achievements && p.achievements.length > 0
+                ? `${p.achievements.length} achievements`
+                : 'New Talent';
 
             // Coordinates & Distance
             // Default to Chennai [80.27..., 13.08...] if coords missing
-            const coords = p.coords ? JSON.parse(p.coords) : [80.2707, 13.0827];
+            let coords = [80.2707, 13.0827];
+            try {
+                if (p.coords) {
+                    const parsed = JSON.parse(p.coords);
+                    if (Array.isArray(parsed) && parsed.length === 2) {
+                        coords = parsed;
+                    }
+                }
+            } catch (e) {
+                // Keep default
+            }
             const distance = calculateDistance(userLat, userLng, coords[1], coords[0]);
 
             return {

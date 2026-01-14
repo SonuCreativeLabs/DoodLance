@@ -318,7 +318,7 @@ model FreelancerProfile {
   coverImage           String?
   createdAt            DateTime     @default(now())
   updatedAt            DateTime     @updatedAt
-  experiences          Experience[]
+  achievements         Achievement[]
   user                 User         @relation(fields: [userId], references: [id])
   portfolios           Portfolio[]
   reviews              Review[]
@@ -326,20 +326,15 @@ model FreelancerProfile {
   @@map("freelancer_profiles")
 }
 
-model Experience {
+model Achievement {
   id          String            @id @default(cuid())
   profileId   String
-  role        String
+  title       String
   company     String
-  location    String
-  startDate   String
-  endDate     String?
-  isCurrent   Boolean           @default(false)
-  description String
   createdAt   DateTime          @default(now())
   profile     FreelancerProfile @relation(fields: [profileId], references: [id])
 
-  @@map("experiences")
+  @@map("achievements")
 }
 
 model Portfolio {

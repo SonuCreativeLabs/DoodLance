@@ -102,12 +102,8 @@ interface FreelancerDetail {
     experienceDetails?: {
         id: string;
         role: string;
+        title?: string;
         company: string;
-        location: string;
-        startDate: string;
-        endDate?: string;
-        isCurrent: boolean;
-        description?: string;
     }[];
 
     // Reviews data
@@ -178,7 +174,7 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
         { id: 'about', label: 'About' },
         { id: 'services', label: 'Services' },
         { id: 'portfolio', label: 'Portfolio' },
-        { id: 'experience', label: 'Experience' },
+        { id: 'experience', label: 'Achievements' },
         { id: 'reviews', label: 'Reviews' }
     ];
 
@@ -286,13 +282,9 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
 
                     experienceDetails: profile.experiences?.map((exp: any) => ({
                         id: String(exp.id),
-                        role: String(exp.role),
-                        company: String(exp.company),
-                        location: String(exp.location),
-                        startDate: String(exp.startDate),
-                        endDate: String(exp.endDate),
-                        isCurrent: Boolean(exp.isCurrent),
-                        description: String(exp.description)
+                        role: String(exp.role || ''),
+                        title: String(exp.title || exp.role || ''),
+                        company: String(exp.company)
                     })) || [],
 
                     portfolio: profile.portfolios?.map((p: any) => ({
@@ -1066,140 +1058,120 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                                         </section>
                                     )}
 
-                                    {/* Experience Section */}
+                                    {/* Achievements Section */}
                                     {freelancer.experienceDetails && freelancer.experienceDetails.length > 0 && (
                                         <section id="experience" data-section="experience" className="pt-8 scroll-mt-20 relative group z-0">
                                             <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
                                             <div className="mb-6">
-                                                <h2 className="text-xl font-semibold text-white mb-1">Experience & Qualifications</h2>
-                                                <p className="text-white/60 text-sm">My professional journey and credentials</p>
+                                                <h2 className="text-xl font-semibold text-white mb-1">Achievements</h2>
+                                                <p className="text-white/60 text-sm">Professional sports highlights</p>
                                             </div>
 
-                                            <div className="relative">
-                                                {/* Timeline line */}
-                                                <div className="absolute left-5 top-0 bottom-0 w-px bg-white/10"></div>
-
-                                                <div className="space-y-4">
-                                                    {freelancer.experienceDetails.map((exp) => (
-                                                        <div key={exp.id} className="flex gap-4">
-                                                            <div className="flex flex-col items-center">
-                                                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-600 to-purple-800 flex items-center justify-center z-10">
-                                                                    <Briefcase className="h-5 w-5 text-white" />
-                                                                </div>
-                                                                <div className="w-px h-full bg-white/10 my-2"></div>
-                                                            </div>
-
-                                                            <div className="flex-1 pb-4">
-                                                                <h3 className="font-medium text-white">{exp.role}</h3>
-                                                                <p className="text-white/70">{exp.company}</p>
-
-                                                                <div className="flex items-center gap-2 text-sm text-white/60 mt-1">
-                                                                    <MapPin className="h-3.5 w-3.5" />
-                                                                    <span>{exp.location}</span>
-                                                                    <span className="mx-1">•</span>
-                                                                    <Award className="h-3.5 w-3.5" />
-                                                                    <span>
-                                                                        {exp.startDate} - {exp.isCurrent ? 'Present' : exp.endDate}
-                                                                    </span>
-                                                                </div>
-
-                                                                {exp.description && (
-                                                                    <p className="mt-3 text-sm text-white/80 leading-relaxed">{exp.description}</p>
-                                                                )}
-                                                            </div>
+                                            <div className="space-y-4">
+                                                {freelancer.experienceDetails.map((exp) => (
+                                                    <div key={exp.id} className="bg-white/5 rounded-xl p-4 border border-white/5 flex items-start gap-4 hover:border-white/10 transition-colors">
+                                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-500/20 to-yellow-600/20 flex items-center justify-center flex-shrink-0 border border-yellow-500/30">
+                                                            <Award className="h-5 w-5 text-yellow-500" />
                                                         </div>
-                                                    ))}
-                                                </div>
+                                                        <div>
+                                                            <h3 className="font-medium text-white text-lg leading-tight">{exp.role || exp.title}</h3>
+                                                            <p className="text-white/60 text-sm mt-1">{exp.company}</p>
+                                                        </div>
+                                                    </div>
+                                                ))}
                                             </div>
                                         </section>
                                     )}
+
 
                                     {/* Reviews Section */}
-                                    {freelancer.reviewsData && freelancer.reviewsData.length > 0 && (
-                                        <section id="reviews" data-section="reviews" className="pt-8 scroll-mt-20 relative group">
-                                            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
-                                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
-                                                <div>
-                                                    <h2 className="text-xl font-semibold text-white">Client Reviews</h2>
-                                                    <p className="text-sm text-white/60">What clients say about working with me</p>
-                                                </div>
-                                                <div className="flex items-center mt-2 sm:mt-0">
-                                                    <div className="flex items-center text-yellow-400 mr-2">
-                                                        {[...Array(5)].map((_, i) => (
-                                                            <Star
-                                                                key={i}
-                                                                className={`h-5 w-5 ${i < Math.floor(freelancer.rating) ? 'fill-current' : 'text-gray-600'}`}
-                                                            />
-                                                        ))}
+                                    {
+                                        freelancer.reviewsData && freelancer.reviewsData.length > 0 && (
+                                            <section id="reviews" data-section="reviews" className="pt-8 scroll-mt-20 relative group">
+                                                <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+                                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
+                                                    <div>
+                                                        <h2 className="text-xl font-semibold text-white">Client Reviews</h2>
+                                                        <p className="text-sm text-white/60">What clients say about working with me</p>
                                                     </div>
-                                                    <div className="text-white">
-                                                        <span className="font-medium">{freelancer.rating.toFixed(1)}</span>
-                                                        <span className="text-white/60"> ({freelancer.reviewCount} reviews)</span>
+                                                    <div className="flex items-center mt-2 sm:mt-0">
+                                                        <div className="flex items-center text-yellow-400 mr-2">
+                                                            {[...Array(5)].map((_, i) => (
+                                                                <Star
+                                                                    key={i}
+                                                                    className={`h-5 w-5 ${i < Math.floor(freelancer.rating) ? 'fill-current' : 'text-gray-600'}`}
+                                                                />
+                                                            ))}
+                                                        </div>
+                                                        <div className="text-white">
+                                                            <span className="font-medium">{freelancer.rating.toFixed(1)}</span>
+                                                            <span className="text-white/60"> ({freelancer.reviewCount} reviews)</span>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
 
-                                            <div className="relative">
-                                                <div className="flex -mx-2 overflow-x-auto scrollbar-hide pb-2">
-                                                    <div className="flex gap-4 px-2">
-                                                        {freelancer.reviewsData.map((review) => (
-                                                            <div
-                                                                key={review.id}
-                                                                className="w-80 flex-shrink-0 p-5 rounded-3xl border border-white/10 bg-white/5 hover:border-purple-500/30 transition-colors flex flex-col h-full"
-                                                            >
-                                                                <div className="flex justify-between items-start mb-3">
-                                                                    <div className="flex items-center gap-3">
-                                                                        <div className="w-10 h-10 rounded-2xl bg-white/5 flex items-center justify-center flex-shrink-0">
-                                                                            <div className="w-5 h-5 rounded-full bg-white/20"></div>
+                                                <div className="relative">
+                                                    <div className="flex -mx-2 overflow-x-auto scrollbar-hide pb-2">
+                                                        <div className="flex gap-4 px-2">
+                                                            {freelancer.reviewsData.map((review) => (
+                                                                <div
+                                                                    key={review.id}
+                                                                    className="w-80 flex-shrink-0 p-5 rounded-3xl border border-white/10 bg-white/5 hover:border-purple-500/30 transition-colors flex flex-col h-full"
+                                                                >
+                                                                    <div className="flex justify-between items-start mb-3">
+                                                                        <div className="flex items-center gap-3">
+                                                                            <div className="w-10 h-10 rounded-2xl bg-white/5 flex items-center justify-center flex-shrink-0">
+                                                                                <div className="w-5 h-5 rounded-full bg-white/20"></div>
+                                                                            </div>
+                                                                            <div className="min-w-0">
+                                                                                <h4 className="font-medium text-white text-sm truncate">{review.author}</h4>
+                                                                                {review.role && (
+                                                                                    <div className="text-xs text-white/60 truncate">
+                                                                                        {review.role}
+                                                                                    </div>
+                                                                                )}
+                                                                            </div>
                                                                         </div>
-                                                                        <div className="min-w-0">
-                                                                            <h4 className="font-medium text-white text-sm truncate">{review.author}</h4>
-                                                                            {review.role && (
-                                                                                <div className="text-xs text-white/60 truncate">
-                                                                                    {review.role}
-                                                                                </div>
-                                                                            )}
-                                                                        </div>
+                                                                        <span className="text-xs text-white/40 whitespace-nowrap ml-2">{review.date}</span>
                                                                     </div>
-                                                                    <span className="text-xs text-white/40 whitespace-nowrap ml-2">{review.date}</span>
+                                                                    <div className="flex items-center gap-1 mb-2">
+                                                                        {[...Array(5)].map((_, i) => (
+                                                                            <Star
+                                                                                key={i}
+                                                                                className={`h-3.5 w-3.5 ${i < review.rating ? 'text-yellow-400 fill-yellow-400' : 'text-white/20'}`}
+                                                                            />
+                                                                        ))}
+                                                                    </div>
+                                                                    <p className="text-sm text-white/80 flex-1">{review.comment}</p>
                                                                 </div>
-                                                                <div className="flex items-center gap-1 mb-2">
-                                                                    {[...Array(5)].map((_, i) => (
-                                                                        <Star
-                                                                            key={i}
-                                                                            className={`h-3.5 w-3.5 ${i < review.rating ? 'text-yellow-400 fill-yellow-400' : 'text-white/20'}`}
-                                                                        />
-                                                                    ))}
-                                                                </div>
-                                                                <p className="text-sm text-white/80 flex-1">{review.comment}</p>
-                                                            </div>
-                                                        ))}
+                                                            ))}
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                            <button
-                                                onClick={handleViewAllReviews}
-                                                className="w-full mt-3 py-2.5 px-4 border border-white/30 hover:bg-white/5 transition-colors text-sm font-medium flex items-center justify-center gap-2 text-white rounded-[6px]"
-                                            >
-                                                View All {freelancer.reviewsData.length} Reviews
-                                                <ArrowRight className="h-4 w-4" />
-                                            </button>
-                                        </section>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                                                <button
+                                                    onClick={handleViewAllReviews}
+                                                    className="w-full mt-3 py-2.5 px-4 border border-white/30 hover:bg-white/5 transition-colors text-sm font-medium flex items-center justify-center gap-2 text-white rounded-[6px]"
+                                                >
+                                                    View All {freelancer.reviewsData.length} Reviews
+                                                    <ArrowRight className="h-4 w-4" />
+                                                </button>
+                                            </section>
+                                        )
+                                    }
+                                </div >
+                            </div >
+                        </div >
+                    </div >
 
                     {/* Skill Info Dialog */}
-                    <SkillInfoDialog
+                    < SkillInfoDialog
                         isOpen={isSkillDialogOpen}
                         onClose={() => setIsSkillDialogOpen(false)}
                         skillInfo={selectedSkillInfo}
                     />
 
                     {/* Portfolio Modal */}
-                    <PortfolioItemModal
+                    < PortfolioItemModal
                         item={selectedPortfolioItem}
                         isOpen={isPortfolioModalOpen}
                         onClose={() => {
@@ -1225,25 +1197,27 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                     }
 
                     {/* Sticky Hire Me Button */}
-                    {!isViewOnly && (
-                        <div className="fixed bottom-0 left-0 right-0 p-4 bg-[#0F0F0F]/95 backdrop-blur-sm border-t border-white/10">
-                            <button
-                                onClick={() => {
-                                    if (isAuthenticated && isProfileComplete) {
-                                        setIsHireBottomSheetOpen(true);
-                                    } else {
-                                        requireAuth(`hire_${freelancerId}`, {
-                                            redirectTo: pathname || window.location.pathname
-                                        });
-                                    }
-                                }}
-                                className="w-full py-2.5 bg-gradient-to-r from-purple-600 to-purple-500 text-white font-medium rounded-xl hover:from-purple-700 hover:to-purple-600 transition-all flex items-center justify-center gap-2 shadow-lg"
-                            >
-                                <UserPlus className="w-4 h-4" />
-                                Hire {freelancer?.name || 'Freelancer'}
-                            </button>
-                        </div>
-                    )}
+                    {
+                        !isViewOnly && (
+                            <div className="fixed bottom-0 left-0 right-0 p-4 bg-[#0F0F0F]/95 backdrop-blur-sm border-t border-white/10">
+                                <button
+                                    onClick={() => {
+                                        if (isAuthenticated && isProfileComplete) {
+                                            setIsHireBottomSheetOpen(true);
+                                        } else {
+                                            requireAuth(`hire_${freelancerId}`, {
+                                                redirectTo: pathname || window.location.pathname
+                                            });
+                                        }
+                                    }}
+                                    className="w-full py-2.5 bg-gradient-to-r from-purple-600 to-purple-500 text-white font-medium rounded-xl hover:from-purple-700 hover:to-purple-600 transition-all flex items-center justify-center gap-2 shadow-lg"
+                                >
+                                    <UserPlus className="w-4 h-4" />
+                                    Hire {freelancer?.name || 'Freelancer'}
+                                </button>
+                            </div>
+                        )
+                    }
 
                     {/* Auth Dialogs */}
                     <ProfileCompletionDialog

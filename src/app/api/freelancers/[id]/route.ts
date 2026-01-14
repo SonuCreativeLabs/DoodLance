@@ -28,8 +28,8 @@ export async function GET(
         reviews: {
           orderBy: { createdAt: 'desc' }
         },
-        experiences: {
-          orderBy: { startDate: 'desc' }
+        achievements: {
+          orderBy: { createdAt: 'desc' }
         },
         portfolios: {
           orderBy: { createdAt: 'desc' }
@@ -58,8 +58,8 @@ export async function GET(
           reviews: {
             orderBy: { createdAt: 'desc' }
           },
-          experiences: {
-            orderBy: { startDate: 'desc' }
+          achievements: {
+            orderBy: { createdAt: 'desc' }
           },
           portfolios: {
             orderBy: { createdAt: 'desc' }
@@ -101,7 +101,7 @@ export async function GET(
       isOnline: profile.isOnline,
       isVerified: profile.isVerified,
       reviews: profile.reviews,
-      experiences: profile.experiences,
+      experiences: profile.achievements,
       portfolios: profile.portfolios,
       services: profile.user.services?.map((s: any) => ({
         ...s,

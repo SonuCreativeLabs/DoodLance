@@ -73,12 +73,12 @@ export async function GET(request: NextRequest) {
             // 3. Skills - placeholder
             Promise.resolve(null),
 
-            // 4. Experiences
-            prisma.experience.findMany({
+            // 4. Achievements (aliased as experiences for compatibility)
+            prisma.achievement.findMany({
                 where: {
                     profile: { userId }
                 },
-                orderBy: { startDate: 'desc' }
+                orderBy: { createdAt: 'desc' }
             }),
 
             // 5. Portfolios

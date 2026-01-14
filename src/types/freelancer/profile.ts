@@ -1,12 +1,13 @@
 export interface Experience {
   id: string;
-  role: string;
+  role?: string;
+  title: string;
   company: string;
-  location: string;
-  startDate: string;
-  endDate?: string;
-  isCurrent: boolean;
-  description: string;
+  location?: string; // Phase out
+  startDate?: string; // Phase out
+  endDate?: string; // Phase out
+  isCurrent?: boolean; // Phase out
+  description?: string; // Phase out
 }
 
 export interface Service {

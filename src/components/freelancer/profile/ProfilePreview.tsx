@@ -17,7 +17,8 @@ import {
   Briefcase,
   Calendar,
   CheckCircle,
-  MessageSquare
+  MessageSquare,
+  Trophy
 } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -72,7 +73,7 @@ const ProfilePreview = memo(({
     { id: 'about', label: 'About' },
     { id: 'services', label: 'Services' },
     { id: 'reviews', label: 'Reviews' },
-    { id: 'experience', label: 'Experience' },
+    { id: 'experience', label: 'Achievements' },
   ] as const;
 
   type TabId = typeof tabs[number]['id'];
@@ -951,52 +952,29 @@ const ProfilePreview = memo(({
               >
                 <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
                 <div className="mb-6">
-                  <h2 className="text-xl font-semibold text-white mb-1">Experience & Qualifications</h2>
-                  <p className="text-white/60 text-sm">My professional journey and credentials</p>
+                  <h2 className="text-xl font-semibold text-white mb-1">Achievements</h2>
+                  <p className="text-white/60 text-sm">My sports achievements and highlights</p>
                 </div>
 
                 {profileData.experience?.length > 0 ? (
-                  <div className="relative">
-                    {/* Timeline line */}
-                    <div className="absolute left-5 top-0 bottom-0 w-px bg-white/10"></div>
-
-                    <div className="space-y-4">
-                      {profileData.experience.map((exp) => (
-                        <div key={exp.id} className="flex gap-4">
-                          <div className="flex flex-col items-center">
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-600 to-purple-800 flex items-center justify-center z-10">
-                              <Briefcase className="h-5 w-5 text-white" />
-                            </div>
-                            <div className="w-px h-full bg-white/10 my-2"></div>
-                          </div>
-
-                          <div className="flex-1 pb-4">
-                            <h3 className="font-medium text-white">{exp.role}</h3>
-                            <p className="text-white/70">{exp.company}</p>
-
-                            <div className="flex items-center gap-2 text-sm text-white/60 mt-1">
-                              <MapPin className="h-3.5 w-3.5" />
-                              <span>{exp.location}</span>
-                              <span className="mx-1">•</span>
-                              <Calendar className="h-3.5 w-3.5" />
-                              <span>
-                                {exp.startDate} - {exp.isCurrent ? 'Present' : exp.endDate}
-                              </span>
-                            </div>
-
-                            {exp.description && (
-                              <p className="mt-3 text-sm text-white/80 leading-relaxed">{exp.description}</p>
-                            )}
-                          </div>
+                  <div className="space-y-4">
+                    {profileData.experience.map((exp) => (
+                      <div key={exp.id} className="bg-white/5 rounded-xl p-4 border border-white/5 flex items-start gap-4 hover:border-white/10 transition-colors">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-500/20 to-yellow-600/20 flex items-center justify-center flex-shrink-0 border border-yellow-500/30">
+                          <Trophy className="h-5 w-5 text-yellow-500" />
                         </div>
-                      ))}
-                    </div>
+                        <div>
+                          <h3 className="font-medium text-white text-lg leading-tight">{exp.title || exp.role}</h3>
+                          <p className="text-white/60 text-sm mt-1">{exp.company}</p>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 ) : (
                   <div className="text-center py-8 rounded-2xl border border-white/10 bg-white/5">
-                    <Briefcase className="h-10 w-10 mx-auto text-white/20 mb-3" />
-                    <h3 className="text-lg font-medium text-white">No experience added yet</h3>
-                    <p className="text-white/60 mt-1">Add your professional experience to build trust with clients</p>
+                    <Trophy className="h-10 w-10 mx-auto text-white/20 mb-3" />
+                    <h3 className="text-lg font-medium text-white">No achievements added yet</h3>
+                    <p className="text-white/60 mt-1">Add your sports highlights to showcase your journey</p>
                   </div>
                 )}
               </section>

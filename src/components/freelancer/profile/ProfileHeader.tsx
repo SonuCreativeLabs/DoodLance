@@ -493,13 +493,8 @@ export function ProfileHeader({
           workingHours: getWorkingHoursText(),
           experience: Array.isArray(experiences) ? experiences.map((exp: any) => ({
             id: exp.id,
-            role: exp.role,
-            company: exp.company,
-            location: exp.location,
-            startDate: exp.startDate?.split('-')[0] || '',
-            endDate: exp.endDate ? exp.endDate.split('-')[0] : undefined,
-            isCurrent: exp.isCurrent,
-            description: exp.description
+            title: exp.title,
+            company: exp.company
           })) : [],
           services: Array.isArray(services) ? services.map((svc: any) => ({
             id: svc.id,

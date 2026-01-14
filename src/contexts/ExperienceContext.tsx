@@ -5,13 +5,8 @@ import { createClient } from '@/lib/supabase/client';
 
 export interface Experience {
   id: string;
-  role: string;
+  title: string;
   company: string;
-  location: string;
-  startDate: string;
-  endDate?: string;
-  isCurrent: boolean;
-  description: string;
 }
 
 interface ExperienceContextType {
@@ -53,19 +48,19 @@ export function ExperienceProvider({ children, skipInitialFetch = false }: Exper
         // Fetch from API
         const response = await fetch('/api/freelancer/experience');
         if (response.ok) {
-          const { experiences: dbExperiences } = await response.json();
-          if (dbExperiences && dbExperiences.length > 0) {
+          const data = await response.json();
+          const dbExperiences = data.achievements;
+
+          if (Array.isArray(dbExperiences)) {
             const mapped = dbExperiences.map((exp: any) => ({
               id: exp.id,
-              role: exp.title,
-              company: exp.company,
-              location: exp.location,
-              startDate: exp.startDate,
-              endDate: exp.endDate,
-              isCurrent: exp.current,
-              description: exp.description
+              title: exp.title,
+              company: exp.company
             }));
             setExperiences(mapped);
+          } else {
+            // If achievements key is missing or not array, try legacy or default empty
+            setExperiences([]);
           }
         }
       } catch (error) {
@@ -86,13 +81,8 @@ export function ExperienceProvider({ children, skipInitialFetch = false }: Exper
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          title: experience.role,
-          company: experience.company,
-          location: experience.location,
-          startDate: experience.startDate,
-          endDate: experience.endDate,
-          current: experience.isCurrent,
-          description: experience.description
+          title: experience.title,
+          company: experience.company
         })
       });
     } catch (e) {
