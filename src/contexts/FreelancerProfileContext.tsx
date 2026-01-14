@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -41,11 +41,18 @@ export function FreelancerProfileProvider({ children }: { children: ReactNode })
 
     const CACHE_DURATION = 2 * 60 * 1000; // 2 minutes cache
 
+    const profileDataRef = useRef<FreelancerProfileData | null>(null);
+
+    // Keep ref in sync with state for cache checks without triggering re-renders/loop
+    useEffect(() => {
+        profileDataRef.current = profileData;
+    }, [profileData]);
+
     const fetchProfile = useCallback(async (forceRefresh = false) => {
         const now = Date.now();
 
         // Use cache if available and not expired (unless force refresh)
-        if (!forceRefresh && profileData && (now - lastFetch < CACHE_DURATION)) {
+        if (!forceRefresh && profileDataRef.current && (now - lastFetch < CACHE_DURATION)) {
             console.log('📦 Using cached profile data - no API call needed!');
             setLoading(false);
             return;
@@ -61,6 +68,15 @@ export function FreelancerProfileProvider({ children }: { children: ReactNode })
 
             console.log('🔄 Fetching fresh profile data from API...');
             const response = await fetch('/api/freelancer/profile');
+
+            // Handle 404 or other errors gracefully
+            if (response.status === 404) {
+                console.log('ℹ️ Profile not found (new user)');
+                setProfileData(null);
+                setLoading(false);
+                return;
+            }
+
             if (!response.ok) {
                 throw new Error('Failed to fetch profile');
             }
@@ -76,7 +92,7 @@ export function FreelancerProfileProvider({ children }: { children: ReactNode })
         } finally {
             setLoading(false);
         }
-    }, [profileData, lastFetch, supabase]);
+    }, [lastFetch, supabase]); // Removed profileData from deps
 
     const refreshProfile = useCallback(async () => {
         console.log('🔄 Force refresh requested');
