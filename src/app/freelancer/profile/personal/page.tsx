@@ -178,7 +178,7 @@ export default function PersonalDetailsPage() {
     firstName: personalDetails.firstName || "",
     lastName: personalDetails.lastName || "",
     gender: personalDetails.gender || "",
-    dateOfBirth: personalDetails.dateOfBirth || "",
+    dateOfBirth: personalDetails.dateOfBirth ? new Date(personalDetails.dateOfBirth).toISOString().split('T')[0] : "",
     bio: personalDetails.bio || "",
   });
 
@@ -209,7 +209,7 @@ export default function PersonalDetailsPage() {
       firstName: personalDetails.firstName || "",
       lastName: personalDetails.lastName || "",
       gender: personalDetails.gender || "",
-      dateOfBirth: personalDetails.dateOfBirth || "",
+      dateOfBirth: personalDetails.dateOfBirth ? new Date(personalDetails.dateOfBirth).toISOString().split('T')[0] : "",
       bio: personalDetails.bio || ""
     }));
     setCricketInfo(prev => ({

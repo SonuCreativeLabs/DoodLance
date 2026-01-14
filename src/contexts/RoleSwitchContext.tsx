@@ -25,13 +25,14 @@ export function RoleSwitchProvider({ children }: { children: ReactNode }) {
       if (role === 'client') {
         router.push('/client');
       } else {
-        router.push('/freelancer'); // Changed from '/freelancer/profile'
+        router.push('/freelancer/profile');
       }
 
       // Hide splash after navigation (plus a small buffer for page load)
+      // Increasing buffer to prevent flash of previous page
       setTimeout(() => {
         setIsSwitching(false);
-      }, 500);
+      }, 2000);
     }, 2000); // 2 seconds splash duration
   };
 

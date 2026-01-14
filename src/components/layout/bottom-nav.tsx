@@ -67,7 +67,7 @@ export function BottomNav() {
           })}
 
           <Link
-            href="/freelancer"
+            href="/freelancer/profile"
             onClick={handleWorkAndEarn}
             className={cn(
               "flex items-center gap-1 px-4 py-2 rounded-full text-sm font-medium transition-all",
