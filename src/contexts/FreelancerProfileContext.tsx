@@ -42,6 +42,7 @@ export function FreelancerProfileProvider({ children }: { children: ReactNode })
     const CACHE_DURATION = 2 * 60 * 1000; // 2 minutes cache
 
     const profileDataRef = useRef<FreelancerProfileData | null>(null);
+    const notFoundRef = useRef<boolean>(false);
 
     // Keep ref in sync with state for cache checks without triggering re-renders/loop
     useEffect(() => {
@@ -50,6 +51,13 @@ export function FreelancerProfileProvider({ children }: { children: ReactNode })
 
     const fetchProfile = useCallback(async (forceRefresh = false) => {
         const now = Date.now();
+
+        // Check if we already know this user has no profile (unless forcing to check again)
+        if (!forceRefresh && notFoundRef.current) {
+            console.log('ℹ️ Skipping profile fetch - known new user');
+            setLoading(false);
+            return;
+        }
 
         // Use cache if available and not expired (unless force refresh)
         if (!forceRefresh && profileDataRef.current && (now - lastFetch < CACHE_DURATION)) {
@@ -73,6 +81,7 @@ export function FreelancerProfileProvider({ children }: { children: ReactNode })
             if (response.status === 404) {
                 console.log('ℹ️ Profile not found (new user)');
                 setProfileData(null);
+                notFoundRef.current = true; // Mark as not found to prevent loops
                 setLoading(false);
                 return;
             }
@@ -83,6 +92,7 @@ export function FreelancerProfileProvider({ children }: { children: ReactNode })
 
             const { profile } = await response.json();
             setProfileData(profile);
+            notFoundRef.current = false; // Reset if found
             setLastFetch(now);
             setError(null);
             console.log('✅ Profile data fetched and cached for 2 minutes');
@@ -116,9 +126,11 @@ export function FreelancerProfileProvider({ children }: { children: ReactNode })
 
             // Reset loading state when auth user changes to ensure skeleton shows immediately
             if (authUser?.id) {
+                notFoundRef.current = false; // Reset for new user
                 setLoading(true);
                 fetchProfile();
             } else {
+                notFoundRef.current = false;
                 setLoading(false);
                 setProfileData(null);
             }
