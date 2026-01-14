@@ -218,6 +218,14 @@ export default function ProfilePage() {
           </div>
 
 
+
+          <ProfileSectionCard
+            title="Service Packages"
+            description="Define your service offerings and pricing"
+            href="/freelancer/profile/services"
+            icon={<FileText className="h-4 w-4" />}
+          />
+
           <div
             id="skills"
             ref={skillsRef}
@@ -230,13 +238,6 @@ export default function ProfilePage() {
               icon={<Code className="h-4 w-4" />}
             />
           </div>
-
-          <ProfileSectionCard
-            title="Service Packages"
-            description="Define your service offerings and pricing"
-            href="/freelancer/profile/services"
-            icon={<FileText className="h-4 w-4" />}
-          />
 
           <ProfileSectionCard
             title="Experience"

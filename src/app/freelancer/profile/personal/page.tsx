@@ -69,8 +69,9 @@ const SectionCard = ({
   isEditing,
   onSave,
   onCancel,
-  className = ''
-}: SectionCardProps) => (
+  className = '',
+  isSaveDisabled = false
+}: SectionCardProps & { isSaveDisabled?: boolean }) => (
   <div className="bg-gradient-to-br from-[#1E1E1E] to-[#121212] rounded-2xl p-6 border border-white/10 hover:border-purple-500/30 transition-all duration-300 shadow-lg shadow-purple-900/10 hover:shadow-purple-900/20">
     <div className="flex items-center justify-between mb-6">
       <div className="flex items-center gap-3">
@@ -87,7 +88,11 @@ const SectionCard = ({
                 size="sm"
                 variant="ghost"
                 onClick={onSave}
-                className="text-green-500 hover:bg-green-500/10 hover:text-green-400 h-8 px-3"
+                disabled={isSaveDisabled}
+                className={cn(
+                  "text-green-500 hover:bg-green-500/10 hover:text-green-400 h-8 px-3 disabled:opacity-50 disabled:cursor-not-allowed",
+                  isSaveDisabled && "text-white/30 hover:bg-transparent hover:text-white/30"
+                )}
               >
                 <Check className="h-4 w-4 mr-1" /> Save
               </Button>
@@ -406,6 +411,7 @@ export default function PersonalDetailsPage() {
           isEditing={isEditing}
           onSave={() => handleSave('personal')}
           onCancel={() => handleCancel('personal')}
+          isSaveDisabled={!editPersonalInfo.firstName || !editPersonalInfo.lastName || !editPersonalInfo.gender || !editPersonalInfo.dateOfBirth || !editPersonalInfo.bio}
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {isEditing ? (
@@ -431,8 +437,12 @@ export default function PersonalDetailsPage() {
                     <select
                       value={editPersonalInfo.gender}
                       onChange={(e) => handleInputChange(e, 'personal', 'gender')}
-                      className="flex h-10 w-full rounded-lg bg-white/5 border border-white/10 text-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1E1E1E] transition-colors cursor-pointer appearance-none pr-10"
+                      className={cn(
+                        "flex h-10 w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1E1E1E] transition-colors cursor-pointer appearance-none pr-10",
+                        !editPersonalInfo.gender ? "text-white/40" : "text-white"
+                      )}
                     >
+                      <option value="" disabled className="bg-[#1E1E1E] text-white/50">Select Gender</option>
                       <option value="Male" className="bg-[#1E1E1E] text-white">Male</option>
                       <option value="Female" className="bg-[#1E1E1E] text-white">Female</option>
                       <option value="Other" className="bg-[#1E1E1E] text-white">Other</option>
@@ -477,7 +487,8 @@ export default function PersonalDetailsPage() {
                     <Button
                       type="button"
                       onClick={() => handleSave('personal')}
-                      className="h-10 px-8 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-700 hover:to-purple-600 shadow-md hover:shadow-purple-500/30 transition-all"
+                      disabled={!editPersonalInfo.firstName || !editPersonalInfo.lastName || !editPersonalInfo.gender || !editPersonalInfo.dateOfBirth || !editPersonalInfo.bio}
+                      className="h-10 px-8 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-700 hover:to-purple-600 shadow-md hover:shadow-purple-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Save Changes
                     </Button>
@@ -547,6 +558,7 @@ export default function PersonalDetailsPage() {
           isEditing={isEditing}
           onSave={() => handleSave('contact')}
           onCancel={() => handleCancel('contact')}
+          isSaveDisabled={!editContact.email || !editContact.phone}
         >
           {isEditing ? (
             <div className="space-y-4">
@@ -585,7 +597,8 @@ export default function PersonalDetailsPage() {
                   <Button
                     type="button"
                     onClick={() => handleSave('contact')}
-                    className="px-4 py-2 text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 rounded-md transition-colors"
+                    disabled={!editContact.email || !editContact.phone}
+                    className="px-4 py-2 text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Save Changes
                   </Button>
@@ -621,6 +634,7 @@ export default function PersonalDetailsPage() {
           isEditing={isEditing}
           onSave={() => handleSave('location')}
           onCancel={() => handleCancel('location')}
+          isSaveDisabled={!editLocation.address || !editLocation.city || !editLocation.country || !editLocation.postalCode}
           className="space-y-4"
         >
           {isEditing ? (
@@ -676,7 +690,8 @@ export default function PersonalDetailsPage() {
                   <Button
                     type="button"
                     onClick={() => handleSave('location')}
-                    className="h-10 px-8 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-700 hover:to-purple-600 shadow-md hover:shadow-purple-500/30 transition-all"
+                    disabled={!editLocation.address || !editLocation.city || !editLocation.country || !editLocation.postalCode}
+                    className="h-10 px-8 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-700 hover:to-purple-600 shadow-md hover:shadow-purple-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Save Changes
                   </Button>
@@ -746,6 +761,7 @@ export default function PersonalDetailsPage() {
             }
           }}
           onCancel={() => handleCancel('username')}
+          isSaveDisabled={!editUsername || usernameStatus === 'taken' || usernameStatus === 'invalid' || usernameStatus === 'checking'}
         >
           {isEditing ? (
             <div className="space-y-4">
@@ -793,11 +809,74 @@ export default function PersonalDetailsPage() {
                 3-30 characters. Letters, numbers, hyphens, and underscores only.
               </p>
 
+              <div className="mt-6 pt-4 border-t border-white/10">
+                <div className="flex justify-center gap-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => handleCancel('username')}
+                    className="h-10 px-8 rounded-xl border-white/10 text-white/80 hover:bg-white/5 hover:text-white transition-colors"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      // Same save logic as SectionCard onSave prop
+                      if (editUsername && editUsername !== username) {
+                        // ... trigger save
+                        // For simplicity, we trigger the prop onSave
+                        // In SectionCard, onSave is passed directly. 
+                        // Here we need to invoke the logic defined in renderSection('username')'s onSave prop
+                        // But renderSection defines the onSave prop. 
+                        // To access it here inside children, we can't easily.
+                        // Better approach: Let SectionCard render the buttons? No, children override it.
+                        // We must reimplement the save button here to add disabled state.
+                        const saveFn = async () => {
+                          // Save username via API
+                          if (editUsername && editUsername !== username) {
+                            try {
+                              const response = await fetch('/api/user/username', {
+                                method: 'PATCH',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ username: editUsername }),
+                              });
+
+                              if (response.ok) {
+                                setUsername(editUsername);
+                                localStorage.setItem('username', editUsername); // Save to localStorage
+                                // Update global context so header reflects the change
+                                updatePersonalDetails({ username: editUsername });
+                                handleSave('username');
+                              } else {
+                                const data = await response.json();
+                                alert(data.error || 'Failed to save username');
+                              }
+                            } catch (error) {
+                              console.error('Error saving username:', error);
+                              alert('Error saving username');
+                            }
+                          } else {
+                            handleSave('username');
+                          }
+                        };
+                        saveFn();
+                      }
+                    }}
+                    disabled={!editUsername || usernameStatus === 'taken' || usernameStatus === 'invalid' || usernameStatus === 'checking'}
+                    className="h-10 px-8 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-700 hover:to-purple-600 shadow-md hover:shadow-purple-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Save Changes
+                  </Button>
+                </div>
+              </div>
+
               {editUsername && editUsername !== username && usernameStatus === 'available' && (
                 <p className="text-xs text-purple-400">
                   Your profile will be: doodlance.com/{editUsername}
                 </p>
               )}
+
 
               <div className="flex justify-center gap-4">
                 <Button
@@ -875,6 +954,7 @@ export default function PersonalDetailsPage() {
           isEditing={isEditing}
           onSave={() => handleSave('cricket')}
           onCancel={() => handleCancel('cricket')}
+          isSaveDisabled={!editCricket.cricketRole || !editCricket.battingStyle || !editCricket.bowlingStyle}
         >
           {isEditing ? (
             <div className="space-y-4">
@@ -920,7 +1000,8 @@ export default function PersonalDetailsPage() {
                   <Button
                     type="button"
                     onClick={() => handleSave('cricket')}
-                    className="h-10 px-8 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-700 hover:to-purple-600 shadow-md hover:shadow-purple-500/30 transition-all"
+                    disabled={!editCricket.cricketRole || !editCricket.battingStyle || !editCricket.bowlingStyle}
+                    className="h-10 px-8 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-700 hover:to-purple-600 shadow-md hover:shadow-purple-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Save Changes
                   </Button>
