@@ -28,6 +28,7 @@ export default function BookingDatePage() {
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);
   const [location, setLocation] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
+  const [isNavigating, setIsNavigating] = useState(false);
 
   // Hide navbar when component mounts - MUST be before early return
   useEffect(() => {
@@ -75,7 +76,7 @@ export default function BookingDatePage() {
     '5:00 PM', '6:00 PM', '7:00 PM', '8:00 PM'
   ];
 
-  const [isNavigating, setIsNavigating] = useState(false);
+
 
   const handleContinue = () => {
     if (selectedDate && selectedTimeSlot && location.trim()) {

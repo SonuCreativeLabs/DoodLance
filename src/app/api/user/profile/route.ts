@@ -80,10 +80,47 @@ export async function GET(request: NextRequest) {
                     }
                 });
                 return NextResponse.json(newDbUser);
-            } catch (createError) {
+            } catch (createError: any) {
                 console.error('[API] Failed to auto-create user:', createError);
-                // If creation failed, it might be due to a race condition that upsert missed (rare) or constraint
-                // Try one last fetch
+
+                // Handle email collision (P2002)
+                if (createError.code === 'P2002' && Array.isArray(createError.meta?.target) && createError.meta.target.includes('email')) {
+                    console.log('[API] Email conflict detected, linking to existing user...');
+                    const existingUser = await prisma.user.findUnique({
+                        where: { email: user.email }
+                    });
+                    if (existingUser) {
+                        // Link new Supabase ID to existing user
+                        const updated = await prisma.user.update({
+                            where: { id: existingUser.id },
+                            data: { supabaseUid: user.id },
+                            select: {
+                                id: true,
+                                email: true,
+                                name: true,
+                                phone: true,
+                                avatar: true,
+                                location: true,
+                                bio: true,
+                                gender: true,
+                                username: true,
+                                displayId: true,
+                                address: true,
+                                city: true,
+                                state: true,
+                                postalCode: true,
+                                role: true,
+                                currentRole: true,
+                                isVerified: true,
+                                phoneVerified: true,
+                                createdAt: true,
+                            }
+                        });
+                        return NextResponse.json(updated);
+                    }
+                }
+
+                // Try one last fetch by ID
                 const retryUser = await prisma.user.findUnique({ where: { id: user.id } });
                 if (retryUser) return NextResponse.json(retryUser);
 
