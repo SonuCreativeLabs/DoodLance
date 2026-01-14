@@ -1,7 +1,7 @@
 // Common UI components for shared usage across the app
 
 // Cards
-export { ServiceCard } from './ServiceCard';
+
 export { ReviewCard } from './ReviewCard';
 export { PortfolioCard } from './PortfolioCard';
 
