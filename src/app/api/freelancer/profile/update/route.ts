@@ -235,7 +235,33 @@ export async function PATCH(request: NextRequest) {
             });
         }
 
-        return NextResponse.json({ success: true });
+        // Fetch the latest user data to return
+        const finalDbUser = await prisma.user.findUnique({
+            where: { id: dbUser.id },
+            select: {
+                id: true,
+                email: true,
+                name: true,
+                phone: true,
+                avatar: true,
+                location: true,
+                bio: true,
+                gender: true,
+                username: true,
+                displayId: true,
+                address: true,
+                city: true,
+                state: true,
+                postalCode: true,
+                role: true,
+                currentRole: true,
+                isVerified: true,
+                phoneVerified: true,
+                createdAt: true,
+            }
+        });
+
+        return NextResponse.json({ success: true, user: finalDbUser });
 
     } catch (error: any) {
         console.error('SERVER ERROR in Profile Update:', error);

@@ -120,9 +120,15 @@ export function PersonalDetailsProvider({ children }: { children: ReactNode }) {
         throw new Error('Failed to update profile');
       }
 
-      // Refresh session if needed, or just let optimistic update hold
+      const result = await response.json();
+
+      // Refresh session with returned data if available, or fetch fresh
       // Trigger AuthContext refresh to sync changes (like name/phone) across the app
-      await refreshAuthUser();
+      if (result.user) {
+        await refreshAuthUser(result.user);
+      } else {
+        await refreshAuthUser();
+      }
 
     } catch (error) {
       console.error('Failed to persist personal details:', error);

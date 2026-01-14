@@ -15,6 +15,7 @@ interface User {
   phoneVerified?: boolean
   role?: string
   createdAt?: string
+  isVerified?: boolean
 }
 
 // 🎯 Stable auth identity (never changes except on login/logout)
@@ -32,7 +33,7 @@ interface AuthContextType {
   signOut: () => Promise<void>
   verifyOTP: (identifier: string, code: string, type?: 'email' | 'phone') => Promise<void>
   sendOTP: (identifier: string, type?: 'email' | 'phone') => Promise<void>
-  refreshUser: () => Promise<void>
+  refreshUser: (userData?: Partial<User>) => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -191,8 +192,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signOut,
     verifyOTP,
     sendOTP,
-    refreshUser: async () => {
-      // Allow manual refresh of user data
+    refreshUser: async (userData?: Partial<User>) => {
+      // If userData is provided directly, use it to update state immediately (Optimistic/Sync)
+      if (userData && user) {
+        console.log('✅ Updating auth user with provided data:', userData);
+        setUser(prev => {
+          if (!prev) return null;
+          return {
+            ...prev,
+            ...userData
+          };
+        });
+        return;
+      }
+
+      // Allow manual refresh of user data via API
       if (user?.id) {
         try {
           console.log('🔍 Manually refreshing user data...')
@@ -209,13 +223,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               if (!prev) return null;
               return {
                 ...prev,
+                ...data, // Spread all data including isVerified, phoneVerified etc
+                // Explicitly map specific fields if needed, but spread is safer for completeness
                 phone: data.phone || prev.phone,
                 name: data.name || prev.name,
                 avatar: data.avatar || prev.avatar,
-                profileImage: data.avatar || prev.profileImage, // Sync both fields
+                profileImage: data.avatar || prev.profileImage,
                 location: data.location || prev.location,
                 email: data.email || prev.email || '',
                 createdAt: data.createdAt || prev.createdAt,
+                role: data.role || prev.role,
+                isVerified: data.isVerified ?? prev.isVerified,
               }
             })
           }

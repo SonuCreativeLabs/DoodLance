@@ -1,7 +1,6 @@
-'use client';
-
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface FreelancerProfileData {
     name: string;
@@ -89,18 +88,30 @@ export function FreelancerProfileProvider({ children }: { children: ReactNode })
         console.log('📝 Profile data updated locally');
     }, []);
 
+    const { authUser } = useAuth();
+
     useEffect(() => {
-        // Only fetch once on mount
+        // Fetch when component mounts or when user changes (e.g. login)
         let mounted = true;
 
         if (mounted) {
-            fetchProfile();
+            // Wait for auth to be determined
+            if (authUser === undefined) return;
+
+            // Reset loading state when auth user changes to ensure skeleton shows immediately
+            if (authUser?.id) {
+                setLoading(true);
+                fetchProfile();
+            } else {
+                setLoading(false);
+                setProfileData(null);
+            }
         }
 
         return () => {
             mounted = false;
         };
-    }, []); // Empty deps - only run once
+    }, [authUser, fetchProfile]);
 
     const value = {
         profileData,

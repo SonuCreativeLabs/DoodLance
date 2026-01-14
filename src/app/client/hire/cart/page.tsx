@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Plus, Minus, ShoppingCart, Tag, AlertCircle, Shield, RefreshCw, CreditCard, Star, Calendar, Clock, MapPin } from 'lucide-react';
+import { ArrowLeft, Plus, Minus, ShoppingCart, Tag, AlertCircle, Shield, RefreshCw, CreditCard, Star, Calendar, Clock, MapPin, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useHire } from '@/contexts/HireContext';
 import { useNavbar } from '@/contexts/NavbarContext';
@@ -19,6 +19,7 @@ export default function CartPage() {
   const [discountAmount, setDiscountAmount] = useState(0);
   const [couponError, setCouponError] = useState('');
   const [validatingCoupon, setValidatingCoupon] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
 
   console.log('🔍 [CART] Component render:', {
     isLoaded,
@@ -107,6 +108,7 @@ export default function CartPage() {
       // Could show a toast or message
       return;
     }
+    setIsNavigating(true);
     router.push('/client/hire/checkout');
   };
 
@@ -398,8 +400,17 @@ export default function CartPage() {
           onClick={handleCheckout}
           className="w-full py-3 bg-gradient-to-r from-purple-600 to-purple-500 text-white font-medium rounded-xl hover:from-purple-700 hover:to-purple-600 transition-all flex items-center justify-center gap-2"
         >
-          <CreditCard className="w-4 h-4" />
-          Proceed to Payment ₹{total.toLocaleString()}
+          {isNavigating ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>Processing...</span>
+            </>
+          ) : (
+            <>
+              <CreditCard className="w-4 h-4" />
+              Proceed to Payment ₹{total.toLocaleString()}
+            </>
+          )}
         </Button>
       </div>
 

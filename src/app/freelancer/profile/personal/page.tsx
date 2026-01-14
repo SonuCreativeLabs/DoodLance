@@ -21,6 +21,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from 'next/navigation';
 import { cn } from "@/lib/utils";
 import { usePersonalDetails } from '@/contexts/PersonalDetailsContext';
+import { useFreelancerProfile } from '@/contexts/FreelancerProfileContext';
 import { UsernameInput } from '@/components/freelancer/profile/UsernameInput';
 
 type PersonalInfo = {
@@ -159,6 +160,7 @@ export default function PersonalDetailsPage() {
   const searchParams = useSearchParams();
   const returnTo = searchParams.get('returnTo'); // Get return path from query params
   const { personalDetails, updatePersonalDetails, refreshUser, isLoading } = usePersonalDetails();
+  const { updateLocalProfile } = useFreelancerProfile();
   const [editingSection, setEditingSection] = useState<EditSection>(null);
 
   // Refresh user data on mount to ensure we have latest updates from Client profile
@@ -291,6 +293,12 @@ export default function PersonalDetailsPage() {
         bio: editPersonalInfo.bio,
         gender: editPersonalInfo.gender
       });
+
+      // Sync with FreelancerProfileContext
+      updateLocalProfile({
+        name: `${editPersonalInfo.firstName} ${editPersonalInfo.lastName}`.trim(),
+        about: editPersonalInfo.bio,
+      });
     } else if (section === 'contact') {
       const newContactInfo = { ...editContact };
       setContactInfo(newContactInfo);
@@ -312,6 +320,11 @@ export default function PersonalDetailsPage() {
         state: editLocation.country,
         postalCode: editLocation.postalCode
       });
+
+      // Sync with FreelancerProfileContext
+      updateLocalProfile({
+        location: `${editLocation.city}, ${editLocation.country}`,
+      });
     } else if (section === 'cricket') {
       const newCricketInfo = { ...editCricket };
       setCricketInfo(newCricketInfo);
@@ -324,6 +337,11 @@ export default function PersonalDetailsPage() {
         bowlingStyle: editCricket.bowlingStyle,
         location: locationInfo.city + ', ' + locationInfo.country,
         dateOfBirth: personalInfo.dateOfBirth
+      });
+
+      // Sync with FreelancerProfileContext
+      updateLocalProfile({
+        title: editCricket.cricketRole || 'Cricketer',
       });
     } else if (section === 'username') {
       setUsername(editUsername);

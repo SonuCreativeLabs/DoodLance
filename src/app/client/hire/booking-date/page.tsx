@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Clock, Calendar, ArrowRight, ShoppingCart, Star, MapPin, MessageSquare, Plus, Minus } from 'lucide-react';
+import { ArrowLeft, Clock, Calendar, ArrowRight, ShoppingCart, Star, MapPin, MessageSquare, Plus, Minus, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useHire } from '@/contexts/HireContext';
 import { useNavbar } from '@/contexts/NavbarContext';
@@ -75,8 +75,12 @@ export default function BookingDatePage() {
     '5:00 PM', '6:00 PM', '7:00 PM', '8:00 PM'
   ];
 
+  const [isNavigating, setIsNavigating] = useState(false);
+
   const handleContinue = () => {
     if (selectedDate && selectedTimeSlot && location.trim()) {
+      setIsNavigating(true);
+
       // Try to parse duration from service deliveryTime (e.g. "60 mins", "1 hour") or default to 60 mins
       const duration = 60; // Default to 60 if parsing fails
 
@@ -109,11 +113,14 @@ export default function BookingDatePage() {
         addToCart(service, selectedDate, selectedTimeSlot, serviceDuration);
       });
 
-      // Wrapped in setTimeout to ensure state updates settle before navigation
-      // This prevents potential race conditions or crashes during the transition
-      setTimeout(() => {
+      // Navigate immediately - relying on react state updates being synchronous for context in this scope usually
+      // But context updates are async. However, since we are moving to a new page that READS context, 
+      // ensuring the context provider has processed the update is safer. 
+      // But typically setTimeout creates race conditions with unmount.
+      // We will perform navigation in next tick.
+      requestAnimationFrame(() => {
         router.push('/client/hire/cart');
-      }, 100);
+      });
     }
   };
 
@@ -309,11 +316,20 @@ export default function BookingDatePage() {
       <div className="fixed bottom-0 left-0 right-0 p-6 bg-[#0F0F0F]/95 backdrop-blur-sm border-t border-white/10">
         <Button
           onClick={handleContinue}
-          disabled={!selectedDate || !selectedTimeSlot || !location.trim()}
-          className="w-full py-3 bg-gradient-to-r from-purple-600 to-purple-500 text-white font-medium rounded-xl hover:from-purple-700 hover:to-purple-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={!selectedDate || !selectedTimeSlot || !location.trim() || isNavigating}
+          className="w-full py-3 bg-gradient-to-r from-purple-600 to-purple-500 text-white font-medium rounded-xl hover:from-purple-700 hover:to-purple-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
-          Continue
-          <ArrowRight className="w-4 h-4 ml-2" />
+          {isNavigating ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>Processing...</span>
+            </>
+          ) : (
+            <>
+              <span>Continue</span>
+              <ArrowRight className="w-4 h-4" />
+            </>
+          )}
         </Button>
       </div>
     </div>
