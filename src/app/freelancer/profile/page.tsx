@@ -214,7 +214,7 @@ export default function ProfilePage() {
           <ProfileSectionCard
             title="Achievements"
             description="Showcase your sports achievements and highlights"
-            href="/freelancer/profile/experience"
+            href="/freelancer/profile/achievements"
             icon={<Award className="h-4 w-4" />}
           />
 

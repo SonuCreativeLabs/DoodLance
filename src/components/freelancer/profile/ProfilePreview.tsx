@@ -42,7 +42,7 @@ import {
   calculateAverageRating,
   groupServicesByType,
   formatExperienceDuration,
-  getRecentExperiences,
+  getRecentAchievements,
   getAvailabilityText,
   formatTime
 } from '@/utils/profileUtils';
@@ -73,7 +73,7 @@ const ProfilePreview = memo(({
     { id: 'about', label: 'About' },
     { id: 'services', label: 'Services' },
     { id: 'reviews', label: 'Reviews' },
-    { id: 'experience', label: 'Achievements' },
+    { id: 'achievements', label: 'Achievements' },
   ] as const;
 
   type TabId = typeof tabs[number]['id'];
@@ -575,9 +575,9 @@ const ProfilePreview = memo(({
     [profileData.services]
   );
 
-  const recentExperiences = useMemo(
-    () => getRecentExperiences(profileData.experience || []),
-    [profileData.experience]
+  const recentAchievements = useMemo(
+    () => getRecentAchievements(profileData.achievements || []),
+    [profileData.achievements]
   );
 
   const handleSkillClick = (skillName: string) => {
@@ -945,9 +945,10 @@ const ProfilePreview = memo(({
 
 
               {/* Experience Section */}
+              {/* Achievements Section */}
               <section
-                id="experience"
-                data-section="experience"
+                id="achievements"
+                data-section="achievements"
                 className="pt-8 scroll-mt-20 relative group z-0"
               >
                 <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
@@ -956,16 +957,16 @@ const ProfilePreview = memo(({
                   <p className="text-white/60 text-sm">My sports achievements and highlights</p>
                 </div>
 
-                {profileData.experience?.length > 0 ? (
+                {profileData.achievements?.length > 0 ? (
                   <div className="space-y-4">
-                    {profileData.experience.map((exp) => (
-                      <div key={exp.id} className="bg-white/5 rounded-xl p-4 border border-white/5 flex items-start gap-4 hover:border-white/10 transition-colors">
+                    {profileData.achievements.map((ach) => (
+                      <div key={ach.id} className="bg-white/5 rounded-xl p-4 border border-white/5 flex items-start gap-4 hover:border-white/10 transition-colors">
                         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-500/20 to-yellow-600/20 flex items-center justify-center flex-shrink-0 border border-yellow-500/30">
                           <Trophy className="h-5 w-5 text-yellow-500" />
                         </div>
                         <div>
-                          <h3 className="font-medium text-white text-lg leading-tight">{exp.title || exp.role}</h3>
-                          <p className="text-white/60 text-sm mt-1">{exp.company}</p>
+                          <h3 className="font-medium text-white text-lg leading-tight">{ach.title}</h3>
+                          <p className="text-white/60 text-sm mt-1">{ach.company}</p>
                         </div>
                       </div>
                     ))}

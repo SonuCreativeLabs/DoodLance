@@ -102,7 +102,7 @@ export async function GET(
       isVerified: profile.isVerified || profile.user.isVerified,
       username: profile.user.username,
       reviews: profile.reviews,
-      experiences: profile.achievements,
+      achievements: profile.achievements,
       portfolios: profile.portfolios,
       services: profile.user.services?.map((s: any) => ({
         ...s,

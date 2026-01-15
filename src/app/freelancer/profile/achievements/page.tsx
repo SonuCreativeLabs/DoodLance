@@ -1,6 +1,6 @@
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import { ExperienceSection } from "@/components/freelancer/profile/ExperienceSection";
+import { AchievementsSection } from "@/components/freelancer/profile/AchievementsSection";
 
 export default function ExperiencePage() {
   return (
@@ -28,7 +28,7 @@ export default function ExperiencePage() {
       {/* Scrollable Content */}
       <div className="flex-1 overflow-y-auto">
         <div className="container mx-auto px-4 py-6 space-y-6">
-          <ExperienceSection />
+          <AchievementsSection />
         </div>
       </div>
     </div>

@@ -102,11 +102,10 @@ interface FreelancerDetail {
         category: string;
     }[];
 
-    // Experience data
-    experienceDetails?: {
+    // Achievements data
+    achievements?: {
         id: string;
-        role: string;
-        title?: string;
+        title: string;
         company: string;
     }[];
 
@@ -178,7 +177,7 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
         { id: 'about', label: 'About' },
         { id: 'services', label: 'Services' },
         { id: 'portfolio', label: 'Portfolio' },
-        { id: 'experience', label: 'Achievements' },
+        { id: 'achievements', label: 'Achievements' },
         { id: 'reviews', label: 'Reviews' }
     ];
 
@@ -286,10 +285,9 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                         };
                     }) || [],
 
-                    experienceDetails: profile.experiences?.map((exp: any) => ({
+                    achievements: profile.achievements?.map((exp: any) => ({
                         id: String(exp.id),
-                        role: String(exp.role || ''),
-                        title: String(exp.title || exp.role || ''),
+                        title: String(exp.title || ''),
                         company: String(exp.company)
                     })) || [],
 
@@ -1080,8 +1078,8 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                                     )}
 
                                     {/* Achievements Section */}
-                                    {freelancer.experienceDetails && freelancer.experienceDetails.length > 0 && (
-                                        <section id="experience" data-section="experience" className="pt-8 scroll-mt-20 relative group z-0">
+                                    {freelancer.achievements && freelancer.achievements.length > 0 && (
+                                        <section id="achievements" data-section="achievements" className="pt-8 scroll-mt-20 relative group z-0">
                                             <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
                                             <div className="mb-6">
                                                 <h2 className="text-xl font-semibold text-white mb-1">Achievements</h2>
@@ -1089,20 +1087,21 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                                             </div>
 
                                             <div className="space-y-4">
-                                                {freelancer.experienceDetails.map((exp) => (
-                                                    <div key={exp.id} className="bg-white/5 rounded-xl p-4 border border-white/5 flex items-start gap-4 hover:border-white/10 transition-colors">
+                                                {freelancer.achievements.map((ach) => (
+                                                    <div key={ach.id} className="bg-white/5 rounded-xl p-4 border border-white/5 flex items-start gap-4 hover:border-white/10 transition-colors">
                                                         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-500/20 to-yellow-600/20 flex items-center justify-center flex-shrink-0 border border-yellow-500/30">
                                                             <Award className="h-5 w-5 text-yellow-500" />
                                                         </div>
                                                         <div>
-                                                            <h3 className="font-medium text-white text-lg leading-tight">{exp.role || exp.title}</h3>
-                                                            <p className="text-white/60 text-sm mt-1">{exp.company}</p>
+                                                            <h3 className="font-medium text-white text-lg leading-tight">{ach.title}</h3>
+                                                            <p className="text-white/60 text-sm mt-1">{ach.company}</p>
                                                         </div>
                                                     </div>
                                                 ))}
                                             </div>
                                         </section>
                                     )}
+
 
 
                                     {/* Reviews Section */}

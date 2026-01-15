@@ -5,7 +5,7 @@ import { PersonalDetailsProvider } from './PersonalDetailsContext';
 import { SkillsProvider } from './SkillsContext';
 import { ForYouJobsProvider } from './ForYouJobsContext';
 import { PortfolioProvider } from './PortfolioContext';
-import { ExperienceProvider } from './ExperienceContext';
+import { AchievementsProvider } from './AchievementsContext';
 import { ServicesProvider } from './ServicesContext';
 import { ReviewsProvider } from './ReviewsContext';
 import { BankAccountProvider } from './BankAccountContext';
@@ -27,7 +27,7 @@ export function CombinedProfileProvider({ children }: CombinedProfileProviderPro
       <SkillsProvider skipInitialFetch={true}>
         <ForYouJobsProvider>
           <PortfolioProvider skipInitialFetch={true}>
-            <ExperienceProvider skipInitialFetch={true}>
+            <AchievementsProvider skipInitialFetch={true}>
               <ServicesProvider>
                 <ReviewsProvider skipInitialFetch={true}>
                   <BankAccountProvider skipInitialFetch={true}>
@@ -38,7 +38,7 @@ export function CombinedProfileProvider({ children }: CombinedProfileProviderPro
                   </BankAccountProvider>
                 </ReviewsProvider>
               </ServicesProvider>
-            </ExperienceProvider>
+            </AchievementsProvider>
           </PortfolioProvider>
         </ForYouJobsProvider>
       </SkillsProvider>

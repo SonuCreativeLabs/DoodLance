@@ -13,7 +13,7 @@ import { usePersonalDetails } from '@/contexts/PersonalDetailsContext';
 import { useSkills } from '@/contexts/SkillsContext';
 import { useReviews } from '@/contexts/ReviewsContext';
 import { usePortfolio } from '@/contexts/PortfolioContext';
-import { useExperience } from '@/contexts/ExperienceContext';
+import { useAchievements } from '@/contexts/AchievementsContext';
 import { useServices } from '@/contexts/ServicesContext';
 import { useAvailability } from '@/contexts/AvailabilityContext';
 import { SkillInfoDialog } from '@/components/common/SkillInfoDialog';
@@ -64,7 +64,7 @@ export function ProfileHeader({
   const { skills } = useSkills();
   const { reviewsData } = useReviews();
   const { portfolio } = usePortfolio();
-  const { experiences } = useExperience();
+  const { achievements } = useAchievements();
   const { services } = useServices();
   const { days: availabilityDays, getWorkingHoursText } = useAvailability();
   const [coverImage, setCoverImage] = useState<string | null>(null);
@@ -491,10 +491,10 @@ export function ProfileHeader({
           completedJobs: personalDetails.completedJobs || 0,
           activeJobs: personalDetails.activeJobs || 0,
           workingHours: getWorkingHoursText(),
-          experience: Array.isArray(experiences) ? experiences.map((exp: any) => ({
-            id: exp.id,
-            title: exp.title,
-            company: exp.company
+          achievements: Array.isArray(achievements) ? achievements.map((ach: any) => ({
+            id: ach.id,
+            title: ach.title,
+            company: ach.company
           })) : [],
           services: Array.isArray(services) ? services.map((svc: any) => ({
             id: svc.id,

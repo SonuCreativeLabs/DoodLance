@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSkills } from '@/contexts/SkillsContext';
-import { useExperience } from '@/contexts/ExperienceContext';
+import { useAchievements } from '@/contexts/AchievementsContext';
 import { usePortfolio } from '@/contexts/PortfolioContext';
 import { useReviews } from '@/contexts/ReviewsContext';
 import { useBankAccount } from '@/contexts/BankAccountContext';
@@ -12,7 +12,7 @@ import { usePersonalDetails } from '@/contexts/PersonalDetailsContext';
 export function FreelancerDataLoader() {
     const { user } = useAuth();
     const { hydrateSkills } = useSkills();
-    const { hydrateExperiences } = useExperience();
+    const { hydrateAchievements } = useAchievements();
     const { hydratePortfolio } = usePortfolio();
     const { hydrateReviews } = useReviews();
     const { hydrateBankAccount } = useBankAccount();
@@ -44,19 +44,20 @@ export function FreelancerDataLoader() {
                     hydrateSkills(skillItems);
                 }
 
-                // 2. Hydrate Experience
-                if (data.experiences) {
-                    const mappedExp = data.experiences.map((exp: any) => ({
+                // 2. Hydrate Achievements
+                // 2. Hydrate Achievements
+                try {
+                    const sourceData = data.achievements || data.experiences || [];
+                    console.log(`✅ Hydrating Achievements with ${sourceData.length} items. Key used: ${data.achievements ? 'achievements' : 'experiences'}`);
+                    const mappedExp = Array.isArray(sourceData) ? sourceData.map((exp: any) => ({
                         id: exp.id,
-                        role: exp.title,
-                        company: exp.company,
-                        location: exp.location,
-                        startDate: exp.startDate,
-                        endDate: exp.endDate,
-                        isCurrent: exp.current,
-                        description: exp.description
-                    }));
-                    hydrateExperiences(mappedExp);
+                        title: exp.title,
+                        company: exp.company
+                    })) : [];
+                    hydrateAchievements(mappedExp);
+                } catch (e) {
+                    console.error("Error hydrating achievements:", e);
+                    hydrateAchievements([]); // Ensure loading stops even on error
                 }
 
                 // 3. Hydrate Portfolio

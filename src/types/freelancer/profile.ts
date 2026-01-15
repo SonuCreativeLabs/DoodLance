@@ -1,13 +1,7 @@
-export interface Experience {
+export interface Achievement {
   id: string;
-  role?: string;
   title: string;
   company: string;
-  location?: string; // Phase out
-  startDate?: string; // Phase out
-  endDate?: string; // Phase out
-  isCurrent?: boolean; // Phase out
-  description?: string; // Phase out
 }
 
 export interface Service {
@@ -58,7 +52,7 @@ export interface ProfileData {
   online: boolean;
   location: string;
   skills: string[];
-  experience: Experience[];
+  achievements: Achievement[];
   services: Service[];
   portfolio: PortfolioItem[];
   reviews: Review[];

@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
                 user: null,
                 profile: null,
                 skills: [],
-                experiences: [],
+                achievements: [],
                 portfolios: [],
                 reviews: [],
                 bankAccount: null
@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
             userProfile,
             freelancerProfile,
             skills,
-            experiences,
+            achievements,
             portfolios,
             reviews,
             bankAccount
@@ -125,7 +125,7 @@ export async function GET(request: NextRequest) {
             user: userProfile,
             profile: freelancerProfile,
             skills: formattedSkills,
-            experiences: experiences || [],
+            achievements: achievements || [],
             portfolios: portfolios || [],
             reviews: reviews || [],
             bankAccount: bankAccount || null
