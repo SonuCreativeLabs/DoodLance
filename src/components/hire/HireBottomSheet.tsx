@@ -81,7 +81,7 @@ export function HireBottomSheet({
       setIsNavigating(true);
       // Short timeout to allow UI to update before unmount/nav starts
       setTimeout(() => {
-        onClose();
+        // onClose(); // Don't close, let navigation happen
         router.push('/client/hire/booking-date');
       }, 500);
     } else {

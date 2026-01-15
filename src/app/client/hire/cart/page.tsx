@@ -176,114 +176,114 @@ export default function CartPage() {
       </div>
 
       <div className="p-6 space-y-6 pb-32">
-        {/* Freelancer Info */}
-        <div className="flex items-center gap-4 p-4 bg-white/5 rounded-xl border border-white/10">
-          <div className="w-12 h-12 rounded-full overflow-hidden bg-white/10">
-            <img
-              src={state.freelancerImage || ''}
-              alt={state.freelancerName || ''}
-              className="w-full h-full object-cover"
-            />
-          </div>
-          <div>
-            <h3 className="font-medium text-white">{state.freelancerName}</h3>
-            {(state.freelancerRating || 0) > 0 && (
-              <div className="flex items-center gap-1 mt-1">
-                <div className="flex items-center gap-0.5">
-                  {[...Array(5)].map((_, i) => (
-                    <Star
-                      key={i}
-                      className={`w-3 h-3 ${i < Math.floor(state.freelancerRating!)
-                        ? 'text-yellow-400 fill-yellow-400'
-                        : 'text-white/20'
-                        }`}
-                    />
-                  ))}
+        {/* Unified Booking Card */}
+        <div className="bg-white/5 rounded-xl border border-white/10 overflow-hidden">
+          {/* Freelancer Header Section */}
+          <div className="p-4 border-b border-white/10 flex items-center gap-4 bg-[#1b1b1b]">
+            <div className="w-12 h-12 rounded-full overflow-hidden bg-white/10">
+              <img
+                src={state.freelancerImage || ''}
+                alt={state.freelancerName || ''}
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <div>
+              <h3 className="font-medium text-white">{state.freelancerName}</h3>
+              {(state.freelancerRating || 0) > 0 && (
+                <div className="flex items-center gap-1 mt-1">
+                  <div className="flex items-center gap-0.5">
+                    {[...Array(5)].map((_, i) => (
+                      <Star
+                        key={i}
+                        className={`w-3 h-3 ${i < Math.floor(state.freelancerRating!)
+                          ? 'text-yellow-400 fill-yellow-400'
+                          : 'text-white/20'
+                          }`}
+                      />
+                    ))}
+                  </div>
+                  <span className="text-sm text-white/70 ml-1">
+                    {(state.freelancerRating || 0).toFixed(1)} ({state.freelancerReviewCount || 0} reviews)
+                  </span>
                 </div>
-                <span className="text-sm text-white/70 ml-1">
-                  {(state.freelancerRating || 0).toFixed(1)} ({state.freelancerReviewCount || 0} reviews)
-                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Booking Context Info (Date/Time/Loc) - Optional to keep in header or body 
+              Let's put it in body top padding */}
+          <div className="px-4 py-3 bg-[#1E1E1E]/50 border-b border-white/5 flex flex-wrap gap-4">
+            {state.selectedDate && (
+              <div className="flex items-center gap-2 text-sm text-white/70">
+                <Calendar className="w-4 h-4 text-purple-400" />
+                <span>{(() => {
+                  const [year, month, day] = state.selectedDate!.split('-').map(Number);
+                  const date = new Date(year, month - 1, day);
+                  return date.toLocaleDateString('en-US', {
+                    weekday: 'short',
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                  });
+                })()}</span>
               </div>
             )}
 
-            {/* Booking Details */}
-            <div className="mt-3 space-y-1">
-              {state.selectedDate && (
-                <div className="flex items-center gap-2 text-sm text-white/70">
-                  <Calendar className="w-4 h-4 text-purple-400" />
-                  <span>{(() => {
-                    const [year, month, day] = state.selectedDate!.split('-').map(Number);
-                    const date = new Date(year, month - 1, day); // month is 0-indexed
-                    return date.toLocaleDateString('en-US', {
-                      weekday: 'short',
-                      year: 'numeric',
-                      month: 'short',
-                      day: 'numeric'
-                    });
-                  })()}</span>
-                </div>
-              )}
-
-              {state.selectedTime && (
-                <div className="flex items-center gap-2 text-sm text-white/70">
-                  <Clock className="w-4 h-4 text-purple-400" />
-                  <span>{state.selectedTime}</span>
-                </div>
-              )}
-
-              {/* Location would need to be stored in context or passed as prop */}
+            {state.selectedTime && (
               <div className="flex items-center gap-2 text-sm text-white/70">
-                <MapPin className="w-4 h-4 text-purple-400" />
-                <span>{state.selectedLocation || 'Ground Location'}</span>
+                <Clock className="w-4 h-4 text-purple-400" />
+                <span>{state.selectedTime}</span>
               </div>
+            )}
+            <div className="flex items-center gap-2 text-sm text-white/70">
+              <MapPin className="w-4 h-4 text-purple-400" />
+              <span>{state.selectedLocation || 'Ground Location'}</span>
             </div>
           </div>
-        </div>
 
-        {/* Cart Items - Same format as booking date page */}
-        <div>
-          <div className="flex items-center gap-2 mb-3">
-            <ShoppingCart className="w-5 h-5 text-purple-400" />
-            <h4 className="text-white font-bold">Added Services</h4>
-            <span className="text-white/40 text-sm font-medium">({state.cartItems.length})</span>
-          </div>
+          {/* Services List Section */}
+          <div className="p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <ShoppingCart className="w-4 h-4 text-purple-400" />
+              <h4 className="text-white/90 font-semibold text-sm">Selected Services</h4>
+            </div>
 
-          <div className="space-y-2">
-            {state.cartItems.map((item, index) => (
-              <div key={`${item.service.id}-${index}`}>
-                <div className="flex items-center justify-between py-2">
-                  <div className="flex-1 min-w-0">
-                    <h5 className="font-medium text-white text-sm truncate">{item.service.title}</h5>
-                    <div className="text-sm font-semibold text-white/80 mt-0.5">
-                      ₹{typeof item.service.price === 'string'
-                        ? parseFloat(item.service.price.replace(/[^\d.]/g, ''))
-                        : item.service.price} / {item.service.deliveryTime}
+            <div className="space-y-3">
+              {state.cartItems.map((item, index) => (
+                <div key={`${item.service.id}-${index}`} className="bg-black/20 rounded-xl border border-white/5 overflow-hidden">
+                  <div className="p-3 flex justify-between items-start gap-3">
+                    <div className="flex-1">
+                      <h5 className="text-white font-medium mb-1 text-sm">{item.service.title}</h5>
+                      <div className="text-purple-400 font-bold text-sm">
+                        ₹{typeof item.service.price === 'string'
+                          ? parseFloat(item.service.price.replace(/[^\d.]/g, ''))
+                          : item.service.price} / {item.service.deliveryTime}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 bg-white/5 rounded-lg p-1">
+                      <button
+                        onClick={() => decreaseQuantity(item.service.id)}
+                        className="w-6 h-6 rounded bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors"
+                      >
+                        <Minus className="w-3 h-3 text-white" />
+                      </button>
+
+                      <span className="text-white font-medium w-4 text-center text-sm">
+                        {item.quantity || 1}
+                      </span>
+
+                      <button
+                        onClick={() => increaseQuantity(item.service.id)}
+                        className="w-6 h-6 rounded bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors"
+                      >
+                        <Plus className="w-3 h-3 text-white" />
+                      </button>
                     </div>
                   </div>
-
-                  <div className="flex items-center gap-2 ml-4">
-                    <button
-                      onClick={() => decreaseQuantity(item.service.id)}
-                      className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors"
-                    >
-                      <Minus className="w-3 h-3" />
-                    </button>
-                    <span className="text-white font-medium min-w-[16px] text-center text-sm">
-                      {item.quantity || 1}
-                    </span>
-                    <button
-                      onClick={() => increaseQuantity(item.service.id)}
-                      className="w-6 h-6 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-400 hover:bg-purple-500/30 transition-colors"
-                    >
-                      <Plus className="w-3 h-3" />
-                    </button>
-                  </div>
                 </div>
-                {index < state.cartItems.length - 1 && (
-                  <div className="border-b border-white/10"></div>
-                )}
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
 
@@ -302,7 +302,7 @@ export default function CartPage() {
               value={couponCode}
               onChange={(e) => setCouponCode(e.target.value)}
               placeholder="Enter coupon code"
-              className="flex-1 px-3 py-2 bg-[#1E1E1E] border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-purple-500"
+              className="flex-1 px-3 py-2 bg-[#1E1E1E] border border-white/20 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-purple-500"
             />
             <Button
               onClick={handleApplyCoupon}
@@ -372,9 +372,9 @@ export default function CartPage() {
               <h4 className="text-white font-medium">Cancellation Policy</h4>
             </div>
             <div className="text-sm text-white/70 space-y-1">
-              <p>• Free cancellation up to 24 hours before booking</p>
-              <p>• 50% refund for cancellation 12-24 hours before</p>
-              <p>• No refund for cancellation within 12 hours</p>
+              <p>• Free cancellation up to 24 hours before the session.</p>
+              <p>• 50% refund for cancellations made 12-24 hours before the session.</p>
+              <p>• No refund for cancellations made within 12 hours of the session.</p>
             </div>
           </div>
 
@@ -384,9 +384,9 @@ export default function CartPage() {
               <h4 className="text-white font-medium">Reschedule Policy</h4>
             </div>
             <div className="text-sm text-white/70 space-y-1">
-              <p>• Free reschedule up to 12 hours before booking</p>
-              <p>• ₹99 fee for reschedule within 12 hours</p>
-              <p>• Reschedule only allowed once per booking</p>
+              <p>• Free rescheduling up to 12 hours before the session.</p>
+              <p>• ₹99 fee for rescheduling within 12 hours of the session.</p>
+              <p>• Rescheduling is allowed only once per session.</p>
             </div>
           </div>
         </div>

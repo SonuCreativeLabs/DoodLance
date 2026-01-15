@@ -79,8 +79,14 @@ export default function BookingDatePage() {
 
       const isAvailable = isWorkingDay(date);
 
+      // Construct YYYY-MM-DD manually from local time to avoid UTC shifts
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const dayNum = String(date.getDate()).padStart(2, '0');
+      const dateStr = `${year}-${month}-${dayNum}`;
+
       d.push({
-        date: date.toISOString().split('T')[0],
+        date: dateStr,
         day: date.getDate(),
         weekday: date.toLocaleDateString('en-US', { weekday: 'short' }),
         month: date.toLocaleDateString('en-US', { month: 'short' }),
@@ -116,7 +122,8 @@ export default function BookingDatePage() {
   const timeSlots = React.useMemo(() => {
     if (!selectedDate) return [];
 
-    const dateObj = new Date(selectedDate);
+    // Force local midnight to ensure correct weekday derivation
+    const dateObj = new Date(`${selectedDate}T00:00:00`);
     const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
     const dayConfig = availability.find((d: any) => d.id === dayName || d.name.toLowerCase() === dayName);
 
@@ -125,75 +132,127 @@ export default function BookingDatePage() {
       dayName,
       hasConfig: !!dayConfig,
       isAvailable: dayConfig?.available,
-      slots: dayConfig?.timeSlots
+      slotsCount: dayConfig?.timeSlots?.length,
+      rawSlots: dayConfig?.timeSlots
     });
 
     // If configuration exists but no config for this day or day is not available, return empty
     if (availability.length > 0 && (!dayConfig || !dayConfig.available)) {
-      console.log('🗓️ [SLOTS] Day blocked by config');
+      console.log(`🗓️ [SLOTS] Day ${dayName} blocked. Config exists: ${!!dayConfig}, Available: ${dayConfig?.available}`);
       return [];
     }
 
-    // Default slots if ABSOLUTELY no configuration exists (fallback for old profiles)
+    // Default slots if ABSOLUTELY no configuration exists
     let configSlots: any[] = [];
     if (availability.length === 0) {
-      // console.log('🗓️ [SLOTS] No availability config found at all'); 
-      // Do nothing, return empty as per new rule, or default?
-      // User requested strictly NO defaults if data is missing/empty.
       configSlots = [];
     } else if (dayConfig && dayConfig.timeSlots && dayConfig.timeSlots.length > 0) {
       configSlots = dayConfig.timeSlots;
     } else {
-      console.log('🗓️ [SLOTS] Day marked available but no slots array');
+      console.warn(`⚠️ [SLOTS] Day ${dayName} is marked available but has NO time slots configured!`);
+      // User explicitly requested NO defaults.
       configSlots = [];
     }
 
-    const generatedSlots: string[] = [];
+    let generatedSlots: string[] = [];
 
     // Process EACH configured time slot range (e.g. 6am-9am AND 5pm-8pm)
-    configSlots.forEach(slot => {
-      const [startH, startM] = slot.start.split(':').map(Number);
-      const [endH, endM] = slot.end.split(':').map(Number);
+    // Process EACH configured time slot range
+    configSlots.forEach((slot, slotIndex) => {
+      let [startH, startM] = slot.start.split(':').map(Number);
+      let [endH, endM] = slot.end.split(':').map(Number);
 
-      // Convert to minutes for easier comparison if needed, but simple hour loop works for hourly slots
-      // We generate hourly slots. e.g. 9:00, 10:00... until < EndTime
-      // If end time is 18:00, last slot is 17:00 (1 hour duration)
+      console.log(`🔍 [SLOTS] Processing config slot #${slotIndex}: ${slot.start}-${slot.end} (${startH}:${startM}-${endH}:${endM})`);
+
+      // Handle midnight wrapping (e.g., 18:00 to 00:00)
+      if (endH === 0 && (startH > endH || (startH === endH && startM >= endM))) {
+        endH = 24;
+      }
+
+      // Explicit Fix for User Input "6 PM to 12 PM" (Meaning Midnight)
+      // If start is PM (>=12) and end is EXACTLY 12 (Noon), treat end as Midnight (24)
+      if (startH >= 12 && endH === 12) {
+        console.log(`  ✨ [SLOTS] Interpreting End '12:00' (Noon) as Midnight (24:00) because Start is PM (${startH}:00)`);
+        endH = 24;
+      }
+
+      // Handle explicit overnight (e.g. 18:00 to 12:00 next day)
+      // If end time is strictly less than start time, and not handled above, it wraps.
+      if (endH < startH) {
+        endH += 24;
+      }
 
       let currentH = startH;
-      // handle minutes if needed? Assuming hourly slots for now as per UI
+      // Adjust start if minutes > 0? For hourly slots starting at 00, simple logic is start at next full hour?
+      // Or just start at current hour if startM is 0.
+      // If start is 6:30, first hourly slot 6:00-7:00 is technically invalid?
+      // Let's assume hourly alignments for simplicity or start at currentH.
+      if (startM > 0) currentH++; // If 6:30, start slots at 7:00
 
-      while (currentH < endH || (currentH === endH && endM > 0)) {
-        // Stop if we reach end hour. strict < endH ensures 17:00-18:00 is valid, 18:00 is not startable
-        if (currentH >= endH && endM === 0) break;
+      while (currentH < endH) {
+        // Calculate slot end time
+        const slotEndH = currentH + 1;
 
-        const timeString = new Date(new Date().setHours(currentH, 0, 0, 0)).toLocaleTimeString('en-US', {
+        const slotEndTimeVal = slotEndH * 60; // minutes from midnight
+        // configEndTime is endH * 60 + endM. If endH > 24, this is > 1440.
+        const configEndTimeVal = endH * 60 + endM;
+
+        if (slotEndTimeVal > configEndTimeVal) {
+          console.log(`  🛑 [SLOTS] Skipping ${currentH}:00 - Slot ends at ${slotEndTimeVal}m, Config ends at ${configEndTimeVal}m`);
+          break;
+        }
+
+        const displayH = currentH % 24;
+        const timeString = new Date(new Date().setHours(displayH, 0, 0, 0)).toLocaleTimeString('en-US', {
           hour: 'numeric',
           minute: '2-digit',
           hour12: true
         });
 
         // Collision Detection
-        const slotStart = new Date(`${selectedDate}T${currentH.toString().padStart(2, '0')}:00:00`);
-        // Check against bookedSlots
+        const slotStart = new Date(`${selectedDate}T${displayH.toString().padStart(2, '0')}:00:00`);
+
         const isBooked = bookedSlots.some((booking: any) => {
           const bStart = new Date(booking.start);
           const bEnd = new Date(booking.end);
-          // Slot: Start to Start+60m
           const slotEnd = new Date(slotStart.getTime() + 60 * 60000);
 
-          // Overlap: (SlotStart < BookingEnd) && (SlotEnd > BookingStart)
-          return slotStart < bEnd && slotEnd > bStart;
+          const collision = slotStart < bEnd && slotEnd > bStart;
+          if (collision) {
+            console.log(`  🚫 [SLOTS] Collision detected! Slot: ${slotStart.toLocaleTimeString()} - ${slotEnd.toLocaleTimeString()}`);
+            console.log(`     Booking: ${bStart.toLocaleTimeString()} - ${bEnd.toLocaleTimeString()}`);
+          }
+          return collision;
         });
 
         if (!isBooked) {
           generatedSlots.push(timeString);
+          console.log(`  ✅ [SLOTS] Added ${timeString}`);
+        } else {
+          // Already logged in collision check
         }
 
         currentH++;
       }
     });
 
-    // Deduplicate and sort (just in case of overlapping configs)
+    console.log(`📊 [SLOTS] Final generated count: ${generatedSlots.length}`);
+
+    // Filter out past times if selectedDate is TODAY
+    const now = new Date();
+    const isToday = new Date(selectedDate).toDateString() === now.toDateString();
+
+    if (isToday) {
+      console.log(`🗓️ [SLOTS] Filtering past slots for today. Now: ${now.toLocaleTimeString()}`);
+      generatedSlots = generatedSlots.filter(timeStr => {
+        // Simply construct date from the string
+        const slotDate = new Date(`${selectedDate} ${timeStr}`);
+        return slotDate > now;
+      });
+      console.log(`📊 [SLOTS] After past-filter count: ${generatedSlots.length}`);
+    }
+
+    // Deduplicate and sort
     return [...new Set(generatedSlots)].sort((a, b) => {
       // simple sort by AM/PM or convert to date
       return new Date(`2000/01/01 ${a}`).getTime() - new Date(`2000/01/01 ${b}`).getTime();
@@ -276,7 +335,7 @@ export default function BookingDatePage() {
         {/* Selected Services Card with Freelancer Info */}
         <div className="bg-white/5 rounded-xl border border-white/10 overflow-hidden">
           {/* Freelancer Header */}
-          <div className="flex items-center gap-4 p-4 border-b border-white/10 bg-white/5">
+          <div className="flex items-center gap-4 p-4 border-b border-white/10 bg-[#1b1b1b]">
             <div className="w-12 h-12 rounded-full overflow-hidden bg-white/10">
               <img
                 src={String(hireState.freelancerImage || '')}
