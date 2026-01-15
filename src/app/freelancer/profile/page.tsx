@@ -20,6 +20,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import FreelancerProfileLogin from '@/components/freelancer/FreelancerProfileLogin';
 import { ProfileSkeleton } from '@/components/skeletons/ProfileSkeleton';
 import { useFreelancerProfile } from '@/contexts/FreelancerProfileContext';
+import { usePersonalDetails } from '@/contexts/PersonalDetailsContext';
 
 // Types
 type Experience = {
@@ -96,9 +97,11 @@ export default function ProfilePage() {
   const portfolioRef = useRef<HTMLDivElement>(null);
   const skillsRef = useRef<HTMLDivElement>(null);
 
+
   // Use cached profile data from context
-  const { profileData, loading } = useFreelancerProfile();
+  const { headerDataLoaded, isLoading: contextLoading } = usePersonalDetails();
   const { requireAuth, openLoginDialog, setOpenLoginDialog, isAuthenticated } = useRequireAuth();
+  const { profileData, loading: profileLoading } = useFreelancerProfile();
 
   useEffect(() => {
     // Require authentication to access profile, but don't force profile completion
@@ -130,61 +133,30 @@ export default function ProfilePage() {
     }
   };
 
-  // Helper function to handle section scrolling
-  const scrollToSectionIfNeeded = (sectionId: string, ref: React.RefObject<HTMLElement>) => {
-    if (!ref.current) return false;
-
-    // Force a reflow to ensure the element is in the DOM
-    void ref.current.offsetHeight;
-    scrollToSection(ref);
-    return true;
-  };
-
   useEffect(() => {
-    // Function to handle hash changes and section scrolling
-    const handleHashChange = () => {
-      const hash = window.location.hash;
-      const isFromPortfolio = getSessionFlag('scrollToPortfolio');
+    // Handle hash scrolling on mount or hash change
+    const hash = window.location.hash;
+    const isFromPortfolio = searchParams.get('from') === 'profile';
 
-      console.log('Hash change detected:', hash, 'isFromPortfolio:', isFromPortfolio);
+    // Debug log
+    console.log("Hash change detected:", hash, "isFromPortfolio:", isFromPortfolio);
 
-      // Small delay to ensure the DOM is fully rendered
-      const timer = setTimeout(() => {
-        // Check for section hashes first
-        if (hash === '#personal-details') {
-          scrollToSectionIfNeeded('personal-details', personalDetailsRef);
-        } else if (hash === '#portfolio' || isFromPortfolio) {
-          console.log('Scrolling to portfolio section');
-          if (isFromPortfolio) {
-            removeSessionItem('scrollToPortfolio');
-          }
-          scrollToSectionIfNeeded('portfolio', portfolioRef);
-        } else if (hash === '#skills') {
-          scrollToSectionIfNeeded('skills', skillsRef);
-        }
-      }, 200); // Increased delay for better reliability
+    if (hash === '#personal-details' && personalDetailsRef.current) {
+      // Small timeout to ensure layout is stable
+      setTimeout(() => scrollToSection(personalDetailsRef), 100);
+    } else if (hash === '#portfolio' && portfolioRef.current) {
+      setTimeout(() => scrollToSection(portfolioRef), 100);
+    } else if (hash === '#skills' && skillsRef.current) {
+      setTimeout(() => scrollToSection(skillsRef), 100);
+    }
+  }, [searchParams]);
 
-      return () => clearTimeout(timer);
-    };
-
-    // Initial check
-    handleHashChange();
-
-    // Listen for hash changes
-    window.addEventListener('hashchange', handleHashChange, false);
-
-    // Clean up
-    return () => {
-      window.removeEventListener('hashchange', handleHashChange, false);
-    };
-  }, []); // Remove searchParams dependency to ensure it always runs
-
-  // Show full-page login if not authenticated
-  if (!isAuthenticated) {
+  if (!isAuthenticated && !contextLoading && !profileLoading) {
     return <FreelancerProfileLogin />;
   }
 
-  if (loading) {
+  // Show skeleton only while critical header data is loading
+  if (!headerDataLoaded) {
     return <ProfileSkeleton />;
   }
 

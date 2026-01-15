@@ -39,12 +39,18 @@ const defaultSettings: SettingsData = {
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
 
+import { useAuth } from '@/contexts/AuthContext';
+
 export function SettingsProvider({ children }: { children: ReactNode }) {
+  const { isAuthenticated } = useAuth();
   const [settings, setSettings] = useState<SettingsData | null>(defaultSettings);
   const [isLoading, setIsLoading] = useState(true);
 
   // Load settings from API
   React.useEffect(() => {
+    // Only fetch if authenticated
+    if (!isAuthenticated) return;
+
     const fetchSettings = async () => {
       try {
         const response = await fetch('/api/freelancer/settings');
@@ -64,7 +70,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     };
 
     fetchSettings();
-  }, []);
+  }, [isAuthenticated]);
 
   const updateNotificationSettings = useCallback(async (notificationSettings: NotificationSettings) => {
     // Optimistic update

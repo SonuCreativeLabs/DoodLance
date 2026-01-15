@@ -29,14 +29,19 @@ const initialServices: ServicePackage[] = [];
 const ServicesContext = createContext<ServicesContextType | undefined>(undefined);
 
 import { createClient } from '@/lib/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 export function ServicesProvider({ children }: { children: ReactNode }) {
+  const { isAuthenticated } = useAuth();
   const [services, setServices] = useState<ServicePackage[]>(initialServices);
   const [isLoading, setIsLoading] = useState(true);
   const supabase = createClient();
 
   // Load from API on mount
   useEffect(() => {
+    // Only fetch if authenticated
+    if (!isAuthenticated) return;
+
     const fetchServices = async () => {
       try {
         const response = await fetch('/api/freelancer/services', {
@@ -54,7 +59,7 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
     };
 
     fetchServices();
-  }, []);
+  }, [isAuthenticated]);
 
   const updateServices = useCallback(async (newServices: ServicePackage[]) => {
     setServices(newServices);

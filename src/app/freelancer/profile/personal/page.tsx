@@ -20,6 +20,7 @@ import {
 import Link from "next/link";
 import { useRouter, useSearchParams } from 'next/navigation';
 import { cn } from "@/lib/utils";
+import { useAuth } from '@/contexts/AuthContext';
 import { usePersonalDetails } from '@/contexts/PersonalDetailsContext';
 import { useFreelancerProfile } from '@/contexts/FreelancerProfileContext';
 import { UsernameInput } from '@/components/freelancer/profile/UsernameInput';
@@ -159,14 +160,16 @@ export default function PersonalDetailsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const returnTo = searchParams.get('returnTo'); // Get return path from query params
-  const { personalDetails, updatePersonalDetails, refreshUser, isLoading } = usePersonalDetails();
+  const { user, refreshUser } = useAuth();
+  const { personalDetails, updatePersonalDetails, refreshPersonalDetails, isLoading } = usePersonalDetails();
   const { updateLocalProfile } = useFreelancerProfile();
   const [editingSection, setEditingSection] = useState<EditSection>(null);
 
   // Refresh user data on mount to ensure we have latest updates from Client profile
   useEffect(() => {
     refreshUser();
-  }, [refreshUser]);
+    refreshPersonalDetails();
+  }, [refreshUser, refreshPersonalDetails]);
 
   // ... (content will be generated in the next step after I verify the end of the file)
 

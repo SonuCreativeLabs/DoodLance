@@ -1,12 +1,18 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 export interface Experience {
   id: string;
   title: string;
   company: string;
+  location: string;
+  startDate: string;
+  endDate: string;
+  current: boolean;
+  description: string;
 }
 
 interface ExperienceContextType {
@@ -24,12 +30,13 @@ const initialExperiences: Experience[] = [];
 
 const ExperienceContext = createContext<ExperienceContextType | undefined>(undefined);
 
-export interface ExperienceProviderProps {
+interface ExperienceProviderProps {
   children: ReactNode;
   skipInitialFetch?: boolean;
 }
 
 export function ExperienceProvider({ children, skipInitialFetch = false }: ExperienceProviderProps) {
+  const { isAuthenticated } = useAuth();
   const [experiences, setExperiences] = useState<Experience[]>(initialExperiences);
   const [isLoading, setIsLoading] = useState(true);
   const supabase = createClient();
@@ -41,7 +48,7 @@ export function ExperienceProvider({ children, skipInitialFetch = false }: Exper
 
   // Load from Supabase on mount
   useEffect(() => {
-    if (skipInitialFetch) return;
+    if (skipInitialFetch || !isAuthenticated) return;
 
     const fetchExperiences = async () => {
       try {
@@ -55,7 +62,12 @@ export function ExperienceProvider({ children, skipInitialFetch = false }: Exper
             const mapped = dbExperiences.map((exp: any) => ({
               id: exp.id,
               title: exp.title,
-              company: exp.company
+              company: exp.company || "",
+              location: exp.location || "",
+              startDate: exp.startDate || "",
+              endDate: exp.endDate || "",
+              current: exp.current || false,
+              description: exp.description || ""
             }));
             setExperiences(mapped);
           } else {

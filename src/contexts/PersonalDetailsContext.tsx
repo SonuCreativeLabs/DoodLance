@@ -40,10 +40,11 @@ export interface PersonalDetails {
 
 interface PersonalDetailsContextType {
   personalDetails: PersonalDetails;
-  updatePersonalDetails: (updates: Partial<PersonalDetails>) => void;
-  toggleReadyToWork: () => void;
-  refreshUser: () => Promise<void>;
   isLoading: boolean;
+  headerDataLoaded: boolean; // Track when header data is ready for immediate display
+  updatePersonalDetails: (updates: Partial<PersonalDetails>) => Promise<void>;
+  refreshPersonalDetails: () => Promise<void>;
+  toggleReadyToWork: () => void; // Re-added based on original context
 }
 
 const initialPersonalDetails: PersonalDetails = {
@@ -91,9 +92,10 @@ import { useAuth } from './AuthContext';
 export function PersonalDetailsProvider({ children }: { children: ReactNode }) {
   const [personalDetails, setPersonalDetails] = useState<PersonalDetails>(initialPersonalDetails);
   const [isLoading, setIsLoading] = useState(true);
+  const [headerDataLoaded, setHeaderDataLoaded] = useState(false); // Track when header data is ready
   const hasHydrated = useRef(false);
   const supabase = createClient();
-  const { refreshUser: refreshAuthUser } = useAuth();
+  const { refreshUser: refreshAuthUser, user } = useAuth();
 
   const updatePersonalDetails = useCallback(async (updates: Partial<PersonalDetails>) => {
     // 1. Optimistic update
@@ -157,18 +159,54 @@ export function PersonalDetailsProvider({ children }: { children: ReactNode }) {
     });
   }, [updatePersonalDetails]);
 
-  // Refactored fetch logic to be reusable
-  const fetchUserData = useCallback(async () => {
+  // Phase 1: Fetch header data only (fast)
+  const fetchHeaderData = useCallback(async () => {
+    if (!user?.id) return;
+
     try {
-      setIsLoading(true);
-      // Fetch user data from API (bypasses RLS issues)
+      setIsLoading(true); // Start loading for header
+      // Fetch only user data first (lightweight, no profile fetch)
       const userResponse = await fetch('/api/user/profile');
       if (!userResponse.ok) {
         console.error('Failed to fetch user profile from API');
+        setIsLoading(false);
         return;
       }
       const userData = await userResponse.json();
 
+      // Set header data immediately
+      const headerDetails = {
+        name: userData?.name || "",
+        firstName: userData?.name?.split(' ')[0] || "",
+        lastName: userData?.name?.split(' ').slice(1).join(' ') || "",
+        location: userData?.location || "",
+        avatarUrl: userData?.avatar || "",
+        username: userData?.username || "",
+        displayId: userData?.displayId || "",
+        isVerified: userData?.isVerified || false,
+        dateOfBirth: userData?.dateOfBirth || "",
+        email: userData?.email || "",
+        phone: userData?.phone || "",
+      };
+
+      setPersonalDetails(prev => ({
+        ...prev,
+        ...headerDetails
+      }));
+
+      setHeaderDataLoaded(true); // Mark header as loaded
+      setIsLoading(false); // Header data loaded, can render
+    } catch (error) {
+      console.error('Failed to fetch header data:', error);
+      setIsLoading(false);
+    }
+  }, [user?.id]);
+
+  // Phase 2: Fetch full profile data (background)
+  const fetchFullProfileData = useCallback(async () => {
+    if (!user?.id) return;
+
+    try {
       // Fetch freelancer profile from API
       const profileResponse = await fetch('/api/freelancer/profile');
       let profile = null;
@@ -177,8 +215,12 @@ export function PersonalDetailsProvider({ children }: { children: ReactNode }) {
         profile = data.profile;
       }
 
+      // Also re-fetch user data for complete details
+      const userResponse = await fetch('/api/user/profile');
+      const userData = userResponse.ok ? await userResponse.json() : null;
+
       // Map all fields from both sources
-      const newDetails = {
+      const fullDetails = {
         name: userData?.name || "",
         firstName: userData?.name?.split(' ')[0] || "",
         lastName: userData?.name?.split(' ').slice(1).join(' ') || "",
@@ -188,9 +230,9 @@ export function PersonalDetailsProvider({ children }: { children: ReactNode }) {
         bio: userData?.bio || "",
         avatarUrl: userData?.avatar || "",
         coverImageUrl: profile?.coverImage || "",
-        online: profile?.isOnline ?? true,
-        readyToWork: profile?.isOnline ?? false,
-        dateOfBirth: profile?.dateOfBirth || "",
+        online: profile?.online ?? false,
+        readyToWork: profile?.online ?? false,
+        dateOfBirth: profile?.dateOfBirth ? new Date(profile.dateOfBirth).toISOString().split('T')[0] : (userData?.dateOfBirth || ""),
         cricketRole: profile?.cricketRole || "",
         battingStyle: profile?.battingStyle || "",
         bowlingStyle: profile?.bowlingStyle || "",
@@ -198,7 +240,7 @@ export function PersonalDetailsProvider({ children }: { children: ReactNode }) {
         deliveryTime: profile?.deliveryTime || "",
         completionRate: profile?.completionRate || 0,
         completedJobs: profile?.completedJobs || 0,
-        activeJobs: 0,
+        activeJobs: profile?.activeJobs || 0,
         username: userData?.username || "",
         displayId: userData?.displayId || "",
         isVerified: userData?.isVerified || false,
@@ -213,27 +255,53 @@ export function PersonalDetailsProvider({ children }: { children: ReactNode }) {
 
       setPersonalDetails(prev => ({
         ...prev,
-        ...newDetails
+        ...fullDetails
       }));
-    } catch (error) {
-      console.error('Failed to fetch user data:', error);
-    } finally {
-      setIsLoading(false);
       hasHydrated.current = true;
+    } catch (error) {
+      console.error('Failed to fetch full profile data:', error);
     }
-  }, []);
+  }, [user?.id]);
 
-  // Initial load
+  // Combined refresh function for external use
+  const refreshPersonalDetails = useCallback(async () => {
+    if (!user?.id) {
+      setPersonalDetails(initialPersonalDetails);
+      setHeaderDataLoaded(false);
+      setIsLoading(false);
+      return;
+    }
+    // Trigger both phases
+    await fetchHeaderData();
+    await fetchFullProfileData();
+  }, [user?.id, fetchHeaderData, fetchFullProfileData]);
+
+  // Two-phase loading: header first, then full profile
   useEffect(() => {
-    fetchUserData();
-  }, [fetchUserData]);
+    if (user?.id) {
+      // Phase 1: Load header data immediately
+      fetchHeaderData();
+
+      // Phase 2: Load full profile in background after a short delay
+      const timer = setTimeout(() => {
+        fetchFullProfileData();
+      }, 100); // Small delay to let header render first
+
+      return () => clearTimeout(timer);
+    } else {
+      setPersonalDetails(initialPersonalDetails);
+      setHeaderDataLoaded(false);
+      setIsLoading(false);
+    }
+  }, [user?.id, fetchHeaderData, fetchFullProfileData]);
 
   const value: PersonalDetailsContextType = {
     personalDetails,
     updatePersonalDetails,
     toggleReadyToWork,
-    refreshUser: fetchUserData,
+    refreshPersonalDetails, // Expose the combined refresh function
     isLoading,
+    headerDataLoaded, // Expose header loaded state
   };
 
   return (
