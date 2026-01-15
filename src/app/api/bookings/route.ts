@@ -395,6 +395,63 @@ export async function POST(request: NextRequest) {
                 return NextResponse.json({ error: 'User profile not found. Please complete your profile.' }, { status: 400 });
             }
 
+            // CRITICAL: Collision Detection
+            // Prevent double booking for the same provider at the same time
+            if (service.providerId && bookingData.scheduledAt) {
+                const requestedStart = bookingData.scheduledAt;
+                const requestedDuration = bookingData.duration || 60; // Minutes
+                const requestedEnd = new Date(requestedStart.getTime() + requestedDuration * 60000);
+
+                const conflict = await prisma.booking.findFirst({
+                    where: {
+                        service: {
+                            providerId: service.providerId
+                        },
+                        status: {
+                            in: ['confirmed', 'pending']
+                        },
+                        scheduledAt: {
+                            lt: requestedEnd
+                        },
+                        AND: [
+                            {
+                                // End time of existing booking > Requested Start
+                                // We can't rely on a stored 'end' column if it doesn't exist, so we calculate on fly or assume 'duration'
+                                // But prisma filtering on computed fields is hard. 
+                                // Alternatively, simply check if scheduledAt matches exactly (if slots are rigorous)
+                                // or better: fetch potential collisions and filter in memory?
+                                // OR: if we assume standard 1 hour slots, we can check 1 hour window.
+                                // Let's use a simpler overlapping logic:
+                                // Existing.Start < Requested.End AND Existing.End > Requested.Start
+                                // Since we don't have 'end' column, we check if Existing.Start is within [Req.Start - Duration, Req.End]
+                                // For now, let's assume strict equality on start time is a good first defense 
+                                // if the UI enforces specific slots.
+                                // But better:
+                                scheduledAt: {
+                                    gte: new Date(requestedStart.getTime() - (3 * 60 * 60 * 1000)), // Look back 3 hours
+                                    lt: requestedEnd
+                                }
+                            }
+                        ]
+                    },
+                    select: {
+                        scheduledAt: true,
+                        duration: true
+                    }
+                });
+
+                if (conflict && conflict.scheduledAt) {
+                    // Check exact overlap in memory to be precise
+                    const conflictStart = conflict.scheduledAt;
+                    const conflictDuration = conflict.duration || 60;
+                    const conflictEnd = new Date(conflictStart.getTime() + conflictDuration * 60000);
+
+                    if (requestedStart < conflictEnd && requestedEnd > conflictStart) {
+                        return NextResponse.json({ error: 'This time slot is already booked.' }, { status: 409 });
+                    }
+                }
+            }
+
             // Use transaction to create booking and promo usage together
             const result = await prisma.$transaction(async (tx: any) => {
                 const booking = await tx.booking.create({

@@ -6,6 +6,7 @@ import { X, Check, ArrowRight, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useHire, ServiceItem } from '@/contexts/HireContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { CricketWhiteBallSpinner } from '@/components/ui/CricketWhiteBallSpinner';
 
 interface HireBottomSheetProps {
   isOpen: boolean;
@@ -77,11 +78,12 @@ export function HireBottomSheet({
     if (state.selectedServices.length > 0) {
       console.log('✅ [HIRE SHEET] Proceeding to booking-date');
       setIsNavigating(true);
+      setIsNavigating(true);
       // Short timeout to allow UI to update before unmount/nav starts
       setTimeout(() => {
         onClose();
         router.push('/client/hire/booking-date');
-      }, 50);
+      }, 500);
     } else {
       console.warn('⚠️ [HIRE SHEET] No services selected');
     }
@@ -225,7 +227,7 @@ export function HireBottomSheet({
                 >
                   {isNavigating ? (
                     <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <CricketWhiteBallSpinner className="w-4 h-4" />
                       <span>Processing...</span>
                     </>
                   ) : (

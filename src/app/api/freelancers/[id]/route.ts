@@ -99,7 +99,8 @@ export async function GET(
       bowlingStyle: profile.bowlingStyle,
       languages: [], // profile.languages removed as it doesn't exist in schema
       isOnline: profile.isOnline,
-      isVerified: profile.isVerified,
+      isVerified: profile.isVerified || profile.user.isVerified,
+      username: profile.user.username,
       reviews: profile.reviews,
       experiences: profile.achievements,
       portfolios: profile.portfolios,

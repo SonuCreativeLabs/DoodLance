@@ -7,22 +7,88 @@ import { Button } from '@/components/ui/button';
 import { useHire } from '@/contexts/HireContext';
 import { useNavbar } from '@/contexts/NavbarContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { CricketWhiteBallSpinner } from '@/components/ui/CricketWhiteBallSpinner';
 
 export default function BookingDatePage() {
   const router = useRouter();
-  const { state, setBookingDetails, setBookingNotes, addToCart, clearCart, isLoaded, increaseSelectedServiceQuantity, decreaseSelectedServiceQuantity } = useHire();
+  const { state: hireState, setBookingDetails, setBookingNotes, addToCart, clearCart, isLoaded, increaseSelectedServiceQuantity, decreaseSelectedServiceQuantity } = useHire();
   const { setNavbarVisibility } = useNavbar();
   const { user } = useAuth();
 
-  console.log('🔍 [BOOKING-DATE] Component render:', {
-    isLoaded,
-    hasUser: !!user,
-    userId: user?.id,
-    selectedServicesCount: state.selectedServices.length
-  });
+  // Dynamic Availability State
+  const [freelancerId, setFreelancerId] = useState<string | null>(null);
+  const [availability, setAvailability] = useState<any[]>([]);
+  const [bookedSlots, setBookedSlots] = useState<any[]>([]);
+  const [isLoadingAvailability, setIsLoadingAvailability] = useState(false);
 
-  // Auth check removed - only validate when user clicks Continue button to avoid infinite loops
+  // Initialize freelancerId from context
+  useEffect(() => {
+    if (hireState.freelancerId) {
+      setFreelancerId(hireState.freelancerId);
+    }
+  }, [hireState.freelancerId]);
 
+  // Hide bottom navbar on mount
+  useEffect(() => {
+    setNavbarVisibility(false);
+    return () => setNavbarVisibility(true);
+  }, [setNavbarVisibility]);
+
+  // Fetch Availability
+  useEffect(() => {
+    if (!freelancerId) return;
+
+    const fetchAvailability = async () => {
+      setIsLoadingAvailability(true);
+      try {
+        const res = await fetch(`/api/client/hire/availability?freelancerId=${freelancerId}`);
+        if (res.ok) {
+          const data = await res.json();
+          setAvailability(data.availability || []);
+          setBookedSlots(data.bookedSlots || []);
+        }
+      } catch (error) {
+        console.error("Failed to fetch availability", error);
+      } finally {
+        setIsLoadingAvailability(false);
+      }
+    };
+
+    fetchAvailability();
+  }, [freelancerId]);
+
+  // Helper to check if a date is a working day
+  const isWorkingDay = (date: Date) => {
+    if (!availability.length) return true; // Default to open if no settings configured at all
+
+    const dayName = date.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+    const dayConfig = availability.find((d: any) => d.id === dayName || d.name.toLowerCase() === dayName);
+
+    // Strict Booking: If configuration exists, respect it. If day is missing in config, assume unavailable.
+    return dayConfig ? dayConfig.available : false;
+  };
+
+  // Generate next 14 days starting from tomorrow
+  const dates = React.useMemo(() => {
+    const d = [];
+    const today = new Date();
+
+    for (let i = 1; i <= 14; i++) { // Next 14 days
+      const date = new Date(today);
+      date.setDate(today.getDate() + i);
+
+      const isAvailable = isWorkingDay(date);
+
+      d.push({
+        date: date.toISOString().split('T')[0],
+        day: date.getDate(),
+        weekday: date.toLocaleDateString('en-US', { weekday: 'short' }),
+        month: date.toLocaleDateString('en-US', { month: 'short' }),
+        isAvailable: isAvailable
+      });
+    }
+    return d;
+  }, [availability]);
 
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);
@@ -30,51 +96,110 @@ export default function BookingDatePage() {
   const [notes, setNotes] = useState<string>('');
   const [isNavigating, setIsNavigating] = useState(false);
 
-  // Hide navbar when component mounts - MUST be before early return
+  // Auto-select the first available date if none selected or if current selection is unavailable/invalid
   useEffect(() => {
-    setNavbarVisibility(false);
+    if (dates.length > 0 && !isLoadingAvailability) {
+      // If currently selected date is not available or null, pick first available
+      const currentIsValid = selectedDate && dates.find(d => d.date === selectedDate)?.isAvailable;
 
-    // Show navbar when component unmounts
-    return () => {
-      setNavbarVisibility(true);
-    };
-  }, [setNavbarVisibility]);
-
-  // Wait for hydration - early return AFTER all hooks
-  if (!isLoaded) {
-    return (
-      <div className="h-screen bg-[#0F0F0F] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
-  // Generate next 7 days starting from tomorrow
-  const generateDates = () => {
-    const dates = [];
-    const today = new Date();
-
-    for (let i = 1; i <= 7; i++) {
-      const date = new Date(today);
-      date.setDate(today.getDate() + i);
-      dates.push({
-        date: date.toISOString().split('T')[0],
-        day: date.getDate(),
-        weekday: date.toLocaleDateString('en-US', { weekday: 'short' }),
-        month: date.toLocaleDateString('en-US', { month: 'short' }),
-      });
+      if (!currentIsValid) {
+        const firstAvailable = dates.find(d => d.isAvailable);
+        if (firstAvailable) {
+          setSelectedDate(firstAvailable.date);
+          setSelectedTimeSlot(null); // Reset time when date changes automatically
+        }
+      }
     }
-    return dates;
-  };
+  }, [dates, selectedDate, isLoadingAvailability]);
 
-  const dates = generateDates();
+  // Generate Time Slots based on selected date
+  const timeSlots = React.useMemo(() => {
+    if (!selectedDate) return [];
 
-  // Time slots
-  const timeSlots = [
-    '9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM',
-    '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM',
-    '5:00 PM', '6:00 PM', '7:00 PM', '8:00 PM'
-  ];
+    const dateObj = new Date(selectedDate);
+    const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+    const dayConfig = availability.find((d: any) => d.id === dayName || d.name.toLowerCase() === dayName);
+
+    console.log('🗓️ [SLOTS] Generating for:', {
+      selectedDate,
+      dayName,
+      hasConfig: !!dayConfig,
+      isAvailable: dayConfig?.available,
+      slots: dayConfig?.timeSlots
+    });
+
+    // If configuration exists but no config for this day or day is not available, return empty
+    if (availability.length > 0 && (!dayConfig || !dayConfig.available)) {
+      console.log('🗓️ [SLOTS] Day blocked by config');
+      return [];
+    }
+
+    // Default slots if ABSOLUTELY no configuration exists (fallback for old profiles)
+    let configSlots: any[] = [];
+    if (availability.length === 0) {
+      // console.log('🗓️ [SLOTS] No availability config found at all'); 
+      // Do nothing, return empty as per new rule, or default?
+      // User requested strictly NO defaults if data is missing/empty.
+      configSlots = [];
+    } else if (dayConfig && dayConfig.timeSlots && dayConfig.timeSlots.length > 0) {
+      configSlots = dayConfig.timeSlots;
+    } else {
+      console.log('🗓️ [SLOTS] Day marked available but no slots array');
+      configSlots = [];
+    }
+
+    const generatedSlots: string[] = [];
+
+    // Process EACH configured time slot range (e.g. 6am-9am AND 5pm-8pm)
+    configSlots.forEach(slot => {
+      const [startH, startM] = slot.start.split(':').map(Number);
+      const [endH, endM] = slot.end.split(':').map(Number);
+
+      // Convert to minutes for easier comparison if needed, but simple hour loop works for hourly slots
+      // We generate hourly slots. e.g. 9:00, 10:00... until < EndTime
+      // If end time is 18:00, last slot is 17:00 (1 hour duration)
+
+      let currentH = startH;
+      // handle minutes if needed? Assuming hourly slots for now as per UI
+
+      while (currentH < endH || (currentH === endH && endM > 0)) {
+        // Stop if we reach end hour. strict < endH ensures 17:00-18:00 is valid, 18:00 is not startable
+        if (currentH >= endH && endM === 0) break;
+
+        const timeString = new Date(new Date().setHours(currentH, 0, 0, 0)).toLocaleTimeString('en-US', {
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true
+        });
+
+        // Collision Detection
+        const slotStart = new Date(`${selectedDate}T${currentH.toString().padStart(2, '0')}:00:00`);
+        // Check against bookedSlots
+        const isBooked = bookedSlots.some((booking: any) => {
+          const bStart = new Date(booking.start);
+          const bEnd = new Date(booking.end);
+          // Slot: Start to Start+60m
+          const slotEnd = new Date(slotStart.getTime() + 60 * 60000);
+
+          // Overlap: (SlotStart < BookingEnd) && (SlotEnd > BookingStart)
+          return slotStart < bEnd && slotEnd > bStart;
+        });
+
+        if (!isBooked) {
+          generatedSlots.push(timeString);
+        }
+
+        currentH++;
+      }
+    });
+
+    // Deduplicate and sort (just in case of overlapping configs)
+    return [...new Set(generatedSlots)].sort((a, b) => {
+      // simple sort by AM/PM or convert to date
+      return new Date(`2000/01/01 ${a}`).getTime() - new Date(`2000/01/01 ${b}`).getTime();
+    });
+
+  }, [selectedDate, availability, bookedSlots]);
 
 
 
@@ -95,7 +220,7 @@ export default function BookingDatePage() {
       clearCart();
 
       // Add services to cart
-      state.selectedServices.forEach(service => {
+      hireState.selectedServices.forEach(service => {
         // Attempt to parse duration from deliveryTime string if possible
         // Simple heuristic: "X hour" -> X * 60, "X mins" -> X
         let serviceDuration = 60;
@@ -148,86 +273,79 @@ export default function BookingDatePage() {
       </div>
 
       <div className="p-6 space-y-6 pb-32">
-        {/* Freelancer Info */}
-        <div className="flex items-center gap-4 p-4 bg-white/5 rounded-xl border border-white/10">
-          <div className="w-12 h-12 rounded-full overflow-hidden bg-white/10">
-            <img
-              src={String(state.freelancerImage || '')}
-              alt={String(state.freelancerName || '')}
-              className="w-full h-full object-cover"
-            />
-          </div>
-          <div>
-            <h3 className="font-medium text-white">{String(state.freelancerName)}</h3>
-            {(state.freelancerRating || 0) > 0 && (
-              <div className="flex items-center gap-1 mt-1">
-                <div className="flex items-center gap-0.5">
-                  {[...Array(5)].map((_, i) => (
-                    <Star
-                      key={i}
-                      className={`w-3 h-3 ${i < Math.floor(Number(state.freelancerRating) || 0)
-                        ? 'text-yellow-400 fill-yellow-400'
-                        : 'text-white/20'
-                        }`}
-                    />
-                  ))}
+        {/* Selected Services Card with Freelancer Info */}
+        <div className="bg-white/5 rounded-xl border border-white/10 overflow-hidden">
+          {/* Freelancer Header */}
+          <div className="flex items-center gap-4 p-4 border-b border-white/10 bg-white/5">
+            <div className="w-12 h-12 rounded-full overflow-hidden bg-white/10">
+              <img
+                src={String(hireState.freelancerImage || '')}
+                alt={String(hireState.freelancerName || '')}
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <div>
+              <h3 className="font-medium text-white">{String(hireState.freelancerName)}</h3>
+              {(hireState.freelancerRating || 0) > 0 && (
+                <div className="flex items-center gap-1 mt-1">
+                  <div className="flex items-center gap-0.5">
+                    {[...Array(5)].map((_, i) => (
+                      <Star
+                        key={i}
+                        className={`w-3 h-3 ${i < Math.floor(Number(hireState.freelancerRating) || 0)
+                          ? 'text-yellow-400 fill-yellow-400'
+                          : 'text-white/20'
+                          }`}
+                      />
+                    ))}
+                  </div>
+                  <span className="text-sm text-white/70 ml-1">
+                    {String((hireState.freelancerRating || 0))} ({String(hireState.freelancerReviewCount || 0)} reviews)
+                  </span>
                 </div>
-                <span className="text-sm text-white/70 ml-1">
-                  {String((state.freelancerRating || 0))} ({String(state.freelancerReviewCount || 0)} reviews)
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Selected Services Summary - Full Width */}
-        <div>
-          <div className="flex items-center gap-2 mb-3">
-            <ShoppingCart className="w-5 h-5 text-purple-400" />
-            <h4 className="text-white font-bold">Added Services</h4>
-            <span className="text-white/40 text-sm font-medium">({state.selectedServices.length})</span>
+              )}
+            </div>
           </div>
 
-          <div className="space-y-2">
-            {state.selectedServices.map((service) => (
-              <div key={service.id}>
-                <div className="py-2 flex items-center justify-between">
-                  <div className="flex-1">
-                    <h5 className="font-medium text-white text-sm">{String(service.title)}</h5>
-                    <div className="text-sm font-semibold text-white/80 mt-0.5">
-                      ₹{typeof service.price === 'string'
-                        ? parseFloat(service.price.replace(/[^\d.]/g, ''))
-                        : String(service.price)} / {String(service.deliveryTime)}
+          {/* Services List */}
+          <div className="p-4 space-y-4">
+            <div className="flex items-center gap-2 mb-2">
+              <ShoppingCart className="w-4 h-4 text-purple-400" />
+              <h4 className="text-white/90 font-semibold text-sm">Selected Services</h4>
+            </div>
+
+            <div className="space-y-3">
+              {hireState.selectedServices.map((service) => (
+                <div key={service.id} className="bg-black/20 rounded-xl border border-white/5 overflow-hidden">
+                  <div className="p-3 flex justify-between items-start gap-3">
+                    <div className="flex-1">
+                      <h5 className="text-white font-medium mb-1 text-sm">{service.title}</h5>
+                      <div className="text-purple-400 font-bold text-sm">₹{service.price} / {service.deliveryTime}</div>
+                    </div>
+
+                    <div className="flex items-center gap-2 bg-white/5 rounded-lg p-1">
+                      <button
+                        onClick={() => decreaseSelectedServiceQuantity(service.id)}
+                        className="w-6 h-6 rounded bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors"
+                      >
+                        <Minus className="w-3 h-3 text-white" />
+                      </button>
+
+                      <span className="text-white font-medium w-4 text-center text-sm">
+                        {service.quantity}
+                      </span>
+
+                      <button
+                        onClick={() => increaseSelectedServiceQuantity(service.id)}
+                        className="w-6 h-6 rounded bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors"
+                      >
+                        <Plus className="w-3 h-3 text-white" />
+                      </button>
                     </div>
                   </div>
-
-                  {/* Quantity Controls */}
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => decreaseSelectedServiceQuantity(service.id)}
-                      disabled={(service.quantity || 1) <= 1}
-                      className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                    >
-                      <Minus className="w-4 h-4 text-white" />
-                    </button>
-
-                    <span className="text-white font-medium w-8 text-center">
-                      {service.quantity || 1}
-                    </span>
-
-                    <button
-                      onClick={() => increaseSelectedServiceQuantity(service.id)}
-                      className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors"
-                    >
-                      <Plus className="w-4 h-4 text-white" />
-                    </button>
-                  </div>
                 </div>
-                {state.selectedServices.indexOf(service) < state.selectedServices.length - 1 && (
-                  <div className="border-b border-white/10"></div>
-                )}
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
 
@@ -239,19 +357,32 @@ export default function BookingDatePage() {
           </div>
 
           <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-            {dates.map((date) => (
-              <button
-                key={date.date}
-                onClick={() => setSelectedDate(date.date)}
-                className={`flex-shrink-0 w-16 h-16 rounded-xl border transition-all flex flex-col items-center justify-center ${selectedDate === date.date
-                  ? 'border-purple-500 bg-purple-500/20 text-white'
-                  : 'border-white/20 bg-white/5 text-white/70 hover:border-white/30 hover:bg-white/10'
-                  }`}
-              >
-                <span className="text-sm font-medium">{date.day}</span>
-                <span className="text-xs">{date.weekday}</span>
-              </button>
-            ))}
+            {isLoadingAvailability ? (
+              // Skeleton Loading for Dates
+              [...Array(7)].map((_, i) => (
+                <div key={i} className="flex-shrink-0 w-16 h-16 rounded-xl bg-white/5 border border-white/5 animate-pulse flex flex-col items-center justify-center gap-2">
+                  <div className="w-6 h-4 bg-white/10 rounded"></div>
+                  <div className="w-8 h-3 bg-white/10 rounded"></div>
+                </div>
+              ))
+            ) : (
+              dates.map((date) => (
+                <button
+                  key={date.date}
+                  onClick={() => date.isAvailable && setSelectedDate(date.date)}
+                  disabled={!date.isAvailable}
+                  className={`flex-shrink-0 w-16 h-16 rounded-xl border transition-all flex flex-col items-center justify-center ${selectedDate === date.date
+                    ? 'border-purple-500 bg-purple-500/20 text-white'
+                    : date.isAvailable
+                      ? 'border-white/20 bg-white/5 text-white/70 hover:border-white/30 hover:bg-white/10'
+                      : 'border-white/5 bg-white/5 text-white/20 cursor-not-allowed opacity-50'
+                    }`}
+                >
+                  <span className="text-sm font-medium">{date.day}</span>
+                  <span className="text-xs">{date.weekday}</span>
+                </button>
+              ))
+            )}
           </div>
         </div>
 
@@ -263,18 +394,24 @@ export default function BookingDatePage() {
           </div>
 
           <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-            {timeSlots.map((time) => (
-              <button
-                key={time}
-                onClick={() => setSelectedTimeSlot(time)}
-                className={`flex-shrink-0 px-4 py-3 rounded-xl border transition-all text-center whitespace-nowrap ${selectedTimeSlot === time
-                  ? 'border-purple-500 bg-purple-500/20 text-white'
-                  : 'border-white/20 bg-white/5 text-white/70 hover:border-white/30 hover:bg-white/10'
-                  }`}
-              >
-                <span className="text-sm font-medium">{time}</span>
-              </button>
-            ))}
+            {timeSlots.length > 0 ? (
+              timeSlots.map((time) => (
+                <button
+                  key={time}
+                  onClick={() => setSelectedTimeSlot(time)}
+                  className={`flex-shrink-0 px-4 py-3 rounded-xl border transition-all text-center whitespace-nowrap ${selectedTimeSlot === time
+                    ? 'border-purple-500 bg-purple-500/20 text-white'
+                    : 'border-white/20 bg-white/5 text-white/70 hover:border-white/30 hover:bg-white/10'
+                    }`}
+                >
+                  <span className="text-sm font-medium">{time}</span>
+                </button>
+              ))
+            ) : (
+              <div className="text-white/50 text-sm italic px-1">
+                {selectedDate ? "No slots available for this date." : "Please select a date first."}
+              </div>
+            )}
           </div>
         </div>
 
@@ -322,7 +459,7 @@ export default function BookingDatePage() {
         >
           {isNavigating ? (
             <>
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <CricketWhiteBallSpinner className="w-4 h-4" />
               <span>Processing...</span>
             </>
           ) : (

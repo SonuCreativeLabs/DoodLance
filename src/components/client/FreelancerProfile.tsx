@@ -65,6 +65,8 @@ interface FreelancerDetail {
         timeSlots?: { start: string; end: string }[];
     }[];
     online: boolean;
+    isVerified?: boolean;
+    username?: string;
 
     // Additional profile fields for detailed view
     bio?: string;
@@ -253,6 +255,8 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                     description: String(profile.about || profile.bio || ''),
                     availability: profile.availability || [],
                     online: Boolean(profile.isOnline),
+                    isVerified: Boolean(profile.isVerified),
+                    username: String(profile.username || ''),
 
                     bio: profile.bio ? String(profile.bio) : undefined,
                     about: profile.about ? String(profile.about) : undefined,
@@ -427,21 +431,35 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
     const handleShare = async () => {
         if (!freelancer) return;
 
+        // Construct profile URL using username if available, otherwise fallback to ID
+        const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+        const profilePath = freelancer.username
+            ? `/freelancer/${freelancer.username}`
+            : `/client/freelancer/${freelancerId}`;
+
+        // Clean URL for sharing
+        const shareUrl = `${baseUrl}${profilePath}`;
+
         const shareData = {
             title: `${freelancer.name}'s Profile`,
             text: `Check out ${freelancer.name}'s profile on DoodLance`,
-            url: typeof window !== 'undefined' ? window.location.href : ''
+            url: shareUrl
         };
 
         // Try Web Share API first
         if (navigator.share) {
-            await navigator.share(shareData);
-            return;
+            try {
+                await navigator.share(shareData);
+                return;
+            } catch (err) {
+                console.debug('Share API failed, falling back to clipboard');
+            }
         }
 
         // Fallback to clipboard
-        if (navigator.clipboard && shareData.url) {
+        if (navigator.clipboard) {
             await navigator.clipboard.writeText(shareData.url);
+            toast.success('Profile link copied to clipboard!');
             return;
         }
 
@@ -452,6 +470,7 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
         input.select();
         document.execCommand('copy');
         document.body.removeChild(input);
+        toast.success('Profile link copied to clipboard!');
     };
 
     const handleTabClick = (tabId: string, e: React.MouseEvent) => {
@@ -620,7 +639,7 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                                             </div>
                                             {/* ID Verified Badge - Mobile: left side of profile picture */}
                                             <div className="md:hidden absolute top-[calc(50%+32px)] -translate-y-1/2 -left-28 ml-0">
-                                                <IdVerifiedBadge isVerified={true} />
+                                                <IdVerifiedBadge isVerified={!!freelancer.isVerified} />
                                             </div>
                                             {/* Online Badge - Mobile: right side of profile picture */}
                                             <div className="md:hidden absolute top-[calc(50%+32px)] -translate-y-1/2 left-full ml-10">
@@ -645,7 +664,7 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
 
                                         {/* ID Verified Badge - Desktop: left corner of profile picture */}
                                         <div className="hidden md:block absolute top-8 -left-28 transform rotate-[1deg]">
-                                            <IdVerifiedBadge isVerified={true} isDesktop={true} />
+                                            <IdVerifiedBadge isVerified={!!freelancer.isVerified} isDesktop={true} />
                                         </div>
                                     </div>
 
@@ -699,30 +718,28 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                         </section>
 
                         {/* Sticky Tab Navigation with Back/Share Header */}
-                        <div className={`sticky top-0 z-[100] ${isScrolledPastCover ? 'bg-[#0f0f0f]/95 backdrop-blur-sm' : 'bg-transparent'} mt-1`}>
+                        <div className={`sticky top-0 z-[100] bg-[#0f0f0f] mt-1 transition-all duration-300 ${isScrolledPastCover ? 'shadow-md border-b border-white/5' : ''}`}>
                             {/* Back/Share Header - Only render when scrolled past cover */}
-                            {isScrolledPastCover && (
-                                <div className="border-b border-white/5">
-                                    <div className="flex items-center justify-between px-4 py-2">
-                                        <IconButton
-                                            icon={ArrowLeft}
-                                            onClick={handleBack}
-                                            aria-label="Back"
-                                        />
-                                        <div className="flex-1 flex justify-center">
-                                            <div className="flex flex-col items-center text-center">
-                                                <span className="text-white font-medium text-sm truncate">{freelancer.name}</span>
-                                                <span className="text-white/60 text-xs truncate">{freelancer.cricketRole || 'All Rounder'}</span>
-                                            </div>
+                            <div className={`transition-all duration-300 ease-in-out overflow-hidden ${isScrolledPastCover ? 'h-14 opacity-100 border-b border-white/5' : 'h-0 opacity-0'}`}>
+                                <div className="flex items-center justify-between px-4 h-full">
+                                    <IconButton
+                                        icon={ArrowLeft}
+                                        onClick={handleBack}
+                                        aria-label="Back"
+                                    />
+                                    <div className="flex-1 flex justify-center">
+                                        <div className="flex flex-col items-center text-center">
+                                            <span className="text-white font-medium text-sm truncate">{freelancer.name}</span>
+                                            <span className="text-white/60 text-xs truncate">{freelancer.cricketRole || 'All Rounder'}</span>
                                         </div>
-                                        <IconButton
-                                            icon={Share2}
-                                            onClick={handleShare}
-                                            aria-label="Share profile"
-                                        />
                                     </div>
+                                    <IconButton
+                                        icon={Share2}
+                                        onClick={handleShare}
+                                        aria-label="Share profile"
+                                    />
                                 </div>
-                            )}
+                            </div>
 
                             {/* Tab Navigation - Always visible */}
                             <div className="relative w-full overflow-hidden border-b border-white/5">
@@ -845,9 +862,11 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                                             <div className="bg-white/5 p-4 rounded-xl border border-white/10">
                                                 <div className="flex items-center justify-between mb-3">
                                                     <h3 className="font-medium text-white">Availability</h3>
-                                                    <div className="flex items-center gap-1 text-xs text-white/60">
-                                                        <div className="w-2 h-2 rounded-full bg-green-400/80"></div>
-                                                        <span>Available</span>
+                                                    <div className="flex items-center gap-1.5 text-xs text-white/60">
+                                                        <div className={`w-2 h-2 rounded-full ${freelancer.online ? 'bg-green-400/80 shadow-[0_0_8px_rgba(74,222,128,0.5)]' : 'bg-yellow-500/80 shadow-[0_0_8px_rgba(234,179,8,0.5)]'}`}></div>
+                                                        <span className={freelancer.online ? 'text-green-400' : 'text-yellow-500'}>
+                                                            {freelancer.online ? 'Available' : 'Not Available'}
+                                                        </span>
                                                     </div>
                                                 </div>
 
@@ -856,7 +875,7 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                                                         <div key={i} className="flex flex-col items-center">
                                                             <div
                                                                 className={`w-8 h-8 flex items-center justify-center rounded-full text-sm font-medium ${day.available
-                                                                    ? 'bg-green-500/10 text-green-400'
+                                                                    ? (freelancer.online ? 'bg-green-500/10 text-green-400' : 'bg-yellow-500/10 text-yellow-500')
                                                                     : 'bg-white/5 text-white/40'
                                                                     }`}
                                                             >
@@ -1199,9 +1218,11 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                     {/* Sticky Hire Me Button */}
                     {
                         !isViewOnly && (
-                            <div className="fixed bottom-0 left-0 right-0 p-4 bg-[#0F0F0F]/95 backdrop-blur-sm border-t border-white/10">
+                            <div className="fixed bottom-0 left-0 right-0 p-4 bg-[#0F0F0F]/95 backdrop-blur-sm border-t border-white/10 z-[50]">
                                 <button
+                                    disabled={!freelancer?.online}
                                     onClick={() => {
+                                        if (!freelancer?.online) return;
                                         if (isAuthenticated && isProfileComplete) {
                                             setIsHireBottomSheetOpen(true);
                                         } else {
@@ -1210,10 +1231,13 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                                             });
                                         }
                                     }}
-                                    className="w-full py-2.5 bg-gradient-to-r from-purple-600 to-purple-500 text-white font-medium rounded-xl hover:from-purple-700 hover:to-purple-600 transition-all flex items-center justify-center gap-2 shadow-lg"
+                                    className={`w-full py-2.5 font-medium rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg ${freelancer?.online
+                                        ? 'bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-700 hover:to-purple-600'
+                                        : 'bg-white/10 text-white/40 cursor-not-allowed border border-white/5'
+                                        }`}
                                 >
-                                    <UserPlus className="w-4 h-4" />
-                                    Hire {freelancer?.name || 'Freelancer'}
+                                    {freelancer?.online ? <UserPlus className="w-4 h-4" /> : <div className="w-4 h-4" />}
+                                    {freelancer?.online ? `Hire ${freelancer?.name || 'Freelancer'}` : 'Currently Unavailable'}
                                 </button>
                             </div>
                         )
