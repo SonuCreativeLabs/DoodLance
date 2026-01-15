@@ -45,10 +45,11 @@ export async function GET(request: NextRequest) {
             const seqPart = sequence.toString().padStart(5, '0');
             const newCode = `BAILS${namePart}${seqPart}`;
 
+            const userId = dbUser.id;
             // Update User AND SystemConfig in transaction
             dbUser = await prisma.$transaction(async (tx) => {
                 const updatedUser = await tx.user.update({
-                    where: { id: dbUser.id },
+                    where: { id: userId },
                     data: { referralCode: newCode },
                     include: {
                         wallet: {
