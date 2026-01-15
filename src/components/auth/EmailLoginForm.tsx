@@ -25,9 +25,16 @@ export function EmailLoginForm({ onSuccess }: EmailLoginFormProps) {
             return
         }
 
+        // Get referral code from URL or localStorage
+        let referralCode = null;
+        if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search);
+            referralCode = params.get('ref') || localStorage.getItem('doodlance_referral_code');
+        }
+
         setIsLoading(true)
         try {
-            await sendOTP(email, 'email')
+            await sendOTP(email, 'email', referralCode ? { referredBy: referralCode } : undefined)
             onSuccess(email)
 
             // Start 60-second countdown

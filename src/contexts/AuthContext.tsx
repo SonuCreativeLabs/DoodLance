@@ -32,7 +32,7 @@ interface AuthContextType {
   signIn: (provider?: string) => void
   signOut: () => Promise<void>
   verifyOTP: (identifier: string, code: string, type?: 'email' | 'phone') => Promise<void>
-  sendOTP: (identifier: string, type?: 'email' | 'phone') => Promise<void>
+  sendOTP: (identifier: string, type?: 'email' | 'phone', metadata?: any) => Promise<void>
   refreshUser: (userData?: Partial<User>) => Promise<void>
 }
 
@@ -153,12 +153,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [supabase])
 
-  const sendOTP = useCallback(async (identifier: string, type: 'email' | 'phone' = 'email') => {
+  const sendOTP = useCallback(async (identifier: string, type: 'email' | 'phone' = 'email', metadata?: any) => {
     // Only support email OTP
     const { error } = await supabase.auth.signInWithOtp({
       email: identifier,
       options: {
         shouldCreateUser: true,
+        data: metadata
       }
     })
     if (error) throw error

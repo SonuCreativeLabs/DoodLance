@@ -24,7 +24,8 @@ import {
     UserPlus,
     User,
     Play,
-    CheckCircle2
+    CheckCircle2,
+    MessageSquare
 } from 'lucide-react';
 import { useNavbar } from '@/contexts/NavbarContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -176,7 +177,6 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
         { id: 'top', label: 'Profile' },
         { id: 'about', label: 'About' },
         { id: 'services', label: 'Services' },
-        { id: 'portfolio', label: 'Portfolio' },
         { id: 'achievements', label: 'Achievements' },
         { id: 'reviews', label: 'Reviews' }
     ];
@@ -1078,14 +1078,14 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                                     )}
 
                                     {/* Achievements Section */}
-                                    {freelancer.achievements && freelancer.achievements.length > 0 && (
-                                        <section id="achievements" data-section="achievements" className="pt-8 scroll-mt-20 relative group z-0">
-                                            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
-                                            <div className="mb-6">
-                                                <h2 className="text-xl font-semibold text-white mb-1">Achievements</h2>
-                                                <p className="text-white/60 text-sm">Professional sports highlights</p>
-                                            </div>
+                                    <section id="achievements" data-section="achievements" className="pt-8 scroll-mt-20 relative group z-0">
+                                        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+                                        <div className="mb-6">
+                                            <h2 className="text-xl font-semibold text-white mb-1">Achievements</h2>
+                                            <p className="text-white/60 text-sm">Professional sports highlights</p>
+                                        </div>
 
+                                        {freelancer.achievements && freelancer.achievements.length > 0 ? (
                                             <div className="space-y-4">
                                                 {freelancer.achievements.map((ach) => (
                                                     <div key={ach.id} className="bg-white/5 rounded-xl p-4 border border-white/5 flex items-start gap-4 hover:border-white/10 transition-colors">
@@ -1099,37 +1099,43 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                                                     </div>
                                                 ))}
                                             </div>
-                                        </section>
-                                    )}
+                                        ) : (
+                                            <div className="text-center py-8 rounded-2xl border border-white/10 bg-white/5">
+                                                <Award className="h-10 w-10 mx-auto text-white/20 mb-3" />
+                                                <h3 className="text-lg font-medium text-white">No achievements added yet</h3>
+                                                <p className="text-white/60 mt-1">This freelancer hasn&apos;t added any achievements yet.</p>
+                                            </div>
+                                        )}
+                                    </section>
 
 
 
                                     {/* Reviews Section */}
-                                    {
-                                        freelancer.reviewsData && freelancer.reviewsData.length > 0 && (
-                                            <section id="reviews" data-section="reviews" className="pt-8 scroll-mt-20 relative group">
-                                                <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
-                                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
-                                                    <div>
-                                                        <h2 className="text-xl font-semibold text-white">Client Reviews</h2>
-                                                        <p className="text-sm text-white/60">What clients say about working with me</p>
-                                                    </div>
-                                                    <div className="flex items-center mt-2 sm:mt-0">
-                                                        <div className="flex items-center text-yellow-400 mr-2">
-                                                            {[...Array(5)].map((_, i) => (
-                                                                <Star
-                                                                    key={i}
-                                                                    className={`h-5 w-5 ${i < Math.floor(freelancer.rating) ? 'fill-current' : 'text-gray-600'}`}
-                                                                />
-                                                            ))}
-                                                        </div>
-                                                        <div className="text-white">
-                                                            <span className="font-medium">{freelancer.rating.toFixed(1)}</span>
-                                                            <span className="text-white/60"> ({freelancer.reviewCount} reviews)</span>
-                                                        </div>
-                                                    </div>
+                                    <section id="reviews" data-section="reviews" className="pt-8 scroll-mt-20 relative group">
+                                        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+                                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
+                                            <div>
+                                                <h2 className="text-xl font-semibold text-white">Client Reviews</h2>
+                                                <p className="text-sm text-white/60">What clients say about working with me</p>
+                                            </div>
+                                            <div className="flex items-center mt-2 sm:mt-0">
+                                                <div className="flex items-center text-yellow-400 mr-2">
+                                                    {[...Array(5)].map((_, i) => (
+                                                        <Star
+                                                            key={i}
+                                                            className={`h-5 w-5 ${i < Math.floor(freelancer.rating) ? 'fill-current' : 'text-gray-600'}`}
+                                                        />
+                                                    ))}
                                                 </div>
+                                                <div className="text-white">
+                                                    <span className="font-medium">{freelancer.rating.toFixed(1)}</span>
+                                                    <span className="text-white/60"> ({freelancer.reviewCount} reviews)</span>
+                                                </div>
+                                            </div>
+                                        </div>
 
+                                        {freelancer.reviewsData && freelancer.reviewsData.length > 0 ? (
+                                            <>
                                                 <div className="relative">
                                                     <div className="flex -mx-2 overflow-x-auto scrollbar-hide pb-2">
                                                         <div className="flex gap-4 px-2">
@@ -1175,9 +1181,15 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                                                     View All {freelancer.reviewsData.length} Reviews
                                                     <ArrowRight className="h-4 w-4" />
                                                 </button>
-                                            </section>
-                                        )
-                                    }
+                                            </>
+                                        ) : (
+                                            <div className="text-center py-12 rounded-3xl border border-white/10 bg-white/5">
+                                                <MessageSquare className="h-12 w-12 mx-auto text-white/20 mb-4" />
+                                                <h3 className="text-lg font-medium text-white">No reviews yet</h3>
+                                                <p className="text-white/60 mt-1">Reviews from clients will appear here</p>
+                                            </div>
+                                        )}
+                                    </section>
                                 </div >
                             </div >
                         </div >

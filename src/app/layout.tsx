@@ -4,6 +4,8 @@ import { Analytics } from '@vercel/analytics/react'
 import { Providers } from "@/components/Providers";
 import ErrorBoundary from '@/components/ErrorBoundary';
 
+import { ReferralTracker } from '@/components/ReferralTracker';
+
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
@@ -24,6 +26,7 @@ export default function RootLayout({
       </head>
       <body className={`${inter.className} antialiased dark`}>
         <Providers>
+          <ReferralTracker />
           <ErrorBoundary>
             {children}
           </ErrorBoundary>

@@ -629,6 +629,7 @@ export default function UserManagementPage() {
                 <th className="p-4 text-sm font-medium text-gray-400">User</th>
                 <th className="p-4 text-sm font-medium text-gray-400">Contact</th>
                 <th className="p-4 text-sm font-medium text-gray-400">Role</th>
+                <th className="p-4 text-sm font-medium text-gray-400">Referral Code</th>
                 <th className="p-4 text-sm font-medium text-gray-400">Status</th>
                 <th className="p-4 text-sm font-medium text-gray-400">Total Spent</th>
                 <th className="p-4 text-sm font-medium text-gray-400">Total Earned</th>
@@ -716,6 +717,9 @@ export default function UserManagementPage() {
                               {user.role}
                             </Badge>
                           </div>
+                        </td>
+                        <td className="p-4">
+                          <span className="text-sm text-gray-300 font-mono">{user.referralCode}</span>
                         </td>
                         <td className="p-4">
                           <div className="flex items-center gap-2">

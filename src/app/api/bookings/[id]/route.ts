@@ -211,6 +211,69 @@ export async function PUT(
       data: updateData
     });
 
+    // REFERRAL REWARD LOGIC
+    if (status && status.toUpperCase() === 'COMPLETED') {
+      try {
+        const bookingClient = await prisma.user.findUnique({
+          where: { id: existingBooking.clientId }
+        });
+
+        if (bookingClient?.referredBy) {
+          // Check if this is the FIRST completed booking for this client
+          // We count bookings that are COMPLETED. Since we just updated the current one, the count should be 1 if it's the first.
+          const completedCount = await prisma.booking.count({
+            where: {
+              clientId: bookingClient.id,
+              status: 'COMPLETED'
+            }
+          });
+
+          // If count is 1, it means this is the first one!
+          if (completedCount === 1) {
+            const referrer = await prisma.user.findUnique({
+              where: { referralCode: bookingClient.referredBy }
+            });
+
+            if (referrer) {
+              // Credit Referrer Wallet
+              // Ensure wallet exists
+              let wallet = await prisma.wallet.findUnique({ where: { userId: referrer.id } });
+              if (!wallet) {
+                wallet = await prisma.wallet.create({
+                  data: { userId: referrer.id }
+                });
+              }
+
+              // Update Wallet Coins
+              await prisma.wallet.update({
+                where: { id: wallet.id },
+                data: {
+                  coins: { increment: 500 }
+                }
+              });
+
+              // Create Transaction Record
+              await prisma.transaction.create({
+                data: {
+                  walletId: wallet.id,
+                  amount: 500,
+                  type: 'REFERRAL_REWARD',
+                  description: `Referral reward for ${bookingClient.name || 'User'}'s first booking`,
+                  status: 'COMPLETED',
+                  paymentMethod: 'SYSTEM_COINS'
+                }
+              });
+
+              console.log(`Referral reward credited to ${referrer.email} for client ${bookingClient.email}`);
+            }
+          }
+        }
+      } catch (refError) {
+        console.error('Error processing referral reward:', refError);
+        // Don't fail the request, just log error
+      }
+    }
+
     return NextResponse.json({
       id: updatedBooking.id,
       status: updatedBooking.status,

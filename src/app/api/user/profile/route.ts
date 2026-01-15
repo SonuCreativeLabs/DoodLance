@@ -56,6 +56,7 @@ export async function GET(request: NextRequest) {
                         role: 'client', // Default role
                         coords: '[0,0]',
                         isVerified: false,
+                        referredBy: user.user_metadata?.referredBy || null,
                     },
                     select: {
                         id: true,

@@ -4,8 +4,8 @@ import { ReactNode, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { AdminAuthProvider, useAdminAuth } from '@/contexts/AdminAuthContext';
 import Link from 'next/link';
-import { 
-  LayoutDashboard, Users, Calendar, CreditCard, 
+import {
+  LayoutDashboard, Users, Calendar, CreditCard,
   Briefcase, HeadphonesIcon, FileText, TrendingUp,
   Settings, Shield, LogOut, ChevronRight, Bell,
   Search, Menu, X, Package, Tag
@@ -16,7 +16,7 @@ import { Input } from '@/components/ui/input';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const sidebarItems = [
-  { 
+  {
     category: 'Main',
     items: [
       { icon: LayoutDashboard, label: 'Dashboard', href: '/admin/dashboard', permission: 'dashboard.view' },
@@ -44,6 +44,7 @@ const sidebarItems = [
     category: 'Marketing',
     items: [
       { icon: Tag, label: 'Promo Codes', href: '/admin/promos', permission: 'promos.view' },
+      { icon: Users, label: 'Referrals', href: '/admin/referrals', permission: 'users.view' },
       { icon: TrendingUp, label: 'Analytics', href: '/admin/analytics', permission: 'analytics.view' },
     ]
   },
@@ -82,10 +83,10 @@ function AdminLayoutContent({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a]">
-      
+
       {/* Mobile Overlay */}
       {mobileMenuOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/50 z-30 lg:hidden"
           onClick={() => setMobileMenuOpen(false)}
         />
@@ -152,31 +153,30 @@ function AdminLayoutContent({ children }: { children: ReactNode }) {
                         {section.items.map((item) => {
                           const hasPermission = isSuper || checkPermission(item.permission);
                           const isActive = pathname === item.href;
-                          
+
                           if (!hasPermission) return null;
 
                           return (
                             <Link
-                            key={item.href}
-                            href={item.href}
-                            className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all ${
-                              isActive
-                                ? 'bg-purple-600/20 text-purple-400 border-l-2 border-purple-600'
-                                : 'text-gray-300 hover:bg-[#2a2a2a] hover:text-white'
-                            }`}
-                            onClick={() => setMobileMenuOpen(false)}
-                          >
-                            <item.icon className="w-5 h-5" />
-                            <span className="text-sm">{item.label}</span>
-                            {isActive && (
-                              <ChevronRight className="w-4 h-4 ml-auto" />
-                            )}
-                          </Link>
-                        );
-                      })}
+                              key={item.href}
+                              href={item.href}
+                              className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all ${isActive
+                                  ? 'bg-purple-600/20 text-purple-400 border-l-2 border-purple-600'
+                                  : 'text-gray-300 hover:bg-[#2a2a2a] hover:text-white'
+                                }`}
+                              onClick={() => setMobileMenuOpen(false)}
+                            >
+                              <item.icon className="w-5 h-5" />
+                              <span className="text-sm">{item.label}</span>
+                              {isActive && (
+                                <ChevronRight className="w-4 h-4 ml-auto" />
+                              )}
+                            </Link>
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
                 </nav>
               </div>
 
@@ -257,18 +257,17 @@ function AdminLayoutContent({ children }: { children: ReactNode }) {
                         {section.items.map((item) => {
                           const hasPermission = isSuper || checkPermission(item.permission);
                           const isActive = pathname === item.href;
-                          
+
                           if (!hasPermission) return null;
 
                           return (
                             <Link
                               key={item.href}
                               href={item.href}
-                              className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all ${
-                                isActive
+                              className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all ${isActive
                                   ? 'bg-purple-600/20 text-purple-400 border-l-2 border-purple-600'
                                   : 'text-gray-300 hover:bg-[#2a2a2a] hover:text-white'
-                              }`}
+                                }`}
                             >
                               <item.icon className="w-5 h-5" />
                               <span className="text-sm">{item.label}</span>
@@ -301,9 +300,8 @@ function AdminLayoutContent({ children }: { children: ReactNode }) {
       </AnimatePresence>
 
       {/* Main Content */}
-      <main className={`min-h-screen bg-[#0a0a0a] transition-all duration-300 ease-in-out ${
-        sidebarOpen ? 'lg:ml-64' : 'lg:ml-0'
-      } ${mobileMenuOpen ? 'ml-0' : ''}`}>
+      <main className={`min-h-screen bg-[#0a0a0a] transition-all duration-300 ease-in-out ${sidebarOpen ? 'lg:ml-64' : 'lg:ml-0'
+        } ${mobileMenuOpen ? 'ml-0' : ''}`}>
         {/* Top Bar - Sticky Header */}
         <div className="sticky top-0 z-20 bg-[#1a1a1a] border-b border-gray-800 px-4 sm:px-6 py-3 sm:py-4">
           <div className="flex items-center justify-between">
@@ -317,7 +315,7 @@ function AdminLayoutContent({ children }: { children: ReactNode }) {
               >
                 {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </Button>
-              
+
               {/* Tablet Hamburger */}
               <Button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -327,7 +325,7 @@ function AdminLayoutContent({ children }: { children: ReactNode }) {
               >
                 {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </Button>
-              
+
               {/* Desktop Hamburger */}
               <Button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -337,12 +335,12 @@ function AdminLayoutContent({ children }: { children: ReactNode }) {
               >
                 {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </Button>
-              
+
               <h1 className="text-lg sm:text-xl font-semibold text-white capitalize truncate">
                 {pathname.split('/').pop()?.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'Dashboard'}
               </h1>
             </div>
-            
+
             <div className="flex items-center gap-2 sm:gap-4">
               {/* Notifications */}
               <Button variant="ghost" size="icon" className="text-gray-400 hover:text-white relative">
@@ -377,7 +375,7 @@ function AdminLayoutContent({ children }: { children: ReactNode }) {
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  
+
   // Don't apply admin layout to login page
   if (pathname === '/admin/login') {
     return <AdminAuthProvider>{children}</AdminAuthProvider>;
