@@ -37,7 +37,7 @@ export function FreelancerProfileProvider({ children }: { children: ReactNode })
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [lastFetch, setLastFetch] = useState<number>(0);
-    const supabase = createClient();
+    const [supabase] = useState(() => createClient());
 
     const CACHE_DURATION = 2 * 60 * 1000; // 2 minutes cache
 
@@ -87,7 +87,13 @@ export function FreelancerProfileProvider({ children }: { children: ReactNode })
             }
 
             if (!response.ok) {
-                throw new Error('Failed to fetch profile');
+                console.error(`Status ${response.status}: Failed to fetch profile`);
+                // Treat 500s as "no profile found" temporarily to break loops, or just stop invalidating
+                // Ideally show error, but for "new user" 500 often means "DB record missing"
+                setProfileData(null);
+                notFoundRef.current = true; // Stop retrying
+                setLoading(false);
+                return;
             }
 
             const { profile } = await response.json();
@@ -99,6 +105,7 @@ export function FreelancerProfileProvider({ children }: { children: ReactNode })
         } catch (err) {
             console.error('Error fetching profile:', err);
             setError(err instanceof Error ? err.message : 'Unknown error');
+            // Do not set notFoundRef=true here, allows retry on next mount
         } finally {
             setLoading(false);
         }
@@ -117,29 +124,23 @@ export function FreelancerProfileProvider({ children }: { children: ReactNode })
     const { authUser } = useAuth();
 
     useEffect(() => {
-        // Fetch when component mounts or when user changes (e.g. login)
-        let mounted = true;
+        // Fetch when component mounts or when user ID changes (e.g. login/logout/switch user)
+        // Wait for auth to be determined
+        if (authUser === undefined) return;
 
-        if (mounted) {
-            // Wait for auth to be determined
-            if (authUser === undefined) return;
-
-            // Reset loading state when auth user changes to ensure skeleton shows immediately
-            if (authUser?.id) {
-                notFoundRef.current = false; // Reset for new user
-                setLoading(true);
-                fetchProfile();
-            } else {
-                notFoundRef.current = false;
-                setLoading(false);
-                setProfileData(null);
-            }
+        // Reset loading state when auth user changes to ensure skeleton shows immediately
+        if (authUser?.id) {
+            notFoundRef.current = false; // Reset for new user
+            setLoading(true);
+            fetchProfile();
+        } else {
+            // No user - clear profile data
+            notFoundRef.current = false;
+            setLoading(false);
+            setProfileData(null);
         }
-
-        return () => {
-            mounted = false;
-        };
-    }, [authUser, fetchProfile]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [authUser?.id]); // Only depend on stable user ID, fetchProfile is accessed via closure
 
     const value = {
         profileData,

@@ -51,32 +51,15 @@ export function PostedJobsProvider({ children }: { children: ReactNode }) {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    // Load from localStorage on mount
+    // Fetch fresh data when user ID changes (stable dependency)
     useEffect(() => {
-        const stored = localStorage.getItem(STORAGE_KEY);
-        if (stored) {
-            try {
-                setPostedJobs(JSON.parse(stored));
-            } catch (e) {
-                console.error('Failed to parse posted jobs from localStorage:', e);
-            }
-        }
-    }, []);
-
-    // Fetch fresh data when user updates
-    useEffect(() => {
-        if (user) {
+        if (user?.id) {
             refreshPostedJobs();
         } else {
-            // Optional: Clear jobs on logout
-            // setPostedJobs([]); 
+            // Clear jobs on logout/no user
+            setPostedJobs([]);
         }
-    }, [user]);
-
-    // Save to localStorage whenever postedJobs changes
-    useEffect(() => {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(postedJobs));
-    }, [postedJobs]);
+    }, [user?.id]); // Only depend on user.id to avoid loops
 
     // Listen for job posted and application updated events
     useEffect(() => {
@@ -95,7 +78,8 @@ export function PostedJobsProvider({ children }: { children: ReactNode }) {
             window.removeEventListener('jobPosted', handleJobPosted as EventListener);
             window.removeEventListener('applicationUpdated', handleAppUpdated as EventListener);
         };
-    }, []);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []); // refreshPostedJobs is accessed via closure, doesn't need to be a dependency
 
 
 
