@@ -38,15 +38,6 @@ export default function CartPage() {
     };
   }, [setNavbarVisibility]);
 
-  // Wait for hydration - early return AFTER all hooks
-  if (!isLoaded) {
-    return (
-      <div className="h-screen bg-[#0F0F0F] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
   const subtotal = state.cartItems.reduce((total, item) => {
     const rawPrice = item.service.price;
     const price = typeof rawPrice === 'string'
@@ -74,6 +65,15 @@ export default function CartPage() {
 
   const discount = discountAmount || 0;
   const total = Math.max(0, (subtotal || 0) + (serviceFee || 0) - discount);
+
+  // Wait for hydration - early return AFTER all hooks
+  if (!isLoaded) {
+    return (
+      <div className="h-screen bg-[#0F0F0F] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   const handleApplyCoupon = async () => {
     if (!couponCode) return;
