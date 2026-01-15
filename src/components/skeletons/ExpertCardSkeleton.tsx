@@ -2,36 +2,33 @@ import { Skeleton } from "@/components/ui/skeleton"
 
 export function ExpertCardSkeleton() {
     return (
-        <div className="flex-shrink-0 w-[130px]">
-            {/* Outer Card */}
-            <div className="relative">
-                {/* Card Background */}
-                <div className="rounded-2xl border border-purple-400/10">
-                    {/* Card Content */}
-                    <div className="relative p-2.5">
-                        {/* Rating Badge Skeleton */}
-                        <div className="absolute top-2 left-2 z-30">
-                            <Skeleton className="h-5 w-12 rounded-full" />
-                        </div>
+        <div className="bg-[#111111] shadow-lg rounded-xl p-3 border border-white/10 backdrop-blur-xl">
+            <div className="flex items-start gap-4">
+                {/* Left Column: Avatar & Rating */}
+                <div className="flex flex-col items-center w-20 gap-2">
+                    <Skeleton className="w-14 h-14 rounded-full" />
+                    <Skeleton className="h-5 w-12 rounded-full" />
+                    <Skeleton className="h-3 w-16" />
+                </div>
 
-                        {/* Profile Picture Skeleton */}
-                        <div className="relative w-[80px] h-[80px] mx-auto">
-                            <Skeleton className="w-full h-full rounded-full" />
-                        </div>
-
-                        {/* Expert Info Skeletons */}
-                        <div className="mt-1.5 space-y-1.5">
-                            {/* Name */}
-                            <Skeleton className="h-3 w-20 mx-auto" />
-                            {/* Role */}
-                            <Skeleton className="h-2.5 w-16 mx-auto" />
-                            {/* Location */}
-                            <Skeleton className="h-2 w-14 mx-auto" />
-                            {/* Distance */}
-                            <Skeleton className="h-2 w-12 mx-auto" />
-                        </div>
+                {/* Right Column: Details */}
+                <div className="flex-1 space-y-2.5 py-1">
+                    <Skeleton className="h-5 w-3/4" />
+                    <Skeleton className="h-4 w-1/2" />
+                    <div className="space-y-1.5 pt-1">
+                        <Skeleton className="h-3.5 w-1/3" />
+                        <Skeleton className="h-3.5 w-1/4" />
                     </div>
                 </div>
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-between pt-2 border-t border-white/5 mt-3">
+                <div className="flex items-center gap-2">
+                    <Skeleton className="h-4 w-8" />
+                    <Skeleton className="h-6 w-16" />
+                </div>
+                <Skeleton className="h-8 w-24 rounded-lg" />
             </div>
         </div>
     )

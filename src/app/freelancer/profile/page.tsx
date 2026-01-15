@@ -192,8 +192,8 @@ export default function ProfilePage() {
 
 
           <ProfileSectionCard
-            title="Service Packages"
-            description="Define your service offerings and pricing"
+            title="Cricket Services"
+            description="List your services with videos, descriptions, and pricing"
             href="/freelancer/profile/services"
             icon={<FileText className="h-4 w-4" />}
           />

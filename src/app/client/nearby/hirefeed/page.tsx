@@ -9,6 +9,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { categories } from '../constants';
 import { useNearbyProfessionals, Professional } from '@/contexts/NearbyProfessionalsContext';
 import SearchFilters from '../components/SearchFilters';
+import { CricketWhiteBallSpinner } from '@/components/ui/CricketWhiteBallSpinner';
 
 export default function IntegratedExplorePage() {
   const searchParams = useSearchParams();
@@ -349,6 +350,24 @@ export default function IntegratedExplorePage() {
       {/* Map View */}
       <MapView ref={mapViewRef} professionals={filteredProfessionals} />
 
+      {/* Loading Overlay */}
+      <AnimatePresence>
+        {loading && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-[1] flex items-center justify-center pointer-events-none"
+            style={{ paddingBottom: '20vh' }}
+          >
+            <div className="bg-[#111111]/80 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 shadow-xl flex items-center gap-3">
+              <CricketWhiteBallSpinner className="w-5 h-5" />
+              <span className="text-white text-sm font-medium">Finding nearby experts...</span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Fixed Header - Always at top */}
       <div className={`fixed top-0 left-0 right-0 z-[3] px-0 pt-3 flex flex-col items-center transition-all duration-200 ${isSheetCollapsed
         ? 'bg-transparent'
@@ -480,46 +499,59 @@ export default function IntegratedExplorePage() {
               <div className="flex items-center justify-between w-full max-w-3xl mx-auto px-4 pt-4">
                 <div className="flex flex-col items-start gap-1.5">
                   <div className="flex -space-x-3">
-                    {filteredProfessionals.slice(0, 4).map((freelancer, index) => (
-                      <motion.div
-                        key={freelancer.id}
-                        className="relative"
-                        style={{ zIndex: 4 - index }}
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                      >
-                        <div className="relative w-9 h-9">
-                          <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full opacity-20 blur-sm"></div>
-                          <div className="relative w-9 h-9 rounded-full border-2 border-purple-200/20 overflow-hidden backdrop-blur-sm shadow-lg">
-                            <img
-                              src={freelancer.avatar || freelancer.image}
-                              alt=""
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                        </div>
-                      </motion.div>
-                    ))}
-                    {filteredProfessionals.length > 4 && (
-                      <motion.div
-                        className="relative"
-                        style={{ zIndex: 0 }}
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 0.4 }}
-                      >
-                        <div className="relative w-9 h-9">
-                          <div className="absolute inset-0 bg-gradient-to-br from-purple-400/20 to-purple-600/20 rounded-full blur-sm"></div>
-                          <div className="relative w-9 h-9 rounded-full border-2 border-purple-200/20 overflow-hidden backdrop-blur-sm bg-[#111111]/90 flex items-center justify-center">
-                            <span className="text-xs font-bold text-white/70">+{filteredProfessionals.length - 4}</span>
-                          </div>
-                        </div>
-                      </motion.div>
+                    {loading ? (
+                      // Skeleton Loader for collapsed avatars
+                      [...Array(4)].map((_, index) => (
+                        <div key={index} className="relative w-9 h-9 rounded-full border-2 border-white/5 bg-white/10 animate-pulse" style={{ zIndex: 4 - index }} />
+                      ))
+                    ) : (
+                      <>
+                        {filteredProfessionals.slice(0, 4).map((freelancer, index) => (
+                          <motion.div
+                            key={freelancer.id}
+                            className="relative"
+                            style={{ zIndex: 4 - index }}
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: index * 0.1 }}
+                          >
+                            <div className="relative w-9 h-9">
+                              <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full opacity-20 blur-sm"></div>
+                              <div className="relative w-9 h-9 rounded-full border-2 border-purple-200/20 overflow-hidden backdrop-blur-sm shadow-lg">
+                                <img
+                                  src={freelancer.avatar || freelancer.image}
+                                  alt=""
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                            </div>
+                          </motion.div>
+                        ))}
+                        {filteredProfessionals.length > 4 && (
+                          <motion.div
+                            className="relative"
+                            style={{ zIndex: 0 }}
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: 0.4 }}
+                          >
+                            <div className="relative w-9 h-9">
+                              <div className="absolute inset-0 bg-gradient-to-br from-purple-400/20 to-purple-600/20 rounded-full blur-sm"></div>
+                              <div className="relative w-9 h-9 rounded-full border-2 border-purple-200/20 overflow-hidden backdrop-blur-sm bg-[#111111]/90 flex items-center justify-center">
+                                <span className="text-xs font-bold text-white/70">+{filteredProfessionals.length - 4}</span>
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+                      </>
                     )}
                   </div>
                   <div className="text-white/80 text-sm font-medium">
-                    <span>{filteredProfessionals.length} experts available</span>
+                    {loading ? (
+                      <span className="animate-pulse">Finding experts...</span>
+                    ) : (
+                      <span>{filteredProfessionals.length} experts available</span>
+                    )}
                   </div>
                 </div>
                 <div className="self-center">
@@ -536,9 +568,14 @@ export default function IntegratedExplorePage() {
                 </div>
               </div>
             ) : (
+              // Expanded List Header
               <div className="flex items-center justify-between w-full max-w-3xl mx-auto px-4 mb-5 pt-1">
                 <div className="text-white/80 text-sm font-medium">
-                  <span>{filteredProfessionals.length} experts available</span>
+                  {loading ? (
+                    <span className="animate-pulse">Finding experts...</span>
+                  ) : (
+                    <span>{filteredProfessionals.length} experts available</span>
+                  )}
                 </div>
                 <button
                   onClick={() => router.push('/client/post')}
