@@ -412,7 +412,7 @@ export default function BookingDetailPage() {
                 </div>
                 <div className="flex-1">
                   <h3 className="text-md font-semibold text-white mb-2">Your Notes</h3>
-                  <p className="text-sm text-white/70 leading-relaxed">{booking.notes.replace(/\s*\[OTP:\s*\d+\]/g, '')}</p>
+                  <p className="text-sm text-white/70 leading-relaxed">{booking.notes.replace(/\s*\[(OTP|TxID):\s*[^\]]+\]/g, '')}</p>
                 </div>
               </div>
             </div>

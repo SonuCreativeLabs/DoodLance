@@ -1,5 +1,7 @@
 "use client";
 
+import { toast } from 'sonner';
+
 import { ProfileSkeleton } from '@/components/skeletons/ProfileSkeleton';
 import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { useParams, useRouter, useSearchParams, usePathname } from 'next/navigation';

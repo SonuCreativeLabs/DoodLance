@@ -394,7 +394,13 @@ export default function BookingDatePage() {
           </div>
 
           <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-            {timeSlots.length > 0 ? (
+
+            {isLoadingAvailability ? (
+              // Skeleton Loading for Time Slots
+              [...Array(5)].map((_, i) => (
+                <div key={i} className="flex-shrink-0 w-24 h-12 rounded-xl bg-white/5 border border-white/5 animate-pulse" />
+              ))
+            ) : timeSlots.length > 0 ? (
               timeSlots.map((time) => (
                 <button
                   key={time}

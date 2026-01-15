@@ -136,7 +136,7 @@ export default function BookingManagementPage() {
     // Define headers
     const headers = [
       'Booking ID', 'Service', 'Client', 'Freelancer', 'Status',
-      'Total Price', 'Platform Fee', 'Scheduled At', 'Created At'
+      'Total Price', 'Platform Fee', 'Scheduled At', 'Created At', 'Transaction ID', 'Payment Status'
     ];
 
     // Convert bookings to CSV rows
@@ -149,7 +149,9 @@ export default function BookingManagementPage() {
       b.totalPrice,
       b.platformFee,
       b.scheduledAt,
-      b.createdAt
+      b.createdAt,
+      b.transactionId || 'N/A',
+      b.paymentStatus || 'N/A'
     ]);
 
     // Combine headers and rows
@@ -321,6 +323,7 @@ export default function BookingManagementPage() {
                 <th className="p-4 text-sm font-medium text-gray-400">Freelancer</th>
                 <th className="p-4 text-sm font-medium text-gray-400">Schedule</th>
                 <th className="p-4 text-sm font-medium text-gray-400">Status</th>
+                <th className="p-4 text-sm font-medium text-gray-400">Payment Info</th>
                 <th className="p-4 text-sm font-medium text-gray-400">Progress</th>
                 <th className="p-4 text-sm font-medium text-gray-400">Amount</th>
                 <th className="p-4 text-sm font-medium text-gray-400">Actions</th>
@@ -392,6 +395,18 @@ export default function BookingManagementPage() {
                         <StatusIcon className="w-3 h-3 mr-1" />
                         {booking.status}
                       </Badge>
+                    </td>
+                    <td className="p-4">
+                      {booking.transactionId ? (
+                        <div className="space-y-1">
+                          <p className="text-white text-sm font-mono">{booking.transactionId}</p>
+                          <Badge variant="outline" className="text-xs border-green-500/50 text-green-400 bg-green-500/10">
+                            {booking.paymentStatus}
+                          </Badge>
+                        </div>
+                      ) : (
+                        <span className="text-gray-500 text-xs">Standard</span>
+                      )}
                     </td>
                     <td className="p-4">
                       <div className="w-20">

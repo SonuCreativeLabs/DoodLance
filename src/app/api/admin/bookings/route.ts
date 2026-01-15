@@ -91,6 +91,8 @@ export async function GET(request: NextRequest) {
       notes: b.notes,
       disputeReason: b.cancellationReason, // Mapping cancellation/dispute reason
       disputeRaisedAt: b.cancelledAt ? b.cancelledAt.toISOString() : null,
+      transactionId: b.transactionId,
+      paymentStatus: b.paymentStatus,
     }));
 
     // Calculate stats

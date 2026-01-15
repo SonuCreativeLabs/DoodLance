@@ -134,6 +134,8 @@ model Booking {
   milestones     String?
   conversationId String?
   otp            String?   // For job start verification
+  transactionId  String?   // For manual UPI payment verification
+  paymentStatus  String    @default("PENDING") // PENDING, VERIFIED, FAILED
   notes          String?
   requirements   String?
   deliveredAt    DateTime?

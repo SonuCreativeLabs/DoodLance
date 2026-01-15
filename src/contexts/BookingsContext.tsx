@@ -32,6 +32,8 @@ export interface Booking {
         deliveryTime?: string;
     }[];
     completedAt?: string;
+    transactionId?: string;
+    paymentStatus?: string;
 }
 
 interface BookingsContextType {
@@ -185,6 +187,9 @@ export function BookingsProvider({ children }: { children: ReactNode }) {
                     location: bookingData.location, // Pass the location
                     services: bookingData.services,
                     couponCode: bookingData.couponCode, // Pass coupon code
+                    transactionId: bookingData.transactionId,
+                    paymentMethod: bookingData.paymentMethod,
+                    paymentStatus: bookingData.paymentStatus,
                     // Pass other fields if API supports
                 }),
             });

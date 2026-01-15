@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, CreditCard, Tag, Shield, RefreshCw, AlertCircle, ChevronDown, ChevronUp, Smartphone, Wallet, Truck, CheckCircle, Loader2 } from 'lucide-react';
+import { ArrowLeft, CreditCard, Tag, Shield, AlertCircle, ChevronDown, ChevronUp, Smartphone, Wallet, Truck, CheckCircle, Loader2, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useHire } from '@/contexts/HireContext';
 import { useNavbar } from '@/contexts/NavbarContext';
@@ -107,7 +107,14 @@ export default function CheckoutPage() {
 
   const total = Math.max(0, subtotal + serviceFee - discountAmount);
 
-  const handleCODBooking = async () => {
+  const [transactionId, setTransactionId] = useState('');
+
+  const handleUPIBooking = async () => {
+    if (!transactionId || transactionId.length < 5) {
+      alert("Please enter a valid Transaction ID");
+      return;
+    }
+
     setIsProcessing(true);
 
     // Generate OTP for this booking
@@ -134,8 +141,11 @@ export default function CheckoutPage() {
           completedJobs: state.freelancerReviewCount || 50,
           description: `Booking for ${serviceNames}`,
           category: 'cricket',
-          paymentMethod: 'cod',
-          notes: (state.bookingNotes || '') + ` [OTP: ${otp}]`, // Append OTP to notes for now
+          paymentMethod: 'upi',
+
+          transactionId: transactionId,
+          paymentStatus: 'PENDING',
+          notes: state.bookingNotes || '', // Client notes only
           otp: otp,
           services: state.cartItems.map(item => ({
             id: item.service.id,
@@ -147,9 +157,6 @@ export default function CheckoutPage() {
           })),
           couponCode: state.appliedCoupon || undefined, // Pass the coupon code for backend processing
         });
-
-        // Store OTP in localStorage for the freelancer side to access - REMOVED
-        // Ideally handled by backend. We appended to notes for persistence context.
 
         setNewBookingId(bookingId);
         setGeneratedOtp(otp);
@@ -167,6 +174,7 @@ export default function CheckoutPage() {
       } catch (error) {
         console.error("Booking creation failed:", error);
         // Handle error UI?
+        alert("Booking failed. Please try again.");
       } finally {
         setIsProcessing(false);
       }
@@ -201,7 +209,7 @@ export default function CheckoutPage() {
             </div>
           )}
 
-          <p className="text-white/40 text-sm mb-4">Payment: Cash on Delivery</p>
+          <p className="text-white/40 text-sm mb-4">Payment: Manual UPI Verification</p>
           <p className="text-white/50 text-sm">Redirecting to your bookings...</p>
         </div>
       </div>
@@ -313,43 +321,96 @@ export default function CheckoutPage() {
           )}
         </div>
 
-
-
         {/* Payment Methods */}
         <div className="space-y-8">
           <h3 className="text-white font-semibold text-lg">Payment Method</h3>
 
-          {/* Cash on Delivery - Top Priority */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <Truck className="w-5 h-5 text-white/60" />
+          {/* Manual UPI Payment */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-3 mb-2">
+              <Wallet className="w-5 h-5 text-purple-400" />
               <div>
-                <h4 className="text-white font-semibold">Cash on Delivery</h4>
-                <p className="text-white/60 text-sm">Pay when service is completed</p>
+                <h4 className="text-white font-semibold">Manual UPI Payment</h4>
+                <p className="text-white/60 text-sm">Scan QR or use UPI ID to pay</p>
               </div>
             </div>
+
+            <div className="bg-white/5 border border-white/10 rounded-xl p-6 space-y-6">
+              {/* QR Code */}
+              <div className="flex flex-col items-center justify-center">
+                <div className="bg-white p-2 rounded-lg mb-3">
+                  <div className="relative w-48 h-48">
+                    <img
+                      src="/images/GPAY QR.jpeg"
+                      alt="Payment QR Code"
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                </div>
+                <p className="text-white/50 text-xs text-center">Scan with any UPI App (GPay, PhonePe, Paytm)</p>
+              </div>
+
+              {/* UPI ID Copy */}
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-white/60">UPI ID</label>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white font-mono text-sm">
+                    sathishsonu07@okaxis
+                  </div>
+
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="shrink-0 bg-white/5 border-white/10 hover:bg-white/10 text-white"
+                    onClick={() => {
+                      navigator.clipboard.writeText('sathishsonu07@okaxis');
+                    }}
+                  >
+                    <Copy className="w-4 h-4" />
+                    <span className="sr-only">Copy</span>
+                  </Button>
+                </div>
+              </div>
+
+              {/* Transaction ID Input */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-white">
+                  Transaction ID / Reference No. <span className="text-red-400">*</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="Enter Transaction ID (e.g. T230...)"
+                  value={transactionId}
+                  onChange={(e) => setTransactionId(e.target.value)}
+                  className="w-full bg-black/30 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-purple-500 transition-colors"
+                />
+                <p className="text-xs text-white/40">
+                  Required for payment verification.
+                </p>
+              </div>
+            </div>
+
             <button
-              onClick={handleCODBooking}
-              disabled={isProcessing}
-              className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white font-medium transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+              onClick={handleUPIBooking}
+              disabled={isProcessing || !transactionId}
+              className="w-full py-4 px-6 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white font-bold text-lg shadow-lg shadow-purple-900/20 transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed mt-4"
             >
               {isProcessing ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Processing...
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Verifying...
                 </>
               ) : (
                 <>
-                  <Truck className="w-4 h-4" />
-                  Book Now • ₹{total.toLocaleString()} COD
+                  <CheckCircle className="w-5 h-5" />
+                  Confirm Payment • ₹{total.toLocaleString()}
                 </>
               )}
             </button>
             <div className="text-xs text-white/40 text-center">
-              No advance payment required • Pay after service completion
+              Your booking will be confirmed after payment verification.
             </div>
           </div>
-
 
         </div>
       </div>

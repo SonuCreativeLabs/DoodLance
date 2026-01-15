@@ -94,6 +94,27 @@ export function BookingDetailsModal({ booking, open, onClose, onStatusChange }: 
             </div>
           </Card>
 
+          {/* Payment Information */}
+          {booking.transactionId && (
+            <Card className="bg-[#2a2a2a] border-gray-700 p-4">
+              <h3 className="text-sm font-medium text-gray-400 mb-3">Payment Information</h3>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-400">Transaction ID:</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-white font-mono bg-black/40 px-2 py-1 rounded">{booking.transactionId}</span>
+                  </div>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-400">Payment Status:</span>
+                  <Badge variant="outline" className="border-gray-600 text-gray-300">
+                    {booking.paymentStatus || 'PENDING'}
+                  </Badge>
+                </div>
+              </div>
+            </Card>
+          )}
+
           {/* Schedule & Location */}
           <Card className="bg-[#2a2a2a] border-gray-700 p-4">
             <h3 className="text-sm font-medium text-gray-400 mb-3">Schedule & Location</h3>

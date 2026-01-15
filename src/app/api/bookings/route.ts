@@ -377,6 +377,8 @@ export async function POST(request: NextRequest) {
             deliverables: '',
             otp: (body.otp as string) || Math.floor(1000 + Math.random() * 9000).toString(),
             services: body.services || [], // Save services JSON
+            transactionId: body.transactionId || null,
+            paymentStatus: body.paymentStatus || 'PENDING',
         };
 
         console.log('Attempting to create booking with data:', JSON.stringify({
