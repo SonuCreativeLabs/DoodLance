@@ -2,6 +2,8 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
+import { AuthChangeEvent, Session } from '@supabase/supabase-js';
 
 interface AdminUser {
   id: string;
@@ -16,7 +18,7 @@ interface AdminUser {
 interface AdminAuthContextType {
   admin: AdminUser | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<{ error: any | null }>;
   logout: () => Promise<void>;
   checkPermission: (permission: string) => boolean;
   isSuper: boolean;
@@ -28,105 +30,65 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
   const [admin, setAdmin] = useState<AdminUser | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const supabase = createClient();
 
-  // Check if admin is logged in on mount
   useEffect(() => {
-    const checkAdmin = async () => {
-      const storedAdmin = localStorage.getItem('admin_user');
-      if (storedAdmin) {
-        setAdmin(JSON.parse(storedAdmin));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, session: Session | null) => {
+      if (session?.user) {
+        // Map session user to AdminUser
+        // Check if role is ADMIN
+        const user = session.user;
+        const metadata = user.user_metadata || {};
+
+        if (metadata.role === 'ADMIN') {
+          setAdmin({
+            id: user.id,
+            email: user.email || '',
+            name: metadata.name || 'Admin',
+            role: metadata.admin_role || 'SUPER_ADMIN',
+            permissions: [], // Load permissions if needed
+            avatar: metadata.avatar,
+            lastLoginAt: user.last_sign_in_at
+          });
+        } else {
+          // Not an admin, maybe redirect?
+          setAdmin(null);
+        }
+      } else {
+        setAdmin(null);
       }
       setLoading(false);
+    });
+
+    return () => {
+      subscription.unsubscribe();
     };
-    checkAdmin();
-  }, []);
+  }, [supabase]);
 
   const login = async (email: string, password: string) => {
-    try {
-      console.log('Client login attempt:', { email, passwordProvided: !!password });
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-      const response = await fetch('/api/admin/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-
-      console.log('Response status:', response.status);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.log('Error response:', errorText);
-        throw new Error('Invalid credentials');
-      }
-
-      const data = await response.json();
-      console.log('Login success:', data);
-      setAdmin(data.admin);
-      localStorage.setItem('admin_user', JSON.stringify(data.admin));
-      localStorage.setItem('admin_token', data.token);
-
-      // Log the login action
-      try {
-        await fetch('/api/admin/audit', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-admin-token': data.token
-          },
-          body: JSON.stringify({
-            action: 'LOGIN',
-            entityType: 'ADMIN_USER',
-            entityId: data.admin.id,
-          }),
-        });
-      } catch (auditError) {
-        // Don't fail login if audit logging fails
-        console.warn('Audit logging failed:', auditError);
-      }
-
-      router.push('/admin/dashboard');
-    } catch (error) {
-      console.error('Login error:', error);
-      throw error;
+    if (error) {
+      console.error('Supabase login error:', error.message);
+      // Throw or return error
+      return { error };
     }
+
+    router.push('/admin/dashboard');
+    return { error: null };
   };
 
   const logout = async () => {
-    try {
-      if (admin) {
-        // Log the logout action
-        try {
-          const token = localStorage.getItem('admin_token');
-          await fetch('/api/admin/audit', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'x-admin-token': token || ''
-            },
-            body: JSON.stringify({
-              action: 'LOGOUT',
-              entityType: 'ADMIN_USER',
-              entityId: admin.id,
-            }),
-          });
-        } catch (auditError) {
-          // Don't fail logout if audit logging fails
-          console.warn('Audit logging failed:', auditError);
-        }
-      }
-
-      setAdmin(null);
-      localStorage.removeItem('admin_user');
-      localStorage.removeItem('admin_token');
-      router.push('/admin/login');
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
+    await supabase.auth.signOut();
+    setAdmin(null);
+    router.push('/admin/login');
   };
 
   const checkPermission = (permission: string): boolean => {
     if (!admin) return false;
-    // Normalize role to uppercase for comparison
     const normalizedRole = admin.role.toUpperCase();
     if (normalizedRole === 'SUPER_ADMIN') return true;
     return admin.permissions?.includes(permission) || false;

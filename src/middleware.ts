@@ -57,49 +57,51 @@ export async function middleware(request: NextRequest) {
         request.nextUrl.pathname !== '/admin/login' &&
         !request.nextUrl.pathname.startsWith('/api/admin/auth')) {
 
-        // Get auth token from cookie or header
-        const token = request.cookies.get('auth-token')?.value;
+        // Create Supabase client to check session
+        // Note: We need to use createServerClient here manually or leverage updateSession
+        // But since updateSession is at the end, we validatng here.
+        // Actually, let's use the helper from @supabase/ssr
 
-        if (!token) {
+        const { createServerClient } = await import('@supabase/ssr');
+
+        const supabase = createServerClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+            {
+                cookies: {
+                    getAll() {
+                        return request.cookies.getAll();
+                    },
+                    setAll(cookiesToSet) {
+                        cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value));
+                    },
+                },
+            }
+        );
+
+        const { data: { user }, error } = await supabase.auth.getUser();
+
+        if (error || !user) {
             if (request.nextUrl.pathname.startsWith('/api/admin')) {
                 return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
             }
-            const redirectUrl = new URL('/login', request.url);
+            const redirectUrl = new URL('/admin/login', request.url);
             redirectUrl.searchParams.set('redirect', request.nextUrl.pathname);
             return NextResponse.redirect(redirectUrl);
         }
 
-        // Verify token and check admin role
-        try {
-            const secret = new TextEncoder().encode(
-                process.env.JWT_SECRET || 'fallback-secret-for-dev'
-            );
-
-            const { payload } = await jwtVerify(token, secret);
-
-            // Check for admin role in metadata or root
-            const role = payload.role || (payload.user_metadata as any)?.role;
-
-            if (role !== 'ADMIN') {
-                console.warn('Unauthorized access attempt: User is not an ADMIN', { role, ip });
-                if (request.nextUrl.pathname.startsWith('/api/admin')) {
-                    return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
-                }
-                // Redirect to login if accessing page
-                const redirectUrl = new URL('/login', request.url);
-                return NextResponse.redirect(redirectUrl);
-            }
-
-            // Token is valid and user is admin -> Allow
-        } catch (error) {
-            console.error('Token verification failed:', error);
+        // Check for ADMIN role
+        const role = user.user_metadata?.role;
+        if (role !== 'ADMIN') {
+            console.warn('Unauthorized access attempt: User is not an ADMIN', { role, ip });
             if (request.nextUrl.pathname.startsWith('/api/admin')) {
-                return NextResponse.json({ error: 'Unauthorized: Invalid token' }, { status: 401 });
+                return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
             }
-            const redirectUrl = new URL('/login', request.url);
-            redirectUrl.searchParams.set('redirect', request.nextUrl.pathname);
+            const redirectUrl = new URL('/admin/login', request.url);
             return NextResponse.redirect(redirectUrl);
         }
+
+        // Allowed
     }
 
     return await updateSession(request);

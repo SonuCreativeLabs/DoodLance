@@ -1,11 +1,14 @@
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
+import * as dotenv from 'dotenv';
+
+dotenv.config();
 
 const prisma = new PrismaClient();
 
 async function createAdmin() {
-    const email = 'sathishraj@doodlance.com';
-    const password = 'Raj1@doodlance';
+    const email = process.env.ADMIN_EMAIL || 'sathishraj@doodlance.com';
+    const password = process.env.ADMIN_PASSWORD || 'default_secure_password';
     const name = 'Sathish Raj';
 
     console.log(`Creating/Updating admin: ${email}`);

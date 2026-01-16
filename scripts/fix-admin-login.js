@@ -1,12 +1,13 @@
 const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcryptjs');
+require('dotenv').config();
 
 const prisma = new PrismaClient();
 
 async function createExactAdmin() {
     // User requested these EXACT credentials
     const email = 'sathishraj@doodlance';  // Disabling email validation locally if needed
-    const password = 'Raj1@doodlance';
+    const password = process.env.ADMIN_PASSWORD || 'default_secure_password';
     const name = 'Sathish Raj';
 
     console.log(`Creating/Updating admin: ${email}`);
