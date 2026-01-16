@@ -34,7 +34,8 @@ import {
   Search, Filter, Download, MoreVertical, Eye, Edit, Ban,
   Shield, Mail, Phone, MapPin, Star, Calendar, DollarSign,
   CheckCircle, XCircle, AlertCircle, UserCheck, Users, ChevronLeft,
-  ChevronRight, X, RefreshCw, FileText, Clock, TrendingUp
+  ChevronRight, X, RefreshCw, FileText, Clock, TrendingUp,
+  Trash2, AlertTriangle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AddUserModal } from '@/components/admin/users/AddUserModal';
@@ -343,6 +344,8 @@ export default function UserManagementPage() {
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [addUserModalOpen, setAddUserModalOpen] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<any>(null);
   const [userToEdit, setUserToEdit] = useState<any>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -413,6 +416,38 @@ export default function UserManagementPage() {
       }
     } catch (e) {
       console.error('Action failed:', e);
+    }
+  };
+
+  const handleDeleteUser = async () => {
+    if (!userToDelete) return;
+
+    try {
+      setLoading(true);
+      const res = await fetch(`/api/admin/users/action`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: userToDelete.id,
+          action: 'delete',
+          reason: 'Admin deleted via dashboard'
+        })
+      });
+
+      if (res.ok) {
+        fetchUsers();
+        setDeleteConfirmOpen(false);
+        setUserToDelete(null);
+        // TODO: Show success toast
+      } else {
+        const data = await res.json();
+        alert(data.error || 'Failed to delete user');
+      }
+    } catch (e) {
+      console.error('Delete failed:', e);
+      alert('Delete failed. Make sure you have applied the Cascade Delete SQL migration in Supabase.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -829,6 +864,17 @@ export default function UserManagementPage() {
                                   Activate User
                                 </DropdownMenuItem>
                               )}
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  setUserToDelete(user);
+                                  setDeleteConfirmOpen(true);
+                                }}
+                                className="cursor-pointer text-red-500 hover:text-red-600 hover:bg-red-500/10"
+                              >
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Delete User
+                              </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </td>
@@ -905,6 +951,31 @@ export default function UserManagementPage() {
         onClose={() => setEditModalOpen(false)}
         onSave={handleUpdateUser}
       />
+      <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <DialogContent className="bg-[#1a1a1a] border-gray-800">
+          <DialogHeader>
+            <DialogTitle className="text-white flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-red-500" />
+              Delete User?
+            </DialogTitle>
+            <DialogDescription className="text-gray-400">
+              Are you sure you want to delete <span className="font-bold text-white">{userToDelete?.name}</span>?
+              <br /><br />
+              <span className="text-red-400 font-medium">Warning:</span> This action cannot be undone. All data associated with this user (profile, wallet, messages) will be permanently deleted.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteConfirmOpen(false)} disabled={loading}>Cancel</Button>
+            <Button
+              className="bg-red-600 hover:bg-red-700 text-white"
+              onClick={handleDeleteUser}
+              disabled={loading}
+            >
+              {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : 'Delete User'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
 
     // Check admin role via database
     const dbUser = await prisma.user.findUnique({
-      where: { id: user.id },
+      where: { supabaseUid: user.id },
       select: { role: true, email: true }
     });
 
@@ -137,8 +137,15 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('User action error:', error);
+    if (error instanceof Error) {
+      console.error('Error stack:', error.stack);
+      console.error('Error message details:', error.message);
+    }
     return NextResponse.json(
-      { error: 'Internal server error' },
+      {
+        error: 'Internal server error',
+        details: error instanceof Error ? error.message : String(error)
+      },
       { status: 500 }
     );
   }

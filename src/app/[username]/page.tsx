@@ -9,8 +9,13 @@ interface PageProps {
 }
 
 async function getFreelancerByUsername(username: string) {
-    const user = await prisma.user.findUnique({
-        where: { username: username.toLowerCase() },
+    const user = await prisma.user.findFirst({
+        where: {
+            username: {
+                equals: decodeURIComponent(username).trim(),
+                mode: 'insensitive'
+            }
+        },
         include: {
             freelancerProfile: {
                 include: {
@@ -46,6 +51,12 @@ export async function generateMetadata({ params }: PageProps) {
 }
 
 export default async function PublicProfilePage({ params }: PageProps) {
+    // Force lowercase URL
+    if (params.username !== params.username.toLowerCase()) {
+        const { redirect } = require('next/navigation');
+        redirect(`/${params.username.toLowerCase()}`);
+    }
+
     const user = await getFreelancerByUsername(params.username);
 
     if (!user || !user.freelancerProfile) {
