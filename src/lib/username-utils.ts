@@ -89,28 +89,28 @@ export function isValidUsernameFormat(username: string): {
         return { valid: false, error: 'Username must be 30 characters or less' };
     }
 
-    // Character check: only letters, numbers, hyphens, underscores
-    const validCharsRegex = /^[a-zA-Z0-9_-]+$/;
+    // Character check: only letters, numbers, underscores
+    const validCharsRegex = /^[a-zA-Z0-9_]+$/;
     if (!validCharsRegex.test(trimmed)) {
         return {
             valid: false,
-            error: 'Username can only contain letters, numbers, hyphens, and underscores',
+            error: 'Username can only contain letters, numbers, and underscores',
         };
     }
 
-    // Cannot start or end with hyphen or underscore
-    if (/^[-_]|[-_]$/.test(trimmed)) {
+    // Cannot start or end with underscore
+    if (/^[_]|[_]$/.test(trimmed)) {
         return {
             valid: false,
-            error: 'Username cannot start or end with hyphen or underscore',
+            error: 'Username cannot start or end with an underscore',
         };
     }
 
-    // No consecutive hyphens or underscores
-    if (/[-_]{2,}/.test(trimmed)) {
+    // No consecutive underscores
+    if (/_{2,}/.test(trimmed)) {
         return {
             valid: false,
-            error: 'Username cannot have consecutive hyphens or underscores',
+            error: 'Username cannot have consecutive underscores',
         };
     }
 

@@ -24,6 +24,7 @@ import { PostedJobsProvider } from '@/contexts/PostedJobsContext';
 // 🚀 React Query POC
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from '@/lib/query-client';
+import { Toaster } from 'sonner';
 
 interface ProvidersProps {
   children: ReactNode;
@@ -53,6 +54,7 @@ export function Providers({ children }: ProvidersProps) {
                                           <HireProvider>
                                             <RoleSwitchProvider>
                                               {children}
+                                              <Toaster theme="dark" richColors closeButton position="top-center" />
                                             </RoleSwitchProvider>
                                           </HireProvider>
                                         </PostedJobsProvider>

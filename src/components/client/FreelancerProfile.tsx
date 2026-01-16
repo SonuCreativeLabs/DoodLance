@@ -44,6 +44,7 @@ import { PortfolioItemModal } from '@/components/common/PortfolioItemModal';
 import { HireBottomSheet } from '@/components/hire/HireBottomSheet';
 import { VideoEmbed } from '@/components/common/VideoEmbed';
 import { ServiceVideoCarousel } from '@/components/common/ServiceVideoCarousel';
+import { ServiceDetailModal } from '@/components/common/ServiceDetailModal';
 
 interface FreelancerDetail {
     id: string;
@@ -154,6 +155,8 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
     const [activeTab, setActiveTab] = useState('top');
     const [selectedPortfolioItem, setSelectedPortfolioItem] = useState<any>(null);
     const [isPortfolioModalOpen, setIsPortfolioModalOpen] = useState(false);
+    const [selectedService, setSelectedService] = useState<any>(null);
+    const [isServiceDetailOpen, setIsServiceDetailOpen] = useState(false);
     const [isHireBottomSheetOpen, setIsHireBottomSheetOpen] = useState(false);
     // showLoginDialog removed in favor of hook state
 
@@ -431,10 +434,10 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
     const handleShare = async () => {
         if (!freelancer) return;
 
-        // Construct profile URL using username if available, otherwise fallback to ID
+        // Construct profile URL - simplified to just /username
         const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
         const profilePath = freelancer.username
-            ? `/freelancer/${freelancer.username}`
+            ? `/${freelancer.username}`
             : `/client/freelancer/${freelancerId}`;
 
         // Clean URL for sharing
@@ -446,31 +449,41 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
             url: shareUrl
         };
 
-        // Try Web Share API first
+        // Try Web Share API first (Native Share Sheet)
         if (navigator.share) {
             try {
                 await navigator.share(shareData);
                 return;
             } catch (err) {
-                console.debug('Share API failed, falling back to clipboard');
+                // If user cancels or share fails, just return (don't auto-copy on cancel)
+                // But if it's a "not supported" error (though check is above), fall through.
+                console.debug('Share API interactions:', err);
             }
         }
 
-        // Fallback to clipboard
+        // Fallback to clipboard if Share API not supported or ignored
         if (navigator.clipboard) {
-            await navigator.clipboard.writeText(shareData.url);
-            toast.success('Profile link copied to clipboard!');
-            return;
+            try {
+                await navigator.clipboard.writeText(shareUrl);
+                toast.success('Profile link copied to clipboard!');
+                return;
+            } catch (err) {
+                console.error('Failed to copy', err);
+            }
         }
 
-        // Fallback for browsers that don't support either API
-        const input = document.createElement('input');
-        input.value = shareData.url;
-        document.body.appendChild(input);
-        input.select();
-        document.execCommand('copy');
-        document.body.removeChild(input);
-        toast.success('Profile link copied to clipboard!');
+        // Fallback for older browsers
+        try {
+            const input = document.createElement('input');
+            input.value = shareUrl;
+            document.body.appendChild(input);
+            input.select();
+            document.execCommand('copy');
+            document.body.removeChild(input);
+            toast.success('Profile link copied to clipboard!');
+        } catch (err) {
+            toast.error('Failed to copy link');
+        }
     };
 
     const handleTabClick = (tabId: string, e: React.MouseEvent) => {
@@ -677,22 +690,21 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                                                 </span>
                                             )}
                                         </div>
-                                        <p className="text-purple-400 mt-0.5">{freelancer.cricketRole || 'All Rounder'}</p>
+                                        {freelancer.username && (
+                                            <p className="text-white/40 text-sm font-medium">@{freelancer.username}</p>
+                                        )}
+                                        <p className="text-purple-400 mt-1">{freelancer.cricketRole || 'All Rounder'}</p>
 
                                         <div className="mt-2 flex flex-col items-center gap-0.5 text-sm text-white/70">
                                             <div className="flex items-center gap-2">
                                                 <span>{freelancer.location}{freelancer.distance ? <><span className="text-white/40 mx-1 text-xs">|</span>{freelancer.distance < 1 ? `${(freelancer.distance * 1000).toFixed(0)}m` : `${freelancer.distance.toFixed(1)}km`} away</> : ''}</span>
                                             </div>
                                             <div className="flex items-center gap-1">
-                                                {[...Array(5)].map((_, i) => (
-                                                    <Star
-                                                        key={i}
-                                                        className={`h-4 w-4 ${i < Math.floor(freelancer.rating) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-500'}`}
-                                                    />
-                                                ))}
-                                                <span className="ml-1 font-medium text-white">{freelancer.rating.toFixed(1)}</span>
-                                                <span className="mx-1">·</span>
-                                                <span>{freelancer.reviewCount} reviews</span>
+                                                <div className="flex items-center gap-1.5 font-semibold text-white">
+                                                    <span>{freelancer.rating.toFixed(1)}</span>
+                                                    <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+                                                    <span className="text-white/60 font-normal">({freelancer.reviewCount})</span>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -790,7 +802,7 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                                 <div className="space-y-8">
                                     {/* About Section */}
                                     <section id="about" data-section="about" className="scroll-mt-20 pt-4">
-                                        <p className="text-white mb-6 whitespace-pre-line">{freelancer.bio || freelancer.about}</p>
+                                        <p className="text-white mb-3 whitespace-pre-line">{freelancer.bio || freelancer.about}</p>
 
                                         {/* Cricket Information */}
                                         <div className="space-y-2 mb-6">
@@ -932,9 +944,9 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
 
                                             <div className="relative">
                                                 <div className="flex -mx-2 overflow-x-auto scrollbar-hide pb-2">
-                                                    <div className="flex gap-4 px-2 items-start">
+                                                    <div className="flex gap-4 px-2 items-stretch">
                                                         {freelancer.services.map((service) => (
-                                                            <div key={service.id} className="w-80 flex-shrink-0 rounded-xl border border-white/5 bg-[#1E1E1E] overflow-hidden flex flex-col relative group hover:border-white/10 transition-colors">
+                                                            <div key={service.id} className="w-80 flex-shrink-0 rounded-xl border border-white/5 bg-[#1E1E1E] overflow-hidden flex flex-col relative group hover:border-white/10 transition-colors h-full">
                                                                 {/* Video Cover */}
                                                                 <ServiceVideoCarousel
                                                                     videoUrls={service.videoUrls?.filter(url => url) || []}
@@ -943,7 +955,13 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                                                                 />
 
                                                                 {/* Content */}
-                                                                <div className="p-5 flex flex-col flex-1">
+                                                                <div
+                                                                    className="p-5 flex flex-col flex-1 cursor-pointer"
+                                                                    onClick={() => {
+                                                                        setSelectedService(service);
+                                                                        setIsServiceDetailOpen(true);
+                                                                    }}
+                                                                >
                                                                     {service.category && (
                                                                         <div className="mb-3 flex justify-start">
                                                                             <Badge className="bg-white/10 text-white/80 border-white/20 px-2 py-0.5 text-xs">
@@ -955,17 +973,6 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                                                                     <h3 className="text-lg font-semibold text-white mb-3 line-clamp-2">{service.title}</h3>
 
                                                                     <p className="text-sm text-white/60 line-clamp-3 mb-6">{service.description}</p>
-
-                                                                    {service.features && service.features.length > 0 && (
-                                                                        <ul className="space-y-2.5 text-left mb-6">
-                                                                            {service.features.map((feature, i) => (
-                                                                                <li key={i} className="flex items-start">
-                                                                                    <CheckCircle2 className="h-4.5 w-4.5 flex-shrink-0 text-purple-400 mr-2.5 mt-0.5" />
-                                                                                    <span className="text-sm text-white/80 leading-tight">{feature}</span>
-                                                                                </li>
-                                                                            ))}
-                                                                        </ul>
-                                                                    )}
 
                                                                     <div className="mt-6 pt-4 relative mt-auto">
                                                                         <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
@@ -1119,17 +1126,16 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                                                 <p className="text-sm text-white/60">What clients say about working with me</p>
                                             </div>
                                             <div className="flex items-center mt-2 sm:mt-0">
-                                                <div className="flex items-center text-yellow-400 mr-2">
+                                                <div className="flex items-center gap-1">
                                                     {[...Array(5)].map((_, i) => (
                                                         <Star
                                                             key={i}
-                                                            className={`h-5 w-5 ${i < Math.floor(freelancer.rating) ? 'fill-current' : 'text-gray-600'}`}
+                                                            className={`h-4 w-4 ${i < Math.floor(freelancer.rating) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-500'}`}
                                                         />
                                                     ))}
-                                                </div>
-                                                <div className="text-white">
-                                                    <span className="font-medium">{freelancer.rating.toFixed(1)}</span>
-                                                    <span className="text-white/60"> ({freelancer.reviewCount} reviews)</span>
+                                                    <span className="ml-1 font-medium text-white">{freelancer.rating.toFixed(1)}</span>
+                                                    <span className="mx-1">·</span>
+                                                    <span>{freelancer.reviewCount} reviews</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -1203,12 +1209,22 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                     />
 
                     {/* Portfolio Modal */}
-                    < PortfolioItemModal
+                    <PortfolioItemModal
                         item={selectedPortfolioItem}
                         isOpen={isPortfolioModalOpen}
                         onClose={() => {
                             setIsPortfolioModalOpen(false);
                             setSelectedPortfolioItem(null);
+                        }}
+                    />
+
+                    {/* Service Detail Modal */}
+                    <ServiceDetailModal
+                        service={selectedService}
+                        isOpen={isServiceDetailOpen}
+                        onClose={() => {
+                            setIsServiceDetailOpen(false);
+                            setSelectedService(null);
                         }}
                     />
 

@@ -12,27 +12,36 @@ if (!supabaseUrl || !supabaseServiceKey) {
     process.exit(1);
 }
 
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+    auth: {
+        autoRefreshToken: false,
+        persistSession: false
+    }
+});
 
 async function createSupabaseAdmin() {
     // Get args from command line: node script.js <email> <password>
-    // Default to known credentials if not provided (for this specific run/context)
-    const email = process.argv[2] || 'sathishraj@doodlance.com';
-    const password = process.argv[3] || 'Raj1@doodlance';
+    const email = process.argv[2];
+    const password = process.argv[3];
     const name = 'Sathish Raj';
 
+    if (!email || !password) {
+        console.error('Error: Email and Password arguments are required.');
+        console.error('Usage: node scripts/create-supabase-admin.js <email> <password>');
+        process.exit(1);
+    }
+
     console.log(`Creating/Updating Supabase Admin: ${email}`);
-    console.log(`Using provided password (length: ${password.length})`);
 
     try {
         // 1. Check if user exists
-        const { data: users, error: listError } = await supabase.auth.admin.listUsers();
+        const { data: { users }, error: listError } = await supabase.auth.admin.listUsers();
 
         if (listError) {
             throw listError;
         }
 
-        const existingUser = users.users.find(u => u.email === email);
+        const existingUser = users.find(u => u.email === email);
         let userId;
 
         if (existingUser) {
