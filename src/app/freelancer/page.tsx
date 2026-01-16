@@ -88,7 +88,11 @@ export default function FreelancerHome() {
   };
 
   if (!isMounted) {
-    return <div className="min-h-screen bg-[#111111] pb-16 sm:pb-20 lg:pb-24"></div>;
+    return (
+      <div className="min-h-screen bg-[#111111] pb-16 sm:pb-20 lg:pb-24">
+        {/* Render a loading skeleton that matches the initial server output if possible, or just a safe empty container */}
+      </div>
+    );
   }
 
   return (
