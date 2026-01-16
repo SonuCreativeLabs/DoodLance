@@ -580,9 +580,20 @@ const ProfilePreview = memo(({
     [profileData.achievements]
   );
 
-  const handleSkillClick = (skillName: string) => {
-    const skillInfo = getSkillInfo(skillName);
-    setSelectedSkillInfo(skillInfo);
+  const handleSkillClick = (skill: any) => {
+    const skillName = typeof skill === 'object' && skill !== null ? (skill.name || skill.title || 'Unknown') : skill;
+    const staticInfo = getSkillInfo(skillName);
+
+    const dynamicInfo: SkillInfo = {
+      ...staticInfo,
+      ...(typeof skill === 'object' ? {
+        description: skill.description || staticInfo.description,
+        experience: skill.experience || staticInfo.experience,
+        level: skill.level || staticInfo.level
+      } : {})
+    };
+
+    setSelectedSkillInfo(dynamicInfo);
     setIsSkillDialogOpen(true);
   };
 
@@ -697,8 +708,7 @@ const ProfilePreview = memo(({
                 cricketRole: profileData.cricketRole,
                 online: profileData.online,
                 username: profileData.username,
-                // Pass username/displayId if available in profileData, otherwise ProfileHeader might show defaults
-                // ProfileHeader uses 'cricketRole' for the role display
+                isVerified: profileData.isVerified,
               }}
             />
           </div>
@@ -777,15 +787,18 @@ const ProfilePreview = memo(({
                 <div className="mb-6">
                   <h3 className="font-medium text-white mb-2">Skills</h3>
                   <div className="flex flex-wrap gap-1.5">
-                    {profileData.skills.map((skill, i) => (
-                      <button
-                        key={i}
-                        onClick={() => handleSkillClick(skill)}
-                        className="px-1.5 py-0.5 bg-white/10 text-white/80 border border-white/20 text-xs rounded-full transition-colors cursor-pointer hover:bg-white/20"
-                      >
-                        {skill}
-                      </button>
-                    ))}
+                    {profileData.skills.map((skill, i) => {
+                      const skillName = typeof skill === 'object' && skill !== null ? (skill.name || skill.title || 'Unknown') : skill;
+                      return (
+                        <button
+                          key={i}
+                          onClick={() => handleSkillClick(skill)}
+                          className="px-1.5 py-0.5 bg-white/10 text-white/80 border border-white/20 text-xs rounded-full transition-colors cursor-pointer hover:bg-white/20"
+                        >
+                          {skillName}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 

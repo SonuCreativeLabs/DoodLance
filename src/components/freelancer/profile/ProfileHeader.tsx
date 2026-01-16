@@ -525,6 +525,7 @@ export function ProfileHeader({
           location: personalDetails.location,
           online: personalDetails.online,
           username: personalDetails.username,
+          isVerified: personalDetails.isVerified,
           dateOfBirth: personalDetails.dateOfBirth,
           skills: Array.isArray(skills) ? skills.map((s: any) => s.name) : [],
           about: personalDetails.about,

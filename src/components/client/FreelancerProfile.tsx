@@ -392,9 +392,22 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
         }
     };
 
-    const handleSkillClick = (skillName: string) => {
-        const skillInfo = getSkillInfo(skillName);
-        setSelectedSkillInfo(skillInfo);
+    const handleSkillClick = (skill: any) => {
+        const skillName = typeof skill === 'object' && skill !== null ? (skill.name || skill.title || 'Unknown') : skill;
+        const staticInfo = getSkillInfo(skillName);
+
+        // Merge static info with dynamic user data
+        const dynamicInfo: SkillInfo = {
+            ...staticInfo,
+            // If skill is an object, override with its specific details
+            ...(typeof skill === 'object' ? {
+                description: skill.description || staticInfo.description,
+                experience: skill.experience || staticInfo.experience,
+                level: skill.level || staticInfo.level
+            } : {})
+        };
+
+        setSelectedSkillInfo(dynamicInfo);
         setIsSkillDialogOpen(true);
     };
 
@@ -725,7 +738,7 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                                             return (
                                                 <button
                                                     key={i}
-                                                    onClick={() => handleSkillClick(skillName)}
+                                                    onClick={() => handleSkillClick(skill)}
                                                     className="bg-white/5 text-white/80 border border-white/10 hover:bg-white/10 rounded-full px-2 py-0.5 text-xs transition-colors cursor-pointer"
                                                 >
                                                     {skillName}
@@ -840,8 +853,8 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                                                     return (
                                                         <button
                                                             key={i}
-                                                            onClick={() => handleSkillClick(skillName)}
-                                                            className="bg-white/5 text-white/80 border border-white/10 hover:bg-white/10 rounded-full px-1.5 py-0.5 text-xs transition-colors cursor-pointer"
+                                                            onClick={() => handleSkillClick(skill)}
+                                                            className="bg-white/5 text-white/80 border border-white/10 hover:bg-white/10 rounded-full px-3 py-1 text-sm transition-colors cursor-pointer"
                                                         >
                                                             {skillName}
                                                         </button>

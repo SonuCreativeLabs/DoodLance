@@ -51,7 +51,7 @@ export interface ProfileData {
   completionRate: number;
   online: boolean;
   location: string;
-  skills: string[];
+  skills: (string | any)[];
   achievements: Achievement[];
   services: Service[];
   portfolio: PortfolioItem[];
@@ -67,6 +67,7 @@ export interface ProfileData {
   dateOfBirth?: string;
   avatar?: string;
   coverImage?: string;
+  isVerified?: boolean;
 }
 
 export interface ProfilePreviewProps {
