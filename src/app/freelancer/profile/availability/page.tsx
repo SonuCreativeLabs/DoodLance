@@ -20,8 +20,13 @@ export default function AvailabilityPage() {
   const { days, updateDays, isLoading } = useAvailability();
   const { listings } = useListings();
   const [currentWeekStart, setCurrentWeekStart] = useState(startOfWeek(new Date()));
+  const [isMounted, setIsMounted] = useState(false);
 
-  if (isLoading) {
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted || isLoading) {
     return (
       <div className="min-h-screen bg-[#0F0F0F] text-white flex flex-col">
         {/* Sticky Header */}

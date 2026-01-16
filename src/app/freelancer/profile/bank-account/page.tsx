@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -126,8 +126,13 @@ type EditSection = 'bank-details' | 'additional-info' | null;
 export default function BankAccountPage() {
   const { bankAccountData, updateBankAccountData, isComplete, isLoading } = useBankAccount();
   const [editingSection, setEditingSection] = useState<EditSection>(null);
+  const [isMounted, setIsMounted] = useState(false);
 
-  if (isLoading) {
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted || isLoading) {
     return (
       <div className="min-h-screen bg-[#0F0F0F] text-white flex flex-col">
         {/* Sticky Header */}

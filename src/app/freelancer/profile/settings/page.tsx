@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -68,10 +68,14 @@ const FormField = ({
 
 export default function SettingsPage() {
   const { settings, updateNotificationSettings, updateEmail, deactivateAccount, logout, isLoading } = useSettings();
-
   const [showDeactivateConfirm, setShowDeactivateConfirm] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
 
-  if (isLoading) {
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted || isLoading) {
     return (
       <div className="min-h-screen bg-[#0F0F0F] text-white flex flex-col">
         {/* Sticky Header */}
