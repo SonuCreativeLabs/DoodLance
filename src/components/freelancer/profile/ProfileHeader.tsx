@@ -10,12 +10,14 @@ import { Badge } from "@/components/ui/badge";
 import { Star, Edit2, Camera, Upload, Loader2, RefreshCw, User } from "lucide-react";
 import { toast } from "sonner";
 import { usePersonalDetails } from '@/contexts/PersonalDetailsContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useSkills } from '@/contexts/SkillsContext';
 import { useReviews } from '@/contexts/ReviewsContext';
 import { usePortfolio } from '@/contexts/PortfolioContext';
 import { useAchievements } from '@/contexts/AchievementsContext';
 import { useServices } from '@/contexts/ServicesContext';
 import { useAvailability } from '@/contexts/AvailabilityContext';
+import { ImageCropper } from '@/components/common/ImageCropper';
 import { SkillInfoDialog } from '@/components/common/SkillInfoDialog';
 import { getSkillInfo, type SkillInfo } from '@/utils/skillUtils';
 import { calculateAge } from '@/utils/personalUtils';
@@ -57,6 +59,7 @@ export function ProfileHeader({
   personalDetails: propPersonalDetails
 }: ProfileHeaderProps) {
   const { personalDetails: contextPersonalDetails } = usePersonalDetails();
+  const { user } = useAuth();
 
   // Use prop if available (for preview/public view), otherwise context
   const personalDetails = propPersonalDetails || contextPersonalDetails;
@@ -75,6 +78,13 @@ export function ProfileHeader({
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isSkillDialogOpen, setIsSkillDialogOpen] = useState(false);
   const [selectedSkillInfo, setSelectedSkillInfo] = useState<SkillInfo | null>(null);
+
+  // Cropper State
+  const [isCropperOpen, setIsCropperOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [cropperAspect, setCropperAspect] = useState(1);
+  const [isCoverCrop, setIsCoverCrop] = useState(false); // true for cover, false for profile
+
   const coverInputRef = useRef<HTMLInputElement>(null);
   const profileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
@@ -167,7 +177,27 @@ export function ProfileHeader({
     setIsSkillDialogOpen(true);
   };
 
-  // Handle Cover Image Upload
+  // Handle Crop Save
+  const handleCropSave = async (croppedBlob: Blob) => {
+    // Convert Blob to File
+    const file = new File([croppedBlob], "cropped-image.jpg", { type: "image/jpeg" });
+
+    if (isCoverCrop) {
+      await uploadCoverImage(file);
+    } else {
+      await uploadProfileImage(file);
+    }
+  };
+
+  const readFile = (file: File): Promise<string> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.addEventListener('load', () => resolve(reader.result as string));
+      reader.readAsDataURL(file);
+    });
+  };
+
+  // Handle Cover Image Selection
   const handleCoverImageChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -177,8 +207,16 @@ export function ProfileHeader({
       return;
     }
 
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error('Image size should be less than 2MB');
+    const imageDataUrl = await readFile(file);
+    setSelectedImage(imageDataUrl);
+    setCropperAspect(16 / 9); // Wide aspect for cover
+    setIsCoverCrop(true);
+    setIsCropperOpen(true);
+  };
+
+  const uploadCoverImage = async (file: File) => {
+    if (file.size > 5 * 1024 * 1024) { // Increased limit for cover
+      toast.error('Image size should be less than 5MB');
       return;
     }
 
@@ -186,12 +224,12 @@ export function ProfileHeader({
 
     try {
       toast.info('Compressing image...');
-      // Compress: 0.7 quality, 1200px max width (covers are wider)
-      const compressedFile = await compressImage(file, 0.7, 1200);
+      // Compress: 0.8 quality, 1600px max width
+      const compressedFile = await compressImage(file, 0.8, 1600);
 
       const formData = new FormData();
       formData.append('file', compressedFile);
-      formData.append('bucket', 'images'); // Assuming 'images' bucket exists
+      formData.append('bucket', 'images');
       formData.append('path', 'covers');
 
       const response = await fetch('/api/upload', {
@@ -208,7 +246,6 @@ export function ProfileHeader({
       const imageUrl = data.url;
 
       setCoverImage(imageUrl);
-      // Persist to context and DB
       updatePersonalDetails({ coverImageUrl: imageUrl });
       toast.success('Cover photo updated successfully');
     } catch (error: any) {
@@ -219,7 +256,7 @@ export function ProfileHeader({
     }
   };
 
-  // Handle Profile Image Upload
+  // Handle Profile Image Selection
   const handleProfileImageChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -229,8 +266,16 @@ export function ProfileHeader({
       return;
     }
 
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error('Image size should be less than 2MB');
+    const imageDataUrl = await readFile(file);
+    setSelectedImage(imageDataUrl);
+    setCropperAspect(1); // Square aspect for profile
+    setIsCoverCrop(false);
+    setIsCropperOpen(true);
+  };
+
+  const uploadProfileImage = async (file: File) => {
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image size should be less than 5MB');
       return;
     }
 
@@ -238,8 +283,8 @@ export function ProfileHeader({
 
     try {
       toast.info('Compressing image...');
-      // Compress: 0.7 quality, 400px max size for avatars
-      const compressedFile = await compressImage(file, 0.7, 400);
+      // Compress: 0.8 quality, 500px max size
+      const compressedFile = await compressImage(file, 0.8, 500);
 
       const formData = new FormData();
       formData.append('file', compressedFile);
@@ -260,7 +305,6 @@ export function ProfileHeader({
       const imageUrl = data.url;
 
       setProfileImage(imageUrl);
-      // Persist to context and DB
       updatePersonalDetails({ avatarUrl: imageUrl });
       toast.success('Profile picture updated successfully');
     } catch (error: any) {
@@ -419,7 +463,12 @@ export function ProfileHeader({
 
           <div className="mt-2 flex flex-col items-center gap-0.5 text-sm text-white/70">
             <div className="flex items-center gap-2">
-              <span>{personalDetails.location || 'Location not set'}</span>
+              <span>
+                {personalDetails.area && personalDetails.city
+                  ? `${personalDetails.area}, ${personalDetails.city}`
+                  : personalDetails.location || 'Location not set'
+                }
+              </span>
             </div>
             <div className="flex items-center gap-1">
               <span className="font-bold text-white text-sm">{(reviewsData?.averageRating || 0).toFixed(1)}</span>
@@ -469,6 +518,7 @@ export function ProfileHeader({
         isOpen={isPreviewOpen}
         onClose={handlePreviewClose}
         profileData={{
+          id: user?.id,
           name: personalDetails.name,
           title: personalDetails.cricketRole || '',
           avatar: personalDetails.avatarUrl || profileImage || undefined,
@@ -476,8 +526,11 @@ export function ProfileHeader({
           rating: reviewsData?.averageRating || 0,
           reviewCount: reviewsData?.totalReviews || 0,
           location: personalDetails.location,
+          area: personalDetails.area,
+          city: personalDetails.city,
           online: personalDetails.online,
           username: personalDetails.username,
+          isVerified: personalDetails.isVerified,
           dateOfBirth: personalDetails.dateOfBirth,
           skills: Array.isArray(skills) ? skills.map((s: any) => s.name) : [],
           about: personalDetails.about,
@@ -537,6 +590,14 @@ export function ProfileHeader({
         isOpen={isSkillDialogOpen}
         onClose={() => setIsSkillDialogOpen(false)}
         skillInfo={selectedSkillInfo}
+      />
+
+      <ImageCropper
+        image={selectedImage}
+        isOpen={isCropperOpen}
+        onClose={() => setIsCropperOpen(false)}
+        onSave={handleCropSave}
+        aspect={cropperAspect}
       />
     </div>
   );

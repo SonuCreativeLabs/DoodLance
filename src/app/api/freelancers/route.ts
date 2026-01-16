@@ -109,7 +109,11 @@ export async function GET(request: Request) {
                 rating: p.rating || rating || 0,
                 reviews: p.reviews.length, // Bug fix: previously p.reviews.length || p.reviews.length ?
                 completedJobs: p.completedJobs || 0,
-                location: p.user.location || (p.user.city ? `${p.user.city}, ${p.user.state || ''}` : 'Chennai, India'),
+                area: p.user.area,
+                city: p.user.city,
+                location: p.user.area && p.user.city
+                    ? `${p.user.area}, ${p.user.city}`
+                    : (p.user.location || (p.user.city ? `${p.user.city}, ${p.user.state || ''}` : 'Chennai, India')),
                 responseTime: p.responseTime || '1 hour',
                 image: p.user.avatar || p.user.profileImage || '/placeholder-user.jpg',
                 avatar: p.user.avatar || p.user.profileImage || '/placeholder-user.jpg',

@@ -12,7 +12,7 @@ import { MapModal } from '@/components/freelancer/jobs/MapModal'
 import { useNearbyProfessionals } from '@/contexts/NearbyProfessionalsContext'
 import { usePopularServices } from '@/contexts/PopularServicesContext'
 import { useAuth } from '@/contexts/AuthContext';
-import { ExpertCardSkeleton } from '@/components/skeletons/ExpertCardSkeleton'
+import { TopRatedExpertSkeleton } from '@/components/skeletons/TopRatedExpertSkeleton'
 
 // Search functionality will be implemented with real data
 
@@ -389,7 +389,7 @@ export default function ClientHome() {
                   {loading ? (
                     // Show skeleton cards while loading
                     [...Array(5)].map((_, i) => (
-                      <ExpertCardSkeleton key={i} />
+                      <TopRatedExpertSkeleton key={i} />
                     ))
                   ) : professionals.length > 0 ? (
                     professionals

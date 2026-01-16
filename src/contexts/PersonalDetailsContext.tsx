@@ -36,6 +36,7 @@ export interface PersonalDetails {
   city?: string;
   state?: string;
   postalCode?: string;
+  area?: string;
 }
 
 interface PersonalDetailsContextType {
@@ -77,7 +78,8 @@ const initialPersonalDetails: PersonalDetails = {
   address: "",
   city: "",
   state: "",
-  postalCode: ""
+  postalCode: "",
+  area: ""
 };
 
 const PersonalDetailsContext = createContext<PersonalDetailsContextType | undefined>(undefined);
@@ -187,6 +189,7 @@ export function PersonalDetailsProvider({ children }: { children: ReactNode }) {
         dateOfBirth: userData?.dateOfBirth || "",
         email: userData?.email || "",
         phone: userData?.phone || "",
+        area: userData?.area || "",
       };
 
       setPersonalDetails(prev => ({
@@ -250,7 +253,8 @@ export function PersonalDetailsProvider({ children }: { children: ReactNode }) {
         address: userData?.address || "",
         city: userData?.city || "",
         state: userData?.state || "",
-        postalCode: userData?.postalCode || ""
+        postalCode: userData?.postalCode || "",
+        area: userData?.area || ""
       };
 
       setPersonalDetails(prev => ({

@@ -52,6 +52,8 @@ interface FreelancerDetail {
     service: string;
     experience: string;
     location: string;
+    area?: string;
+    city?: string;
     distance: number;
     price: number;
     priceUnit: string;
@@ -370,8 +372,8 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
 
     const handleBack = () => {
         if (isPublicView) {
-            // For public links, maybe go to home or browse freelancers
-            router.push('/');
+            // For public links, go to hire page list view
+            router.push('/client/nearby/hirefeed?view=list');
             return;
         }
 
@@ -390,9 +392,22 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
         }
     };
 
-    const handleSkillClick = (skillName: string) => {
-        const skillInfo = getSkillInfo(skillName);
-        setSelectedSkillInfo(skillInfo);
+    const handleSkillClick = (skill: any) => {
+        const skillName = typeof skill === 'object' && skill !== null ? (skill.name || skill.title || 'Unknown') : skill;
+        const staticInfo = getSkillInfo(skillName);
+
+        // Merge static info with dynamic user data
+        const dynamicInfo: SkillInfo = {
+            ...staticInfo,
+            // If skill is an object, override with its specific details
+            ...(typeof skill === 'object' ? {
+                description: skill.description || staticInfo.description,
+                experience: skill.experience || staticInfo.experience,
+                level: skill.level || staticInfo.level
+            } : {})
+        };
+
+        setSelectedSkillInfo(dynamicInfo);
         setIsSkillDialogOpen(true);
     };
 
@@ -697,7 +712,13 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
 
                                         <div className="mt-2 flex flex-col items-center gap-0.5 text-sm text-white/70">
                                             <div className="flex items-center gap-2">
-                                                <span>{freelancer.location}{freelancer.distance ? <><span className="text-white/40 mx-1 text-xs">|</span>{freelancer.distance < 1 ? `${(freelancer.distance * 1000).toFixed(0)}m` : `${freelancer.distance.toFixed(1)}km`} away</> : ''}</span>
+                                                <span>
+                                                    {freelancer.area && freelancer.city
+                                                        ? `${freelancer.area}, ${freelancer.city}`
+                                                        : freelancer.location
+                                                    }
+                                                    {freelancer.distance ? <><span className="text-white/40 mx-1 text-xs">|</span>{freelancer.distance < 1 ? `${(freelancer.distance * 1000).toFixed(0)}m` : `${freelancer.distance.toFixed(1)}km`} away</> : ''}
+                                                </span>
                                             </div>
                                             <div className="flex items-center gap-1">
                                                 <div className="flex items-center gap-1.5 font-semibold text-white">
@@ -717,7 +738,7 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                                             return (
                                                 <button
                                                     key={i}
-                                                    onClick={() => handleSkillClick(skillName)}
+                                                    onClick={() => handleSkillClick(skill)}
                                                     className="bg-white/5 text-white/80 border border-white/10 hover:bg-white/10 rounded-full px-2 py-0.5 text-xs transition-colors cursor-pointer"
                                                 >
                                                     {skillName}
@@ -802,7 +823,11 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                                 <div className="space-y-8">
                                     {/* About Section */}
                                     <section id="about" data-section="about" className="scroll-mt-20 pt-4">
-                                        <p className="text-white mb-3 whitespace-pre-line">{freelancer.bio || freelancer.about}</p>
+                                        {freelancer.bio || freelancer.about ? (
+                                            <p className="text-white mb-3 whitespace-pre-line">{freelancer.bio || freelancer.about}</p>
+                                        ) : (
+                                            <p className="text-white/40 text-sm italic mb-6">No bio available</p>
+                                        )}
 
                                         {/* Cricket Information */}
                                         <div className="space-y-2 mb-6">
@@ -826,30 +851,34 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                                         {/* Skills Section - Moved above response time */}
                                         <div className="mb-6">
                                             <h3 className="font-medium text-white mb-2">Skills</h3>
-                                            <div className="flex flex-wrap gap-1.5">
-                                                {freelancer.skills?.map((skill: any, i) => {
-                                                    const skillName = typeof skill === 'object' && skill !== null ? (skill.name || skill.title || 'Unknown') : skill;
-                                                    return (
-                                                        <button
-                                                            key={i}
-                                                            onClick={() => handleSkillClick(skillName)}
-                                                            className="bg-white/5 text-white/80 border border-white/10 hover:bg-white/10 rounded-full px-1.5 py-0.5 text-xs transition-colors cursor-pointer"
-                                                        >
-                                                            {skillName}
-                                                        </button>
-                                                    );
-                                                }) || freelancer.expertise?.map((skill: any, i) => {
-                                                    const skillName = typeof skill === 'object' && skill !== null ? (skill.name || skill.title || 'Unknown') : skill;
-                                                    return (
-                                                        <span
-                                                            key={i}
-                                                            className="px-1.5 py-0.5 bg-purple-500/10 text-purple-400 rounded-full text-xs font-medium border border-purple-500/20"
-                                                        >
-                                                            {skillName}
-                                                        </span>
-                                                    );
-                                                })}
-                                            </div>
+                                            {(freelancer.skills && freelancer.skills.length > 0) || (freelancer.expertise && freelancer.expertise.length > 0) ? (
+                                                <div className="flex flex-wrap gap-1.5">
+                                                    {freelancer.skills?.map((skill: any, i) => {
+                                                        const skillName = typeof skill === 'object' && skill !== null ? (skill.name || skill.title || 'Unknown') : skill;
+                                                        return (
+                                                            <button
+                                                                key={i}
+                                                                onClick={() => handleSkillClick(skill)}
+                                                                className="bg-white/5 text-white/80 border border-white/10 hover:bg-white/10 rounded-full px-3 py-1 text-sm transition-colors cursor-pointer"
+                                                            >
+                                                                {skillName}
+                                                            </button>
+                                                        );
+                                                    }) || freelancer.expertise?.map((skill: any, i) => {
+                                                        const skillName = typeof skill === 'object' && skill !== null ? (skill.name || skill.title || 'Unknown') : skill;
+                                                        return (
+                                                            <span
+                                                                key={i}
+                                                                className="px-1.5 py-0.5 bg-purple-500/10 text-purple-400 rounded-full text-xs font-medium border border-purple-500/20"
+                                                            >
+                                                                {skillName}
+                                                            </span>
+                                                        );
+                                                    })}
+                                                </div>
+                                            ) : (
+                                                <p className="text-white/40 text-sm italic">No skills listed</p>
+                                            )}
                                         </div>
 
                                         <div className="flex items-center gap-6 mb-6 text-sm">
@@ -934,72 +963,80 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                                     </section>
 
                                     {/* Services Section */}
-                                    {freelancer.services && freelancer.services.length > 0 && (
-                                        <section id="services" data-section="services" className="pt-8 scroll-mt-20 relative group">
-                                            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
-                                            <div className="mb-4">
-                                                <h2 className="text-xl font-semibold text-white mb-1">My Services</h2>
-                                                <p className="text-white/60 text-sm">Professional services tailored to your needs</p>
-                                            </div>
+                                    <section id="services" data-section="services" className="pt-8 scroll-mt-20 relative group">
+                                        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+                                        <div className="mb-4">
+                                            <h2 className="text-xl font-semibold text-white mb-1">My Services</h2>
+                                            <p className="text-white/60 text-sm">Professional services tailored to your needs</p>
+                                        </div>
 
-                                            <div className="relative">
-                                                <div className="flex -mx-2 overflow-x-auto scrollbar-hide pb-2">
-                                                    <div className="flex gap-4 px-2 items-stretch">
-                                                        {freelancer.services.map((service) => (
-                                                            <div key={service.id} className="w-80 flex-shrink-0 rounded-xl border border-white/5 bg-[#1E1E1E] overflow-hidden flex flex-col relative group hover:border-white/10 transition-colors h-full">
-                                                                {/* Video Cover */}
-                                                                <ServiceVideoCarousel
-                                                                    videoUrls={service.videoUrls?.filter(url => url) || []}
-                                                                    onVideoClick={(url) => window.open(url, '_blank')}
-                                                                    className="w-full"
-                                                                />
+                                        {freelancer.services && freelancer.services.length > 0 ? (
+                                            <>
+                                                <div className="relative">
+                                                    <div className="flex -mx-2 overflow-x-auto scrollbar-hide pb-2">
+                                                        <div className="flex gap-4 px-2 items-stretch">
+                                                            {freelancer.services.map((service) => (
+                                                                <div key={service.id} className="w-80 flex-shrink-0 rounded-xl border border-white/5 bg-[#1E1E1E] overflow-hidden flex flex-col relative group hover:border-white/10 transition-colors h-full">
+                                                                    {/* Video Cover */}
+                                                                    <ServiceVideoCarousel
+                                                                        videoUrls={service.videoUrls?.filter(url => url) || []}
+                                                                        onVideoClick={(url) => window.open(url, '_blank')}
+                                                                        className="w-full"
+                                                                    />
 
-                                                                {/* Content */}
-                                                                <div
-                                                                    className="p-5 flex flex-col flex-1 cursor-pointer"
-                                                                    onClick={() => {
-                                                                        setSelectedService(service);
-                                                                        setIsServiceDetailOpen(true);
-                                                                    }}
-                                                                >
-                                                                    {service.category && (
-                                                                        <div className="mb-3 flex justify-start">
-                                                                            <Badge className="bg-white/10 text-white/80 border-white/20 px-2 py-0.5 text-xs">
-                                                                                {service.category}
-                                                                            </Badge>
-                                                                        </div>
-                                                                    )}
-
-                                                                    <h3 className="text-lg font-semibold text-white mb-3 line-clamp-2">{service.title}</h3>
-
-                                                                    <p className="text-sm text-white/60 line-clamp-3 mb-6">{service.description}</p>
-
-                                                                    <div className="mt-6 pt-4 relative mt-auto">
-                                                                        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
-                                                                        <div className="flex items-center justify-between">
-                                                                            <div className="text-xl font-bold text-white">
-                                                                                ₹{String(service.price).replace(/^₹/, '')}
+                                                                    {/* Content */}
+                                                                    <div
+                                                                        className="p-5 flex flex-col flex-1 cursor-pointer"
+                                                                        onClick={() => {
+                                                                            setSelectedService(service);
+                                                                            setIsServiceDetailOpen(true);
+                                                                        }}
+                                                                    >
+                                                                        {service.category && (
+                                                                            <div className="mb-3 flex justify-start">
+                                                                                <Badge className="bg-white/10 text-white/80 border-white/20 px-2 py-0.5 text-xs">
+                                                                                    {service.category}
+                                                                                </Badge>
                                                                             </div>
-                                                                            <div className="text-sm text-white/60 bg-white/5 px-3 py-1 rounded-full border border-white/5">
-                                                                                {service.deliveryTime}
+                                                                        )}
+
+                                                                        <h3 className="text-lg font-semibold text-white mb-3 line-clamp-2">{service.title}</h3>
+
+                                                                        <p className="text-sm text-white/60 line-clamp-3 mb-6">{service.description}</p>
+
+                                                                        <div className="mt-6 pt-4 relative mt-auto">
+                                                                            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
+                                                                            <div className="flex items-center justify-between">
+                                                                                <div className="text-xl font-bold text-white">
+                                                                                    ₹{String(service.price).replace(/^₹/, '')}
+                                                                                </div>
+                                                                                <div className="text-sm text-white/60 bg-white/5 px-3 py-1 rounded-full border border-white/5">
+                                                                                    {service.deliveryTime}
+                                                                                </div>
                                                                             </div>
                                                                         </div>
                                                                     </div>
                                                                 </div>
-                                                            </div>
-                                                        ))}
+                                                            ))}
+                                                        </div>
                                                     </div>
                                                 </div>
+                                                <button
+                                                    onClick={handleViewAllServices}
+                                                    className="w-full mt-4 py-3 px-4 border border-white/30 hover:bg-white/5 transition-colors text-sm font-medium flex items-center justify-center gap-2 text-white rounded-[6px]"
+                                                >
+                                                    View All {freelancer.services.length} Services
+                                                    <ArrowRight className="h-4 w-4" />
+                                                </button>
+                                            </>
+                                        ) : (
+                                            <div className="text-center py-12 rounded-3xl border border-white/10 bg-white/5">
+                                                <Briefcase className="h-12 w-12 mx-auto text-white/20 mb-4" />
+                                                <h3 className="text-lg font-medium text-white">No services listed yet</h3>
+                                                <p className="text-white/60 mt-1">This freelancer hasn&apos;t added any service packages yet.</p>
                                             </div>
-                                            <button
-                                                onClick={handleViewAllServices}
-                                                className="w-full mt-4 py-3 px-4 border border-white/30 hover:bg-white/5 transition-colors text-sm font-medium flex items-center justify-center gap-2 text-white rounded-[6px]"
-                                            >
-                                                View All {freelancer.services.length} Services
-                                                <ArrowRight className="h-4 w-4" />
-                                            </button>
-                                        </section>
-                                    )}
+                                        )}
+                                    </section>
 
                                     {/* Portfolio Section */}
                                     {freelancer.portfolio && freelancer.portfolio.length > 0 && (

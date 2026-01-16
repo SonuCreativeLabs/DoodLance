@@ -44,7 +44,12 @@ type LocationInfo = {
   city: string;
   country: string;
   postalCode: string;
+  area: string;
 };
+
+
+
+
 
 type CricketInfo = {
   cricketRole: string;
@@ -197,7 +202,8 @@ export default function PersonalDetailsPage() {
     address: personalDetails.address || "",
     city: personalDetails.city || "",
     country: personalDetails.state || "", // Using country field for State temporarily to match UI
-    postalCode: personalDetails.postalCode || ""
+    postalCode: personalDetails.postalCode || "",
+    area: personalDetails.area || ""
   });
 
   const [cricketInfo, setCricketInfo] = useState<CricketInfo>({
@@ -235,7 +241,8 @@ export default function PersonalDetailsPage() {
       address: personalDetails.address || "",
       city: personalDetails.city || "",
       country: personalDetails.state || "",
-      postalCode: personalDetails.postalCode || ""
+      postalCode: personalDetails.postalCode || "",
+      area: personalDetails.area || ""
     }));
   }, [personalDetails]);
 
@@ -316,9 +323,10 @@ export default function PersonalDetailsPage() {
       updatePersonalDetails({
         name: `${personalInfo.firstName} ${personalInfo.lastName}`.trim(),
         title: cricketInfo.cricketRole || 'Cricketer',
-        location: `${editLocation.city}, ${editLocation.country}`,
+        location: `${editLocation.area ? editLocation.area + ', ' : ''}${editLocation.city}`,
         dateOfBirth: personalInfo.dateOfBirth,
         address: editLocation.address,
+        area: editLocation.area,
         city: editLocation.city,
         state: editLocation.country,
         postalCode: editLocation.postalCode
@@ -326,7 +334,7 @@ export default function PersonalDetailsPage() {
 
       // Sync with FreelancerProfileContext
       updateLocalProfile({
-        location: `${editLocation.city}, ${editLocation.country}`,
+        location: `${editLocation.area ? editLocation.area + ', ' : ''}${editLocation.city}`,
       });
     } else if (section === 'cricket') {
       const newCricketInfo = { ...editCricket };
@@ -670,6 +678,15 @@ export default function PersonalDetailsPage() {
                   />
                 </FormField>
 
+                <FormField label="Area" required>
+                  <Input
+                    value={editLocation.area}
+                    onChange={(e) => handleInputChange(e, 'location', 'area')}
+                    className="bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50"
+                    placeholder="e.g. Velachery"
+                  />
+                </FormField>
+
                 <FormField label="City" required>
                   <Input
                     value={editLocation.city}
@@ -723,8 +740,8 @@ export default function PersonalDetailsPage() {
             <div className="space-y-3">
               <div>
                 <p className={cn("text-white/90 font-medium", !locationInfo.address && "text-white/50 italic")}>{locationInfo.address || "Address not specified"}</p>
-                <p className={cn("text-white/70 text-sm mt-1", (!locationInfo.city && !locationInfo.country) && "text-white/50 italic")}>
-                  {(locationInfo.city || locationInfo.country) ? `${locationInfo.city || ''}${(locationInfo.city && locationInfo.country) ? ', ' : ''}${locationInfo.country || ''} ${locationInfo.postalCode || ''}` : "City/Country not specified"}
+                <p className={cn("text-white/70 text-sm mt-1", (!locationInfo.city && !locationInfo.area) && "text-white/50 italic")}>
+                  {(locationInfo.city || locationInfo.area) ? `${locationInfo.area ? locationInfo.area + ', ' : ''}${locationInfo.city || ''}` : "Location not specified"}
                 </p>
               </div>
               <div className="pt-1">
