@@ -22,8 +22,12 @@ export default function AdminLoginPage() {
     setLoading(true);
 
     try {
-      await login(email, password);
+      // Use Supabase Auth directly
+      const { error } = await login(email, password);
+      if (error) throw error;
+      // Redirect is handled in context or useEffect
     } catch (err) {
+      console.error('Login error:', err);
       setError('Invalid email or password');
     } finally {
       setLoading(false);
