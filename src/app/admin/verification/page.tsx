@@ -34,6 +34,7 @@ import {
   RefreshCw, ChevronLeft, ChevronRight, ShieldCheck, ShieldAlert
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function KYCVerificationPage() {
   const [kycRequests, setKYCRequests] = useState<any[]>([]);
@@ -45,6 +46,28 @@ export default function KYCVerificationPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const itemsPerPage = 10;
+
+  const [stats, setStats] = useState({ total: 0, pending: 0, verified: 0, rejected: 0 });
+  const [confirmAction, setConfirmAction] = useState<{
+    type: 'verify' | 'reject';
+    requestId: string;
+    userName: string;
+    reason?: string;
+  } | null>(null);
+  const [isActionLoading, setIsActionLoading] = useState(false);
+
+  // Cricket Ball Spinner for Buttons
+  const CricketBallSpinner = () => (
+    <motion.div
+      className="w-5 h-5 rounded-full bg-white relative flex items-center justify-center overflow-hidden shadow-inner mr-2"
+      animate={{ rotate: 360 }}
+      transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
+    >
+      <div className="absolute w-full h-[2px] bg-emerald-800" />
+      <div className="absolute w-[2px] h-full bg-emerald-800" />
+      <div className="absolute w-full h-full border-2 border-emerald-800/10 rounded-full" />
+    </motion.div>
+  );
 
   // Debounce search
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -74,6 +97,7 @@ export default function KYCVerificationPage() {
       if (res.ok) {
         const data = await res.json();
         setKYCRequests(data.requests);
+        if (data.stats) setStats(data.stats); // Use server-side stats
         setTotalPages(data.totalPages);
       }
     } catch (error) {
@@ -83,38 +107,89 @@ export default function KYCVerificationPage() {
     }
   };
 
-  const handleVerify = async (requestId: string) => {
+  const handleExport = () => {
+    if (!kycRequests || kycRequests.length === 0) {
+      alert('No data to export');
+      return;
+    }
+
+    // Convert to CSV
+    const headers = ['User Name', 'Email', 'Role', 'Status', 'Submitted At', 'Verified By'];
+    const csvContent = [
+      headers.join(','),
+      ...kycRequests.map(req => [
+        `"${req.userName}"`,
+        req.userEmail,
+        req.userRole,
+        req.status,
+        req.submittedAt,
+        req.verifiedBy || '-'
+      ].join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    if (link.download !== undefined) {
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', 'kyc_requests.csv');
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
+
+  const initiateVerify = (request: any) => {
+    setConfirmAction({
+      type: 'verify',
+      requestId: request.id,
+      userName: request.userName
+    });
+  };
+
+  const initiateReject = (request: any, reason: string) => {
+    setConfirmAction({
+      type: 'reject',
+      requestId: request.id,
+      userName: request.userName,
+      reason
+    });
+  };
+
+  const executeAction = async () => {
+    if (!confirmAction) return;
+    setIsActionLoading(true);
+
     try {
-      const res = await fetch(`/api/admin/verification/${requestId}`, {
+      const body: any = { action: confirmAction.type };
+      if (confirmAction.type === 'reject') {
+        body.notes = confirmAction.reason;
+      }
+
+      const res = await fetch(`/api/admin/verification/${confirmAction.requestId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'verify' })
+        body: JSON.stringify(body)
       });
-      if (res.ok) fetchKYCRequests();
-    } catch (e) { console.error(e); }
+
+      if (res.ok) {
+        await fetchKYCRequests();
+        setConfirmAction(null);
+        setDetailsModalOpen(false); // Close details if open
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsActionLoading(false);
+    }
   };
 
-  const handleReject = async (requestId: string, reason: string) => {
-    try {
-      const res = await fetch(`/api/admin/verification/${requestId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'reject', notes: reason })
-      });
-      if (res.ok) fetchKYCRequests();
-    } catch (e) { console.error(e); }
-  };
+  // Filter KYC requests (client-side filtering logic removed as API handles it)
+  const currentItems = kycRequests;
 
-  // Filter KYC requests (client-side filtering for current page)
-  const filteredRequests = kycRequests;
-  const currentItems = filteredRequests;
+  // Stats are now from server state 'stats', not local calculations
 
-  const stats = {
-    total: kycRequests.length,
-    pending: kycRequests.filter((r: any) => r.status === 'pending').length,
-    verified: kycRequests.filter((r: any) => r.status === 'verified').length,
-    rejected: kycRequests.filter((r: any) => r.status === 'rejected').length,
-  };
 
   return (
     <div className="space-y-6">
@@ -125,11 +200,11 @@ export default function KYCVerificationPage() {
           <p className="text-gray-400 mt-1 text-sm sm:text-base">Review and verify user identity documents</p>
         </div>
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-          <Button variant="outline" className="text-gray-300 w-full sm:w-auto">
+          <Button variant="outline" className="text-gray-300 w-full sm:w-auto" onClick={fetchKYCRequests}>
             <RefreshCw className="w-4 h-4 mr-2" />
             Refresh
           </Button>
-          <Button className="bg-purple-600 hover:bg-purple-700 w-full sm:w-auto">
+          <Button className="bg-purple-600 hover:bg-purple-700 w-full sm:w-auto" onClick={handleExport}>
             <Download className="w-4 h-4 mr-2" />
             Export Report
           </Button>
@@ -138,42 +213,58 @@ export default function KYCVerificationPage() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="bg-[#1a1a1a] border-gray-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-400">Total Requests</p>
-              <p className="text-2xl font-bold text-white">{stats.total}</p>
-            </div>
-            <FileText className="w-8 h-8 text-gray-600" />
-          </div>
-        </Card>
-        <Card className="bg-[#1a1a1a] border-gray-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-400">Pending</p>
-              <p className="text-2xl font-bold text-yellow-400">{stats.pending}</p>
-            </div>
-            <Clock className="w-8 h-8 text-yellow-600" />
-          </div>
-        </Card>
-        <Card className="bg-[#1a1a1a] border-gray-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-400">Verified</p>
-              <p className="text-2xl font-bold text-green-400">{stats.verified}</p>
-            </div>
-            <ShieldCheck className="w-8 h-8 text-green-600" />
-          </div>
-        </Card>
-        <Card className="bg-[#1a1a1a] border-gray-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-400">Rejected</p>
-              <p className="text-2xl font-bold text-red-400">{stats.rejected}</p>
-            </div>
-            <ShieldAlert className="w-8 h-8 text-red-600" />
-          </div>
-        </Card>
+        {loading ? (
+          Array.from({ length: 4 }).map((_, i) => (
+            <Card key={i} className="bg-[#1a1a1a] border-gray-800 p-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-24 bg-[#2a2a2a]" />
+                  <Skeleton className="h-8 w-16 bg-[#2a2a2a]" />
+                </div>
+                <Skeleton className="h-8 w-8 rounded-full bg-[#2a2a2a]" />
+              </div>
+            </Card>
+          ))
+        ) : (
+          <>
+            <Card className="bg-[#1a1a1a] border-gray-800 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-400">Total Requests</p>
+                  <p className="text-2xl font-bold text-white">{stats.total}</p>
+                </div>
+                <FileText className="w-8 h-8 text-gray-600" />
+              </div>
+            </Card>
+            <Card className="bg-[#1a1a1a] border-gray-800 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-400">Pending</p>
+                  <p className="text-2xl font-bold text-yellow-400">{stats.pending}</p>
+                </div>
+                <Clock className="w-8 h-8 text-yellow-600" />
+              </div>
+            </Card>
+            <Card className="bg-[#1a1a1a] border-gray-800 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-400">Verified</p>
+                  <p className="text-2xl font-bold text-green-400">{stats.verified}</p>
+                </div>
+                <ShieldCheck className="w-8 h-8 text-green-600" />
+              </div>
+            </Card>
+            <Card className="bg-[#1a1a1a] border-gray-800 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-400">Rejected</p>
+                  <p className="text-2xl font-bold text-red-400">{stats.rejected}</p>
+                </div>
+                <ShieldAlert className="w-8 h-8 text-red-600" />
+              </div>
+            </Card>
+          </>
+        )}
       </div>
 
       {/* Filters */}
@@ -220,89 +311,143 @@ export default function KYCVerificationPage() {
               </tr>
             </thead>
             <tbody>
-              {currentItems.map((request, index) => (
-                <motion.tr
-                  key={request.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  className="border-b border-gray-800 hover:bg-[#2a2a2a] transition-colors"
-                >
-                  <td className="p-4">
-                    <div>
-                      <p className="text-white font-medium">{request.userName}</p>
-                      <p className="text-xs text-gray-400">{request.userEmail}</p>
-                      <p className="text-xs text-gray-500">{request.userId}</p>
-                    </div>
-                  </td>
-                  <td className="p-4">
-                    <div className="flex gap-2">
-                      {Object.entries(request.documents).map(([key, doc]: [string, any]) => (
-                        <Badge
-                          key={key}
-                          variant={doc.status === 'verified' ? 'default' : doc.status === 'pending' ? 'secondary' : 'destructive'}
-                          className={
-                            doc.status === 'verified' ? 'bg-green-500/20 text-green-400' :
-                              doc.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
-                                'bg-red-500/20 text-red-400'
-                          }
-                        >
-                          {doc.type}
-                        </Badge>
-                      ))}
-                    </div>
-                  </td>
-                  <td className="p-4">
-                    <Badge
-                      variant={request.status === 'verified' ? 'default' : request.status === 'pending' ? 'secondary' : 'destructive'}
-                      className={
-                        request.status === 'verified' ? 'bg-green-500/20 text-green-400' :
-                          request.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
-                            'bg-red-500/20 text-red-400'
-                      }
-                    >
-                      {request.status}
-                    </Badge>
-                  </td>
-                  <td className="p-4 text-sm text-gray-300">{request.submittedAt}</td>
-                  <td className="p-4 text-sm text-gray-300">{request.verifiedBy || '-'}</td>
-                  <td className="p-4">
-                    <div className="flex items-center gap-2">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="text-gray-400 hover:text-white"
-                        onClick={() => {
-                          setSelectedRequest(request);
-                          setDetailsModalOpen(true);
-                        }}
-                      >
-                        <Eye className="w-4 h-4" />
-                      </Button>
-                      {request.status === 'pending' && (
-                        <>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="text-green-400 hover:text-green-300"
-                            onClick={() => handleVerify(request.id)}
+              {loading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={i} className="border-b border-gray-800">
+                    <td className="p-4">
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-32 bg-[#2a2a2a]" />
+                        <Skeleton className="h-3 w-48 bg-[#2a2a2a]" />
+                        <Skeleton className="h-3 w-20 bg-[#2a2a2a]" />
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <div className="flex gap-2">
+                        <Skeleton className="h-6 w-16 bg-[#2a2a2a]" />
+                        <Skeleton className="h-6 w-16 bg-[#2a2a2a]" />
+                      </div>
+                    </td>
+                    <td className="p-4"><Skeleton className="h-6 w-20 bg-[#2a2a2a] rounded-full" /></td>
+                    <td className="p-4"><Skeleton className="h-4 w-24 bg-[#2a2a2a]" /></td>
+                    <td className="p-4"><Skeleton className="h-4 w-20 bg-[#2a2a2a]" /></td>
+                    <td className="p-4">
+                      <div className="flex gap-2">
+                        <Skeleton className="h-8 w-8 bg-[#2a2a2a] rounded" />
+                        <Skeleton className="h-8 w-8 bg-[#2a2a2a] rounded" />
+                        <Skeleton className="h-8 w-8 bg-[#2a2a2a] rounded" />
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                currentItems.map((request, index) => (
+                  <motion.tr
+                    key={request.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="border-b border-gray-800 hover:bg-[#2a2a2a] transition-colors"
+                  >
+                    <td className="p-4">
+                      <div>
+                        <p className="text-white font-medium">{request.userName}</p>
+                        <p className="text-xs text-gray-400">{request.userEmail}</p>
+                        <p className="text-xs text-gray-500">{request.userId}</p>
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <div className="flex gap-2">
+                        {Object.entries(request.documents).map(([key, doc]: [string, any]) => (
+                          <Badge
+                            key={key}
+                            variant={doc.status === 'verified' ? 'default' : doc.status === 'pending' ? 'secondary' : 'destructive'}
+                            className={
+                              doc.status === 'verified' ? 'bg-green-500/20 text-green-400' :
+                                doc.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
+                                  'bg-red-500/20 text-red-400'
+                            }
                           >
-                            <CheckCircle className="w-4 h-4" />
-                          </Button>
+                            {doc.type}
+                          </Badge>
+                        ))}
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <Badge
+                        variant={request.status === 'verified' ? 'default' : request.status === 'pending' ? 'secondary' : 'destructive'}
+                        className={
+                          request.status === 'verified' ? 'bg-green-500/20 text-green-400' :
+                            request.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
+                              'bg-red-500/20 text-red-400'
+                        }
+                      >
+                        {request.status}
+                      </Badge>
+                    </td>
+                    <td className="p-4 text-sm text-gray-300">{request.submittedAt}</td>
+                    <td className="p-4 text-sm text-gray-300">{request.verifiedBy || '-'}</td>
+                    <td className="p-4">
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-gray-400 hover:text-white"
+                          onClick={() => {
+                            setSelectedRequest(request);
+                            setDetailsModalOpen(true);
+                          }}
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                        {request.status === 'pending' && (
+                          <>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="text-green-400 hover:text-green-300"
+                              onClick={() => initiateVerify(request)}
+                              title="Verify"
+                            >
+                              <CheckCircle className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="text-red-400 hover:text-red-300"
+                              onClick={() => initiateReject(request, 'Documents not clear')}
+                              title="Reject"
+                            >
+                              <XCircle className="w-4 h-4" />
+                            </Button>
+                          </>
+                        )}
+                        {request.status === 'verified' && (
                           <Button
                             size="sm"
                             variant="ghost"
                             className="text-red-400 hover:text-red-300"
-                            onClick={() => handleReject(request.id, 'Documents not clear')}
+                            onClick={() => initiateReject(request, 'Verification Revoked')}
+                            title="Revoke Verification"
                           >
                             <XCircle className="w-4 h-4" />
                           </Button>
-                        </>
-                      )}
-                    </div>
-                  </td>
-                </motion.tr>
-              ))}
+                        )}
+                        {request.status === 'rejected' && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="text-green-400 hover:text-green-300"
+                            onClick={() => initiateVerify(request)}
+                            title="Re-Verify"
+                          >
+                            <CheckCircle className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </td>
+                  </motion.tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -407,7 +552,12 @@ export default function KYCVerificationPage() {
                         >
                           {doc.status}
                         </Badge>
-                        <Button size="sm" variant="ghost" className="text-purple-400">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-purple-400 hover:text-purple-300"
+                          onClick={() => window.open(doc.file, '_blank')}
+                        >
                           <Eye className="w-4 h-4" />
                         </Button>
                       </div>
@@ -427,16 +577,13 @@ export default function KYCVerificationPage() {
                 <div className="flex justify-end gap-2 pt-4 border-t border-gray-800">
                   <Button
                     variant="outline"
-                    onClick={() => handleReject(selectedRequest.id, 'Documents not clear')}
+                    onClick={() => initiateReject(selectedRequest, 'Documents not clear')}
                     className="text-red-400 border-red-400 hover:bg-red-400/20"
                   >
                     Reject
                   </Button>
                   <Button
-                    onClick={() => {
-                      handleVerify(selectedRequest.id);
-                      setDetailsModalOpen(false);
-                    }}
+                    onClick={() => initiateVerify(selectedRequest)}
                     className="bg-green-600 hover:bg-green-700"
                   >
                     Verify KYC
@@ -445,6 +592,41 @@ export default function KYCVerificationPage() {
               )}
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirmation Dialog */}
+      <Dialog open={!!confirmAction} onOpenChange={(open) => !open && setConfirmAction(null)}>
+        <DialogContent className="bg-[#1a1a1a] border-gray-800">
+          <DialogHeader>
+            <DialogTitle className="text-white">
+              Confirm {confirmAction?.type === 'verify' ? 'Verification' : 'Rejection'}
+            </DialogTitle>
+            <DialogDescription className="text-gray-400">
+              Are you sure you want to {confirmAction?.type === 'verify' ? 'verify' : 'reject'} the documents for <span className="text-white font-medium">{confirmAction?.userName}</span>?
+              {confirmAction?.type === 'reject' && (
+                <p className="mt-2 text-red-400 text-sm">Reason: {confirmAction.reason}</p>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-3 mt-4">
+            <Button
+              variant="ghost"
+              onClick={() => setConfirmAction(null)}
+              className="text-gray-400 hover:text-white"
+              disabled={isActionLoading}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={executeAction}
+              className={confirmAction?.type === 'verify' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}
+              disabled={isActionLoading}
+            >
+              {isActionLoading ? <CricketBallSpinner /> : null}
+              {isActionLoading ? 'Processing...' : `Confirm ${confirmAction?.type === 'verify' ? 'Verify' : 'Reject'}`}
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

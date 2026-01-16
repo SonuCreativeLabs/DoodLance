@@ -17,6 +17,7 @@ import {
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { useBankAccount } from '@/contexts/BankAccountContext';
+import { Skeleton } from "@/components/ui/skeleton";
 
 type BankAccountInfo = {
   accountHolderName: string;
@@ -123,8 +124,53 @@ const FormField = ({
 type EditSection = 'bank-details' | 'additional-info' | null;
 
 export default function BankAccountPage() {
-  const { bankAccountData, updateBankAccountData, isComplete } = useBankAccount();
+  const { bankAccountData, updateBankAccountData, isComplete, isLoading } = useBankAccount();
   const [editingSection, setEditingSection] = useState<EditSection>(null);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#0F0F0F] text-white flex flex-col">
+        {/* Sticky Header */}
+        <div className="sticky top-0 z-10 bg-[#0F0F0F] border-b border-white/5 pt-2">
+          <div className="container mx-auto px-4 py-3">
+            <div className="flex items-center">
+              <Skeleton className="h-8 w-8 rounded-full" />
+              <div className="ml-3">
+                <Skeleton className="h-5 w-40 mb-1" />
+                <Skeleton className="h-3 w-48" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-y-auto">
+          <div className="container mx-auto px-4 py-6 space-y-6">
+            <div className="bg-[#1E1E1E] border border-white/5 rounded-2xl p-6 shadow-lg">
+              <div className="flex justify-between mb-6">
+                <div className="flex gap-3">
+                  <Skeleton className="h-5 w-5" />
+                  <Skeleton className="h-6 w-48" />
+                </div>
+                <Skeleton className="h-8 w-8" />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <div key={i} className="space-y-2">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-6 w-full" />
+                  </div>
+                ))}
+                <div className="md:col-span-2 space-y-2">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-6 w-full" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Initialize state with existing data or defaults
   const [bankDetails, setBankDetails] = useState<BankAccountInfo>(() => {

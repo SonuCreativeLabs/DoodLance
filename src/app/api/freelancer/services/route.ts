@@ -24,7 +24,8 @@ export async function GET(request: Request) {
 
         const services = await prisma.service.findMany({
             where: {
-                providerId: userId
+                providerId: userId,
+                isActive: true // Only fetch active services
             },
             include: {
                 category: true
@@ -41,6 +42,7 @@ export async function GET(request: Request) {
             description: service.description,
             price: `₹${service.price.toString()}`,
             deliveryTime: service.deliveryTime || '',
+            videoUrls: service.videoUrl || [], // videoUrl is already an array from Prisma
             type: service.serviceType, // 'online' | 'in-person' | 'hybrid'
             features: service.packages ? JSON.parse(service.packages) : [], // We store features in 'packages' column field for now or 'tags'? 
             // Wait, schema says 'tags' is String and 'packages' is String?. 
@@ -88,7 +90,8 @@ export async function POST(request: Request) {
             type,
             features,
             category,
-            skill
+            skill,
+            videoUrls
         } = body;
 
         // Validate required fields
@@ -141,6 +144,7 @@ export async function POST(request: Request) {
                 location: '', // Optional
                 serviceType: type || 'online',
                 deliveryTime,
+                videoUrl: videoUrls || [], // Save videoUrls as array
                 packages: JSON.stringify(features || []), // Store features here
                 requirements: '', // Required
 
@@ -162,6 +166,7 @@ export async function POST(request: Request) {
             description: service.description,
             price: `₹${service.price.toString()}`,
             deliveryTime: service.deliveryTime,
+            videoUrls: service.videoUrl || [], // videoUrl is already an array from Prisma
             type: service.serviceType,
             features: service.packages ? JSON.parse(service.packages) : [],
             category: service.category.name,

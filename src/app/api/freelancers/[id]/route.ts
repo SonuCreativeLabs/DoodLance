@@ -15,21 +15,21 @@ export async function GET(
         user: {
           include: {
             services: {
+              where: { isActive: true },
               include: {
                 category: {
                   select: { name: true }
                 }
-              }
+              },
+              orderBy: { createdAt: 'desc' }
             }
           }
         },
         reviews: {
-          // Relation name might be wrong in schema check.
-          // Schema has `reviews Review[]`
           orderBy: { createdAt: 'desc' }
         },
-        experiences: {
-          orderBy: { startDate: 'desc' }
+        achievements: {
+          orderBy: { createdAt: 'desc' }
         },
         portfolios: {
           orderBy: { createdAt: 'desc' }
@@ -45,19 +45,21 @@ export async function GET(
           user: {
             include: {
               services: {
+                where: { isActive: true },
                 include: {
                   category: {
                     select: { name: true }
                   }
-                }
+                },
+                orderBy: { createdAt: 'desc' }
               }
             }
           },
           reviews: {
             orderBy: { createdAt: 'desc' }
           },
-          experiences: {
-            orderBy: { startDate: 'desc' }
+          achievements: {
+            orderBy: { createdAt: 'desc' }
           },
           portfolios: {
             orderBy: { createdAt: 'desc' }
@@ -82,6 +84,7 @@ export async function GET(
       bio: profile.user.bio,
       avatar: profile.user.avatar,
       coverImage: profile.coverImage,
+      dateOfBirth: (profile.user as any).dateOfBirth,
       phone: profile.user.phone,
       email: profile.user.email,
       hourlyRate: profile.hourlyRate,
@@ -94,13 +97,18 @@ export async function GET(
       cricketRole: profile.cricketRole,
       battingStyle: profile.battingStyle,
       bowlingStyle: profile.bowlingStyle,
-      languages: profile.languages,
+      languages: [], // profile.languages removed as it doesn't exist in schema
       isOnline: profile.isOnline,
-      isVerified: profile.isVerified,
+      isVerified: profile.isVerified || profile.user.isVerified,
+      username: profile.user.username,
       reviews: profile.reviews,
-      experiences: profile.experiences,
+      achievements: profile.achievements,
       portfolios: profile.portfolios,
-      services: profile.user.services,
+      services: profile.user.services?.map((s: any) => ({
+        ...s,
+        features: s.packages ? JSON.parse(s.packages) : [],
+        videoUrls: s.videoUrl || []
+      })) || [],
       availability: (() => {
         try {
           const parsed = profile.availability ? JSON.parse(profile.availability) : [];

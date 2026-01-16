@@ -47,19 +47,19 @@ export async function GET(request: NextRequest) {
 
         const reviews = await prisma.review.findMany({
             where: { profileId: targetProfileId },
-            include: {
-                client: {
-                    select: {
-                        id: true,
-                        name: true,
-                        avatar: true
-                    }
-                }
-            },
             orderBy: { createdAt: 'desc' }
         });
 
-        return NextResponse.json({ reviews });
+        const mappedReviews = reviews.map(review => ({
+            ...review,
+            client: {
+                id: review.clientId,
+                name: review.clientName,
+                avatar: review.clientAvatar
+            }
+        }));
+
+        return NextResponse.json({ reviews: mappedReviews });
 
     } catch (error) {
         console.error('Reviews fetch error:', error);

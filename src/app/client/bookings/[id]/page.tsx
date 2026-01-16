@@ -24,18 +24,37 @@ const statusCopy: Record<string, string> = {
 // Format date from YYYY-MM-DD to readable format
 const formatBookingDate = (dateStr: string): string => {
   if (!dateStr) return '';
-  // Check if it's in YYYY-MM-DD format
-  if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
-    const [year, month, day] = dateStr.split('-').map(Number);
-    const date = new Date(year, month - 1, day);
-    return date.toLocaleDateString('en-US', {
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
+  try {
+    // 1. Try YYYY-MM-DD format (preferred for consistency with context)
+    if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      const [year, month, day] = dateStr.split('-').map(Number);
+      const date = new Date(year, month - 1, day);
+      if (!isNaN(date.getTime())) {
+        return date.toLocaleDateString('en-US', {
+          weekday: 'short',
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric'
+        });
+      }
+    }
+
+    // 2. Fallback: Try generic Date parsing
+    const date = new Date(dateStr);
+    if (!isNaN(date.getTime())) {
+      return date.toLocaleDateString('en-US', {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+      });
+    }
+
+    // 3. Last valid result, return original
+    return dateStr;
+  } catch (e) {
+    return dateStr;
   }
-  return dateStr;
 };
 
 export default function BookingDetailPage() {
@@ -393,7 +412,7 @@ export default function BookingDetailPage() {
                 </div>
                 <div className="flex-1">
                   <h3 className="text-md font-semibold text-white mb-2">Your Notes</h3>
-                  <p className="text-sm text-white/70 leading-relaxed">{booking.notes.replace(/\s*\[OTP:\s*\d+\]/g, '')}</p>
+                  <p className="text-sm text-white/70 leading-relaxed">{booking.notes.replace(/\s*\[(OTP|TxID):\s*[^\]]+\]/g, '')}</p>
                 </div>
               </div>
             </div>

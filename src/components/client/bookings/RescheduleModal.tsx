@@ -9,7 +9,7 @@ import { Calendar as CalendarIcon, Clock, Check, MapPin, IndianRupee } from "luc
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import { CustomCalendar } from "./CustomCalendar"
-import { useAvailability } from "@/contexts/AvailabilityContext"
+import { DayAvailability } from "@/contexts/AvailabilityContext"
 
 interface RescheduleModalProps {
     isOpen: boolean
@@ -38,7 +38,10 @@ export function RescheduleModal({ isOpen, onClose, booking, onReschedule, mode =
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [isSuccess, setIsSuccess] = useState(false)
     const [location, setLocation] = useState<string>("")
-    const { days: availabilityDays } = useAvailability()
+
+    // Fetch availability for the specific freelancer
+    const [availabilityDays, setAvailabilityDays] = useState<DayAvailability[]>([])
+    const [isLoadingAvailability, setIsLoadingAvailability] = useState(false)
 
     // Reset state when modal opens/closes or booking changes
     useEffect(() => {
@@ -49,6 +52,24 @@ export function RescheduleModal({ isOpen, onClose, booking, onReschedule, mode =
             setSelectedTime(booking.time)
             setIsSuccess(false)
             setLocation(booking.location || "")
+
+            // Fetch availability
+            const fetchAvailability = async () => {
+                if (!booking.freelancerId) return;
+                setIsLoadingAvailability(true);
+                try {
+                    const res = await fetch(`/api/freelancer/availability?userId=${booking.freelancerId}`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        setAvailabilityDays(data.availability || []);
+                    }
+                } catch (error) {
+                    console.error("Failed to fetch freelancer availability", error);
+                } finally {
+                    setIsLoadingAvailability(false);
+                }
+            };
+            fetchAvailability();
         }
     }, [isOpen, booking])
 
@@ -81,12 +102,19 @@ export function RescheduleModal({ isOpen, onClose, booking, onReschedule, mode =
         today.setHours(0, 0, 0, 0)
         if (date < today) return true
 
+        // If availability is loading or empty, default to disabled or let's say enabled? 
+        // Safer to disable until loaded, or if empty array (not set), maybe default to available?
+        // Let's assume unavailable if no data found to prompt setup, OR available if we want to be permissive.
+        // Given user requirement "show only the dates... set by freelancer", we should be strict.
+        if (availabilityDays.length === 0 && !isLoadingAvailability) return false; // Fallback if no availability set? Or true? Let's strictly follow requirement: "dates... set by freelancer". If not set, maybe unavailable. But better UX might be available. Let's return true (disabled) if we strictly follow "only dates set". But if they haven't set any, they might be fully blocked. Let's check `available` flag.
+
         // Check if freelancer works on this day of week
         const dayOfWeek = date.getDay() // 0 = Sunday, 1 = Monday, etc.
         const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
         const dayName = dayNames[dayOfWeek]
 
         const dayAvailability = availabilityDays.find(d => d.id === dayName)
+        // If day not found in availability config, assume unavailable
         return !dayAvailability?.available
     }
 
@@ -189,7 +217,9 @@ export function RescheduleModal({ isOpen, onClose, booking, onReschedule, mode =
                             <span>Select Time</span>
                         </div>
                         <div className="grid grid-cols-3 gap-2">
-                            {TIME_SLOTS.map((time) => {
+                            {isLoadingAvailability ? (
+                                <div className="col-span-3 text-center text-xs text-white/40 py-2">Loading availability...</div>
+                            ) : TIME_SLOTS.map((time) => {
                                 const isAvailable = isTimeSlotAvailable(time)
                                 const isDisabled = !date || !isAvailable
 

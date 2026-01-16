@@ -5,6 +5,17 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Select,
   SelectContent,
@@ -27,6 +38,116 @@ const statusColors: Record<JobStatus, string> = {
   draft: 'bg-yellow-500',
 };
 
+interface EditJobModalProps {
+  job: any;
+  open: boolean;
+  onClose: () => void;
+  onSave: (jobId: string, data: any) => Promise<void>;
+}
+
+function EditJobModal({ job, open, onClose, onSave }: EditJobModalProps) {
+  const [formData, setFormData] = useState({
+    title: '',
+    budget: '',
+    status: '',
+    description: ''
+  });
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (job) {
+      setFormData({
+        title: job.title || '',
+        budget: job.budget ? job.budget.toString() : '',
+        status: job.status || 'active',
+        description: job.description || ''
+      });
+    }
+  }, [job]);
+
+  const handleSubmit = async () => {
+    setLoading(true);
+    try {
+      await onSave(job.id, {
+        ...formData,
+        budget: parseFloat(formData.budget) || 0
+      });
+      onClose();
+    } catch (error) {
+      console.error('Failed to save:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!job) return null;
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-md bg-[#1a1a1a] border-gray-800">
+        <DialogHeader>
+          <DialogTitle className="text-white">Edit Job</DialogTitle>
+          <DialogDescription className="text-gray-400">
+            Update job details for {job.title}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4 py-4">
+          <div className="space-y-2">
+            <Label className="text-gray-300">Title</Label>
+            <Input
+              value={formData.title}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              className="bg-[#2a2a2a] border-gray-700 text-white"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-gray-300">Budget (₹)</Label>
+            <Input
+              type="number"
+              value={formData.budget}
+              onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
+              className="bg-[#2a2a2a] border-gray-700 text-white"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-gray-300">Status</Label>
+            <Select value={formData.status} onValueChange={(val) => setFormData({ ...formData, status: val })}>
+              <SelectTrigger className="bg-[#2a2a2a] border-gray-700 text-white">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="closed">Closed</SelectItem>
+                <SelectItem value="draft">Draft</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label className="text-gray-300">Description</Label>
+            <Textarea
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              className="bg-[#2a2a2a] border-gray-700 text-white"
+            />
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose} disabled={loading}>Cancel</Button>
+          <Button
+            className="bg-purple-600 hover:bg-purple-700"
+            onClick={handleSubmit}
+            disabled={loading}
+          >
+            {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : 'Save Changes'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export default function JobsPage() {
   const [jobs, setJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -35,6 +156,8 @@ export default function JobsPage() {
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [jobToEdit, setJobToEdit] = useState<any>(null);
   const itemsPerPage = 10;
 
   // Debounce search
@@ -46,6 +169,52 @@ export default function JobsPage() {
     }, 500);
     return () => clearTimeout(timer);
   }, [searchTerm]);
+
+  const handleExport = () => {
+    // Define headers
+    const headers = [
+      'Job ID', 'Title', 'Client', 'Category', 'Budget', 'Status',
+      'Applications', 'Posted Date', 'Deadline', 'Location'
+    ];
+
+    // Convert jobs to CSV rows
+    const rows = jobs.map(j => [
+      j.id,
+      `"${j.title}"`,
+      `"${j.client}"`,
+      `"${j.category}"`,
+      j.budget,
+      j.status,
+      j.applications,
+      j.postedDate,
+      j.deadline,
+      `"${j.location}"`
+    ]);
+
+    // Combine headers and rows
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.join(','))
+    ].join('\n');
+
+    // Create blob and download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `jobs_export_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const [stats, setStats] = useState({
+    totalJobs: 0,
+    activeJobs: 0,
+    totalApplications: 0,
+    avgBudget: 0
+  });
 
   const fetchJobs = async () => {
     setLoading(true);
@@ -62,6 +231,9 @@ export default function JobsPage() {
         const data = await res.json();
         setJobs(data.jobs);
         setTotalPages(data.totalPages);
+        if (data.stats) {
+          setStats(data.stats);
+        }
       }
     } catch (error) {
       console.error('Error fetching jobs:', error);
@@ -75,11 +247,24 @@ export default function JobsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, debouncedSearch, statusFilter, categoryFilter]);
 
-  const stats = {
-    totalJobs: jobs.length,
-    activeJobs: jobs.filter(j => j.status === 'active').length,
-    totalApplications: jobs.reduce((sum, j) => sum + (j.applications || 0), 0),
-    avgBudget: jobs.length > 0 ? Math.round(jobs.reduce((sum, j) => sum + (j.budget || 0), 0) / jobs.length) : 0
+  const handleUpdateJob = async (jobId: string, data: any) => {
+    try {
+      const res = await fetch(`/api/admin/jobs/${jobId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+
+      if (res.ok) {
+        fetchJobs();
+      } else {
+        const error = await res.json();
+        alert(error.error || 'Failed to update job');
+      }
+    } catch (e) {
+      console.error('Update job error:', e);
+      alert('Failed to update job');
+    }
   };
 
   return (
@@ -91,7 +276,12 @@ export default function JobsPage() {
           <p className="text-gray-400 mt-1 text-sm sm:text-base">Manage job postings and applications</p>
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
-          <Button variant="outline" className="text-gray-300 w-full sm:w-auto">
+          <Button
+            variant="outline"
+            className="text-gray-300 w-full sm:w-auto"
+            onClick={handleExport}
+            disabled={jobs.length === 0}
+          >
             <Download className="w-4 h-4 mr-2" />
             Export
           </Button>
@@ -104,7 +294,9 @@ export default function JobsPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-400">Total Jobs</p>
-              <p className="text-2xl font-bold text-white">{stats.totalJobs}</p>
+              {loading ? <Skeleton className="h-8 w-16 bg-[#2a2a2a] mt-1" /> : (
+                <p className="text-2xl font-bold text-white">{stats.totalJobs}</p>
+              )}
             </div>
             <Briefcase className="w-8 h-8 text-blue-500" />
           </div>
@@ -113,7 +305,9 @@ export default function JobsPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-400">Active Jobs</p>
-              <p className="text-2xl font-bold text-white">{stats.activeJobs}</p>
+              {loading ? <Skeleton className="h-8 w-16 bg-[#2a2a2a] mt-1" /> : (
+                <p className="text-2xl font-bold text-white">{stats.activeJobs}</p>
+              )}
             </div>
             <CheckCircle className="w-8 h-8 text-green-500" />
           </div>
@@ -122,7 +316,9 @@ export default function JobsPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-400">Applications</p>
-              <p className="text-2xl font-bold text-white">{stats.totalApplications}</p>
+              {loading ? <Skeleton className="h-8 w-16 bg-[#2a2a2a] mt-1" /> : (
+                <p className="text-2xl font-bold text-white">{stats.totalApplications}</p>
+              )}
             </div>
             <Users className="w-8 h-8 text-purple-500" />
           </div>
@@ -131,7 +327,9 @@ export default function JobsPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-400">Avg Budget</p>
-              <p className="text-2xl font-bold text-white">₹{(stats.avgBudget / 1000).toFixed(0)}k</p>
+              {loading ? <Skeleton className="h-8 w-24 bg-[#2a2a2a] mt-1" /> : (
+                <p className="text-2xl font-bold text-white">₹{(stats.avgBudget / 1000).toFixed(0)}k</p>
+              )}
             </div>
             <DollarSign className="w-8 h-8 text-orange-500" />
           </div>
@@ -183,8 +381,35 @@ export default function JobsPage() {
         <div className="p-6">
           <h2 className="text-lg font-semibold text-white mb-4">Job Listings</h2>
           <div className="space-y-4">
+
             {loading ? (
-              <p className="text-gray-400 text-center py-8">Loading jobs...</p>
+              Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="border border-gray-800 rounded-lg p-4 bg-[#1a1a1a]">
+                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                    <div className="flex-1">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="space-y-3 w-full">
+                          <Skeleton className="h-6 w-1/3 bg-[#2a2a2a]" />
+                          <Skeleton className="h-4 w-1/4 bg-[#2a2a2a]" />
+                          <div className="flex gap-4">
+                            <Skeleton className="h-4 w-20 bg-[#2a2a2a]" />
+                            <Skeleton className="h-4 w-20 bg-[#2a2a2a]" />
+                            <Skeleton className="h-4 w-20 bg-[#2a2a2a]" />
+                          </div>
+                          <div className="flex gap-2">
+                            <Skeleton className="h-6 w-16 bg-[#2a2a2a] rounded-full" />
+                            <Skeleton className="h-6 w-16 bg-[#2a2a2a] rounded-full" />
+                          </div>
+                        </div>
+                        <div className="text-right space-y-2">
+                          <Skeleton className="h-8 w-24 bg-[#2a2a2a]" />
+                          <Skeleton className="h-6 w-20 bg-[#2a2a2a] rounded-full ml-auto" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))
             ) : jobs.map((job, index) => (
               <motion.div
                 key={job.id}
@@ -226,16 +451,24 @@ export default function JobsPage() {
                         <Badge className={`${statusColors[job.status as JobStatus]} text-white mt-2`}>
                           {job.status}
                         </Badge>
+
                       </div>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-2 mt-4 lg:mt-0">
-                    <Button variant="outline" size="sm" className="text-gray-300">
-                      View Applications ({job.applications})
-                    </Button>
-                    <Button size="sm" className="bg-purple-600 hover:bg-purple-700">
-                      Edit
-                    </Button>
+                    <div className="flex items-center gap-2 mt-4 lg:mt-0">
+                      <Button variant="outline" size="sm" className="text-gray-300">
+                        View Applications ({job.applications})
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="bg-purple-600 hover:bg-purple-700"
+                        onClick={() => {
+                          setJobToEdit(job);
+                          setEditModalOpen(true);
+                        }}
+                      >
+                        Edit
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </motion.div>
@@ -269,6 +502,15 @@ export default function JobsPage() {
           </div>
         )}
       </Card>
+      <EditJobModal
+        job={jobToEdit}
+        open={editModalOpen}
+        onClose={() => {
+          setEditModalOpen(false);
+          setJobToEdit(null);
+        }}
+        onSave={handleUpdateJob}
+      />
     </div>
   );
 }

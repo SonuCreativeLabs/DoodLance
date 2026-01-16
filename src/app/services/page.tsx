@@ -2,9 +2,11 @@
 
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Check } from 'lucide-react';
+import { ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useRole } from '@/contexts/role-context';
+import { ServiceVideoCarousel } from '@/components/common/ServiceVideoCarousel';
+import { Badge } from '@/components/ui/badge';
 
 interface Service {
   id: string;
@@ -15,6 +17,7 @@ interface Service {
   deliveryTime: string;
   features?: string[];
   category?: string;
+  videoUrls?: string[];
 }
 
 interface ServicesPageProps {
@@ -32,14 +35,14 @@ export default function ServicesPage() {
   const [showFreelancerMessage, setShowFreelancerMessage] = useState(false);
   const params = useSearchParams();
   const { role } = useRole();
-  
+
   // Back button handler
   const handleBack = () => {
     console.log('Back button clicked on services page');
     // Check if we have a stored URL to return to the profile preview
     const returnToPreview = sessionStorage.getItem('returnToProfilePreview');
     console.log('Stored return URL:', returnToPreview);
-    
+
     if (returnToPreview) {
       console.log('Navigating back to profile preview');
       // Clear the stored URL
@@ -53,7 +56,7 @@ export default function ServicesPage() {
       }
       return; // Prevent further execution
     }
-    
+
     // Fallback to browser history if available
     if (window.history.length > 1) {
       router.back();
@@ -67,19 +70,19 @@ export default function ServicesPage() {
     try {
       // Check if we're coming from the profile preview modal
       const isFromPreview = window.location.hash === '#fromPreview';
-      
+
       if (isFromPreview) {
         // Get data from session storage
         const storedServices = sessionStorage.getItem('servicesPreviewData');
         const storedName = sessionStorage.getItem('freelancerName');
-        
+
         if (storedServices) {
           const parsedServices = JSON.parse(storedServices);
           setServices(parsedServices);
           // Clear the stored data after using it
           sessionStorage.removeItem('servicesPreviewData');
         }
-        
+
         if (storedName) {
           setFreelancerName(storedName);
           sessionStorage.removeItem('freelancerName');
@@ -91,13 +94,13 @@ export default function ServicesPage() {
           const decodedServices = JSON.parse(decodeURIComponent(servicesParam));
           setServices(decodedServices);
         }
-        
+
         const nameParam = params.get('freelancerName');
         if (nameParam) {
           setFreelancerName(decodeURIComponent(nameParam));
         }
       }
-      
+
       setLoading(false);
     } catch (error) {
       console.error('Error parsing services data:', error);
@@ -121,7 +124,7 @@ export default function ServicesPage() {
           <div className="h-6 w-48 bg-white/10 rounded animate-pulse"></div>
           <div className="w-10"></div> {/* Spacer for alignment */}
         </div>
-        
+
         {/* Content */}
         <div className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -139,7 +142,7 @@ export default function ServicesPage() {
       {/* Header */}
       <div className="sticky top-0 z-50 px-4 py-2 border-b border-white/5 bg-[#0f0f0f]/95 backdrop-blur-sm">
         <div className="flex items-center">
-          <button 
+          <button
             onClick={handleBack}
             className="inline-flex items-center text-sm text-purple-400 hover:text-purple-300 transition-colors duration-200"
             aria-label="Go back"
@@ -154,13 +157,13 @@ export default function ServicesPage() {
           </div>
         </div>
       </div>
-      
+
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-6">
         {services.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-center py-12">
             <div className="text-white/60 mb-4">No services available</div>
-            <Button 
+            <Button
               variant="outline"
               onClick={handleBack}
               className="border-white/20 text-white hover:bg-white/10"
@@ -172,58 +175,52 @@ export default function ServicesPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
             {services.map((service) => (
-              <div key={service.id} className="flex-shrink-0 p-5 pt-8 rounded-3xl border border-white/10 bg-white/5 hover:border-purple-500/30 transition-colors flex flex-col h-full relative">
-                {service.category && (
-                  <div className="absolute top-3 left-3">
-                    <span className="bg-white/10 text-white/80 border-white/20 px-2 py-0.5 text-xs rounded">
-                      {service.category}
-                    </span>
-                  </div>
-                )}
-                <div className="flex-1">
-                  <div className="flex items-start justify-between mt-2">
-                    <h3 className="text-lg font-semibold text-white">{service.title}</h3>
-                  </div>
-                  
-                  <p className="text-white/70 mt-2 text-sm">{service.description}</p>
-                  
-                  {service.features && service.features.length > 0 && (
-                    <ul className="mt-3 space-y-2">
-                      {service.features.map((feature, i) => (
-                        <li key={i} className="flex items-start text-sm text-white/80">
-                          <Check className="h-4 w-4 text-green-400 mr-2 mt-0.5 flex-shrink-0" />
-                          <span>{feature}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-                
-                <div className="mt-4 pt-4 relative">
-                  <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
-                  <div className="flex flex-col gap-3">
-                    <div className="flex items-center justify-between">
-                      <div className="text-xl font-bold text-white">
-                        {service.price}
-                      </div>
-                      <div className="text-sm text-white/60 bg-white/5 px-3 py-1 rounded-full">
-                        {service.deliveryTime}
-                      </div>
+              <div key={service.id} className="rounded-3xl border border-white/5 bg-[#1E1E1E] flex flex-col relative overflow-hidden group hover:border-white/10 transition-colors">
+                {/* Video Carousel Header */}
+                <ServiceVideoCarousel
+                  videoUrls={service.videoUrls?.filter(url => url) || []}
+                  onVideoClick={(url) => window.open(url, '_blank')}
+                  className="aspect-video w-full object-cover rounded-t-3xl"
+                />
+
+                <div className="p-6 flex flex-col flex-1">
+                  {service.category && (
+                    <div className="mb-4 flex justify-start">
+                      <Badge className="bg-white/10 text-white/80 border-white/20 px-2 py-0.5 text-xs font-normal">
+                        {service.category}
+                      </Badge>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <button 
-                        className="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-xl text-sm font-medium transition-colors"
-                        onClick={() => {
-                          if (role === 'freelancer') {
-                            setShowFreelancerMessage(true);
-                          } else {
-                            // Handle client hire functionality
-                            console.log('Client wants to hire freelancer for service:', service.title);
-                          }
-                        }}
-                      >
-                        Hire Me
-                      </button>
+                  )}
+
+                  <div className="mb-auto">
+                    <h3 className="text-lg font-semibold text-white mb-3 line-clamp-2 text-left">{service.title}</h3>
+                    <p className="text-sm text-white/60 line-clamp-3 mb-6 text-left">{service.description}</p>
+
+                    {service.features && service.features.length > 0 && (
+                      <ul className="space-y-2.5 text-left mb-6">
+                        {service.features.map((feature, i) => (
+                          <li key={i} className="flex items-start">
+                            <CheckCircle2 className="h-4.5 w-4.5 flex-shrink-0 text-purple-400 mr-2.5 mt-0.5" />
+                            <span className="text-sm text-white/80 leading-tight">{feature}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+
+                  <div className="mt-6 pt-4 relative">
+                    <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
+                    <div className="flex flex-col gap-3">
+                      <div className="flex items-center justify-between">
+                        <div className="text-xl font-bold text-white">
+                          {service.price.includes('₹') ? service.price : `₹${service.price.replace(/^\₹/, '')}`}
+                        </div>
+                        <div className="text-sm text-white/60 bg-white/5 px-3 py-1 rounded-full border border-white/5">
+                          {service.deliveryTime}
+                        </div>
+                      </div>
+
+
                     </div>
                   </div>
                 </div>

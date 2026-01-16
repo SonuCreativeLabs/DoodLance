@@ -270,24 +270,24 @@ export async function POST(request: NextRequest) {
       await prisma.notification.create({
         data: {
           userId: freelancerId,
-          title: 'Application Submitted',
-          message: `Your application for "${jobTitle}" has been submitted successfully`,
+          title: 'Application Sent',
+          message: `Your request to join the squad for "${jobTitle}" has been sent.`,
           type: 'JOB_APPLICATION',
           entityId: application.id,
           entityType: 'application',
-          actionUrl: `/freelancer/applications/${application.id}`,
+          actionUrl: `/freelancer/proposals`,
         }
       })
 
       await prisma.notification.create({
         data: {
           userId: jobClientId,
-          title: 'New Job Application',
-          message: `${freelancerName} has applied to your job "${jobTitle}"`,
+          title: 'New Squad Application',
+          message: `${freelancerName} is interested in your "${jobTitle}" position.`,
           type: 'JOB_APPLICATION',
           entityId: application.id,
           entityType: 'application',
-          actionUrl: `/client/applications/${application.id}`,
+          actionUrl: `/client/bookings/applications/${application.id}`,
         }
       })
     } catch (notifError) {

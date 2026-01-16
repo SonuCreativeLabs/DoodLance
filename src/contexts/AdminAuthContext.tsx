@@ -44,7 +44,7 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string) => {
     try {
       console.log('Client login attempt:', { email, passwordProvided: !!password });
-      
+
       const response = await fetch('/api/admin/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -52,7 +52,7 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
       });
 
       console.log('Response status:', response.status);
-      
+
       if (!response.ok) {
         const errorText = await response.text();
         console.log('Error response:', errorText);
@@ -64,12 +64,12 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
       setAdmin(data.admin);
       localStorage.setItem('admin_user', JSON.stringify(data.admin));
       localStorage.setItem('admin_token', data.token);
-      
+
       // Log the login action
       try {
         await fetch('/api/admin/audit', {
           method: 'POST',
-          headers: { 
+          headers: {
             'Content-Type': 'application/json',
             'x-admin-token': data.token
           },
@@ -99,7 +99,7 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
           const token = localStorage.getItem('admin_token');
           await fetch('/api/admin/audit', {
             method: 'POST',
-            headers: { 
+            headers: {
               'Content-Type': 'application/json',
               'x-admin-token': token || ''
             },
@@ -126,11 +126,13 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
 
   const checkPermission = (permission: string): boolean => {
     if (!admin) return false;
-    if (admin.role === 'SUPER_ADMIN') return true;
-    return admin.permissions.includes(permission);
+    // Normalize role to uppercase for comparison
+    const normalizedRole = admin.role.toUpperCase();
+    if (normalizedRole === 'SUPER_ADMIN') return true;
+    return admin.permissions?.includes(permission) || false;
   };
 
-  const isSuper = admin?.role === 'SUPER_ADMIN';
+  const isSuper = admin?.role?.toUpperCase() === 'SUPER_ADMIN';
 
   return (
     <AdminAuthContext.Provider value={{ admin, loading, login, logout, checkPermission, isSuper }}>

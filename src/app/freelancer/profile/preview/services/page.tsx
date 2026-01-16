@@ -1,10 +1,12 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ArrowLeft, Check, Clock, UserPlus } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Clock, UserPlus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { HireBottomSheet } from '@/components/hire/HireBottomSheet';
 import { ServiceItem } from '@/contexts/HireContext';
+import { ServiceVideoCarousel } from '@/components/common/ServiceVideoCarousel';
+import { Badge } from '@/components/ui/badge';
 
 
 export type Service = {
@@ -15,6 +17,22 @@ export type Service = {
   deliveryTime: string;
   features?: string[];
   category?: string;
+  videoUrls?: string[];
+};
+
+// Helper to safely parse features
+const parseFeatures = (features: any): string[] => {
+  if (!features) return [];
+  if (Array.isArray(features)) return features;
+  if (typeof features === 'string') {
+    try {
+      const parsed = JSON.parse(features);
+      return Array.isArray(parsed) ? parsed : [features];
+    } catch (e) {
+      return [features];
+    }
+  }
+  return [];
 };
 
 export default function ServicesPage() {
@@ -27,6 +45,7 @@ export default function ServicesPage() {
   const [freelancerImage, setFreelancerImage] = useState('');
   const [isHireSheetOpen, setIsHireSheetOpen] = useState(false);
   const [isViewOnly, setIsViewOnly] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Check if we are in view only mode
   useEffect(() => {
@@ -34,6 +53,62 @@ export default function ServicesPage() {
       setIsViewOnly(window.location.hash.includes('fromPreview'));
     }
   }, []);
+
+  // Fetch services if freelancerId is present
+  useEffect(() => {
+    async function fetchServices() {
+      if (!freelancerId) {
+        // Try fallback to session storage if from preview
+        try {
+          const storedServices = sessionStorage.getItem('servicesPreviewData');
+          const storedName = sessionStorage.getItem('freelancerName');
+          if (storedServices) {
+            setServices(JSON.parse(storedServices));
+          }
+          if (storedName) {
+            setFreelancerName(storedName);
+          }
+        } catch (e) {
+          console.error('Error loading from session:', e);
+        }
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/freelancers/${freelancerId}`);
+        if (!res.ok) throw new Error('Failed to fetch profile');
+
+        const data = await res.json();
+        const profile = data.profile;
+
+        if (profile) {
+          setFreelancerName(profile.name || 'Freelancer');
+          setFreelancerImage(profile.avatar || '');
+
+          if (profile.services && Array.isArray(profile.services)) {
+            const mappedServices: Service[] = profile.services.map((s: any) => ({
+              id: s.id,
+              title: s.title,
+              description: s.description,
+              price: s.price,
+              deliveryTime: s.deliveryTime || 'Flexible',
+              features: parseFeatures(s.features),
+              category: s.category?.name || 'Service',
+              videoUrls: (Array.isArray(s.videoUrls) ? s.videoUrls : (Array.isArray(s.videoUrl) ? s.videoUrl : [])).filter((u: any) => typeof u === 'string' && u.trim().length > 0),
+            }));
+            setServices(mappedServices);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching services:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchServices();
+  }, [freelancerId]);
 
   // Hide header and navbar for this page
   useEffect(() => {
@@ -117,45 +192,92 @@ export default function ServicesPage() {
 
       {/* Services List */}
       <div className="container mx-auto px-4 py-6">
-        {services.length > 0 ? (
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div
+                key={i}
+                className="p-5 rounded-3xl border border-white/5 bg-white/5 flex flex-col h-full animate-pulse"
+              >
+                <div className="flex-1">
+                  <div className="flex justify-between mb-4">
+                    <div className="h-6 bg-white/10 rounded w-2/3"></div>
+                    <div className="h-5 bg-white/10 rounded-full w-20"></div>
+                  </div>
+                  <div className="space-y-2 mb-6">
+                    <div className="h-4 bg-white/10 rounded w-full"></div>
+                    <div className="h-4 bg-white/10 rounded w-5/6"></div>
+                    <div className="h-4 bg-white/10 rounded w-4/6"></div>
+                  </div>
+                  <div className="space-y-3 mb-6">
+                    {[1, 2, 3].map((j) => (
+                      <div key={j} className="flex items-center gap-2">
+                        <div className="w-4 h-4 rounded-full bg-white/10"></div>
+                        <div className="h-3 bg-white/10 rounded w-1/2"></div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="mt-4 pt-4 border-t border-white/5 flex justify-between items-center">
+                  <div className="h-8 bg-white/10 rounded w-24"></div>
+                  <div className="h-6 bg-white/10 rounded-full w-20"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : services.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {services.map((service) => (
               <div
                 key={service.id}
-                className="p-5 rounded-3xl border border-white/10 bg-white/5 hover:border-purple-500/30 transition-colors flex flex-col h-full"
+                className="rounded-3xl border border-white/5 bg-[#1E1E1E] flex flex-col relative overflow-hidden group hover:border-white/10 transition-colors"
                 onClick={() => setIsHireSheetOpen(true)}
                 style={{ cursor: 'pointer' }}
               >
-                <div className="flex flex-col h-full">
-                  <div className="flex-1">
-                    <div className="flex items-start justify-between mb-3">
-                      <h3 className="text-lg font-semibold text-white">{service.title}</h3>
+                {/* Video Carousel Header */}
+                <ServiceVideoCarousel
+                  videoUrls={service.videoUrls || []}
+                  onVideoClick={(url) => window.open(url, '_blank')}
+                  className="aspect-video w-full object-cover rounded-t-3xl"
+                />
+
+                <div className="p-6 flex flex-col flex-1">
+
+                  {/* Category Badge */}
+                  {service.category && (
+                    <div className="mb-4 flex justify-start">
+                      <Badge className="bg-white/10 text-white/80 border-white/20 px-2 py-0.5 text-xs font-normal">
+                        {service.category}
+                      </Badge>
                     </div>
+                  )}
 
-                    <p className="text-white/70 text-sm mb-4">{service.description}</p>
+                  {/* Title and Description */}
+                  <div className="mb-auto">
+                    <h3 className="text-lg font-semibold text-white mb-3 line-clamp-2 text-left">{service.title}</h3>
+                    <p className="text-sm text-white/60 line-clamp-3 mb-6 text-left">{service.description}</p>
 
+                    {/* Features List */}
                     {service.features && service.features.length > 0 && (
-                      <ul className="space-y-2 mb-4">
+                      <ul className="space-y-2.5 text-left mb-6">
                         {service.features.map((feature, i) => (
-                          <li key={i} className="flex items-start text-sm text-white/80">
-                            <Check className="h-4 w-4 text-green-400 mr-2 mt-0.5 flex-shrink-0" />
-                            <span>{feature}</span>
+                          <li key={i} className="flex items-start">
+                            <CheckCircle2 className="h-4.5 w-4.5 flex-shrink-0 text-purple-400 mr-2.5 mt-0.5" />
+                            <span className="text-sm text-white/80 leading-tight">{feature}</span>
                           </li>
                         ))}
                       </ul>
                     )}
                   </div>
 
-                  <div className="mt-4 pt-4 relative">
+                  {/* Footer */}
+                  <div className="mt-6 pt-4 relative">
                     <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
                     <div className="flex items-center justify-between">
                       <div className="text-xl font-bold text-white">
-                        {typeof service.price === 'string' && service.price.includes('₹')
-                          ? service.price
-                          : `₹${service.price}`
-                        }
+                        ₹{String(service.price).replace(/^₹/, '')}
                       </div>
-                      <div className="text-sm text-white/60 bg-white/5 px-3 py-1 rounded-full">
+                      <div className="text-sm text-white/60 bg-white/5 px-3 py-1 rounded-full border border-white/5">
                         {service.deliveryTime}
                       </div>
                     </div>

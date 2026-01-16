@@ -7,11 +7,21 @@ import {
   Users, Calendar, CreditCard, TrendingUp,
   ArrowUp, ArrowDown, Activity, DollarSign,
   Package, UserCheck, Clock, AlertCircle,
-  ChevronRight, Download, Filter
+  ChevronRight, Download, Filter, ShieldAlert,
+  MoreVertical
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import Link from 'next/link';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
-// Skeleton component for loading states
+import { Skeleton } from "@/components/ui/skeleton";
+
+// Skeleton component for loading states (Keeping the custom MetricSkeleton if specifically needed, but importing generic Skeleton too)
 function MetricSkeleton() {
   return (
     <Card className="bg-[#1a1a1a] border-gray-800 p-4 sm:p-6 h-[120px] animate-pulse">
@@ -31,9 +41,10 @@ interface MetricCardProps {
   icon: React.ElementType;
   color: string;
   prefix?: string;
+  isInverse?: boolean; // For metrics where lower is better, or neutral
 }
 
-function MetricCard({ title, value, change, icon: Icon, color, prefix = '' }: MetricCardProps) {
+function MetricCard({ title, value, change, icon: Icon, color, prefix = '', isInverse = false }: MetricCardProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -66,19 +77,67 @@ function MetricCard({ title, value, change, icon: Icon, color, prefix = '' }: Me
   );
 }
 
-function RevenueChart({ data }: { data: any[] }) {
-  const maxRevenue = data.length > 0 ? Math.max(...data.map(d => d.revenue)) : 1000;
+interface RevenueChartProps {
+  data: any[];
+  timeRange: string;
+  setTimeRange: (range: string) => void;
+}
+
+function RevenueChart({ data, timeRange, setTimeRange }: RevenueChartProps) {
+  const maxRevenue = data.length > 0 ? Math.max(100000, ...data.map(d => d.revenue)) : 100000;
+
+  const handleExport = () => {
+    if (!data || data.length === 0) return;
+
+    // Create CSV content
+    const headers = ['Date', 'Revenue', 'Bookings'];
+    const csvContent = [
+      headers.join(','),
+      ...data.map(item => `${item.date},${item.revenue},${item.bookings}`)
+    ].join('\n');
+
+    // Create download link
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `revenue_report_${timeRange}_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   return (
     <Card className="bg-[#1a1a1a] border-gray-800 p-4 sm:p-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-2">
         <h3 className="text-base sm:text-lg font-semibold text-white">Revenue Overview</h3>
         <div className="flex gap-2">
-          <Button variant="ghost" size="sm" className="text-gray-400">
-            <Filter className="w-4 h-4 mr-1" />
-            Filter
-          </Button>
-          <Button variant="ghost" size="sm" className="text-gray-400">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white hover:bg-gray-800">
+                <Filter className="w-4 h-4 mr-1" />
+                {timeRange === 'day' ? 'Today' : timeRange === 'week' ? 'Last 7 Days' : 'This Month'}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="bg-[#1a1a1a] border-gray-800 text-white">
+              <DropdownMenuItem onClick={() => setTimeRange('day')} className="hover:bg-gray-800 cursor-pointer">
+                Today
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setTimeRange('week')} className="hover:bg-gray-800 cursor-pointer">
+                Last 7 Days
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setTimeRange('month')} className="hover:bg-gray-800 cursor-pointer">
+                This Month
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-gray-400 hover:text-white hover:bg-gray-800"
+            onClick={handleExport}
+          >
             <Download className="w-4 h-4 mr-1" />
             Export
           </Button>
@@ -86,24 +145,31 @@ function RevenueChart({ data }: { data: any[] }) {
       </div>
 
       <div className="space-y-4">
-        <div className="flex items-end justify-between gap-2 h-48">
-          {data.map((item, index) => (
-            <div key={index} className="flex-1 flex flex-col items-center gap-2">
-              <div className="w-full bg-[#2a2a2a] rounded-t-lg relative flex items-end justify-center">
-                <motion.div
-                  initial={{ height: 0 }}
-                  animate={{ height: `${maxRevenue > 0 ? (item.revenue / maxRevenue) * 100 : 0}%` }}
-                  transition={{ delay: index * 0.1, duration: 0.5 }}
-                  className="w-full bg-gradient-to-t from-purple-600 to-purple-400 rounded-t-lg"
-                  style={{ minHeight: '2px' }}
-                />
+        {/* Scrollable container for chart bars */}
+        <div className="overflow-x-auto pb-2 pt-12 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
+          <div className="flex justify-between gap-2 h-48 min-w-[600px] px-1">
+            {data.map((item, index) => (
+              <div key={index} className="flex-1 flex flex-col items-center gap-2 group h-full justify-end">
+                <div className="w-full bg-[#2a2a2a] rounded-t-lg relative flex items-end justify-center hover:bg-[#333] transition-colors flex-1">
+                  <div
+                    className="w-full bg-gradient-to-t from-purple-600 to-purple-400 rounded-t-lg relative group-hover:from-purple-500 group-hover:to-purple-300 transition-all duration-500 ease-out"
+                    style={{
+                      height: `${maxRevenue > 0 ? (Number(item.revenue) / maxRevenue) * 100 : 0}%`,
+                      minHeight: '4px'
+                    }}
+                  >
+                    {/* Tooltip on hover */}
+                    <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-black/90 text-white text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50 border border-gray-800">
+                      ₹{item.revenue.toLocaleString()}
+                    </div>
+                  </div>
+                </div>
+                <div className="text-center w-full">
+                  <p className="text-[10px] sm:text-xs text-gray-400 truncate px-0.5">{item.date}</p>
+                </div>
               </div>
-              <div className="text-center">
-                <p className="text-xs text-gray-400">{item.date}</p>
-                <p className="text-xs font-medium text-white">₹{(item.revenue / 1000).toFixed(1)}k</p>
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-800">
@@ -126,18 +192,18 @@ function RevenueChart({ data }: { data: any[] }) {
 }
 
 export default function AdminDashboard() {
-  const [timeRange, setTimeRange] = useState('week');
+  const [timeRange, setTimeRange] = useState('month');
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<any>(null);
 
   useEffect(() => {
     const fetchStats = async () => {
+      setLoading(true); // Show skeleton on range change
       try {
-        const res = await fetch('/api/admin/stats');
+        const res = await fetch(`/api/admin/stats?range=${timeRange}`);
         if (res.ok) {
           const data = await res.json();
-          // Data from API comes formatted as needed, but verify chart order
-          data.revenueData = data.revenueData.reverse();
+          // No need to reverse revenueData, API sends chronological
           setStats(data);
         }
       } catch (error) {
@@ -147,24 +213,110 @@ export default function AdminDashboard() {
       }
     };
     fetchStats();
-  }, []);
+  }, [timeRange]);
 
   if (loading) {
     return (
-      <div className="space-y-4 sm:space-y-6 p-4 sm:p-6 text-white">
-        <h1 className="text-2xl font-bold mb-4">Dashboard</h1>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          <MetricSkeleton />
-          <MetricSkeleton />
-          <MetricSkeleton />
-          <MetricSkeleton />
+      <div className="space-y-4 sm:space-y-6 p-4 sm:p-6 text-white text-left">
+        {/* Header Skeleton */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div>
+            <Skeleton className="h-8 w-48 bg-[#2a2a2a] mb-2" />
+            <Skeleton className="h-4 w-64 bg-[#2a2a2a]" />
+          </div>
+          <div className="flex gap-2">
+            <Skeleton className="h-9 w-16 bg-[#2a2a2a]" />
+            <Skeleton className="h-9 w-16 bg-[#2a2a2a]" />
+            <Skeleton className="h-9 w-16 bg-[#2a2a2a]" />
+          </div>
         </div>
-        <div className="text-gray-400">Loading dashboard data...</div>
+
+        {/* Stats Grid Skeleton */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i} className="bg-[#1a1a1a] border-gray-800 p-4 sm:p-6 h-[120px] flex flex-col justify-between">
+              <div className="flex justify-between items-start">
+                <Skeleton className="h-4 w-24 bg-[#2a2a2a]" />
+                <Skeleton className="h-8 w-8 rounded-lg bg-[#2a2a2a]" />
+              </div>
+              <div className="space-y-2">
+                <Skeleton className="h-8 w-32 bg-[#2a2a2a]" />
+                <Skeleton className="h-4 w-16 bg-[#2a2a2a]" />
+              </div>
+            </Card>
+          ))}
+        </div>
+
+        {/* Charts Section Skeleton */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
+          <Card className="bg-[#1a1a1a] border-gray-800 p-4 sm:p-6 h-[400px]">
+            <div className="flex justify-between items-center mb-6">
+              <Skeleton className="h-6 w-32 bg-[#2a2a2a]" />
+              <Skeleton className="h-8 w-24 bg-[#2a2a2a]" />
+            </div>
+            <div className="flex items-end gap-2 h-[280px] mt-4">
+              {[...Array(7)].map((_, i) => (
+                <Skeleton key={i} className="flex-1 bg-[#2a2a2a] rounded-t-lg" style={{ height: `${Math.random() * 60 + 20}%` }} />
+              ))}
+            </div>
+          </Card>
+          <Card className="bg-[#1a1a1a] border-gray-800 p-6 h-[400px]">
+            <Skeleton className="h-6 w-40 bg-[#2a2a2a] mb-6" />
+            <div className="space-y-4">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="flex items-center justify-between p-3 bg-[#2a2a2a]/50 rounded-lg border border-gray-800/50">
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-32 bg-[#2a2a2a]" />
+                    <Skeleton className="h-3 w-48 bg-[#2a2a2a]" />
+                  </div>
+                  <Skeleton className="h-4 w-12 bg-[#2a2a2a]" />
+                </div>
+              ))}
+            </div>
+          </Card>
+        </div>
+
+        {/* Additional Metrics Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[...Array(3)].map((_, i) => (
+            <Card key={i} className="bg-[#1a1a1a] border-gray-800 p-6">
+              <div className="flex items-center gap-4">
+                <Skeleton className="h-12 w-12 rounded-lg bg-[#2a2a2a]" />
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-24 bg-[#2a2a2a]" />
+                  <Skeleton className="h-6 w-32 bg-[#2a2a2a]" />
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+
+        {/* Recent Activity Skeleton */}
+        <Card className="bg-[#1a1a1a] border-gray-800 p-6">
+          <div className="flex justify-between items-center mb-4">
+            <Skeleton className="h-6 w-32 bg-[#2a2a2a]" />
+            <Skeleton className="h-8 w-20 bg-[#2a2a2a]" />
+          </div>
+          <div className="space-y-3">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="flex items-center justify-between p-3 bg-[#2a2a2a]/50 rounded-lg">
+                <div className="flex items-center gap-3 w-full">
+                  <Skeleton className="h-8 w-8 rounded-lg bg-[#2a2a2a]" />
+                  <div className="space-y-2 flex-1">
+                    <Skeleton className="h-4 w-3/4 bg-[#2a2a2a]" />
+                    <Skeleton className="h-3 w-1/4 bg-[#2a2a2a]" />
+                  </div>
+                </div>
+                <Skeleton className="h-8 w-16 bg-[#2a2a2a]" />
+              </div>
+            ))}
+          </div>
+        </Card>
       </div>
     );
   }
 
-  if (!stats) return <div className="p-6 text-white">Failed to load payload.</div>;
+  if (!stats) return <div className="p-6 text-white">Failed to load dashboard data.</div>;
 
   return (
     <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
@@ -229,7 +381,7 @@ export default function AdminDashboard() {
         <MetricCard
           title="Platform Fees"
           value={stats.platformFees}
-          change={0}
+          change={stats.revenueGrowth}
           icon={CreditCard}
           color="bg-orange-600"
           prefix="₹"
@@ -239,7 +391,12 @@ export default function AdminDashboard() {
       {/* Charts Section */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
         {/* Revenue Chart */}
-        <RevenueChart data={stats.revenueData || []} />
+        {/* Revenue Chart */}
+        <RevenueChart
+          data={stats.revenueData || []}
+          timeRange={timeRange}
+          setTimeRange={setTimeRange}
+        />
 
         {/* Category Performance */}
         <Card className="bg-[#1a1a1a] border-gray-800 p-6">
@@ -261,11 +418,14 @@ export default function AdminDashboard() {
                       <span className="text-xs text-gray-400">₹{category.revenue.toLocaleString()}</span>
                     </div>
                   </div>
-                  <div className={`flex items-center gap-1 text-sm ${category.growth >= 0 ? 'text-green-500' : 'text-red-500'
-                    }`}>
-                    {category.growth >= 0 ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />}
-                    {Math.abs(category.growth)}%
-                  </div>
+                  {/* Hide growth if it's 0 to avoid clutter */}
+                  {category.growth !== 0 && (
+                    <div className={`flex items-center gap-1 text-sm ${category.growth >= 0 ? 'text-green-500' : 'text-red-500'
+                      }`}>
+                      {category.growth >= 0 ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />}
+                      {Math.abs(category.growth)}%
+                    </div>
+                  )}
                 </motion.div>
               ))
             ) : (
@@ -303,12 +463,12 @@ export default function AdminDashboard() {
 
         <Card className="bg-[#1a1a1a] border-gray-800 p-6">
           <div className="flex items-center gap-4">
-            <div className="p-3 bg-purple-600/20 rounded-lg">
-              <Clock className="w-6 h-6 text-purple-400" />
+            <div className="p-3 bg-red-600/20 rounded-lg">
+              <ShieldAlert className="w-6 h-6 text-red-500" />
             </div>
             <div>
-              <p className="text-sm text-gray-400">Avg Response Time</p>
-              <p className="text-2xl font-bold text-white">{stats.avgResponseTime}</p>
+              <p className="text-sm text-gray-400">Pending Verifications</p>
+              <p className="text-2xl font-bold text-white">{stats.pendingVerifications}</p>
             </div>
           </div>
         </Card>
@@ -318,10 +478,12 @@ export default function AdminDashboard() {
       <Card className="bg-[#1a1a1a] border-gray-800 p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-white">Recent Activity</h3>
-          <Button variant="ghost" size="sm" className="text-purple-400">
-            View All
-            <ChevronRight className="w-4 h-4 ml-1" />
-          </Button>
+          <Link href="/admin/bookings">
+            <Button variant="ghost" size="sm" className="text-purple-400 hover:text-purple-300 hover:bg-purple-400/10">
+              View All
+              <ChevronRight className="w-4 h-4 ml-1" />
+            </Button>
+          </Link>
         </div>
         <div className="space-y-3">
           {stats.recentActivity && stats.recentActivity.map((activity: any) => (
@@ -338,18 +500,19 @@ export default function AdminDashboard() {
                       'bg-blue-600/20'
                   }`}>
                   {activity.status === 'urgent' && <AlertCircle className="w-4 h-4 text-red-400" />}
-                  {activity.status === 'pending' && <Clock className="w-4 h-4 text-yellow-400" />}
+                  {activity.status === 'pending' || activity.status === 'new' ? <Clock className="w-4 h-4 text-blue-400" /> : null}
                   {activity.status === 'success' && <Activity className="w-4 h-4 text-green-400" />}
-                  {activity.status === 'new' && <TrendingUp className="w-4 h-4 text-blue-400" />}
                 </div>
                 <div>
                   <p className="text-sm text-white">{activity.message}</p>
-                  <p className="text-xs text-gray-400">{new Date(activity.time).toLocaleTimeString()}</p>
+                  <p className="text-xs text-gray-400">{new Date(activity.time).toLocaleTimeString()} • {activity.user}</p>
                 </div>
               </div>
-              <Button variant="ghost" size="sm" className="text-gray-400">
-                View
-              </Button>
+              <Link href={`/admin/bookings`}>
+                <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
+                  View
+                </Button>
+              </Link>
             </motion.div>
           ))}
           {(!stats.recentActivity || stats.recentActivity.length === 0) && (

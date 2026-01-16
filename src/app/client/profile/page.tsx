@@ -60,6 +60,25 @@ export default function ClientProfile() {
           </div>
         ) : (
           <>
+            {/* Incomplete Profile Warning */}
+            {((user.name && user.name.toLowerCase() === 'new user') || !user.phone || !user.avatar) && (
+              <div className="mb-6 bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4 flex items-center gap-3">
+                <div className="p-2 bg-yellow-500/20 rounded-full">
+                  <Edit className="w-4 h-4 text-yellow-500" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-yellow-500 font-medium text-sm">Complete your profile</h3>
+                  <p className="text-white/60 text-xs mt-0.5">Please update your name, phone, and profile picture to continue.</p>
+                </div>
+                <Link
+                  href="/client/profile/edit"
+                  className="px-3 py-1.5 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-500 text-xs font-medium rounded-lg transition-colors"
+                >
+                  Edit Profile
+                </Link>
+              </div>
+            )}
+
             {/* Profile Card */}
             <div className="bg-[#18181b] rounded-2xl p-6 border border-white/10 shadow-lg relative">
               {/* Edit Icon in Top Right */}
@@ -73,13 +92,13 @@ export default function ClientProfile() {
               <div className="flex flex-col items-center mb-6">
                 <div className="relative mb-4">
                   <Image
-                    src={user.avatar || '/placeholder-user.jpg'}
+                    src={user.avatar || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="120" height="120"%3E%3Crect width="120" height="120" fill="%23333"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-size="48" fill="%23999"%3E%F0%9F%91%A4%3C/text%3E%3C/svg%3E'}
                     alt="Profile"
                     width={100}
                     height={100}
                     className="rounded-full border-2 border-purple-400/50 object-cover shadow-lg"
                     onError={(e) => {
-                      e.currentTarget.src = '/placeholder-user.jpg';
+                      e.currentTarget.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="120" height="120"%3E%3Crect width="120" height="120" fill="%23333"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-size="48" fill="%23999"%3E%F0%9F%91%A4%3C/text%3E%3C/svg%3E';
                     }}
                   />
                   {(user as any)?.isVerified && (

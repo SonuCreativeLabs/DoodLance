@@ -70,11 +70,11 @@ export const formatDate = (dateString: string) => {
   return format(new Date(dateString), 'MMM d, yyyy');
 };
 
-export const calculateJobEarnings = (job: Job) => {
+export const calculateJobEarnings = (job: Job, commissionRate: number = 0.25) => {
   const baseAmount = typeof job.payment === 'string' ? parseFloat(job.payment) : job.payment;
 
-  // Default platform commission rate (25%)
-  const commissionRate = 0.25;
+  // Use provided commission rate (default 25%)
+  // const commissionRate = 0.25;
 
   // No GST charged to freelancer
   const gstRate = 0;

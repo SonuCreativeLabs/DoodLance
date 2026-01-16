@@ -13,7 +13,9 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from '@/components/ui/dialog';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Select,
   SelectContent,
@@ -38,6 +40,135 @@ import {
 import { motion } from 'framer-motion';
 import { ServiceDetailsModal } from '@/components/admin/ServiceDetailsModal';
 
+interface EditServiceModalProps {
+  service: any;
+  open: boolean;
+  onClose: () => void;
+  onSave: (serviceId: string, data: any) => Promise<void>;
+  categories: any[];
+}
+
+function EditServiceModal({ service, open, onClose, onSave, categories }: EditServiceModalProps) {
+  const [formData, setFormData] = useState({
+    title: '',
+    price: '',
+    categoryId: '',
+    description: '',
+    deliveryTime: ''
+  });
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (service) {
+      setFormData({
+        title: service.title || '',
+        price: service.price ? service.price.toString() : '',
+        categoryId: service.categoryId || '',
+        description: service.description || '',
+        deliveryTime: service.deliveryTime || ''
+      });
+    }
+  }, [service]);
+
+  const handleSubmit = async () => {
+    setLoading(true);
+    try {
+      await onSave(service.id, {
+        ...formData,
+        price: parseFloat(formData.price) || 0
+      });
+      onClose();
+    } catch (error) {
+      console.error('Failed to save:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!service) return null;
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-md bg-[#1a1a1a] border-gray-800">
+        <DialogHeader>
+          <DialogTitle className="text-white">Edit Service</DialogTitle>
+          <DialogDescription className="text-gray-400">
+            Update service details for {service.title}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4 py-4">
+          <div className="space-y-2">
+            <Label className="text-gray-300">Title</Label>
+            <Input
+              value={formData.title}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              className="bg-[#2a2a2a] border-gray-700 text-white"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label className="text-gray-300">Price (₹)</Label>
+              <Input
+                type="number"
+                value={formData.price}
+                onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                className="bg-[#2a2a2a] border-gray-700 text-white"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-gray-300">Delivery Time</Label>
+              <Input
+                value={formData.deliveryTime}
+                onChange={(e) => setFormData({ ...formData, deliveryTime: e.target.value })}
+                className="bg-[#2a2a2a] border-gray-700 text-white"
+                placeholder="e.g. 3 days"
+              />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label className="text-gray-300">Category</Label>
+            <Select
+              value={formData.categoryId}
+              onValueChange={(val) => setFormData({ ...formData, categoryId: val })}
+            >
+              <SelectTrigger className="bg-[#2a2a2a] border-gray-700 text-white">
+                <SelectValue placeholder="Select Category" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((cat) => (
+                  <SelectItem key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label className="text-gray-300">Description</Label>
+            <Textarea
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              className="bg-[#2a2a2a] border-gray-700 text-white"
+            />
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose} disabled={loading}>Cancel</Button>
+          <Button
+            className="bg-purple-600 hover:bg-purple-700"
+            onClick={handleSubmit}
+            disabled={loading}
+          >
+            {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : 'Save Changes'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export default function ServiceManagementPage() {
   const [services, setServices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -49,6 +180,8 @@ export default function ServiceManagementPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [showAddService, setShowAddService] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [serviceToEdit, setServiceToEdit] = useState<any>(null);
   const itemsPerPage = 10;
 
   // Debounce search
@@ -97,8 +230,23 @@ export default function ServiceManagementPage() {
     }
   };
 
+  const [categories, setCategories] = useState<any[]>([]);
+
+  const fetchCategories = async () => {
+    try {
+      const res = await fetch('/api/categories');
+      // Assuming a public categories endpoint exists, if not we might need /api/admin/categories
+      // Checking existing codebase, usually /api/categories is used for dropdowns.
+      if (res.ok) {
+        const data = await res.json();
+        setCategories(data);
+      }
+    } catch (e) { console.error(e); }
+  };
+
   useEffect(() => {
     fetchServices();
+    fetchCategories();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, debouncedSearch, categoryFilter, activeFilter]);
 
@@ -138,6 +286,17 @@ export default function ServiceManagementPage() {
     } catch (e) { console.error(e); }
   };
 
+  const handleUpdateService = async (serviceId: string, data: any) => {
+    try {
+      const res = await fetch(`/api/admin/services/${serviceId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      if (res.ok) fetchServices();
+    } catch (e) { console.error(e); }
+  };
+
   const statusColors: Record<string, string> = {
     approved: 'bg-green-500',
     pending: 'bg-yellow-500',
@@ -167,7 +326,9 @@ export default function ServiceManagementPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-400">Total Services</p>
-              <p className="text-2xl font-bold text-white">{stats.totalServices}</p>
+              {loading ? <Skeleton className="h-8 w-16 bg-[#2a2a2a] mt-1" /> : (
+                <p className="text-2xl font-bold text-white">{stats.totalServices}</p>
+              )}
             </div>
             <Package className="w-8 h-8 text-blue-500" />
           </div>
@@ -176,7 +337,9 @@ export default function ServiceManagementPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-400">Active</p>
-              <p className="text-2xl font-bold text-white">{stats.activeServices}</p>
+              {loading ? <Skeleton className="h-8 w-16 bg-[#2a2a2a] mt-1" /> : (
+                <p className="text-2xl font-bold text-white">{stats.activeServices}</p>
+              )}
             </div>
             <CheckCircle className="w-8 h-8 text-green-500" />
           </div>
@@ -185,7 +348,9 @@ export default function ServiceManagementPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-400">Pending</p>
-              <p className="text-2xl font-bold text-white">{stats.pendingApproval}</p>
+              {loading ? <Skeleton className="h-8 w-16 bg-[#2a2a2a] mt-1" /> : (
+                <p className="text-2xl font-bold text-white">{stats.pendingApproval}</p>
+              )}
             </div>
             <Clock className="w-8 h-8 text-yellow-500" />
           </div>
@@ -194,7 +359,9 @@ export default function ServiceManagementPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-400">Revenue</p>
-              <p className="text-2xl font-bold text-white">₹{(stats.totalRevenue / 1000).toFixed(0)}k</p>
+              {loading ? <Skeleton className="h-8 w-24 bg-[#2a2a2a] mt-1" /> : (
+                <p className="text-2xl font-bold text-white">₹{stats.totalRevenue.toLocaleString()}</p>
+              )}
             </div>
             <DollarSign className="w-8 h-8 text-purple-500" />
           </div>
@@ -203,7 +370,9 @@ export default function ServiceManagementPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-400">Avg Rating</p>
-              <p className="text-2xl font-bold text-white">{stats.avgRating}</p>
+              {loading ? <Skeleton className="h-8 w-12 bg-[#2a2a2a] mt-1" /> : (
+                <p className="text-2xl font-bold text-white">{stats.avgRating}</p>
+              )}
             </div>
             <Star className="w-8 h-8 text-yellow-500" />
           </div>
@@ -212,7 +381,9 @@ export default function ServiceManagementPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-400">Total Orders</p>
-              <p className="text-2xl font-bold text-white">{stats.totalOrders}</p>
+              {loading ? <Skeleton className="h-8 w-16 bg-[#2a2a2a] mt-1" /> : (
+                <p className="text-2xl font-bold text-white">{stats.totalOrders}</p>
+              )}
             </div>
             <TrendingUp className="w-8 h-8 text-cyan-500" />
           </div>
@@ -272,13 +443,45 @@ export default function ServiceManagementPage() {
                 <th className="p-4 text-sm font-medium text-gray-400">Price</th>
                 <th className="p-4 text-sm font-medium text-gray-400">Status</th>
                 <th className="p-4 text-sm font-medium text-gray-400">Performance</th>
-                <th className="p-4 text-sm font-medium text-gray-400">Location</th>
                 <th className="p-4 text-sm font-medium text-gray-400">Actions</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={8} className="p-4 text-center text-gray-400">Loading...</td></tr>
+                Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={i} className="border-b border-gray-800">
+                    <td className="p-4">
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-32 bg-[#2a2a2a]" />
+                        <Skeleton className="h-3 w-16 bg-[#2a2a2a]" />
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-24 bg-[#2a2a2a]" />
+                        <div className="flex gap-2">
+                          <Skeleton className="h-3 w-8 bg-[#2a2a2a]" />
+                          <Skeleton className="h-3 w-4 bg-[#2a2a2a]" />
+                        </div>
+                      </div>
+                    </td>
+                    <td className="p-4"><Skeleton className="h-5 w-20 bg-[#2a2a2a] rounded-full" /></td>
+                    <td className="p-4"><Skeleton className="h-4 w-16 bg-[#2a2a2a]" /></td>
+                    <td className="p-4">
+                      <div className="space-y-1">
+                        <Skeleton className="h-5 w-16 bg-[#2a2a2a] rounded-full" />
+                        <Skeleton className="h-5 w-16 bg-[#2a2a2a] rounded-full" />
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <div className="space-y-1">
+                        <Skeleton className="h-4 w-24 bg-[#2a2a2a]" />
+                        <Skeleton className="h-3 w-16 bg-[#2a2a2a]" />
+                      </div>
+                    </td>
+                    <td className="p-4"><Skeleton className="h-8 w-8 bg-[#2a2a2a] rounded" /></td>
+                  </tr>
+                ))
               ) : services.map((service, index) => (
                 <motion.tr
                   key={service.id}
@@ -333,12 +536,7 @@ export default function ServiceManagementPage() {
                       <p className="text-xs text-gray-400">{service.totalOrders} orders</p>
                     </div>
                   </td>
-                  <td className="p-4">
-                    <div className="flex items-center gap-1">
-                      <MapPin className="w-3 h-3 text-gray-400" />
-                      <span className="text-sm text-white">{service.location}</span>
-                    </div>
-                  </td>
+
                   <td className="p-4">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -358,6 +556,16 @@ export default function ServiceManagementPage() {
                         >
                           <Eye className="w-4 h-4 mr-2" />
                           View Details
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setServiceToEdit(service);
+                            setEditModalOpen(true);
+                          }}
+                          className="cursor-pointer"
+                        >
+                          <Edit className="w-4 h-4 mr-2" />
+                          Edit Service
                         </DropdownMenuItem>
                         {!service.isActive && (
                           <DropdownMenuItem
@@ -421,6 +629,16 @@ export default function ServiceManagementPage() {
         }}
         onApprove={handleApprove}
         onReject={handleReject}
+      />
+      <EditServiceModal
+        service={serviceToEdit}
+        open={editModalOpen}
+        onClose={() => {
+          setEditModalOpen(false);
+          setServiceToEdit(null);
+        }}
+        onSave={handleUpdateService}
+        categories={categories}
       />
     </div>
   );

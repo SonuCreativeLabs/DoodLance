@@ -1,4 +1,4 @@
-import type { Experience, Review, Service, Availability } from '@/types/freelancer/profile';
+import type { Achievement, Review, Service, Availability } from '@/types/freelancer/profile';
 
 /**
  * Formats a date string to a more readable format
@@ -105,8 +105,7 @@ export const formatExperienceDuration = (startDate: string, endDate?: string): s
  * @param limit - Maximum number of experiences to return (default: 3)
  * @returns Array of most recent experiences
  */
-export const getRecentExperiences = (experiences: Experience[], limit: number = 3): Experience[] => {
-  return [...experiences]
-    .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime())
-    .slice(0, limit);
+export const getRecentAchievements = (achievements: Achievement[], limit: number = 3): Achievement[] => {
+  // Data is already sorted by API
+  return [...achievements].slice(0, limit);
 };

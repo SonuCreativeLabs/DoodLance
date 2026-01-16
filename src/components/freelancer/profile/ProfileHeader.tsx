@@ -13,12 +13,13 @@ import { usePersonalDetails } from '@/contexts/PersonalDetailsContext';
 import { useSkills } from '@/contexts/SkillsContext';
 import { useReviews } from '@/contexts/ReviewsContext';
 import { usePortfolio } from '@/contexts/PortfolioContext';
-import { useExperience } from '@/contexts/ExperienceContext';
+import { useAchievements } from '@/contexts/AchievementsContext';
 import { useServices } from '@/contexts/ServicesContext';
 import { useAvailability } from '@/contexts/AvailabilityContext';
 import { SkillInfoDialog } from '@/components/common/SkillInfoDialog';
 import { getSkillInfo, type SkillInfo } from '@/utils/skillUtils';
 import { calculateAge } from '@/utils/personalUtils';
+import { compressImage } from '@/utils/compression';
 import { IdVerifiedBadge } from './IdVerifiedBadge';
 import { useRoleSwitch } from '@/contexts/RoleSwitchContext';
 
@@ -46,18 +47,24 @@ interface ProfileHeaderProps {
   isPreview?: boolean;
   avatarUrl?: string;
   coverImageUrl?: string;
+  personalDetails?: any; // Optional override for personal details
 }
 
 export function ProfileHeader({
   isPreview = false,
   avatarUrl,
-  coverImageUrl
+  coverImageUrl,
+  personalDetails: propPersonalDetails
 }: ProfileHeaderProps) {
-  const { personalDetails } = usePersonalDetails();
+  const { personalDetails: contextPersonalDetails } = usePersonalDetails();
+
+  // Use prop if available (for preview/public view), otherwise context
+  const personalDetails = propPersonalDetails || contextPersonalDetails;
+
   const { skills } = useSkills();
   const { reviewsData } = useReviews();
   const { portfolio } = usePortfolio();
-  const { experiences } = useExperience();
+  const { achievements } = useAchievements();
   const { services } = useServices();
   const { days: availabilityDays, getWorkingHoursText } = useAvailability();
   const [coverImage, setCoverImage] = useState<string | null>(null);
@@ -77,8 +84,10 @@ export function ProfileHeader({
   // Calculate age from personal details
   const age = (() => {
     try {
-      if (personalDetails.dateOfBirth && typeof personalDetails.dateOfBirth === 'string') {
-        const calculatedAge = calculateAge(personalDetails.dateOfBirth);
+      if (personalDetails.dateOfBirth) {
+        // Handle various date formats including string and Date object
+        const dob = personalDetails.dateOfBirth;
+        const calculatedAge = calculateAge(dob);
         return isNaN(calculatedAge) ? null : calculatedAge;
       }
       return null;
@@ -168,16 +177,20 @@ export function ProfileHeader({
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image size should be less than 5MB');
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('Image size should be less than 2MB');
       return;
     }
 
     setIsUploading(true);
 
     try {
+      toast.info('Compressing image...');
+      // Compress: 0.7 quality, 1200px max width (covers are wider)
+      const compressedFile = await compressImage(file, 0.7, 1200);
+
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append('file', compressedFile);
       formData.append('bucket', 'images'); // Assuming 'images' bucket exists
       formData.append('path', 'covers');
 
@@ -216,16 +229,20 @@ export function ProfileHeader({
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image size should be less than 5MB');
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('Image size should be less than 2MB');
       return;
     }
 
     setIsProfileUploading(true);
 
     try {
+      toast.info('Compressing image...');
+      // Compress: 0.7 quality, 400px max size for avatars
+      const compressedFile = await compressImage(file, 0.7, 400);
+
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append('file', compressedFile);
       formData.append('bucket', 'images');
       formData.append('path', 'avatars');
 
@@ -385,7 +402,7 @@ export function ProfileHeader({
 
         <div className="text-center mb-4">
           <div className="flex items-center justify-center gap-2">
-            <h1 className="text-2xl font-bold text-white">{personalDetails.name}</h1>
+            <h1 className="text-2xl font-bold text-white">{personalDetails.name?.split(' ')[0] || personalDetails.name}</h1>
             {age && (
               <span className="text-lg font-semibold text-white/70">{age}</span>
             )}
@@ -454,10 +471,14 @@ export function ProfileHeader({
         profileData={{
           name: personalDetails.name,
           title: personalDetails.cricketRole || '',
+          avatar: personalDetails.avatarUrl || profileImage || undefined,
+          coverImage: personalDetails.coverImageUrl || coverImage || undefined,
           rating: reviewsData?.averageRating || 0,
           reviewCount: reviewsData?.totalReviews || 0,
           location: personalDetails.location,
           online: personalDetails.online,
+          username: personalDetails.username,
+          dateOfBirth: personalDetails.dateOfBirth,
           skills: Array.isArray(skills) ? skills.map((s: any) => s.name) : [],
           about: personalDetails.about,
           bio: personalDetails.bio,
@@ -470,15 +491,10 @@ export function ProfileHeader({
           completedJobs: personalDetails.completedJobs || 0,
           activeJobs: personalDetails.activeJobs || 0,
           workingHours: getWorkingHoursText(),
-          experience: Array.isArray(experiences) ? experiences.map((exp: any) => ({
-            id: exp.id,
-            role: exp.role,
-            company: exp.company,
-            location: exp.location,
-            startDate: exp.startDate?.split('-')[0] || '',
-            endDate: exp.endDate ? exp.endDate.split('-')[0] : undefined,
-            isCurrent: exp.isCurrent,
-            description: exp.description
+          achievements: Array.isArray(achievements) ? achievements.map((ach: any) => ({
+            id: ach.id,
+            title: ach.title,
+            company: ach.company
           })) : [],
           services: Array.isArray(services) ? services.map((svc: any) => ({
             id: svc.id,
@@ -488,6 +504,7 @@ export function ProfileHeader({
             type: svc.type || 'online',
             deliveryTime: svc.deliveryTime,
             features: svc.features || [],
+            videoUrls: svc.videoUrls || [],
             category: svc.category
           })) : [],
           portfolio: Array.isArray(portfolio) ? portfolio.map((item: any) => ({

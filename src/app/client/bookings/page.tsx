@@ -13,6 +13,10 @@ import { useApplications, Application } from "@/contexts/ApplicationsContext"
 import { useHistoryJobs, HistoryJob } from "@/contexts/HistoryJobsContext"
 import { usePostedJobs } from "@/contexts/PostedJobsContext"
 import { useBookAgain } from "@/hooks/useBookAgain"
+// 🚀 React Query POC imports
+import { QueryClientProvider } from '@tanstack/react-query'
+import { queryClient } from '@/lib/query-client'
+import { useBookingsQuery } from '@/hooks/useBookingsQuery'
 
 
 interface BookingCardProps {
@@ -23,6 +27,7 @@ interface BookingCardProps {
 import { RescheduleModal } from "@/components/client/bookings/RescheduleModal"
 import { ComingSoonOverlay } from '@/components/common/ComingSoonOverlay';
 import { CricketComingSoon } from '@/components/common/CricketComingSoon';
+import { BookingCardSkeleton } from '@/components/skeletons/BookingCardSkeleton'
 
 const BookingCard = ({ booking, showActions = true }: BookingCardProps) => {
   const router = useRouter()
@@ -107,13 +112,20 @@ const BookingCard = ({ booking, showActions = true }: BookingCardProps) => {
                 <div className="text-sm text-white/90">
                   {(() => {
                     // Format date from YYYY-MM-DD to readable format
-                    const [year, month, day] = booking.date.split('-').map(Number);
-                    const date = new Date(year, month - 1, day);
-                    return date.toLocaleDateString('en-US', {
-                      weekday: 'short',
-                      month: 'short',
-                      day: 'numeric'
-                    });
+                    if (!booking.date) return 'Date not set';
+                    try {
+                      const [year, month, day] = booking.date.split('-').map(Number);
+                      const date = new Date(year, month - 1, day);
+                      if (isNaN(date.getTime())) return booking.date;
+
+                      return date.toLocaleDateString('en-US', {
+                        weekday: 'short',
+                        month: 'short',
+                        day: 'numeric'
+                      });
+                    } catch (e) {
+                      return booking.date;
+                    }
                   })()} at {booking.time}
                 </div>
               </div>
@@ -141,20 +153,17 @@ const BookingCard = ({ booking, showActions = true }: BookingCardProps) => {
             <div className="flex gap-2">
               <Button
                 size="sm"
-                variant="outline"
-                disabled
-                className="flex-1 border-white/10 text-white/30 hover:bg-transparent hover:border-white/10 cursor-not-allowed transition-all duration-300 !rounded-lg"
-                onClick={(event) => {
-                  event.stopPropagation()
-                  event.preventDefault()
+                className="w-full text-white h-9 text-xs font-medium shadow-md transition-all duration-200 flex items-center justify-center gap-1.5 !rounded-lg border-0"
+                style={{
+                  background: 'linear-gradient(135deg, #2131e2 0%, #1d59eb 100%)',
+                  boxShadow: '0 4px 14px 0 rgba(33, 49, 226, 0.25)'
                 }}
-              >
-                Message
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                className="flex-1 border-white/20 text-white/70 hover:bg-white/10 hover:border-white/30 transition-all duration-300 !rounded-lg"
+                onMouseOver={(e) => {
+                  e.currentTarget.style.background = 'linear-gradient(135deg, #1d2bcb 0%, #1a4fd3 100%)';
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.background = 'linear-gradient(135deg, #2131e2 0%, #1d59eb 100%)';
+                }}
                 onClick={(event) => {
                   event.stopPropagation()
                   if (booking.providerPhone) {
@@ -165,8 +174,8 @@ const BookingCard = ({ booking, showActions = true }: BookingCardProps) => {
                   }
                 }}
               >
-                <PhoneIcon className="w-4 h-4 mr-2" />
-                Call
+                <PhoneIcon className="w-3.5 h-3.5" />
+                <span>Call</span>
               </Button>
             </div>
           )}
@@ -316,7 +325,7 @@ const HistoryCard = ({ booking }: { booking: Booking }) => {
   const { showBookAgain, setShowBookAgain, BookAgainModal } = useBookAgain(historyJobMock)
 
   const handleOpenDetails = () => {
-    router.push(`/client/bookings/history/${encodeURIComponent(booking["#"])}`)
+    router.push(`/client/bookings/${encodeURIComponent(booking["#"])}`)
   }
 
   return (
@@ -571,7 +580,10 @@ const PostedJobCard = ({ job, showUpcoming = false }: { job: any; showUpcoming?:
 
 import { CricketLoader } from "@/components/ui/cricket-loader"
 
-export default function BookingsPage() {
+// 🎯 Feature flag for React Query POC
+const USE_REACT_QUERY = process.env.NEXT_PUBLIC_USE_REACT_QUERY === 'true'
+
+function BookingsPageContent() {
   const searchParams = useSearchParams()
   const initialTab = searchParams.get('tab') || 'active'
   const initialFilter = searchParams.get('filter') || 'all'
@@ -585,10 +597,20 @@ export default function BookingsPage() {
 
   const [isSearchOpen, setIsSearchOpen] = useState(false)
 
-  const { bookings, loading: bookingsLoading } = useBookings()
+  // 🔀 Conditional hook usage: React Query (POC) OR BookingsContext (fallback)
+  const bookingsFromQuery = USE_REACT_QUERY ? useBookingsQuery() : { bookings: [], loading: false }
+  const bookingsFromContext = USE_REACT_QUERY ? { bookings: [], loading: false } : useBookings()
+
+  const { bookings, loading: bookingsLoading } = USE_REACT_QUERY ? bookingsFromQuery : bookingsFromContext
+
   const { applications } = useApplications()
   const { historyJobs } = useHistoryJobs()
   const { postedJobs, loading: jobsLoading } = usePostedJobs()
+
+  // 📊 Log which data source is being used
+  if (typeof window !== 'undefined' && bookings.length > 0) {
+    console.log(`📦 Bookings Source: ${USE_REACT_QUERY ? 'React Query (Cached)' : 'BookingsContext'}, Count: ${bookings.length}`)
+  }
 
 
   const filteredBookings = useMemo(() => {
@@ -604,12 +626,21 @@ export default function BookingsPage() {
       if (!bookingMatchesSearch) return false;
 
       // Parse the time properly considering AM/PM
-      const timeStr = booking.time
-      const [time, period] = timeStr.split(' ')
-      const [hours, minutes] = time.split(':').map(Number)
-      let bookingHours = hours
-      if (period === 'PM' && hours !== 12) bookingHours += 12
-      if (period === 'AM' && hours === 12) bookingHours = 0
+      // Parse the time properly considering AM/PM
+      const timeStr = booking.time || ''
+      let minutes = 0;
+      let bookingHours = 0;
+
+      if (timeStr) {
+        const [time, period] = timeStr.split(' ')
+        if (time) {
+          const [hours, mins] = time.split(':').map(Number)
+          minutes = mins || 0
+          bookingHours = hours || 0
+          if (period === 'PM' && hours !== 12) bookingHours += 12
+          if (period === 'AM' && hours === 12) bookingHours = 0
+        }
+      }
 
       // Create booking date with proper time
       const [bookingYear, bookingMonth, bookingDay] = booking.date.split('-').map(Number)
@@ -651,12 +682,22 @@ export default function BookingsPage() {
     }).sort((a, b) => {
       // Parse dates for sorting
       const parseDateTime = (date: string, time: string) => {
+        if (!date) return 0;
         const [year, month, day] = date.split('-').map(Number)
-        const [timeStr, period] = time.split(' ')
-        const [hours, minutes] = timeStr.split(':').map(Number)
-        let adjustedHours = hours
-        if (period === 'PM' && hours !== 12) adjustedHours += 12
-        if (period === 'AM' && hours === 12) adjustedHours = 0
+
+        let adjustedHours = 0;
+        let minutes = 0;
+
+        if (time) {
+          const [timeStr, period] = time.split(' ')
+          if (timeStr) {
+            const [hours, mins] = timeStr.split(':').map(Number)
+            minutes = mins || 0
+            adjustedHours = hours || 0
+            if (period === 'PM' && hours !== 12) adjustedHours += 12
+            if (period === 'AM' && hours === 12) adjustedHours = 0
+          }
+        }
         return new Date(year, month - 1, day, adjustedHours, minutes).getTime()
       }
 
@@ -819,10 +860,10 @@ export default function BookingsPage() {
                   </div>
                   <div className="space-y-4">
                     {bookingsLoading ? (
-                      <div className="flex flex-col items-center justify-center py-20">
-                        <CricketLoader size={48} color="white" />
-                        <p className="mt-4 text-white/40 text-sm">Loading your crease...</p>
-                      </div>
+                      // Show skeleton cards while loading
+                      [...Array(3)].map((_, i) => (
+                        <BookingCardSkeleton key={i} />
+                      ))
                     ) : filteredBookings.filter(booking =>
                       booking.status === 'confirmed' || booking.status === 'ongoing' || booking.status === 'pending'
                     ).length === 0 ? (
@@ -897,7 +938,12 @@ export default function BookingsPage() {
                     ))}
                   </div>
                   <div className="space-y-4">
-                    {filteredHistory.length === 0 ? (
+                    {bookingsLoading ? (
+                      // Show skeleton cards while loading
+                      [...Array(3)].map((_, i) => (
+                        <BookingCardSkeleton key={i} />
+                      ))
+                    ) : filteredHistory.length === 0 ? (
                       <div className="text-center py-12">
                         <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-white/5 flex items-center justify-center">
                           <Clock className="w-8 h-8 text-white/40" />
@@ -921,4 +967,15 @@ export default function BookingsPage() {
       </div>
     </ClientLayout>
   )
+}
+
+// Export the content directly (QueryClientProvider is now global in Providers.tsx)
+export default function BookingsPage() {
+  if (USE_REACT_QUERY) {
+    console.log('🚀 [POC] Using React Query for Bookings page')
+  } else {
+    console.log('📦 [Fallback] Using BookingsContext for Bookings page')
+  }
+
+  return <BookingsPageContent />
 }

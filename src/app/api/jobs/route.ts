@@ -268,20 +268,17 @@ export async function POST(request: NextRequest) {
     })
 
     // Create notification for job posting
-    // Temporarily disabled - may be causing 500 error
-    /*
     await prisma.notification.create({
       data: {
         userId: user.id,
         title: 'Job Posted Successfully',
-        message: `Your job "${title}" has been posted and is now visible to freelancers`,
+        message: `Your job "${title}" is now live and visible to freelancers.`,
         type: 'SYSTEM_UPDATE',
         entityId: job.id,
         entityType: 'job',
         actionUrl: `/client/jobs/${job.id}`,
       }
     })
-    */
 
     return NextResponse.json(job, { status: 201 })
   } catch (error) {

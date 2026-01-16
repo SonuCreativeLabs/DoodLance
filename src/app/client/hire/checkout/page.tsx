@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, CreditCard, Tag, Shield, RefreshCw, AlertCircle, ChevronDown, ChevronUp, Smartphone, Wallet, Truck, CheckCircle } from 'lucide-react';
+import { ArrowLeft, CreditCard, Tag, Shield, AlertCircle, ChevronDown, ChevronUp, Smartphone, Wallet, Truck, CheckCircle, Loader2, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useHire } from '@/contexts/HireContext';
 import { useNavbar } from '@/contexts/NavbarContext';
@@ -16,32 +16,47 @@ export default function CheckoutPage() {
   const { setNavbarVisibility } = useNavbar();
   const { user } = useAuth();
 
-  const [couponCode, setCouponCode] = useState('');
-  const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
   const [discountAmount, setDiscountAmount] = useState(0);
-  const [showOrderDetails, setShowOrderDetails] = useState(false);
+
+  // Hide navbar on mount
+  useEffect(() => {
+    setNavbarVisibility(false);
+    return () => setNavbarVisibility(true);
+  }, [setNavbarVisibility]);
+
   const [isProcessing, setIsProcessing] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(false);
-  const [newBookingId, setNewBookingId] = useState<string | null>(null);
-  const [generatedOtp, setGeneratedOtp] = useState<string | null>(null);
+  const [newBookingId, setNewBookingId] = useState('');
+  const [generatedOtp, setGeneratedOtp] = useState('');
+  const [showOrderDetails, setShowOrderDetails] = useState(false);
 
-  // Generate OTP function
   const generateOtp = () => {
     return Math.floor(1000 + Math.random() * 9000).toString();
   };
 
-  // Auth check removed - will validate when user clicks payment button instead
+  const [commissionRate, setCommissionRate] = useState(0.05); // Default 5%
+  const [currency, setCurrency] = useState('INR');
 
-
-  // Hide navbar when component mounts
   useEffect(() => {
-    setNavbarVisibility(false);
-
-    // Show navbar when component unmounts
-    return () => {
-      setNavbarVisibility(true);
+    // Fetch public config
+    const fetchConfig = async () => {
+      try {
+        const res = await fetch('/api/public-config');
+        if (res.ok) {
+          const config = await res.json();
+          if (config.clientCommission) {
+            setCommissionRate(Number(config.clientCommission) / 100);
+          }
+          if (config.currency) {
+            setCurrency(config.currency as string);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch config:', error);
+      }
     };
-  }, [setNavbarVisibility]);
+    fetchConfig();
+  }, []);
 
   const subtotal = state.cartItems.reduce((total, item) => {
     const price = typeof item.service.price === 'string'
@@ -49,11 +64,57 @@ export default function CheckoutPage() {
       : item.service.price;
     return total + (price * (item.quantity || 1));
   }, 0);
-  const serviceFee = Math.round(subtotal * 0.05); // 5% platform fee
-  const discount = appliedCoupon ? Math.round(subtotal * 0.1) : 0; // 10% discount for demo
-  const total = subtotal + serviceFee - discount;
+  const serviceFee = Math.round(subtotal * commissionRate); // Dynamic platform fee
 
-  const handleCODBooking = async () => {
+  // Validate coupon from context and set discount
+  useEffect(() => {
+    const validateContextCoupon = async () => {
+      // Logic for known demo code
+      if (state.appliedCoupon === 'DOOD10') {
+        setDiscountAmount(Math.round(subtotal * 0.1));
+        return;
+      }
+
+      // For any other code, validate with API
+      if (state.appliedCoupon) {
+        try {
+          const res = await fetch('/api/promos/validate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              code: state.appliedCoupon,
+              orderAmount: subtotal,
+              userId: user?.id
+            })
+          });
+          const data = await res.json();
+          if (res.ok && data.valid) {
+            setDiscountAmount(data.promo.calculatedDiscount);
+          } else {
+            setDiscountAmount(0); // Invalid or expired
+          }
+        } catch (e) {
+          console.error("Failed to re-validate coupon", e);
+          setDiscountAmount(0);
+        }
+      } else {
+        setDiscountAmount(0);
+      }
+    };
+
+    validateContextCoupon();
+  }, [state.appliedCoupon, subtotal, user?.id]);
+
+  const total = Math.max(0, subtotal + serviceFee - discountAmount);
+
+  const [transactionId, setTransactionId] = useState('');
+
+  const handleUPIBooking = async () => {
+    if (!transactionId || transactionId.length < 5) {
+      alert("Please enter a valid Transaction ID");
+      return;
+    }
+
     setIsProcessing(true);
 
     // Generate OTP for this booking
@@ -80,8 +141,11 @@ export default function CheckoutPage() {
           completedJobs: state.freelancerReviewCount || 50,
           description: `Booking for ${serviceNames}`,
           category: 'cricket',
-          paymentMethod: 'cod',
-          notes: (state.bookingNotes || '') + ` [OTP: ${otp}]`, // Append OTP to notes for now
+          paymentMethod: 'upi',
+
+          transactionId: transactionId,
+          paymentStatus: 'PENDING',
+          notes: state.bookingNotes || '', // Client notes only
           otp: otp,
           services: state.cartItems.map(item => ({
             id: item.service.id,
@@ -90,11 +154,9 @@ export default function CheckoutPage() {
             quantity: item.quantity || 1,
             duration: item.duration || (item.service as any).duration,
             deliveryTime: item.service.deliveryTime
-          }))
+          })),
+          couponCode: state.appliedCoupon || undefined, // Pass the coupon code for backend processing
         });
-
-        // Store OTP in localStorage for the freelancer side to access - REMOVED
-        // Ideally handled by backend. We appended to notes for persistence context.
 
         setNewBookingId(bookingId);
         setGeneratedOtp(otp);
@@ -112,6 +174,7 @@ export default function CheckoutPage() {
       } catch (error) {
         console.error("Booking creation failed:", error);
         // Handle error UI?
+        alert("Booking failed. Please try again.");
       } finally {
         setIsProcessing(false);
       }
@@ -146,7 +209,7 @@ export default function CheckoutPage() {
             </div>
           )}
 
-          <p className="text-white/40 text-sm mb-4">Payment: Cash on Delivery</p>
+          <p className="text-white/40 text-sm mb-4">Payment: Manual UPI Verification</p>
           <p className="text-white/50 text-sm">Redirecting to your bookings...</p>
         </div>
       </div>
@@ -244,12 +307,12 @@ export default function CheckoutPage() {
                   <span className="text-white">₹{subtotal.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-white/70">Platform Fee (5%)</span>
+                  <span className="text-white/70">Platform Fee ({(commissionRate * 100).toFixed(0)}%)</span>
                   <span className="text-white">₹{serviceFee.toLocaleString()}</span>
                 </div>
-                {appliedCoupon && (
+                {state.appliedCoupon && (
                   <div className="flex justify-between text-sm">
-                    <span className="text-green-400">Discount ({appliedCoupon})</span>
+                    <span className="text-green-400">Discount ({state.appliedCoupon})</span>
                     <span className="text-green-400">-₹{discountAmount.toLocaleString()}</span>
                   </div>
                 )}
@@ -262,37 +325,92 @@ export default function CheckoutPage() {
         <div className="space-y-8">
           <h3 className="text-white font-semibold text-lg">Payment Method</h3>
 
-          {/* Cash on Delivery - Top Priority */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <Truck className="w-5 h-5 text-white/60" />
+          {/* Manual UPI Payment */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-3 mb-2">
+              <Wallet className="w-5 h-5 text-purple-400" />
               <div>
-                <h4 className="text-white font-semibold">Cash on Delivery</h4>
-                <p className="text-white/60 text-sm">Pay when service is completed</p>
+                <h4 className="text-white font-semibold">Manual UPI Payment</h4>
+                <p className="text-white/60 text-sm">Scan QR or use UPI ID to pay</p>
               </div>
             </div>
+
+            <div className="bg-white/5 border border-white/10 rounded-xl p-6 space-y-6">
+              {/* QR Code */}
+              <div className="flex flex-col items-center justify-center">
+                <div className="bg-white p-2 rounded-lg mb-3">
+                  <div className="relative w-48 h-48">
+                    <img
+                      src="/images/GPAY QR.jpeg"
+                      alt="Payment QR Code"
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                </div>
+                <p className="text-white/50 text-xs text-center">Scan with any UPI App (GPay, PhonePe, Paytm)</p>
+              </div>
+
+              {/* UPI ID Copy */}
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-white/60">UPI ID</label>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white font-mono text-sm">
+                    sathishsonu07@okaxis
+                  </div>
+
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="shrink-0 bg-white/5 border-white/10 hover:bg-white/10 text-white"
+                    onClick={() => {
+                      navigator.clipboard.writeText('sathishsonu07@okaxis');
+                    }}
+                  >
+                    <Copy className="w-4 h-4" />
+                    <span className="sr-only">Copy</span>
+                  </Button>
+                </div>
+              </div>
+
+              {/* Transaction ID Input */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-white">
+                  Transaction ID / Reference No. <span className="text-red-400">*</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="Enter Transaction ID (e.g. T230...)"
+                  value={transactionId}
+                  onChange={(e) => setTransactionId(e.target.value)}
+                  className="w-full bg-black/30 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-purple-500 transition-colors"
+                />
+                <p className="text-xs text-white/40">
+                  Required for payment verification.
+                </p>
+              </div>
+            </div>
+
             <button
-              onClick={handleCODBooking}
-              disabled={isProcessing}
-              className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white font-medium transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+              onClick={handleUPIBooking}
+              disabled={isProcessing || !transactionId}
+              className="w-full py-4 px-6 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white font-bold text-lg shadow-lg shadow-purple-900/20 transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed mt-4"
             >
               {isProcessing ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Processing...
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Verifying...
                 </>
               ) : (
                 <>
-                  <Truck className="w-4 h-4" />
-                  Book Now • ₹{total.toLocaleString()} COD
+                  <CheckCircle className="w-5 h-5" />
+                  Confirm Payment • ₹{total.toLocaleString()}
                 </>
               )}
             </button>
             <div className="text-xs text-white/40 text-center">
-              No advance payment required • Pay after service completion
+              Your booking will be confirmed after payment verification.
             </div>
           </div>
-
 
         </div>
       </div>

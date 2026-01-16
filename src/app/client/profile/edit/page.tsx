@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useEffect } from 'react'
-import { User, Camera, ArrowLeft, Trash2, Check, Loader2 } from 'lucide-react'
+import { User, Camera, ArrowLeft, Trash2, Check, Loader2, AlertCircle } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -9,6 +9,17 @@ import { useNavbar } from '@/contexts/NavbarContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
+import { compressImage } from '@/utils/compression'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose
+} from "@/components/ui/dialog"
 
 export default function EditProfile() {
   const { setNavbarVisibility } = useNavbar()
@@ -30,6 +41,13 @@ export default function EditProfile() {
     avatar: ''
   })
 
+  const [errors, setErrors] = useState<{
+    name?: string;
+    phone?: string;
+    location?: string;
+    avatar?: string;
+  }>({})
+
   // Initialize form data from AuthContext user
   useEffect(() => {
     if (user) {
@@ -37,7 +55,7 @@ export default function EditProfile() {
         name: user.name || '',
         email: user.email || '',
         phone: user.phone || '',
-        location: (user as any)?.location || '', // Cast as any if location isn't on User type in AuthContext yet
+        location: (user as any)?.location || '',
         avatar: user.avatar || ''
       })
     }
@@ -48,9 +66,52 @@ export default function EditProfile() {
     return () => setNavbarVisibility(true)
   }, [setNavbarVisibility])
 
+  const validateForm = () => {
+    const newErrors: typeof errors = {}
+    let isValid = true
+
+    // Name validation
+    if (!formData.name.trim()) {
+      newErrors.name = 'Full Name is required'
+      isValid = false
+    } else if (formData.name.trim().toLowerCase() === 'new user') {
+      newErrors.name = 'Please enter your real name'
+      isValid = false
+    }
+
+    // Phone validation
+    if (!formData.phone.trim()) {
+      newErrors.phone = 'Phone Number is required'
+      isValid = false
+    } else if (!/^\d{10}$/.test(formData.phone.replace(/\D/g, ''))) {
+      newErrors.phone = 'Phone number must be exactly 10 digits'
+      isValid = false
+    }
+
+    // Location validation
+    if (!formData.location.trim()) {
+      newErrors.location = 'Location is required'
+      isValid = false
+    }
+
+    // Avatar validation
+    if (!formData.avatar) {
+      newErrors.avatar = 'Profile picture is required'
+      isValid = false
+    }
+
+    setErrors(newErrors)
+    return isValid
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!user) return
+
+    if (!validateForm()) {
+      toast.error("Please fix the errors before saving")
+      return
+    }
 
     setSaving(true)
     try {
@@ -78,7 +139,7 @@ export default function EditProfile() {
           full_name: formData.name,
           avatar_url: formData.avatar,
           location: formData.location,
-          phone: formData.phone // Custom metadata or standard? Standard phone is separate, but we can store in metadata too for easy access
+          phone: formData.phone
         }
       })
 
@@ -113,62 +174,7 @@ export default function EditProfile() {
     }
   }
 
-  // Compress image before upload
-  const compressImage = (file: File): Promise<File> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader()
-      reader.readAsDataURL(file)
-      reader.onload = (event) => {
-        const img = new window.Image()
-        img.src = event.target?.result as string
-        img.onload = () => {
-          const canvas = document.createElement('canvas')
-          const ctx = canvas.getContext('2d')!
 
-          // Max width/height for profile pictures
-          const MAX_SIZE = 400
-          let width = img.width
-          let height = img.height
-
-          // Calculate new dimensions
-          if (width > height) {
-            if (width > MAX_SIZE) {
-              height = (height * MAX_SIZE) / width
-              width = MAX_SIZE
-            }
-          } else {
-            if (height > MAX_SIZE) {
-              width = (width * MAX_SIZE) / height
-              height = MAX_SIZE
-            }
-          }
-
-          canvas.width = width
-          canvas.height = height
-          ctx.drawImage(img, 0, 0, width, height)
-
-          // Convert to blob with compression
-          canvas.toBlob(
-            (blob) => {
-              if (blob) {
-                const compressedFile = new File([blob], file.name, {
-                  type: 'image/jpeg',
-                  lastModified: Date.now()
-                })
-                resolve(compressedFile)
-              } else {
-                reject(new Error('Canvas to Blob conversion failed'))
-              }
-            },
-            'image/jpeg',
-            0.7 // 70% quality - good balance between size and quality
-          )
-        }
-        img.onerror = reject
-      }
-      reader.onerror = reject
-    })
-  }
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -180,18 +186,17 @@ export default function EditProfile() {
       return
     }
 
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image size must be less than 5MB')
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('Image size must be less than 2MB')
       return
     }
 
     setUploading(true)
     setUploadProgress(20)
     try {
-      // Compress image first
       toast.info('Compressing image...')
-      const compressedFile = await compressImage(file)
+      const compressedFile = await compressImage(file, 0.7, 400) // Keep original settings: 0.7 quality, 400px max size
       setUploadProgress(60)
 
       // Create unique filename
@@ -218,7 +223,8 @@ export default function EditProfile() {
 
       setUploadProgress(100)
       // Update form data with optimistic update
-      setFormData({ ...formData, avatar: publicUrl })
+      setFormData(prev => ({ ...prev, avatar: publicUrl }))
+      setErrors(prev => ({ ...prev, avatar: undefined })) // Clear avatar error
       toast.success('Profile picture uploaded!')
     } catch (error) {
       console.error('Upload error:', error)
@@ -271,7 +277,7 @@ export default function EditProfile() {
                 alt="Profile"
                 width={120}
                 height={120}
-                className="rounded-full border-2 border-purple-400/50 object-cover shadow-lg bg-[#18181b]"
+                className={`rounded-full border-2 object-cover shadow-lg bg-[#18181b] ${errors.avatar ? 'border-red-500' : 'border-purple-400/50'}`}
                 onError={(e) => {
                   e.currentTarget.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="120" height="120"%3E%3Crect width="120" height="120" fill="%23333"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-size="48" fill="%23999"%3E%F0%9F%91%A4%3C/text%3E%3C/svg%3E';
                 }}
@@ -294,6 +300,12 @@ export default function EditProfile() {
                 className="hidden"
               />
             </div>
+            {errors.avatar && (
+              <p className="text-red-400 text-sm flex items-center gap-1">
+                <AlertCircle className="w-4 h-4" />
+                {errors.avatar}
+              </p>
+            )}
             {formData.avatar && (
               <button
                 type="button"
@@ -310,16 +322,26 @@ export default function EditProfile() {
             {/* Name */}
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-white/70 mb-2">
-                Full Name
+                Full Name <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 id="name"
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-4 py-3 rounded-xl bg-[#18181b] border border-white/10 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-400/40 focus:border-purple-400/50 transition-all"
+                onChange={(e) => {
+                  setFormData({ ...formData, name: e.target.value })
+                  if (errors.name) setErrors({ ...errors, name: undefined })
+                }}
+                className={`w-full px-4 py-3 rounded-xl bg-[#18181b] border text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-400/40 transition-all ${errors.name ? 'border-red-500 focus:border-red-500' : 'border-white/10 focus:border-purple-400/50'
+                  }`}
                 placeholder="Enter your full name"
               />
+              {errors.name && (
+                <p className="mt-1 text-red-400 text-sm flex items-center gap-1">
+                  <AlertCircle className="w-4 h-4" />
+                  {errors.name}
+                </p>
+              )}
             </div>
 
             {/* Email - Read Only */}
@@ -340,31 +362,51 @@ export default function EditProfile() {
             {/* Phone */}
             <div>
               <label htmlFor="phone" className="block text-sm font-medium text-white/70 mb-2">
-                Phone Number
+                Phone Number <span className="text-red-500">*</span>
               </label>
               <input
                 type="tel"
                 id="phone"
                 value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                className="w-full px-4 py-3 rounded-xl bg-[#18181b] border border-white/10 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-400/40 focus:border-purple-400/50 transition-all"
-                placeholder="Enter your phone number"
+                onChange={(e) => {
+                  setFormData({ ...formData, phone: e.target.value })
+                  if (errors.phone) setErrors({ ...errors, phone: undefined })
+                }}
+                className={`w-full px-4 py-3 rounded-xl bg-[#18181b] border text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-400/40 transition-all ${errors.phone ? 'border-red-500 focus:border-red-500' : 'border-white/10 focus:border-purple-400/50'
+                  }`}
+                placeholder="Enter your phone number (10 digits)"
               />
+              {errors.phone && (
+                <p className="mt-1 text-red-400 text-sm flex items-center gap-1">
+                  <AlertCircle className="w-4 h-4" />
+                  {errors.phone}
+                </p>
+              )}
             </div>
 
             {/* Location */}
             <div>
               <label htmlFor="location" className="block text-sm font-medium text-white/70 mb-2">
-                Location
+                Location <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 id="location"
                 value={formData.location}
-                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                className="w-full px-4 py-3 rounded-xl bg-[#18181b] border border-white/10 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-400/40 focus:border-purple-400/50 transition-all"
+                onChange={(e) => {
+                  setFormData({ ...formData, location: e.target.value })
+                  if (errors.location) setErrors({ ...errors, location: undefined })
+                }}
+                className={`w-full px-4 py-3 rounded-xl bg-[#18181b] border text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-400/40 transition-all ${errors.location ? 'border-red-500 focus:border-red-500' : 'border-white/10 focus:border-purple-400/50'
+                  }`}
                 placeholder="Enter your location"
               />
+              {errors.location && (
+                <p className="mt-1 text-red-400 text-sm flex items-center gap-1">
+                  <AlertCircle className="w-4 h-4" />
+                  {errors.location}
+                </p>
+              )}
             </div>
           </div>
 
@@ -372,7 +414,7 @@ export default function EditProfile() {
           <div className="pt-6">
             <button
               type="submit"
-              disabled={saving}
+              disabled={saving || !formData.name || !formData.phone || !formData.location || !formData.avatar}
               className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-purple-400 hover:from-purple-700 hover:to-purple-500 text-white py-3 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {saving ? (
@@ -391,16 +433,43 @@ export default function EditProfile() {
             </button>
           </div>
 
+
+
           {/* Danger Zone */}
           <div className="pt-6 border-t border-white/10">
             <h2 className="text-red-400 font-medium mb-4">Danger Zone</h2>
-            <button
-              type="button"
-              onClick={() => toast.error("Account deletion is not available in demo")}
-              className="px-4 py-3 rounded-xl border border-red-500/20 text-red-400 hover:bg-red-500/10 transition-colors text-sm font-medium w-full"
-            >
-              Delete Account
-            </button>
+
+            <Dialog>
+              <DialogTrigger asChild>
+                <button
+                  type="button"
+                  className="px-4 py-3 rounded-xl border border-red-500/20 text-red-400 hover:bg-red-500/10 transition-colors text-sm font-medium w-full"
+                >
+                  Delete Account
+                </button>
+              </DialogTrigger>
+              <DialogContent className="bg-[#18181b] text-white border-white/10">
+                <DialogHeader>
+                  <DialogTitle>Are you absolutely sure?</DialogTitle>
+                  <DialogDescription className="text-white/60">
+                    This action cannot be undone. This will permanently delete your account and remove your data from our servers.
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter className="gap-2 sm:gap-0">
+                  <DialogClose asChild>
+                    <button className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm font-medium transition-colors">
+                      Cancel
+                    </button>
+                  </DialogClose>
+                  <button
+                    onClick={() => toast.error("Account deletion is not available in demo")}
+                    className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-medium transition-colors"
+                  >
+                    Delete Account
+                  </button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
         </form>
       </div>

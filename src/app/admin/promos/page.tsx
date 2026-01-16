@@ -1,10 +1,22 @@
 'use client';
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '../../../components/ui/alert-dialog';
+
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Select,
   SelectContent,
@@ -15,7 +27,8 @@ import {
 import {
   Tag, Plus, Search, Filter, Copy, Edit, Trash2,
   TrendingUp, Gift, Percent, Users, DollarSign,
-  Calendar, RefreshCw, ChevronLeft, ChevronRight
+  Calendar, RefreshCw, ChevronLeft, ChevronRight,
+  CheckCircle, XCircle, BarChart
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { CreatePromoModal } from '@/components/admin/CreatePromoModal';
@@ -39,6 +52,13 @@ export default function PromoCodesPage() {
     }, 500);
     return () => clearTimeout(timer);
   }, [searchTerm]);
+
+  // Confirmation State
+  const [actionPromo, setActionPromo] = useState<any | null>(null);
+  const [actionType, setActionType] = useState<'delete' | 'toggle' | null>(null);
+
+  // Editing State
+  const [editingPromo, setEditingPromo] = useState<any | null>(null);
 
   const fetchPromos = async () => {
     setLoading(true);
@@ -67,28 +87,57 @@ export default function PromoCodesPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, debouncedSearch, statusFilter]);
 
-  const handleCreatePromo = async (newPromoData: any) => {
+  const handleSavePromo = async (promoData: any) => {
     try {
-      // Map frontend fields to API expectations if necessary
-      // Assuming modal sends: code, description, discountType, discountValue, validFrom, validTo, usageLimit
-      const res = await fetch('/api/admin/promos', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newPromoData)
-      });
-      if (res.ok) {
-        setCreateModalOpen(false);
-        fetchPromos(); // Refresh list
+      if (editingPromo) {
+        // Edit Mode
+        // We likely need a dedicated PATCH endpoint for full updates or use the existing structure if compatible.
+        // Assuming we can re-use the create endpoint with an ID or need a new route.
+        // The current [id] route is tailored for status PATCH or DELETE.
+        // Let's assume we need to update src/app/api/admin/promos/[id]/route.ts to handle full updates FIRST.
+        // Or we can try to send it there.
+        const res = await fetch(`/api/admin/promos/${editingPromo.id}`, {
+          method: 'PUT', // or PATCH if we update multiple fields
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(promoData)
+        });
+        if (res.ok) {
+          setEditingPromo(null);
+          setCreateModalOpen(false);
+          fetchPromos();
+        } else {
+          console.error('Failed to update promo');
+        }
       } else {
-        console.error('Failed to create promo');
-        // TODO: Toast
+        // Create Mode
+        const res = await fetch('/api/admin/promos', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(promoData)
+        });
+        if (res.ok) {
+          setCreateModalOpen(false);
+          fetchPromos();
+        } else {
+          console.error('Failed to create promo');
+        }
       }
     } catch (e) {
       console.error(e);
     }
   };
 
-  const togglePromoStatus = async (promoId: string, currentStatus: boolean) => {
+  const initEditPromo = (promo: any) => {
+    setEditingPromo(promo);
+    setCreateModalOpen(true); // Re-use the modal open state or rely on editingPromo
+  };
+
+  const initToggleStatus = (promo: any) => {
+    setActionPromo(promo);
+    setActionType('toggle');
+  };
+
+  const confirmToggleStatus = async (promoId: string, currentStatus: boolean) => {
     try {
       const res = await fetch(`/api/admin/promos/${promoId}`, {
         method: 'PATCH',
@@ -99,10 +148,15 @@ export default function PromoCodesPage() {
         fetchPromos();
       }
     } catch (e) { console.error(e); }
+    setActionPromo(null);
   };
 
-  const deletePromo = async (promoId: string) => {
-    if (!confirm('Are you sure you want to delete this promo code?')) return;
+  const initDeletePromo = (promo: any) => {
+    setActionPromo(promo);
+    setActionType('delete');
+  };
+
+  const confirmDeletePromo = async (promoId: string) => {
     try {
       const res = await fetch(`/api/admin/promos/${promoId}`, {
         method: 'DELETE'
@@ -111,15 +165,17 @@ export default function PromoCodesPage() {
         fetchPromos();
       }
     } catch (e) { console.error(e); }
+    setActionPromo(null);
   };
 
   // Stats (Calculated on frontend for now based on current view/API response if available, 
   // ideally API should return this summary)
   const stats = {
-    totalPromos: promoCodes.length, // Only current page? Should fetch total from API.
+    totalPromos: promoCodes.length,
     activePromos: promoCodes.filter(p => p.isActive).length,
-    totalUsage: promoCodes.reduce((sum, p) => sum + (p.usedCount || 0), 0),
+    totalUses: promoCodes.reduce((sum, p) => sum + (p.usedCount || 0), 0),
     totalRevenue: promoCodes.reduce((sum, p) => sum + (p.stats?.totalRevenue || 0), 0),
+    totalDiscountValue: promoCodes.reduce((sum, p) => sum + (p.discountValue || 0), 0), // Approx calculation
     avgConversion: 0,
     totalSaved: 0
   };
@@ -143,25 +199,76 @@ export default function PromoCodesPage() {
 
       {/* Stats Cards - Simplified for now */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-        <Card className="bg-[#1a1a1a] border-gray-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-400">Total Promos</p>
-              <p className="text-2xl font-bold text-white">{stats.totalPromos}</p>
-            </div>
-            <Tag className="w-8 h-8 text-blue-500" />
-          </div>
-        </Card>
-        {/* ... Other stats cards ... */}
-        <Card className="bg-[#1a1a1a] border-gray-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-400">Active</p>
-              <p className="text-2xl font-bold text-white">{stats.activePromos}</p>
-            </div>
-            <Gift className="w-8 h-8 text-green-500" />
-          </div>
-        </Card>
+        {loading ? (
+          Array.from({ length: 6 }).map((_, i) => (
+            <Card key={i} className="bg-[#1a1a1a] border-gray-800 p-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-24 bg-[#2a2a2a]" />
+                  <Skeleton className="h-8 w-16 bg-[#2a2a2a]" />
+                </div>
+                <Skeleton className="h-8 w-8 rounded-full bg-[#2a2a2a]" />
+              </div>
+            </Card>
+          ))
+        ) : (
+          <>
+            <Card className="bg-[#1a1a1a] border-gray-800 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-400">Total Promos</p>
+                  <p className="text-2xl font-bold text-white">{stats.totalPromos}</p>
+                </div>
+                <Tag className="w-8 h-8 text-blue-500" />
+              </div>
+            </Card>
+            <Card className="bg-[#1a1a1a] border-gray-800 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-400">Active</p>
+                  <p className="text-2xl font-bold text-white">{stats.activePromos}</p>
+                </div>
+                <CheckCircle className="w-8 h-8 text-green-500" />
+              </div>
+            </Card>
+            <Card className="bg-[#1a1a1a] border-gray-800 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-400">Total Uses</p>
+                  <p className="text-2xl font-bold text-white">{stats.totalUses}</p>
+                </div>
+                <BarChart className="w-8 h-8 text-purple-500" />
+              </div>
+            </Card>
+            <Card className="bg-[#1a1a1a] border-gray-800 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-400">Total Discount</p>
+                  <p className="text-2xl font-bold text-white">₹{stats.totalDiscountValue.toLocaleString()}</p>
+                </div>
+                <Percent className="w-8 h-8 text-yellow-500" />
+              </div>
+            </Card>
+            <Card className="bg-[#1a1a1a] border-gray-800 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-400">Revenue</p>
+                  <p className="text-2xl font-bold text-white">₹{stats.totalRevenue.toLocaleString()}</p>
+                </div>
+                <DollarSign className="w-8 h-8 text-green-500" />
+              </div>
+            </Card>
+            <Card className="bg-[#1a1a1a] border-gray-800 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-400">Saved</p>
+                  <p className="text-2xl font-bold text-white">₹{stats.totalSaved.toLocaleString()}</p>
+                </div>
+                <Gift className="w-8 h-8 text-orange-500" />
+              </div>
+            </Card>
+          </>
+        )}
       </div>
 
       {/* Filters */}
@@ -205,9 +312,27 @@ export default function PromoCodesPage() {
       </Card>
 
       {/* Promo Codes Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {loading ? (
-          <p className="text-gray-400 p-4">Loading promos...</p>
+          Array.from({ length: 6 }).map((_, i) => (
+            <Card key={i} className="bg-[#1a1a1a] border-gray-800 p-6 space-y-4">
+              <div className="flex justify-between items-start">
+                <div className="space-y-2">
+                  <Skeleton className="h-6 w-32 bg-[#2a2a2a]" />
+                  <Skeleton className="h-4 w-48 bg-[#2a2a2a]" />
+                </div>
+                <Skeleton className="h-6 w-16 rounded-full bg-[#2a2a2a]" />
+              </div>
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-full bg-[#2a2a2a]" />
+                <Skeleton className="h-4 w-2/3 bg-[#2a2a2a]" />
+              </div>
+              <div className="flex justify-between items-center pt-4 border-t border-gray-800">
+                <Skeleton className="h-4 w-24 bg-[#2a2a2a]" />
+                <Skeleton className="h-8 w-24 bg-[#2a2a2a]" />
+              </div>
+            </Card>
+          ))
         ) : promoCodes.map((promo, index) => (
           <motion.div
             key={promo.id}
@@ -273,17 +398,21 @@ export default function PromoCodesPage() {
                   variant="outline"
                   size="sm"
                   className="flex-1"
-                  onClick={() => togglePromoStatus(promo.id, promo.isActive)}
+                  onClick={() => initToggleStatus(promo)}
                 >
                   {promo.isActive ? 'Deactivate' : 'Activate'}
                 </Button>
-                <Button variant="outline" size="sm">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => initEditPromo(promo)}
+                >
                   <Edit className="w-4 h-4" />
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => deletePromo(promo.id)}
+                  onClick={() => initDeletePromo(promo)}
                 >
                   <Trash2 className="w-4 h-4 text-red-400" />
                 </Button>
@@ -321,10 +450,47 @@ export default function PromoCodesPage() {
 
       {/* Create Promo Modal */}
       <CreatePromoModal
-        open={createModalOpen}
-        onClose={() => setCreateModalOpen(false)}
-        onCreate={handleCreatePromo}
+        open={createModalOpen || !!editingPromo}
+        onClose={() => {
+          setCreateModalOpen(false);
+          setEditingPromo(null);
+        }}
+        onCreate={handleSavePromo}
+        initialData={editingPromo}
       />
+
+      {/* Confirmation Dialog */}
+      <AlertDialog open={!!actionPromo} onOpenChange={() => setActionPromo(null)}>
+        <AlertDialogContent className="bg-[#1a1a1a] border-gray-800 text-white">
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {actionType === 'delete' ? 'Delete Promo Code' : 'Update Status'}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-gray-400">
+              {actionType === 'delete'
+                ? `Are you sure you want to delete "${actionPromo?.code}"? This action cannot be undone.`
+                : `Are you sure you want to ${actionPromo?.isActive ? 'deactivate' : 'activate'} "${actionPromo?.code}"?`
+              }
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="bg-transparent border-gray-700 text-gray-300 hover:bg-gray-800 hover:text-white">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className={`text-white ${actionType === 'delete' ? 'bg-red-600 hover:bg-red-700' : 'bg-purple-600 hover:bg-purple-700'}`}
+              onClick={() => {
+                if (!actionPromo) return;
+                if (actionType === 'delete') {
+                  confirmDeletePromo(actionPromo.id);
+                } else {
+                  confirmToggleStatus(actionPromo.id, actionPromo.isActive);
+                }
+              }}
+            >
+              Confirm
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

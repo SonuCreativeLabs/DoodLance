@@ -47,7 +47,10 @@ export async function PATCH(request: NextRequest) {
         const {
             // User fields
             name,
+            firstName,
+            lastName,
             location,
+            dateOfBirth,
             avatarUrl,
             gender,
             bio, // bio is on User table in schema now
@@ -61,7 +64,6 @@ export async function PATCH(request: NextRequest) {
             cricketRole,
             battingStyle,
             bowlingStyle,
-            dateOfBirth,
             online,
             readyToWork,
             hourlyRate,
@@ -78,8 +80,27 @@ export async function PATCH(request: NextRequest) {
 
         // 1. Update User Table
         const userUpdates: any = {};
-        if (name !== undefined) userUpdates.name = name;
+        if (name !== undefined) {
+            userUpdates.name = name;
+        } else if (firstName !== undefined || lastName !== undefined) {
+            // If individual fields provided but no full name, we might need to fetch current name to merge? 
+            // Or assume frontend sends both if it sends one. 
+            // For simplify, if we receive parts, we try to use them.
+            // But we need the OTHER part if only one is sent.
+            // Best practice: Frontend sends combined name OR we fetch DB user first (which we have in dbUser).
+
+            const currentName = dbUser.name || "";
+            const currentFirst = currentName.split(' ')[0] || "";
+            const currentLast = currentName.split(' ').slice(1).join(' ') || "";
+
+            const newFirst = firstName !== undefined ? firstName : currentFirst;
+            const newLast = lastName !== undefined ? lastName : currentLast;
+
+            userUpdates.name = `${newFirst} ${newLast}`.trim();
+        }
+
         if (location !== undefined) userUpdates.location = location;
+        if (dateOfBirth !== undefined) userUpdates.dateOfBirth = dateOfBirth;
         if (avatarUrl !== undefined) userUpdates.avatar = avatarUrl;
         if (gender !== undefined) userUpdates.gender = gender;
         if (bio !== undefined) userUpdates.bio = bio;
@@ -214,7 +235,33 @@ export async function PATCH(request: NextRequest) {
             });
         }
 
-        return NextResponse.json({ success: true });
+        // Fetch the latest user data to return
+        const finalDbUser = await prisma.user.findUnique({
+            where: { id: dbUser.id },
+            select: {
+                id: true,
+                email: true,
+                name: true,
+                phone: true,
+                avatar: true,
+                location: true,
+                bio: true,
+                gender: true,
+                username: true,
+                displayId: true,
+                address: true,
+                city: true,
+                state: true,
+                postalCode: true,
+                role: true,
+                currentRole: true,
+                isVerified: true,
+                phoneVerified: true,
+                createdAt: true,
+            }
+        });
+
+        return NextResponse.json({ success: true, user: finalDbUser });
 
     } catch (error: any) {
         console.error('SERVER ERROR in Profile Update:', error);

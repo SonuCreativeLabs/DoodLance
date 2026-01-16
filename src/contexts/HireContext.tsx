@@ -38,6 +38,7 @@ export interface HireState {
   selectedDuration: number | undefined;
   selectedLocation: string | undefined;
   bookingNotes: string | undefined;
+  appliedCoupon: string | null;
 }
 
 interface HireContextType {
@@ -50,6 +51,7 @@ interface HireContextType {
   decreaseSelectedServiceQuantity: (serviceId: string) => void;
   setBookingDetails: (date: string, time: string, duration: number, location: string, notes?: string) => void;
   setBookingNotes: (notes: string) => void;
+  setAppliedCoupon: (coupon: string | null) => void;
   addToCart: (service: ServiceItem, date?: string, time?: string, duration?: number) => void;
   removeFromCart: (serviceId: string) => void;
   increaseQuantity: (serviceId: string) => void;
@@ -74,6 +76,7 @@ const initialState: HireState = {
   selectedDuration: undefined,
   selectedLocation: undefined,
   bookingNotes: undefined,
+  appliedCoupon: null,
 };
 
 const HireContext = createContext<HireContextType | undefined>(undefined);
@@ -208,6 +211,13 @@ export function HireProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
+  const setAppliedCoupon = useCallback((coupon: string | null) => {
+    setState(prev => ({
+      ...prev,
+      appliedCoupon: coupon,
+    }));
+  }, []);
+
   const addToCart = useCallback((service: ServiceItem, date?: string, time?: string, duration?: number) => {
     setState(prev => {
       // Find the selected service to get its quantity
@@ -295,6 +305,7 @@ export function HireProvider({ children }: { children: ReactNode }) {
     clearCart,
     resetHireState,
     getTotalPrice,
+    setAppliedCoupon,
     isLoaded: isInitialized,
   };
 

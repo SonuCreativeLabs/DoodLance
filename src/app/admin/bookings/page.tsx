@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Select,
   SelectContent,
@@ -25,7 +26,7 @@ import {
   Calendar, Clock, MapPin, DollarSign, User, Shield,
   MoreVertical, Eye, Edit, XCircle, CheckCircle, AlertTriangle,
   MessageSquare, FileText, TrendingUp, Filter, Download,
-  ChevronLeft, ChevronRight, RefreshCw, Phone, Mail, Search
+  ChevronLeft, ChevronRight, RefreshCw, Phone, Mail, Search, HelpCircle
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { BookingDetailsModal } from '@/components/admin/BookingDetailsModal';
@@ -73,10 +74,12 @@ export default function BookingManagementPage() {
 
   // Stats state
   const [stats, setStats] = useState({
-    total: 0,
+    totalBookings: 0,
     pending: 0,
+    confirmed: 0,
     inProgress: 0,
     completed: 0,
+    cancelled: 0,
     disputed: 0,
     totalRevenue: 0,
     platformEarnings: 0,
@@ -119,8 +122,54 @@ export default function BookingManagementPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus })
       });
-      if (res.ok) fetchBookings();
+      if (res.ok) {
+        await fetchBookings(); // Refresh list to get new stats and data
+        // Update selectedBooking if it's open, so modal reflects new status immediately
+        if (selectedBooking && selectedBooking.id === bookingId) {
+          setSelectedBooking((prev: any) => ({ ...prev, status: newStatus }));
+        }
+      }
     } catch (e) { console.error(e); }
+  };
+
+  const handleExport = () => {
+    // Define headers
+    const headers = [
+      'Booking ID', 'Service', 'Client', 'Freelancer', 'Status',
+      'Total Price', 'Platform Fee', 'Scheduled At', 'Created At', 'Transaction ID', 'Payment Status'
+    ];
+
+    // Convert bookings to CSV rows
+    const rows = bookings.map(b => [
+      b.id,
+      `"${b.serviceTitle}"`,
+      `"${b.clientName}"`,
+      `"${b.freelancerName}"`,
+      b.status,
+      b.totalPrice,
+      b.platformFee,
+      b.scheduledAt,
+      b.createdAt,
+      b.transactionId || 'N/A',
+      b.paymentStatus || 'N/A'
+    ]);
+
+    // Combine headers and rows
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.join(','))
+    ].join('\n');
+
+    // Create blob and download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `bookings_export_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
@@ -132,20 +181,27 @@ export default function BookingManagementPage() {
           <p className="text-gray-400 mt-1 text-sm sm:text-base">Monitor and manage all platform bookings</p>
         </div>
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-          <Button variant="outline" className="text-gray-300 w-full sm:w-auto">
+          <Button
+            variant="outline"
+            className="text-gray-300 w-full sm:w-auto"
+            onClick={handleExport}
+            disabled={bookings.length === 0}
+          >
             <Download className="w-4 h-4 mr-2" />
             Export
           </Button>
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Stats Overview */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Card className="bg-[#1a1a1a] border-gray-800 p-4">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-400">Total Bookings</p>
-              <p className="text-2xl font-bold text-white">{stats.total}</p>
+              {loading ? <Skeleton className="h-8 w-16 bg-gray-800" /> : (
+                <p className="text-2xl font-bold text-white">{stats.totalBookings}</p>
+              )}
             </div>
             <Calendar className="w-8 h-8 text-blue-500" />
           </div>
@@ -153,28 +209,60 @@ export default function BookingManagementPage() {
         <Card className="bg-[#1a1a1a] border-gray-800 p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-400">In Progress</p>
-              <p className="text-2xl font-bold text-white">{stats.inProgress}</p>
-            </div>
-            <TrendingUp className="w-8 h-8 text-purple-500" />
-          </div>
-        </Card>
-        <Card className="bg-[#1a1a1a] border-gray-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
               <p className="text-sm text-gray-400">Total Revenue</p>
-              <p className="text-2xl font-bold text-white">₹{stats.totalRevenue.toLocaleString()}</p>
+              {loading ? <Skeleton className="h-8 w-24 bg-gray-800" /> : (
+                <p className="text-2xl font-bold text-white">₹{stats.totalRevenue.toLocaleString()}</p>
+              )}
             </div>
             <DollarSign className="w-8 h-8 text-green-500" />
           </div>
         </Card>
+      </div>
+
+      {/* Status Breakdown */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="bg-[#1a1a1a] border-gray-800 p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-400">Disputes</p>
-              <p className="text-2xl font-bold text-white">{stats.disputed}</p>
+              <p className="text-sm text-gray-400">Completed</p>
+              {loading ? <Skeleton className="h-8 w-16 bg-gray-800" /> : (
+                <p className="text-xl font-bold text-white">{stats.completed}</p>
+              )}
             </div>
-            <AlertTriangle className="w-8 h-8 text-red-500" />
+            <CheckCircle className="w-6 h-6 text-green-500" />
+          </div>
+        </Card>
+        <Card className="bg-[#1a1a1a] border-gray-800 p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-400">Upcoming</p>
+              {loading ? <Skeleton className="h-8 w-16 bg-gray-800" /> : (
+                <p className="text-xl font-bold text-white">{stats.confirmed}</p>
+              )}
+            </div>
+            <Clock className="w-6 h-6 text-blue-500" />
+          </div>
+        </Card>
+        <Card className="bg-[#1a1a1a] border-gray-800 p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-400">Ongoing</p>
+              {loading ? <Skeleton className="h-8 w-16 bg-gray-800" /> : (
+                <p className="text-xl font-bold text-white">{stats.inProgress}</p>
+              )}
+            </div>
+            <TrendingUp className="w-6 h-6 text-purple-500" />
+          </div>
+        </Card>
+        <Card className="bg-[#1a1a1a] border-gray-800 p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-400">Cancelled</p>
+              {loading ? <Skeleton className="h-8 w-16 bg-gray-800" /> : (
+                <p className="text-xl font-bold text-white">{stats.cancelled}</p>
+              )}
+            </div>
+            <XCircle className="w-6 h-6 text-red-500" />
           </div>
         </Card>
       </div>
@@ -235,6 +323,7 @@ export default function BookingManagementPage() {
                 <th className="p-4 text-sm font-medium text-gray-400">Freelancer</th>
                 <th className="p-4 text-sm font-medium text-gray-400">Schedule</th>
                 <th className="p-4 text-sm font-medium text-gray-400">Status</th>
+                <th className="p-4 text-sm font-medium text-gray-400">Payment Info</th>
                 <th className="p-4 text-sm font-medium text-gray-400">Progress</th>
                 <th className="p-4 text-sm font-medium text-gray-400">Amount</th>
                 <th className="p-4 text-sm font-medium text-gray-400">Actions</th>
@@ -242,9 +331,36 @@ export default function BookingManagementPage() {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={9} className="p-4 text-center text-gray-400">Loading...</td></tr>
+                Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={i} className="border-b border-gray-800">
+                    <td className="p-4"><Skeleton className="h-4 w-20 bg-gray-800" /></td>
+                    <td className="p-4">
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-32 bg-gray-800" />
+                        <Skeleton className="h-3 w-24 bg-gray-800" />
+                      </div>
+                    </td>
+                    <td className="p-4"><Skeleton className="h-4 w-24 bg-gray-800" /></td>
+                    <td className="p-4"><Skeleton className="h-4 w-24 bg-gray-800" /></td>
+                    <td className="p-4">
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-24 bg-gray-800" />
+                        <Skeleton className="h-3 w-16 bg-gray-800" />
+                      </div>
+                    </td>
+                    <td className="p-4"><Skeleton className="h-6 w-20 rounded-full bg-gray-800" /></td>
+                    <td className="p-4"><Skeleton className="h-2 w-20 bg-gray-800" /></td>
+                    <td className="p-4">
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-16 bg-gray-800" />
+                        <Skeleton className="h-3 w-12 bg-gray-800" />
+                      </div>
+                    </td>
+                    <td className="p-4"><Skeleton className="h-8 w-8 rounded bg-gray-800" /></td>
+                  </tr>
+                ))
               ) : bookings.map((booking, index) => {
-                const StatusIcon = statusIcons[booking.status];
+                const StatusIcon = statusIcons[booking.status] || HelpCircle;
                 return (
                   <motion.tr
                     key={booking.id}
@@ -275,10 +391,22 @@ export default function BookingManagementPage() {
                       </div>
                     </td>
                     <td className="p-4">
-                      <Badge className={`${statusColors[booking.status]} text-white`}>
+                      <Badge className={`${statusColors[booking.status] || 'bg-gray-600'} text-white`}>
                         <StatusIcon className="w-3 h-3 mr-1" />
                         {booking.status}
                       </Badge>
+                    </td>
+                    <td className="p-4">
+                      {booking.transactionId ? (
+                        <div className="space-y-1">
+                          <p className="text-white text-sm font-mono">{booking.transactionId}</p>
+                          <Badge variant="outline" className="text-xs border-green-500/50 text-green-400 bg-green-500/10">
+                            {booking.paymentStatus}
+                          </Badge>
+                        </div>
+                      ) : (
+                        <span className="text-gray-500 text-xs">Standard</span>
+                      )}
                     </td>
                     <td className="p-4">
                       <div className="w-20">

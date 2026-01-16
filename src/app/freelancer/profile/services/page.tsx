@@ -8,7 +8,7 @@ export default function ServicesPage() {
     <ServicesProvider>
       <div className="min-h-screen bg-[#0F0F0F] text-white flex flex-col">
         {/* Sticky Header */}
-        <div className="sticky top-0 z-10 bg-[#0F0F0F] border-b border-white/5">
+        <div className="sticky top-0 z-50 bg-[#0F0F0F] border-b border-white/5">
           <div className="container mx-auto px-4 py-3">
             <div className="flex items-center">
               <Link

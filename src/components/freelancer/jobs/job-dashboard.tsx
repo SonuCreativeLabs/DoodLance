@@ -11,7 +11,8 @@ import { Search, X } from 'lucide-react';
 import { JobCard, ApplicationCard } from './index';
 import { Job, Application, EarningsData, JobCategory } from './types';
 import { CricketComingSoon } from '@/components/common/CricketComingSoon';
-import { CricketLoader } from '@/components/ui/cricket-loader';
+import { JobCardSkeleton } from '@/components/skeletons/JobCardSkeleton';
+import { useAuth } from '@/contexts/AuthContext';
 
 // LocalStorage key for client bookings
 const CLIENT_BOOKINGS_KEY = 'clientBookings';
@@ -126,7 +127,7 @@ const convertBookingToJob = (booking: any): Job => {
       rating: 4.5,
       jobsCompleted: 10,
       memberSince: new Date().toISOString().split('T')[0],
-      phoneNumber: booking.providerPhone || booking.client?.phone,
+      phoneNumber: booking.clientPhone || booking.client?.phone || booking.providerPhone,
       image: booking.clientAvatar || '',
       moneySpent: 50000,
       location: booking.location || 'Remote',
@@ -189,18 +190,21 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
       skills: Array.isArray(dbJob.skills) ? dbJob.skills : [],
       duration: dbJob.duration || 'Not specified',
       experienceLevel: dbJob.experienceLevel || 'Any',
-      client: dbJob.client || {
-        name: 'Unknown Client',
-        rating: 4.5,
-        jobsCompleted: 10,
-        memberSince: new Date().toISOString().split('T')[0],
-        phoneNumber: dbJob.client?.phone || dbJob.client?.phoneNumber,
-        image: '',
-        moneySpent: 50000,
-        location: 'Location not specified',
-        joinedDate: new Date().toISOString().split('T')[0],
-        freelancersWorked: 15,
-        freelancerAvatars: []
+      client: {
+        ...(dbJob.client || {
+          name: 'Unknown Client',
+          rating: 4.5,
+          jobsCompleted: 10,
+          memberSince: new Date().toISOString().split('T')[0],
+          image: '',
+          moneySpent: 50000,
+          location: 'Location not specified',
+          joinedDate: new Date().toISOString().split('T')[0],
+          freelancersWorked: 15,
+          freelancerAvatars: []
+        }),
+        // Explicitly set/overwrite phoneNumber to ensure we check all sources
+        phoneNumber: dbJob.client?.phone || dbJob.client?.phoneNumber || dbJob.providerPhone || dbJob.client?.phoneNumber
       },
       cancellationDetails: dbJob.cancellationDetails,
       rating: dbJob.rating,
@@ -211,14 +215,24 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
     };
   };
 
+  // Use cached auth context instead of fetching session repeatedly
+  const { user, isLoading: authLoading } = useAuth();
+
   // Initialize with API data
   useEffect(() => {
     const fetchData = async () => {
+      // If auth is still loading, don't fetch yet
+      if (authLoading) return;
+
+      // If no user after loading, just stop loading local state
+      if (!user?.id) {
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
       try {
-        const sessionRes = await fetch('/api/auth/session');
-        const session = await sessionRes.json();
-        const userId = session?.user?.id;
+        const userId = user.id;
 
         if (userId) {
           // Fetch applications
@@ -264,8 +278,9 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
         setLoading(false);
       }
     };
+
     fetchData();
-  }, []);
+  }, [user, authLoading]);
 
 
 
@@ -796,9 +811,10 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
                 >
                   <TabsContent value="upcoming" className="mt-0 w-full">
                     {loading ? (
-                      <div className="flex flex-col items-center justify-center py-20">
-                        <CricketLoader size={48} color="white" />
-                        <p className="mt-4 text-white/40 text-sm">Loading your crease...</p>
+                      <div className="space-y-4">
+                        {[...Array(3)].map((_, i) => (
+                          <JobCardSkeleton key={i} />
+                        ))}
                       </div>
                     ) : filteredJobs.length > 0 ? (
                       <div className="space-y-4 w-full">
@@ -860,7 +876,7 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
             </div>
           </Tabs>
         </div>
-      </div>
-    </div>
+      </div >
+    </div >
   );
 }

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -85,7 +86,8 @@ const defaultSettings = {
   systemAlerts: true,
 
   // Payments
-  platformCommission: '15',
+  clientCommission: '5',
+  freelancerCommission: '25',
   minWithdrawal: '500',
   maxWithdrawal: '50000',
   withdrawalFrequency: 'weekly',
@@ -111,12 +113,14 @@ export default function SettingsPage() {
   const [settings, setSettings] = useState(defaultSettings);
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     fetchSettings();
   }, []);
 
   const fetchSettings = async () => {
+    setLoading(true);
     try {
       const res = await fetch('/api/admin/settings');
       if (res.ok) {
@@ -130,7 +134,12 @@ export default function SettingsPage() {
     }
   };
 
+  const handleReset = () => {
+    fetchSettings();
+  };
+
   const handleSave = async () => {
+    setIsSaving(true);
     try {
       const res = await fetch('/api/admin/settings', {
         method: 'PATCH',
@@ -143,6 +152,8 @@ export default function SettingsPage() {
       }
     } catch (error) {
       console.error('Error saving settings:', error);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -334,11 +345,20 @@ export default function SettingsPage() {
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label className="text-gray-300">Platform Commission (%)</Label>
+                <Label className="text-gray-300">Client Commission (%)</Label>
                 <Input
                   type="number"
-                  value={settings.platformCommission}
-                  onChange={(e) => setSettings({ ...settings, platformCommission: e.target.value })}
+                  value={settings.clientCommission}
+                  onChange={(e) => setSettings({ ...settings, clientCommission: e.target.value })}
+                  className="bg-[#2a2a2a] border-gray-700 text-white mt-1"
+                />
+              </div>
+              <div>
+                <Label className="text-gray-300">Freelancer Commission (%)</Label>
+                <Input
+                  type="number"
+                  value={settings.freelancerCommission}
+                  onChange={(e) => setSettings({ ...settings, freelancerCommission: e.target.value })}
                   className="bg-[#2a2a2a] border-gray-700 text-white mt-1"
                 />
               </div>
@@ -389,6 +409,132 @@ export default function SettingsPage() {
           </div>
         );
 
+      case 'performance':
+        return (
+          <div className="space-y-4">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-gray-300">Enable Caching</Label>
+                  <p className="text-xs text-gray-400 mt-1">Cache static assets and API responses</p>
+                </div>
+                <Switch
+                  checked={settings.enableCache}
+                  onCheckedChange={(checked) => setSettings({ ...settings, enableCache: checked })}
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-gray-300">CDN Delivery</Label>
+                  <p className="text-xs text-gray-400 mt-1">Serve assets from Content Delivery Network</p>
+                </div>
+                <Switch
+                  checked={settings.enableCdn}
+                  onCheckedChange={(checked) => setSettings({ ...settings, enableCdn: checked })}
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-gray-300">Compression</Label>
+                  <p className="text-xs text-gray-400 mt-1">Enable Gzip/Brotli compression</p>
+                </div>
+                <Switch
+                  checked={settings.compressionEnabled}
+                  onCheckedChange={(checked) => setSettings({ ...settings, compressionEnabled: checked })}
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-gray-300">Lazy Loading</Label>
+                  <p className="text-xs text-gray-400 mt-1">Lazy load images and components</p>
+                </div>
+                <Switch
+                  checked={settings.lazyLoading}
+                  onCheckedChange={(checked) => setSettings({ ...settings, lazyLoading: checked })}
+                />
+              </div>
+            </div>
+            <div className="mt-4">
+              <Label className="text-gray-300">Cache Expiry (seconds)</Label>
+              <Input
+                type="number"
+                value={settings.cacheExpiry}
+                onChange={(e) => setSettings({ ...settings, cacheExpiry: e.target.value })}
+                className="bg-[#2a2a2a] border-gray-700 text-white mt-1"
+              />
+            </div>
+          </div>
+        );
+
+      case 'database':
+        return (
+          <div className="space-y-4">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-gray-300">Automatic Backups</Label>
+                  <p className="text-xs text-gray-400 mt-1">Schedule periodic database backups</p>
+                </div>
+                <Switch
+                  checked={settings.autoBackup}
+                  onCheckedChange={(checked) => setSettings({ ...settings, autoBackup: checked })}
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-gray-300">Maintenance Mode</Label>
+                  <p className="text-xs text-gray-400 mt-1">Enabling this restricts user access</p>
+                </div>
+                <Switch
+                  checked={settings.maintenanceMode}
+                  onCheckedChange={(checked) => setSettings({ ...settings, maintenanceMode: checked })}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4 mt-4">
+              <div>
+                <Label className="text-gray-300">Backup Frequency</Label>
+                <Select value={settings.backupFrequency} onValueChange={(value) => setSettings({ ...settings, backupFrequency: value })}>
+                  <SelectTrigger className="bg-[#2a2a2a] border-gray-700 text-white mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="daily">Daily</SelectItem>
+                    <SelectItem value="weekly">Weekly</SelectItem>
+                    <SelectItem value="monthly">Monthly</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-gray-300">Retention (Days)</Label>
+                <Input
+                  type="number"
+                  value={settings.backupRetention}
+                  onChange={(e) => setSettings({ ...settings, backupRetention: e.target.value })}
+                  className="bg-[#2a2a2a] border-gray-700 text-white mt-1"
+                />
+              </div>
+            </div>
+            <div className="mt-6 p-4 bg-yellow-900/10 border border-yellow-700/30 rounded-lg">
+              <h4 className="text-yellow-500 font-medium flex items-center mb-2">
+                <AlertCircle className="w-4 h-4 mr-2" />
+                Database Operations
+              </h4>
+              <p className="text-sm text-gray-400 mb-4">
+                Manual actions for database management. Warning: Some actions may affect system availability.
+              </p>
+              <div className="flex gap-2">
+                <Button variant="outline" className="text-gray-300 border-gray-700 hover:bg-[#2a2a2a]">
+                  Run Backup Now
+                </Button>
+                <Button variant="outline" className="text-gray-300 border-gray-700 hover:bg-[#2a2a2a]">
+                  Optimize Tables
+                </Button>
+              </div>
+            </div>
+          </div>
+        );
+
       default:
         return null;
     }
@@ -403,16 +549,26 @@ export default function SettingsPage() {
           <p className="text-gray-400 mt-1 text-sm sm:text-base">Configure platform settings and preferences</p>
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
-          <Button variant="outline" className="text-gray-300 flex-1 sm:flex-none">
-            <RefreshCw className="w-4 h-4 mr-2" />
+          <Button
+            variant="outline"
+            className="text-gray-300 flex-1 sm:flex-none border-gray-700 hover:bg-white/5"
+            onClick={handleReset}
+            disabled={loading || isSaving}
+          >
+            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
             Reset
           </Button>
           <Button
             onClick={handleSave}
-            className="bg-purple-600 hover:bg-purple-700 flex-1 sm:flex-none"
-            disabled={saved}
+            className="bg-purple-600 hover:bg-purple-700 flex-1 sm:flex-none min-w-[140px]"
+            disabled={saved || isSaving || loading}
           >
-            {saved ? (
+            {isSaving ? (
+              <>
+                <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin mr-2" />
+                Saving...
+              </>
+            ) : saved ? (
               <>
                 <Check className="w-4 h-4 mr-2" />
                 Saved
@@ -444,14 +600,47 @@ export default function SettingsPage() {
       </div>
 
       {/* Settings Content */}
+      {/* Settings Content */}
       <Card className="bg-[#1a1a1a] border-gray-800 p-6">
-        <h2 className="text-xl font-semibold text-white mb-4">
-          {settingsCategories.find(c => c.id === activeCategory)?.title}
-        </h2>
-        <p className="text-sm text-gray-400 mb-6">
-          {settingsCategories.find(c => c.id === activeCategory)?.description}
-        </p>
-        {renderSettingsContent()}
+        {loading ? (
+          <div className="space-y-6">
+            <div className="space-y-2 mb-6">
+              <Skeleton className="h-8 w-48 bg-[#2a2a2a]" />
+              <Skeleton className="h-4 w-64 bg-[#2a2a2a]" />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Skeleton className="h-5 w-32 bg-[#2a2a2a]" />
+                <Skeleton className="h-10 w-full bg-[#2a2a2a]" />
+              </div>
+              <div className="space-y-2">
+                <Skeleton className="h-5 w-32 bg-[#2a2a2a]" />
+                <Skeleton className="h-10 w-full bg-[#2a2a2a]" />
+              </div>
+              <div className="space-y-2">
+                <Skeleton className="h-5 w-32 bg-[#2a2a2a]" />
+                <Skeleton className="h-10 w-full bg-[#2a2a2a]" />
+              </div>
+              <div className="space-y-2">
+                <Skeleton className="h-5 w-32 bg-[#2a2a2a]" />
+                <Skeleton className="h-10 w-full bg-[#2a2a2a]" />
+              </div>
+            </div>
+            <div className="flex justify-end pt-6 border-t border-gray-800">
+              <Skeleton className="h-10 w-32 bg-[#2a2a2a]" />
+            </div>
+          </div>
+        ) : (
+          <>
+            <h2 className="text-xl font-semibold text-white mb-4">
+              {settingsCategories.find(c => c.id === activeCategory)?.title}
+            </h2>
+            <p className="text-sm text-gray-400 mb-6">
+              {settingsCategories.find(c => c.id === activeCategory)?.description}
+            </p>
+            {renderSettingsContent()}
+          </>
+        )}
       </Card>
 
       {/* Stats Cards */}

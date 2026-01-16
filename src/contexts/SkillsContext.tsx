@@ -17,6 +17,7 @@ interface SkillsContextType {
   removeSkill: (skillId: string) => void;
   reorderSkills: (skills: SkillItem[]) => void;
   hydrateSkills: (skills: SkillItem[]) => void;
+  isLoading: boolean;
 }
 
 const defaultSkills: SkillItem[] = [];
@@ -151,7 +152,8 @@ export function SkillsProvider({ children, skipInitialFetch = false }: SkillsPro
     addSkill,
     removeSkill,
     reorderSkills,
-  }), [skills, updateSkills, hydrateSkills, addSkill, removeSkill, reorderSkills]);
+    isLoading: !isHydrated,
+  }), [skills, updateSkills, hydrateSkills, addSkill, removeSkill, reorderSkills, isHydrated]);
 
   return (
     <SkillsContext.Provider value={value}>

@@ -24,9 +24,9 @@ export function Navbar() {
             <Link href="/client/nearby/hirefeed" className="text-gray-600 hover:text-[#FF8A3D] transition-colors">
               Hire
             </Link>
-            <Link href="/inbox" className="text-gray-600 hover:text-[#FF8A3D] transition-colors">
+            {/* <Link href="/inbox" className="text-gray-600 hover:text-[#FF8A3D] transition-colors">
               Inbox
-            </Link>
+            </Link> */}
           </div>
 
           {/* Auth Buttons */}

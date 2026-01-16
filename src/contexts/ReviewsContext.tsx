@@ -27,6 +27,7 @@ interface ReviewsContextType {
   addReview: (review: Review) => void;
   removeReview: (reviewId: string) => void;
   hydrateReviews: (reviews: Review[]) => void;
+  isLoading: boolean;
 }
 
 const ReviewsContext = createContext<ReviewsContextType | undefined>(undefined);
@@ -42,6 +43,7 @@ export function ReviewsProvider({ children, skipInitialFetch = false }: ReviewsP
     averageRating: 0,
     totalReviews: 0,
   });
+  const [isLoading, setIsLoading] = useState(true);
   const hasHydrated = useRef(false);
   const supabase = createClient();
 
@@ -55,10 +57,14 @@ export function ReviewsProvider({ children, skipInitialFetch = false }: ReviewsP
       totalReviews: reviews.length
     });
     hasHydrated.current = true;
+    setIsLoading(false);
   }, []);
 
   useEffect(() => {
-    if (skipInitialFetch) return;
+    if (skipInitialFetch) {
+      setIsLoading(false);
+      return;
+    }
 
     const fetchReviews = async () => {
       try {
@@ -89,6 +95,8 @@ export function ReviewsProvider({ children, skipInitialFetch = false }: ReviewsP
         }
       } catch (error) {
         console.error('Error fetching reviews:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -131,6 +139,7 @@ export function ReviewsProvider({ children, skipInitialFetch = false }: ReviewsP
     addReview,
     removeReview,
     hydrateReviews,
+    isLoading,
   };
 
   return (

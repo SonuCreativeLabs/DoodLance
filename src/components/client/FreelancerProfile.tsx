@@ -1,6 +1,8 @@
 "use client";
 
-import { CricketLoader } from '@/components/ui/cricket-loader';
+import { toast } from 'sonner';
+
+import { ProfileSkeleton } from '@/components/skeletons/ProfileSkeleton';
 import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { useParams, useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -20,7 +22,10 @@ import {
     CheckCircle,
     ArrowRight,
     UserPlus,
-    User
+    User,
+    Play,
+    CheckCircle2,
+    MessageSquare
 } from 'lucide-react';
 import { useNavbar } from '@/contexts/NavbarContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -32,10 +37,13 @@ import { IdVerifiedBadge } from '@/components/freelancer/profile/IdVerifiedBadge
 import { SkillInfoDialog } from '@/components/common/SkillInfoDialog';
 import { getSkillInfo, type SkillInfo } from '@/utils/skillUtils';
 import { formatTime } from '@/utils/profileUtils';
+import { calculateAge } from '@/utils/personalUtils';
 import Image from 'next/image';
 import { IconButton } from '@/components/ui/icon-button';
 import { PortfolioItemModal } from '@/components/common/PortfolioItemModal';
 import { HireBottomSheet } from '@/components/hire/HireBottomSheet';
+import { VideoEmbed } from '@/components/common/VideoEmbed';
+import { ServiceVideoCarousel } from '@/components/common/ServiceVideoCarousel';
 
 interface FreelancerDetail {
     id: string;
@@ -60,6 +68,8 @@ interface FreelancerDetail {
         timeSlots?: { start: string; end: string }[];
     }[];
     online: boolean;
+    isVerified?: boolean;
+    username?: string;
 
     // Additional profile fields for detailed view
     bio?: string;
@@ -71,6 +81,7 @@ interface FreelancerDetail {
     completionRate?: number;
     skills?: string[];
     coverImage?: string; // New field for unique cover images
+    dateOfBirth?: string;
 
     // Services data
     services?: {
@@ -81,6 +92,7 @@ interface FreelancerDetail {
         deliveryTime: string;
         features?: string[];
         category?: string;
+        videoUrls?: string[];
     }[];
 
     // Portfolio data
@@ -91,16 +103,11 @@ interface FreelancerDetail {
         category: string;
     }[];
 
-    // Experience data
-    experienceDetails?: {
+    // Achievements data
+    achievements?: {
         id: string;
-        role: string;
+        title: string;
         company: string;
-        location: string;
-        startDate: string;
-        endDate?: string;
-        isCurrent: boolean;
-        description?: string;
     }[];
 
     // Reviews data
@@ -170,8 +177,7 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
         { id: 'top', label: 'Profile' },
         { id: 'about', label: 'About' },
         { id: 'services', label: 'Services' },
-        { id: 'portfolio', label: 'Portfolio' },
-        { id: 'experience', label: 'Experience' },
+        { id: 'achievements', label: 'Achievements' },
         { id: 'reviews', label: 'Reviews' }
     ];
 
@@ -198,10 +204,8 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                 try {
                     const parsed = JSON.parse(cachedData);
                     setFreelancer(parsed);
-                    setLoading(false);
-                    // verified - we can return here, or fetch in background to update
-                    // returning here is faster and meets "keep infos solid" requirement
-                    // we can do a background SWR-like revalidation if needed, but for now simple cache is best
+                    // Don't set loading false yet - wait for fresh data
+                    // setLoading(false);
                 } catch (e) {
                     console.error("Cache parse error", e);
                 }
@@ -252,6 +256,8 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                     description: String(profile.about || profile.bio || ''),
                     availability: profile.availability || [],
                     online: Boolean(profile.isOnline),
+                    isVerified: Boolean(profile.isVerified),
+                    username: String(profile.username || ''),
 
                     bio: profile.bio ? String(profile.bio) : undefined,
                     about: profile.about ? String(profile.about) : undefined,
@@ -262,25 +268,27 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                     completionRate: 0,
                     skills: skills,
                     coverImage: String(profile.coverImage || ''),
+                    dateOfBirth: profile.dateOfBirth,
 
-                    services: profile.services?.map((s: any) => ({
-                        id: String(s.id),
-                        title: String(s.title),
-                        description: String(s.description),
-                        price: String(s.price), // Force string as per interface expectation or UI usage
-                        category: String(s.category?.name || 'Service'),
-                        deliveryTime: String(s.deliveryTime)
-                    })) || [],
+                    services: profile.services?.map((s: any) => {
+                        // DEBUG LOG
+                        console.log('FreelancerProfile Service Raw:', s.id, s.title, s.videoUrl, s.videoUrls);
+                        return {
+                            id: String(s.id),
+                            title: String(s.title),
+                            description: String(s.description),
+                            price: String(s.price), // Force string as per interface expectation or UI usage
+                            category: String(s.category?.name || 'Service'),
+                            deliveryTime: String(s.deliveryTime),
+                            videoUrls: (Array.isArray(s.videoUrls) ? s.videoUrls : (Array.isArray(s.videoUrl) ? s.videoUrl : [])).filter((u: any) => typeof u === 'string' && u.trim().length > 0),
+                            features: s.features ? (typeof s.features === 'string' ? JSON.parse(s.features) : Array.isArray(s.features) ? s.features : []) : []
+                        };
+                    }) || [],
 
-                    experienceDetails: profile.experiences?.map((exp: any) => ({
+                    achievements: profile.achievements?.map((exp: any) => ({
                         id: String(exp.id),
-                        role: String(exp.role),
-                        company: String(exp.company),
-                        location: String(exp.location),
-                        startDate: String(exp.startDate),
-                        endDate: String(exp.endDate),
-                        isCurrent: Boolean(exp.isCurrent),
-                        description: String(exp.description)
+                        title: String(exp.title || ''),
+                        company: String(exp.company)
                     })) || [],
 
                     portfolio: profile.portfolios?.map((p: any) => ({
@@ -423,21 +431,35 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
     const handleShare = async () => {
         if (!freelancer) return;
 
+        // Construct profile URL using username if available, otherwise fallback to ID
+        const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+        const profilePath = freelancer.username
+            ? `/freelancer/${freelancer.username}`
+            : `/client/freelancer/${freelancerId}`;
+
+        // Clean URL for sharing
+        const shareUrl = `${baseUrl}${profilePath}`;
+
         const shareData = {
             title: `${freelancer.name}'s Profile`,
             text: `Check out ${freelancer.name}'s profile on DoodLance`,
-            url: typeof window !== 'undefined' ? window.location.href : ''
+            url: shareUrl
         };
 
         // Try Web Share API first
         if (navigator.share) {
-            await navigator.share(shareData);
-            return;
+            try {
+                await navigator.share(shareData);
+                return;
+            } catch (err) {
+                console.debug('Share API failed, falling back to clipboard');
+            }
         }
 
         // Fallback to clipboard
-        if (navigator.clipboard && shareData.url) {
+        if (navigator.clipboard) {
             await navigator.clipboard.writeText(shareData.url);
+            toast.success('Profile link copied to clipboard!');
             return;
         }
 
@@ -448,6 +470,7 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
         input.select();
         document.execCommand('copy');
         document.body.removeChild(input);
+        toast.success('Profile link copied to clipboard!');
     };
 
     const handleTabClick = (tabId: string, e: React.MouseEvent) => {
@@ -545,9 +568,7 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
     return (
         <div>
             {loading && (
-                <div className="flex items-center justify-center h-screen bg-[#0F0F0F]">
-                    <CricketLoader size={60} />
-                </div>
+                <ProfileSkeleton />
             )}
 
             {!loading && !freelancer && (
@@ -618,7 +639,7 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                                             </div>
                                             {/* ID Verified Badge - Mobile: left side of profile picture */}
                                             <div className="md:hidden absolute top-[calc(50%+32px)] -translate-y-1/2 -left-28 ml-0">
-                                                <IdVerifiedBadge isVerified={true} />
+                                                <IdVerifiedBadge isVerified={!!freelancer.isVerified} />
                                             </div>
                                             {/* Online Badge - Mobile: right side of profile picture */}
                                             <div className="md:hidden absolute top-[calc(50%+32px)] -translate-y-1/2 left-full ml-10">
@@ -643,13 +664,18 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
 
                                         {/* ID Verified Badge - Desktop: left corner of profile picture */}
                                         <div className="hidden md:block absolute top-8 -left-28 transform rotate-[1deg]">
-                                            <IdVerifiedBadge isVerified={true} isDesktop={true} />
+                                            <IdVerifiedBadge isVerified={!!freelancer.isVerified} isDesktop={true} />
                                         </div>
                                     </div>
 
                                     <div className="text-center mb-4">
                                         <div className="flex items-center justify-center gap-2">
                                             <h1 className="text-2xl font-bold text-white">{freelancer.name}</h1>
+                                            {freelancer.dateOfBirth && (
+                                                <span className="text-lg font-semibold text-white/70">
+                                                    {calculateAge(freelancer.dateOfBirth)}
+                                                </span>
+                                            )}
                                         </div>
                                         <p className="text-purple-400 mt-0.5">{freelancer.cricketRole || 'All Rounder'}</p>
 
@@ -692,30 +718,28 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                         </section>
 
                         {/* Sticky Tab Navigation with Back/Share Header */}
-                        <div className={`sticky top-0 z-[100] ${isScrolledPastCover ? 'bg-[#0f0f0f]/95 backdrop-blur-sm' : 'bg-transparent'} mt-1`}>
+                        <div className={`sticky top-0 z-[100] bg-[#0f0f0f] mt-1 transition-all duration-300 ${isScrolledPastCover ? 'shadow-md border-b border-white/5' : ''}`}>
                             {/* Back/Share Header - Only render when scrolled past cover */}
-                            {isScrolledPastCover && (
-                                <div className="border-b border-white/5">
-                                    <div className="flex items-center justify-between px-4 py-2">
-                                        <IconButton
-                                            icon={ArrowLeft}
-                                            onClick={handleBack}
-                                            aria-label="Back"
-                                        />
-                                        <div className="flex-1 flex justify-center">
-                                            <div className="flex flex-col items-center text-center">
-                                                <span className="text-white font-medium text-sm truncate">{freelancer.name}</span>
-                                                <span className="text-white/60 text-xs truncate">{freelancer.cricketRole || 'All Rounder'}</span>
-                                            </div>
+                            <div className={`transition-all duration-300 ease-in-out overflow-hidden ${isScrolledPastCover ? 'h-14 opacity-100 border-b border-white/5' : 'h-0 opacity-0'}`}>
+                                <div className="flex items-center justify-between px-4 h-full">
+                                    <IconButton
+                                        icon={ArrowLeft}
+                                        onClick={handleBack}
+                                        aria-label="Back"
+                                    />
+                                    <div className="flex-1 flex justify-center">
+                                        <div className="flex flex-col items-center text-center">
+                                            <span className="text-white font-medium text-sm truncate">{freelancer.name}</span>
+                                            <span className="text-white/60 text-xs truncate">{freelancer.cricketRole || 'All Rounder'}</span>
                                         </div>
-                                        <IconButton
-                                            icon={Share2}
-                                            onClick={handleShare}
-                                            aria-label="Share profile"
-                                        />
                                     </div>
+                                    <IconButton
+                                        icon={Share2}
+                                        onClick={handleShare}
+                                        aria-label="Share profile"
+                                    />
                                 </div>
-                            )}
+                            </div>
 
                             {/* Tab Navigation - Always visible */}
                             <div className="relative w-full overflow-hidden border-b border-white/5">
@@ -838,9 +862,11 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                                             <div className="bg-white/5 p-4 rounded-xl border border-white/10">
                                                 <div className="flex items-center justify-between mb-3">
                                                     <h3 className="font-medium text-white">Availability</h3>
-                                                    <div className="flex items-center gap-1 text-xs text-white/60">
-                                                        <div className="w-2 h-2 rounded-full bg-green-400/80"></div>
-                                                        <span>Available</span>
+                                                    <div className="flex items-center gap-1.5 text-xs text-white/60">
+                                                        <div className={`w-2 h-2 rounded-full ${freelancer.online ? 'bg-green-400/80 shadow-[0_0_8px_rgba(74,222,128,0.5)]' : 'bg-yellow-500/80 shadow-[0_0_8px_rgba(234,179,8,0.5)]'}`}></div>
+                                                        <span className={freelancer.online ? 'text-green-400' : 'text-yellow-500'}>
+                                                            {freelancer.online ? 'Available' : 'Not Available'}
+                                                        </span>
                                                     </div>
                                                 </div>
 
@@ -849,7 +875,7 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                                                         <div key={i} className="flex flex-col items-center">
                                                             <div
                                                                 className={`w-8 h-8 flex items-center justify-center rounded-full text-sm font-medium ${day.available
-                                                                    ? 'bg-green-500/10 text-green-400'
+                                                                    ? (freelancer.online ? 'bg-green-500/10 text-green-400' : 'bg-yellow-500/10 text-yellow-500')
                                                                     : 'bg-white/5 text-white/40'
                                                                     }`}
                                                             >
@@ -906,47 +932,49 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
 
                                             <div className="relative">
                                                 <div className="flex -mx-2 overflow-x-auto scrollbar-hide pb-2">
-                                                    <div className="flex gap-4 px-2">
+                                                    <div className="flex gap-4 px-2 items-start">
                                                         {freelancer.services.map((service) => (
-                                                            <div key={service.id} className="w-80 flex-shrink-0 p-5 pt-8 rounded-3xl border border-white/10 bg-white/5 hover:border-purple-500/30 transition-colors flex flex-col h-full relative">
-                                                                {/* Category badge */}
-                                                                {service.category && (
-                                                                    <div className="absolute top-3 left-3 z-10">
-                                                                        <Badge className="bg-white/10 text-white/80 border-white/20 px-2 py-0.5 text-xs">
-                                                                            {service.category}
-                                                                        </Badge>
-                                                                    </div>
-                                                                )}
-                                                                <div className="flex flex-col h-full">
-                                                                    <div className="flex-1 mt-2">
-                                                                        <div className="flex items-start justify-between">
-                                                                            <h3 className="text-lg font-semibold text-white">{service.title}</h3>
+                                                            <div key={service.id} className="w-80 flex-shrink-0 rounded-xl border border-white/5 bg-[#1E1E1E] overflow-hidden flex flex-col relative group hover:border-white/10 transition-colors">
+                                                                {/* Video Cover */}
+                                                                <ServiceVideoCarousel
+                                                                    videoUrls={service.videoUrls?.filter(url => url) || []}
+                                                                    onVideoClick={(url) => window.open(url, '_blank')}
+                                                                    className="w-full"
+                                                                />
+
+                                                                {/* Content */}
+                                                                <div className="p-5 flex flex-col flex-1">
+                                                                    {service.category && (
+                                                                        <div className="mb-3 flex justify-start">
+                                                                            <Badge className="bg-white/10 text-white/80 border-white/20 px-2 py-0.5 text-xs">
+                                                                                {service.category}
+                                                                            </Badge>
                                                                         </div>
+                                                                    )}
 
-                                                                        <p className="text-white/70 mt-2 text-sm">{service.description}</p>
+                                                                    <h3 className="text-lg font-semibold text-white mb-3 line-clamp-2">{service.title}</h3>
 
-                                                                        {service.features && service.features.length > 0 && (
-                                                                            <ul className="mt-3 space-y-2">
-                                                                                {service.features.map((feature, i) => (
-                                                                                    <li key={i} className="flex items-start text-sm text-white/80">
-                                                                                        <Check className="h-4 w-4 text-green-400 mr-2 mt-0.5 flex-shrink-0" />
-                                                                                        <span>{feature}</span>
-                                                                                    </li>
-                                                                                ))}
-                                                                            </ul>
-                                                                        )}
-                                                                    </div>
+                                                                    <p className="text-sm text-white/60 line-clamp-3 mb-6">{service.description}</p>
 
-                                                                    <div className="mt-4 pt-4 relative">
+                                                                    {service.features && service.features.length > 0 && (
+                                                                        <ul className="space-y-2.5 text-left mb-6">
+                                                                            {service.features.map((feature, i) => (
+                                                                                <li key={i} className="flex items-start">
+                                                                                    <CheckCircle2 className="h-4.5 w-4.5 flex-shrink-0 text-purple-400 mr-2.5 mt-0.5" />
+                                                                                    <span className="text-sm text-white/80 leading-tight">{feature}</span>
+                                                                                </li>
+                                                                            ))}
+                                                                        </ul>
+                                                                    )}
+
+                                                                    <div className="mt-6 pt-4 relative mt-auto">
                                                                         <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
-                                                                        <div className="flex flex-col gap-3">
-                                                                            <div className="flex items-center justify-between">
-                                                                                <div className="text-xl font-bold text-white">
-                                                                                    {service.price}
-                                                                                </div>
-                                                                                <div className="text-sm text-white/60 bg-white/5 px-3 py-1 rounded-full">
-                                                                                    {service.deliveryTime}
-                                                                                </div>
+                                                                        <div className="flex items-center justify-between">
+                                                                            <div className="text-xl font-bold text-white">
+                                                                                ₹{String(service.price).replace(/^₹/, '')}
+                                                                            </div>
+                                                                            <div className="text-sm text-white/60 bg-white/5 px-3 py-1 rounded-full border border-white/5">
+                                                                                {service.deliveryTime}
                                                                             </div>
                                                                         </div>
                                                                     </div>
@@ -1049,140 +1077,133 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                                         </section>
                                     )}
 
-                                    {/* Experience Section */}
-                                    {freelancer.experienceDetails && freelancer.experienceDetails.length > 0 && (
-                                        <section id="experience" data-section="experience" className="pt-8 scroll-mt-20 relative group z-0">
-                                            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
-                                            <div className="mb-6">
-                                                <h2 className="text-xl font-semibold text-white mb-1">Experience & Qualifications</h2>
-                                                <p className="text-white/60 text-sm">My professional journey and credentials</p>
-                                            </div>
+                                    {/* Achievements Section */}
+                                    <section id="achievements" data-section="achievements" className="pt-8 scroll-mt-20 relative group z-0">
+                                        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+                                        <div className="mb-6">
+                                            <h2 className="text-xl font-semibold text-white mb-1">Achievements</h2>
+                                            <p className="text-white/60 text-sm">Professional sports highlights</p>
+                                        </div>
 
-                                            <div className="relative">
-                                                {/* Timeline line */}
-                                                <div className="absolute left-5 top-0 bottom-0 w-px bg-white/10"></div>
-
-                                                <div className="space-y-4">
-                                                    {freelancer.experienceDetails.map((exp) => (
-                                                        <div key={exp.id} className="flex gap-4">
-                                                            <div className="flex flex-col items-center">
-                                                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-600 to-purple-800 flex items-center justify-center z-10">
-                                                                    <Briefcase className="h-5 w-5 text-white" />
-                                                                </div>
-                                                                <div className="w-px h-full bg-white/10 my-2"></div>
-                                                            </div>
-
-                                                            <div className="flex-1 pb-4">
-                                                                <h3 className="font-medium text-white">{exp.role}</h3>
-                                                                <p className="text-white/70">{exp.company}</p>
-
-                                                                <div className="flex items-center gap-2 text-sm text-white/60 mt-1">
-                                                                    <MapPin className="h-3.5 w-3.5" />
-                                                                    <span>{exp.location}</span>
-                                                                    <span className="mx-1">•</span>
-                                                                    <Award className="h-3.5 w-3.5" />
-                                                                    <span>
-                                                                        {exp.startDate} - {exp.isCurrent ? 'Present' : exp.endDate}
-                                                                    </span>
-                                                                </div>
-
-                                                                {exp.description && (
-                                                                    <p className="mt-3 text-sm text-white/80 leading-relaxed">{exp.description}</p>
-                                                                )}
-                                                            </div>
+                                        {freelancer.achievements && freelancer.achievements.length > 0 ? (
+                                            <div className="space-y-4">
+                                                {freelancer.achievements.map((ach) => (
+                                                    <div key={ach.id} className="bg-white/5 rounded-xl p-4 border border-white/5 flex items-start gap-4 hover:border-white/10 transition-colors">
+                                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-500/20 to-yellow-600/20 flex items-center justify-center flex-shrink-0 border border-yellow-500/30">
+                                                            <Award className="h-5 w-5 text-yellow-500" />
                                                         </div>
-                                                    ))}
-                                                </div>
+                                                        <div>
+                                                            <h3 className="font-medium text-white text-lg leading-tight">{ach.title}</h3>
+                                                            <p className="text-white/60 text-sm mt-1">{ach.company}</p>
+                                                        </div>
+                                                    </div>
+                                                ))}
                                             </div>
-                                        </section>
-                                    )}
+                                        ) : (
+                                            <div className="text-center py-8 rounded-2xl border border-white/10 bg-white/5">
+                                                <Award className="h-10 w-10 mx-auto text-white/20 mb-3" />
+                                                <h3 className="text-lg font-medium text-white">No achievements added yet</h3>
+                                                <p className="text-white/60 mt-1">This freelancer hasn&apos;t added any achievements yet.</p>
+                                            </div>
+                                        )}
+                                    </section>
+
+
 
                                     {/* Reviews Section */}
-                                    {freelancer.reviewsData && freelancer.reviewsData.length > 0 && (
-                                        <section id="reviews" data-section="reviews" className="pt-8 scroll-mt-20 relative group">
-                                            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
-                                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
-                                                <div>
-                                                    <h2 className="text-xl font-semibold text-white">Client Reviews</h2>
-                                                    <p className="text-sm text-white/60">What clients say about working with me</p>
+                                    <section id="reviews" data-section="reviews" className="pt-8 scroll-mt-20 relative group">
+                                        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+                                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
+                                            <div>
+                                                <h2 className="text-xl font-semibold text-white">Client Reviews</h2>
+                                                <p className="text-sm text-white/60">What clients say about working with me</p>
+                                            </div>
+                                            <div className="flex items-center mt-2 sm:mt-0">
+                                                <div className="flex items-center text-yellow-400 mr-2">
+                                                    {[...Array(5)].map((_, i) => (
+                                                        <Star
+                                                            key={i}
+                                                            className={`h-5 w-5 ${i < Math.floor(freelancer.rating) ? 'fill-current' : 'text-gray-600'}`}
+                                                        />
+                                                    ))}
                                                 </div>
-                                                <div className="flex items-center mt-2 sm:mt-0">
-                                                    <div className="flex items-center text-yellow-400 mr-2">
-                                                        {[...Array(5)].map((_, i) => (
-                                                            <Star
-                                                                key={i}
-                                                                className={`h-5 w-5 ${i < Math.floor(freelancer.rating) ? 'fill-current' : 'text-gray-600'}`}
-                                                            />
-                                                        ))}
-                                                    </div>
-                                                    <div className="text-white">
-                                                        <span className="font-medium">{freelancer.rating.toFixed(1)}</span>
-                                                        <span className="text-white/60"> ({freelancer.reviewCount} reviews)</span>
-                                                    </div>
+                                                <div className="text-white">
+                                                    <span className="font-medium">{freelancer.rating.toFixed(1)}</span>
+                                                    <span className="text-white/60"> ({freelancer.reviewCount} reviews)</span>
                                                 </div>
                                             </div>
+                                        </div>
 
-                                            <div className="relative">
-                                                <div className="flex -mx-2 overflow-x-auto scrollbar-hide pb-2">
-                                                    <div className="flex gap-4 px-2">
-                                                        {freelancer.reviewsData.map((review) => (
-                                                            <div
-                                                                key={review.id}
-                                                                className="w-80 flex-shrink-0 p-5 rounded-3xl border border-white/10 bg-white/5 hover:border-purple-500/30 transition-colors flex flex-col h-full"
-                                                            >
-                                                                <div className="flex justify-between items-start mb-3">
-                                                                    <div className="flex items-center gap-3">
-                                                                        <div className="w-10 h-10 rounded-2xl bg-white/5 flex items-center justify-center flex-shrink-0">
-                                                                            <div className="w-5 h-5 rounded-full bg-white/20"></div>
+                                        {freelancer.reviewsData && freelancer.reviewsData.length > 0 ? (
+                                            <>
+                                                <div className="relative">
+                                                    <div className="flex -mx-2 overflow-x-auto scrollbar-hide pb-2">
+                                                        <div className="flex gap-4 px-2">
+                                                            {freelancer.reviewsData.map((review) => (
+                                                                <div
+                                                                    key={review.id}
+                                                                    className="w-80 flex-shrink-0 p-5 rounded-3xl border border-white/10 bg-white/5 hover:border-purple-500/30 transition-colors flex flex-col h-full"
+                                                                >
+                                                                    <div className="flex justify-between items-start mb-3">
+                                                                        <div className="flex items-center gap-3">
+                                                                            <div className="w-10 h-10 rounded-2xl bg-white/5 flex items-center justify-center flex-shrink-0">
+                                                                                <div className="w-5 h-5 rounded-full bg-white/20"></div>
+                                                                            </div>
+                                                                            <div className="min-w-0">
+                                                                                <h4 className="font-medium text-white text-sm truncate">{review.author}</h4>
+                                                                                {review.role && (
+                                                                                    <div className="text-xs text-white/60 truncate">
+                                                                                        {review.role}
+                                                                                    </div>
+                                                                                )}
+                                                                            </div>
                                                                         </div>
-                                                                        <div className="min-w-0">
-                                                                            <h4 className="font-medium text-white text-sm truncate">{review.author}</h4>
-                                                                            {review.role && (
-                                                                                <div className="text-xs text-white/60 truncate">
-                                                                                    {review.role}
-                                                                                </div>
-                                                                            )}
-                                                                        </div>
+                                                                        <span className="text-xs text-white/40 whitespace-nowrap ml-2">{review.date}</span>
                                                                     </div>
-                                                                    <span className="text-xs text-white/40 whitespace-nowrap ml-2">{review.date}</span>
+                                                                    <div className="flex items-center gap-1 mb-2">
+                                                                        {[...Array(5)].map((_, i) => (
+                                                                            <Star
+                                                                                key={i}
+                                                                                className={`h-3.5 w-3.5 ${i < review.rating ? 'text-yellow-400 fill-yellow-400' : 'text-white/20'}`}
+                                                                            />
+                                                                        ))}
+                                                                    </div>
+                                                                    <p className="text-sm text-white/80 flex-1">{review.comment}</p>
                                                                 </div>
-                                                                <div className="flex items-center gap-1 mb-2">
-                                                                    {[...Array(5)].map((_, i) => (
-                                                                        <Star
-                                                                            key={i}
-                                                                            className={`h-3.5 w-3.5 ${i < review.rating ? 'text-yellow-400 fill-yellow-400' : 'text-white/20'}`}
-                                                                        />
-                                                                    ))}
-                                                                </div>
-                                                                <p className="text-sm text-white/80 flex-1">{review.comment}</p>
-                                                            </div>
-                                                        ))}
+                                                            ))}
+                                                        </div>
                                                     </div>
                                                 </div>
+                                                <button
+                                                    onClick={handleViewAllReviews}
+                                                    className="w-full mt-3 py-2.5 px-4 border border-white/30 hover:bg-white/5 transition-colors text-sm font-medium flex items-center justify-center gap-2 text-white rounded-[6px]"
+                                                >
+                                                    View All {freelancer.reviewsData.length} Reviews
+                                                    <ArrowRight className="h-4 w-4" />
+                                                </button>
+                                            </>
+                                        ) : (
+                                            <div className="text-center py-12 rounded-3xl border border-white/10 bg-white/5">
+                                                <MessageSquare className="h-12 w-12 mx-auto text-white/20 mb-4" />
+                                                <h3 className="text-lg font-medium text-white">No reviews yet</h3>
+                                                <p className="text-white/60 mt-1">Reviews from clients will appear here</p>
                                             </div>
-                                            <button
-                                                onClick={handleViewAllReviews}
-                                                className="w-full mt-3 py-2.5 px-4 border border-white/30 hover:bg-white/5 transition-colors text-sm font-medium flex items-center justify-center gap-2 text-white rounded-[6px]"
-                                            >
-                                                View All {freelancer.reviewsData.length} Reviews
-                                                <ArrowRight className="h-4 w-4" />
-                                            </button>
-                                        </section>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                                        )}
+                                    </section>
+                                </div >
+                            </div >
+                        </div >
+                    </div >
 
                     {/* Skill Info Dialog */}
-                    <SkillInfoDialog
+                    < SkillInfoDialog
                         isOpen={isSkillDialogOpen}
                         onClose={() => setIsSkillDialogOpen(false)}
                         skillInfo={selectedSkillInfo}
                     />
 
                     {/* Portfolio Modal */}
-                    <PortfolioItemModal
+                    < PortfolioItemModal
                         item={selectedPortfolioItem}
                         isOpen={isPortfolioModalOpen}
                         onClose={() => {
@@ -1208,25 +1229,32 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                     }
 
                     {/* Sticky Hire Me Button */}
-                    {!isViewOnly && (
-                        <div className="fixed bottom-0 left-0 right-0 p-4 bg-[#0F0F0F]/95 backdrop-blur-sm border-t border-white/10">
-                            <button
-                                onClick={() => {
-                                    if (isAuthenticated && isProfileComplete) {
-                                        setIsHireBottomSheetOpen(true);
-                                    } else {
-                                        requireAuth(`hire_${freelancerId}`, {
-                                            redirectTo: pathname || window.location.pathname
-                                        });
-                                    }
-                                }}
-                                className="w-full py-2.5 bg-gradient-to-r from-purple-600 to-purple-500 text-white font-medium rounded-xl hover:from-purple-700 hover:to-purple-600 transition-all flex items-center justify-center gap-2 shadow-lg"
-                            >
-                                <UserPlus className="w-4 h-4" />
-                                Hire {freelancer?.name || 'Freelancer'}
-                            </button>
-                        </div>
-                    )}
+                    {
+                        !isViewOnly && (
+                            <div className="fixed bottom-0 left-0 right-0 p-4 bg-[#0F0F0F]/95 backdrop-blur-sm border-t border-white/10 z-[50]">
+                                <button
+                                    disabled={!freelancer?.online}
+                                    onClick={() => {
+                                        if (!freelancer?.online) return;
+                                        if (isAuthenticated && isProfileComplete) {
+                                            setIsHireBottomSheetOpen(true);
+                                        } else {
+                                            requireAuth(`hire_${freelancerId}`, {
+                                                redirectTo: pathname || window.location.pathname
+                                            });
+                                        }
+                                    }}
+                                    className={`w-full py-2.5 font-medium rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg ${freelancer?.online
+                                        ? 'bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-700 hover:to-purple-600'
+                                        : 'bg-white/10 text-white/40 cursor-not-allowed border border-white/5'
+                                        }`}
+                                >
+                                    {freelancer?.online ? <UserPlus className="w-4 h-4" /> : <div className="w-4 h-4" />}
+                                    {freelancer?.online ? `Hire ${freelancer?.name || 'Freelancer'}` : 'Currently Unavailable'}
+                                </button>
+                            </div>
+                        )
+                    }
 
                     {/* Auth Dialogs */}
                     <ProfileCompletionDialog

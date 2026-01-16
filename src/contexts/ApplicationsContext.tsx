@@ -46,6 +46,12 @@ export function ApplicationsProvider({ children }: { children: ReactNode }) {
   const refreshApplications = async () => {
     if (!user?.id) return;
 
+    // ✅ Guard: Prevent concurrent fetches
+    if (loading) {
+      console.log('⏭️ Skipping fetch - already loading applications');
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
@@ -221,7 +227,9 @@ export function ApplicationsProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
-    refreshApplications();
+    if (user?.id) {
+      refreshApplications();
+    }
 
     // Listen for new applications
     const handleApplicationsUpdated = () => {
@@ -231,7 +239,7 @@ export function ApplicationsProvider({ children }: { children: ReactNode }) {
 
     window.addEventListener('applicationsUpdated', handleApplicationsUpdated);
     return () => window.removeEventListener('applicationsUpdated', handleApplicationsUpdated);
-  }, []);
+  }, [user?.id]); // ✅ Only refetch when user ID changes (login/logout)
 
   const value = {
     applications,

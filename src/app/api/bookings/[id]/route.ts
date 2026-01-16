@@ -55,7 +55,8 @@ export async function GET(
               include: {
                 freelancerProfile: true
               }
-            }
+            },
+            category: true
           }
         },
         client: true,
@@ -87,7 +88,7 @@ export async function GET(
         name: provider?.name || 'Unknown',
         image: provider?.avatar || "/images/avatar-placeholder.png",
         rating: profile?.rating || 0,
-        location: profile?.location || 'Remote',
+        location: provider?.location || 'Remote',
         phone: provider?.phone || ''
       },
       image: provider?.avatar || "/images/avatar-placeholder.png",
@@ -97,18 +98,18 @@ export async function GET(
       location: booking.location || "Remote",
       price: `₹${booking.totalPrice}`,
       totalPrice: booking.totalPrice,
-      rating: booking.rating || 0,
+      rating: 0, // Schema has complex Json rating, using placeholder
       review: (booking as any).review || '',
       completedJobs: profile?.completedJobs || 0,
       description: booking.service?.description || '',
-      category: booking.service?.category || "General",
+      category: booking.service?.category?.name || "General",
       earnedMoney: `₹${booking.totalPrice}`,
       completedDate: (booking as any).deliveredAt
         ? new Date((booking as any).deliveredAt).toLocaleDateString()
         : (booking.scheduledAt ? new Date(booking.scheduledAt).toLocaleDateString() : ''),
       cancellationNotes: booking.notes || '',
-      clientRating: (booking as any).clientRating || null,
-      yourRating: booking.rating || 0
+      clientRating: booking.clientRating || null,
+      yourRating: 0 // Schema has complex Json rating
     };
     return NextResponse.json(mappedBooking);
 
@@ -209,6 +210,69 @@ export async function PUT(
       where: { id: params.id },
       data: updateData
     });
+
+    // REFERRAL REWARD LOGIC
+    if (status && status.toUpperCase() === 'COMPLETED') {
+      try {
+        const bookingClient = await prisma.user.findUnique({
+          where: { id: existingBooking.clientId }
+        });
+
+        if (bookingClient?.referredBy) {
+          // Check if this is the FIRST completed booking for this client
+          // We count bookings that are COMPLETED. Since we just updated the current one, the count should be 1 if it's the first.
+          const completedCount = await prisma.booking.count({
+            where: {
+              clientId: bookingClient.id,
+              status: 'COMPLETED'
+            }
+          });
+
+          // If count is 1, it means this is the first one!
+          if (completedCount === 1) {
+            const referrer = await prisma.user.findUnique({
+              where: { referralCode: bookingClient.referredBy }
+            });
+
+            if (referrer) {
+              // Credit Referrer Wallet
+              // Ensure wallet exists
+              let wallet = await prisma.wallet.findUnique({ where: { userId: referrer.id } });
+              if (!wallet) {
+                wallet = await prisma.wallet.create({
+                  data: { userId: referrer.id }
+                });
+              }
+
+              // Update Wallet Coins
+              await prisma.wallet.update({
+                where: { id: wallet.id },
+                data: {
+                  coins: { increment: 500 }
+                }
+              });
+
+              // Create Transaction Record
+              await prisma.transaction.create({
+                data: {
+                  walletId: wallet.id,
+                  amount: 500,
+                  type: 'REFERRAL_REWARD',
+                  description: `Referral reward for ${bookingClient.name || 'User'}'s first booking`,
+                  status: 'COMPLETED',
+                  paymentMethod: 'SYSTEM_COINS'
+                }
+              });
+
+              console.log(`Referral reward credited to ${referrer.email} for client ${bookingClient.email}`);
+            }
+          }
+        }
+      } catch (refError) {
+        console.error('Error processing referral reward:', refError);
+        // Don't fail the request, just log error
+      }
+    }
 
     return NextResponse.json({
       id: updatedBooking.id,

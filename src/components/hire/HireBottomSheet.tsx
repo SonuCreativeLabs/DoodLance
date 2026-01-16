@@ -2,10 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Check, ArrowRight } from 'lucide-react';
+import { X, Check, ArrowRight, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useHire, ServiceItem } from '@/contexts/HireContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { CricketWhiteBallSpinner } from '@/components/ui/CricketWhiteBallSpinner';
 
 interface HireBottomSheetProps {
   isOpen: boolean;
@@ -32,6 +33,7 @@ export function HireBottomSheet({
   const { state, setFreelancer, setSelectedService, removeService, resetHireState } = useHire();
   const { user } = useAuth();
   const prevFreelancerIdRef = React.useRef<string | null>(null);
+  const [isNavigating, setIsNavigating] = useState(false);
 
   console.log('🔍 [HIRE SHEET] Render:', {
     isOpen,
@@ -75,12 +77,19 @@ export function HireBottomSheet({
 
     if (state.selectedServices.length > 0) {
       console.log('✅ [HIRE SHEET] Proceeding to booking-date');
-      onClose();
-      router.push('/client/hire/booking-date');
+      setIsNavigating(true);
+      setIsNavigating(true);
+      // Short timeout to allow UI to update before unmount/nav starts
+      setTimeout(() => {
+        // onClose(); // Don't close, let navigation happen
+        router.push('/client/hire/booking-date');
+      }, 500);
     } else {
       console.warn('⚠️ [HIRE SHEET] No services selected');
     }
   };
+
+
 
   return (
     <>
@@ -210,14 +219,23 @@ export function HireBottomSheet({
 
                 <button
                   onClick={handleContinue}
-                  disabled={state.selectedServices.length === 0}
+                  disabled={state.selectedServices.length === 0 || isNavigating}
                   className={`w-full py-3 px-4 rounded-xl font-medium transition-all flex items-center justify-center gap-2 ${state.selectedServices.length > 0
                     ? 'bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-700 hover:to-purple-600 shadow-lg'
                     : 'bg-white/10 text-white/40 cursor-not-allowed'
                     }`}
                 >
-                  Confirm
-                  <ArrowRight className="w-4 h-4" />
+                  {isNavigating ? (
+                    <>
+                      <CricketWhiteBallSpinner className="w-4 h-4" />
+                      <span>Processing...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Confirm</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
                 </button>
               </div>
             </motion.div>

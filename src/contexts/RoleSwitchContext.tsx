@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { RoleSwitchSplash } from '@/components/shared/RoleSwitchSplash';
 
 interface RoleSwitchContextType {
@@ -16,24 +16,41 @@ export function RoleSwitchProvider({ children }: { children: ReactNode }) {
   const [targetRole, setTargetRole] = useState<'client' | 'freelancer'>('client');
   const router = useRouter();
 
+  const pathname = usePathname();
+
   const switchRole = (role: 'client' | 'freelancer') => {
     setTargetRole(role);
     setIsSwitching(true);
 
-    // Wait for animation/splash duration
+    // Wait for minimum splash animation duration
     setTimeout(() => {
       if (role === 'client') {
         router.push('/client');
       } else {
-        router.push('/freelancer'); // Changed from '/freelancer/profile'
+        router.push('/freelancer/profile');
       }
-
-      // Hide splash after navigation (plus a small buffer for page load)
-      setTimeout(() => {
-        setIsSwitching(false);
-      }, 500);
-    }, 2000); // 2 seconds splash duration
+      // We don't turn off isSwitching here anymore.
+      // We wait for the pathname to change in the useEffect below.
+    }, 2000);
   };
+
+  // Watch for path changes to turn off the splash screen
+  React.useEffect(() => {
+    if (isSwitching) {
+      const isTargetReached =
+        (targetRole === 'client' && pathname.startsWith('/client')) ||
+        (targetRole === 'freelancer' && pathname.startsWith('/freelancer'));
+
+      if (isTargetReached) {
+        // Small buffer to ensure page is painted
+        const timer = setTimeout(() => {
+          setIsSwitching(false);
+        }, 500);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [pathname, isSwitching, targetRole]);
+
 
   return (
     <RoleSwitchContext.Provider value={{ switchRole, isSwitching }}>

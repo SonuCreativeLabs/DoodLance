@@ -22,6 +22,7 @@ export interface Booking {
     paymentMethod?: 'cod' | 'upi' | 'card' | 'wallet';
     notes?: string; // Client notes for the freelancer
     otp?: string; // 4-digit OTP for job verification
+    couponCode?: string; // Coupon code applied for this booking
     services?: {
         id: string;
         title: string;
@@ -31,6 +32,8 @@ export interface Booking {
         deliveryTime?: string;
     }[];
     completedAt?: string;
+    transactionId?: string;
+    paymentStatus?: string;
 }
 
 interface BookingsContextType {
@@ -60,6 +63,12 @@ export function BookingsProvider({ children }: { children: ReactNode }) {
             return;
         }
 
+        // ✅ Guard: Prevent concurrent fetches
+        if (loading) {
+            console.log('⏭️ Skipping fetch - already loading bookings');
+            return;
+        }
+
         // Only show loading state if we don't have data yet
         // This prevents the flicker when refreshing data
         if (bookings.length === 0) {
@@ -74,14 +83,29 @@ export function BookingsProvider({ children }: { children: ReactNode }) {
                 console.log('✅ Bookings API Data:', data);
 
                 const mapped: Booking[] = (data.bookings || []).map((b: any) => {
+                    // Robust parsing using Date constructor with ISO string
+                    // b.date is the ISO string from server (scheduledAt)
                     const dateObj = b.date ? new Date(b.date) : null;
+                    const isValidDate = dateObj && !isNaN(dateObj.getTime());
+
+                    // Manually format to YYYY-MM-DD using local time to ensure consistency across browsers
+                    const formattedDate = isValidDate ? (() => {
+                        const year = dateObj.getFullYear();
+                        const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+                        const day = String(dateObj.getDate()).padStart(2, '0');
+                        return `${year}-${month}-${day}`;
+                    })() : '';
+
                     return {
                         "#": b.id, // Ensure this matches the Booking interface
                         service: b.title,
                         provider: b.freelancerName || 'Unknown',
+                        providerPhone: b.freelancerPhone,
                         image: b.freelancerAvatar || '/images/default-avatar.svg',
-                        date: dateObj ? dateObj.toISOString().split('T')[0] : '', // YYYY-MM-DD
-                        time: b.time || (dateObj ? dateObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }) : ''),
+                        // Store as YYYY-MM-DD for consistency with input fields
+                        date: formattedDate,
+                        // Format time to 12-hour format "h:mm AM/PM"
+                        time: isValidDate ? dateObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }) : '',
                         status: (b.status?.toLowerCase() as any) || 'pending',
                         location: b.location || 'Remote',
                         price: `₹${b.price}`,
@@ -93,7 +117,6 @@ export function BookingsProvider({ children }: { children: ReactNode }) {
                         completedAt: b.completedAt ? new Date(b.completedAt).toLocaleDateString() : undefined,
                         notes: b.notes,
                         services: b.services,
-                        providerPhone: b.freelancerPhone,
                         freelancerId: b.freelancerId,
                     };
                 });
@@ -117,14 +140,14 @@ export function BookingsProvider({ children }: { children: ReactNode }) {
         }
     };
 
-    // Load bookings on mount or when user changes
+    // Load bookings only when user ID changes (login/logout), not when user object reference changes
     useEffect(() => {
-        if (user) {
+        if (user?.id) {
             fetchBookings();
         } else {
             setBookings([]); // Clear bookings on logout
         }
-    }, [user]);
+    }, [user?.id]); // ✅ Stable dependency
 
     const refreshBookings = fetchBookings;
 
@@ -163,6 +186,10 @@ export function BookingsProvider({ children }: { children: ReactNode }) {
                     otp: bookingData.otp, // Pass the client-generated OTP
                     location: bookingData.location, // Pass the location
                     services: bookingData.services,
+                    couponCode: bookingData.couponCode, // Pass coupon code
+                    transactionId: bookingData.transactionId,
+                    paymentMethod: bookingData.paymentMethod,
+                    paymentStatus: bookingData.paymentStatus,
                     // Pass other fields if API supports
                 }),
             });

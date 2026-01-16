@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
     const { data: admin, error: fetchError } = await supabase
       .from('admins')
       .select('*')
-      .eq('email', email.toLowerCase())
+      .eq('email', email)
       .eq('is_active', true)
       .single();
 
@@ -47,9 +47,12 @@ export async function POST(req: NextRequest) {
     if (fetchError || !admin) {
       console.log('4. ERROR: Admin not found or query error');
       console.log('   - Fetch error:', fetchError);
-      console.log('   - Looking for email:', email.toLowerCase());
+      console.log('   - Looking for email:', email);
       return NextResponse.json(
-        { error: 'Invalid credentials' },
+        {
+          error: fetchError ? `DB Error: ${fetchError.message}` : 'User not found in admins table',
+          debug: { email, found: false }
+        },
         { status: 401 }
       );
     }
@@ -64,7 +67,10 @@ export async function POST(req: NextRequest) {
     if (!validPassword) {
       console.log('7. ERROR: Invalid password!');
       return NextResponse.json(
-        { error: 'Invalid credentials' },
+        {
+          error: 'Password mismatch',
+          debug: { email, found: true, passwordValid: false }
+        },
         { status: 401 }
       );
     }

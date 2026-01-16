@@ -6,11 +6,99 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useEffect } from 'react';
 import { useReviews } from '@/contexts/ReviewsContext';
+import { Skeleton } from "@/components/ui/skeleton";
 import { reviews, getInitialRatingStats } from '@/data/reviewsData';
 
 export default function ReviewsPage() {
-  const { reviewsData, updateRating } = useReviews();
+  const { reviewsData, updateRating, isLoading } = useReviews();
   const { reviews, averageRating, totalReviews } = reviewsData;
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#0F0F0F] text-white flex flex-col">
+        {/* Sticky Header */}
+        <div className="sticky top-0 z-10 bg-[#0F0F0F] border-b border-white/5">
+          <div className="container mx-auto px-4 py-3">
+            <div className="flex items-center">
+              <Link
+                href="/freelancer/profile"
+                className="inline-flex items-center text-sm text-purple-400 hover:text-purple-300 transition-colors duration-200"
+                aria-label="Back to profile"
+              >
+                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors duration-200">
+                  <ArrowLeft className="h-4 w-4" />
+                </div>
+              </Link>
+              <div className="ml-3">
+                <h1 className="text-lg font-semibold text-white">Client Reviews</h1>
+                <p className="text-white/50 text-xs">What your clients say about your work</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Scrollable Content */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="container mx-auto px-4 py-6 space-y-6">
+            {/* Rating Summary Skeleton */}
+            <div className="flex items-center justify-between w-full py-4 bg-[#1E1E1E] px-6 rounded-2xl border border-white/5">
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-24" />
+                <div className="flex items-center gap-3">
+                  <Skeleton className="h-8 w-12" />
+                  <div className="flex gap-1">
+                    {[1, 2, 3, 4, 5].map((i) => (
+                      <Skeleton key={i} className="h-5 w-5 rounded-full" />
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div className="text-right space-y-1">
+                <Skeleton className="h-4 w-16 ml-auto" />
+                <Skeleton className="h-6 w-24 ml-auto" />
+              </div>
+            </div>
+
+            {/* Reviews Grid Skeleton */}
+            <div className="grid grid-cols-1 gap-5">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="border border-white/5 bg-[#1A1A1A] rounded-xl p-6 space-y-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-start space-x-4 w-full">
+                      <Skeleton className="h-12 w-12 rounded-full" />
+                      <div className="flex-1 min-w-0 space-y-2">
+                        <Skeleton className="h-5 w-32" />
+                        <div className="flex gap-2">
+                          <Skeleton className="h-5 w-20 rounded-full" />
+                          <Skeleton className="h-5 w-24 rounded-full" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-3 mt-4">
+                    <div className="flex items-center gap-2">
+                      <div className="flex gap-1">
+                        {[1, 2, 3, 4, 5].map((s) => (
+                          <Skeleton key={s} className="h-4 w-4 rounded-full" />
+                        ))}
+                      </div>
+                      <Skeleton className="h-4 w-8" />
+                    </div>
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-3/4" />
+                    <div className="pt-2 border-t border-white/5">
+                      <Skeleton className="h-3 w-24" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   useEffect(() => {
     // If we needed to sync local calcs back to context, we'd do it here, 

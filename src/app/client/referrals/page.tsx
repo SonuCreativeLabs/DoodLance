@@ -1,28 +1,65 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Gift, Users, Copy, Check, Share2, Trophy, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavbar } from "@/contexts/NavbarContext";
 import Link from "next/link";
+import { Skeleton } from "@/components/ui/skeleton";
 
-const referrals: any[] = [];
+interface Referral {
+  id: string;
+  name: string;
+  email: string;
+  date: string;
+  status: 'pending' | 'completed';
+  reward: number;
+}
 
-const referralStats = {
-  totalReferrals: 0,
-  successfulReferrals: 0,
-  totalEarned: 0,
-  pendingRewards: 0,
-};
+interface ReferralStats {
+  totalReferrals: number;
+  successfulReferrals: number;
+  totalEarned: number;
+  pendingRewards: number;
+}
 
 export default function ReferralsPage() {
   const { setNavbarVisibility } = useNavbar();
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [referralCode, setReferralCode] = useState<string>("");
+  const [stats, setStats] = useState<ReferralStats>({
+    totalReferrals: 0,
+    successfulReferrals: 0,
+    totalEarned: 0,
+    pendingRewards: 0,
+  });
+  const [referrals, setReferrals] = useState<Referral[]>([]);
 
   React.useEffect(() => {
     setNavbarVisibility(false);
     return () => setNavbarVisibility(true);
   }, [setNavbarVisibility]);
+
+  useEffect(() => {
+    const fetchReferralData = async () => {
+      try {
+        const response = await fetch('/api/client/referrals');
+        if (response.ok) {
+          const data = await response.json();
+          setReferralCode(data.referralCode);
+          setStats(data.stats);
+          setReferrals(data.referrals);
+        }
+      } catch (error) {
+        console.error("Failed to fetch referral data", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchReferralData();
+  }, []);
 
   const handleCopyCode = async (code: string) => {
     try {
@@ -35,9 +72,10 @@ export default function ReferralsPage() {
   };
 
   const handleShare = async () => {
-    const referralCode = "DOODSONU2025";
+    if (!referralCode) return;
+
     const shareUrl = `https://doodlance.com/join?ref=${referralCode}`;
-    const shareText = `Join DoodLance and get cricket training from the best professionals! Use my referral code ${referralCode} for ₹500 off your first booking. ${shareUrl}`;
+    const shareText = `Join DoodLance and get cricket training from the best professionals! Use my referral code ${referralCode} to get 500 App Coins! ${shareUrl}`;
 
     if (navigator.share) {
       try {
@@ -58,7 +96,7 @@ export default function ReferralsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#111111]">
+    <div className="min-h-screen bg-[#111111] text-white">
       {/* Fixed Header */}
       <div className="fixed top-0 left-0 w-full z-30 bg-gradient-to-br from-[#6B46C1] via-[#4C1D95] to-[#2D1B69] border-b border-white/10 shadow-md">
         <div className="container mx-auto px-4 h-16 flex items-center relative">
@@ -81,20 +119,26 @@ export default function ReferralsPage() {
         <div className="bg-[#18181b] rounded-xl p-6 border border-white/10 shadow-lg mb-6">
           <div className="text-center mb-6">
             <h2 className="text-lg font-semibold text-white mb-2">Your Referral Code</h2>
-            <p className="text-white/70 text-sm">Share this code and earn ₹500 for each successful referral</p>
+            <p className="text-white/70 text-sm">Earn app coins for every successful referral</p>
+            <p className="text-white/50 text-xs mt-2 italic">Once your referral takes or completes a booking your rewards will be credited.</p>
           </div>
 
           <div className="bg-[#1a1a1a] rounded-lg p-4 border border-white/5 mb-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-white/60 text-xs mb-1">Referral Code</p>
-                <p className="text-white font-mono text-lg">DOODSONU2025</p>
+                {loading ? (
+                  <Skeleton className="h-7 w-32 bg-white/10" />
+                ) : (
+                  <p className="text-white font-mono text-lg tracking-wider">{referralCode || "Generating..."}</p>
+                )}
               </div>
               <button
-                onClick={() => handleCopyCode('DOODSONU2025')}
-                className="flex items-center gap-2 px-3 py-2 bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 rounded-lg transition-colors"
+                onClick={() => handleCopyCode(referralCode)}
+                disabled={loading || !referralCode}
+                className="flex items-center gap-2 px-3 py-2 bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {copiedCode === 'DOODSONU2025' ? (
+                {copiedCode === referralCode ? (
                   <>
                     <Check className="w-4 h-4" />
                     <span className="text-xs">Copied</span>
@@ -111,7 +155,8 @@ export default function ReferralsPage() {
 
           <button
             onClick={handleShare}
-            className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-purple-400 hover:from-purple-700 hover:to-purple-500 text-white py-3 rounded-lg font-medium transition-all"
+            disabled={loading || !referralCode}
+            className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-purple-400 hover:from-purple-700 hover:to-purple-500 text-white py-3 rounded-lg font-medium transition-all disabled:opacity-50"
           >
             {copiedCode === "share" ? (
               <>
@@ -134,7 +179,7 @@ export default function ReferralsPage() {
               <Users className="w-5 h-5 text-purple-400" />
               <span className="text-white/70 text-sm">Total Referrals</span>
             </div>
-            <p className="text-2xl font-bold text-white">{referralStats.totalReferrals}</p>
+            <p className="text-2xl font-bold text-white">{stats.totalReferrals}</p>
           </div>
 
           <div className="bg-[#18181b] rounded-xl p-4 border border-white/10">
@@ -142,7 +187,7 @@ export default function ReferralsPage() {
               <Trophy className="w-5 h-5 text-yellow-400" />
               <span className="text-white/70 text-sm">Successful</span>
             </div>
-            <p className="text-2xl font-bold text-white">{referralStats.successfulReferrals}</p>
+            <p className="text-2xl font-bold text-white">{stats.successfulReferrals}</p>
           </div>
 
           <div className="bg-[#18181b] rounded-xl p-4 border border-white/10">
@@ -150,7 +195,7 @@ export default function ReferralsPage() {
               <TrendingUp className="w-5 h-5 text-green-400" />
               <span className="text-white/70 text-sm">Total Earned</span>
             </div>
-            <p className="text-2xl font-bold text-green-400">₹{referralStats.totalEarned}</p>
+            <p className="text-2xl font-bold text-green-400">{stats.totalEarned} Coins</p>
           </div>
 
           <div className="bg-[#18181b] rounded-xl p-4 border border-white/10">
@@ -158,7 +203,7 @@ export default function ReferralsPage() {
               <Gift className="w-5 h-5 text-blue-400" />
               <span className="text-white/70 text-sm">Pending</span>
             </div>
-            <p className="text-2xl font-bold text-blue-400">₹{referralStats.pendingRewards}</p>
+            <p className="text-2xl font-bold text-blue-400">{stats.pendingRewards} Coins</p>
           </div>
         </div>
 
@@ -166,31 +211,43 @@ export default function ReferralsPage() {
         <div className="bg-[#18181b] rounded-xl p-6 border border-white/10 shadow-lg">
           <h3 className="text-lg font-semibold text-white mb-4">Referral History</h3>
 
-          <div className="space-y-3">
-            {referrals.map((referral) => (
-              <div key={referral.id} className="flex items-center justify-between p-4 bg-[#1a1a1a] rounded-xl border border-white/5">
-                <div className="flex-1 min-w-0">
-                  <p className="text-white font-medium truncate">{referral.name}</p>
-                  <p className="text-white/60 text-sm truncate">{referral.email}</p>
-                  <p className="text-white/50 text-xs">{referral.date}</p>
-                </div>
-
-                <div className="text-right ml-4">
-                  <div className={cn(
-                    "text-sm font-medium px-2 py-1 rounded-full",
-                    referral.status === "completed"
-                      ? "bg-green-500/20 text-green-400"
-                      : "bg-yellow-500/20 text-yellow-400"
-                  )}>
-                    {referral.status === "completed" ? "Completed" : "Pending"}
+          {loading ? (
+            <div className="space-y-3">
+              {[1, 2].map(i => (
+                <div key={i} className="h-16 bg-white/5 rounded-xl animate-pulse" />
+              ))}
+            </div>
+          ) : referrals.length > 0 ? (
+            <div className="space-y-3">
+              {referrals.map((referral) => (
+                <div key={referral.id} className="flex items-center justify-between p-4 bg-[#1a1a1a] rounded-xl border border-white/5">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white font-medium truncate">{referral.name}</p>
+                    <p className="text-white/60 text-sm truncate">{referral.email}</p>
+                    <p className="text-white/50 text-xs">{referral.date}</p>
                   </div>
-                  {referral.reward > 0 && (
-                    <p className="text-green-400 text-sm font-semibold mt-1">+₹{referral.reward}</p>
-                  )}
+
+                  <div className="text-right ml-4">
+                    <div className={cn(
+                      "text-sm font-medium px-2 py-1 rounded-full",
+                      referral.status === "completed"
+                        ? "bg-green-500/20 text-green-400"
+                        : "bg-yellow-500/20 text-yellow-400"
+                    )}>
+                      {referral.status === "completed" ? "Completed" : "Pending"}
+                    </div>
+                    {referral.reward > 0 && (
+                      <p className="text-green-400 text-sm font-semibold mt-1">+{referral.reward} Coins</p>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-white/40">
+              <p>No referrals yet. Share your code to start earning!</p>
+            </div>
+          )}
         </div>
       </div>
     </div>

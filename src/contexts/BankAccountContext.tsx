@@ -19,6 +19,7 @@ interface BankAccountContextType {
   clearBankAccountData: () => void;
   isComplete: boolean;
   hydrateBankAccount: (data: BankAccountData | null) => void;
+  isLoading: boolean;
 }
 
 const defaultBankAccountData: BankAccountData = {
@@ -41,6 +42,7 @@ export interface BankAccountProviderProps {
 
 export function BankAccountProvider({ children, skipInitialFetch = false }: BankAccountProviderProps) {
   const [bankAccountData, setBankAccountData] = useState<BankAccountData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   const hydrateBankAccount = useCallback((data: BankAccountData | null) => {
     setBankAccountData(data);
@@ -48,7 +50,10 @@ export function BankAccountProvider({ children, skipInitialFetch = false }: Bank
 
   // Initial load
   useEffect(() => {
-    if (skipInitialFetch) return;
+    if (skipInitialFetch) {
+      setIsLoading(false);
+      return;
+    }
 
     async function fetchBankAccount() {
       try {
@@ -60,6 +65,8 @@ export function BankAccountProvider({ children, skipInitialFetch = false }: Bank
         }
       } catch (error) {
         console.error('Failed to fetch bank account:', error);
+      } finally {
+        setIsLoading(false);
       }
     }
     fetchBankAccount();
@@ -113,6 +120,7 @@ export function BankAccountProvider({ children, skipInitialFetch = false }: Bank
     clearBankAccountData,
     isComplete,
     hydrateBankAccount,
+    isLoading,
   };
 
   return (

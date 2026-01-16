@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, ReactNode, useMemo, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 
@@ -15,17 +15,25 @@ interface User {
   phoneVerified?: boolean
   role?: string
   createdAt?: string
+  isVerified?: boolean
+}
+
+// 🎯 Stable auth identity (never changes except on login/logout)
+interface AuthUser {
+  id: string
+  email: string
 }
 
 interface AuthContextType {
   user: User | null
+  authUser: AuthUser | null  // 🆕 Stable identity for React Query keys
   isLoading: boolean
   isAuthenticated: boolean
   signIn: (provider?: string) => void
   signOut: () => Promise<void>
   verifyOTP: (identifier: string, code: string, type?: 'email' | 'phone') => Promise<void>
-  sendOTP: (identifier: string, type?: 'email' | 'phone') => Promise<void>
-  refreshUser: () => Promise<void>
+  sendOTP: (identifier: string, type?: 'email' | 'phone', metadata?: any) => Promise<void>
+  refreshUser: (userData?: Partial<User>) => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -127,7 +135,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [supabase])
 
-  const signIn = async (provider?: string) => {
+  // 🎯 Create stable auth identity (only recreates when id/email changes)
+  const authUser = useMemo<AuthUser | null>(
+    () => user ? { id: user.id, email: user.email || '' } : null,
+    [user?.id, user?.email]
+  )
+
+  const signIn = useCallback(async (provider?: string) => {
     // Legacy support or OAuth
     if (provider === 'google') {
       await supabase.auth.signInWithOAuth({
@@ -137,20 +151,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         },
       })
     }
-  }
+  }, [supabase])
 
-  const sendOTP = async (identifier: string, type: 'email' | 'phone' = 'email') => {
+  const sendOTP = useCallback(async (identifier: string, type: 'email' | 'phone' = 'email', metadata?: any) => {
     // Only support email OTP
     const { error } = await supabase.auth.signInWithOtp({
       email: identifier,
       options: {
         shouldCreateUser: true,
+        data: metadata
       }
     })
     if (error) throw error
-  }
+  }, [supabase])
 
-  const verifyOTP = async (identifier: string, code: string, type: 'email' | 'phone' = 'email') => {
+  const verifyOTP = useCallback(async (identifier: string, code: string, type: 'email' | 'phone' = 'email') => {
     // Only support email OTP verification
     const { error } = await supabase.auth.verifyOtp({
       email: identifier,
@@ -158,58 +173,79 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       type: 'email'
     })
     if (error) throw error
-
     // User is set automatically by onAuthStateChange
-  }
+  }, [supabase])
 
-  const signOut = async () => {
+  const signOut = useCallback(async () => {
     await supabase.auth.signOut()
     setUser(null)
     router.push('/')
-  }
+  }, [supabase, router])
 
-  const value = {
+  const refreshUser = useCallback(async (userData?: Partial<User>) => {
+    // If userData is provided directly, use it to update state immediately (Optimistic/Sync)
+    if (userData && user) {
+      console.log('✅ Updating auth user with provided data:', userData);
+      setUser(prev => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          ...userData
+        };
+      });
+      return;
+    }
+
+    // Allow manual refresh of user data via API
+    if (user?.id) {
+      try {
+        console.log('🔍 Manually refreshing user data...')
+        const response = await fetch('/api/user/profile')
+
+        if (response.ok) {
+          const data = await response.json()
+          console.log('✅ Updating user with API data:', {
+            phone: data.phone,
+            name: data.name,
+            location: data.location
+          })
+          setUser(prev => {
+            if (!prev) return null;
+            return {
+              ...prev,
+              ...data, // Spread all data including isVerified, phoneVerified etc
+              // Explicitly map specific fields if needed, but spread is safer for completeness
+              phone: data.phone || prev.phone,
+              name: data.name || prev.name,
+              avatar: data.avatar || prev.avatar,
+              profileImage: data.avatar || prev.profileImage,
+              location: data.location || prev.location,
+              email: data.email || prev.email || '',
+              createdAt: data.createdAt || prev.createdAt,
+              role: data.role || prev.role,
+              isVerified: data.isVerified ?? prev.isVerified,
+            }
+          })
+        }
+      } catch (error) {
+        console.error('Failed to refresh user data:', error)
+        // Don't throw invalidation errors to UI
+      }
+    }
+  }, [user?.id]); // Only recreate if user ID changes (login different user) - STABLE across updates
+
+  // ✅ Memoize value to prevent cascade refetches when user object reference changes
+  const value = useMemo(() => ({
     user,
+    authUser,  // 🆕 Expose stable identity
     isLoading,
     isAuthenticated: !!user,
     signIn,
     signOut,
     verifyOTP,
     sendOTP,
-    refreshUser: async () => {
-      // Allow manual refresh of user data
-      if (user?.id) {
-        try {
-          console.log('🔍 Manually refreshing user data...')
-          const response = await fetch('/api/user/profile')
-
-          if (response.ok) {
-            const data = await response.json()
-            console.log('✅ Updating user with API data:', {
-              phone: data.phone,
-              name: data.name,
-              location: data.location
-            })
-            setUser(prev => {
-              if (!prev) return null;
-              return {
-                ...prev,
-                phone: data.phone || prev.phone,
-                name: data.name || prev.name,
-                avatar: data.avatar || prev.avatar,
-                profileImage: data.avatar || prev.profileImage, // Sync both fields
-                location: data.location || prev.location,
-                email: data.email || prev.email || '',
-                createdAt: data.createdAt || prev.createdAt,
-              }
-            })
-          }
-        } catch (error) {
-          console.error('Failed to refresh user data:', error)
-        }
-      }
-    }
-  }
+    refreshUser
+  }), [user, authUser, isLoading, signIn, signOut, verifyOTP, sendOTP, refreshUser]) // Re-create value when user object updates
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

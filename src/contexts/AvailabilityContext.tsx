@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 export interface TimeSlot {
   id: string;
@@ -22,6 +23,7 @@ interface AvailabilityContextType {
   updateDays: (days: DayAvailability[]) => void;
   getAvailableDays: () => DayAvailability[];
   getWorkingHoursText: () => string;
+  isLoading: boolean;
 }
 
 const initialDays: DayAvailability[] = [
@@ -37,6 +39,7 @@ const initialDays: DayAvailability[] = [
 const AvailabilityContext = createContext<AvailabilityContextType | undefined>(undefined);
 
 export function AvailabilityProvider({ children }: { children: ReactNode }) {
+  const { isAuthenticated } = useAuth();
   const [days, setDays] = useState<DayAvailability[]>(initialDays);
   const [isHydrated, setIsHydrated] = useState(false);
   const supabase = createClient();
@@ -50,14 +53,16 @@ export function AvailabilityProvider({ children }: { children: ReactNode }) {
           setDays(JSON.parse(saved));
         }
 
-        // Fetch from API
-        const response = await fetch('/api/freelancer/availability');
-        if (response.ok) {
-          const { availability: dbAvailability } = await response.json();
+        // Only fetch from API if authenticated
+        if (isAuthenticated) {
+          const response = await fetch('/api/freelancer/availability');
+          if (response.ok) {
+            const { availability: dbAvailability } = await response.json();
 
-          if (Array.isArray(dbAvailability) && dbAvailability.length > 0) {
-            setDays(dbAvailability);
-            localStorage.setItem('availability', JSON.stringify(dbAvailability));
+            if (Array.isArray(dbAvailability) && dbAvailability.length > 0) {
+              setDays(dbAvailability);
+              localStorage.setItem('availability', JSON.stringify(dbAvailability));
+            }
           }
         }
       } catch (error) {
@@ -68,7 +73,7 @@ export function AvailabilityProvider({ children }: { children: ReactNode }) {
     };
 
     fetchAvailability();
-  }, []);
+  }, [isAuthenticated]);
 
   // Save to localStorage whenever it changes
   useEffect(() => {
@@ -128,6 +133,7 @@ export function AvailabilityProvider({ children }: { children: ReactNode }) {
     updateDays,
     getAvailableDays,
     getWorkingHoursText,
+    isLoading: !isHydrated,
   };
 
   return (

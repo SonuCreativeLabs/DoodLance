@@ -15,9 +15,9 @@ import {
 } from 'lucide-react';
 import {
   LineChart as RechartsLineChart, Line, BarChart, Bar, PieChart as RechartsPieChart,
-  Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  Area, AreaChart, ComposedChart
+  Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Area, AreaChart, ComposedChart
 } from 'recharts';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const COLORS = ['#8B5CF6', '#A78BFA', '#C4B5FD', '#DDD6FE', '#EDE9FE', '#F5F3FF'];
 
@@ -67,6 +67,32 @@ export default function AnalyticsPage() {
     }
   };
 
+  const handleExport = () => {
+    if (!performanceData.length) return;
+
+    // Create CSV content
+    const headers = ['Date', 'Users', 'Revenue', 'Bookings'];
+    const csvContent = [
+      headers.join(','),
+      ...performanceData.map(row =>
+        `"${row.name}",${row.users},${row.revenue},${row.bookings}`
+      )
+    ].join('\n');
+
+    // Create and click download link
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    if (link.download !== undefined) {
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `analytics_report_${timeRange}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -91,16 +117,25 @@ export default function AnalyticsPage() {
             <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
-          <Button className="bg-purple-600 hover:bg-purple-700">
+          <Button className="bg-purple-600 hover:bg-purple-700" onClick={handleExport}>
             <Download className="w-4 h-4 mr-2" />
             Export
           </Button>
         </div>
-      </div>
 
-      {/* Key Metrics */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {userMetrics.map((metric, index) => (
+        {/* Key Metrics */}
+
+        {loading ? (
+          Array.from({ length: 4 }).map((_, i) => (
+            <Card key={i} className="bg-[#1a1a1a] border-gray-800 p-4">
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-24 bg-[#2a2a2a]" />
+                <Skeleton className="h-8 w-32 bg-[#2a2a2a]" />
+                <Skeleton className="h-4 w-16 bg-[#2a2a2a]" />
+              </div>
+            </Card>
+          ))
+        ) : userMetrics.map((metric, index) => (
           <Card key={index} className="bg-[#1a1a1a] border-gray-800 p-4">
             <div className="flex items-start justify-between">
               <div>
@@ -135,36 +170,48 @@ export default function AnalyticsPage() {
               </SelectContent>
             </Select>
           </div>
-          <ResponsiveContainer width="100%" height={300}>
-            <AreaChart data={performanceData}>
-              <defs>
-                <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.8} />
-                  <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#2a2a2a" />
-              <XAxis dataKey="name" stroke="#6b7280" />
-              <YAxis stroke="#6b7280" />
-              <Tooltip
-                contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #2a2a2a' }}
-                labelStyle={{ color: '#fff' }}
-              />
-              <Area
-                type="monotone"
-                dataKey={metric}
-                stroke="#8B5CF6"
-                fillOpacity={1}
-                fill="url(#colorGradient)"
-              />
-            </AreaChart>
-          </ResponsiveContainer>
+          {loading ? (
+            <div className="w-full h-[300px] flex items-end justify-between gap-1">
+              {Array.from({ length: 12 }).map((_, i) => (
+                <Skeleton key={i} className="w-full bg-[#2a2a2a] rounded-t" style={{ height: `${Math.random() * 60 + 20}%` }} />
+              ))}
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height={300}>
+              <AreaChart data={performanceData}>
+                <defs>
+                  <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.8} />
+                    <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#2a2a2a" />
+                <XAxis dataKey="name" stroke="#6b7280" />
+                <YAxis stroke="#6b7280" />
+                <Tooltip
+                  contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #2a2a2a' }}
+                  labelStyle={{ color: '#fff' }}
+                />
+                <Area
+                  type="monotone"
+                  dataKey={metric}
+                  stroke="#8B5CF6"
+                  fillOpacity={1}
+                  fill="url(#colorGradient)"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          )}
         </Card>
 
         {/* Service Distribution */}
         <Card className="bg-[#1a1a1a] border-gray-800 p-6">
           <h3 className="text-lg font-semibold text-white mb-4">Service Distribution</h3>
-          {serviceDistribution.length > 0 ? (
+          {loading ? (
+            <div className="w-full h-[300px] flex items-center justify-center">
+              <Skeleton className="w-64 h-64 rounded-full bg-[#2a2a2a]" />
+            </div>
+          ) : serviceDistribution.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
               <RechartsPieChart>
                 <Pie
@@ -197,38 +244,54 @@ export default function AnalyticsPage() {
         {/* Conversion Funnel */}
         <Card className="bg-[#1a1a1a] border-gray-800 p-6">
           <h3 className="text-lg font-semibold text-white mb-4">Conversion Funnel</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={conversionData} layout="horizontal">
-              <CartesianGrid strokeDasharray="3 3" stroke="#2a2a2a" />
-              <XAxis type="number" stroke="#6b7280" />
-              <YAxis dataKey="name" type="category" stroke="#6b7280" width={100} />
-              <Tooltip
-                contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #2a2a2a' }}
-                labelStyle={{ color: '#fff' }}
-                cursor={{ fill: 'transparent' }}
-              />
-              <Bar dataKey="value" fill="#8B5CF6" radius={[0, 4, 4, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+          {loading ? (
+            <div className="w-full h-[300px] flex items-end justify-between gap-2 px-2">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <Skeleton key={i} className="w-full bg-[#2a2a2a] rounded-t" style={{ height: `${Math.random() * 60 + 20}%` }} />
+              ))}
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={conversionData} layout="horizontal">
+                <CartesianGrid strokeDasharray="3 3" stroke="#2a2a2a" />
+                <XAxis type="number" stroke="#6b7280" />
+                <YAxis dataKey="name" type="category" stroke="#6b7280" width={100} />
+                <Tooltip
+                  contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #2a2a2a' }}
+                  labelStyle={{ color: '#fff' }}
+                  cursor={{ fill: 'transparent' }}
+                />
+                <Bar dataKey="value" fill="#8B5CF6" radius={[0, 4, 4, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
         </Card>
 
         {/* User Growth */}
         <Card className="bg-[#1a1a1a] border-gray-800 p-6">
           <h3 className="text-lg font-semibold text-white mb-4">User Growth Trend</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <ComposedChart data={performanceData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#2a2a2a" />
-              <XAxis dataKey="name" stroke="#6b7280" />
-              <YAxis yAxisId="left" stroke="#6b7280" />
-              <YAxis yAxisId="right" orientation="right" stroke="#6b7280" />
-              <Tooltip
-                contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #2a2a2a' }}
-                labelStyle={{ color: '#fff' }}
-              />
-              <Bar yAxisId="left" dataKey="bookings" barSize={20} fill="#10B981" name="Bookings" />
-              <Line yAxisId="right" type="monotone" dataKey="users" stroke="#EC4899" strokeWidth={2} name="Active Users" />
-            </ComposedChart>
-          </ResponsiveContainer>
+          {loading ? (
+            <div className="w-full h-[300px] flex items-end justify-between gap-1">
+              {Array.from({ length: 12 }).map((_, i) => (
+                <Skeleton key={i} className="w-full bg-[#2a2a2a] rounded-t" style={{ height: `${Math.random() * 60 + 20}%` }} />
+              ))}
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height={300}>
+              <ComposedChart data={performanceData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#2a2a2a" />
+                <XAxis dataKey="name" stroke="#6b7280" />
+                <YAxis yAxisId="left" stroke="#6b7280" />
+                <YAxis yAxisId="right" orientation="right" stroke="#6b7280" />
+                <Tooltip
+                  contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #2a2a2a' }}
+                  labelStyle={{ color: '#fff' }}
+                />
+                <Bar yAxisId="left" dataKey="bookings" barSize={20} fill="#10B981" name="Bookings" />
+                <Line yAxisId="right" type="monotone" dataKey="users" stroke="#EC4899" strokeWidth={2} name="Active Users" />
+              </ComposedChart>
+            </ResponsiveContainer>
+          )}
         </Card>
       </div>
 
@@ -236,7 +299,14 @@ export default function AnalyticsPage() {
       <Card className="bg-[#1a1a1a] border-gray-800 p-6">
         <h3 className="text-lg font-semibold text-white mb-4">Performance Metrics</h3>
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4">
-          {[
+          {loading ? (
+            Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="text-center p-4 bg-[#2a2a2a] rounded-lg">
+                <Skeleton className="h-4 w-20 mx-auto mb-2 bg-[#333]" />
+                <Skeleton className="h-6 w-16 mx-auto bg-[#333]" />
+              </div>
+            ))
+          ) : [
             { label: 'Total Revenue', value: `₹${(stats.totalRevenue || 0).toLocaleString()}` },
             { label: 'Avg Booking Value', value: `₹${Math.round(stats.avgBookingValue || 0).toLocaleString()}` },
             { label: 'Booking Completion', value: `${stats.bookingCompletionRate || 0}%` },

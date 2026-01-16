@@ -22,6 +22,7 @@ import {
   LineChart, Line, BarChart as RechartsBarChart, Bar, PieChart as RechartsPieChart,
   Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, AreaChart
 } from 'recharts';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const reportTypes = [
   {
@@ -73,12 +74,16 @@ export default function ReportsPage() {
 
   useEffect(() => {
     fetchReports();
-  }, [reportType]);
+  }, [reportType, dateRange.from, dateRange.to]);
 
   const fetchReports = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/admin/reports?type=${reportType}`);
+      const params = new URLSearchParams({ type: reportType });
+      if (dateRange.from) params.append('from', dateRange.from);
+      if (dateRange.to) params.append('to', dateRange.to);
+
+      const res = await fetch(`/api/admin/reports?${params.toString()}`);
       if (res.ok) {
         const data = await res.json();
         setRevenueData(data.revenueData || []);
@@ -93,9 +98,57 @@ export default function ReportsPage() {
     }
   };
 
+  const generateReport = (type: string = 'overview') => {
+    // Reuse export logic but force type
+    let dataToExport;
+    let filename = 'report.csv';
+
+    // Default to revenue data if overview
+    if (type === 'overview' || type === 'revenue' || type === 'all' || type === 'bookings') {
+      dataToExport = revenueData;
+      filename = `${type}-report.csv`;
+    } else if (type === 'users') {
+      dataToExport = userGrowthData;
+      filename = 'user-growth-report.csv';
+    } else if (type === 'performance') {
+      dataToExport = categoryData;
+      filename = 'performance-report.csv';
+    }
+
+    if (!dataToExport || dataToExport.length === 0) {
+      alert('No data to generate report for ' + type);
+      return;
+    }
+
+    // Convert and Download
+    const headers = Object.keys(dataToExport[0]);
+    const csvContent = [
+      headers.join(','),
+      ...dataToExport.map(row => headers.map(header => {
+        const value = row[header];
+        return typeof value === 'string' && value.includes(',') ? `"${value}"` : value;
+      }).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    if (link.download !== undefined) {
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', filename);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
+
   const handleExport = (format: string) => {
-    console.log(`Exporting ${selectedReport} report as ${format}`);
-    // In production, this would generate and download the report
+    if (format !== 'csv') {
+      alert('Only CSV export is currently supported.');
+      return;
+    }
+    generateReport(selectedReport || reportType);
   };
 
   return (
@@ -107,11 +160,14 @@ export default function ReportsPage() {
           <p className="text-gray-400 mt-1 text-sm sm:text-base">Generate comprehensive reports and insights</p>
         </div>
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-          <Button variant="outline" className="text-gray-300 w-full sm:w-auto">
+          <Button variant="outline" className="text-gray-300 w-full sm:w-auto" onClick={fetchReports}>
             <RefreshCw className="w-4 h-4 mr-2" />
             Refresh
           </Button>
-          <Button className="bg-purple-600 hover:bg-purple-700 w-full sm:w-auto">
+          <Button
+            className="bg-purple-600 hover:bg-purple-700 w-full sm:w-auto"
+            onClick={() => generateReport(reportType === 'all' ? 'overview' : reportType)}
+          >
             <FilePlus className="w-4 h-4 mr-2" />
             Generate Report
           </Button>
@@ -120,43 +176,56 @@ export default function ReportsPage() {
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
-        <Card className="bg-[#1a1a1a] border-gray-800 p-4">
-          <div>
-            <p className="text-sm text-gray-400">Total Revenue</p>
-            <p className="text-2xl font-bold text-white">₹{(stats.totalRevenue || 0).toLocaleString()}</p>
-            <p className="text-xs text-green-400 mt-1">{stats.growthRate || '+0%'}</p>
-          </div>
-        </Card>
-        <Card className="bg-[#1a1a1a] border-gray-800 p-4">
-          <div>
-            <p className="text-sm text-gray-400">Total Bookings</p>
-            <p className="text-2xl font-bold text-white">{(stats.totalBookings || 0).toLocaleString()}</p>
-          </div>
-        </Card>
-        <Card className="bg-[#1a1a1a] border-gray-800 p-4">
-          <div>
-            <p className="text-sm text-gray-400">Total Users</p>
-            <p className="text-2xl font-bold text-white">{(stats.totalUsers || 0).toLocaleString()}</p>
-          </div>
-        </Card>
-        <Card className="bg-[#1a1a1a] border-gray-800 p-4">
-          <div>
-            <p className="text-sm text-gray-400">Avg Order Value</p>
-            <p className="text-2xl font-bold text-white">₹{Math.round(stats.avgOrderValue || 0).toLocaleString()}</p>
-          </div>
-        </Card>
-        <Card className="bg-[#1a1a1a] border-gray-800 p-4">
-          <div>
-            <p className="text-sm text-gray-400">Conversion Rate</p>
-            <p className="text-2xl font-bold text-white">{(stats.conversionRate || 0).toFixed(1)}%</p>
-          </div>
-        </Card>
-        <Card className="bg-[#1a1a1a] border-gray-800 p-4">
-          <div>
-            <p className="text-sm text-gray-400">Growth Rate</p>
-            <p className="text-2xl font-bold text-white">+{(stats.growthRate || 0).toFixed(1)}%</p>
-          </div>
-        </Card>
+        {loading ? (
+          Array.from({ length: 6 }).map((_, i) => (
+            <Card key={i} className="bg-[#1a1a1a] border-gray-800 p-4">
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-24 bg-[#2a2a2a]" />
+                <Skeleton className="h-8 w-32 bg-[#2a2a2a]" />
+              </div>
+            </Card>
+          ))
+        ) : (
+          <>
+            <Card className="bg-[#1a1a1a] border-gray-800 p-4">
+              <div>
+                <p className="text-sm text-gray-400">Total Revenue</p>
+                <p className="text-2xl font-bold text-white">₹{(stats.totalRevenue || 0).toLocaleString()}</p>
+                <p className="text-xs text-green-400 mt-1">{stats.growthRate || '+0%'}</p>
+              </div>
+            </Card>
+            <Card className="bg-[#1a1a1a] border-gray-800 p-4">
+              <div>
+                <p className="text-sm text-gray-400">Total Bookings</p>
+                <p className="text-2xl font-bold text-white">{(stats.totalBookings || 0).toLocaleString()}</p>
+              </div>
+            </Card>
+            <Card className="bg-[#1a1a1a] border-gray-800 p-4">
+              <div>
+                <p className="text-sm text-gray-400">Total Users</p>
+                <p className="text-2xl font-bold text-white">{(stats.totalUsers || 0).toLocaleString()}</p>
+              </div>
+            </Card>
+            <Card className="bg-[#1a1a1a] border-gray-800 p-4">
+              <div>
+                <p className="text-sm text-gray-400">Avg Order Value</p>
+                <p className="text-2xl font-bold text-white">₹{Math.round(stats.avgOrderValue || 0).toLocaleString()}</p>
+              </div>
+            </Card>
+            <Card className="bg-[#1a1a1a] border-gray-800 p-4">
+              <div>
+                <p className="text-sm text-gray-400">Conversion Rate</p>
+                <p className="text-2xl font-bold text-white">{(stats.conversionRate || 0).toFixed(1)}%</p>
+              </div>
+            </Card>
+            <Card className="bg-[#1a1a1a] border-gray-800 p-4">
+              <div>
+                <p className="text-sm text-gray-400">Growth Rate</p>
+                <p className="text-2xl font-bold text-white">+{(stats.growthRate || 0).toFixed(1)}%</p>
+              </div>
+            </Card>
+          </>
+        )}
       </div>
 
       {/* Report Types */}
@@ -183,6 +252,10 @@ export default function ReportsPage() {
                     variant="ghost"
                     size="sm"
                     className="mt-2 text-purple-400 hover:text-purple-300 p-0"
+                    onClick={(e) => {
+                      e.stopPropagation(); // prevent card click
+                      generateReport(report.id);
+                    }}
                   >
                     Generate Report →
                   </Button>
@@ -257,102 +330,132 @@ export default function ReportsPage() {
         {/* Revenue Chart */}
         <Card className="bg-[#1a1a1a] border-gray-800 p-6">
           <h3 className="text-lg font-semibold text-white mb-4">Revenue Trend</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <AreaChart data={revenueData}>
-              <defs>
-                <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.8} />
-                  <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#2a2a2a" />
-              <XAxis dataKey="month" stroke="#6b7280" />
-              <YAxis stroke="#6b7280" />
-              <Tooltip
-                contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #2a2a2a' }}
-                labelStyle={{ color: '#fff' }}
-              />
-              <Area
-                type="monotone"
-                dataKey="revenue"
-                stroke="#8B5CF6"
-                fillOpacity={1}
-                fill="url(#colorRevenue)"
-              />
-            </AreaChart>
-          </ResponsiveContainer>
+          {loading ? (
+            <div className="w-full h-[300px] flex items-end justify-between gap-1">
+              {Array.from({ length: 12 }).map((_, i) => (
+                <Skeleton key={i} className="w-full bg-[#2a2a2a] rounded-t" style={{ height: `${Math.random() * 60 + 20}%` }} />
+              ))}
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height={300}>
+              <AreaChart data={revenueData}>
+                <defs>
+                  <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.8} />
+                    <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#2a2a2a" />
+                <XAxis dataKey="month" stroke="#6b7280" />
+                <YAxis stroke="#6b7280" />
+                <Tooltip
+                  contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #2a2a2a' }}
+                  labelStyle={{ color: '#fff' }}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="revenue"
+                  stroke="#8B5CF6"
+                  fillOpacity={1}
+                  fill="url(#colorRevenue)"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          )}
         </Card>
 
         {/* Category Distribution */}
         <Card className="bg-[#1a1a1a] border-gray-800 p-6">
           <h3 className="text-lg font-semibold text-white mb-4">Service Distribution</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <RechartsPieChart>
-              <Pie
-                data={categoryData}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={({ name, value }) => `${name}: ${value}%`}
-                outerRadius={100}
-                fill="#8884d8"
-                dataKey="value"
-              >
-                {categoryData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip />
-            </RechartsPieChart>
-          </ResponsiveContainer>
+          {loading ? (
+            <div className="w-full h-[300px] flex items-center justify-center">
+              <Skeleton className="w-64 h-64 rounded-full bg-[#2a2a2a]" />
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height={300}>
+              <RechartsPieChart>
+                <Pie
+                  data={categoryData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ name, value }) => `${name}: ${value}%`}
+                  outerRadius={100}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {categoryData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </RechartsPieChart>
+            </ResponsiveContainer>
+          )}
         </Card>
 
         {/* User Growth */}
         <Card className="bg-[#1a1a1a] border-gray-800 p-6">
           <h3 className="text-lg font-semibold text-white mb-4">User Growth</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={userGrowthData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#2a2a2a" />
-              <XAxis dataKey="date" stroke="#6b7280" />
-              <YAxis stroke="#6b7280" />
-              <Tooltip
-                contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #2a2a2a' }}
-                labelStyle={{ color: '#fff' }}
-              />
-              <Legend />
-              <Line
-                type="monotone"
-                dataKey="clients"
-                stroke="#10B981"
-                strokeWidth={2}
-                dot={{ fill: '#10B981', r: 4 }}
-              />
-              <Line
-                type="monotone"
-                dataKey="freelancers"
-                stroke="#F59E0B"
-                strokeWidth={2}
-                dot={{ fill: '#F59E0B', r: 4 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
+          {loading ? (
+            <div className="w-full h-[300px] flex items-end justify-between gap-1">
+              {Array.from({ length: 12 }).map((_, i) => (
+                <Skeleton key={i} className="w-full bg-[#2a2a2a] rounded-t" style={{ height: `${Math.random() * 60 + 20}%` }} />
+              ))}
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={userGrowthData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#2a2a2a" />
+                <XAxis dataKey="date" stroke="#6b7280" />
+                <YAxis stroke="#6b7280" />
+                <Tooltip
+                  contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #2a2a2a' }}
+                  labelStyle={{ color: '#fff' }}
+                />
+                <Legend />
+                <Line
+                  type="monotone"
+                  dataKey="clients"
+                  stroke="#10B981"
+                  strokeWidth={2}
+                  dot={{ fill: '#10B981', r: 4 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="freelancers"
+                  stroke="#F59E0B"
+                  strokeWidth={2}
+                  dot={{ fill: '#F59E0B', r: 4 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          )}
         </Card>
 
         {/* Booking Stats */}
         <Card className="bg-[#1a1a1a] border-gray-800 p-6">
           <h3 className="text-lg font-semibold text-white mb-4">Booking Volume</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <RechartsBarChart data={revenueData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#2a2a2a" />
-              <XAxis dataKey="month" stroke="#6b7280" />
-              <YAxis stroke="#6b7280" />
-              <Tooltip
-                contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #2a2a2a' }}
-                labelStyle={{ color: '#fff' }}
-              />
-              <Bar dataKey="bookings" fill="#EC4899" radius={[4, 4, 0, 0]} />
-            </RechartsBarChart>
-          </ResponsiveContainer>
+          {loading ? (
+            <div className="w-full h-[300px] flex items-end justify-between gap-2 px-2">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <Skeleton key={i} className="w-full bg-[#2a2a2a] rounded-t" style={{ height: `${Math.random() * 60 + 20}%` }} />
+              ))}
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height={300}>
+              <RechartsBarChart data={revenueData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#2a2a2a" />
+                <XAxis dataKey="month" stroke="#6b7280" />
+                <YAxis stroke="#6b7280" />
+                <Tooltip
+                  contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #2a2a2a' }}
+                  labelStyle={{ color: '#fff' }}
+                />
+                <Bar dataKey="bookings" fill="#EC4899" radius={[4, 4, 0, 0]} />
+              </RechartsBarChart>
+            </ResponsiveContainer>
+          )}
         </Card>
       </div>
 

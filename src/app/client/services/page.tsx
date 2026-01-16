@@ -1,12 +1,13 @@
 "use client"
 
 // import { motion } from 'framer-motion' // Unused
-import ClientLayout from '@/components/layouts/client-layout'
-import { Search, ArrowLeft, Clock, Video, Dumbbell, Cpu, Package, Camera, Clapperboard, Brain, Briefcase, Sparkles } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
+import ClientLayout from '@/components/layouts/client-layout'
+import { Search, ArrowLeft, Clock, Video, Dumbbell, Cpu, Package, Camera, Clapperboard, Brain, Briefcase, Sparkles, GraduationCap, HeartHandshake, Grid, Circle } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useClientServices } from '@/contexts/ClientServicesContext'
+import { CricketWickets } from '@/components/icons/CricketWickets'
 
 export default function ServicesPage() {
   const [selectedCategory, setSelectedCategory] = useState('for-you')
@@ -17,12 +18,22 @@ export default function ServicesPage() {
   // Add 'For You' to categories if not present (it's a frontend pseudo-category)
   const displayCategories = [
     { id: 'for-you', name: 'For You', icon: <Sparkles className="w-6 h-6" />, slug: 'for-you' },
-    ...categories.map(cat => ({
-      id: cat.slug, // Use slug as ID for selection matching
-      name: cat.name,
-      icon: <span className="text-2xl">{cat.icon}</span>, // Render emoji/icon string 
-      slug: cat.slug
-    }))
+    ...categories.map(cat => {
+      let iconNode;
+      switch (cat.id) {
+        case 'playing': iconNode = <CricketWickets className="w-6 h-6" />; break; // Custom Cricket Wickets
+        case 'coaching': iconNode = <GraduationCap className="w-6 h-6" />; break;
+        case 'support': iconNode = <HeartHandshake className="w-6 h-6" />; break;
+        case 'media': iconNode = <Camera className="w-6 h-6" />; break;
+        default: iconNode = <Grid className="w-6 h-6" />;
+      }
+      return {
+        id: cat.slug,
+        name: cat.name,
+        icon: iconNode,
+        slug: cat.slug
+      }
+    })
   ];
 
   // Function to scroll selected category into view
@@ -137,13 +148,16 @@ export default function ServicesPage() {
                                   )}
                                 </div>
 
-                                <img
+                                <Image
                                   src={service.image}
                                   alt={service.name}
-                                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out z-[1]"
-                                  onError={(e) => {
-                                    const target = e.currentTarget as HTMLImageElement;
-                                    if (target.src !== '/images/cover-placeholder.svg') {
+                                  fill
+                                  className="object-cover group-hover:scale-105 transition-transform duration-700 ease-out z-[1]"
+                                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                                  onError={(e: any) => {
+                                    const target = e.target as HTMLImageElement;
+                                    if (target.src.indexOf('cover-placeholder.svg') === -1) {
+                                      target.srcset = '';
                                       target.src = '/images/cover-placeholder.svg';
                                     }
                                   }}

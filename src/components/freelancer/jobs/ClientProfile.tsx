@@ -190,8 +190,8 @@ export function ClientProfile({
                   onClick={onChat}
                   disabled={chatDisabled}
                   className={`flex-1 px-3 py-2 rounded-lg border text-sm font-medium flex items-center justify-center gap-2 transition-colors ${chatDisabled
-                      ? 'bg-white/5 border-white/5 text-white/30 cursor-not-allowed'
-                      : 'bg-white/5 hover:bg-white/10 border-white/10 text-white/90 hover:text-white'
+                    ? 'bg-white/5 border-white/5 text-white/30 cursor-not-allowed'
+                    : 'bg-white/5 hover:bg-white/10 border-white/10 text-white/90 hover:text-white'
                     }`}
                 >
                   <MessageCircle className="w-4 h-4" />
@@ -229,7 +229,7 @@ export function ClientProfile({
 
             {showCommunicationButtons && (
               <div className="flex space-x-2">
-                <button
+                {/* <button
                   onClick={onChat}
                   disabled={chatDisabled}
                   className={`flex-1 px-3 py-2 rounded-lg border text-sm font-medium flex items-center justify-center gap-2 transition-colors ${chatDisabled
@@ -239,7 +239,7 @@ export function ClientProfile({
                 >
                   <MessageCircle className="w-4 h-4" />
                   Chat
-                </button>
+                </button> */}
                 <button
                   onClick={onCall}
                   className="flex-1 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/90 hover:text-white transition-colors text-sm font-medium flex items-center justify-center gap-2"

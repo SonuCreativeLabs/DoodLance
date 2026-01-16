@@ -48,20 +48,21 @@ export async function GET(request: NextRequest) {
         });
 
         if (!profile) {
-            return NextResponse.json({ experiences: [] });
+            return NextResponse.json({ achievements: [] });
         }
 
-        // Now query experiences by profileId
-        const experiences = await prisma.experience.findMany({
+        // Now query achievements by profileId
+        // Ordered by creation since date fields are removed
+        const achievements = await prisma.achievement.findMany({
             where: { profileId: profile.id },
-            orderBy: { startDate: 'desc' }
+            orderBy: { createdAt: 'desc' }
         });
 
-        return NextResponse.json({ experiences });
+        return NextResponse.json({ achievements });
 
     } catch (error) {
-        console.error('Experience fetch error DETAILS:', error);
-        return NextResponse.json({ error: 'Failed to fetch experiences', details: String(error) }, { status: 500 });
+        console.error('Achievement fetch error DETAILS:', error);
+        return NextResponse.json({ error: 'Failed to fetch achievements', details: String(error) }, { status: 500 });
     }
 }
 
@@ -78,7 +79,11 @@ export async function POST(request: NextRequest) {
         if (!dbUser) return NextResponse.json({ error: 'User not found' }, { status: 404 });
 
         const body = await request.json();
-        const { title, company, location, startDate, endDate, description, current } = body;
+        const { title, company } = body;
+
+        if (!title || !company) {
+            return NextResponse.json({ error: 'Title and Company are required' }, { status: 400 });
+        }
 
         // Get user's FreelancerProfile
         let profile = await prisma.freelancerProfile.findUnique({
@@ -86,7 +91,7 @@ export async function POST(request: NextRequest) {
         });
 
         if (!profile) {
-            console.log('Profile missing during Experience Create. Auto-creating...');
+            console.log('Profile missing during Achievement Create. Auto-creating...');
             // Auto-create profile if missing
             profile = await prisma.freelancerProfile.create({
                 data: {
@@ -112,24 +117,19 @@ export async function POST(request: NextRequest) {
             });
         }
 
-        const experience = await prisma.experience.create({
+        const achievement = await prisma.achievement.create({
             data: {
                 profileId: profile.id,
-                role: title,
-                company,
-                location,
-                startDate,
-                endDate: endDate || null,
-                description,
-                isCurrent: current || false
+                title,
+                company
             }
         });
 
-        return NextResponse.json({ experience });
+        return NextResponse.json({ achievement });
 
     } catch (error) {
-        console.error('Experience create error:', error);
-        return NextResponse.json({ error: 'Failed to create experience' }, { status: 500 });
+        console.error('Achievement create error:', error);
+        return NextResponse.json({ error: 'Failed to create achievement' }, { status: 500 });
     }
 }
 
@@ -146,7 +146,7 @@ export async function PUT(request: NextRequest) {
         if (!dbUser) return NextResponse.json({ error: 'User not found' }, { status: 404 });
 
         const body = await request.json();
-        const { id, role, company, location, startDate, endDate, description, isCurrent } = body;
+        const { id, title, company } = body;
 
         // Get user's profile
         const profile = await prisma.freelancerProfile.findUnique({
@@ -158,32 +158,27 @@ export async function PUT(request: NextRequest) {
         }
 
         // Verify ownership
-        const existingExp = await prisma.experience.findUnique({
+        const existingAch = await prisma.achievement.findUnique({
             where: { id }
         });
 
-        if (!existingExp || existingExp.profileId !== profile.id) {
-            return NextResponse.json({ error: 'Experience not found or unauthorized' }, { status: 403 });
+        if (!existingAch || existingAch.profileId !== profile.id) {
+            return NextResponse.json({ error: 'Achievement not found or unauthorized' }, { status: 403 });
         }
 
-        const experience = await prisma.experience.update({
+        const achievement = await prisma.achievement.update({
             where: { id },
             data: {
-                role,
-                company,
-                location,
-                startDate,
-                endDate: endDate || null,
-                description,
-                isCurrent: isCurrent || false
+                title,
+                company
             }
         });
 
-        return NextResponse.json({ experience });
+        return NextResponse.json({ achievement });
 
     } catch (error) {
-        console.error('Experience update error:', error);
-        return NextResponse.json({ error: 'Failed to update experience' }, { status: 500 });
+        console.error('Achievement update error:', error);
+        return NextResponse.json({ error: 'Failed to update achievement' }, { status: 500 });
     }
 }
 
@@ -203,7 +198,7 @@ export async function DELETE(request: NextRequest) {
         const id = searchParams.get('id');
 
         if (!id) {
-            return NextResponse.json({ error: 'Experience ID required' }, { status: 400 });
+            return NextResponse.json({ error: 'Achievement ID required' }, { status: 400 });
         }
 
         // Get user's profile
@@ -216,22 +211,22 @@ export async function DELETE(request: NextRequest) {
         }
 
         // Verify ownership
-        const existingExp = await prisma.experience.findUnique({
+        const existingAch = await prisma.achievement.findUnique({
             where: { id }
         });
 
-        if (!existingExp || existingExp.profileId !== profile.id) {
-            return NextResponse.json({ error: 'Experience not found or unauthorized' }, { status: 403 });
+        if (!existingAch || existingAch.profileId !== profile.id) {
+            return NextResponse.json({ error: 'Achievement not found or unauthorized' }, { status: 403 });
         }
 
-        await prisma.experience.delete({
+        await prisma.achievement.delete({
             where: { id }
         });
 
         return NextResponse.json({ success: true });
 
     } catch (error) {
-        console.error('Experience delete error:', error);
-        return NextResponse.json({ error: 'Failed to delete experience' }, { status: 500 });
+        console.error('Achievement delete error:', error);
+        return NextResponse.json({ error: 'Failed to delete achievement' }, { status: 500 });
     }
 }

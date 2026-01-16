@@ -12,12 +12,13 @@ import { MapModal } from '@/components/freelancer/jobs/MapModal'
 import { useNearbyProfessionals } from '@/contexts/NearbyProfessionalsContext'
 import { usePopularServices } from '@/contexts/PopularServicesContext'
 import { useAuth } from '@/contexts/AuthContext';
+import { ExpertCardSkeleton } from '@/components/skeletons/ExpertCardSkeleton'
 
 // Search functionality will be implemented with real data
 
 export default function ClientHome() {
   const router = useRouter();
-  const { professionals } = useNearbyProfessionals();
+  const { professionals, loading } = useNearbyProfessionals();
   const { popularServices } = usePopularServices();
   const [searchQuery, setSearchQuery] = useState("");
   const [placeholder, setPlaceholder] = useState("Search for services...");
@@ -144,7 +145,22 @@ export default function ClientHome() {
     return () => window.removeEventListener('keydown', handleEsc);
   }, []);
 
-  // ... (skipping unimplemented handlers)
+  // Coupon state
+  const [promos, setPromos] = useState<any[]>([]);
+  const [loadingPromos, setLoadingPromos] = useState(true);
+
+  // Fetch featured promos
+  useEffect(() => {
+    fetch('/api/promos/featured')
+      .then(res => res.json())
+      .then(data => {
+        if (data.promos) {
+          setPromos(data.promos);
+        }
+      })
+      .catch(err => console.error('Failed to load promos', err))
+      .finally(() => setLoadingPromos(false));
+  }, []);
 
   return (
     <ClientLayout>
@@ -210,13 +226,7 @@ export default function ClientHome() {
                       My Profile
                     </button>
                     {/* Skill Coins */}
-                    <button
-                      className="flex items-center gap-3 px-6 py-2 text-left text-white/90 hover:bg-white/10 hover:text-white transition-colors"
-                      onClick={() => router.push('/client/wallet')}
-                    >
-                      <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" /><polyline points="7.5,4.27 12,6.11 16.5,4.27" /><polyline points="7.5,9.73 12,11.57 16.5,9.73" /><polyline points="12,2.27 12,11.57" /></svg>
-                      <span className="text-white/90">Skill Coins</span>
-                    </button>
+                    {/* Skill Coins Removed */}
                     {/* My Bookings */}
                     <button
                       className="flex items-center gap-3 px-6 py-3 text-left text-white/90 hover:bg-white/10 hover:text-white transition-colors"
@@ -297,13 +307,7 @@ export default function ClientHome() {
           </div>
 
           <div className="flex items-center space-x-3 sm:space-x-4">
-            <div className="relative">
-              <Link href="/client/wallet" className="relative group" aria-label="Wallet">
-                <span className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/10 hover:bg-white/20 transition-colors">
-                  <Wallet className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-                </span>
-              </Link>
-            </div>
+            {/* Wallet Hidden */}
             <div className="relative">
               <Link href="/client/notifications" className="relative group" aria-label="Notifications">
                 <span className="relative inline-flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/10 hover:bg-white/20 transition-colors">
@@ -367,6 +371,111 @@ export default function ClientHome() {
         </div>
 
         <div className="container mx-auto px-4 py-4 bg-[#111111] mb-8 relative z-0">
+          {/* Top Rated Experts Section */}
+          <section className="mb-4 relative z-0">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-base font-semibold text-white tracking-wide text-left">
+                <span className="bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 text-transparent bg-clip-text">Top Rated</span>
+                {" "}Experts
+              </h2>
+              <Link href="/client/nearby" className="text-white/80 hover:text-white text-xs font-medium flex items-center transition-colors">
+                View All
+                <ChevronRight className="w-3 h-3 ml-1" />
+              </Link>
+            </div>
+            <div className="relative">
+              <div className="overflow-x-auto scrollbar-hide -mx-4 px-4 pr-8">
+                <div className="flex gap-3 pb-2">
+                  {loading ? (
+                    // Show skeleton cards while loading
+                    [...Array(5)].map((_, i) => (
+                      <ExpertCardSkeleton key={i} />
+                    ))
+                  ) : professionals.length > 0 ? (
+                    professionals
+                      .sort((a, b) => {
+                        // First sort by rating
+                        if (b.rating !== a.rating) {
+                          return b.rating - a.rating;
+                        }
+                        // If ratings are equal, sort by number of reviews
+                        return b.reviews - a.reviews;
+                      })
+                      .slice(0, 5) // Only take top 5
+                      .map((expert) => (
+                        <button
+                          key={expert.id}
+                          onClick={() => router.push(`/client/freelancer/${expert.id}`)}
+                          className="flex-shrink-0 w-[140px] cursor-pointer"
+                        >
+                          {/* Outer Layer Card */}
+                          <div className="relative group h-full">
+                            {/* Card Background */}
+                            <div className="absolute inset-0 rounded-2xl border border-purple-400/10 transition-all duration-300 group-hover:border-purple-400/20 bg-[#161616]"></div>
+
+                            {/* Rating Badge - positioned at top corner of card */}
+                            <div className="absolute top-2 left-2 z-30 bg-gradient-to-r from-yellow-400 to-yellow-600 px-2 py-0.5 rounded-full flex items-center gap-1 shadow-lg">
+                              <Star className="w-2.5 h-2.5 text-black fill-current" />
+                              <span className="text-black text-[10px] font-bold">{expert.rating}</span>
+                            </div>
+
+                            {/* Card Content */}
+                            <div className="relative p-3">
+                              <div className="relative group">
+                                {/* Rating Badge - moved to outer card */}
+
+                                {/* Profile Picture - Larger size */}
+                                <div className="relative w-[100px] h-[100px] mx-auto">
+                                  <img
+                                    src={expert.image}
+                                    alt={expert.name}
+                                    className="w-full h-full rounded-full border-2 border-purple-200/50 relative z-10 object-cover"
+                                  />
+                                </div>
+
+                                {/* Expert Info with Adjusted Spacing */}
+                                <div className="mt-2 text-center">
+                                  <h3 className="font-semibold text-white text-xs leading-tight truncate px-1">{expert.name}</h3>
+                                  <p className="text-purple-400 text-[10px] font-medium truncate mt-0.5 px-1">{expert.cricketRole || expert.service || 'Expert'}</p>
+                                  <p className="text-white/70 text-[9px] mt-0.5 truncate px-1">
+                                    {expert.location}
+                                  </p>
+                                  <p className="text-white/50 text-[9px] font-medium mt-0.5 truncate px-1">
+                                    {expert.distance ? (
+                                      <>
+                                        {expert.distance < 1
+                                          ? `${(expert.distance * 1000).toFixed(0)}m`
+                                          : `${expert.distance.toFixed(1)}km`} away
+                                      </>
+                                    ) : ''}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </button>
+                      ))
+                  ) : (
+                    <div className="w-full py-8 text-center mx-auto col-span-full">
+                      <p className="text-white/60 text-sm">No experts found nearby</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Add scrollbar-hide utility to tailwind config */}
+          <style jsx global>{`
+            .scrollbar-hide::-webkit-scrollbar {
+              display: none;
+            }
+            .scrollbar-hide {
+              -ms-overflow-style: none;
+              scrollbar-width: none;
+            }
+          `}</style>
+
           {/* Service Categories */}
           <section className="mb-4 relative z-0">
             <div className="flex items-center justify-between mb-4">
@@ -390,106 +499,6 @@ export default function ClientHome() {
                       className="w-[140px] flex-shrink-0"
                     />
                   ))}
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* Add scrollbar-hide utility to tailwind config */}
-          <style jsx global>{`
-            .scrollbar-hide::-webkit-scrollbar {
-              display: none;
-            }
-            .scrollbar-hide {
-              -ms-overflow-style: none;
-              scrollbar-width: none;
-            }
-          `}</style>
-
-          {/* Top Rated Experts Section */}
-          <section className="mb-4 relative z-0">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-semibold text-white tracking-wide text-left">
-                <span className="bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 text-transparent bg-clip-text">Top Rated</span>
-                {" "}Experts
-              </h2>
-              <Link href="/client/nearby" className="text-white/80 hover:text-white text-xs font-medium flex items-center transition-colors">
-                View All
-                <ChevronRight className="w-3 h-3 ml-1" />
-              </Link>
-            </div>
-            <div className="relative">
-              <div className="overflow-x-auto scrollbar-hide -mx-4 px-4 pr-8">
-                <div className="flex gap-3 pb-2">
-                  {professionals.length > 0 ? (
-                    professionals
-                      .sort((a, b) => {
-                        // First sort by rating
-                        if (b.rating !== a.rating) {
-                          return b.rating - a.rating;
-                        }
-                        // If ratings are equal, sort by number of reviews
-                        return b.reviews - a.reviews;
-                      })
-                      .slice(0, 5) // Only take top 5
-                      .map((expert) => (
-                        <button
-                          key={expert.id}
-                          onClick={() => router.push(`/client/freelancer/${expert.id}`)}
-                          className="flex-shrink-0 w-[130px] cursor-pointer"
-                        >
-                          {/* Outer Layer Card */}
-                          <div className="relative group">
-                            {/* Card Background */}
-                            <div className="absolute inset-0 rounded-2xl border border-purple-400/10 transition-all duration-300 group-hover:border-purple-400/20"></div>
-
-                            {/* Rating Badge - positioned at top corner of card */}
-                            <div className="absolute top-2 left-2 z-30 bg-gradient-to-r from-yellow-400 to-yellow-600 px-2 py-0.5 rounded-full flex items-center gap-1 shadow-lg">
-                              <Star className="w-2.5 h-2.5 text-black fill-current" />
-                              <span className="text-black text-[10px] font-bold">{expert.rating}</span>
-                            </div>
-
-                            {/* Card Content */}
-                            <div className="relative p-2.5">
-                              <div className="relative group">
-                                {/* Rating Badge - moved to outer card */}
-
-                                {/* Profile Picture */}
-                                <div className="relative w-[80px] h-[80px] mx-auto">
-                                  <img
-                                    src={expert.image}
-                                    alt={expert.name}
-                                    className="w-full h-full rounded-full border-2 border-purple-200/50 relative z-10 object-cover"
-                                  />
-                                </div>
-
-                                {/* Expert Info with Reduced Spacing */}
-                                <div className="mt-1.5 text-center">
-                                  <h3 className="font-semibold text-white text-xs leading-tight truncate">{expert.name}</h3>
-                                  <p className="text-purple-400 text-[10px] font-medium truncate mt-0.5">{expert.cricketRole || expert.service}</p>
-                                  <p className="text-white/70 text-[9px] mt-0.5 truncate">
-                                    {expert.location}
-                                  </p>
-                                  <p className="text-white/50 text-[9px] font-medium mt-0.5 truncate">
-                                    {expert.distance ? (
-                                      <>
-                                        {expert.distance < 1
-                                          ? `${(expert.distance * 1000).toFixed(0)}m`
-                                          : `${expert.distance.toFixed(1)}km`} away
-                                      </>
-                                    ) : ''}
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </button>
-                      ))
-                  ) : (
-                    <div className="w-full py-8 text-center mx-auto col-span-full">
-                      <p className="text-white/60 text-sm">No experts found nearby</p>
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
@@ -548,139 +557,69 @@ export default function ClientHome() {
             <div className="relative -mx-4">
               <div className="overflow-x-auto scrollbar-hide px-4 pr-8">
                 <div className="flex gap-3">
-                  {/* First Coupon */}
-                  <div className="flex-shrink-0 w-[300px] min-h-[140px] rounded-2xl p-3 border border-dashed border-white/15 bg-white/5 backdrop-blur-sm relative overflow-hidden flex flex-col justify-between">
-                    {/* Accent stripe */}
-                    <div className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-purple-400/80 to-purple-600/80" />
-                    <div className="flex items-start gap-3">
-                      {/* Icon circle (subtle) */}
-                      <div className="hidden sm:flex items-center justify-center w-12 h-12 rounded-xl bg-white/5 border border-white/10">
-                        <Calendar className="w-6 h-6 text-purple-300" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="inline-flex items-center text-[11px] px-2 py-0.5 rounded-full border border-white/15 text-white/80">Limited time</span>
-                        </div>
-                        <h3 className="text-white text-base font-semibold leading-snug">20% off first booking</h3>
-                      </div>
-                      {/* Discount badge */}
-                      <div className="ml-2">
-                        <div className="rounded-xl px-2.5 py-1 bg-purple-500/20 text-purple-200 border border-purple-300/30 text-sm font-bold">20%</div>
-                      </div>
-                    </div>
-                    {/* Code and button section at bottom */}
-                    <div className="mt-3 flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-[11px] px-2 py-1 rounded-md border border-white/15 bg-white/5 text-white/90">WELCOME20</span>
-                        <button
-                          onClick={() => handleCopyCode('WELCOME20')}
-                          className="inline-flex items-center gap-1 px-2 py-1.5 rounded-full border border-white/20 text-white/90 hover:bg-white/10 text-xs sm:text-sm transition-colors whitespace-nowrap shrink-0"
-                          aria-label="Copy coupon code WELCOME20"
-                        >
-                          {copiedCode === 'WELCOME20' ? (
-                            <Check className="w-4 h-4" />
-                          ) : (
-                            <Copy className="w-4 h-4" />
-                          )}
-                        </button>
-                      </div>
-                      <span className="text-[11px] text-white/50 whitespace-nowrap">Ends soon</span>
-                    </div>
-                    {/* Perforated divider at bottom */}
-                    <div className="mt-3 flex items-center gap-2">
-                      <div className="h-[10px] w-[10px] rounded-full bg-[#111111] border border-white/10 -ml-5" />
-                      <div className="flex-1 border-t border-dashed border-white/15" />
-                      <div className="h-[10px] w-[10px] rounded-full bg-[#111111] border border-white/10 -mr-5" />
-                    </div>
-                  </div>
+                  {loadingPromos ? (
+                    // Skeleton
+                    [...Array(2)].map((_, i) => (
+                      <div key={i} className="flex-shrink-0 w-[300px] h-[140px] rounded-2xl bg-white/5 animate-pulse" />
+                    ))
+                  ) : promos.length > 0 ? (
+                    promos.map((promo, index) => {
+                      // Determine accent color based on index or discount type
+                      const colors = [
+                        { gradient: 'from-purple-400/80 to-purple-600/80', text: 'text-purple-300', bg: 'bg-purple-500/20', border: 'border-purple-300/30', text2: 'text-purple-200' },
+                        { gradient: 'from-blue-400/80 to-blue-600/80', text: 'text-blue-300', bg: 'bg-blue-500/20', border: 'border-blue-300/30', text2: 'text-blue-200' },
+                        { gradient: 'from-emerald-400/80 to-emerald-600/80', text: 'text-emerald-300', bg: 'bg-emerald-500/20', border: 'border-emerald-300/30', text2: 'text-emerald-200' }
+                      ];
+                      const color = colors[index % colors.length];
 
-                  {/* Second Coupon */}
-                  <div className="flex-shrink-0 w-[300px] min-h-[140px] rounded-2xl p-3 border border-dashed border-white/15 bg-white/5 backdrop-blur-sm relative overflow-hidden flex flex-col justify-between">
-                    <div className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-blue-400/80 to-blue-600/80" />
-                    <div className="flex items-start gap-3">
-                      <div className="hidden sm:flex items-center justify-center w-12 h-12 rounded-xl bg-white/5 border border-white/10">
-                        <Star className="w-6 h-6 text-blue-300" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="inline-flex items-center text-[11px] px-2 py-0.5 rounded-full border border-white/15 text-white/80">Weekend special</span>
-                          <span className="text-[11px] text-white/50">• All services</span>
+                      return (
+                        <div key={promo.id} className="flex-shrink-0 w-[300px] min-h-[140px] rounded-2xl p-3 border border-dashed border-white/15 bg-white/5 backdrop-blur-sm relative overflow-hidden flex flex-col justify-between">
+                          <div className={`absolute left-0 top-0 h-full w-1 bg-gradient-to-b ${color.gradient}`} />
+                          <div className="flex items-start gap-3">
+                            <div className="hidden sm:flex items-center justify-center w-12 h-12 rounded-xl bg-white/5 border border-white/10">
+                              <Zap className={`w-6 h-6 ${color.text}`} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="inline-flex items-center text-[11px] px-2 py-0.5 rounded-full border border-white/15 text-white/80">Special Offer</span>
+                              </div>
+                              <h3 className="text-white text-base font-semibold leading-snug">{promo.description || 'Exclusive Discount'}</h3>
+                            </div>
+                            <div className="ml-2">
+                              <div className={`rounded-xl px-2.5 py-1 ${color.bg} ${color.text2} ${color.border} text-sm font-bold`}>
+                                {promo.discountType === 'PERCENTAGE' ? `${promo.discountValue}%` : `₹${promo.discountValue}`}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="mt-3 flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono text-[11px] px-2 py-1 rounded-md border border-white/15 bg-white/5 text-white/90">{promo.code}</span>
+                              <button
+                                onClick={() => handleCopyCode(promo.code)}
+                                className="inline-flex items-center gap-1 px-2 py-1.5 rounded-full border border-white/20 text-white/90 hover:bg-white/10 text-xs sm:text-sm transition-colors whitespace-nowrap shrink-0"
+                              >
+                                {copiedCode === promo.code ? (
+                                  <Check className="w-4 h-4" />
+                                ) : (
+                                  <Copy className="w-4 h-4" />
+                                )}
+                              </button>
+                            </div>
+                            <span className="text-[11px] text-white/50 whitespace-nowrap">
+                              {promo.endDate ? `Ends ${new Date(promo.endDate).toLocaleDateString()}` : 'Limited time'}
+                            </span>
+                          </div>
+                          <div className="mt-3 flex items-center gap-2">
+                            <div className="h-[10px] w-[10px] rounded-full bg-[#111111] border border-white/10 -ml-5" />
+                            <div className="flex-1 border-t border-dashed border-white/15" />
+                            <div className="h-[10px] w-[10px] rounded-full bg-[#111111] border border-white/10 -mr-5" />
+                          </div>
                         </div>
-                        <h3 className="text-white text-base font-semibold leading-snug">15% off weekend bookings</h3>
-                      </div>
-                      <div className="ml-2">
-                        <div className="rounded-xl px-2.5 py-1 bg-blue-500/20 text-blue-200 border border-blue-300/30 text-sm font-bold">15%</div>
-                      </div>
-                    </div>
-                    {/* Code and button section at bottom */}
-                    <div className="mt-3 flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-[11px] px-2 py-1 rounded-md border border-white/15 bg-white/5 text-white/90">WEEKEND15</span>
-                        <button
-                          onClick={() => handleCopyCode('WEEKEND15')}
-                          className="inline-flex items-center gap-1 px-2 py-1.5 rounded-full border border-white/20 text-white/90 hover:bg-white/10 text-xs sm:text-sm transition-colors whitespace-nowrap shrink-0"
-                          aria-label="Copy coupon code WEEKEND15"
-                        >
-                          {copiedCode === 'WEEKEND15' ? (
-                            <Check className="w-4 h-4" />
-                          ) : (
-                            <Copy className="w-4 h-4" />
-                          )}
-                        </button>
-                      </div>
-                      <span className="text-[11px] text-white/50 whitespace-nowrap">Valid Sat-Sun</span>
-                    </div>
-                    {/* Perforated divider at bottom */}
-                    <div className="mt-3 flex items-center gap-2">
-                      <div className="h-[10px] w-[10px] rounded-full bg-[#111111] border border-white/10 -ml-5" />
-                      <div className="flex-1 border-t border-dashed border-white/15" />
-                      <div className="h-[10px] w-[10px] rounded-full bg-[#111111] border border-white/10 -mr-5" />
-                    </div>
-                  </div>
-
-                  {/* Third Coupon */}
-                  <div className="flex-shrink-0 w-[300px] min-h-[140px] rounded-2xl p-3 border border-dashed border-white/15 bg-white/5 backdrop-blur-sm relative overflow-hidden flex flex-col justify-between">
-                    <div className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-emerald-400/80 to-emerald-600/80" />
-                    <div className="flex items-start gap-3">
-                      <div className="hidden sm:flex items-center justify-center w-12 h-12 rounded-xl bg-white/5 border border-white/10">
-                        <svg className="w-6 h-6 text-emerald-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 7h18M3 12h18M3 17h18" /></svg>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="inline-flex items-center text-[11px] px-2 py-0.5 rounded-full border border-white/15 text-white/80">Bulk booking</span>
-                          <span className="text-[11px] text-white/50">• 3+ services</span>
-                        </div>
-                        <h3 className="text-white text-base font-semibold leading-snug">25% off bulk orders</h3>
-                      </div>
-                      <div className="ml-2">
-                        <div className="rounded-xl px-2.5 py-1 bg-emerald-500/20 text-emerald-200 border border-emerald-300/30 text-sm font-bold">25%</div>
-                      </div>
-                    </div>
-                    {/* Code and button section at bottom */}
-                    <div className="mt-3 flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-[11px] px-2 py-1 rounded-md border border-white/15 bg-white/5 text-white/90">BULK25</span>
-                        <button
-                          onClick={() => handleCopyCode('BULK25')}
-                          className="inline-flex items-center gap-1 px-2 py-1.5 rounded-full border border-white/20 text-white/90 hover:bg-white/10 text-xs sm:text-sm transition-colors whitespace-nowrap shrink-0"
-                          aria-label="Copy coupon code BULK25"
-                        >
-                          {copiedCode === 'BULK25' ? (
-                            <Check className="w-4 h-4" />
-                          ) : (
-                            <Copy className="w-4 h-4" />
-                          )}
-                        </button>
-                      </div>
-                      <span className="text-[11px] text-white/50 whitespace-nowrap">Limited time</span>
-                    </div>
-                    {/* Perforated divider at bottom */}
-                    <div className="mt-3 flex items-center gap-2">
-                      <div className="h-[10px] w-[10px] rounded-full bg-[#111111] border border-white/10 -ml-5" />
-                      <div className="flex-1 border-t border-dashed border-white/15" />
-                      <div className="h-[10px] w-[10px] rounded-full bg-[#111111] border border-white/10 -mr-5" />
-                    </div>
-                  </div>
+                      );
+                    })
+                  ) : (
+                    <div className="w-full text-center text-gray-500 py-4">No active offers at the moment</div>
+                  )}
                 </div>
               </div>
             </div>

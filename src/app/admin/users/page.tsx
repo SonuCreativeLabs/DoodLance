@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Select,
   SelectContent,
@@ -36,6 +37,7 @@ import {
   ChevronRight, X, RefreshCw, FileText, Clock, TrendingUp
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { AddUserModal } from '@/components/admin/users/AddUserModal';
 
 const initialStats = {
   totalUsers: 0,
@@ -48,6 +50,139 @@ interface UserDetailsModalProps {
   user: any;
   open: boolean;
   onClose: () => void;
+}
+
+interface EditUserModalProps {
+  user: any;
+  open: boolean;
+  onClose: () => void;
+  onSave: (userId: string, data: any) => Promise<void>;
+}
+
+function EditUserModal({ user, open, onClose, onSave }: EditUserModalProps) {
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    location: '',
+    role: '',
+    status: ''
+  });
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        name: user.name || '',
+        email: user.email || '',
+        phone: user.phone || '',
+        location: user.location || '',
+        role: user.role || 'client',
+        status: user.status || 'active'
+      });
+    }
+  }, [user]);
+
+  const handleSubmit = async () => {
+    setLoading(true);
+    try {
+      await onSave(user.id, formData);
+      onClose();
+    } catch (error) {
+      console.error('Failed to save:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!user) return null;
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-md bg-[#1a1a1a] border-gray-800">
+        <DialogHeader>
+          <DialogTitle className="text-white">Edit User Profile</DialogTitle>
+          <DialogDescription className="text-gray-400">
+            Update information for {user.name}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4 py-4">
+          <div className="space-y-2">
+            <Label className="text-gray-300">Full Name</Label>
+            <Input
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              className="bg-[#2a2a2a] border-gray-700 text-white"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-gray-300">Email</Label>
+            <Input
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              className="bg-[#2a2a2a] border-gray-700 text-white"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-gray-300">Phone</Label>
+            <Input
+              value={formData.phone}
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              className="bg-[#2a2a2a] border-gray-700 text-white"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-gray-300">Location</Label>
+            <Input
+              value={formData.location}
+              onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+              className="bg-[#2a2a2a] border-gray-700 text-white"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label className="text-gray-300">Role</Label>
+              <Select value={formData.role} onValueChange={(val) => setFormData({ ...formData, role: val })}>
+                <SelectTrigger className="bg-[#2a2a2a] border-gray-700 text-white">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="client">Client</SelectItem>
+                  <SelectItem value="freelancer">Freelancer</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-gray-300">Status</Label>
+              <Select value={formData.status} onValueChange={(val) => setFormData({ ...formData, status: val })}>
+                <SelectTrigger className="bg-[#2a2a2a] border-gray-700 text-white">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="suspended">Suspended</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose} disabled={loading}>Cancel</Button>
+          <Button
+            className="bg-purple-600 hover:bg-purple-700"
+            onClick={handleSubmit}
+            disabled={loading}
+          >
+            {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : 'Save Changes'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
 }
 
 function UserDetailsModal({ user, open, onClose }: UserDetailsModalProps) {
@@ -206,6 +341,9 @@ export default function UserManagementPage() {
   const [verificationFilter, setVerificationFilter] = useState('all');
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [addUserModalOpen, setAddUserModalOpen] = useState(false);
+  const [userToEdit, setUserToEdit] = useState<any>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [stats, setStats] = useState(initialStats);
@@ -278,8 +416,72 @@ export default function UserManagementPage() {
     }
   };
 
+  const handleUpdateUser = async (userId: string, data: any) => {
+    try {
+      const res = await fetch(`/api/admin/users/${userId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+
+      if (res.ok) {
+        fetchUsers();
+        // TODO: Success toast
+      } else {
+        const error = await res.json();
+        console.error('Update failed:', error);
+        alert(error.error || 'Failed to update user');
+      }
+    } catch (e) {
+      console.error('Update error:', e);
+      alert('An error occurred while updating capabilities');
+    }
+  };
+
+  const handleExport = () => {
+    // Define headers
+    const headers = ['ID', 'Name', 'Email', 'Role', 'Status', 'Total Spent', 'Total Earned', 'Joined At'];
+
+    // Convert users to CSV rows
+    const rows = users.map(user => [
+      user.id,
+      `"${user.name}"`, // Quote strings with potential commas
+      user.email,
+      user.role,
+      user.status,
+      user.totalSpent,
+      user.totalEarnings,
+      user.joinedAt
+    ]);
+
+    // Combine headers and rows
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.join(','))
+    ].join('\n');
+
+    // Create blob and download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `users_export_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="space-y-6">
+      <AddUserModal
+        open={addUserModalOpen}
+        onOpenChange={setAddUserModalOpen}
+        onSuccess={() => {
+          fetchUsers();
+          // Add toast success here if available
+        }}
+      />
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -287,11 +489,19 @@ export default function UserManagementPage() {
           <p className="text-gray-400 mt-1 text-sm sm:text-base">Manage all platform users and their profiles</p>
         </div>
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-          <Button variant="outline" className="text-gray-300 w-full sm:w-auto">
+          <Button
+            variant="outline"
+            className="text-gray-300 w-full sm:w-auto"
+            onClick={handleExport}
+            disabled={users.length === 0}
+          >
             <Download className="w-4 h-4 mr-2" />
             Export
           </Button>
-          <Button className="bg-purple-600 hover:bg-purple-700 w-full sm:w-auto">
+          <Button
+            className="bg-purple-600 hover:bg-purple-700 w-full sm:w-auto"
+            onClick={() => setAddUserModalOpen(true)}
+          >
             <Users className="w-4 h-4 mr-2" />
             Add User
           </Button>
@@ -304,7 +514,9 @@ export default function UserManagementPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-400">Total Users</p>
-              <p className="text-2xl font-bold text-white">{stats.totalUsers}</p>
+              {loading ? <Skeleton className="h-8 w-16 bg-gray-800" /> : (
+                <p className="text-2xl font-bold text-white">{stats.totalUsers}</p>
+              )}
             </div>
             <Users className="w-8 h-8 text-blue-500" />
           </div>
@@ -313,7 +525,9 @@ export default function UserManagementPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-400">Active Users</p>
-              <p className="text-2xl font-bold text-white">{stats.activeUsers}</p>
+              {loading ? <Skeleton className="h-8 w-16 bg-gray-800" /> : (
+                <p className="text-2xl font-bold text-white">{stats.activeUsers}</p>
+              )}
             </div>
             <UserCheck className="w-8 h-8 text-green-500" />
           </div>
@@ -322,7 +536,9 @@ export default function UserManagementPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-400">Verified</p>
-              <p className="text-2xl font-bold text-white">{stats.verifiedUsers}</p>
+              {loading ? <Skeleton className="h-8 w-16 bg-gray-800" /> : (
+                <p className="text-2xl font-bold text-white">{stats.verifiedUsers}</p>
+              )}
             </div>
             <Shield className="w-8 h-8 text-purple-500" />
           </div>
@@ -331,7 +547,9 @@ export default function UserManagementPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-400">Freelancers</p>
-              <p className="text-2xl font-bold text-white">{stats.freelancers}</p>
+              {loading ? <Skeleton className="h-8 w-16 bg-gray-800" /> : (
+                <p className="text-2xl font-bold text-white">{stats.freelancers}</p>
+              )}
             </div>
             <TrendingUp className="w-8 h-8 text-orange-500" />
           </div>
@@ -411,17 +629,45 @@ export default function UserManagementPage() {
                 <th className="p-4 text-sm font-medium text-gray-400">User</th>
                 <th className="p-4 text-sm font-medium text-gray-400">Contact</th>
                 <th className="p-4 text-sm font-medium text-gray-400">Role</th>
+                <th className="p-4 text-sm font-medium text-gray-400">Referral Code</th>
                 <th className="p-4 text-sm font-medium text-gray-400">Status</th>
-                <th className="p-4 text-sm font-medium text-gray-400">Performance</th>
+                <th className="p-4 text-sm font-medium text-gray-400">Total Spent</th>
+                <th className="p-4 text-sm font-medium text-gray-400">Total Earned</th>
                 <th className="p-4 text-sm font-medium text-gray-400">Last Active</th>
                 <th className="p-4 text-sm font-medium text-gray-400">Actions</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
-                <tr>
-                  <td colSpan={7} className="p-8 text-center text-gray-400">Loading users...</td>
-                </tr>
+                Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={i} className="border-b border-gray-800">
+                    <td className="p-4">
+                      <div className="flex items-center gap-3">
+                        <Skeleton className="w-10 h-10 rounded-full bg-gray-800" />
+                        <div className="space-y-2">
+                          <Skeleton className="h-4 w-32 bg-gray-800" />
+                          <Skeleton className="h-3 w-24 bg-gray-800" />
+                        </div>
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-40 bg-gray-800" />
+                        <Skeleton className="h-3 w-24 bg-gray-800" />
+                      </div>
+                    </td>
+                    <td className="p-4"><Skeleton className="h-5 w-20 rounded-full bg-gray-800" /></td>
+                    <td className="p-4"><Skeleton className="h-5 w-20 rounded-full bg-gray-800" /></td>
+                    <td className="p-4">
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-24 bg-gray-800" />
+                        <Skeleton className="h-3 w-16 bg-gray-800" />
+                      </div>
+                    </td>
+                    <td className="p-4"><Skeleton className="h-4 w-24 bg-gray-800" /></td>
+                    <td className="p-4"><Skeleton className="h-8 w-8 rounded bg-gray-800" /></td>
+                  </tr>
+                ))
               ) : (
                 <AnimatePresence>
                   {users.length > 0 ? (
@@ -436,11 +682,19 @@ export default function UserManagementPage() {
                       >
                         <td className="p-4">
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-purple-800 rounded-full flex items-center justify-center">
-                              <span className="text-white font-semibold">
-                                {user.name.charAt(0).toUpperCase()}
-                              </span>
-                            </div>
+                            {user.avatar ? (
+                              <img
+                                src={user.avatar}
+                                alt={user.name}
+                                className="w-10 h-10 rounded-full object-cover border border-gray-700"
+                              />
+                            ) : (
+                              <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-purple-800 rounded-full flex items-center justify-center">
+                                <span className="text-white font-semibold">
+                                  {user.name.charAt(0).toUpperCase()}
+                                </span>
+                              </div>
+                            )}
                             <div>
                               <p className="text-white font-medium">{user.name}</p>
                               <p className="text-xs text-gray-400">{user.location}</p>
@@ -455,13 +709,17 @@ export default function UserManagementPage() {
                         </td>
                         <td className="p-4">
                           <div className="space-y-1">
-                            <Badge variant="secondary" className="capitalize">
+                            <Badge
+                              variant="secondary"
+                              className={`capitalize ${user.role === 'both' ? 'bg-gradient-to-r from-purple-900 to-blue-900 text-white border-none' : ''
+                                }`}
+                            >
                               {user.role}
                             </Badge>
-                            {user.role !== user.currentRole && (
-                              <p className="text-xs text-gray-400">as {user.currentRole}</p>
-                            )}
                           </div>
+                        </td>
+                        <td className="p-4">
+                          <span className="text-sm text-gray-300 font-mono">{user.referralCode}</span>
                         </td>
                         <td className="p-4">
                           <div className="flex items-center gap-2">
@@ -480,24 +738,29 @@ export default function UserManagementPage() {
                           </div>
                         </td>
                         <td className="p-4">
-                          {user.role === 'freelancer' ? (
-                            <div className="space-y-1">
-                              <div className="flex items-center gap-1">
-                                <Star className="w-4 h-4 text-yellow-500" />
-                                <span className="text-sm text-white">{user.rating?.toFixed(1) || 0}</span>
-                                <span className="text-xs text-gray-400">({user.completedJobs || 0} jobs)</span>
-                              </div>
-                              <p className="text-xs text-gray-400">₹{((user.totalEarnings || 0) / 1000).toFixed(1)}k earned</p>
-                            </div>
-                          ) : (
-                            <div className="space-y-1">
-                              <p className="text-sm text-white">₹{((user.totalSpent || 0) / 1000).toFixed(1)}k spent</p>
-                              <p className="text-xs text-gray-400">{user.projectsPosted || 0} projects</p>
-                            </div>
+                          <div className="flex items-center gap-1">
+                            <DollarSign className="w-4 h-4 text-green-500" />
+                            <span className="text-sm text-white">₹{(user.totalSpent || 0).toLocaleString()}</span>
+                          </div>
+                          <p className="text-xs text-gray-400">{user.projectsPosted || 0} projects</p>
+                        </td>
+                        <td className="p-4">
+                          <div className="flex items-center gap-1">
+                            {user.role === 'freelancer' || user.role === 'both' ? (
+                              <>
+                                <DollarSign className="w-4 h-4 text-purple-500" />
+                                <span className="text-sm text-white">₹{((user.totalEarnings || 0) / 1000).toFixed(1)}k</span>
+                              </>
+                            ) : (
+                              <span className="text-sm text-gray-600">-</span>
+                            )}
+                          </div>
+                          {(user.role === 'freelancer' || user.role === 'both') && (
+                            <p className="text-xs text-gray-400">{user.completedJobs || 0} jobs</p>
                           )}
                         </td>
                         <td className="p-4">
-                          <div className="flex items-center gap-1 text-sm text-gray-400">
+                          <div className="flex items-center gap-1 text-sm text-gray-400 whitespace-nowrap">
                             <Clock className="w-4 h-4" />
                             {user.lastActive}
                           </div>
@@ -522,11 +785,20 @@ export default function UserManagementPage() {
                                 <Eye className="w-4 h-4 mr-2" />
                                 View Details
                               </DropdownMenuItem>
-                              <DropdownMenuItem className="cursor-pointer">
+                              <DropdownMenuItem
+                                className="cursor-pointer"
+                                onClick={() => {
+                                  setUserToEdit(user);
+                                  setEditModalOpen(true);
+                                }}
+                              >
                                 <Edit className="w-4 h-4 mr-2" />
                                 Edit Profile
                               </DropdownMenuItem>
-                              <DropdownMenuItem className="cursor-pointer">
+                              <DropdownMenuItem
+                                className="cursor-pointer"
+                                onClick={() => window.location.href = `/messages?userId=${user.id}`}
+                              >
                                 <Mail className="w-4 h-4 mr-2" />
                                 Send Message
                               </DropdownMenuItem>
@@ -582,21 +854,38 @@ export default function UserManagementPage() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className="text-gray-300"
+              className="bg-[#2a2a2a] border-gray-700 text-white"
             >
               <ChevronLeft className="w-4 h-4" />
             </Button>
-
-            <span className="text-gray-400 text-sm">Page {currentPage} of {totalPages}</span>
-
+            <div className="flex items-center gap-1">
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                let pageNum = i + 1;
+                if (totalPages > 5 && currentPage > 3) {
+                  pageNum = currentPage - 2 + i;
+                  if (pageNum > totalPages) pageNum = totalPages - (4 - i);
+                }
+                return (
+                  <Button
+                    key={i}
+                    variant={currentPage === pageNum ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setCurrentPage(pageNum)}
+                    className={currentPage === pageNum ? "bg-purple-600" : "bg-[#2a2a2a] border-gray-700 text-white"}
+                  >
+                    {pageNum}
+                  </Button>
+                );
+              })}
+            </div>
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
-              className="text-gray-300"
+              className="bg-[#2a2a2a] border-gray-700 text-white"
             >
               <ChevronRight className="w-4 h-4" />
             </Button>
@@ -604,14 +893,17 @@ export default function UserManagementPage() {
         </div>
       </Card>
 
-      {/* User Details Modal */}
+      {/* Modals */}
       <UserDetailsModal
         user={selectedUser}
         open={detailsModalOpen}
-        onClose={() => {
-          setDetailsModalOpen(false);
-          setSelectedUser(null);
-        }}
+        onClose={() => setDetailsModalOpen(false)}
+      />
+      <EditUserModal
+        user={userToEdit}
+        open={editModalOpen}
+        onClose={() => setEditModalOpen(false)}
+        onSave={handleUpdateUser}
       />
     </div>
   );

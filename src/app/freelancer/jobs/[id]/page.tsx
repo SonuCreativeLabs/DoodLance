@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { JobDetailsModal } from '@/components/freelancer/jobs/JobDetailsModal';
 import { Job } from '@/components/freelancer/jobs/types';
+import { JobDetailsSkeleton } from '@/components/skeletons/JobDetailsSkeleton';
 
 export default function JobDetailsPage({ params }: { params: { id: string } }) {
   const router = useRouter();
@@ -101,12 +102,7 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
   };
 
   if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center h-screen bg-[#0a0a0a] text-white p-4">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mb-4" />
-        <p className="text-white/60">Loading job details...</p>
-      </div>
-    );
+    return <JobDetailsSkeleton />;
   }
 
   if (error || !job) {

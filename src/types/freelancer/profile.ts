@@ -1,12 +1,7 @@
-export interface Experience {
+export interface Achievement {
   id: string;
-  role: string;
+  title: string;
   company: string;
-  location: string;
-  startDate: string;
-  endDate?: string;
-  isCurrent: boolean;
-  description: string;
 }
 
 export interface Service {
@@ -17,6 +12,7 @@ export interface Service {
   type?: 'online' | 'in-person';
   deliveryTime: string;
   features?: string[];
+  videoUrls?: string[];
   category?: string;
 }
 
@@ -56,7 +52,7 @@ export interface ProfileData {
   online: boolean;
   location: string;
   skills: string[];
-  experience: Experience[];
+  achievements: Achievement[];
   services: Service[];
   portfolio: PortfolioItem[];
   reviews: Review[];
@@ -64,9 +60,13 @@ export interface ProfileData {
   workingHours?: string;
   completedJobs?: number;
   activeJobs?: number;
+  username?: string;
   cricketRole?: string;
   battingStyle?: string;
   bowlingStyle?: string;
+  dateOfBirth?: string;
+  avatar?: string;
+  coverImage?: string;
 }
 
 export interface ProfilePreviewProps {
