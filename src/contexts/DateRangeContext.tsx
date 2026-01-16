@@ -18,7 +18,7 @@ const defaultDateRange = {
 
 const DateRangeContext = createContext<DateRangeContextType>({
   dateRange: defaultDateRange,
-  updateDateRange: () => {}
+  updateDateRange: () => { }
 });
 
 export function DateRangeProvider({ children }: { children: ReactNode }) {
@@ -44,14 +44,14 @@ export function DateRangeProvider({ children }: { children: ReactNode }) {
 
   const updateDateRange = (start: Date, end: Date) => {
     if (!start || !end) return;
-    
-    const newDateRange = { 
-      start: new Date(start), 
-      end: new Date(end) 
+
+    const newDateRange = {
+      start: new Date(start),
+      end: new Date(end)
     };
-    
+
     setDateRange(newDateRange);
-    
+
     // Save to localStorage for persistence
     if (typeof window !== 'undefined') {
       try {
@@ -66,9 +66,7 @@ export function DateRangeProvider({ children }: { children: ReactNode }) {
   };
 
   // Don't render children until we've loaded the saved date range
-  if (!isMounted) {
-    return null;
-  }
+
 
   return (
     <DateRangeContext.Provider value={{ dateRange, updateDateRange }}>
@@ -79,15 +77,15 @@ export function DateRangeProvider({ children }: { children: ReactNode }) {
 
 export function useDateRange() {
   const context = useContext(DateRangeContext);
-  
+
   // This should never happen because of the default context value
   if (!context) {
     console.error('useDateRange must be used within a DateRangeProvider');
     return {
       dateRange: defaultDateRange,
-      updateDateRange: () => {}
+      updateDateRange: () => { }
     };
   }
-  
+
   return context;
 }

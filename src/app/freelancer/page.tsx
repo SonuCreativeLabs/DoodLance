@@ -33,6 +33,11 @@ export default function FreelancerHome() {
   const [isLoadingStats, setIsLoadingStats] = useState(true);
   const [stats, setStats] = useState<any>(null);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   useEffect(() => {
     // Always show header and navbar for the home page
@@ -81,6 +86,14 @@ export default function FreelancerHome() {
     // Navigate to the feed page with job details open
     router.push(`/freelancer/feed?jobId=${job.id}`);
   };
+
+  if (!isMounted) {
+    return (
+      <div className="min-h-screen bg-[#111111] pb-16 sm:pb-20 lg:pb-24">
+        {/* Render a loading skeleton that matches the initial server output if possible, or just a safe empty container */}
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#111111] pb-16 sm:pb-20 lg:pb-24">

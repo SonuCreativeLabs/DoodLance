@@ -20,51 +20,11 @@ export default function AvailabilityPage() {
   const { days, updateDays, isLoading } = useAvailability();
   const { listings } = useListings();
   const [currentWeekStart, setCurrentWeekStart] = useState(startOfWeek(new Date()));
+  const [isMounted, setIsMounted] = useState(false);
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-[#0F0F0F] text-white flex flex-col">
-        {/* Sticky Header */}
-        <div className="sticky top-0 z-10 bg-[#0F0F0F] border-b border-white/5">
-          <div className="container mx-auto px-4 py-3">
-            <div className="flex items-center">
-              <Skeleton className="h-8 w-8 rounded-full" />
-              <div className="ml-3">
-                <Skeleton className="h-5 w-40 mb-1" />
-                <Skeleton className="h-3 w-32" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex-1 overflow-y-auto">
-          <div className="container mx-auto px-4 py-6 space-y-6">
-            <div className="mb-4">
-              <Skeleton className="h-6 w-64 mb-2" />
-              <Skeleton className="h-4 w-96" />
-            </div>
-
-            <div className="bg-[#1E1E1E] border border-white/5 rounded-xl p-6 space-y-4">
-              <Skeleton className="h-6 w-32 mb-4" />
-              <Skeleton className="h-20 w-full" />
-              <Skeleton className="h-10 w-full" />
-            </div>
-
-            <div className="bg-[#1E1E1E] border border-white/5 rounded-xl p-6 flex justify-between items-center">
-              <div className="flex gap-3">
-                <Skeleton className="h-10 w-10 rounded-full" />
-                <div className="space-y-2">
-                  <Skeleton className="h-5 w-32" />
-                  <Skeleton className="h-4 w-48" />
-                </div>
-              </div>
-              <Skeleton className="h-8 w-14 rounded-full" />
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Booking notice state
   const [enableAdvanceNotice, setEnableAdvanceNotice] = useState(false);
@@ -237,6 +197,51 @@ export default function AvailabilityPage() {
     const displayHour = hour % 12 || 12;
     return `${displayHour}:${minutes} ${ampm}`;
   };
+
+  if (!isMounted || isLoading) {
+    return (
+      <div className="min-h-screen bg-[#0F0F0F] text-white flex flex-col">
+        {/* Sticky Header */}
+        <div className="sticky top-0 z-10 bg-[#0F0F0F] border-b border-white/5">
+          <div className="container mx-auto px-4 py-3">
+            <div className="flex items-center">
+              <Skeleton className="h-8 w-8 rounded-full" />
+              <div className="ml-3">
+                <Skeleton className="h-5 w-40 mb-1" />
+                <Skeleton className="h-3 w-32" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-y-auto">
+          <div className="container mx-auto px-4 py-6 space-y-6">
+            <div className="mb-4">
+              <Skeleton className="h-6 w-64 mb-2" />
+              <Skeleton className="h-4 w-96" />
+            </div>
+
+            <div className="bg-[#1E1E1E] border border-white/5 rounded-xl p-6 space-y-4">
+              <Skeleton className="h-6 w-32 mb-4" />
+              <Skeleton className="h-20 w-full" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+
+            <div className="bg-[#1E1E1E] border border-white/5 rounded-xl p-6 flex justify-between items-center">
+              <div className="flex gap-3">
+                <Skeleton className="h-10 w-10 rounded-full" />
+                <div className="space-y-2">
+                  <Skeleton className="h-5 w-32" />
+                  <Skeleton className="h-4 w-48" />
+                </div>
+              </div>
+              <Skeleton className="h-8 w-14 rounded-full" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="min-h-screen bg-[#0F0F0F] text-white flex flex-col">
       {/* Sticky Header */}
