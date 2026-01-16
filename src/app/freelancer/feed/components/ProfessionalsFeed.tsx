@@ -288,14 +288,32 @@ export default function ProfessionalsFeed({
             </div>
           </div>
           {/* Footer - Price and Hire Button */}
-          <div className="flex items-center justify-between pt-2 border-t border-white/5 mt-3 mb-2">
-            <div className="flex items-center gap-1">
-              <span className="text-sm font-medium text-white/70 drop-shadow-sm">From</span>
-              <span className="text-lg font-bold text-white drop-shadow-sm">₹{getServicePrice(item, searchQuery, selectedCategory).toLocaleString()}</span>
-            </div>
-            <button className="bg-gradient-to-r from-purple-600 via-purple-500 to-purple-400 text-white py-1.5 px-3 rounded-lg text-sm font-medium transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/25 hover:from-purple-700 hover:to-purple-500 relative z-20" onClick={(e) => { e.stopPropagation(); }}>
-              <span className="relative z-10">Hire Now</span>
-            </button>
+          <div className="flex items-center justify-between pt-2 border-t border-white/5 mt-3 mb-2 min-h-[40px]">
+            {item.services && item.services.length > 0 ? (
+              <>
+                <div className="flex items-center gap-1">
+                  <span className="text-sm font-medium text-white/70 drop-shadow-sm">From</span>
+                  <span className="text-lg font-bold text-white drop-shadow-sm">₹{getServicePrice(item, searchQuery, selectedCategory).toLocaleString()}</span>
+                </div>
+                <button
+                  className="bg-gradient-to-r from-purple-600 via-purple-500 to-purple-400 text-white py-1.5 px-3 rounded-lg text-sm font-medium transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/25 hover:from-purple-700 hover:to-purple-500 relative z-20"
+                  onClick={(e) => { e.stopPropagation(); }}
+                >
+                  <span className="relative z-10">Hire Now</span>
+                </button>
+              </>
+            ) : (
+              <div className="flex items-center justify-between w-full">
+                <span className="text-xs text-white/40 italic">No services listed</span>
+                <button
+                  disabled
+                  className="bg-white/5 text-white/40 border border-white/5 py-1.5 px-3 rounded-lg text-sm font-medium cursor-not-allowed relative z-20"
+                  onClick={(e) => { e.stopPropagation(); }}
+                >
+                  Hire Now
+                </button>
+              </div>
+            )}
           </div>
         </div>
       );
