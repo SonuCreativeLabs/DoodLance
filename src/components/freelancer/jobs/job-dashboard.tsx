@@ -127,7 +127,7 @@ const convertBookingToJob = (booking: any): Job => {
       rating: 4.5,
       jobsCompleted: 10,
       memberSince: new Date().toISOString().split('T')[0],
-      phoneNumber: booking.providerPhone || booking.client?.phone,
+      phoneNumber: booking.clientPhone || booking.client?.phone || booking.providerPhone,
       image: booking.clientAvatar || '',
       moneySpent: 50000,
       location: booking.location || 'Remote',
@@ -190,18 +190,21 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
       skills: Array.isArray(dbJob.skills) ? dbJob.skills : [],
       duration: dbJob.duration || 'Not specified',
       experienceLevel: dbJob.experienceLevel || 'Any',
-      client: dbJob.client || {
-        name: 'Unknown Client',
-        rating: 4.5,
-        jobsCompleted: 10,
-        memberSince: new Date().toISOString().split('T')[0],
-        phoneNumber: dbJob.client?.phone || dbJob.client?.phoneNumber,
-        image: '',
-        moneySpent: 50000,
-        location: 'Location not specified',
-        joinedDate: new Date().toISOString().split('T')[0],
-        freelancersWorked: 15,
-        freelancerAvatars: []
+      client: {
+        ...(dbJob.client || {
+          name: 'Unknown Client',
+          rating: 4.5,
+          jobsCompleted: 10,
+          memberSince: new Date().toISOString().split('T')[0],
+          image: '',
+          moneySpent: 50000,
+          location: 'Location not specified',
+          joinedDate: new Date().toISOString().split('T')[0],
+          freelancersWorked: 15,
+          freelancerAvatars: []
+        }),
+        // Explicitly set/overwrite phoneNumber to ensure we check all sources
+        phoneNumber: dbJob.client?.phone || dbJob.client?.phoneNumber || dbJob.providerPhone || dbJob.client?.phoneNumber
       },
       cancellationDetails: dbJob.cancellationDetails,
       rating: dbJob.rating,

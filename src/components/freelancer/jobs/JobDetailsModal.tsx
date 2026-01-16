@@ -15,6 +15,7 @@ import { ClientProfile } from './ClientProfile';
 import { SuccessMessage } from '@/components/ui/success-message';
 import { CollapsibleTimeline, createTimelineItems } from './CollapsibleTimeline';
 import { getJobDurationLabel, getWorkModeLabel } from '@/app/freelancer/feed/types';
+import { CricketWhiteBallSpinner } from '@/components/ui/CricketWhiteBallSpinner';
 
 // Experience level mapping for display
 const getExperienceLevelDisplayName = (level: string) => {
@@ -89,6 +90,11 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
   const [showFreelancerRating, setShowFreelancerRating] = useState(false);
   const [showClientRating, setShowClientRating] = useState(false);
   const [commissionRate, setCommissionRate] = useState(0.25);
+
+  // Loading states for actions
+  const [isStarting, setIsStarting] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
+  const [isCompleting, setIsCompleting] = useState(false);
 
   useEffect(() => {
     fetch('/api/public-config')
@@ -243,6 +249,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
     }
 
     try {
+      setIsCancelling(true);
       console.log('Attempting to cancel job:', job.id);
       console.log('API URL:', `/api/jobs/${job.id}`);
 
@@ -282,6 +289,8 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
       console.error('Error cancelling job:', error);
       const errorMessage = error instanceof Error ? error.message : 'Network error occurred';
       alert(`Failed to cancel job: ${errorMessage}`);
+    } finally {
+      setIsCancelling(false);
     }
   };
 
@@ -303,6 +312,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
     setOtpError('');
 
     try {
+      setIsStarting(true);
       console.log('Starting job:', job.id);
 
       const response = await fetch(`/api/jobs/${job.id}`, {
@@ -364,6 +374,8 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
     } catch (error) {
       console.error('Error starting job:', error);
       alert('Failed to start job. Please try again.');
+    } finally {
+      setIsStarting(false);
     }
   };
 
@@ -383,6 +395,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
   const confirmMarkComplete = async () => {
 
     try {
+      setIsCompleting(true);
       console.log('Attempting to complete job:', job.id);
       console.log('API URL:', `/api/jobs/${job.id}`);
 
@@ -441,6 +454,8 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
       console.error('Error completing job:', error);
       const errorMessage = error instanceof Error ? error.message : 'Network error occurred';
       alert(`Failed to complete job: ${errorMessage}`);
+    } finally {
+      setIsCompleting(false);
     }
   };
 
@@ -1625,9 +1640,16 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                     variant="destructive"
                     className="flex-1 h-10 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-medium shadow-lg shadow-red-600/25 hover:shadow-red-600/40 transition-all duration-200"
                     onClick={confirmCancelJob}
-                    disabled={!cancelNotes.trim()}
+                    disabled={!cancelNotes.trim() || isCancelling}
                   >
-                    Yes, Cancel Job
+                    {isCancelling ? (
+                      <div className="flex items-center gap-2">
+                        <CricketWhiteBallSpinner className="w-5 h-5 border-red-200" />
+                        <span>Cancelling...</span>
+                      </div>
+                    ) : (
+                      'Yes, Cancel Job'
+                    )}
                   </Button>
                 </div>
               </div>
@@ -1784,9 +1806,16 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                     type="button"
                     className="flex-1 h-10 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40 transition-all duration-200"
                     onClick={confirmStartJob}
-                    disabled={otpDigits.some(digit => digit === '')}
+                    disabled={otpDigits.some(digit => digit === '') || isStarting}
                   >
-                    Start Job
+                    {isStarting ? (
+                      <div className="flex items-center gap-2">
+                        <CricketWhiteBallSpinner className="w-5 h-5 border-blue-200" />
+                        <span>Starting...</span>
+                      </div>
+                    ) : (
+                      'Start Job'
+                    )}
                   </Button>
                 </div>
               </div>
@@ -1999,9 +2028,16 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                     type="button"
                     className="flex-1 h-10 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-medium shadow-lg shadow-green-600/25 hover:shadow-green-600/40 transition-all duration-200"
                     onClick={confirmMarkComplete}
-                    disabled={rating === 0 || !review.trim()}
+                    disabled={rating === 0 || !review.trim() || isCompleting}
                   >
-                    Mark as Complete
+                    {isCompleting ? (
+                      <div className="flex items-center gap-2">
+                        <CricketWhiteBallSpinner className="w-5 h-5 border-green-200" />
+                        <span>Completing...</span>
+                      </div>
+                    ) : (
+                      'Mark as Complete'
+                    )}
                   </Button>
                 </div>
               </div>

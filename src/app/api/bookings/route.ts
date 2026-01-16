@@ -117,6 +117,7 @@ async function handleGetBookings(request: NextRequest, user: { id: string, role?
                     select: {
                         name: true,
                         avatar: true,
+                        phone: true, // Added phone
                     }
                 }
             },
@@ -128,6 +129,7 @@ async function handleGetBookings(request: NextRequest, user: { id: string, role?
             id: b.id,
             title: b.service.title,
             clientName: b.client.name,
+            clientPhone: b.client.phone, // Added clientPhone
             freelancerName: b.service.provider.name,
             freelancerId: b.service.provider.id,
             freelancerAvatar: b.service.provider.avatar,

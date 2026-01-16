@@ -153,8 +153,17 @@ const BookingCard = ({ booking, showActions = true }: BookingCardProps) => {
             <div className="flex gap-2">
               <Button
                 size="sm"
-                variant="outline"
-                className="w-full border-white/20 text-white/70 hover:bg-white/10 hover:border-white/30 transition-all duration-300 !rounded-lg"
+                className="w-full text-white h-9 text-xs font-medium shadow-md transition-all duration-200 flex items-center justify-center gap-1.5 !rounded-lg border-0"
+                style={{
+                  background: 'linear-gradient(135deg, #2131e2 0%, #1d59eb 100%)',
+                  boxShadow: '0 4px 14px 0 rgba(33, 49, 226, 0.25)'
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.background = 'linear-gradient(135deg, #1d2bcb 0%, #1a4fd3 100%)';
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.background = 'linear-gradient(135deg, #2131e2 0%, #1d59eb 100%)';
+                }}
                 onClick={(event) => {
                   event.stopPropagation()
                   if (booking.providerPhone) {
@@ -165,8 +174,8 @@ const BookingCard = ({ booking, showActions = true }: BookingCardProps) => {
                   }
                 }}
               >
-                <PhoneIcon className="w-4 h-4 mr-2" />
-                Call
+                <PhoneIcon className="w-3.5 h-3.5" />
+                <span>Call</span>
               </Button>
             </div>
           )}
@@ -316,7 +325,7 @@ const HistoryCard = ({ booking }: { booking: Booking }) => {
   const { showBookAgain, setShowBookAgain, BookAgainModal } = useBookAgain(historyJobMock)
 
   const handleOpenDetails = () => {
-    router.push(`/client/bookings/history/${encodeURIComponent(booking["#"])}`)
+    router.push(`/client/bookings/${encodeURIComponent(booking["#"])}`)
   }
 
   return (
