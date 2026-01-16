@@ -21,6 +21,8 @@ export type BaseProfessional = {
   reviews?: number;
   completedJobs?: number;
   location: string;
+  area?: string;
+  city?: string;
   responseTime?: string;
   image?: string;
   avatar?: string;

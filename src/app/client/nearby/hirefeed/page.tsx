@@ -125,6 +125,14 @@ export default function IntegratedExplorePage() {
 
     const cricketRole = freelancer.cricketRole || getCricketRole(freelancer.service);
 
+    // Format location: Area, City (if available) -> Location (DB) -> City, State -> Fallback
+    let displayLocation = freelancer.location;
+    if (freelancer.area && freelancer.city) {
+      displayLocation = `${freelancer.area}, ${freelancer.city}`;
+    } else if (freelancer.city) {
+      displayLocation = `${freelancer.city}${freelancer.location && freelancer.location.includes(freelancer.city) ? '' : ''}`;
+    }
+
     return {
       ...freelancer, // This includes the services array for pricing calculation
       id: freelancer.id.toString(),
@@ -143,7 +151,10 @@ export default function IntegratedExplorePage() {
       category: freelancer.service,
       cricketRole: cricketRole,
       expertise: freelancer.expertise,
-      experience: freelancer.experience
+      experience: freelancer.experience,
+      location: displayLocation, // Use the formatted location
+      area: freelancer.area,
+      city: freelancer.city
     };
   };
 

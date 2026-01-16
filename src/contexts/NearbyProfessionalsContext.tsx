@@ -11,6 +11,8 @@ export interface Professional {
   reviews: number;
   completedJobs: number;
   location: string;
+  area?: string;
+  city?: string;
   responseTime: string;
   image: string;
   avatar?: string;
