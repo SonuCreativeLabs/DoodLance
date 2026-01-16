@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Star, Edit2, Camera, Upload, Loader2, RefreshCw, User } from "lucide-react";
 import { toast } from "sonner";
 import { usePersonalDetails } from '@/contexts/PersonalDetailsContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useSkills } from '@/contexts/SkillsContext';
 import { useReviews } from '@/contexts/ReviewsContext';
 import { usePortfolio } from '@/contexts/PortfolioContext';
@@ -58,6 +59,7 @@ export function ProfileHeader({
   personalDetails: propPersonalDetails
 }: ProfileHeaderProps) {
   const { personalDetails: contextPersonalDetails } = usePersonalDetails();
+  const { user } = useAuth();
 
   // Use prop if available (for preview/public view), otherwise context
   const personalDetails = propPersonalDetails || contextPersonalDetails;
@@ -516,6 +518,7 @@ export function ProfileHeader({
         isOpen={isPreviewOpen}
         onClose={handlePreviewClose}
         profileData={{
+          id: user?.id,
           name: personalDetails.name,
           title: personalDetails.cricketRole || '',
           avatar: personalDetails.avatarUrl || profileImage || undefined,
@@ -523,6 +526,8 @@ export function ProfileHeader({
           rating: reviewsData?.averageRating || 0,
           reviewCount: reviewsData?.totalReviews || 0,
           location: personalDetails.location,
+          area: personalDetails.area,
+          city: personalDetails.city,
           online: personalDetails.online,
           username: personalDetails.username,
           isVerified: personalDetails.isVerified,

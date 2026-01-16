@@ -40,6 +40,7 @@ export interface Availability {
 }
 
 export interface ProfileData {
+  id?: string;
   name: string;
   title: string;
   about: string;
@@ -51,6 +52,8 @@ export interface ProfileData {
   completionRate: number;
   online: boolean;
   location: string;
+  area?: string;
+  city?: string;
   skills: (string | any)[];
   achievements: Achievement[];
   services: Service[];

@@ -3,6 +3,7 @@
 import { useRef, useEffect, useCallback, useMemo, memo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createPortal } from 'react-dom';
+import { toast } from 'sonner';
 import {
   Share2,
   X,
@@ -29,6 +30,7 @@ import { getSkillInfo, type SkillInfo } from '@/utils/skillUtils';
 import { IconButton } from '@/components/ui/icon-button';
 import { ProfileHeader } from './ProfileHeader';
 import { PortfolioItemModal } from '@/components/common/PortfolioItemModal';
+import { ServiceDetailModal } from '@/components/common/ServiceDetailModal';
 
 // Types
 import type {
@@ -66,6 +68,8 @@ const ProfilePreview = memo(({
   const [isSkillDialogOpen, setIsSkillDialogOpen] = useState(false);
   const [selectedSkillInfo, setSelectedSkillInfo] = useState<SkillInfo | null>(null);
   const [isHoursDropdownOpen, setIsHoursDropdownOpen] = useState(false);
+  const [selectedService, setSelectedService] = useState<any>(null);
+  const [isServiceDetailOpen, setIsServiceDetailOpen] = useState(false);
 
   // Define tabs with their corresponding section IDs
   const tabs = [
@@ -616,69 +620,74 @@ const ProfilePreview = memo(({
                 icon={Share2}
                 onClick={async () => {
                   try {
+                    // Construct profile URL - simplified to just /username
+                    const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+                    let profilePath = '';
+
+                    if (profileData.username) {
+                      profilePath = `/${profileData.username}`;
+                    } else if (profileData.id) {
+                      profilePath = `/client/freelancer/${profileData.id}`;
+                    }
+
+                    if (!profilePath) {
+                      toast.error("Set a username or save your profile to share!");
+                      return;
+                    }
+
+                    // Clean URL for sharing
+                    const shareUrl = `${baseUrl}${profilePath}`;
+
                     const shareData = {
                       title: `${profileData.name}'s Profile`,
                       text: `Check out ${profileData.name}'s profile on DoodLance`,
-                      url: typeof window !== 'undefined' ? window.location.href : ''
+                      url: shareUrl
                     };
 
-                    // Try Web Share API first
+                    // Try Web Share API first (Native Share Sheet)
                     if (navigator.share) {
-                      await navigator.share(shareData);
-                      return;
-                    }
-
-                    // Fallback to clipboard
-                    if (navigator.clipboard && shareData.url) {
-                      await navigator.clipboard.writeText(shareData.url);
-                      // Show feedback
-                      const button = document.getElementById('share-button');
-                      if (button) {
-                        button.setAttribute('data-copied', 'true');
-                        setTimeout(() => {
-                          button.setAttribute('data-copied', 'false');
-                        }, 2000);
+                      try {
+                        await navigator.share(shareData);
+                        return;
+                      } catch (err) {
+                        // If user cancels or share fails, auto-copy to clipboard as fallback (matching public profile)
+                        // This ensures "auto copying" even if the share sheet was dismissed or failed.
+                        console.debug('Share API interactions:', err);
                       }
-                      return;
                     }
 
-                    // Fallback for browsers that don't support either API
-                    const input = document.createElement('input');
-                    input.value = shareData.url;
-                    document.body.appendChild(input);
-                    input.select();
-                    document.execCommand('copy');
-                    document.body.removeChild(input);
-
-                    // Show feedback
-                    const button = document.getElementById('share-button');
-                    if (button) {
-                      button.setAttribute('data-copied', 'true');
-                      setTimeout(() => {
-                        button.setAttribute('data-copied', 'false');
-                      }, 2000);
+                    // Fallback to clipboard if Share API not supported or ignored/failed
+                    if (navigator.clipboard) {
+                      try {
+                        await navigator.clipboard.writeText(shareUrl);
+                        toast.success('Profile link copied to clipboard!');
+                        return;
+                      } catch (err) {
+                        console.error('Failed to copy', err);
+                      }
                     }
+
+                    // Fallback for older browsers
+                    try {
+                      const input = document.createElement('input');
+                      input.value = shareUrl;
+                      document.body.appendChild(input);
+                      input.select();
+                      document.execCommand('copy');
+                      document.body.removeChild(input);
+                      toast.success('Profile link copied to clipboard!');
+                    } catch (err) {
+                      toast.error('Failed to copy link');
+                    }
+
                   } catch (error) {
-                    // Handle share cancellation gracefully without logging
-                    if (error instanceof Error && error.name === 'AbortError') {
-                      // User canceled the share - no need to log this
-                      return;
-                    }
                     console.error('Error sharing profile:', error);
+                    toast.error('Failed to share profile');
                   }
                 }}
                 id="share-button"
                 aria-label="Share profile preview"
-                data-copied="false"
               />
-              <style jsx>{`
-                button[data-copied="true"]:after {
-                  content: '✓ Copied!';
-                }
-                button[data-copied="false"]:after {
-                  content: 'Share Profile';
-                }
-              `}</style>
             </div>
             <IconButton
               icon={X}
@@ -705,6 +714,8 @@ const ProfilePreview = memo(({
                 dateOfBirth: profileData.dateOfBirth,
                 bio: profileData.bio || profileData.about,
                 location: profileData.location,
+                area: profileData.area,
+                city: profileData.city,
                 cricketRole: profileData.cricketRole,
                 online: profileData.online,
                 username: profileData.username,
@@ -896,16 +907,22 @@ const ProfilePreview = memo(({
                   <div className="flex -mx-2 overflow-x-auto scrollbar-hide pb-2">
                     <div className="flex gap-4 px-2 items-start">
                       {profileData.services.map((service) => (
-                        <div key={service.id} className="w-80 flex-shrink-0 rounded-xl border border-white/5 bg-[#1E1E1E] flex flex-col relative overflow-hidden text-left">
+                        <div key={service.id} className="w-80 flex-shrink-0 rounded-xl border border-white/5 bg-[#1E1E1E] overflow-hidden flex flex-col relative group hover:border-white/10 transition-colors h-full">
                           <ServiceVideoCarousel
                             videoUrls={service.videoUrls?.filter(url => url) || []}
                             onVideoClick={(url) => window.open(url, '_blank')}
-                            className="rounded-t-xl"
+                            className="w-full"
                           />
 
-                          <div className="pt-6 pb-6 px-6 flex flex-col flex-1">
+                          <div
+                            className="p-5 flex flex-col flex-1 cursor-pointer"
+                            onClick={() => {
+                              setSelectedService(service);
+                              setIsServiceDetailOpen(true);
+                            }}
+                          >
                             {service.category && (
-                              <div className="mb-4 flex justify-start">
+                              <div className="mb-3 flex justify-start">
                                 <Badge className="bg-white/10 text-white/80 border-white/20 px-2 py-0.5 text-xs">
                                   {service.category}
                                 </Badge>
@@ -915,17 +932,6 @@ const ProfilePreview = memo(({
                             <h3 className="text-lg font-semibold text-white mb-3 line-clamp-2">{service.title}</h3>
 
                             <p className="text-sm text-white/60 line-clamp-3 mb-6">{service.description}</p>
-
-                            {service.features && service.features.length > 0 && (
-                              <ul className="space-y-2.5 text-left mb-6">
-                                {service.features.map((feature: string, i: number) => (
-                                  <li key={i} className="flex items-start">
-                                    <CheckCircle2 className="h-4.5 w-4.5 flex-shrink-0 text-purple-400 mr-2.5 mt-0.5" />
-                                    <span className="text-sm text-white/80 leading-tight">{feature}</span>
-                                  </li>
-                                ))}
-                              </ul>
-                            )}
 
                             <div className="mt-6 pt-4 relative mt-auto">
                               <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
@@ -1093,6 +1099,16 @@ const ProfilePreview = memo(({
         onClose={() => {
           setIsPortfolioModalOpen(false);
           setSelectedPortfolioItem(null);
+        }}
+      />
+
+      {/* Service Detail Modal */}
+      <ServiceDetailModal
+        service={selectedService}
+        isOpen={isServiceDetailOpen}
+        onClose={() => {
+          setIsServiceDetailOpen(false);
+          setSelectedService(null);
         }}
       />
     </div >
