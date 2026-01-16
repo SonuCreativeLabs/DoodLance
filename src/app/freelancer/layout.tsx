@@ -71,7 +71,7 @@ export default function FreelancerLayout({ children }: FreelancerLayoutProps) {
   return (
     <div className="min-h-screen bg-[#111111] text-white relative">
       {/* Header */}
-      {isHeaderVisible && !fullChatView && !isModalOpen && (
+      {isMounted && isHeaderVisible && !fullChatView && !isModalOpen && (
         <nav className="fixed top-0 left-0 right-0 border-b border-white/10 bg-[#111111]/95 backdrop-blur-xl z-[100]">
           <div className="container mx-auto px-4 h-16 flex items-center justify-between">
             <div className="flex items-center space-x-8">
@@ -121,7 +121,7 @@ export default function FreelancerLayout({ children }: FreelancerLayoutProps) {
         </nav>
       )}
       {/* Mobile Navigation */}
-      {isNavbarVisible && !fullChatView && !isModalOpen && (
+      {isMounted && isNavbarVisible && !fullChatView && !isModalOpen && (
         <div className="md:hidden fixed bottom-0 left-0 right-0 border-t border-white/10 bg-[#111111]/95 backdrop-blur-lg z-50">
           <div className="container mx-auto px-4">
             <div className="grid grid-cols-4 items-center h-16">
