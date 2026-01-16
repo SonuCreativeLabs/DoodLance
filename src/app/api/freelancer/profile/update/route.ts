@@ -75,7 +75,8 @@ export async function PATCH(request: NextRequest) {
             address,
             city,
             state,
-            postalCode
+            postalCode,
+            area
         } = body;
 
         // 1. Update User Table
@@ -107,6 +108,7 @@ export async function PATCH(request: NextRequest) {
         if (email !== undefined) userUpdates.email = email;
         if (phone !== undefined) userUpdates.phone = phone;
         if (username !== undefined) userUpdates.username = username;
+        if (area !== undefined) userUpdates.area = area;
 
         if (Object.keys(userUpdates).length > 0) {
             await prisma.user.update({
@@ -121,6 +123,7 @@ export async function PATCH(request: NextRequest) {
         if (city !== undefined) addressUpdates.city = city;
         if (state !== undefined) addressUpdates.state = state;
         if (postalCode !== undefined) addressUpdates.postalCode = postalCode;
+        if (area !== undefined) addressUpdates.area = area;
 
         // Geocode address to coordinates for map display
         let coords: string | undefined;
@@ -136,6 +139,7 @@ export async function PATCH(request: NextRequest) {
                 const currentUser = await prisma.user.findUnique({ where: { id: dbUser.id } });
                 const fullAddress = [
                     addressUpdates.address || currentUser?.address,
+                    addressUpdates.area || currentUser?.area,
                     addressUpdates.city || currentUser?.city,
                     addressUpdates.state || currentUser?.state,
                     addressUpdates.postalCode || currentUser?.postalCode
@@ -250,6 +254,7 @@ export async function PATCH(request: NextRequest) {
                 username: true,
                 displayId: true,
                 address: true,
+                area: true,
                 city: true,
                 state: true,
                 postalCode: true,

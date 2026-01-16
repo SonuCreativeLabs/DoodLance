@@ -52,6 +52,8 @@ interface FreelancerDetail {
     service: string;
     experience: string;
     location: string;
+    area?: string;
+    city?: string;
     distance: number;
     price: number;
     priceUnit: string;
@@ -697,7 +699,13 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
 
                                         <div className="mt-2 flex flex-col items-center gap-0.5 text-sm text-white/70">
                                             <div className="flex items-center gap-2">
-                                                <span>{freelancer.location}{freelancer.distance ? <><span className="text-white/40 mx-1 text-xs">|</span>{freelancer.distance < 1 ? `${(freelancer.distance * 1000).toFixed(0)}m` : `${freelancer.distance.toFixed(1)}km`} away</> : ''}</span>
+                                                <span>
+                                                    {freelancer.area && freelancer.city
+                                                        ? `${freelancer.area}, ${freelancer.city}`
+                                                        : freelancer.location
+                                                    }
+                                                    {freelancer.distance ? <><span className="text-white/40 mx-1 text-xs">|</span>{freelancer.distance < 1 ? `${(freelancer.distance * 1000).toFixed(0)}m` : `${freelancer.distance.toFixed(1)}km`} away</> : ''}
+                                                </span>
                                             </div>
                                             <div className="flex items-center gap-1">
                                                 <div className="flex items-center gap-1.5 font-semibold text-white">

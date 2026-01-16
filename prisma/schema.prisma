@@ -22,6 +22,7 @@ model User {
   phoneVerified          Boolean            @default(false)
   phoneVerifiedAt        DateTime?
   location               String?
+  area                   String?
   coords                 String
   bio                    String?
   gender                 String?
