@@ -375,7 +375,7 @@ export default function CheckoutPage() {
               {/* Transaction ID Input */}
               <div className="space-y-2">
                 <label className="text-sm font-medium text-white">
-                  Transaction ID / Reference No. <span className="text-red-400">*</span>
+                  UPI Transaction ID <span className="text-red-400">*</span>
                 </label>
                 <input
                   type="text"

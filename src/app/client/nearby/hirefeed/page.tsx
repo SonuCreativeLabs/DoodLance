@@ -125,13 +125,10 @@ export default function IntegratedExplorePage() {
 
     const cricketRole = freelancer.cricketRole || getCricketRole(freelancer.service);
 
-    // Format location: Area, City (if available) -> Location (DB) -> City, State -> Fallback
-    let displayLocation = freelancer.location;
-    if (freelancer.area && freelancer.city) {
-      displayLocation = `${freelancer.area}, ${freelancer.city}`;
-    } else if (freelancer.city) {
-      displayLocation = `${freelancer.city}${freelancer.location && freelancer.location.includes(freelancer.city) ? '' : ''}`;
-    }
+    // Format location: Area, City (if available) -> Location (DB) -> City -> Fallback
+    let displayLocation = freelancer.area && freelancer.city
+      ? `${freelancer.area}, ${freelancer.city}`
+      : (freelancer.location || '').split(',').slice(0, 2).join(',');
 
     return {
       ...freelancer, // This includes the services array for pricing calculation

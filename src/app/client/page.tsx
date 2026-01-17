@@ -438,7 +438,7 @@ export default function ClientHome() {
                                   <h3 className="font-semibold text-white text-xs leading-tight truncate px-1">{expert.name}</h3>
                                   <p className="text-purple-400 text-[10px] font-medium truncate mt-0.5 px-1">{expert.cricketRole || expert.service || 'Expert'}</p>
                                   <p className="text-white/70 text-[9px] mt-0.5 truncate px-1">
-                                    {expert.location}
+                                    {expert.area && expert.city ? `${expert.area}, ${expert.city}` : (expert.location || '').split(',').slice(0, 2).join(',')}
                                   </p>
                                   <p className="text-white/50 text-[9px] font-medium mt-0.5 truncate px-1">
                                     {expert.distance ? (
