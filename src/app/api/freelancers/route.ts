@@ -105,6 +105,7 @@ export async function GET(request: Request) {
                 id: p.id,
                 userId: p.userId,
                 name: p.user.name || 'Anonymous',
+                email: p.user.email, // Added for sorting
                 service: primaryService,
                 rating: p.rating || rating || 0,
                 reviews: p.reviews.length, // Bug fix: previously p.reviews.length || p.reviews.length ?
@@ -142,6 +143,14 @@ export async function GET(request: Request) {
                 p.services.some((s: any) => s.category === category || s.title.toLowerCase().includes(category.toLowerCase()))
             );
         }
+
+        // Custom Sort: Prioritize 'sonucreativelabs@gmail.com'
+        const PRIORITY_EMAIL = 'sonucreativelabs@gmail.com';
+        filtered.sort((a: any, b: any) => {
+            if (a.email === PRIORITY_EMAIL) return -1;
+            if (b.email === PRIORITY_EMAIL) return 1;
+            return 0; // Keep original order for others
+        });
 
         return NextResponse.json(filtered);
     } catch (error) {

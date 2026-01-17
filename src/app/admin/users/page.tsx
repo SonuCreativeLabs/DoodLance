@@ -964,7 +964,7 @@ export default function UserManagementPage() {
               <span className="text-red-400 font-medium">Warning:</span> This action cannot be undone. All data associated with this user (profile, wallet, messages) will be permanently deleted.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
+          <DialogFooter className="gap-2 sm:space-x-2">
             <Button variant="outline" onClick={() => setDeleteConfirmOpen(false)} disabled={loading}>Cancel</Button>
             <Button
               className="bg-red-600 hover:bg-red-700 text-white"

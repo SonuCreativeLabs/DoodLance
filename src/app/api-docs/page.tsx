@@ -3,7 +3,7 @@
 import dynamic from 'next/dynamic';
 import 'swagger-ui-react/swagger-ui.css';
 
-const SwaggerUI = dynamic(() => import('swagger-ui-react'), { 
+const SwaggerUI = dynamic(() => import('swagger-ui-react'), {
   ssr: false,
   loading: () => <div className="flex items-center justify-center min-h-screen">Loading API Documentation...</div>
 });
@@ -16,7 +16,7 @@ const apiSpec = {
     description: 'Complete API documentation for DoodLance platform',
     contact: {
       name: 'DoodLance Support',
-      email: 'support@doodlance.com',
+      email: 'support@bails.in',
     },
   },
   servers: [
@@ -297,7 +297,7 @@ const apiSpec = {
           {
             name: 'status',
             in: 'query',
-            schema: { 
+            schema: {
               type: 'string',
               enum: ['pending', 'confirmed', 'completed', 'cancelled']
             },

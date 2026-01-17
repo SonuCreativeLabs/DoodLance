@@ -29,7 +29,7 @@ export async function sendEmail({ to, subject, text, html }: SendEmailParams) {
     });
 
     await transporter.sendMail({
-      from: process.env.SMTP_FROM || '"DoodLance" <noreply@doodlance.com>',
+      from: process.env.SMTP_FROM || '"DoodLance" <noreply@bails.in>',
       to,
       subject,
       text,
@@ -124,4 +124,21 @@ export async function sendOTPEmail(email: string, code: string): Promise<boolean
 export function isValidEmail(email: string): boolean {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
+}
+
+const ADMIN_EMAIL = 'sathishraj@doodlance.com';
+
+/**
+ * Sends a notification email to the admin
+ * @param subject - Email subject
+ * @param content - Email content (text)
+ * @param html - Optional HTML content
+ */
+export async function sendAdminNotification(subject: string, content: string, html?: string): Promise<boolean> {
+  return await sendEmail({
+    to: ADMIN_EMAIL,
+    subject: `[Admin Alert] ${subject}`,
+    text: content,
+    html: html || content.replace(/\n/g, '<br>')
+  });
 }
