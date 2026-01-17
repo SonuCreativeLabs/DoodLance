@@ -504,10 +504,10 @@ export default function ClientHome() {
             </div>
           </section>
 
-          {/* Why DoodLance Section */}
+          {/* Why BAILS Section */}
           <section className="mb-4 relative z-0">
             <div className="mb-4">
-              <h2 className="text-base font-semibold text-white tracking-wide text-left">Why DoodLance?</h2>
+              <h2 className="text-base font-semibold text-white tracking-wide text-left">Why BAILS?</h2>
             </div>
             <div className="flex flex-row justify-center gap-2 md:gap-3 pb-4">
               {/* Local Delivery */}

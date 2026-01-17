@@ -63,9 +63,9 @@ const settingsCategories = [
 
 const defaultSettings = {
   // General
-  platformName: 'DoodLance',
-  platformUrl: 'https://doodlance.com',
-  supportEmail: 'support@doodlance.com',
+  platformName: 'BAILS',
+  platformUrl: 'https://bails.in',
+  supportEmail: 'support@bails.in',
   timezone: 'Asia/Kolkata',
   language: 'en',
   currency: 'INR',
@@ -632,9 +632,7 @@ export default function SettingsPage() {
           </div>
         ) : (
           <>
-            <h2 className="text-xl font-semibold text-white mb-4">
-              {settingsCategories.find(c => c.id === activeCategory)?.title}
-            </h2>
+            <h1 className="text-2xl font-bold text-white mb-6">Platform Settings | BAILS</h1>
             <p className="text-sm text-gray-400 mb-6">
               {settingsCategories.find(c => c.id === activeCategory)?.description}
             </p>

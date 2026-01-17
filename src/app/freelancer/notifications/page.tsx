@@ -1,19 +1,20 @@
 "use client";
-import { CheckCircle, Briefcase, MessageCircle, ArrowLeft, Inbox } from "lucide-react";
+import { CheckCircle, Briefcase, MessageCircle, ArrowLeft, Inbox, Calendar, Info, Clock, DollarSign } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { formatDistanceToNow } from "date-fns";
 
 interface Notification {
   id: string;
-  type: "job" | "message" | "payment" | "system";
   title: string;
-  description: string;
-  time: string;
-  icon: React.ReactNode;
-  unread: boolean;
+  message: string;
+  type: string;
   entityId?: string;
+  entityType?: string;
   actionUrl?: string;
+  isRead: boolean;
+  createdAt: string;
 }
 
 export default function NotificationsPage() {
@@ -30,12 +31,11 @@ export default function NotificationsPage() {
       }
 
       try {
-        // In production, fetch from your API
-        // const response = await fetch(`/api/notifications?userId=${user.id}`);
-        // const data = await response.json();
-        
-        // For now, set to empty state
-        setNotifications([]);
+        const response = await fetch(`/api/notifications`);
+        if (response.ok) {
+          const data = await response.json();
+          setNotifications(data.notifications || []);
+        }
       } catch (error) {
         console.error('Failed to fetch notifications:', error);
       } finally {
@@ -46,7 +46,32 @@ export default function NotificationsPage() {
     fetchNotifications();
   }, [user?.id]);
 
-  const unreadCount = notifications.filter(n => n.unread).length;
+  const unreadCount = notifications.filter(n => !n.isRead).length;
+
+  const getIcon = (type: string) => {
+    switch (type) {
+      case 'BOOKING_REQUEST':
+      case 'JOB_OFFER':
+        return <Briefcase className="w-5 h-5 text-purple-400" />;
+      case 'BOOKING_CONFIRMED':
+        return <Calendar className="w-5 h-5 text-green-400" />;
+      case 'PAYMENT_RECEIVED':
+      case 'REFERRAL_REWARD':
+        return <DollarSign className="w-5 h-5 text-yellow-400" />;
+      case 'MESSAGE':
+        return <MessageCircle className="w-5 h-5 text-blue-400" />;
+      default:
+        return <Info className="w-5 h-5 text-gray-400" />;
+    }
+  };
+
+  const getTimeAgo = (dateStr: string) => {
+    try {
+      return formatDistanceToNow(new Date(dateStr), { addSuffix: true });
+    } catch (e) {
+      return '';
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#111111]">
@@ -87,37 +112,66 @@ export default function NotificationsPage() {
         ) : (
           <div className="space-y-2">
             {notifications.map((notification: Notification) => (
-              <div
-                key={notification.id}
-                className={`rounded-2xl px-4 py-3 border transition-all duration-200 relative ${
-                  notification.unread
-                    ? 'bg-gradient-to-br from-[#1E1E1E] to-[#1A1A1A] border-white/5 hover:border-white/10'
-                    : 'bg-[#111111] border-white/5 hover:border-white/10'
-                }`}
-              >
-                <div className="flex items-start gap-3">
-                  <div className="flex-shrink-0 mt-0.5">
-                    {notification.icon}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-3 mb-1">
-                      <div className="flex-1 min-w-0">
-                        <h3 className={`text-[14px] font-semibold leading-tight ${
-                          notification.unread ? 'text-white' : 'text-white/90'
-                        }`}>
-                          {notification.title}
-                        </h3>
+              notification.actionUrl ? (
+                <Link href={notification.actionUrl} key={notification.id} className="block group">
+                  <div
+                    className={`rounded-2xl px-4 py-3 border transition-all duration-200 relative group-hover:scale-[0.99] ${!notification.isRead
+                        ? 'bg-gradient-to-br from-[#1E1E1E] to-[#1A1A1A] border-white/5 hover:border-white/10'
+                        : 'bg-[#111111] border-white/5 hover:border-white/10'
+                      }`}
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className="flex-shrink-0 mt-0.5 bg-white/5 p-2 rounded-full">
+                        {getIcon(notification.type)}
                       </div>
-                      <span className="text-xs text-white/50 flex-shrink-0">{notification.time}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-3 mb-1">
+                          <div className="flex-1 min-w-0">
+                            <h3 className={`text-[14px] font-semibold leading-tight ${!notification.isRead ? 'text-white' : 'text-white/90'
+                              }`}>
+                              {notification.title}
+                            </h3>
+                          </div>
+                          <span className="text-xs text-white/50 flex-shrink-0">{getTimeAgo(notification.createdAt)}</span>
+                        </div>
+                        <p className={`text-[12px] leading-relaxed ${!notification.isRead ? 'text-white/80' : 'text-white/70'
+                          }`}>
+                          {notification.message}
+                        </p>
+                      </div>
                     </div>
-                    <p className={`text-[12px] leading-relaxed ${
-                      notification.unread ? 'text-white/80' : 'text-white/70'
-                    }`}>
-                      {notification.description}
-                    </p>
+                  </div>
+                </Link>
+              ) : (
+                <div
+                  key={notification.id}
+                  className={`rounded-2xl px-4 py-3 border transition-all duration-200 relative ${!notification.isRead
+                      ? 'bg-gradient-to-br from-[#1E1E1E] to-[#1A1A1A] border-white/5 hover:border-white/10'
+                      : 'bg-[#111111] border-white/5 hover:border-white/10'
+                    }`}
+                >
+                  <div className="flex items-start gap-4">
+                    <div className="flex-shrink-0 mt-0.5 bg-white/5 p-2 rounded-full">
+                      {getIcon(notification.type)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-3 mb-1">
+                        <div className="flex-1 min-w-0">
+                          <h3 className={`text-[14px] font-semibold leading-tight ${!notification.isRead ? 'text-white' : 'text-white/90'
+                            }`}>
+                            {notification.title}
+                          </h3>
+                        </div>
+                        <span className="text-xs text-white/50 flex-shrink-0">{getTimeAgo(notification.createdAt)}</span>
+                      </div>
+                      <p className={`text-[12px] leading-relaxed ${!notification.isRead ? 'text-white/80' : 'text-white/70'
+                        }`}>
+                        {notification.message}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )
             ))}
           </div>
         )}

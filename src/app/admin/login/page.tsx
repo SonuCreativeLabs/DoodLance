@@ -6,8 +6,9 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Shield, Loader2, AlertCircle } from 'lucide-react';
+import { Loader2, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState('');
@@ -53,11 +54,18 @@ export default function AdminLoginPage() {
           <div className="p-8">
             {/* Logo & Title */}
             <div className="flex flex-col items-center mb-8">
-              <div className="w-16 h-16 bg-gradient-to-br from-purple-600 to-purple-800 rounded-2xl flex items-center justify-center mb-4">
-                <Shield className="w-8 h-8 text-white" />
+              <div className="relative w-20 h-20 mb-4">
+                <Image
+                  src="/images/LOGOS/BAILS TG.png"
+                  alt="BAILS Logo"
+                  fill
+                  className="object-contain"
+                />
               </div>
-              <h1 className="text-2xl font-bold text-white">Admin Portal</h1>
-              <p className="text-gray-400 mt-2">DoodLance Administration</p>
+              <h2 className="mt-6 text-3xl font-bold tracking-tight text-white">
+                Admin Login | BAILS
+              </h2>
+              <p className="text-gray-400 mt-2">BAILS Administration</p>
             </div>
 
             {/* Login Form */}
@@ -78,7 +86,7 @@ export default function AdminLoginPage() {
                   type="text"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@doodlance.com"
+                  placeholder="admin@bails.in"
                   className="bg-[#2a2a2a] border-gray-700 text-white placeholder:text-gray-500"
                   required
                 />

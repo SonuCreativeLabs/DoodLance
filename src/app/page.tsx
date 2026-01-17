@@ -52,8 +52,8 @@ export default function Home() {
               className="relative z-10 w-64 h-64 mb-0 overflow-hidden"
             >
               <Image
-                src="/images/LOGOS/Doodlance Logo.svg"
-                alt="DoodLance"
+                src="/images/LOGOS/BAILS TG.png"
+                alt="BAILS"
                 fill
                 className="object-cover scale-110"
                 priority
@@ -66,9 +66,9 @@ export default function Home() {
               className="relative z-20 flex flex-col items-center -mt-24"
             >
               <p
-                className="text-purple-400 text-sm md:text-base mt-4 font-medium"
+                className="text-white text-xs md:text-sm mt-4 font-semibold uppercase tracking-[0.3em]"
               >
-                {Array.from("Redefining Sports Freelancing").map((char, index) => (
+                {Array.from("Levelup Your Game").map((char, index) => (
                   <motion.span
                     key={index}
                     initial={{ opacity: 0 }}
@@ -99,13 +99,12 @@ export default function Home() {
               <div className="absolute top-0 left-0 w-full h-full bg-[url('/images/grid-pattern.svg')] bg-repeat opacity-[0.03]" />
             </div>
 
-            {/* Navbar Placeholder */}
             <header className="relative z-10 px-6 py-6 flex flex-col items-center max-w-7xl mx-auto w-full">
               <div className="flex flex-col items-center gap-4">
-                <div className="w-64 h-64 relative overflow-hidden">
+                <div className="w-64 h-64 relative overflow-hidden -mb-16">
                   <Image
-                    src="/images/LOGOS/Doodlance Logo.svg"
-                    alt="DoodLance"
+                    src="/images/LOGOS/BAILS TG.png"
+                    alt="BAILS"
                     fill
                     className="object-cover scale-110"
                   />
@@ -116,14 +115,14 @@ export default function Home() {
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.2, duration: 0.8 }}
-                  className="mb-2"
+                  className="mb-0"
                 >
                   <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-500/10 border border-purple-500/20 backdrop-blur-sm">
                     <span className="relative flex h-2 w-2">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
                       <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-500"></span>
                     </span>
-                    <span className="text-sm text-purple-300 font-medium">Premier Sports Freelancing Platform</span>
+                    <span className="text-sm text-purple-300 font-medium">Cricket Freelancing Platform</span>
                   </div>
                 </motion.div>
               </div>
@@ -137,13 +136,13 @@ export default function Home() {
                 transition={{ delay: 0.2, duration: 0.8 }}
                 className="text-center max-w-4xl mx-auto"
               >
-                <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-6 text-white leading-tight">
-                  Turn ur <span className="text-[#39FF14] drop-shadow-[0_0_15px_rgba(57,255,20,0.5)]">cricket passion</span><br />
-                  into <span className="text-[#39FF14] drop-shadow-[0_0_15px_rgba(57,255,20,0.5)]">paycheck</span>
+                <h1 className="text-4xl md:text-6xl lg:text-7xl font-serif font-extrabold italic tracking-tight mb-6 text-white leading-tight">
+                  Hire Cricket <span className="text-[#39FF14] drop-shadow-[0_0_15px_rgba(57,255,20,0.5)]">Pros</span><br />
+                  To <span className="text-[#39FF14] drop-shadow-[0_0_15px_rgba(57,255,20,0.5)]">Play</span> Anywhere, Anytime
                 </h1>
 
-                <p className="text-lg md:text-xl text-gray-400 max-w-3xl mx-auto mb-8 leading-relaxed">
-                  Hire or get hired as cricket players, coaches, and support staff.
+                <p className="text-lg md:text-xl text-gray-400 font-sans font-medium tracking-wide max-w-3xl mx-auto mb-8 leading-relaxed">
+                  Instantly hire net bowlers, sidearmers, match players, coaches and experts to level up your game.
                 </p>
 
                 {/* Action Button */}
@@ -155,7 +154,7 @@ export default function Home() {
                     whileTap={{ scale: 0.95 }}
                     className="group px-6 py-3 rounded-full bg-gradient-to-r from-[#6B46C1] via-[#4C1D95] to-[#2D1B69] text-white font-bold text-lg flex items-center gap-2 shadow-lg hover:shadow-md hover:shadow-[#4C1D95]/40 transition-all duration-300 transform hover:-translate-y-0.5 focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-[#6B46C1] disabled:opacity-50"
                   >
-                    Get Started <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                    Enter the Arena <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </motion.button>
                 </div>
               </motion.div>

@@ -171,7 +171,7 @@ export function ClientProfile({
                     <p className="text-sm font-medium text-white">
                       ₹{(client?.moneySpent || 0).toLocaleString('en-IN')}+
                     </p>
-                    <p className="text-xs text-gray-500">On DoodLance</p>
+                    <p className="text-xs text-gray-500">On BAILS</p>
                   </div>
                   <div className="text-right">
                     <h4 className="text-xs font-medium text-gray-400 mb-1">Bookings</h4>

@@ -104,8 +104,8 @@ export default function FreelancerProfileLogin() {
                     <div className="text-center space-y-2">
                         <div className="relative w-32 h-32 mx-auto mb-0 overflow-hidden">
                             <Image
-                                src="/images/LOGOS/Doodlance Logo.svg"
-                                alt="DoodLance"
+                                src="/images/LOGOS/BAILS TG.png"
+                                alt="BAILS Logo"
                                 fill
                                 className="object-cover scale-110"
                                 priority

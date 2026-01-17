@@ -259,7 +259,7 @@ const AdvancedKYC: React.FC = () => {
             <h3 className="font-medium text-white">Why verify your identity?</h3>
             <p className="text-sm text-white/60 mt-1">
               Verifying your identity helps build trust with clients and is required to access certain features
-              on DoodLance, including receiving payments and applying for premium jobs.
+              on BAILS, including receiving payments and applying for premium jobs.
             </p>
           </div>
         </div>

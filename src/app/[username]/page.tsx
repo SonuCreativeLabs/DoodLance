@@ -35,13 +35,13 @@ export async function generateMetadata({ params }: PageProps) {
 
     if (!user || !user.freelancerProfile) {
         return {
-            title: 'User Not Found | DoodLance',
+            title: 'User Not Found | BAILS',
         };
     }
 
     return {
-        title: `${user.name || user.username} - ${user.freelancerProfile.title || 'Freelancer'} | DoodLance`,
-        description: user.freelancerProfile.about || `Hire ${user.name} on DoodLance`,
+        title: `${user.name || user.username} - ${user.freelancerProfile.title || 'Freelancer'} | BAILS`,
+        description: user.freelancerProfile.about || `Hire ${user.name} on BAILS`,
         openGraph: {
             title: user.name || user.username,
             description: user.freelancerProfile.about,

@@ -94,7 +94,7 @@ export default function LoginDialog({ open, onOpenChange, onSuccess, redirectTo 
         <Dialog open={open} onOpenChange={handleDialogChange}>
             <DialogContent className="sm:max-w-md bg-[#111111] border-white/10 z-[10000]">
                 <DialogHeader>
-                    <DialogTitle className="text-white text-2xl font-bold text-center">Welcome to DoodLance</DialogTitle>
+                    <DialogTitle className="text-white text-2xl font-bold text-center">Welcome to BAILS</DialogTitle>
                     <DialogDescription className="text-white/50 text-sm text-center">
                         Sign in to continue
                     </DialogDescription>

@@ -75,12 +75,12 @@ export default function ReferralsPage() {
     if (!referralCode) return;
 
     const shareUrl = `https://bails.in/join?ref=${referralCode}`;
-    const shareText = `Join DoodLance and get cricket training from the best professionals! Use my referral code ${referralCode} to get 500 App Coins! ${shareUrl}`;
+    const shareText = `Join BAILS and get cricket training from the best professionals! Use my referral code ${referralCode} to get 500 App Coins! ${shareUrl}`;
 
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'Join DoodLance',
+          title: 'Join BAILS',
           text: shareText,
           url: shareUrl,
         });

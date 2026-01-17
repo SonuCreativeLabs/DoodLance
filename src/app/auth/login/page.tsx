@@ -69,21 +69,21 @@ export default function Login() {
         >
           {/* Logo & Title */}
           <div className="text-center space-y-2">
-            <div className="relative w-32 h-32 mx-auto mb-0 overflow-hidden">
+            <div className="relative w-64 h-64 mx-auto -mb-12 overflow-hidden">
               <Image
-                src="/images/LOGOS/Doodlance Logo.svg"
-                alt="DoodLance"
+                src="/images/LOGOS/BAILS TG.png"
+                alt="BAILS"
                 fill
                 className="object-cover scale-110"
                 priority
               />
             </div>
-            <h1 className="text-3xl font-bold tracking-tight text-white -mt-10">
-              Welcome to DoodLance
-            </h1>
-            <p className="text-white/50 text-sm">
-              Enter your email to get started
-            </p>
+            <div className="text-center mb-8">
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-600 bg-clip-text text-transparent">
+                Welcome to BAILS
+              </h1>
+              <p className="text-gray-400 mt-2">Sign in to continue to your account</p>
+            </div>
           </div>
 
           {/* Card */}

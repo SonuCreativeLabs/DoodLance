@@ -1,19 +1,22 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Bell, ArrowLeft } from "lucide-react";
+import { Bell, ArrowLeft, CheckCircle, Calendar, MessageSquare, Info } from "lucide-react";
 import { useNavbar } from "@/contexts/NavbarContext";
 import { useAuth } from "@/contexts/AuthContext";
 import Link from "next/link";
+import { formatDistanceToNow } from "date-fns";
 
 interface Notification {
   id: string;
+  title: string;
   message: string;
-  time: string;
-  unread: boolean;
-  type?: string;
+  type: string;
   entityId?: string;
+  entityType?: string;
   actionUrl?: string;
+  isRead: boolean;
+  createdAt: string;
 }
 
 export default function NotificationsPage() {
@@ -28,7 +31,6 @@ export default function NotificationsPage() {
   }, [setNavbarVisibility]);
 
   useEffect(() => {
-    // Fetch notifications from API
     const fetchNotifications = async () => {
       if (!user?.id) {
         setLoading(false);
@@ -36,12 +38,11 @@ export default function NotificationsPage() {
       }
 
       try {
-        // In production, fetch from your API
-        // const response = await fetch(`/api/notifications?userId=${user.id}`);
-        // const data = await response.json();
-        
-        // For now, set to empty state
-        setNotifications([]);
+        const response = await fetch(`/api/notifications`);
+        if (response.ok) {
+          const data = await response.json();
+          setNotifications(data.notifications || []);
+        }
       } catch (error) {
         console.error('Failed to fetch notifications:', error);
       } finally {
@@ -51,6 +52,29 @@ export default function NotificationsPage() {
 
     fetchNotifications();
   }, [user?.id]);
+
+  const getIcon = (type: string) => {
+    switch (type) {
+      case 'BOOKING_CREATED':
+      case 'BOOKING_CONFIRMED':
+        return <Calendar className="w-5 h-5 text-purple-400" />;
+      case 'PAYMENT_RECEIVED':
+      case 'REFERRAL_REWARD':
+        return <CheckCircle className="w-5 h-5 text-green-400" />;
+      case 'MESSAGE':
+        return <MessageSquare className="w-5 h-5 text-blue-400" />;
+      default:
+        return <Info className="w-5 h-5 text-gray-400" />;
+    }
+  };
+
+  const getTimeAgo = (dateStr: string) => {
+    try {
+      return formatDistanceToNow(new Date(dateStr), { addSuffix: true });
+    } catch (e) {
+      return '';
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#111111]">
@@ -83,19 +107,33 @@ export default function NotificationsPage() {
           </div>
         ) : (
           <div className="space-y-3">
-            {notifications.map((notif: Notification) => (
-              <div key={notif.id} className="bg-[#18181b] rounded-xl p-4 border border-white/10 hover:border-white/20 transition-colors">
-                <div className="flex items-start gap-3">
-                  {notif.unread && (
-                    <div className="w-2 h-2 rounded-full bg-purple-400 mt-2 flex-shrink-0"></div>
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-white text-sm leading-relaxed">{notif.message}</p>
-                    <p className="text-white/50 text-xs mt-2">{notif.time}</p>
+            {notifications.map((notif: Notification) => {
+              const Content = (
+                <div className="bg-[#18181b] rounded-xl p-4 border border-white/10 hover:border-white/20 transition-colors active:scale-[0.99]">
+                  <div className="flex items-start gap-4">
+                    <div className="mt-1 bg-white/5 p-2 rounded-full">
+                      {getIcon(notif.type)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-white font-medium text-sm mb-1">{notif.title}</h4>
+                      <p className="text-white/70 text-sm leading-relaxed mb-2">{notif.message}</p>
+                      <p className="text-white/40 text-xs">{getTimeAgo(notif.createdAt)}</p>
+                    </div>
+                    {!notif.isRead && (
+                      <div className="w-2 h-2 rounded-full bg-purple-500 mt-2 flex-shrink-0"></div>
+                    )}
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+
+              return notif.actionUrl ? (
+                <Link href={notif.actionUrl} key={notif.id} className="block">
+                  {Content}
+                </Link>
+              ) : (
+                <div key={notif.id}>{Content}</div>
+              );
+            })}
           </div>
         )}
       </div>

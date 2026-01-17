@@ -3,6 +3,7 @@
 import { Bell, Wallet, Home, Inbox, Briefcase, User, Compass } from 'lucide-react'
 import { useEffect, useState } from 'react';
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { useChatView } from '@/contexts/ChatViewContext';
 import { useModal } from '@/contexts/ModalContext';
@@ -77,13 +78,16 @@ export default function FreelancerLayout({ children }: FreelancerLayoutProps) {
             <div className="flex items-center space-x-8">
               <Link
                 href="/freelancer"
-                className="flex items-center -ml-6"
+                className="flex items-center ml-[5%]"
               >
-                <img
-                  src="/images/LOGOS/ts wordmark LOGO.svg"
-                  alt="DoodLance"
-                  className="h-30 w-auto hover:opacity-80 transition-opacity duration-300"
-                />
+                <div className="relative h-12 w-32">
+                  <Image
+                    src="/images/LOGOS/BAILS TG.png"
+                    alt="BAILS"
+                    fill
+                    className="object-cover scale-110"
+                  />
+                </div>
               </Link>
               <div className="hidden md:flex items-center space-x-1">
                 {navItems.map((item) => {

@@ -17,7 +17,7 @@ export async function GET() {
             clientCommission: 5, // Default
             freelancerCommission: 25, // Default
             currency: 'INR',
-            platformName: 'DoodLance'
+            platformName: 'BAILS'
         };
 
         configs.forEach((conf: any) => {

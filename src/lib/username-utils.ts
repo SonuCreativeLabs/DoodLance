@@ -59,7 +59,7 @@ export const RESERVED_USERNAMES = [
     'example',
     'null',
     'undefined',
-    'doodlance',
+    'bails',
 ];
 
 /**

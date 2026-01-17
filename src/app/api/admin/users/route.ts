@@ -206,6 +206,7 @@ export async function GET(request: NextRequest) {
         status: user.status || 'active',
         avatar: user.avatar,
         referralCode: user.referralCode || 'N/A',
+        referredBy: user.referredBy || 'N/A',
         services: user.freelancerProfile?.specializations ? user.freelancerProfile.specializations.split(',') : [],
       };
     });

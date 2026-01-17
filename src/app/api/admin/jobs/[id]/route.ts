@@ -18,7 +18,7 @@ export async function PATCH(
             return NextResponse.json({ error: validation.error }, { status: 400 });
         }
 
-        const adminEmail = 'admin@doodlance.com';
+        const adminEmail = 'admin@bails.in';
         const adminId = 'admin-1';
 
         const updated = await prisma.job.update({
@@ -51,7 +51,7 @@ export async function DELETE(
 ) {
     try {
         const { id } = params;
-        const adminEmail = 'admin@doodlance.com';
+        const adminEmail = 'admin@bails.in';
         const adminId = 'admin-1';
 
         await prisma.job.delete({

@@ -466,7 +466,7 @@ export function ProfileHeader({
               <span>
                 {personalDetails.area && personalDetails.city
                   ? `${personalDetails.area}, ${personalDetails.city}`
-                  : personalDetails.location || 'Location not set'
+                  : (personalDetails.location || '').split(',').slice(0, 2).join(',') || 'Location not set'
                 }
               </span>
             </div>

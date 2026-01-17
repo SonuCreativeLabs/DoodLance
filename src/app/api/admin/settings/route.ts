@@ -51,7 +51,7 @@ export async function PATCH(request: NextRequest) {
         }
 
         const { settings } = validation.data;
-        const adminEmail = 'admin@doodlance.com';
+        const adminEmail = 'admin@bails.in';
         const adminId = 'admin-1';
 
         // Update each setting

@@ -1,6 +1,6 @@
-# DoodLance - Cricket Services Marketplace
+# BAILS - Cricket Services Marketplace
 
-DoodLance is a specialized on-demand marketplace that connects cricket enthusiasts, players, coaches, and teams with professional cricket service providers across Chennai.
+BAILS is a specialized on-demand marketplace that connects cricket enthusiasts, players, coaches, and teams with professional cricket service providers across Chennai.
 
 A Progressive Web App (PWA) that connects cricket service providers with clients, built with Next.js.
 

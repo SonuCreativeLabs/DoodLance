@@ -199,7 +199,7 @@ const generateJobs = (): Job[] => {
     const clientIndex = id.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0) % clientNames.length;
     const clientName = clientNames[clientIndex];
     // Set default company info (simplified for demo)
-    const company = 'DoodLance';
+    const company = 'BAILS';
     const companyLogo = '/images/logo.png';
 
     // Determine specific duration based on job characteristics

@@ -106,6 +106,24 @@ export async function GET(request: NextRequest) {
                     }
                 });
 
+
+                // Create Welcome Notification
+                try {
+                    await prisma.notification.create({
+                        data: {
+                            userId: newDbUser.id,
+                            title: 'Welcome to BAILS! 🎉',
+                            message: `Hi ${newDbUser.name}, welcome to BAILS! Complete your profile to get started.`,
+                            type: 'WELCOME',
+                            entityId: newDbUser.id,
+                            entityType: 'user',
+                            actionUrl: '/client/profile',
+                        }
+                    });
+                } catch (notifError) {
+                    console.error('[API] Failed to create welcome notification:', notifError);
+                }
+
                 // Send Admin Notification
                 const { sendAdminNotification } = await import('@/lib/email');
                 await sendAdminNotification(
@@ -176,3 +194,4 @@ export async function GET(request: NextRequest) {
         );
     }
 }
+

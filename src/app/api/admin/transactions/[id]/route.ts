@@ -19,7 +19,7 @@ export async function PATCH(
         }
 
         const { status } = validation.data;
-        const adminEmail = 'admin@doodlance.com';
+        const adminEmail = 'admin@bails.in';
         const adminId = 'admin-1';
 
         const updated = await prisma.transaction.update({
