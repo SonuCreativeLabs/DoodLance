@@ -17,6 +17,7 @@ import { usePortfolio } from '@/contexts/PortfolioContext';
 import { useAchievements } from '@/contexts/AchievementsContext';
 import { useServices } from '@/contexts/ServicesContext';
 import { useAvailability } from '@/contexts/AvailabilityContext';
+import { useBankAccount } from '@/contexts/BankAccountContext';
 import { ImageCropper } from '@/components/common/ImageCropper';
 import { SkillInfoDialog } from '@/components/common/SkillInfoDialog';
 import { getSkillInfo, type SkillInfo } from '@/utils/skillUtils';
@@ -24,6 +25,7 @@ import { calculateAge } from '@/utils/personalUtils';
 import { compressImage } from '@/utils/compression';
 import { IdVerifiedBadge } from './IdVerifiedBadge';
 import { useRoleSwitch } from '@/contexts/RoleSwitchContext';
+import { Progress } from "@/components/ui/progress";
 
 // CoverImage component defined outside the ProfileHeader component
 const CoverImage = ({ src, alt = 'Profile Cover' }: { src?: string | null, alt?: string }) => (
@@ -70,6 +72,8 @@ export function ProfileHeader({
   const { achievements } = useAchievements();
   const { services } = useServices();
   const { days: availabilityDays, getWorkingHoursText } = useAvailability();
+  const { isComplete: isBankComplete } = useBankAccount();
+
   const [coverImage, setCoverImage] = useState<string | null>(null);
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -90,6 +94,93 @@ export function ProfileHeader({
   const router = useRouter();
   const { switchRole } = useRoleSwitch();
   const { updatePersonalDetails } = usePersonalDetails();
+
+  // Calculate Profile Completion and Missing Items
+  const completionStatus = (() => {
+    let completed = 0;
+    const total = 10;
+    const missing: string[] = [];
+
+    // --- Personal Details Page (5 Points) ---
+
+    // 1. Personal Info Card
+    if (personalDetails?.firstName && personalDetails?.lastName && personalDetails?.gender && personalDetails?.dateOfBirth && personalDetails?.bio) {
+      completed++;
+    } else {
+      missing.push("Personal Info");
+    }
+
+    // 2. Contact Info Card
+    if (personalDetails?.email && personalDetails?.phone) {
+      completed++;
+    } else {
+      missing.push("Contact Details");
+    }
+
+    // 3. Location Card
+    if (personalDetails?.address && personalDetails?.city && personalDetails?.state && personalDetails?.postalCode) {
+      completed++;
+    } else {
+      missing.push("Location");
+    }
+
+    // 4. Cricket Info Card
+    if (personalDetails?.cricketRole) {
+      completed++;
+    } else {
+      missing.push("Cricket Role");
+    }
+
+    // 5. Public Profile Link
+    if (personalDetails?.username) {
+      completed++;
+    } else {
+      missing.push("Username");
+    }
+
+
+    // --- Other Sections (5 Points) ---
+
+    // 6. Skills
+    if (skills && skills.length > 0) {
+      completed++;
+    } else {
+      missing.push("Skills");
+    }
+
+    // 7. Services
+    if (services && services.length > 0) {
+      completed++;
+    } else {
+      missing.push("Services");
+    }
+
+    // 8. Achievements
+    if (achievements && achievements.length > 0) {
+      completed++;
+    } else {
+      missing.push("Achievements");
+    }
+
+    // 9. Availability
+    if (availabilityDays && availabilityDays.some((d: any) => d.available)) {
+      completed++;
+    } else {
+      missing.push("Availability");
+    }
+
+    // 10. Bank Account
+    if (isBankComplete) {
+      completed++;
+    } else {
+      missing.push("Bank Account");
+    }
+
+    return {
+      percentage: Math.round((completed / total) * 100),
+      missingItems: missing
+    };
+  })();
 
   // Calculate age from personal details
   const age = (() => {
@@ -325,7 +416,18 @@ export function ProfileHeader({
   };
 
   return (
-    <div className="relative w-full bg-[#0f0f0f] profile-header">
+    <div className="relative w-full bg-[#0f0f0f] profile-header overflow-hidden">
+      {/* Content Retention Watermark - Visible behind name/skills */}
+      <div className="absolute top-[200px] inset-x-0 bottom-0 flex items-center justify-center opacity-[0.03] pointer-events-none select-none overflow-hidden">
+        <Image
+          src="/images/LOGOS/BAILS TG.png"
+          alt="BAILS Background"
+          width={800}
+          height={300}
+          className="w-full max-w-4xl h-auto object-contain"
+          priority
+        />
+      </div>
       {/* Cover Photo */}
       <div className="group relative h-48 md:h-64 w-full bg-gradient-to-r from-purple-900 to-purple-700">
         {/* Switch to Client Button - Top-right of cover */}
@@ -342,7 +444,7 @@ export function ProfileHeader({
             </Button>
           </div>
         )}
-        <div className="absolute inset-0 w-full h-full">
+        <div className="absolute inset-0 w-full h-full overflow-hidden">
           <CoverImage src={coverImage || coverImageUrl || personalDetails.coverImageUrl} alt={`${personalDetails.name || 'User'}'s cover`} />
         </div>
 
@@ -476,6 +578,8 @@ export function ProfileHeader({
               <span className="text-white/60 text-sm">({reviewsData?.totalReviews || 0})</span>
             </div>
           </div>
+
+
         </div>
 
         {/* Skills */}
@@ -511,6 +615,32 @@ export function ProfileHeader({
             </Button>
           )}
         </div>
+
+        {/* Profile Completion Indicator */}
+        {/* Profile Completion Indicator */}
+        {!isPreview && (
+          <div className="flex flex-col items-center justify-center mt-2 mb-4 w-full max-w-xs mx-auto px-4 group relative">
+            <div className="w-full flex justify-between items-center text-[10px] uppercase font-bold tracking-widest text-white/30 mb-1.5">
+              <span>Profile Strength</span>
+              <span className={completionStatus.percentage === 100 ? "text-green-500" : "text-yellow-400"}>
+                {completionStatus.percentage}%
+              </span>
+            </div>
+            <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all duration-500 ease-out ${completionStatus.percentage === 100 ? "bg-green-500" : "bg-yellow-400"}`}
+                style={{ width: `${completionStatus.percentage}%` }}
+              />
+            </div>
+            {completionStatus.percentage < 100 && completionStatus.missingItems.length > 0 && (
+              <div className="mt-2 text-[10px] text-white/40 text-center w-full px-2">
+                <span className="text-yellow-400/80 mr-1">Missing:</span>
+                {completionStatus.missingItems.slice(0, 3).join(', ')}
+                {completionStatus.missingItems.length > 3 && ` +${completionStatus.missingItems.length - 3} more`}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Profile Preview Modal */}
