@@ -8,6 +8,7 @@ import { useHire } from '@/contexts/HireContext';
 import { useNavbar } from '@/contexts/NavbarContext';
 import { useBookings } from '@/contexts/BookingsContext';
 import { useAuth } from '@/contexts/AuthContext';
+import LoginDialog from '@/components/auth/LoginDialog';
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -29,6 +30,7 @@ export default function CheckoutPage() {
   const [newBookingId, setNewBookingId] = useState('');
   const [generatedOtp, setGeneratedOtp] = useState('');
   const [showOrderDetails, setShowOrderDetails] = useState(false);
+  const [showLoginDialog, setShowLoginDialog] = useState(false);
 
   const generateOtp = () => {
     return Math.floor(1000 + Math.random() * 9000).toString();
@@ -171,9 +173,15 @@ export default function CheckoutPage() {
           router.push('/client/bookings');
         }, 3500);
 
-      } catch (error) {
+      } catch (error: any) {
         console.error("Booking creation failed:", error);
-        // Handle error UI?
+
+        // Handle Session Expiry / Unauthorized
+        if (error.message?.includes('Unauthorized') || error.toString().includes('Unauthorized')) {
+          setShowLoginDialog(true);
+          return;
+        }
+
         alert("Booking failed. Please try again.");
       } finally {
         setIsProcessing(false);
@@ -414,6 +422,11 @@ export default function CheckoutPage() {
 
         </div>
       </div>
-    </div>
+
+      <LoginDialog
+        open={showLoginDialog}
+        onOpenChange={setShowLoginDialog}
+      />
+    </div >
   );
 }

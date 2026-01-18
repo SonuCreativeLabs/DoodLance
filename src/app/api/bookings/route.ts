@@ -169,9 +169,9 @@ export async function POST(request: NextRequest) {
         let { data: { user }, error: authError } = await supabase.auth.getUser()
 
         if (authError || !user) {
-            // Fallback: Check for 'auth-token' (Legacy/JWT)
+            // Fallback: Check for 'access_token' (Legacy/JWT)
             const cookieStore = cookies();
-            const token = cookieStore.get('auth-token')?.value;
+            const token = cookieStore.get('access_token')?.value;
 
             if (token) {
                 try {

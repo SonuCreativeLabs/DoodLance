@@ -616,12 +616,23 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                     {/* Scrollable Content */}
                     <div className="flex-1 overflow-y-auto" ref={scrollContainerRef}>
                         {/* Profile Header - Using ProfileHeader component style */}
-                        <section id="top" data-section="top" className="scroll-mt-20">
+                        <section id="top" data-section="top" className="scroll-mt-20 relative overflow-hidden">
+                            {/* Content Retention Watermark */}
+                            <div className="absolute top-[200px] inset-x-0 bottom-0 flex items-center justify-center opacity-[0.03] pointer-events-none select-none overflow-hidden">
+                                <Image
+                                    src="/images/LOGOS/BAILS TG.png"
+                                    alt="BAILS Background"
+                                    width={800}
+                                    height={300}
+                                    className="w-full max-w-4xl h-auto object-contain"
+                                    priority
+                                />
+                            </div>
                             <div className="w-full bg-[#0f0f0f]">
                                 {/* Cover Photo */}
                                 <div className="relative h-48 md:h-64 w-full bg-gradient-to-r from-purple-900 to-purple-700">
 
-                                    <div className="absolute inset-0 w-full h-full bg-[#111111]">
+                                    <div className="absolute inset-0 w-full h-full bg-[#111111] overflow-hidden">
                                         <div className="absolute inset-0 flex items-center justify-center">
                                             <User className="w-16 h-16 text-white/10" />
                                         </div>

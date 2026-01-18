@@ -117,7 +117,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               user: {
                 id: session.user.id,
                 email: session.user.email,
-                role: session.user.user_metadata?.role || 'client'
+                role: session.user.user_metadata?.role || 'client',
+                createdAt: session.user.created_at,
+                name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || 'User',
+                phone: session.user.user_metadata?.phone || ''
               }
             })
           });
