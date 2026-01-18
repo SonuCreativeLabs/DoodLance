@@ -63,6 +63,40 @@ export async function POST(request: Request) {
         // Set cookies
         await setAuthCookies(tokens.accessToken, tokens.refreshToken);
 
+        // Check for New User (created within last 2 minutes)
+        if (user.createdAt) {
+            const createdAt = new Date(user.createdAt).getTime();
+            const now = Date.now();
+            const isNewUser = (now - createdAt) < 2 * 60 * 1000; // 2 minutes
+
+            if (isNewUser) {
+                // Send Admin Notification asynchronously
+                (async () => {
+                    try {
+                        const { sendAdminNotification } = await import('@/lib/email');
+                        const subject = `New User Signup: ${user.name || 'User'}`;
+                        const message = `A new user has signed up.\n\nName: ${user.name || 'N/A'}\nEmail: ${user.email}\nPhone: ${user.phone || 'N/A'}\nRole: ${user.role}`;
+
+                        const html = `
+                            <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 8px;">
+                                <h2 style="color: #6B46C1;">New User Signup 🎉</h2>
+                                <p><strong>Name:</strong> ${user.name || 'N/A'}</p>
+                                <p><strong>Email:</strong> ${user.email}</p>
+                                <p><strong>Phone:</strong> ${user.phone || 'N/A'}</p>
+                                <p><strong>Role:</strong> ${user.role}</p>
+                                <p><strong>Time:</strong> ${new Date().toLocaleString('en-IN')}</p>
+                            </div>
+                        `;
+
+                        await sendAdminNotification(subject, message, html);
+                        console.log('📧 New user notification sent for:', user.email);
+                    } catch (emailErr) {
+                        console.error('Failed to send new user notification:', emailErr);
+                    }
+                })();
+            }
+        }
+
         return NextResponse.json({ success: true, user: { ...user, role: user.role || 'client' } });
     } catch (error) {
         console.error('Session API Error:', error);

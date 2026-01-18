@@ -28,17 +28,23 @@ export async function sendEmail({ to, subject, text, html }: SendEmailParams) {
       },
     });
 
+    console.log('📧 Attempting to send email to:', to);
     await transporter.sendMail({
-      from: process.env.SMTP_FROM || '"BAILS" <noreply@bails.in>',
+      from: process.env.SMTP_FROM || '"BAILS" <sonucreativelabs@gmail.com>',
       to,
       subject,
       text,
       html,
     });
 
+    console.log('✅ Email sent successfully to:', to);
     return true;
   } catch (error) {
     console.error('❌ Error sending email:', error);
+    // Log additional error details if available
+    if ((error as any).response) {
+      console.error('SMTP Response:', (error as any).response);
+    }
     return false;
   }
 }
@@ -126,7 +132,7 @@ export function isValidEmail(email: string): boolean {
   return emailRegex.test(email);
 }
 
-const ADMIN_EMAIL = 'sathishraj@bails.in';
+const ADMIN_EMAIL = 'sathishraj@doodlance.com';
 
 /**
  * Sends a notification email to the admin
