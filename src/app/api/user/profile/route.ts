@@ -17,27 +17,16 @@ export async function GET(request: NextRequest) {
         // Query user from database
         const dbUser = await prisma.user.findUnique({
             where: { id: user.id },
-            select: {
-                id: true,
-                email: true,
-                name: true,
-                phone: true,
-                avatar: true,
-                location: true,
-                bio: true,
-                gender: true,
-                username: true,
-                displayId: true,
-                address: true,
-                area: true,
-                city: true,
-                state: true,
-                postalCode: true,
-                role: true,
-                currentRole: true,
-                isVerified: true,
-                phoneVerified: true,
-                createdAt: true,
+            include: {
+                freelancerProfile: {
+                    select: {
+                        dateOfBirth: true,
+                        isOnline: true,
+                        cricketRole: true,
+                        title: true,
+                        coverImage: true,
+                    }
+                }
             }
         });
 
@@ -94,7 +83,6 @@ export async function GET(request: NextRequest) {
                         username: true,
                         displayId: true,
                         address: true,
-                        area: true,
                         city: true,
                         state: true,
                         postalCode: true,
@@ -158,7 +146,6 @@ export async function GET(request: NextRequest) {
                                 username: true,
                                 displayId: true,
                                 address: true,
-                                area: true,
                                 city: true,
                                 state: true,
                                 postalCode: true,

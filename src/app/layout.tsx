@@ -16,6 +16,9 @@ export const metadata = {
     template: '%s | BAILS',
   },
   description: 'Find and hire the best cricket talent in Chennai',
+  icons: {
+    icon: '/images/LOGOS/TS favicon.svg',
+  },
 };
 
 export default function RootLayout({

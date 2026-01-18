@@ -100,18 +100,18 @@ export default function FreelancerProfileLogin() {
                     transition={{ duration: 0.5 }}
                     className="w-full max-w-md space-y-2"
                 >
-                    {/* Logo & Title */}
-                    <div className="text-center space-y-2">
-                        <div className="relative w-32 h-32 mx-auto mb-0 overflow-hidden">
+                    <div className="flex flex-col items-center space-y-2 text-center">
+                        <div className="-my-16 mx-auto">
                             <Image
                                 src="/images/LOGOS/BAILS TG.png"
                                 alt="BAILS Logo"
-                                fill
-                                className="object-cover scale-110"
+                                width={400}
+                                height={120}
+                                className="w-80 h-auto object-contain"
                                 priority
                             />
                         </div>
-                        <h1 className="text-3xl font-bold tracking-tight text-white -mt-10">
+                        <h1 className="text-3xl font-bold tracking-tight text-white mt-0">
                             {step === 'email' ? 'Access Your Profile' : 'Enter Verification Code'}
                         </h1>
                         <p className="text-white/50 text-sm">

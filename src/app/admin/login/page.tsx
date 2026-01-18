@@ -53,19 +53,20 @@ export default function AdminLoginPage() {
         <Card className="bg-[#1a1a1a]/90 backdrop-blur-xl border-purple-900/50">
           <div className="p-8">
             {/* Logo & Title */}
-            <div className="flex flex-col items-center mb-8">
-              <div className="relative w-20 h-20 mb-4">
+            <div className="flex flex-col items-center mb-6">
+              <div className="-my-28">
                 <Image
                   src="/images/LOGOS/BAILS TG.png"
                   alt="BAILS Logo"
-                  fill
-                  className="object-contain"
+                  width={400}
+                  height={120}
+                  className="w-96 h-auto object-contain"
+                  priority
                 />
               </div>
-              <h2 className="mt-6 text-3xl font-bold tracking-tight text-white">
-                Admin Login | BAILS
+              <h2 className="mt-0 text-3xl font-bold tracking-tight text-white">
+                Admin Login
               </h2>
-              <p className="text-gray-400 mt-2">BAILS Administration</p>
             </div>
 
             {/* Login Form */}

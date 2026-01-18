@@ -83,9 +83,9 @@ export default function IntegratedExplorePage() {
   }, [searchParams]);
 
   // Filter state
-  const [selectedArea, setSelectedArea] = useState("Velachery");
+  const [selectedArea, setSelectedArea] = useState("All");
   const [selectedService, setSelectedService] = useState("All");
-  const [range, setRange] = useState([10]);
+  const [range, setRange] = useState([50]);
   const [minRating, setMinRating] = useState(0);
   const [priceRange, setPriceRange] = useState([0, 20000]);
   const [availability, setAvailability] = useState("");
@@ -167,23 +167,38 @@ export default function IntegratedExplorePage() {
     setInitialSheetY(getInitialSheetY());
   }, [professionals]);
 
-  // Filter professionals based on selected category - matches against service card categories
+  // Filter professionals based on selected category, search, and location
   useEffect(() => {
-    let result: BaseProfessional[] = [];
+    // 1. Map all professionals first to ensure consistent data structure
+    let result = professionals.map(mapToProfessional);
 
+    // 2. Apply Category Filter
     if (selectedCategory && selectedCategory !== "All") {
-      // Map filter categories to service card category keywords
       const categoryKeywords: { [key: string]: string[] } = {
-        'Players': ['match player', 'net bowler', 'net batsman', 'sidearm', 'bowler', 'batsman', 'player'],
-        'Coaching & Training': ['coach', 'coaching', 'training', 'trainer', 'conditioning'],
-        'Support Staff & Others': ['analyst', 'analysis', 'physio', 'scorer', 'umpire', 'groundsman'],
-        'Media & Content': ['photo', 'video', 'videography', 'content', 'commentator', 'media']
+        'Players': [
+          'match player', 'net bowler', 'net batsman', 'sidearm', 'sidearm specialist',
+          'bowler', 'batsman', 'player', 'cricketer', 'all rounder',
+          'wicket keeper', 'spinner', 'pacer', 'leg spinner', 'off spinner', 'fast bowler'
+        ],
+        'Coaching & Training': [
+          'coach', 'coaching', 'training', 'trainer', 'conditioning',
+          'fitness', 'drill', 'practice', 'mentor', 'strength'
+        ],
+        'Support Staff & Others': [
+          'analyst', 'analysis', 'physio', 'physiotherapist', 'scorer',
+          'umpire', 'groundsman', 'manager', 'support', 'medic', 'doctor',
+          'statistician', 'masseur', 'other'
+        ],
+        'Media & Content': [
+          'photo', 'video', 'videography', 'content', 'commentator',
+          'media', 'social', 'editor', 'creator', 'streaming',
+          'photographer', 'videographer'
+        ]
       };
 
       const keywords = categoryKeywords[selectedCategory] || [];
       if (keywords.length > 0) {
-        // Filter by checking if freelancer has ANY service with matching category
-        const filtered = professionals.filter(pro => {
+        result = result.filter(pro => {
           // Check services array categories
           if (pro.services && pro.services.length > 0) {
             return pro.services.some((svc: any) => {
@@ -194,19 +209,14 @@ export default function IntegratedExplorePage() {
               );
             });
           }
-          // Fallback to main service field if no services array
-          const proService = pro.service.toLowerCase();
+          // Fallback to main service field
+          const proService = (pro.service || '').toLowerCase();
           return keywords.some(keyword => proService.includes(keyword));
         });
-        result = filtered.map(mapToProfessional);
-      } else {
-        result = professionals.map(mapToProfessional);
       }
-    } else {
-      result = professionals.map(mapToProfessional);
     }
 
-    // Apply search query filter
+    // 3. Apply Search Query Filter
     if (searchQuery && searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
       result = result.filter(pro =>
@@ -214,7 +224,9 @@ export default function IntegratedExplorePage() {
         (pro.service && pro.service.toLowerCase().includes(query)) ||
         pro.expertise?.some(skill => skill.toLowerCase().includes(query)) ||
         (pro.description && pro.description.toLowerCase().includes(query)) ||
-        // Deep search in services
+        (pro.location && pro.location.toLowerCase().includes(query)) ||
+        (pro.area && pro.area.toLowerCase().includes(query)) ||
+        (pro.city && pro.city.toLowerCase().includes(query)) ||
         pro.services?.some((svc: any) =>
           (svc.title && svc.title.toLowerCase().includes(query)) ||
           (svc.description && svc.description.toLowerCase().includes(query)) ||
@@ -223,9 +235,59 @@ export default function IntegratedExplorePage() {
       );
     }
 
-    // Sort by distance (nearest first) and update state
+    // 4. Apply Location/Area Filter
+    if (selectedArea && selectedArea !== "All") {
+      const areaQuery = selectedArea.toLowerCase().trim();
+      result = result.filter(pro => {
+        const locationLower = (pro.location || '').toLowerCase();
+        const areaLower = (pro.area || '').toLowerCase();
+        const cityLower = (pro.city || '').toLowerCase();
+
+        // Split area query into parts to allow partial matching (e.g. "Chennai" matching "Velachery, Chennai")
+        const queryParts = areaQuery.split(/[\s,]+/);
+
+        return queryParts.some(part =>
+          locationLower.includes(part) ||
+          areaLower.includes(part) ||
+          cityLower.includes(part)
+        );
+      });
+    }
+
+    // 5. Apply Service Type Filter (from Modal)
+    if (selectedService && selectedService !== "All") {
+      result = result.filter(pro => {
+        const proService = (pro.service || '').toLowerCase();
+        const filterService = selectedService.toLowerCase();
+        return proService.includes(filterService) || filterService.includes(proService);
+      });
+    }
+
+    // 6. Apply Distance Filter
+    if (range[0] < 50) {
+      result = result.filter(pro => (pro.distance || 0) <= range[0]);
+    }
+
+    // 7. Apply Rating Filter
+    if (minRating > 0) {
+      result = result.filter(pro => (pro.rating || 0) >= minRating);
+    }
+
+    // 8. Apply Price Filter
+    const minPrice = priceRange[0];
+    const maxPrice = priceRange[1];
+
+    result = result.filter(pro => {
+      const price = pro.price || 0;
+      if (maxPrice >= 20000) {
+        return price >= minPrice; // No upper limit
+      }
+      return price >= minPrice && price <= maxPrice;
+    });
+
+    // 9. Sort by distance (nearest first) and update state
     setFilteredProfessionals(sortByDistance(result));
-  }, [selectedCategory, professionals, searchQuery]);
+  }, [selectedCategory, professionals, searchQuery, selectedArea, selectedService, range, minRating, priceRange]);
 
   // Set initial sheet position to collapsed state (responsive to screen size)
   const getInitialSheetY = () => {
@@ -249,103 +311,36 @@ export default function IntegratedExplorePage() {
   };
 
   const handleSaveFilters = () => {
-    // Apply filters to professionals
-    let filtered = [...professionals];
-
-    // Apply category filter first (if not "All") - matches against service card categories
-    if (selectedCategory && selectedCategory !== "All") {
-      const categoryKeywords: { [key: string]: string[] } = {
-        'Players': ['match player', 'net bowler', 'net batsman', 'sidearm', 'bowler', 'batsman', 'player'],
-        'Coaching & Training': ['coach', 'coaching', 'training', 'trainer', 'conditioning'],
-        'Support Staff & Others': ['analyst', 'analysis', 'physio', 'scorer', 'umpire', 'groundsman'],
-        'Media & Content': ['photo', 'video', 'videography', 'content', 'commentator', 'media']
-      };
-
-      const keywords = categoryKeywords[selectedCategory] || [];
-      if (keywords.length > 0) {
-        filtered = filtered.filter(pro => {
-          // Check services array categories
-          if (pro.services && pro.services.length > 0) {
-            return pro.services.some((svc: any) => {
-              const svcCategory = (svc.category || '').toLowerCase();
-              const svcTitle = (svc.title || '').toLowerCase();
-              return keywords.some(keyword =>
-                svcCategory.includes(keyword) || svcTitle.includes(keyword)
-              );
-            });
-          }
-          // Fallback to main service field
-          const proService = pro.service.toLowerCase();
-          return keywords.some(keyword => proService.includes(keyword));
-        });
-      }
-    }
-
-    // Apply area filter
-    if (selectedArea && selectedArea !== "All") {
-      filtered = filtered.filter(pro =>
-        pro.location && pro.location.toLowerCase().includes(selectedArea.toLowerCase())
-      );
-    }
-
-    // Apply service filter (only if specific service selected and not already filtered by category)
-    if (selectedService && selectedService !== "All") {
-      filtered = filtered.filter(pro => {
-        const proService = pro.service.toLowerCase();
-        const filterService = selectedService.toLowerCase();
-        return proService.includes(filterService) || filterService.includes(proService);
-      });
-    }
-
-    // Apply distance filter
-    if (range[0]) {
-      filtered = filtered.filter(pro => pro.distance <= range[0]);
-    }
-
-    // Apply rating filter
-    if (minRating > 0) {
-      filtered = filtered.filter(pro => pro.rating >= minRating);
-    }
-
-    // Apply price range filter
-    filtered = filtered.filter(pro =>
-      pro.price >= priceRange[0] && pro.price <= priceRange[1]
-    );
-
-    // Apply search query filter
-    if (searchQuery && searchQuery.trim()) {
-      const query = searchQuery.toLowerCase().trim();
-      filtered = filtered.filter(pro =>
-        (pro.name && pro.name.toLowerCase().includes(query)) ||
-        (pro.service && pro.service.toLowerCase().includes(query)) ||
-        pro.expertise?.some(skill => skill.toLowerCase().includes(query)) ||
-        (pro.description && pro.description.toLowerCase().includes(query)) ||
-        // Deep search in services
-        pro.services?.some((svc: any) =>
-          (svc.title && svc.title.toLowerCase().includes(query)) ||
-          (svc.description && svc.description.toLowerCase().includes(query)) ||
-          svc.features?.some((f: string) => f.toLowerCase().includes(query))
-        )
-      );
-    }
-
-    // Map filtered professionals and sort by distance (nearest first)
-    const mappedFiltered = filtered.map(mapToProfessional);
-    setFilteredProfessionals(sortByDistance(mappedFiltered));
+    // Formatting is handled reactively by the main useEffect
+    // This button just acts as a confirmation/close action
     setShowFilterModal(false);
   };
 
+  // Get user's current location for default - Commented out as per user request to show "India" (All) by default
+  // The list is already sorted by distance so nearby professionals appear first
+  /*
+  useEffect(() => {
+    if (typeof window !== 'undefined' && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          // ... code removed ...
+        }
+      );
+    }
+  }, []);
+  */
+
   const handleClearFilters = () => {
-    setSelectedArea("Velachery");
+    setSelectedCategory("All");
+    setSearchQuery("");
+    setSelectedArea("All");
     setSelectedService("All");
-    setRange([10]);
+    setRange([50]);
     setMinRating(0);
     setPriceRange([0, 20000]);
     setAvailability("");
     setSelectedTimeOptions([]);
-    // Reset to all mapped professionals and sort by distance
-    const mappedProfessionals = professionals.map(mapToProfessional);
-    setFilteredProfessionals(sortByDistance(mappedProfessionals));
+    // The main useEffect will handle re-filtering automatically when these states change
   };
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
@@ -426,7 +421,10 @@ export default function IntegratedExplorePage() {
                       ? 'bg-black/60 text-white border-white/20 hover:bg-black/70 backdrop-blur-sm'
                       : 'bg-[#111111] text-white border-white/30 hover:bg-[#111111]/80'
                     }`}
-                  onClick={() => setSelectedCategory(cat.name)}
+                  onClick={() => {
+                    setSelectedCategory(cat.name);
+                    setSelectedService("All");
+                  }}
                 >
                   <span>{cat.name}</span>
                 </button>
