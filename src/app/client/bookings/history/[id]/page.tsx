@@ -18,6 +18,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Skeleton } from "@/components/ui/skeleton";
 
 import { useNavbar } from "@/contexts/NavbarContext";
 import { useBookAgain } from "@/hooks/useBookAgain";
@@ -39,17 +40,22 @@ export default function BookingHistoryDetailPage() {
   }, [params]);
 
   const [historyItem, setHistoryItem] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (rawId) {
-      fetch(`/api/bookings/${rawId}`)
+      setLoading(true);
+      fetch(`/api/bookings/${encodeURIComponent(rawId)}`)
         .then(res => res.json())
         .then(data => {
           if (data && !data.error) {
             setHistoryItem(data);
           }
         })
-        .catch(err => console.error("Failed to fetch booking history", err));
+        .catch(err => console.error("Failed to fetch booking history", err))
+        .finally(() => setLoading(false));
+    } else {
+      setLoading(false);
     }
   }, [rawId]);
 
@@ -58,6 +64,65 @@ export default function BookingHistoryDetailPage() {
     historyItem || null,
     { useReplace: true }
   );
+
+
+
+
+
+  if (loading) {
+    return (
+      <div className="flex flex-col min-h-screen bg-gradient-to-b from-[#111111] via-[#0b0b0b] to-[#050505] text-white">
+        {/* Header Skeleton */}
+        <div className="fixed top-0 left-0 right-0 z-30 bg-[#0F0F0F]/95 backdrop-blur-md border-b border-white/5">
+          <div className="container mx-auto px-4 py-3">
+            <div className="flex items-center justify-between w-full">
+              <div className="flex items-center gap-3">
+                <Skeleton className="h-8 w-8 rounded-full bg-white/10" />
+                <div className="space-y-1">
+                  <Skeleton className="h-4 w-24 bg-white/10" />
+                  <Skeleton className="h-3 w-32 bg-white/5" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Content Skeleton */}
+        <div className="flex-1 overflow-y-auto pt-[64px] pb-[88px]">
+          {/* Banner Skeleton */}
+          <div className="relative bg-gradient-to-br from-white/5 to-transparent pt-10 pb-10 px-4">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+              <div className="flex items-center gap-4">
+                <Skeleton className="h-16 w-16 rounded-full bg-white/10" />
+                <div className="space-y-2">
+                  <Skeleton className="h-3 w-16 bg-white/5" />
+                  <Skeleton className="h-6 w-40 bg-white/10" />
+                  <Skeleton className="h-3 w-24 bg-white/5" />
+                </div>
+              </div>
+              <div className="text-right space-y-2">
+                <Skeleton className="h-3 w-20 bg-white/5 ml-auto" />
+                <Skeleton className="h-8 w-32 bg-white/10 ml-auto" />
+                <Skeleton className="h-3 w-40 bg-white/5 ml-auto" />
+              </div>
+            </div>
+          </div>
+
+          <div className="px-4 pb-24 space-y-8 mt-8">
+            {/* Grid Skeleton */}
+            <div className="grid gap-4 md:grid-cols-3">
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-24 w-full rounded-2xl bg-white/5" />
+              ))}
+            </div>
+
+            {/* Feedback Skeleton */}
+            <Skeleton className="h-32 w-full rounded-2xl bg-white/5" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!historyItem) {
     return (
@@ -188,7 +253,7 @@ export default function BookingHistoryDetailPage() {
                 <Calendar className="w-4 h-4 text-purple-300" />
                 <span>Session date</span>
               </div>
-              <p className="text-lg font-semibold text-white">{historyItem.date}</p>
+              <p className="text-lg font-semibold text-white">{historyItem.date} {historyItem.time ? ` at ${historyItem.time}` : ''}</p>
               <p className="text-sm text-white/60 mt-1">
                 {historyItem.status === 'cancelled' ? 'Session was cancelled' : 'Concluded successfully'}
               </p>
@@ -250,7 +315,7 @@ export default function BookingHistoryDetailPage() {
                     <div>
                       <h4 className="text-xs text-white/40 uppercase mb-1">Duration</h4>
                       <p className="text-sm text-white/80">
-                        {historyItem.duration || 'Hourly Session'}
+                        {historyItem.duration || '60 mins'}
                       </p>
                     </div>
                     <div>

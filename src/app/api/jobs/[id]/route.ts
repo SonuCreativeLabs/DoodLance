@@ -6,6 +6,8 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
+    console.log('[API] Fetching job/booking details for ID:', params.id);
+
     // 1. Try to find as Job
     const job = await prisma.job.findUnique({
       where: { id: params.id },
@@ -34,6 +36,7 @@ export async function GET(
     })
 
     if (job) {
+      console.log('[API] Found Job record');
       return NextResponse.json({
         ...job,
         payment: job.budget
@@ -41,6 +44,7 @@ export async function GET(
     }
 
     // 2. If not found, try to find as Booking
+    console.log('[API] Job not found, checking Booking');
     const booking = await prisma.booking.findUnique({
       where: { id: params.id },
       include: {
@@ -59,46 +63,56 @@ export async function GET(
     })
 
     if (booking) {
-      // Auto-generate OTP if missing (for legacy bookings)
-      let otp = booking.otp;
-      if (!otp && (booking.status === 'confirmed' || booking.status === 'pending' || booking.status === 'PENDING')) {
-        otp = Math.floor(1000 + Math.random() * 9000).toString();
-        await prisma.booking.update({
-          where: { id: booking.id },
-          data: { otp }
-        });
-      }
+      console.log('[API] Found Booking record:', booking.id);
+      try {
+        // Auto-generate OTP if missing (for legacy bookings)
+        let otp = booking.otp;
+        if (!otp && (booking.status === 'confirmed' || booking.status === 'pending' || booking.status === 'PENDING')) {
+          console.log('[API] Generating OTP for booking');
+          otp = Math.floor(1000 + Math.random() * 9000).toString();
+          await prisma.booking.update({
+            where: { id: booking.id },
+            data: { otp }
+          });
+        }
 
-      // Map booking to job shape
-      return NextResponse.json({
-        id: booking.id,
-        title: booking.service?.title || 'Unknown Job',
-        description: booking.service?.description || '',
-        status: booking.status === 'PENDING' ? 'OPEN' : booking.status === 'CONFIRMED' ? 'OPEN' : booking.status === 'ONGOING' ? 'STARTED' : booking.status,
-        payment: booking.totalPrice,
-        location: booking.location,
-        scheduledAt: booking.scheduledAt,
-        duration: (booking.duration || 60) + " mins",
-        client: booking.client,
-        otp: otp,
-        clientId: booking.clientId,
-        category: 'Services', // Generic category
-        workMode: 'On-site', // Default or derive
-        experience: 'N/A',
-        skills: '', // Or derive from service tags
-        peopleNeeded: 1,
-        applications: [], // No applications for direct booking
-        services: booking.services,
-        notes: booking.notes,
-        createdAt: booking.createdAt,
-        completedAt: booking.deliveredAt,
-        cancelledAt: booking.cancelledAt,
-        clientRating: booking.clientRating,
-        freelancerRating: booking.freelancerRating,
-        isDirectHire: true,
-      })
+        // Map booking to job shape
+        const responseHelper = {
+          id: booking.id,
+          title: booking.service?.title || 'Unknown Job',
+          description: booking.service?.description || '',
+          status: booking.status === 'PENDING' ? 'OPEN' : booking.status === 'CONFIRMED' ? 'OPEN' : booking.status === 'ONGOING' ? 'STARTED' : booking.status,
+          payment: booking.totalPrice,
+          location: booking.location,
+          scheduledAt: booking.scheduledAt,
+          duration: (booking.duration || 60) + " mins",
+          client: booking.client,
+          otp: otp,
+          clientId: booking.clientId,
+          category: 'Services', // Generic category
+          workMode: 'On-site', // Default or derive
+          experience: 'N/A',
+          skills: '', // Or derive from service tags
+          peopleNeeded: 1,
+          applications: [], // No applications for direct booking
+          services: booking.services,
+          notes: booking.notes,
+          createdAt: booking.createdAt,
+          completedAt: booking.deliveredAt,
+          cancelledAt: booking.cancelledAt,
+          clientRating: booking.clientRating,
+          freelancerRating: booking.freelancerRating,
+          isDirectHire: true,
+        };
+        console.log('[API] Mapped response successfully');
+        return NextResponse.json(responseHelper);
+      } catch (mapError) {
+        console.error('[API] Error mapping booking:', mapError);
+        throw mapError;
+      }
     }
 
+    console.log('[API] Record not found in Job or Booking');
     return NextResponse.json(
       { error: 'Job not found' },
       { status: 404 }

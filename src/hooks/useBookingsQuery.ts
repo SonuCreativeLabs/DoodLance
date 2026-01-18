@@ -40,7 +40,7 @@ async function fetchBookings(): Promise<Booking[]> {
             description: '',
             category: 'General',
             otp: b.otp,
-            completedAt: b.completedAt ? new Date(b.completedAt).toLocaleDateString() : undefined,
+            completedAt: b.completedAt,
             notes: b.notes,
             services: b.services,
             providerPhone: b.freelancerPhone,

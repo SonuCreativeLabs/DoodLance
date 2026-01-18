@@ -92,8 +92,8 @@ export async function GET(
         phone: provider?.phone || ''
       },
       image: provider?.avatar || "/images/avatar-placeholder.png",
-      date: booking.scheduledAt ? new Date(booking.scheduledAt).toISOString().split('T')[0] : '',
-      time: booking.scheduledAt ? new Date(booking.scheduledAt).toLocaleTimeString() : '',
+      date: booking.scheduledAt ? new Date(booking.scheduledAt).toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }) : '',
+      time: booking.scheduledAt ? new Date(booking.scheduledAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' }) : '',
       status: booking.status.toLowerCase(),
       location: booking.location || "Remote",
       price: `₹${booking.totalPrice}`,
@@ -103,10 +103,11 @@ export async function GET(
       completedJobs: profile?.completedJobs || 0,
       description: booking.service?.description || '',
       category: booking.service?.category?.name || "General",
+      duration: (booking.duration || 60) + " mins",
       earnedMoney: `₹${booking.totalPrice}`,
       completedDate: (booking as any).deliveredAt
-        ? new Date((booking as any).deliveredAt).toLocaleDateString()
-        : (booking.scheduledAt ? new Date(booking.scheduledAt).toLocaleDateString() : ''),
+        ? new Date((booking as any).deliveredAt).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' })
+        : (booking.scheduledAt ? new Date(booking.scheduledAt).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' }) : ''),
       cancellationNotes: booking.notes || '',
       clientRating: booking.clientRating || null,
       yourRating: 0 // Schema has complex Json rating

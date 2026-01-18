@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils"
 import ClientLayout from "@/components/layouts/client-layout"
 import { useBookings, Booking } from "@/contexts/BookingsContext"
 import { useApplications, Application } from "@/contexts/ApplicationsContext"
+import { CricketLoader } from "@/components/ui/cricket-loader"
 import { useHistoryJobs, HistoryJob } from "@/contexts/HistoryJobsContext"
 import { usePostedJobs } from "@/contexts/PostedJobsContext"
 import { useBookAgain } from "@/hooks/useBookAgain"
@@ -110,23 +111,37 @@ const BookingCard = ({ booking, showActions = true }: BookingCardProps) => {
               <div className="min-w-0">
                 <div className="text-xs text-white/40 mb-0.5">Date & Time</div>
                 <div className="text-sm text-white/90">
-                  {(() => {
-                    // Format date from YYYY-MM-DD to readable format
-                    if (!booking.date) return 'Date not set';
-                    try {
-                      const [year, month, day] = booking.date.split('-').map(Number);
-                      const date = new Date(year, month - 1, day);
-                      if (isNaN(date.getTime())) return booking.date;
-
-                      return date.toLocaleDateString('en-US', {
+                  {booking.date && booking.time ? (
+                    <>
+                      {(() => {
+                        const dateObj = new Date(booking.date);
+                        if (!isNaN(dateObj.getTime())) {
+                          return dateObj.toLocaleDateString('en-US', {
+                            weekday: 'short',
+                            month: 'short',
+                            day: 'numeric'
+                          });
+                        }
+                        return booking.date;
+                      })()} at {booking.time}
+                    </>
+                  ) : booking.scheduledAt ? (
+                    <>
+                      {new Date(booking.scheduledAt).toLocaleDateString('en-US', {
                         weekday: 'short',
                         month: 'short',
-                        day: 'numeric'
-                      });
-                    } catch (e) {
-                      return booking.date;
-                    }
-                  })()} at {booking.time}
+                        day: 'numeric',
+                        timeZone: 'Asia/Kolkata'
+                      })} at {new Date(booking.scheduledAt).toLocaleTimeString('en-US', {
+                        hour: 'numeric',
+                        minute: '2-digit',
+                        hour12: true,
+                        timeZone: 'Asia/Kolkata'
+                      })}
+                    </>
+                  ) : (
+                    'Date not set'
+                  )}
                 </div>
               </div>
             </div>
@@ -325,7 +340,7 @@ const HistoryCard = ({ booking }: { booking: Booking }) => {
   const { showBookAgain, setShowBookAgain, BookAgainModal } = useBookAgain(historyJobMock)
 
   const handleOpenDetails = () => {
-    router.push(`/client/bookings/${encodeURIComponent(booking["#"])}`)
+    router.push(`/client/bookings/history/${encodeURIComponent(booking["#"])}`)
   }
 
   return (
@@ -385,7 +400,23 @@ const HistoryCard = ({ booking }: { booking: Booking }) => {
               </div>
               <div className="min-w-0">
                 <div className="text-xs text-white/40 mb-0.5">Completed</div>
-                <div className="text-sm text-white/90">{booking.completedAt || 'N/A'}</div>
+                <div className="text-sm text-white/90">
+                  {booking.completedAt ? (
+                    <>
+                      {new Date(booking.completedAt).toLocaleDateString('en-US', {
+                        weekday: 'short',
+                        month: 'short',
+                        day: 'numeric',
+                        timeZone: 'Asia/Kolkata'
+                      })} at {new Date(booking.completedAt).toLocaleTimeString('en-US', {
+                        hour: 'numeric',
+                        minute: '2-digit',
+                        hour12: true,
+                        timeZone: 'Asia/Kolkata'
+                      })}
+                    </>
+                  ) : 'N/A'}
+                </div>
               </div>
             </div>
 
@@ -531,8 +562,10 @@ const PostedJobCard = ({ job, showUpcoming = false }: { job: any; showUpcoming?:
                     month: 'short',
                     day: 'numeric',
                     year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    hour12: true,
+                    timeZone: 'Asia/Kolkata'
                   })
                   : 'Not set'}
               </div>
@@ -578,7 +611,7 @@ const PostedJobCard = ({ job, showUpcoming = false }: { job: any; showUpcoming?:
   )
 }
 
-import { CricketLoader } from "@/components/ui/cricket-loader"
+
 
 // 🎯 Feature flag for React Query POC
 const USE_REACT_QUERY = process.env.NEXT_PUBLIC_USE_REACT_QUERY === 'true'

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import prisma from '@/lib/db';
 
@@ -28,15 +29,41 @@ export async function GET(request: NextRequest) {
             const { data: { user }, error: authError } = await supabase.auth.getUser();
 
             if (authError || !user) {
-                return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-            }
+                // Return 401 immediately if standard auth fails, but check for fallback token
+                // NOTE: Similar logic to bookings/route.ts
+                const cookieStore = cookies();
+                const token = cookieStore.get('access_token')?.value;
 
-            const dbUser = await getDbUser(user.id, user.email);
-            if (!dbUser) return NextResponse.json({
-                serviceRadius: 10,
-                advanceNoticeHours: 0
-            });
-            targetUserId = dbUser.id;
+                if (token) {
+                    try {
+                        const { verifyAccessToken } = await import('@/lib/auth/jwt');
+                        const decoded = verifyAccessToken(token);
+                        if (decoded && decoded.userId) {
+                            const dbUser = await prisma.user.findUnique({
+                                where: { id: decoded.userId }
+                            });
+                            if (dbUser) {
+                                targetUserId = dbUser.id;
+                            } else {
+                                return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+                            }
+                        } else {
+                            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+                        }
+                    } catch (e) {
+                        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+                    }
+                } else {
+                    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+                }
+            } else {
+                const dbUser = await getDbUser(user.id, user.email);
+                if (!dbUser) return NextResponse.json({
+                    serviceRadius: 10,
+                    advanceNoticeHours: 0
+                });
+                targetUserId = dbUser.id;
+            }
         }
 
         const profile = await prisma.freelancerProfile.findUnique({

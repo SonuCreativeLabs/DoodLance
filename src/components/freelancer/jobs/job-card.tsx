@@ -91,8 +91,24 @@ export const JobCard: React.FC<JobCardProps> = ({ job, index, onStatusChange }) 
               <div className="min-w-0">
                 <div className="text-sm text-white/90">
                   {(() => {
-                    const dateStr = job.date || job.jobDate;
-                    const timeStr = job.time || job.jobTime;
+                    // 1. Prioritize legacy date/time fields as they are the source of truth for existing data
+                    if (job.date && job.time) {
+                      const dateObj = new Date(job.date);
+                      if (!isNaN(dateObj.getTime())) {
+                        const friendlyDate = dateObj.toLocaleDateString('en-US', {
+                          weekday: 'short',
+                          month: 'short',
+                          day: 'numeric'
+                        });
+                        // job.time is already formatted like "1:00 PM" or "10:00 PM"
+                        return `${friendlyDate} at ${job.time}`;
+                      }
+                      // Fallback if date parsing fails
+                      return `${job.date} at ${job.time}`;
+                    }
+
+                    // 2. Fallback to scheduledAt (for future or migrated jobs where date/time might be missing)
+                    const dateStr = job.scheduledAt || job.jobDate;
 
                     if (!dateStr) return 'Date not specified';
 
@@ -101,8 +117,21 @@ export const JobCard: React.FC<JobCardProps> = ({ job, index, onStatusChange }) 
                       // If invalid date
                       if (isNaN(dateObj.getTime())) return dateStr;
 
-                      const formattedDate = format(dateObj, 'MMM d, yyyy');
-                      return timeStr ? `${formattedDate} at ${timeStr}` : formattedDate;
+                      // Format to ensure local time is displayed, matching JobDetailsPage
+                      const formattedDate = dateObj.toLocaleDateString('en-US', {
+                        weekday: 'short',
+                        month: 'short',
+                        day: 'numeric',
+                        timeZone: 'Asia/Kolkata'
+                      });
+                      const formattedTime = dateObj.toLocaleTimeString('en-US', {
+                        hour: 'numeric',
+                        minute: '2-digit',
+                        hour12: true,
+                        timeZone: 'Asia/Kolkata'
+                      });
+
+                      return `${formattedDate} at ${formattedTime}`;
                     } catch (e) {
                       return dateStr;
                     }
@@ -125,7 +154,7 @@ export const JobCard: React.FC<JobCardProps> = ({ job, index, onStatusChange }) 
               <IndianRupee className="w-4 h-4 text-purple-400 flex-shrink-0 mt-0.5" />
               <div>
                 <div className="text-xs text-white/40">Payment</div>
-                <div className="text-white/80">₹{job.payment}</div>
+                <div className="text-white/80">₹{Math.round(Number(job.payment) / 1.05)}</div>
               </div>
             </div>
             <div className="flex items-start gap-2 text-white/60">

@@ -129,13 +129,33 @@ export default function CheckoutPage() {
         const serviceNames = state.cartItems.map(item => item.service.title).join(', ');
         // Use the date in YYYY-MM-DD format for proper filtering
         const bookingDate = state.selectedDate || new Date().toISOString().split('T')[0];
+        const bookingTime = state.selectedTime || '10:00 AM';
+
+        // Construct scheduledAt ISO string
+        let scheduledAt = new Date().toISOString();
+        try {
+          // Combine date and time
+          // Note: bookingDate is YYYY-MM-DD, bookingTime is HH:mm AM/PM or HH:mm
+          // We construct a string that the Date constructor parses in local time
+          const dateTimeStr = `${bookingDate} ${bookingTime}`;
+          const dateObj = new Date(dateTimeStr);
+
+          if (!isNaN(dateObj.getTime())) {
+            // Forcing the backend to respect this as the absolute time point
+            // toISOString() converts to UTC, which is correct for storage
+            scheduledAt = dateObj.toISOString();
+          }
+        } catch (e) {
+          console.error("Date parsing error", e);
+        }
 
         const bookingId = await addBooking({
           service: serviceNames,
           provider: state.freelancerName || 'Freelancer',
           image: state.freelancerImage || '',
           date: bookingDate,
-          time: state.selectedTime || '10:00 AM',
+          time: bookingTime,
+          scheduledAt: scheduledAt, // Add this field for the backend
           status: 'confirmed',
           location: state.selectedLocation || 'Location TBD',
           price: `₹${total.toLocaleString()}`,

@@ -34,6 +34,7 @@ export interface Booking {
     completedAt?: string;
     transactionId?: string;
     paymentStatus?: string;
+    scheduledAt?: string; // ISO String for exact scheduling
 }
 
 interface BookingsContextType {

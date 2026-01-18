@@ -76,6 +76,15 @@ export default function BookingDetailPage() {
     return () => setNavbarVisibility(true);
   }, [setNavbarVisibility]);
 
+  const booking = useMemo(() => bookings.find((entry) => entry["#"] === (Array.isArray(params.id) ? params.id[0] : params.id) && entry["#"] === decodeURIComponent(entry["#"])), [params, bookings]);
+
+  // Redirect completed/cancelled to history view
+  useEffect(() => {
+    if (booking && (booking.status === 'completed' || booking.status === 'cancelled')) {
+      router.replace(`/client/bookings/history/${encodeURIComponent(booking["#"])}`);
+    }
+  }, [booking, router]);
+
   const rawId = useMemo(() => {
     if (!params || typeof params.id === "undefined") return "";
     const value = Array.isArray(params.id) ? params.id[0] : params.id;
@@ -180,7 +189,7 @@ export default function BookingDetailPage() {
     }
   };
 
-  const booking = useMemo(() => bookings.find((entry) => entry["#"] === rawId), [rawId, bookings]);
+
 
   const handleRescheduleSubmit = async (id: string, newDate: string, newTime: string, location?: string) => {
     if (!booking) return;
