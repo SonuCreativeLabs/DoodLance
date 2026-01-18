@@ -52,6 +52,7 @@ export default function SearchFilters({
 }: SearchFiltersProps) {
   const dateInputRef = useRef<HTMLInputElement | null>(null);
   const { setNavbarVisibility } = useNavbar();
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   useEffect(() => {
     if (showFilterModal) {
@@ -60,6 +61,7 @@ export default function SearchFilters({
     } else {
       document.body.style.overflow = 'unset';
       setNavbarVisibility(true);
+      setShowSuggestions(false);
     }
 
     return () => {
@@ -87,17 +89,41 @@ export default function SearchFilters({
       {/* Content */}
       <div className="flex-1 p-4 max-w-2xl w-full mx-auto">
         {/* Area Filter */}
-        <div className="mb-6">
-          <label className="block mb-2 text-sm text-white/90 font-medium">Area</label>
-          <select
-            value={selectedArea}
-            onChange={e => setSelectedArea(e.target.value)}
-            className="w-full px-4 py-3 text-sm rounded-xl bg-[#111111] text-white border border-white/10 font-medium"
-          >
-            {areas.map(area => (
-              <option key={area} value={area}>{area}</option>
-            ))}
-          </select>
+        <div className="mb-6 relative">
+          <label className="block mb-2 text-sm text-white/90 font-medium">Location</label>
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Search any location in India..."
+              value={selectedArea === "All" || selectedArea === "Velachery" ? (showSuggestions ? selectedArea : "") : selectedArea}
+              onChange={(e) => {
+                const value = e.target.value;
+                setSelectedArea(value);
+                // Debounce simple suggestion fetch (mock for now, ideally calls Mapbox)
+                // Since this component might not have direct API access without setup, 
+                // we will rely on text input for now but styled as search.
+                // For a proper implementation, we would fetch from https://api.mapbox.com/geocoding/v5/mapbox.places/{value}.json
+              }}
+              onFocus={() => setShowSuggestions(true)}
+              className="w-full px-4 py-3 text-sm rounded-xl bg-[#111111] text-white border border-white/10 font-medium focus:outline-none focus:border-purple-500 transition-colors pl-10"
+            />
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" /><circle cx="12" cy="10" r="3" /></svg>
+            </div>
+            {selectedArea && selectedArea !== "All" && (
+              <button
+                onClick={() => setSelectedArea("All")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+
+          {/* Note: In a production environment, you would map search results here. 
+              For now, we allow free text entry as "Location" to match broad searches. 
+              If the user wants strictly suggestions, we'd add the SuggestionsDropdown here.
+          */}
         </div>
 
         {/* Service Type Filter */}
@@ -119,7 +145,7 @@ export default function SearchFilters({
         <div className="mb-6">
           <div className="flex justify-between items-center mb-2">
             <label className="text-sm text-white/90 font-medium">Distance (km)</label>
-            <span className="text-sm text-white/80 font-medium">{range[0]} km</span>
+            <span className="text-sm text-white/80 font-medium">{range[0] === 50 ? 'No Limit' : `${range[0]} km`}</span>
           </div>
           <input
             type="range"
@@ -169,11 +195,10 @@ export default function SearchFilters({
               <button
                 key={rating}
                 onClick={() => setMinRating(rating)}
-                className={`py-2 rounded-xl text-sm font-medium ${
-                  minRating === rating
-                    ? 'bg-purple-600 text-white'
-                    : 'bg-transparent text-white/70 border border-white/10 hover:bg-white/5'
-                }`}
+                className={`py-2 rounded-xl text-sm font-medium ${minRating === rating
+                  ? 'bg-purple-600 text-white'
+                  : 'bg-transparent text-white/70 border border-white/10 hover:bg-white/5'
+                  }`}
               >
                 {rating === 0 ? 'Any' : `${rating}+`}
               </button>
@@ -189,22 +214,20 @@ export default function SearchFilters({
               <button
                 key={option}
                 onClick={() => setAvailability(option)}
-                className={`py-2 rounded-xl text-sm font-medium ${
-                  availability === option
-                    ? 'bg-purple-600 text-white'
-                    : 'bg-transparent text-white/70 border border-white/10 hover:bg-white/5'
-                }`}
+                className={`py-2 rounded-xl text-sm font-medium ${availability === option
+                  ? 'bg-purple-600 text-white'
+                  : 'bg-transparent text-white/70 border border-white/10 hover:bg-white/5'
+                  }`}
               >
                 {option}
               </button>
             ))}
             <button
               onClick={() => setAvailability('Pick Date')}
-              className={`py-2 rounded-xl text-sm font-medium flex items-center justify-center gap-2 ${
-                availability === 'Pick Date'
-                  ? 'bg-purple-600 text-white'
-                  : 'bg-transparent text-white/70 border border-white/10 hover:bg-white/5'
-              }`}
+              className={`py-2 rounded-xl text-sm font-medium flex items-center justify-center gap-2 ${availability === 'Pick Date'
+                ? 'bg-purple-600 text-white'
+                : 'bg-transparent text-white/70 border border-white/10 hover:bg-white/5'
+                }`}
             >
               <Calendar className="w-4 h-4" />
               Pick Date
@@ -232,11 +255,10 @@ export default function SearchFilters({
                 <button
                   key={option}
                   onClick={() => handleTimeOptionClick(option)}
-                  className={`py-2 rounded-xl text-sm font-medium ${
-                    selectedTimeOptions.includes(option)
-                      ? 'bg-purple-600 text-white'
-                      : 'bg-transparent text-white/70 border border-white/10 hover:bg-white/5 transition-colors'
-                  }`}
+                  className={`py-2 rounded-xl text-sm font-medium ${selectedTimeOptions.includes(option)
+                    ? 'bg-purple-600 text-white'
+                    : 'bg-transparent text-white/70 border border-white/10 hover:bg-white/5 transition-colors'
+                    }`}
                 >
                   {option}
                 </button>

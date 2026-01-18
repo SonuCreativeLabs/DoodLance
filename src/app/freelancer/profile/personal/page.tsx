@@ -806,7 +806,7 @@ export default function PersonalDetailsPage() {
               <FormField label="Claim your unique URL" required>
                 <div className="relative flex items-center">
                   <div className="absolute left-3 text-white/50 text-sm font-medium z-10 pointer-events-none select-none">
-                    doodlance.com/
+                    bails.in/
                   </div>
                   <Input
                     value={editUsername}
@@ -911,7 +911,7 @@ export default function PersonalDetailsPage() {
 
               {editUsername && editUsername !== username && usernameStatus === 'available' && (
                 <p className="text-xs text-purple-400">
-                  Your profile will be: doodlance.com/{editUsername}
+                  Your profile will be: bails.in/{editUsername}
                 </p>
               )}
 
@@ -970,7 +970,7 @@ export default function PersonalDetailsPage() {
                       className="text-purple-400 text-sm break-all hover:underline flex items-center gap-2"
                       target="_blank"
                     >
-                      doodlance.com/{username}
+                      bails.in/{username}
                       <ArrowLeft className="h-3 w-3 rotate-180" />
                     </Link>
                   </div>

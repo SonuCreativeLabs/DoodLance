@@ -184,7 +184,7 @@ export function UsernameInput({ value, onChange, userId }: UsernameInputProps) {
                     <Label>Your Public Profile</Label>
                     <div className="flex gap-2">
                         <Input
-                            value={`doodlance.com/${savedUsername}`}
+                            value={`bails.in/${savedUsername}`}
                             readOnly
                             className="flex-1"
                         />

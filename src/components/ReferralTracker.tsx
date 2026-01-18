@@ -10,7 +10,7 @@ function TrackerContent() {
         const ref = searchParams.get('ref');
         if (ref) {
             console.log('🔗 Referral Code Detected:', ref);
-            localStorage.setItem('doodlance_referral_code', ref);
+            localStorage.setItem('bails_referral_code', ref);
         }
     }, [searchParams]);
 

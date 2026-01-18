@@ -9,8 +9,18 @@ export const categories: Category[] = [
 ];
 
 export const areas = [
-  "Velachery", "Anna Nagar", "T Nagar", "Adyar", 
-  "Mylapore", "Porur", "Vadapalani", "Chromepet"
+  "Adyar", "Alandur", "Alwarpet", "Ambattur", "Aminjikarai", "Anna Nagar", "Ashok Nagar", "Avadi", "Ayanavaram",
+  "Besant Nagar", "Boat Club", "Chetpet", "Chintadripet", "Choolai", "Choolaimedu", "Chromepet",
+  "Egmore", "Ekkaduthangal", "Ennore", "Gopalapuram", "Guindy", "IIT Madras", "Injambakkam",
+  "K.K. Nagar", "Keelkattalai", "Kilpauk", "Kodambakkam", "Kodungaiyur", "Kolathur", "Korattur", "Kotturpuram", "Koyambedu",
+  "Madhavaram", "Madipakkam", "Manali", "Manapakkam", "Mandaveli", "Medavakkam", "Meenambakkam", "Mogappair", "MRC Nagar", "Mylapore",
+  "Nandanam", "Nanganallur", "Neelankarai", "Nungambakkam", "Otteri",
+  "Palavakkam", "Pallavaram", "Pallikaranai", "Pammal", "Park Town", "Parrys", "Perambur", "Perungudi", "Poonamallee", "Porur", "Purasawalkam",
+  "RA Puram", "Ramapuram", "Red Hills", "Royapettah", "Royapuram",
+  "Saidapet", "Saligramam", "Santhome", "Selaiyur", "Shenoy Nagar", "Sholinganallur", "Sowcarpet", "St. Thomas Mount",
+  "T. Nagar", "Tambaram", "Teynampet", "Tharamani", "Thiruvanmiyur", "Thiruvottiyur", "Thoraipakkam", "Tondiarpet", "Triplicane",
+  "Vadapalani", "Valasaravakkam", "Vanagaram", "Velachery", "Vepery", "Villivakkam", "Virugambakkam",
+  "Washermanpet", "West Mambalam"
 ];
 
 export const serviceTypes = [
@@ -21,7 +31,7 @@ export const serviceTypes = [
 ];
 
 export const availabilityOptions = [
-  "Available Now", "Available Today", 
+  "Available Now", "Available Today",
   "Available This Week", "Available Next Week"
 ];
 

@@ -460,7 +460,7 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
 
         const shareData = {
             title: `${freelancer.name}'s Profile`,
-            text: `Check out ${freelancer.name}'s profile on DoodLance`,
+            text: `Check out ${freelancer.name}'s profile on BAILS`,
             url: shareUrl
         };
 
@@ -715,7 +715,7 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                                                 <span>
                                                     {freelancer.area && freelancer.city
                                                         ? `${freelancer.area}, ${freelancer.city}`
-                                                        : freelancer.location
+                                                        : (freelancer.location || '').split(',').slice(0, 2).join(',')
                                                     }
                                                     {freelancer.distance ? <><span className="text-white/40 mx-1 text-xs">|</span>{freelancer.distance < 1 ? `${(freelancer.distance * 1000).toFixed(0)}m` : `${freelancer.distance.toFixed(1)}km`} away</> : ''}
                                                 </span>

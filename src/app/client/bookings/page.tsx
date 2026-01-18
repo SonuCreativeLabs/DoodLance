@@ -905,8 +905,8 @@ function BookingsPageContent() {
                   </div>
                 </TabsContent>
 
-                <TabsContent value="applications" className="mt-2 focus-visible:outline-none focus-visible:ring-0">
-                  <div className="py-12">
+                <TabsContent value="applications" className="mt-0 h-full">
+                  <div className="h-[60vh] flex flex-col items-center justify-center">
                     <CricketComingSoon
                       title="Field Setting Change!"
                       description={

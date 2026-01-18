@@ -151,10 +151,10 @@ function OTPContent() {
         >
           {/* Logo & Title */}
           <div className="text-center space-y-2">
-            <div className="relative w-32 h-32 mx-auto mb-0 overflow-hidden">
+            <div className="relative w-64 h-64 mx-auto -mb-12 overflow-hidden">
               <Image
-                src="/images/LOGOS/Doodlance Logo.svg"
-                alt="DoodLance"
+                src="/images/LOGOS/BAILS TG.png"
+                alt="BAILS"
                 fill
                 className="object-cover scale-110"
                 priority

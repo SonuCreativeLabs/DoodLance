@@ -87,7 +87,7 @@ export function HireProvider({ children }: { children: ReactNode }) {
 
   // Load from localStorage on mount
   useEffect(() => {
-    const savedState = localStorage.getItem('doodlance_hire_state');
+    const savedState = localStorage.getItem('bails_hire_state');
     if (savedState) {
       try {
         const parsedState = JSON.parse(savedState);
@@ -134,7 +134,7 @@ export function HireProvider({ children }: { children: ReactNode }) {
   // Save to localStorage whenever state changes
   useEffect(() => {
     if (isInitialized) {
-      localStorage.setItem('doodlance_hire_state', JSON.stringify(state));
+      localStorage.setItem('bails_hire_state', JSON.stringify(state));
     }
   }, [state, isInitialized]);
 

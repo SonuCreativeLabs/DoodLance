@@ -43,7 +43,7 @@ const PostedJobsContext = createContext<PostedJobsContextType | undefined>(undef
 // Initial state
 const initialPostedJobs: PostedJob[] = [];
 
-const STORAGE_KEY = 'doodlance_posted_jobs';
+const STORAGE_KEY = 'bails_posted_jobs';
 
 export function PostedJobsProvider({ children }: { children: ReactNode }) {
     const { user } = useAuth();

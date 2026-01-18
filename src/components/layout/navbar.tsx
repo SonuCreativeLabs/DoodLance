@@ -1,5 +1,5 @@
+import Image from "next/image"
 import Link from "next/link"
-import { Mouse } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 export function Navbar() {
@@ -9,8 +9,15 @@ export function Navbar() {
         <div className="flex items-center justify-between h-full">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
-            <Mouse className="w-6 h-6 text-[#FF8A3D]" />
-            <span className="text-lg font-semibold text-gray-800">DoodLance</span>
+            <div className="relative w-8 h-8">
+              <Image
+                src="/images/LOGOS/BAILS TG.png"
+                alt="BAILS Logo"
+                fill
+                className="object-contain"
+              />
+            </div>
+            <span className="text-lg font-semibold text-gray-800">BAILS</span>
           </Link>
 
           {/* Navigation Links */}

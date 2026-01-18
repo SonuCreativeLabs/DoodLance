@@ -152,7 +152,7 @@ export async function POST(request: NextRequest) {
     // Log Action
     await logAdminAction({
       adminId: 'admin-1', // Simplified
-      adminEmail: 'admin@doodlance.com',
+      adminEmail: 'admin@bails.in',
       action: 'CREATE',
       resource: 'SUPPORT_TICKET',
       resourceId: ticket.id,

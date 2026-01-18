@@ -3,7 +3,7 @@
 import dynamic from 'next/dynamic';
 import 'swagger-ui-react/swagger-ui.css';
 
-const SwaggerUI = dynamic(() => import('swagger-ui-react'), { 
+const SwaggerUI = dynamic(() => import('swagger-ui-react'), {
   ssr: false,
   loading: () => <div className="flex items-center justify-center min-h-screen">Loading API Documentation...</div>
 });
@@ -11,12 +11,12 @@ const SwaggerUI = dynamic(() => import('swagger-ui-react'), {
 const apiSpec = {
   openapi: '3.0.0',
   info: {
-    title: 'DoodLance API',
+    title: 'BAILS API',
     version: '1.0.0',
-    description: 'Complete API documentation for DoodLance platform',
+    description: 'Complete API documentation for BAILS platform',
     contact: {
-      name: 'DoodLance Support',
-      email: 'support@doodlance.com',
+      name: 'BAILS Support',
+      email: 'support@bails.in',
     },
   },
   servers: [
@@ -297,7 +297,7 @@ const apiSpec = {
           {
             name: 'status',
             in: 'query',
-            schema: { 
+            schema: {
               type: 'string',
               enum: ['pending', 'confirmed', 'completed', 'cancelled']
             },
@@ -450,7 +450,7 @@ export default function ApiDocsPage() {
   return (
     <div className="min-h-screen bg-white">
       <div className="p-4 bg-gray-900 text-white">
-        <h1 className="text-2xl font-bold">DoodLance API Documentation</h1>
+        <h1 className="text-2xl font-bold">BAILS API Documentation</h1>
         <p className="text-gray-300 mt-1">Complete API reference for developers</p>
       </div>
       <SwaggerUI spec={apiSpec} />

@@ -17,27 +17,16 @@ export async function GET(request: NextRequest) {
         // Query user from database
         const dbUser = await prisma.user.findUnique({
             where: { id: user.id },
-            select: {
-                id: true,
-                email: true,
-                name: true,
-                phone: true,
-                avatar: true,
-                location: true,
-                bio: true,
-                gender: true,
-                username: true,
-                displayId: true,
-                address: true,
-                area: true,
-                city: true,
-                state: true,
-                postalCode: true,
-                role: true,
-                currentRole: true,
-                isVerified: true,
-                phoneVerified: true,
-                createdAt: true,
+            include: {
+                freelancerProfile: {
+                    select: {
+                        dateOfBirth: true,
+                        isOnline: true,
+                        cricketRole: true,
+                        title: true,
+                        coverImage: true,
+                    }
+                }
             }
         });
 
@@ -45,6 +34,28 @@ export async function GET(request: NextRequest) {
             console.log(`[API] User ${user.id} not found in DB, creating new record...`);
 
             try {
+                // Generate Referral Code (BAILS + Sequence)
+                let referralCode = null;
+                try {
+                    // Fetch and increment sequence in a transaction to minimize race conditions
+                    // Note: 'value' is a string, so we can't use atomic increment directly unless we change schema
+                    // We'll use a read-write approach. If concurrency is high, this might need a lock or int field.
+                    const config = await prisma.systemConfig.findUnique({ where: { key: 'NEXT_REFERRAL_SEQUENCE' } });
+                    let sequence = 22; // Default start if missing
+                    if (config) {
+                        sequence = parseInt(config.value);
+                    }
+                    referralCode = `BAILS${sequence}`;
+
+                    await prisma.systemConfig.upsert({
+                        where: { key: 'NEXT_REFERRAL_SEQUENCE' },
+                        update: { value: (sequence + 1).toString() },
+                        create: { key: 'NEXT_REFERRAL_SEQUENCE', value: (sequence + 1).toString() }
+                    });
+                } catch (e) {
+                    console.error('[API] Failed to generate referral code, falling back to lazy generation:', e);
+                }
+
                 // Auto-create user if they exist in Auth but not in DB (Self-healing)
                 // Use upsert to handle race conditions where parallel requests try to create
                 const newDbUser = await prisma.user.upsert({
@@ -57,6 +68,7 @@ export async function GET(request: NextRequest) {
                         role: 'client', // Default role
                         coords: '[0,0]',
                         isVerified: false,
+                        referralCode: referralCode, // Add generated code
                         referredBy: user.user_metadata?.referredBy || null,
                     },
                     select: {
@@ -71,7 +83,6 @@ export async function GET(request: NextRequest) {
                         username: true,
                         displayId: true,
                         address: true,
-                        area: true,
                         city: true,
                         state: true,
                         postalCode: true,
@@ -82,6 +93,32 @@ export async function GET(request: NextRequest) {
                         createdAt: true,
                     }
                 });
+
+
+                // Create Welcome Notification
+                try {
+                    await prisma.notification.create({
+                        data: {
+                            userId: newDbUser.id,
+                            title: 'Welcome to BAILS! 🎉',
+                            message: `Hi ${newDbUser.name}, welcome to BAILS! Complete your profile to get started.`,
+                            type: 'WELCOME',
+                            entityId: newDbUser.id,
+                            entityType: 'user',
+                            actionUrl: '/client/profile',
+                        }
+                    });
+                } catch (notifError) {
+                    console.error('[API] Failed to create welcome notification:', notifError);
+                }
+
+                // Send Admin Notification
+                const { sendAdminNotification } = await import('@/lib/email');
+                await sendAdminNotification(
+                    'New User Signed Up',
+                    `A new user has signed up.\n\nName: ${newDbUser.name}\nEmail: ${newDbUser.email}\nID: ${newDbUser.id}\nRole: ${newDbUser.role}`
+                ).catch(err => console.error('Failed to send admin notification:', err));
+
                 return NextResponse.json(newDbUser);
             } catch (createError: any) {
                 console.error('[API] Failed to auto-create user:', createError);
@@ -109,7 +146,6 @@ export async function GET(request: NextRequest) {
                                 username: true,
                                 displayId: true,
                                 address: true,
-                                area: true,
                                 city: true,
                                 state: true,
                                 postalCode: true,
@@ -145,3 +181,4 @@ export async function GET(request: NextRequest) {
         );
     }
 }
+

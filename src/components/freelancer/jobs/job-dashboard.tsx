@@ -858,8 +858,8 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
                     )}
                   </TabsContent>
 
-                  <TabsContent value="applications" className="mt-0 w-full">
-                    <div className="py-12">
+                  <TabsContent value="applications" className="mt-0 w-full h-full">
+                    <div className="h-[60vh] flex flex-col items-center justify-center">
                       <CricketComingSoon
                         title="Pitch Inspection in Progress!"
                         description={

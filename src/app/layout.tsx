@@ -11,8 +11,14 @@ import { MicrosoftClarity } from "@/components/MicrosoftClarity";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: "DoodLance - Cricket Services Marketplace",
-  description: "Connect with professional cricketers and coaches for training, matches, and more",
+  title: {
+    default: 'BAILS - Cricket Services Marketplace',
+    template: '%s | BAILS',
+  },
+  description: 'Find and hire the best cricket talent in Chennai',
+  icons: {
+    icon: '/images/LOGOS/TS favicon.svg',
+  },
 };
 
 export default function RootLayout({

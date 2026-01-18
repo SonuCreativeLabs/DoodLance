@@ -536,6 +536,70 @@ export async function POST(request: NextRequest) {
                 });
             }
 
+            // 3. Notify Admin (Email) - Rich HTML Format
+            // Run asynchronously to not block response
+            (async () => {
+                if (!fullBooking) return; // Should not happen
+
+                try {
+                    const { sendAdminNotification } = await import('@/lib/email');
+
+                    const price = (fullBooking.totalPrice || 0).toLocaleString('en-IN');
+                    const date = fullBooking.scheduledAt ? new Date(fullBooking.scheduledAt).toLocaleString('en-IN', {
+                        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                    }) : 'Date TBD';
+
+                    const clientName = fullBooking.client.name || fullBooking.client.email || 'Client';
+                    const freelancerName = fullBooking.service.provider.name || 'Freelancer';
+                    const serviceTitle = fullBooking.service.title;
+                    const duration = fullBooking.duration || 60;
+
+                    const htmlContent = `
+                        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 8px;">
+                            <h2 style="color: #6B46C1; text-align: center;">New Booking Confirmed 🚀</h2>
+                            <p style="color: #555; font-size: 16px;">A new service has been booked on BAILS.</p>
+                            
+                            <div style="background-color: #f8f9fa; padding: 15px; border-radius: 6px; margin: 20px 0;">
+                                <h3 style="margin-top: 0; color: #333;">${serviceTitle}</h3>
+                                <p style="margin: 5px 0;"><strong>Price:</strong> ₹${price}</p>
+                                <p style="margin: 5px 0;"><strong>Date:</strong> ${date}</p>
+                                <p style="margin: 5px 0;"><strong>Duration:</strong> ${duration} mins</p>
+                            </div>
+
+                            <div style="display: flex; gap: 20px; margin-bottom: 20px;">
+                                <div style="flex: 1;">
+                                    <h4 style="border-bottom: 2px solid #6B46C1; padding-bottom: 5px;">Client</h4>
+                                    <p style="margin: 5px 0;"><strong>Name:</strong> ${clientName}</p>
+                                    <p style="margin: 5px 0;"><strong>Email:</strong> ${fullBooking.client.email}</p>
+                                    <p style="margin: 5px 0;"><strong>Phone:</strong> ${fullBooking.client.phone || 'N/A'}</p>
+                                </div>
+                                <div style="flex: 1;">
+                                    <h4 style="border-bottom: 2px solid #6B46C1; padding-bottom: 5px;">Freelancer</h4>
+                                    <p style="margin: 5px 0;"><strong>Name:</strong> ${freelancerName}</p>
+                                    <p style="margin: 5px 0;"><strong>ID:</strong> ${fullBooking.service.providerId}</p>
+                                </div>
+                            </div>
+
+                            <div style="text-align: center; margin-top: 30px;">
+                                <a href="https://bails.in/admin/bookings/${fullBooking.id}" style="background-color: #6B46C1; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">View Booking</a>
+                            </div>
+                            
+                            <p style="font-size: 12px; color: #999; text-align: center; margin-top: 30px;">
+                                Booking ID: ${fullBooking.id}
+                            </p>
+                        </div>
+                    `;
+
+                    await sendAdminNotification(
+                        `New Booking: ${serviceTitle} - ₹${price}`,
+                        `New booking confirmed for ${serviceTitle} by ${clientName}. Price: ₹${price}`,
+                        htmlContent
+                    );
+                } catch (emailErr) {
+                    console.error('Failed to send admin booking notification:', emailErr);
+                }
+            })();
+
             console.log('Booking created successfully:', result.id);
             return NextResponse.json({ success: true, booking: result });
         } catch (dbError: any) {

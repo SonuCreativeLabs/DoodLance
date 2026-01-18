@@ -31,7 +31,7 @@ export async function PATCH(
 
             await logAdminAction({
                 adminId: 'admin-1',
-                adminEmail: 'admin@doodlance.com',
+                adminEmail: 'admin@bails.in',
                 action: 'VERIFY',
                 resource: 'KYC',
                 resourceId: profileId,
@@ -81,7 +81,7 @@ export async function PATCH(
 
             await logAdminAction({
                 adminId: 'admin-1',
-                adminEmail: 'admin@doodlance.com',
+                adminEmail: 'admin@bails.in',
                 action: 'REJECT',
                 resource: 'KYC',
                 resourceId: profileId,

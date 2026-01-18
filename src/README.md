@@ -79,7 +79,7 @@ src/
 4. Maintain proper type safety
 5. Document complex business logic 
 
-# DoodLance UI Theme
+# BAILS UI Theme
 
 ## Primary Colors
 - **Light Theme**: `#6B46C1`

@@ -42,7 +42,7 @@ export async function POST(
         // Log
         await logAdminAction({
             adminId: 'admin-1',
-            adminEmail: 'admin@doodlance.com',
+            adminEmail: 'admin@bails.in',
             action: 'UPDATE',
             resource: 'SUPPORT_TICKET',
             resourceId: ticketId,

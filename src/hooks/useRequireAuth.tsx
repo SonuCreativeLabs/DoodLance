@@ -5,8 +5,8 @@ import { useState, useCallback, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 
 // localStorage keys for persistence across page navigations
-const RETURN_TO_KEY = 'doodlance_return_to'
-const PENDING_ACTION_KEY = 'doodlance_pending_action'
+const RETURN_TO_KEY = 'bails_return_to'
+const PENDING_ACTION_KEY = 'bails_pending_action'
 
 interface UseRequireAuthReturn {
     requireAuth: (actionId: string, options?: {

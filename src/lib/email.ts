@@ -29,7 +29,7 @@ export async function sendEmail({ to, subject, text, html }: SendEmailParams) {
     });
 
     await transporter.sendMail({
-      from: process.env.SMTP_FROM || '"DoodLance" <noreply@doodlance.com>',
+      from: process.env.SMTP_FROM || '"BAILS" <noreply@bails.in>',
       to,
       subject,
       text,
@@ -50,7 +50,7 @@ export async function sendEmail({ to, subject, text, html }: SendEmailParams) {
  * @returns true if sent successfully, false otherwise
  */
 export async function sendOTPEmail(email: string, code: string): Promise<boolean> {
-  const subject = 'Your DoodLance Login Code';
+  const subject = 'Your BAILS Login Code';
   const text = `Your verification code is: ${code}\n\nThis code expires in 10 minutes.\n\nIf you didn't request this code, please ignore this email.`;
 
   const html = `
@@ -97,16 +97,16 @@ export async function sendOTPEmail(email: string, code: string): Promise<boolean
       </head>
       <body>
         <div class="container">
-          <h1 style="color: #6B46C1;">DoodLance</h1>
+          <h1 style="color: #6B46C1;">BAILS</h1>
           <h2>Your Verification Code</h2>
-          <p>You requested a login code for your DoodLance account. Use the code below:</p>
+          <p>You requested a login code for your BAILS account. Use the code below:</p>
           <div class="code-box">
             <div class="code">${code}</div>
           </div>
           <p><strong>This code expires in 10 minutes.</strong></p>
           <p>If you didn't request this code, you can safely ignore this email.</p>
           <div class="footer">
-            <p>© 2024 DoodLance. All rights reserved.</p>
+            <p>© 2024 BAILS. All rights reserved.</p>
           </div>
         </div>
       </body>
@@ -124,4 +124,21 @@ export async function sendOTPEmail(email: string, code: string): Promise<boolean
 export function isValidEmail(email: string): boolean {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
+}
+
+const ADMIN_EMAIL = 'sathishraj@bails.in';
+
+/**
+ * Sends a notification email to the admin
+ * @param subject - Email subject
+ * @param content - Email content (text)
+ * @param html - Optional HTML content
+ */
+export async function sendAdminNotification(subject: string, content: string, html?: string): Promise<boolean> {
+  return await sendEmail({
+    to: ADMIN_EMAIL,
+    subject: `[Admin Alert] ${subject}`,
+    text: content,
+    html: html || content.replace(/\n/g, '<br>')
+  });
 }

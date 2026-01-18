@@ -31,10 +31,6 @@ export async function GET(request: NextRequest) {
 
         // Generate Referral Code if not exists
         if (!dbUser.referralCode) {
-            const namePart = dbUser.name
-                ? dbUser.name.split(' ')[0].toUpperCase().replace(/[^A-Z]/g, '').substring(0, 10)
-                : 'USER';
-
             // Get Next Sequence
             let sequence = 1;
             const config = await prisma.systemConfig.findUnique({ where: { key: 'NEXT_REFERRAL_SEQUENCE' } });
@@ -42,8 +38,8 @@ export async function GET(request: NextRequest) {
                 sequence = parseInt(config.value);
             }
 
-            const seqPart = sequence.toString().padStart(5, '0');
-            const newCode = `BAILS${namePart}${seqPart}`;
+            // Format: BAILS + Sequence (e.g., BAILS1, BAILS2...)
+            const newCode = `BAILS${sequence}`;
 
             const userId = dbUser.id;
             // Update User AND SystemConfig in transaction

@@ -640,7 +640,7 @@ const ProfilePreview = memo(({
 
                     const shareData = {
                       title: `${profileData.name}'s Profile`,
-                      text: `Check out ${profileData.name}'s profile on DoodLance`,
+                      text: `Check out ${profileData.name}'s profile on BAILS`,
                       url: shareUrl
                     };
 
