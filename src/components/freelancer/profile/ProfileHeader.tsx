@@ -483,9 +483,8 @@ export function ProfileHeader({
         <div className="flex flex-col items-center md:flex-row md:items-end md:justify-between -mt-16 mb-4 relative">
           {/* Profile Picture */}
           <div className="relative group">
-            {/* Profile Picture with Verified Ring */}
-            <div className={`relative w-32 h-32 sm:w-40 sm:h-40 rounded-full border-4 overflow-hidden bg-[#111111] ${personalDetails.isVerified ? 'border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.5)]' : 'border-[#1E1E1E]'}`}>
-
+            {/* Profile Picture */}
+            <div className="relative w-32 h-32 sm:w-40 sm:h-40 rounded-full border-4 border-[#1E1E1E] overflow-hidden bg-[#111111]">
               <Avatar className="w-full h-full">
                 <AvatarImage src={profileImage || avatarUrl || personalDetails.avatarUrl} alt={personalDetails.name} />
                 <AvatarFallback className="bg-[#1a1a1a] flex items-center justify-center">
@@ -514,17 +513,6 @@ export function ProfileHeader({
                     accept="image/*"
                     className="hidden"
                   />
-                </div>
-              )}
-
-              {/* Verified Tick Badge */}
-              {personalDetails.isVerified && (
-                <div className="absolute bottom-2 right-2 md:bottom-2 md:right-3 z-30">
-                  <div className="bg-blue-500 text-white rounded-full p-1 border-4 border-[#0f0f0f] shadow-lg flex items-center justify-center w-8 h-8 md:w-10 md:h-10">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 md:w-5 md:h-5">
-                      <path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clipRule="evenodd" />
-                    </svg>
-                  </div>
                 </div>
               )}
             </div>
