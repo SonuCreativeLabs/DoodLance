@@ -114,9 +114,34 @@ export async function GET(request: NextRequest) {
 
                 // Send Admin Notification
                 const { sendAdminNotification } = await import('@/lib/email');
+
+                const subject = `New User Signup: ${newDbUser.name || 'User'}`;
+                const htmlContent = `
+                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 8px;">
+                        <h2 style="color: #6B46C1; text-align: center;">New User Signup 🎉</h2>
+                        <p style="color: #555; text-align: center;">A new user has joined the platform.</p>
+                        
+                        <div style="background-color: #f8f9fa; padding: 15px; border-radius: 6px; margin: 20px 0;">
+                            <p style="margin: 8px 0;"><strong>Name:</strong> ${newDbUser.name}</p>
+                            <p style="margin: 8px 0;"><strong>Email:</strong> ${newDbUser.email}</p>
+                            <p style="margin: 8px 0;"><strong>Role:</strong> ${newDbUser.role}</p>
+                            <p style="margin: 8px 0;"><strong>Joined:</strong> ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}</p>
+                        </div>
+
+                        <div style="text-align: center; margin-top: 20px;">
+                            <a href="https://bails.in/admin/users?search=${newDbUser.email}" style="background-color: #6B46C1; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">View User</a>
+                        </div>
+                        
+                        <p style="font-size: 12px; color: #999; text-align: center; margin-top: 30px;">
+                            User ID: ${newDbUser.id}
+                        </p>
+                    </div>
+                `;
+
                 await sendAdminNotification(
-                    'New User Signed Up',
-                    `A new user has signed up.\n\nName: ${newDbUser.name}\nEmail: ${newDbUser.email}\nID: ${newDbUser.id}\nRole: ${newDbUser.role}`
+                    subject,
+                    `New user signed up: ${newDbUser.name} (${newDbUser.email})`,
+                    htmlContent
                 ).catch(err => console.error('Failed to send admin notification:', err));
 
                 return NextResponse.json(newDbUser);

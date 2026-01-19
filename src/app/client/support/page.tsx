@@ -21,7 +21,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { MessageSquare, Plus, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { MessageSquare, Plus, Clock, CheckCircle, XCircle, AlertCircle, Mail, Phone, Copy } from 'lucide-react';
+import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { motion } from 'framer-motion';
 
@@ -37,6 +38,11 @@ export default function ClientSupportPage() {
   const [subject, setSubject] = useState('');
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState('MEDIUM');
+
+  const copyToClipboard = (text: string, label: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success(`${label} copied to clipboard`);
+  };
 
   useEffect(() => {
     if (user?.id) {
@@ -136,6 +142,53 @@ export default function ClientSupportPage() {
             <Plus className="w-4 h-4 mr-2" />
             New Ticket
           </Button>
+        </div>
+
+        {/* Contact Info Card */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Card className="bg-[#1a1a1a] border-gray-800 p-6 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-purple-500/10 rounded-full">
+                <Mail className="w-6 h-6 text-purple-400" />
+              </div>
+              <div>
+                <p className="text-gray-400 text-sm">Email Us</p>
+                <a href="mailto:connect.bails@gmail.com" className="text-white font-medium hover:text-purple-400 transition-colors">
+                  connect.bails@gmail.com
+                </a>
+              </div>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-gray-400 hover:text-white hover:bg-white/10"
+              onClick={() => copyToClipboard('connect.bails@gmail.com', 'Email')}
+            >
+              <Copy className="w-4 h-4" />
+            </Button>
+          </Card>
+
+          <Card className="bg-[#1a1a1a] border-gray-800 p-6 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-purple-500/10 rounded-full">
+                <Phone className="w-6 h-6 text-purple-400" />
+              </div>
+              <div>
+                <p className="text-gray-400 text-sm">Call Us</p>
+                <a href="tel:6379496755" className="text-white font-medium hover:text-purple-400 transition-colors">
+                  6379496755
+                </a>
+              </div>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-gray-400 hover:text-white hover:bg-white/10"
+              onClick={() => copyToClipboard('6379496755', 'Phone number')}
+            >
+              <Copy className="w-4 h-4" />
+            </Button>
+          </Card>
         </div>
 
         {/* Tickets List */}

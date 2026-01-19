@@ -31,6 +31,14 @@ const initialPopularServices: PopularService[] = [
     mostBooked: true
   },
   {
+    id: 'sidearm-thrower',
+    title: 'Sidearm Thrower',
+    icon: '💪',
+    providerCount: 34,
+    image: '/images/Service Catagories/cricket sidearm.png',
+    mostBooked: true
+  },
+  {
     id: 'cricket-coach',
     title: 'Cricket Coach',
     icon: '🏏',
@@ -52,14 +60,6 @@ const initialPopularServices: PopularService[] = [
     icon: '☝️',
     providerCount: 45,
     image: '/images/Service Catagories/cricket umpire.png',
-    mostBooked: true
-  },
-  {
-    id: 'sidearm-thrower',
-    title: 'Sidearm Thrower',
-    icon: '💪',
-    providerCount: 34,
-    image: '/images/Service Catagories/cricket sidearm.png',
     mostBooked: true
   }
 ];
