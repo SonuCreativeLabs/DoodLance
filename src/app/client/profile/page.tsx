@@ -110,15 +110,7 @@ export default function ClientProfile() {
 
                 <h1 className="text-2xl font-bold text-white mb-2">{user.name || 'Your Name'}</h1>
 
-                {!(user as any)?.isVerified && (
-                  <Link
-                    href="/client/profile/kyc"
-                    className="flex items-center gap-2 px-4 py-2 bg-green-500/20 hover:bg-green-500/30 text-green-400 rounded-lg text-sm font-medium transition-colors border border-green-500/20"
-                  >
-                    <ShieldCheck className="w-4 h-4" />
-                    Verify KYC
-                  </Link>
-                )}
+
               </div>
 
               {/* Contact Information */}

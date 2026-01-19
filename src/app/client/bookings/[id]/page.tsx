@@ -184,8 +184,8 @@ export default function BookingDetailPage() {
       setReview('');
       setSelectedChips([]);
 
-      // Redirect or show success
-      router.push('/client/bookings');
+      // Redirect directly to history details page
+      router.push(`/client/bookings/history/${encodeURIComponent(booking["#"])}`);
     } catch (error) {
       console.error("Error completing booking:", error);
       alert("Failed to complete booking. Please try again.");

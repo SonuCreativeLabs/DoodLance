@@ -723,13 +723,22 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
 
                                         <div className="mt-2 flex flex-col items-center gap-0.5 text-sm text-white/70">
                                             <div className="flex items-center gap-2">
-                                                <span>
-                                                    {freelancer.area && freelancer.city
-                                                        ? `${freelancer.area}, ${freelancer.city}`
-                                                        : (freelancer.location || '').split(',').slice(0, 2).join(',')
-                                                    }
-                                                    {freelancer.distance ? <><span className="text-white/40 mx-1 text-xs">|</span>{freelancer.distance < 1 ? `${(freelancer.distance * 1000).toFixed(0)}m` : `${freelancer.distance.toFixed(1)}km`} away</> : ''}
-                                                </span>
+                                                <div className="flex items-center gap-2">
+                                                    {(() => {
+                                                        const locationText = freelancer.area && freelancer.city
+                                                            ? `${freelancer.area}, ${freelancer.city}`
+                                                            : (freelancer.location || '').split(',').slice(0, 2).filter(Boolean).join(',');
+
+                                                        if (!locationText) return null;
+
+                                                        return (
+                                                            <span>
+                                                                {locationText}
+                                                                {freelancer.distance ? <><span className="text-white/40 mx-1 text-xs">|</span>{freelancer.distance < 1 ? `${(freelancer.distance * 1000).toFixed(0)}m` : `${freelancer.distance.toFixed(1)}km`} away</> : ''}
+                                                            </span>
+                                                        );
+                                                    })()}
+                                                </div>
                                             </div>
                                             <div className="flex items-center gap-1">
                                                 <div className="flex items-center gap-1.5 font-semibold text-white">

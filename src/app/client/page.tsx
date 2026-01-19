@@ -393,6 +393,7 @@ export default function ClientHome() {
                     ))
                   ) : professionals.length > 0 ? (
                     professionals
+                      .filter(expert => (expert.area && expert.city) || (expert.location && expert.location.trim() !== ''))
                       .sort((a, b) => {
                         // First sort by rating
                         if (b.rating !== a.rating) {
@@ -437,18 +438,30 @@ export default function ClientHome() {
                                 <div className="mt-2 text-center">
                                   <h3 className="font-semibold text-white text-xs leading-tight truncate px-1">{expert.name}</h3>
                                   <p className="text-purple-400 text-[10px] font-medium truncate mt-0.5 px-1">{expert.cricketRole || expert.service || 'Expert'}</p>
-                                  <p className="text-white/70 text-[9px] mt-0.5 truncate px-1">
-                                    {expert.area && expert.city ? `${expert.area}, ${expert.city}` : (expert.location || '').split(',').slice(0, 2).join(',')}
-                                  </p>
-                                  <p className="text-white/50 text-[9px] font-medium mt-0.5 truncate px-1">
-                                    {expert.distance ? (
+                                  {(() => {
+                                    const locationText = expert.area && expert.city
+                                      ? `${expert.area}, ${expert.city}`
+                                      : (expert.location || '').split(',').slice(0, 2).filter(Boolean).join(',');
+
+                                    if (!locationText) return null;
+
+                                    return (
                                       <>
-                                        {expert.distance < 1
-                                          ? `${(expert.distance * 1000).toFixed(0)}m`
-                                          : `${expert.distance.toFixed(1)}km`} away
+                                        <p className="text-white/70 text-[9px] mt-0.5 truncate px-1">
+                                          {locationText}
+                                        </p>
+                                        <p className="text-white/50 text-[9px] font-medium mt-0.5 truncate px-1">
+                                          {expert.distance ? (
+                                            <>
+                                              {expert.distance < 1
+                                                ? `${(expert.distance * 1000).toFixed(0)}m`
+                                                : `${expert.distance.toFixed(1)}km`} away
+                                            </>
+                                          ) : ''}
+                                        </p>
                                       </>
-                                    ) : ''}
-                                  </p>
+                                    );
+                                  })()}
                                 </div>
                               </div>
                             </div>
@@ -496,7 +509,7 @@ export default function ClientHome() {
                       image={service.image}
                       icon={service.icon}
                       providerCount={service.providerCount}
-                      className="w-[140px] flex-shrink-0"
+                      className="w-[125px] flex-shrink-0"
                     />
                   ))}
                 </div>

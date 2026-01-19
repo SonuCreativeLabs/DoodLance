@@ -114,7 +114,7 @@ export async function GET(request: Request) {
                 city: p.user.city,
                 location: p.user.area && p.user.city
                     ? `${p.user.area}, ${p.user.city}`
-                    : (p.user.location || (p.user.city ? `${p.user.city}, ${p.user.state || ''}` : 'Chennai, India')),
+                    : (p.user.location || (p.user.city ? `${p.user.city}, ${p.user.state || ''}` : '')),
                 responseTime: p.responseTime || '1 hour',
                 image: p.user.avatar || p.user.profileImage || '/placeholder-user.jpg',
                 avatar: p.user.avatar || p.user.profileImage || '/placeholder-user.jpg',
