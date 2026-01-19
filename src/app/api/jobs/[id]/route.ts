@@ -84,6 +84,8 @@ export async function GET(
           status: booking.status === 'PENDING' ? 'OPEN' : booking.status === 'CONFIRMED' ? 'OPEN' : booking.status === 'ONGOING' ? 'STARTED' : booking.status,
           payment: booking.totalPrice,
           location: booking.location,
+          date: booking.scheduledAt ? booking.scheduledAt.toISOString() : null,
+          time: booking.scheduledAt ? booking.scheduledAt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }) : null,
           scheduledAt: booking.scheduledAt,
           duration: (booking.duration || 60) + " mins",
           client: booking.client,

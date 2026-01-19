@@ -119,6 +119,7 @@ export function BookingsProvider({ children }: { children: ReactNode }) {
                         notes: b.notes,
                         services: b.services,
                         freelancerId: b.freelancerId,
+                        scheduledAt: b.scheduledAt,
                     };
                 });
 

@@ -81,10 +81,14 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
     }
   }, [jobId]);
 
-  const handleJobUpdate = async (id: string, newStatus: 'completed' | 'cancelled' | 'started' | 'delivered', notes?: string, completionData?: { rating: number; review: string; feedbackChips: string[]; }) => {
+  const handleJobUpdate = async (id: string, newStatus: 'completed' | 'cancelled' | 'started' | 'delivered', notes?: string, completionData?: { rating: number; review: string; feedbackChips: string[]; }, extraData?: any) => {
     // Optimistic update
     if (job) {
-      setJob({ ...job, status: newStatus as any });
+      setJob({
+        ...job,
+        status: newStatus as any,
+        ...extraData // Merge any extra data like startedAt
+      });
 
       // For real update, the Modal component (JobDetailsModal) actually handles the API call internally in 'confirmStartJob' etc.
       // But we should refresh the data here just in case, or trust the modal calls.

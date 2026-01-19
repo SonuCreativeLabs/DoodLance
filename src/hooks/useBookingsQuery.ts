@@ -46,6 +46,7 @@ async function fetchBookings(): Promise<Booking[]> {
             providerPhone: b.freelancerPhone,
             freelancerId: b.freelancerId,
             paymentMethod: b.paymentMethod,
+            scheduledAt: b.scheduledAt,
         }
     })
 

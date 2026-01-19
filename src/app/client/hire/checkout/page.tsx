@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, CreditCard, Tag, Shield, AlertCircle, ChevronDown, ChevronUp, Smartphone, Wallet, Truck, CheckCircle, Loader2, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -12,6 +13,7 @@ import LoginDialog from '@/components/auth/LoginDialog';
 
 export default function CheckoutPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { state, getTotalPrice, clearCart, resetHireState } = useHire();
   const { addBooking } = useBookings();
   const { setNavbarVisibility } = useNavbar();
@@ -183,6 +185,9 @@ export default function CheckoutPage() {
         setNewBookingId(bookingId);
         setGeneratedOtp(otp);
         setBookingSuccess(true);
+
+        // 🔄 Invalidate React Query cache to force refetch on Bookings page
+        queryClient.invalidateQueries({ queryKey: ['bookings'] });
 
         // Clear cart and hire state
         clearCart();

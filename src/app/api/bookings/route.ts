@@ -136,8 +136,8 @@ async function handleGetBookings(request: NextRequest, user: { id: string, role?
             freelancerPhone: b.service.provider.phone,
             clientAvatar: b.client.avatar, // Added client avatar
             status: b.status,
-            date: b.scheduledAt ? b.scheduledAt.toISOString() : null,
-            time: b.scheduledAt ? b.scheduledAt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }) : null, // Added time
+            date: b.scheduledAt ? b.scheduledAt.toISOString() : b.date,
+            time: b.scheduledAt ? b.scheduledAt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }) : b.time,
             price: b.totalPrice,
             serviceId: b.serviceId,
             clientId: b.clientId,
