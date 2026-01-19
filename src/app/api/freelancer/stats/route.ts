@@ -1,19 +1,39 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import prisma from '@/lib/db';
 
 export async function GET(request: NextRequest) {
     try {
         const supabase = createClient();
-        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        let { data: { user }, error: authError } = await supabase.auth.getUser();
 
         if (authError || !user) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+            // Fallback: Check for 'access_token' (Legacy/JWT)
+            const cookieStore = cookies();
+            const token = cookieStore.get('access_token')?.value;
+
+            if (token) {
+                try {
+                    const { verifyAccessToken } = await import('@/lib/auth/jwt');
+                    const decoded = verifyAccessToken(token);
+                    if (decoded && decoded.userId) {
+                        // We just need the user object with ID
+                        user = { id: decoded.userId } as any;
+                    } else {
+                        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+                    }
+                } catch (e) {
+                    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+                }
+            } else {
+                return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+            }
         }
 
         const profile = await prisma.freelancerProfile.findUnique({
-            where: { userId: user.id },
+            where: { userId: user!.id },
             select: {
                 id: true,
                 totalEarnings: true,
@@ -32,7 +52,7 @@ export async function GET(request: NextRequest) {
 
         // Fetch ALL completed bookings for services provided by this user
         const userServices = await prisma.service.findMany({
-            where: { providerId: user.id },
+            where: { providerId: user!.id },
             select: { id: true }
         });
 

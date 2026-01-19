@@ -51,7 +51,7 @@ interface ClientInfo {
 interface JobDetailsModalProps {
   job: Job;
   onClose?: () => void;
-  onJobUpdate?: (jobId: string, newStatus: 'completed' | 'cancelled' | 'started' | 'delivered', notes?: string, completionData?: { rating: number, review: string, feedbackChips: string[] }) => void;
+  onJobUpdate?: (jobId: string, newStatus: 'completed' | 'cancelled' | 'started' | 'delivered', notes?: string, completionData?: { rating: number, review: string, feedbackChips: string[] }, extraData?: any) => void;
   initialShowComplete?: boolean;
 }
 
@@ -251,9 +251,9 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
     try {
       setIsCancelling(true);
       console.log('Attempting to cancel job:', job.id);
-      console.log('API URL:', `/api/jobs/${job.id}`);
+      console.log('API URL:', `/api/jobs/${encodeURIComponent(job.id)}`);
 
-      const response = await fetch(`/api/jobs/${job.id}`, {
+      const response = await fetch(`/api/jobs/${encodeURIComponent(job.id)}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -300,6 +300,8 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
     setShowStartJobDialog(true);
   };
 
+
+
   const confirmStartJob = async () => {
     if (otpInput !== jobOtp) {
       setOtpError('Invalid verification code. Please try again.');
@@ -315,14 +317,16 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
       setIsStarting(true);
       console.log('Starting job:', job.id);
 
-      const response = await fetch(`/api/jobs/${job.id}`, {
+      const startedAt = new Date().toISOString();
+
+      const response = await fetch(`/api/jobs/${encodeURIComponent(job.id)}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           status: 'started',
-          startedAt: new Date().toISOString(),
+          startedAt: startedAt,
           otpVerified: true,
           otp: jobOtp, // Save the OTP to the job for reference
           originalJobData: job // Pass the complete original job data
@@ -337,6 +341,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
         setOtpDigits(['', '', '', '']);
 
         // Update client booking status from 'confirmed' to 'ongoing' in localStorage
+        // Wrap in try-catch so it doesn't fail the UI if local storage fails
         try {
           const clientBookings = JSON.parse(localStorage.getItem('clientBookings') || '[]');
           const updatedBookings = clientBookings.map((booking: any) => {
@@ -352,12 +357,12 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
             detail: { bookings: updatedBookings, action: 'started', jobId: job.id }
           }));
         } catch (e) {
-          console.error('Error updating client booking status:', e);
+          console.error('Error updating client booking status (non-critical):', e);
         }
 
         // Save job status update to localStorage and update dashboard
         if (onJobUpdate) {
-          onJobUpdate(job.id, 'started');
+          onJobUpdate(job.id, 'started', undefined, undefined, { startedAt });
         }
 
         // Show success message
@@ -369,7 +374,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
       } else {
         const errorData = await response.json();
         console.error('Start job error:', errorData);
-        alert(`Failed to start job: ${errorData.error}`);
+        alert(`Failed to start job: ${errorData.error || 'Unknown server error'}`);
       }
     } catch (error) {
       console.error('Error starting job:', error);
@@ -397,9 +402,9 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
     try {
       setIsCompleting(true);
       console.log('Attempting to complete job:', job.id);
-      console.log('API URL:', `/api/jobs/${job.id}`);
+      console.log('API URL:', `/api/jobs/${encodeURIComponent(job.id)}`);
 
-      const response = await fetch(`/api/jobs/${job.id}`, {
+      const response = await fetch(`/api/jobs/${encodeURIComponent(job.id)}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

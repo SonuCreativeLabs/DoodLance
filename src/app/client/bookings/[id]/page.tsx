@@ -8,9 +8,11 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { CricketLoader } from '@/components/ui/cricket-loader';
 import { useBookings } from "@/contexts/BookingsContext";
+import { useBookingsQuery } from "@/hooks/useBookingsQuery";
 import { useNavbar } from "@/contexts/NavbarContext";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { CricketWhiteBallSpinner } from '@/components/ui/CricketWhiteBallSpinner';
 import { RescheduleModal } from "@/components/client/bookings/RescheduleModal";
 
 const statusCopy: Record<string, string> = {
@@ -61,12 +63,21 @@ export default function BookingDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { setNavbarVisibility } = useNavbar();
-  const { bookings, loading, refreshBookings, rescheduleBooking } = useBookings();
+
+  // Use React Query if enabled, otherwise fall back to Context
+  // This matches logic in BookingsPage to ensure consistent data availability
+  const USE_REACT_QUERY = process.env.NEXT_PUBLIC_USE_REACT_QUERY === 'true';
+  const bookingsQuery = useBookingsQuery();
+  const bookingsContext = useBookings();
+
+  const { bookings, loading, refreshBookings, rescheduleBooking } = USE_REACT_QUERY ? bookingsQuery : bookingsContext;
 
   const [showRescheduleModal, setShowRescheduleModal] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showCompleteDialog, setShowCompleteDialog] = useState(false);
-  const [cancelNotes, setCancelNotes] = useState('');
+  const [cancelNotes, setCancelNotes] = useState("");
+  const [isCompleting, setIsCompleting] = useState(false);
+  const [showReviewModal, setShowReviewModal] = useState(false);
   const [rating, setRating] = useState(0);
   const [review, setReview] = useState('');
   const [selectedChips, setSelectedChips] = useState<string[]>([]);
@@ -75,6 +86,15 @@ export default function BookingDetailPage() {
     setNavbarVisibility(false);
     return () => setNavbarVisibility(true);
   }, [setNavbarVisibility]);
+
+  const booking = useMemo(() => bookings.find((entry) => entry["#"] === (Array.isArray(params.id) ? params.id[0] : params.id) && entry["#"] === decodeURIComponent(entry["#"])), [params, bookings]);
+
+  // Redirect completed/cancelled to history view
+  useEffect(() => {
+    if (booking && (booking.status === 'completed' || booking.status === 'cancelled')) {
+      router.replace(`/client/bookings/history/${encodeURIComponent(booking["#"])}`);
+    }
+  }, [booking, router]);
 
   const rawId = useMemo(() => {
     if (!params || typeof params.id === "undefined") return "";
@@ -134,53 +154,47 @@ export default function BookingDetailPage() {
   };
 
   const confirmMarkComplete = async () => {
+    if (!booking) return;
+
     if (rating === 0) {
       alert('Please provide a rating before marking as complete.');
       return;
     }
 
-    if (!booking) return;
-
     try {
-      const response = await fetch(`/api/jobs/${encodeURIComponent(rawId)}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      setIsCompleting(true);
+      const res = await fetch(`/api/bookings/${params.id}/complete`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          status: 'completed',
-          rating: rating,
-          review: review,
+          rating,
+          review,
           feedbackChips: selectedChips
-        }),
+        })
       });
 
-      if (response.ok) {
-        // Dispatch event to notify other components (legacy support)
-        window.dispatchEvent(new CustomEvent('clientBookingUpdated', {
-          detail: { bookings: [], action: 'completed' }
-        }));
+      if (!res.ok) throw new Error("Failed to mark booking as complete");
 
-        await refreshBookings();
+      // Refetch bookings to update UI
+      if (refreshBookings) refreshBookings();
+      setShowCompleteDialog(false);
 
-        setShowCompleteDialog(false);
-        setReview('');
-        setRating(0);
-        setSelectedChips([]);
+      // Reset form
+      setRating(0);
+      setReview('');
+      setSelectedChips([]);
 
-        // Redirect to bookings list
-        router.push('/client/bookings');
-      } else {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to complete booking');
-      }
+      // Redirect or show success
+      router.push('/client/bookings');
     } catch (error) {
-      console.error('Error completing booking:', error);
-      alert('Failed to complete booking. Please try again.');
+      console.error("Error completing booking:", error);
+      alert("Failed to complete booking. Please try again.");
+    } finally {
+      setIsCompleting(false);
     }
   };
 
-  const booking = useMemo(() => bookings.find((entry) => entry["#"] === rawId), [rawId, bookings]);
+
 
   const handleRescheduleSubmit = async (id: string, newDate: string, newTime: string, location?: string) => {
     if (!booking) return;
@@ -510,7 +524,10 @@ export default function BookingDetailPage() {
               <X className="mr-2 h-4 w-4" />
               Cancel
             </Button>
-            <Button className="bg-green-600 hover:bg-green-700 text-white" onClick={handleMarkComplete}>
+            <Button
+              className="bg-green-600 hover:bg-green-700 text-white"
+              onClick={handleMarkComplete}
+            >
               <CheckCircle className="mr-2 h-4 w-4" />
               Mark Complete
             </Button>
@@ -545,346 +562,359 @@ export default function BookingDetailPage() {
       </div>
 
       {/* Cancel Booking Full Page */}
-      {showCancelDialog && (
-        <div className="fixed inset-0 z-50 bg-gradient-to-br from-[#111111] to-[#0a0a0a] overflow-y-auto">
-          {/* Header */}
-          <div className="fixed top-0 left-0 right-0 z-50 bg-[#0F0F0F]/95 backdrop-blur-md border-b border-white/5">
-            <div className="container mx-auto px-4 py-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setShowCancelDialog(false);
-                      setCancelNotes('');
-                    }}
-                    className="inline-flex items-center p-0 hover:bg-transparent text-sm text-purple-400 hover:text-purple-300 transition-colors duration-200"
-                    aria-label="Back"
-                  >
-                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors duration-200">
-                      <ArrowLeft className="h-4 w-4" />
-                    </div>
-                  </Button>
+      {
+        showCancelDialog && (
+          <div className="fixed inset-0 z-50 bg-gradient-to-br from-[#111111] to-[#0a0a0a] overflow-y-auto">
+            {/* Header */}
+            <div className="fixed top-0 left-0 right-0 z-50 bg-[#0F0F0F]/95 backdrop-blur-md border-b border-white/5">
+              <div className="container mx-auto px-4 py-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setShowCancelDialog(false);
+                        setCancelNotes('');
+                      }}
+                      className="inline-flex items-center p-0 hover:bg-transparent text-sm text-purple-400 hover:text-purple-300 transition-colors duration-200"
+                      aria-label="Back"
+                    >
+                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors duration-200">
+                        <ArrowLeft className="h-4 w-4" />
+                      </div>
+                    </Button>
 
-                  <div className="ml-3">
-                    <h1 className="text-lg font-semibold text-white">Cancel Booking</h1>
-                    <p className="text-white/50 text-xs">{booking?.["#"]}</p>
+                    <div className="ml-3">
+                      <h1 className="text-lg font-semibold text-white">Cancel Booking</h1>
+                      <p className="text-white/50 text-xs">{booking?.["#"]}</p>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Main Content */}
-          <div className="min-h-[100dvh] w-full pt-[64px] pb-24">
-            <div className="max-w-3xl mx-auto p-4 md:p-6">
-              <div className="space-y-6">
-                {/* Header Section */}
-                <div className="text-center space-y-3">
-                  <div className="flex items-center justify-center">
-                    <div className="relative">
-                      <div className="absolute inset-0 bg-red-500/20 rounded-full blur-lg"></div>
-                      <div className="relative p-4 rounded-full bg-gradient-to-br from-red-500/10 to-red-600/20 border border-red-500/30">
-                        <AlertTriangle className="w-8 h-8 text-red-400" />
+            {/* Main Content */}
+            <div className="min-h-[100dvh] w-full pt-[64px] pb-24">
+              <div className="max-w-3xl mx-auto p-4 md:p-6">
+                <div className="space-y-6">
+                  {/* Header Section */}
+                  <div className="text-center space-y-3">
+                    <div className="flex items-center justify-center">
+                      <div className="relative">
+                        <div className="absolute inset-0 bg-red-500/20 rounded-full blur-lg"></div>
+                        <div className="relative p-4 rounded-full bg-gradient-to-br from-red-500/10 to-red-600/20 border border-red-500/30">
+                          <AlertTriangle className="w-8 h-8 text-red-400" />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <h1 className="text-xl font-bold text-white">Cancel Booking</h1>
+                      <p className="text-gray-400 text-sm leading-relaxed max-w-sm mx-auto">
+                        Are you sure you want to cancel this booking? This action cannot be undone.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Booking Summary */}
+                  <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#111111] via-[#0f0f0f] to-[#111111] border border-gray-600/30 shadow-lg">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/5 rounded-full blur-2xl"></div>
+                    <div className="relative p-5">
+                      <div className="flex items-center justify-between mb-4">
+                        <h2 className="text-sm font-semibold text-white/90">Booking Overview</h2>
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-500/15 text-purple-400 border border-purple-500/30">
+                          {booking?.status}
+                        </span>
+                      </div>
+                      <div className="text-center space-y-2">
+                        <p className="text-sm text-gray-400">Service</p>
+                        <p className="text-base font-medium text-white">{booking?.service}</p>
+                      </div>
+                      <div className="border-t border-gray-600/30 pt-3 mt-3">
+                        <div className="text-center space-y-1">
+                          <p className="text-sm text-gray-400">Coach</p>
+                          <p className="text-lg font-medium text-white">{booking?.provider}</p>
+                        </div>
                       </div>
                     </div>
                   </div>
 
-                  <div className="space-y-1">
-                    <h1 className="text-xl font-bold text-white">Cancel Booking</h1>
-                    <p className="text-gray-400 text-sm leading-relaxed max-w-sm mx-auto">
-                      Are you sure you want to cancel this booking? This action cannot be undone.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Booking Summary */}
-                <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#111111] via-[#0f0f0f] to-[#111111] border border-gray-600/30 shadow-lg">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/5 rounded-full blur-2xl"></div>
-                  <div className="relative p-5">
-                    <div className="flex items-center justify-between mb-4">
-                      <h2 className="text-sm font-semibold text-white/90">Booking Overview</h2>
-                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-500/15 text-purple-400 border border-purple-500/30">
-                        {booking?.status}
-                      </span>
+                  {/* Cancel Reason */}
+                  <div className="space-y-3">
+                    <Label className="text-base font-medium text-white">
+                      Reason for cancellation <span className="text-red-400">*</span>
+                    </Label>
+                    <Textarea
+                      value={cancelNotes}
+                      onChange={(e) => setCancelNotes(e.target.value)}
+                      placeholder="Please provide a reason for cancelling this booking..."
+                      className="min-h-[120px] bg-[#111111] border-gray-600/50 text-white placeholder:text-gray-500 resize-none"
+                      maxLength={500}
+                    />
+                    <div className="flex justify-end">
+                      <span className="text-xs text-gray-500">{cancelNotes.length}/500</span>
                     </div>
-                    <div className="text-center space-y-2">
-                      <p className="text-sm text-gray-400">Service</p>
-                      <p className="text-base font-medium text-white">{booking?.service}</p>
-                    </div>
-                    <div className="border-t border-gray-600/30 pt-3 mt-3">
-                      <div className="text-center space-y-1">
-                        <p className="text-sm text-gray-400">Coach</p>
-                        <p className="text-lg font-medium text-white">{booking?.provider}</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Cancel Reason */}
-                <div className="space-y-3">
-                  <Label className="text-base font-medium text-white">
-                    Reason for cancellation <span className="text-red-400">*</span>
-                  </Label>
-                  <Textarea
-                    value={cancelNotes}
-                    onChange={(e) => setCancelNotes(e.target.value)}
-                    placeholder="Please provide a reason for cancelling this booking..."
-                    className="min-h-[120px] bg-[#111111] border-gray-600/50 text-white placeholder:text-gray-500 resize-none"
-                    maxLength={500}
-                  />
-                  <div className="flex justify-end">
-                    <span className="text-xs text-gray-500">{cancelNotes.length}/500</span>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Fixed Bottom Action Bar */}
-          <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-white/10 bg-[#111111]/95 backdrop-blur-md px-4 py-4">
-            <div className="max-w-3xl mx-auto grid grid-cols-2 gap-3">
-              <Button
-                type="button"
-                variant="outline"
-                className="border-white/20 bg-white/5 text-white hover:bg-white/10"
-                onClick={() => {
-                  setShowCancelDialog(false);
-                  setCancelNotes('');
-                }}
-              >
-                Go Back
-              </Button>
-              <Button
-                type="button"
-                className="bg-red-600 hover:bg-red-700 text-white"
-                onClick={confirmCancelBooking}
-                disabled={!cancelNotes.trim()}
-              >
-                Confirm Cancellation
-              </Button>
+            {/* Fixed Bottom Action Bar */}
+            <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-white/10 bg-[#111111]/95 backdrop-blur-md px-4 py-4">
+              <div className="max-w-3xl mx-auto grid grid-cols-2 gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="border-white/20 bg-white/5 text-white hover:bg-white/10"
+                  onClick={() => {
+                    setShowCancelDialog(false);
+                    setCancelNotes('');
+                  }}
+                >
+                  Go Back
+                </Button>
+                <Button
+                  type="button"
+                  className="bg-red-600 hover:bg-red-700 text-white"
+                  onClick={confirmCancelBooking}
+                  disabled={!cancelNotes.trim()}
+                >
+                  Confirm Cancellation
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       {/* Mark Complete Full Page */}
-      {showCompleteDialog && (
-        <div className="fixed inset-0 z-50 bg-gradient-to-br from-[#111111] to-[#0a0a0a] overflow-y-auto">
-          {/* Header */}
-          <div className="fixed top-0 left-0 right-0 z-50 bg-[#0F0F0F]/95 backdrop-blur-md border-b border-white/5">
-            <div className="container mx-auto px-4 py-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setShowCompleteDialog(false);
-                      setReview('');
-                      setRating(0);
-                      setSelectedChips([]);
-                    }}
-                    className="inline-flex items-center p-0 hover:bg-transparent text-sm text-purple-400 hover:text-purple-300 transition-colors duration-200"
-                    aria-label="Back"
-                  >
-                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors duration-200">
-                      <ArrowLeft className="h-4 w-4" />
-                    </div>
-                  </Button>
+      {
+        showCompleteDialog && (
+          <div className="fixed inset-0 z-50 bg-gradient-to-br from-[#111111] to-[#0a0a0a] overflow-y-auto">
+            {/* Header */}
+            <div className="fixed top-0 left-0 right-0 z-50 bg-[#0F0F0F]/95 backdrop-blur-md border-b border-white/5">
+              <div className="container mx-auto px-4 py-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setShowCompleteDialog(false);
+                        setReview('');
+                        setRating(0);
+                        setSelectedChips([]);
+                      }}
+                      className="inline-flex items-center p-0 hover:bg-transparent text-sm text-purple-400 hover:text-purple-300 transition-colors duration-200"
+                      aria-label="Back"
+                    >
+                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors duration-200">
+                        <ArrowLeft className="h-4 w-4" />
+                      </div>
+                    </Button>
 
-                  <div className="ml-3">
-                    <h1 className="text-lg font-semibold text-white">Mark Complete</h1>
-                    <p className="text-white/50 text-xs">{booking?.["#"]}</p>
+                    <div className="ml-3">
+                      <h1 className="text-lg font-semibold text-white">Mark Complete</h1>
+                      <p className="text-white/50 text-xs">{booking?.["#"]}</p>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Main Content */}
-          <div className="min-h-[100dvh] w-full pt-[64px] pb-24">
-            <div className="max-w-3xl mx-auto p-4 md:p-6">
-              <div className="space-y-6">
-                {/* Header Section */}
-                <div className="text-center space-y-3">
-                  <div className="flex items-center justify-center">
-                    <div className="relative">
-                      <div className="absolute inset-0 bg-green-500/20 rounded-full blur-lg"></div>
-                      <div className="relative p-4 rounded-full bg-gradient-to-br from-green-500/10 to-green-600/20 border border-green-500/30">
-                        <CheckCircle className="w-8 h-8 text-green-400" />
+            {/* Main Content */}
+            <div className="min-h-[100dvh] w-full pt-[64px] pb-24">
+              <div className="max-w-3xl mx-auto p-4 md:p-6">
+                <div className="space-y-6">
+                  {/* Header Section */}
+                  <div className="text-center space-y-3">
+                    <div className="flex items-center justify-center">
+                      <div className="relative">
+                        <div className="absolute inset-0 bg-green-500/20 rounded-full blur-lg"></div>
+                        <div className="relative p-4 rounded-full bg-gradient-to-br from-green-500/10 to-green-600/20 border border-green-500/30">
+                          <CheckCircle className="w-8 h-8 text-green-400" />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <h1 className="text-xl font-bold text-white">Mark as Complete</h1>
+                      <p className="text-gray-400 text-sm leading-relaxed max-w-sm mx-auto">
+                        Please rate your experience with this coach and provide feedback.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Booking Summary */}
+                  <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#111111] via-[#0f0f0f] to-[#111111] border border-gray-600/30 shadow-lg">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/5 rounded-full blur-2xl"></div>
+                    <div className="relative p-5">
+                      <div className="flex items-center justify-between mb-4">
+                        <h2 className="text-sm font-semibold text-white/90">Booking Overview</h2>
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-500/15 text-green-400 border border-green-500/30">
+                          completing
+                        </span>
+                      </div>
+                      <div className="text-center space-y-2">
+                        <p className="text-sm text-gray-400">Service</p>
+                        <p className="text-base font-medium text-white">{booking?.service}</p>
+                      </div>
+                      <div className="border-t border-gray-600/30 pt-3 mt-3">
+                        <div className="text-center space-y-1">
+                          <p className="text-sm text-gray-400">Coach</p>
+                          <p className="text-lg font-medium text-white">{booking?.provider}</p>
+                        </div>
                       </div>
                     </div>
                   </div>
 
-                  <div className="space-y-1">
-                    <h1 className="text-xl font-bold text-white">Mark as Complete</h1>
-                    <p className="text-gray-400 text-sm leading-relaxed max-w-sm mx-auto">
-                      Please rate your experience with this coach and provide feedback.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Booking Summary */}
-                <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#111111] via-[#0f0f0f] to-[#111111] border border-gray-600/30 shadow-lg">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/5 rounded-full blur-2xl"></div>
-                  <div className="relative p-5">
-                    <div className="flex items-center justify-between mb-4">
-                      <h2 className="text-sm font-semibold text-white/90">Booking Overview</h2>
-                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-500/15 text-green-400 border border-green-500/30">
-                        completing
-                      </span>
-                    </div>
-                    <div className="text-center space-y-2">
-                      <p className="text-sm text-gray-400">Service</p>
-                      <p className="text-base font-medium text-white">{booking?.service}</p>
-                    </div>
-                    <div className="border-t border-gray-600/30 pt-3 mt-3">
-                      <div className="text-center space-y-1">
-                        <p className="text-sm text-gray-400">Coach</p>
-                        <p className="text-lg font-medium text-white">{booking?.provider}</p>
+                  {/* Rating Section */}
+                  <div className="space-y-4">
+                    <Label className="text-lg font-semibold text-white">
+                      How would you rate your experience? <span className="text-red-400">*</span>
+                    </Label>
+                    <div className="flex flex-col items-center gap-4">
+                      <div className="flex items-center gap-2">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <button
+                            key={star}
+                            onClick={() => setRating(star)}
+                            className={`transition-all duration-200 ${star <= rating
+                              ? 'text-yellow-400 scale-110 drop-shadow-sm'
+                              : 'hover:text-yellow-400/50 hover:scale-105'
+                              }`}
+                            style={star <= rating ? {} : { color: '#404040' }}
+                          >
+                            <Star className="w-12 h-12 fill-current" />
+                          </button>
+                        ))}
+                      </div>
+                      <div className="text-center">
+                        {rating > 0 ? (
+                          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-bold tracking-wide ring-1 ring-gray-500/30">
+                            <span className="text-lg">
+                              {rating === 1 ? '😞' : rating === 2 ? '😐' : rating === 3 ? '😊' : rating === 4 ? '😄' : '🤩'}
+                            </span>
+                            <span className={`font-bold text-sm tracking-wider ${rating === 1 ? 'text-red-400' :
+                              rating === 2 ? 'text-orange-400' :
+                                rating === 3 ? 'text-yellow-400' :
+                                  rating === 4 ? 'text-blue-400' : 'text-green-400'
+                              }`}>
+                              {rating === 1 ? 'Poor' :
+                                rating === 2 ? 'Fair' :
+                                  rating === 3 ? 'Good' :
+                                    rating === 4 ? 'Very Good' : 'Excellent'}
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="text-white/60 text-xs italic ring-1 ring-gray-500/30 px-2 py-0.5 rounded-full">
+                            Tap to rate
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Rating Section */}
-                <div className="space-y-4">
-                  <Label className="text-lg font-semibold text-white">
-                    How would you rate your experience? <span className="text-red-400">*</span>
-                  </Label>
-                  <div className="flex flex-col items-center gap-4">
-                    <div className="flex items-center gap-2">
-                      {[1, 2, 3, 4, 5].map((star) => (
+                  {/* Feedback Chips */}
+                  <div className="space-y-3">
+                    <Label className="text-base font-medium text-white">
+                      What did you love? <span className="text-gray-400">(Optional)</span>
+                    </Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {[
+                        'Professional coaching',
+                        'Clear communication',
+                        'Punctual sessions',
+                        'Expert knowledge',
+                        'Friendly approach',
+                        'Good facilities'
+                      ].map((chip) => (
                         <button
-                          key={star}
-                          onClick={() => setRating(star)}
-                          className={`transition-all duration-200 ${star <= rating
-                            ? 'text-yellow-400 scale-110 drop-shadow-sm'
-                            : 'hover:text-yellow-400/50 hover:scale-105'
+                          key={chip}
+                          onClick={() => {
+                            setSelectedChips(prev =>
+                              prev.includes(chip)
+                                ? prev.filter(c => c !== chip)
+                                : [...prev, chip]
+                            );
+                          }}
+                          className={`px-3 py-2 text-sm rounded-lg border transition-all duration-200 ${selectedChips.includes(chip)
+                            ? 'bg-purple-500/10 border-purple-500/50 text-purple-300'
+                            : 'bg-[#111111] border-gray-600/50 text-gray-300 hover:bg-[#1E1E1E]'
                             }`}
-                          style={star <= rating ? {} : { color: '#404040' }}
                         >
-                          <Star className="w-12 h-12 fill-current" />
+                          {chip}
                         </button>
                       ))}
                     </div>
-                    <div className="text-center">
-                      {rating > 0 ? (
-                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-bold tracking-wide ring-1 ring-gray-500/30">
-                          <span className="text-lg">
-                            {rating === 1 ? '😞' : rating === 2 ? '😐' : rating === 3 ? '😊' : rating === 4 ? '😄' : '🤩'}
-                          </span>
-                          <span className={`font-bold text-sm tracking-wider ${rating === 1 ? 'text-red-400' :
-                            rating === 2 ? 'text-orange-400' :
-                              rating === 3 ? 'text-yellow-400' :
-                                rating === 4 ? 'text-blue-400' : 'text-green-400'
-                            }`}>
-                            {rating === 1 ? 'Poor' :
-                              rating === 2 ? 'Fair' :
-                                rating === 3 ? 'Good' :
-                                  rating === 4 ? 'Very Good' : 'Excellent'}
-                          </span>
-                        </div>
-                      ) : (
-                        <div className="text-white/60 text-xs italic ring-1 ring-gray-500/30 px-2 py-0.5 rounded-full">
-                          Tap to rate
-                        </div>
-                      )}
+                  </div>
+
+                  {/* Review Text */}
+                  <div className="space-y-3">
+                    <Label className="text-base font-medium text-white">
+                      Additional feedback <span className="text-gray-400">(Optional)</span>
+                    </Label>
+                    <Textarea
+                      value={review}
+                      onChange={(e) => setReview(e.target.value)}
+                      placeholder="Share your experience, what went well, and any suggestions..."
+                      className="min-h-[100px] bg-[#111111] border-gray-600/50 text-white placeholder:text-gray-500 resize-none"
+                      maxLength={500}
+                    />
+                    <div className="flex justify-end">
+                      <span className="text-xs text-gray-500">{review.length}/500</span>
                     </div>
-                  </div>
-                </div>
-
-                {/* Feedback Chips */}
-                <div className="space-y-3">
-                  <Label className="text-base font-medium text-white">
-                    What did you love? <span className="text-gray-400">(Optional)</span>
-                  </Label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {[
-                      'Professional coaching',
-                      'Clear communication',
-                      'Punctual sessions',
-                      'Expert knowledge',
-                      'Friendly approach',
-                      'Good facilities'
-                    ].map((chip) => (
-                      <button
-                        key={chip}
-                        onClick={() => {
-                          setSelectedChips(prev =>
-                            prev.includes(chip)
-                              ? prev.filter(c => c !== chip)
-                              : [...prev, chip]
-                          );
-                        }}
-                        className={`px-3 py-2 text-sm rounded-lg border transition-all duration-200 ${selectedChips.includes(chip)
-                          ? 'bg-purple-500/10 border-purple-500/50 text-purple-300'
-                          : 'bg-[#111111] border-gray-600/50 text-gray-300 hover:bg-[#1E1E1E]'
-                          }`}
-                      >
-                        {chip}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Review Text */}
-                <div className="space-y-3">
-                  <Label className="text-base font-medium text-white">
-                    Additional feedback <span className="text-gray-400">(Optional)</span>
-                  </Label>
-                  <Textarea
-                    value={review}
-                    onChange={(e) => setReview(e.target.value)}
-                    placeholder="Share your experience, what went well, and any suggestions..."
-                    className="min-h-[100px] bg-[#111111] border-gray-600/50 text-white placeholder:text-gray-500 resize-none"
-                    maxLength={500}
-                  />
-                  <div className="flex justify-end">
-                    <span className="text-xs text-gray-500">{review.length}/500</span>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Fixed Bottom Action Bar */}
-          <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-white/10 bg-[#111111]/95 backdrop-blur-md px-4 py-4">
-            <div className="max-w-3xl mx-auto flex gap-3">
-              <Button
-                type="button"
-                variant="outline"
-                className="flex-1 border-white/20 bg-white/5 text-white hover:bg-white/10"
-                onClick={() => {
-                  setShowCompleteDialog(false);
-                  setReview('');
-                  setRating(0);
-                  setSelectedChips([]);
-                }}
-              >
-                Go Back
-              </Button>
-              <Button
-                type="button"
-                className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-                onClick={confirmMarkComplete}
-                disabled={rating === 0}
-              >
-                Complete Booking
-              </Button>
+            {/* Fixed Bottom Action Bar */}
+            <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-white/10 bg-[#111111]/95 backdrop-blur-md px-4 py-4">
+              <div className="max-w-3xl mx-auto flex gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1 border-white/20 bg-white/5 text-white hover:bg-white/10"
+                  onClick={() => {
+                    setShowCompleteDialog(false);
+                    setReview('');
+                    setRating(0);
+                    setSelectedChips([]);
+                  }}
+                >
+                  Go Back
+                </Button>
+
+                <Button
+                  type="button"
+                  className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                  onClick={confirmMarkComplete}
+                  disabled={rating === 0 || isCompleting}
+                >
+                  {isCompleting ? (
+                    <>
+                      <CricketWhiteBallSpinner className="w-5 h-5 mr-2" />
+                      Processing...
+                    </>
+                  ) : (
+                    'Complete Booking'
+                  )}
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
+
       <RescheduleModal
         isOpen={showRescheduleModal}
         onClose={() => setShowRescheduleModal(false)}
-        booking={booking}
+        booking={booking || null}
         onReschedule={handleRescheduleSubmit}
         mode="reschedule"
       />
-    </div>
+    </div >
   );
 }

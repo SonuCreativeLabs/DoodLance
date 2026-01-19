@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
         if (authError || !user) {
             // Fallback: Check for 'auth-token' (Legacy/JWT)
             const cookieStore = cookies();
-            const token = cookieStore.get('auth-token')?.value;
+            const token = cookieStore.get('access_token')?.value;
 
             if (token) {
                 try {
@@ -136,8 +136,8 @@ async function handleGetBookings(request: NextRequest, user: { id: string, role?
             freelancerPhone: b.service.provider.phone,
             clientAvatar: b.client.avatar, // Added client avatar
             status: b.status,
-            date: b.scheduledAt ? b.scheduledAt.toISOString() : null,
-            time: b.scheduledAt ? b.scheduledAt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }) : null, // Added time
+            date: b.scheduledAt ? b.scheduledAt.toISOString() : b.date,
+            time: b.scheduledAt ? b.scheduledAt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }) : b.time,
             price: b.totalPrice,
             serviceId: b.serviceId,
             clientId: b.clientId,
@@ -148,6 +148,7 @@ async function handleGetBookings(request: NextRequest, user: { id: string, role?
             notes: b.notes, // Added notes
             requirements: b.requirements, // Added requirements
             skills: b.service.tags ? b.service.tags.split(',').map((s: string) => s.trim()) : [], // Added skills from service tags
+            scheduledAt: b.scheduledAt ? b.scheduledAt.toISOString() : null, // Added ISO string for client-side formatting
             services: b.services || [], // Return services list
         }));
 

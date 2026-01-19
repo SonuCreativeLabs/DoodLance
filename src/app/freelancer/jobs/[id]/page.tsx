@@ -39,10 +39,10 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
           if (s === 'confirmed' || s === 'pending') return 'upcoming';
           return 'upcoming';
         })(),
-        payment: data.payment || data.budget || data.price || 0,
+        payment: Math.round(Number(data.payment || data.budget || data.price || 0) / 1.05),
         location: data.location || 'Remote',
         date: data.scheduledAt ? new Date(data.scheduledAt).toLocaleDateString() : (data.date || 'TBD'),
-        time: data.scheduledAt ? new Date(data.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : (data.time || 'TBD'),
+        time: data.scheduledAt ? new Date(data.scheduledAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' }) : (data.time || 'TBD'),
         duration: data.duration ? `${data.duration} mins` : 'Flexible',
         workMode: data.workMode,
         experience: data.experience,
@@ -81,10 +81,14 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
     }
   }, [jobId]);
 
-  const handleJobUpdate = async (id: string, newStatus: 'completed' | 'cancelled' | 'started' | 'delivered', notes?: string, completionData?: { rating: number; review: string; feedbackChips: string[]; }) => {
+  const handleJobUpdate = async (id: string, newStatus: 'completed' | 'cancelled' | 'started' | 'delivered', notes?: string, completionData?: { rating: number; review: string; feedbackChips: string[]; }, extraData?: any) => {
     // Optimistic update
     if (job) {
-      setJob({ ...job, status: newStatus as any });
+      setJob({
+        ...job,
+        status: newStatus as any,
+        ...extraData // Merge any extra data like startedAt
+      });
 
       // For real update, the Modal component (JobDetailsModal) actually handles the API call internally in 'confirmStartJob' etc.
       // But we should refresh the data here just in case, or trust the modal calls.

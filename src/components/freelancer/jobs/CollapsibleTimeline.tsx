@@ -141,6 +141,21 @@ export function CollapsibleTimeline({ items, title = "Timeline", defaultExpanded
 }
 
 // Common timeline utility for cricket-themed gamified messages
+// Helper to safely get a valid ISO string from a date input
+const getSafeIsoDate = (dateInfo: any, fallbackDelay = 0): string => {
+  try {
+    if (dateInfo && dateInfo !== 'TBD') {
+      const d = new Date(dateInfo);
+      if (!isNaN(d.getTime())) {
+        return new Date(d.getTime() + fallbackDelay).toISOString();
+      }
+    }
+  } catch (e) {
+    // Ignore error
+  }
+  return new Date(Date.now() + fallbackDelay).toISOString();
+};
+
 export const createTimelineItems = (type: 'proposal' | 'job', item: any) => {
   const timelineItems = [];
 
@@ -159,14 +174,14 @@ export const createTimelineItems = (type: 'proposal' | 'job', item: any) => {
       timelineItems.push(
         {
           label: '👀 Client Spotted Your Skills!',
-          date: item.appliedDate ? new Date(new Date(item.appliedDate).getTime() + 3600000).toISOString() : new Date(Date.now() + 3600000).toISOString(),
+          date: item.appliedDate ? getSafeIsoDate(item.appliedDate, 3600000) : getSafeIsoDate(Date.now(), 3600000),
           completed: true,
           icon: CheckCircle,
           color: 'bg-purple-500'
         },
         {
           label: '🎉 Victory! You\'re In The Game!',
-          date: item.appliedDate ? new Date(new Date(item.appliedDate).getTime() + 7200000).toISOString() : new Date(Date.now() + 7200000).toISOString(),
+          date: item.appliedDate ? getSafeIsoDate(item.appliedDate, 7200000) : getSafeIsoDate(Date.now(), 7200000),
           completed: true,
           icon: CheckCircle,
           color: 'bg-green-500'
@@ -176,14 +191,14 @@ export const createTimelineItems = (type: 'proposal' | 'job', item: any) => {
       timelineItems.push(
         {
           label: '👀 Client Spotted Your Skills!',
-          date: item.appliedDate ? new Date(new Date(item.appliedDate).getTime() + 3600000).toISOString() : new Date(Date.now() + 3600000).toISOString(),
+          date: item.appliedDate ? getSafeIsoDate(item.appliedDate, 3600000) : getSafeIsoDate(Date.now(), 3600000),
           completed: true,
           icon: CheckCircle,
           color: 'bg-purple-500'
         },
         {
           label: '❌ Strike Out - Keep Playing!',
-          date: item.appliedDate ? new Date(new Date(item.appliedDate).getTime() + 7200000).toISOString() : new Date(Date.now() + 7200000).toISOString(),
+          date: item.appliedDate ? getSafeIsoDate(item.appliedDate, 7200000) : getSafeIsoDate(Date.now(), 7200000),
           completed: true,
           icon: XCircle,
           color: 'bg-red-500'
@@ -193,14 +208,14 @@ export const createTimelineItems = (type: 'proposal' | 'job', item: any) => {
       timelineItems.push(
         {
           label: '👀 Client Spotted Your Skills!',
-          date: item.appliedDate ? new Date(new Date(item.appliedDate).getTime() + 3600000).toISOString() : new Date(Date.now() + 3600000).toISOString(),
+          date: item.appliedDate ? getSafeIsoDate(item.appliedDate, 3600000) : getSafeIsoDate(Date.now(), 3600000),
           completed: true,
           icon: CheckCircle,
           color: 'bg-purple-500'
         },
         {
           label: '🏃 Walked Away From This One',
-          date: item.appliedDate ? new Date(new Date(item.appliedDate).getTime() + 7200000).toISOString() : new Date(Date.now() + 7200000).toISOString(),
+          date: item.appliedDate ? getSafeIsoDate(item.appliedDate, 7200000) : getSafeIsoDate(Date.now(), 7200000),
           completed: true,
           icon: XCircle,
           color: 'bg-gray-500'
@@ -210,21 +225,21 @@ export const createTimelineItems = (type: 'proposal' | 'job', item: any) => {
       timelineItems.push(
         {
           label: '👀 Client Spotted Your Skills!',
-          date: item.appliedDate ? new Date(new Date(item.appliedDate).getTime() + 3600000).toISOString() : new Date(Date.now() + 3600000).toISOString(),
+          date: item.appliedDate ? getSafeIsoDate(item.appliedDate, 3600000) : getSafeIsoDate(Date.now(), 3600000),
           completed: true,
           icon: CheckCircle,
           color: 'bg-purple-500'
         },
         {
           label: '🏏 Session Victory!',
-          date: item.appliedDate ? new Date(new Date(item.appliedDate).getTime() + 7200000).toISOString() : new Date(Date.now() + 7200000).toISOString(),
+          date: item.appliedDate ? getSafeIsoDate(item.appliedDate, 7200000) : getSafeIsoDate(Date.now(), 7200000),
           completed: true,
           icon: CheckCircle,
           color: 'bg-green-500'
         },
         {
           label: '🎯 Deal Secured - Job Completed!',
-          date: item.appliedDate ? new Date(new Date(item.appliedDate).getTime() + 86400000).toISOString() : new Date(Date.now() + 86400000).toISOString(),
+          date: item.appliedDate ? getSafeIsoDate(item.appliedDate, 86400000) : getSafeIsoDate(Date.now(), 86400000),
           completed: true,
           icon: CheckCircle,
           color: 'bg-emerald-500'
@@ -235,7 +250,7 @@ export const createTimelineItems = (type: 'proposal' | 'job', item: any) => {
       timelineItems.push(
         {
           label: '👀 Client Spotted Your Skills!',
-          date: item.appliedDate ? new Date(new Date(item.appliedDate).getTime() + 3600000).toISOString() : new Date(Date.now() + 3600000).toISOString(),
+          date: item.appliedDate ? getSafeIsoDate(item.appliedDate, 3600000) : getSafeIsoDate(Date.now(), 3600000),
           completed: true,
           icon: CheckCircle,
           color: 'bg-purple-500'
@@ -286,7 +301,7 @@ export const createTimelineItems = (type: 'proposal' | 'job', item: any) => {
 
       timelineItems.push({
         label: '👀 Client Spotted Your Skills!',
-        date: item.proposalHistory.clientSpottedDate || new Date(new Date(item.proposalHistory.appliedDate).getTime() + 3600000).toISOString(),
+        date: item.proposalHistory.clientSpottedDate || getSafeIsoDate(item.proposalHistory.appliedDate, 3600000),
         completed: true,
         icon: CheckCircle,
         color: 'bg-purple-500'
@@ -294,7 +309,7 @@ export const createTimelineItems = (type: 'proposal' | 'job', item: any) => {
 
       timelineItems.push({
         label: '🎉 Victory! You\'re In The Game!',
-        date: item.proposalHistory.acceptedDate || new Date(new Date(item.proposalHistory.appliedDate).getTime() + 7200000).toISOString(),
+        date: item.proposalHistory.acceptedDate || getSafeIsoDate(item.proposalHistory.appliedDate, 7200000),
         completed: true,
         icon: CheckCircle,
         color: 'bg-green-500'
@@ -303,7 +318,7 @@ export const createTimelineItems = (type: 'proposal' | 'job', item: any) => {
       // For jobs without proposal history (direct assignments)
       timelineItems.push({
         label: item.isDirectHire ? '📅 Booking Confirmed' : '🏏 Session Announced!',
-        date: item.createdAt || item.date || item.postedAt || new Date().toISOString(),
+        date: item.createdAt || item.date && item.date !== 'TBD' ? item.date : (item.postedAt || new Date().toISOString()),
         completed: true,
         icon: CheckCircle,
         color: 'bg-purple-500'
@@ -314,7 +329,7 @@ export const createTimelineItems = (type: 'proposal' | 'job', item: any) => {
     if (item.status === 'started' || item.status === 'ongoing' || item.status === 'completed') {
       timelineItems.push({
         label: '🏃 Game On - Work Started!',
-        date: item.startedAt || item.scheduledAt || (item.date ? new Date(new Date(item.date).getTime() + 7200000).toISOString() : new Date(Date.now() + 7200000).toISOString()),
+        date: item.startedAt || item.scheduledAt || getSafeIsoDate(item.date, 7200000),
         completed: true,
         icon: CheckCircle,
         color: 'bg-blue-500'
