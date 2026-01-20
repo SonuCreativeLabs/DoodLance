@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, ArrowRight, FileText, Check, X, UploadCloud, AlertCircle, Loader2, User } from 'lucide-react';
+import { ArrowLeft, ArrowRight, FileText, Check, X, UploadCloud, AlertCircle, Loader2, User, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { SelfieCapture } from '@/components/verification/SelfieCapture';
 import { Skeleton } from "@/components/ui/skeleton";
+import imageCompression from 'browser-image-compression';
 
 interface IdType {
   value: string;
@@ -19,18 +20,20 @@ type VerificationStep = 'document' | 'selfie' | 'review';
 export default function IdUploadPage() {
   const router = useRouter();
 
-  // Form state
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  // Form state - NOW SUPPORTS MULTIPLE FILES
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [selectedIdType, setSelectedIdType] = useState<string>('');
   const [idNumber, setIdNumber] = useState('');
   const [selfieImage, setSelfieImage] = useState<string | null>(null);
 
   // UI state
   const [isUploading, setIsUploading] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+  const [isCompressing, setIsCompressing] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState<VerificationStep>('document');
   const [isLoading, setIsLoading] = useState(true);
+  const [idValidation, setIdValidation] = useState<{ isValid: boolean; message: string }>({ isValid: true, message: '' });
 
   const [verificationStatus, setVerificationStatus] = useState<'idle' | 'in_review' | 'verified' | 'rejected'>('idle');
   const [rejectionReason, setRejectionReason] = useState('');
@@ -190,11 +193,163 @@ export default function IdUploadPage() {
     { value: 'other', label: 'Other Document', description: 'Any other valid document' },
   ];
 
+  // ID validation patterns and formatters
+  const idPatterns: Record<string, { pattern: RegExp; format: (val: string) => string; placeholder: string; maxLength: number }> = {
+    aadhaar: {
+      pattern: /^\d{4}\s?\d{4}\s?\d{4}$/,
+      format: (val: string) => {
+        const numbers = val.replace(/\D/g, '').slice(0, 12);
+        if (numbers.length <= 4) return numbers;
+        if (numbers.length <= 8) return `${numbers.slice(0, 4)} ${numbers.slice(4)}`;
+        return `${numbers.slice(0, 4)} ${numbers.slice(4, 8)} ${numbers.slice(8)}`;
+      },
+      placeholder: '1234 5678 9012',
+      maxLength: 14 // 12 digits + 2 spaces
+    },
+    pan: {
+      pattern: /^[A-Z]{5}[0-9]{4}[A-Z]$/,
+      format: (val: string) => val.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10),
+      placeholder: 'ABCDE1234F',
+      maxLength: 10
+    },
+    passport: {
+      pattern: /^[A-Z][0-9]{7}$/,
+      format: (val: string) => val.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8),
+      placeholder: 'A1234567',
+      maxLength: 8
+    },
+    voter_id: {
+      pattern: /^[A-Z]{3}[0-9]{7}$/,
+      format: (val: string) => val.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10),
+      placeholder: 'ABC1234567',
+      maxLength: 10
+    },
+    driving_license: {
+      pattern: /^[A-Z]{2}[0-9]{13}$/,
+      format: (val: string) => val.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 15),
+      placeholder: 'DL1420110012345',
+      maxLength: 15
+    },
+    company_id: {
+      pattern: /.+/,
+      format: (val: string) => val.slice(0, 50),
+      placeholder: 'Enter your company ID',
+      maxLength: 50
+    },
+    other: {
+      pattern: /.+/,
+      format: (val: string) => val.slice(0, 50),
+      placeholder: 'Enter your document number',
+      maxLength: 50
+    }
+  };
+
+  const validateIdNumber = (idType: string, value: string): { isValid: boolean; message: string } => {
+    if (!value.trim()) {
+      return { isValid: false, message: 'ID number is required' };
+    }
+
+    const validator = idPatterns[idType];
+    if (!validator) {
+      return { isValid: true, message: '' };
+    }
+
+    const isValid = validator.pattern.test(value.trim());
+
+    if (!isValid) {
+      const messages: Record<string, string> = {
+        aadhaar: 'Aadhaar must be 12 digits (e.g., 1234 5678 9012)',
+        pan: 'PAN must be uppercase, format: ABCDE1234F',
+        passport: 'Passport format: A1234567 (1 letter + 7 digits)',
+        voter_id: 'Voter ID format: ABC1234567 (3 letters + 7 digits)',
+        driving_license: 'Format: DL1420110012345 (2 letters + 13 digits)',
+      };
+      return { isValid: false, message: messages[idType] || 'Invalid format' };
+    }
+
+    return { isValid: true, message: '✓ Valid format' };
+  };
+
+  const handleIdNumberChange = (value: string) => {
+    if (!selectedIdType) {
+      setIdNumber(value);
+      return;
+    }
+
+    const formatter = idPatterns[selectedIdType];
+    const formattedValue = formatter ? formatter.format(value) : value;
+    setIdNumber(formattedValue);
+
+    // Validate
+    const validation = validateIdNumber(selectedIdType, formattedValue);
+    setIdValidation(validation);
+  };
+
   const selectedTypeDetails = idTypes.find(type => type.value === selectedIdType);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const compressImage = async (file: File): Promise<File> => {
+    if (!file.type.startsWith('image/')) {
+      return file; // Don't compress PDFs here
+    }
+
+    try {
+      const options = {
+        maxSizeMB: 0.3, // Max 300KB after compression (more aggressive)
+        maxWidthOrHeight: 1080, // Reduced to 1080px for smaller files
+        useWebWorker: true,
+        initialQuality: 0.7, // More aggressive quality reduction
+        fileType: file.type as 'image/jpeg' | 'image/png'
+      };
+
+      const compressedFile = await imageCompression(file, options);
+      console.log('Image compressed:', (file.size / 1024 / 1024).toFixed(2), 'MB →', (compressedFile.size / 1024 / 1024).toFixed(2), 'MB');
+      return compressedFile;
+    } catch (error) {
+      console.error('Compression error:', error);
+      toast.error('Failed to compress image, using original');
+      return file;
+    }
+  };
+
+  const compressPDF = async (file: File): Promise<File> => {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch('/api/compress-pdf', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('PDF compression failed');
+      }
+
+      const compressedBlob = await response.blob();
+      const originalSize = response.headers.get('X-Original-Size');
+      const compressedSize = response.headers.get('X-Compressed-Size');
+      const reduction = response.headers.get('X-Reduction-Percent');
+
+      console.log(`PDF compressed: ${(parseInt(originalSize || '0') / 1024 / 1024).toFixed(2)}MB → ${(parseInt(compressedSize || '0') / 1024 / 1024).toFixed(2)}MB (${reduction}% reduction)`);
+
+      // Create new File object from compressed blob
+      return new File([compressedBlob], file.name, { type: 'application/pdf' });
+    } catch (error) {
+      console.error('PDF compression error:', error);
+      toast.error('Failed to compress PDF, using original');
+      return file;
+    }
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    // Check if already have max files
+    if (selectedFiles.length >= 3) {
+      toast.error('Maximum 3 documents allowed');
+      return;
+    }
 
     // Validate file type
     const validTypes = ['image/jpeg', 'image/png', 'application/pdf'];
@@ -203,31 +358,54 @@ export default function IdUploadPage() {
       return;
     }
 
-    // Check file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('File size should be less than 5MB');
+    // Check file size (max 10MB for original)
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error(`File size should be less than 10MB (current: ${(file.size / 1024 / 1024).toFixed(2)}MB)`);
       return;
     }
 
-    setSelectedFile(file);
+    // Compress based on file type
+    setIsCompressing(true);
+    let processedFile: File;
 
-    // Create preview for images
-    if (file.type.startsWith('image/')) {
+    if (file.type === 'application/pdf') {
+      processedFile = await compressPDF(file);
+    } else {
+      processedFile = await compressImage(file);
+    }
+
+    setIsCompressing(false);
+
+    // Add to files array
+    setSelectedFiles(prev => [...prev, processedFile]);
+
+    // Create preview
+    if (processedFile.type.startsWith('image/')) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setPreviewUrl(reader.result as string);
+        setPreviewUrls(prev => [...prev, reader.result as string]);
       };
-      reader.readAsDataURL(file);
+      reader.readAsDataURL(processedFile);
     } else {
-      setPreviewUrl(null);
+      // For PDFs, add a placeholder
+      setPreviewUrls(prev => [...prev, 'PDF']);
     }
+
+    // Reset input
+    e.target.value = '';
+  };
+
+  const removeFile = (index: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+    setPreviewUrls(prev => prev.filter((_, i) => i !== index));
+    toast.success('Document removed');
   };
 
   const handleDocumentSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!selectedFile) {
-      toast.error('Please select a file to upload');
+    if (selectedFiles.length === 0) {
+      toast.error('Please upload at least one document');
       return;
     }
 
@@ -238,6 +416,13 @@ export default function IdUploadPage() {
 
     if (!idNumber.trim()) {
       toast.error('Please enter your ID number');
+      return;
+    }
+
+    // Validate ID number
+    const validation = validateIdNumber(selectedIdType, idNumber);
+    if (!validation.isValid) {
+      toast.error(validation.message);
       return;
     }
 
@@ -308,7 +493,7 @@ export default function IdUploadPage() {
   };
 
   const handleSubmit = async () => {
-    if (!selfieImage || !selectedFile) {
+    if (!selfieImage || selectedFiles.length === 0) {
       toast.error('Please complete all verification steps');
       return;
     }
@@ -322,8 +507,17 @@ export default function IdUploadPage() {
 
       if (!user) throw new Error('User not authenticated');
 
-      // 1. Upload Document
-      const documentUrl = await uploadFile(selectedFile, `${user.id}/documents`);
+      // 1. Upload All Documents
+      const documentUrls: string[] = [];
+      for (const file of selectedFiles) {
+        try {
+          const url = await uploadFile(file, `${user.id}/documents`);
+          documentUrls.push(url);
+        } catch (error) {
+          console.error('Failed to upload document:', file.name, error);
+          throw new Error(`Failed to upload ${file.name}`);
+        }
+      }
 
       // 2. Upload Selfie
       const selfieUrl = await uploadBase64(selfieImage, `${user.id}/selfies`);
@@ -335,7 +529,7 @@ export default function IdUploadPage() {
         body: JSON.stringify({
           idType: selectedIdType,
           idNumber,
-          documentUrl,
+          documentUrls, // Changed to array
           selfieUrl
         })
       });
@@ -349,7 +543,7 @@ export default function IdUploadPage() {
       router.push('/freelancer/profile/verification/status?status=in_review');
     } catch (error) {
       console.error('Error submitting verification:', error);
-      toast.error('Failed to submit verification. Please try again.');
+      toast.error(error instanceof Error ? error.message : 'Failed to submit verification. Please try again.');
     } finally {
       setIsUploading(false);
     }
@@ -530,73 +724,119 @@ export default function IdUploadPage() {
           <input
             type="text"
             value={idNumber}
-            onChange={(e) => setIdNumber(e.target.value)}
-            className="w-full px-3 py-2 text-sm bg-[#1E1E1E] border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-            placeholder={selectedTypeDetails ? `Enter your ${selectedTypeDetails.label} number` : 'Enter your ID number'}
+            onChange={(e) => handleIdNumberChange(e.target.value)}
+            className={`w-full px-3 py-2 text-sm bg-[#1E1E1E] border rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 transition-all ${idNumber && selectedIdType
+                ? idValidation.isValid
+                  ? 'border-green-500/50 focus:ring-green-500/50 focus:border-green-500'
+                  : 'border-red-500/50 focus:ring-red-500/50 focus:border-red-500'
+                : 'border-white/10 focus:ring-purple-500 focus:border-transparent'
+              }`}
+            placeholder={selectedIdType && idPatterns[selectedIdType] ? idPatterns[selectedIdType].placeholder : 'Enter your ID number'}
+            maxLength={selectedIdType && idPatterns[selectedIdType] ? idPatterns[selectedIdType].maxLength : 50}
             required
           />
-          <p className="mt-1 text-[11px] text-white/40">
-            Enter the ID number exactly as it appears on your document
-          </p>
+          {idNumber && selectedIdType && (
+            <p className={`mt-1.5 text-[11px] flex items-center gap-1 ${idValidation.isValid ? 'text-green-400' : 'text-red-400'
+              }`}>
+              {idValidation.message}
+            </p>
+          )}
+          {!idNumber && selectedIdType && (
+            <p className="mt-1 text-[11px] text-white/40">
+              {selectedIdType === 'aadhaar' && 'Format: 1234 5678 9012'}
+              {selectedIdType === 'pan' && 'Format: ABCDE1234F (uppercase letters and numbers)'}
+              {selectedIdType === 'passport' && 'Format: A1234567'}
+              {selectedIdType === 'voter_id' && 'Format: ABC1234567'}
+              {selectedIdType === 'driving_license' && 'Format: DL1420110012345'}
+              {(!selectedIdType || ['company_id', 'other'].includes(selectedIdType)) && 'Enter the ID number exactly as it appears on your document'}
+            </p>
+          )}
         </div>
       </div>
 
       <div className="space-y-1.5">
         <label className="block text-xs font-medium text-white/80">
-          Upload Document <span className="text-red-500">*</span>
+          Upload Documents <span className="text-red-500">*</span>
         </label>
-        <div className="flex justify-center p-4 border-2 border-dashed border-white/10 rounded-xl">
-          <div className="space-y-1 text-center">
-            {previewUrl ? (
-              <div className="space-y-2 w-full">
-                <p className="text-xs font-medium text-white/80">Document Preview</p>
-                <div className="relative mx-auto">
-                  <img
-                    src={previewUrl}
-                    alt="Document preview"
-                    className="max-h-40 mx-auto rounded border border-white/10"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSelectedFile(null);
-                      setPreviewUrl(null);
-                    }}
-                    className="absolute -top-2 -right-2 bg-red-500 rounded-full p-0.5 text-white hover:bg-red-600 transition-colors"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <>
-                <div className="mx-auto h-8 w-8 text-white/40">
-                  <UploadCloud className="h-full w-full" />
-                </div>
-                <div className="flex items-center justify-center text-xs text-white/60">
-                  <label
-                    htmlFor="file-upload"
-                    className="relative cursor-pointer rounded font-medium text-purple-400 hover:text-purple-300 focus-within:outline-none"
-                  >
-                    <span>Upload a file</span>
-                    <input
-                      id="file-upload"
-                      name="file-upload"
-                      type="file"
-                      className="sr-only"
-                      onChange={handleFileChange}
-                      accept="image/jpeg,image/png,application/pdf"
+        <p className="text-[11px] text-white/40 mb-2">
+          Upload 1-3 documents (e.g., front and back of ID). PNG, JPG, PDF up to 10MB each.
+        </p>
+
+        {/* Display uploaded files */}
+        {selectedFiles.length > 0 && (
+          <div className="space-y-2 mb-3">
+            {selectedFiles.map((file, index) => (
+              <div key={index} className="flex items-center gap-3 p-3 bg-[#1E1E1E] rounded-xl border border-white/10">
+                {/* Preview or icon */}
+                <div className="flex-shrink-0 w-12 h-12 rounded overflow-hidden border border-white/10 bg-black/20">
+                  {previewUrls[index] === 'PDF' ? (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <FileText className="h-6 w-6 text-red-400" />
+                    </div>
+                  ) : (
+                    <img
+                      src={previewUrls[index]}
+                      alt={`Document ${index + 1}`}
+                      className="w-full h-full object-cover"
                     />
-                  </label>
-                  <p className="pl-1">or drag and drop</p>
+                  )}
                 </div>
-                <p className="text-[11px] text-white/40">
-                  PNG, JPG, PDF up to 5MB
-                </p>
-              </>
-            )}
+
+                {/* File info */}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-white truncate">{file.name}</p>
+                  <p className="text-xs text-white/50">
+                    {(file.size / 1024 / 1024).toFixed(2)} MB
+                  </p>
+                </div>
+
+                {/* Remove button */}
+                <button
+                  type="button"
+                  onClick={() => removeFile(index)}
+                  className="flex-shrink-0 p-1.5 rounded-full bg-red-500/20 hover:bg-red-500/30 text-red-400 transition-colors"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            ))}
           </div>
-        </div>
+        )}
+
+        {/* Upload area - show only if less than 3 files */}
+        {selectedFiles.length < 3 && (
+          <div className="flex justify-center p-4 border-2 border-dashed border-white/10 rounded-xl hover:border-purple-500/50 transition-colors">
+            <div className="space-y-1 text-center w-full">
+              <div className="mx-auto h-8 w-8 text-white/40">
+                <UploadCloud className="h-full w-full" />
+              </div>
+              <div className="flex items-center justify-center text-xs text-white/60">
+                <label
+                  htmlFor="file-upload"
+                  className="relative cursor-pointer rounded font-medium text-purple-400 hover:text-purple-300 focus-within:outline-none flex items-center gap-1"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  <span>{selectedFiles.length === 0 ? 'Upload documents' : 'Add another document'}</span>
+                  <input
+                    id="file-upload"
+                    name="file-upload"
+                    type="file"
+                    className="sr-only"
+                    onChange={handleFileChange}
+                    accept="image/jpeg,image/png,application/pdf"
+                    disabled={isCompressing}
+                  />
+                </label>
+              </div>
+              {isCompressing && (
+                <p className="text-xs text-yellow-400 flex items-center justify-center gap-1">
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  Compressing file...
+                </p>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="bg-[#1E1E1E] rounded-xl border border-white/10 p-3">
@@ -629,11 +869,20 @@ export default function IdUploadPage() {
       <div className="pt-2">
         <Button
           type="submit"
-          disabled={!selectedFile || !selectedIdType || !idNumber}
-          className="w-full h-10 rounded-xl text-sm bg-primary hover:bg-primary/90 text-white transition-all duration-200 font-medium"
+          disabled={selectedFiles.length === 0 || !selectedIdType || !idNumber || isCompressing}
+          className="w-full h-10 rounded-xl text-sm bg-primary hover:bg-primary/90 text-white transition-all duration-200 font-medium disabled:opacity-50"
         >
-          Continue to Selfie
-          <ArrowRight className="h-4 w-4 ml-2" />
+          {isCompressing ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              Processing...
+            </>
+          ) : (
+            <>
+              Continue to Selfie
+              <ArrowRight className="h-4 w-4 ml-2" />
+            </>
+          )}
         </Button>
       </div>
     </form>
@@ -694,20 +943,32 @@ export default function IdUploadPage() {
             </div>
 
             <div className="border-b border-white/5 pb-4">
-              <h3 className="text-sm font-medium text-white/80 mb-2">Document Preview</h3>
-              {previewUrl ? (
-                <div className="relative w-full max-w-xs aspect-[3/2] bg-black/20 rounded-lg overflow-hidden border border-white/10">
-                  <img
-                    src={previewUrl}
-                    alt="Document preview"
-                    className="w-full h-full object-contain"
-                  />
-                </div>
-              ) : (
-                <div className="flex items-center justify-center w-full max-w-xs h-32 bg-black/20 rounded-lg border border-dashed border-white/10">
-                  <FileText className="h-8 w-8 text-white/40" />
-                </div>
-              )}
+              <h3 className="text-sm font-medium text-white/80 mb-2">Document Previews ({selectedFiles.length})</h3>
+              <div className="space-y-2">
+                {selectedFiles.map((file, index) => (
+                  <div key={index} className="flex items-center gap-3 p-2 bg-black/20 rounded-lg border border-white/5">
+                    <div className="flex-shrink-0 w-16 h-16 rounded overflow-hidden border border-white/10 bg-black/30">
+                      {previewUrls[index] === 'PDF' ? (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <FileText className="h-8 w-8 text-red-400" />
+                        </div>
+                      ) : (
+                        <img
+                          src={previewUrls[index]}
+                          alt={`Document ${index + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-white truncate">{file.name}</p>
+                      <p className="text-xs text-white/50">
+                        {(file.size / 1024 / 1024).toFixed(2)} MB
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
 
             <div>
