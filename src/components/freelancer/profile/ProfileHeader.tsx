@@ -634,11 +634,21 @@ export function ProfileHeader({
               />
             </div>
             {completionStatus.percentage < 100 && completionStatus.missingItems.length > 0 && (
-              <div className="mt-2 text-[10px] text-white/40 text-center w-full px-2">
-                <span className="text-yellow-400/80 mr-1">Missing:</span>
-                {completionStatus.missingItems.slice(0, 3).join(', ')}
-                {completionStatus.missingItems.length > 3 && ` +${completionStatus.missingItems.length - 3} more`}
-              </div>
+              <>
+                <div className="mt-2 text-[10px] text-white/40 text-center w-full px-2">
+                  <span className="text-yellow-400/80 mr-1">Missing:</span>
+                  {completionStatus.missingItems.slice(0, 3).join(', ')}
+                  {completionStatus.missingItems.length > 3 && ` +${completionStatus.missingItems.length - 3} more`}
+                </div>
+                <div className="mt-1.5 text-[9px] text-purple-400/70 text-center w-full px-2 flex items-center justify-center gap-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                  </svg>
+                  <span>Complete your profile to appear in client search</span>
+                </div>
+              </>
             )}
           </div>
         )}

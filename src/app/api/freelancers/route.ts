@@ -17,7 +17,15 @@ export async function GET(request: Request) {
         // Build filter - exclude current user
         const where: any = {};
         if (user) {
-            where.userId = { not: user.id };
+            // Get internal user ID from Supabase UID
+            const internalUser = await prisma.user.findUnique({
+                where: { supabaseUid: user.id },
+                select: { id: true }
+            });
+
+            if (internalUser) {
+                where.userId = { not: internalUser.id };
+            }
         }
 
         const profiles = await prisma.freelancerProfile.findMany({
@@ -86,20 +94,37 @@ export async function GET(request: Request) {
                 ? `${p.achievements.length} achievements`
                 : 'New Talent';
 
-            // Coordinates & Distance
-            // Default to Chennai [80.27..., 13.08...] if coords missing
-            let coords = [80.2707, 13.0827];
+            // Coordinates & Distance - NO DEFAULT, null if missing
+            let coords: [number, number] | null = null;
+            let distance: number | null = null;
+
             try {
-                if (p.coords) {
+                if (p.coords && p.coords.trim() !== '') {
                     const parsed = JSON.parse(p.coords);
-                    if (Array.isArray(parsed) && parsed.length === 2) {
-                        coords = parsed;
+                    if (Array.isArray(parsed) && parsed.length === 2 &&
+                        typeof parsed[0] === 'number' && typeof parsed[1] === 'number') {
+                        coords = [parsed[0], parsed[1]];
+                        distance = calculateDistance(userLat, userLng, coords[1], coords[0]);
                     }
                 }
             } catch (e) {
-                // Keep default
+                // coords stays null
             }
-            const distance = calculateDistance(userLat, userLng, coords[1], coords[0]);
+
+            // Calculate profile completion
+            const hasName = p.user.name && p.user.name.trim().length > 0;
+
+            // Bio is stored in User table, not FreelancerProfile
+            const bioText = p.user.bio || p.bio || p.about || '';
+            const hasBio = bioText.trim().length > 0;
+            const hasLocation = coords !== null;
+            const hasService = userServices.length > 0;
+            const hasPrice = finalPrice > 0;
+            const hasSkills = skills.length > 0;
+
+            const completionFields = [hasName, hasBio, hasLocation, hasService, hasPrice, hasSkills];
+            const completionPercentage = (completionFields.filter(Boolean).length / completionFields.length) * 100;
+            const isComplete = completionPercentage === 100;
 
             return {
                 id: p.id,
@@ -108,7 +133,7 @@ export async function GET(request: Request) {
                 email: p.user.email, // Added for sorting
                 service: primaryService,
                 rating: p.rating || rating || 0,
-                reviews: p.reviews.length, // Bug fix: previously p.reviews.length || p.reviews.length ?
+                reviews: p.reviews.length,
                 completedJobs: p.completedJobs || 0,
                 area: p.user.area,
                 city: p.user.city,
@@ -124,21 +149,28 @@ export async function GET(request: Request) {
                 coords: coords,
                 expertise: skills,
                 experience: experience,
-                description: p.bio || p.about || '',
+                description: bioText,
                 cricketRole: p.cricketRole,
                 services: userServices.map((s: any) => ({
                     id: s.id,
                     title: s.title,
                     price: s.price,
                     category: s.categoryId
-                }))
+                })),
+                isComplete,
+                completionPercentage
             };
         });
 
+
+        // Filter to show profiles with at least 50% completion (3/6 criteria)
+        // User requested to lower to 50% for now (allows ~4/6 incomplete profiles to show)
+        const qualityProfiles = formattedProfiles.filter((p: any) => p.completionPercentage >= 50);
+
         // Client-side filtering for category if strict filtering needed
-        let filtered = formattedProfiles;
+        let filtered = qualityProfiles;
         if (category && category !== 'All') {
-            filtered = formattedProfiles.filter((p: any) =>
+            filtered = qualityProfiles.filter((p: any) =>
                 p.service.toLowerCase().includes(category.toLowerCase()) ||
                 p.services.some((s: any) => s.category === category || s.title.toLowerCase().includes(category.toLowerCase()))
             );

@@ -120,7 +120,7 @@ export default function IntegratedExplorePage() {
         'Cricket Commentator': 'Commentator'
       };
 
-      return roleMapping[service] || 'All Rounder';
+      return roleMapping[service] || 'Role not set';
     };
 
     const cricketRole = freelancer.cricketRole || getCricketRole(freelancer.service);
