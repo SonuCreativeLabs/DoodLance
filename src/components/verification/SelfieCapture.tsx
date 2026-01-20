@@ -12,12 +12,12 @@ interface SelfieCaptureProps {
   error?: string | null;
 }
 
-export function SelfieCapture({ 
-  onCapture, 
-  onRetake, 
-  capturedImage, 
+export function SelfieCapture({
+  onCapture,
+  onRetake,
+  capturedImage,
   isUploading,
-  error 
+  error
 }: SelfieCaptureProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
@@ -122,20 +122,20 @@ export function SelfieCapture({
 
   const captureImage = () => {
     if (!videoRef.current) return;
-    
+
     const canvas = document.createElement('canvas');
     canvas.width = videoRef.current.videoWidth;
     canvas.height = videoRef.current.videoHeight;
     const ctx = canvas.getContext('2d');
-    
+
     if (ctx) {
       // Draw the current frame from the video
       ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
-      
+
       // Convert to base64 and notify parent
       const imageData = canvas.toDataURL('image/jpeg', 0.8);
       onCapture(imageData);
-      
+
       // Stop the camera stream
       if (stream) {
         stream.getTracks().forEach(track => track.stop());
@@ -150,11 +150,11 @@ export function SelfieCapture({
       stream.getTracks().forEach(track => track.stop());
       setStream(null);
     }
-    
+
     // Toggle facing mode
     const newFacingMode = facingMode === 'user' ? 'environment' : 'user';
     setFacingMode(newFacingMode);
-    
+
     // Restart camera with new facing mode
     await startCamera();
   };
@@ -165,9 +165,9 @@ export function SelfieCapture({
     return (
       <div className="w-full">
         <div className="relative w-full aspect-[3/4] rounded-2xl overflow-hidden border-2 border-green-500/50 bg-black/20">
-          <img 
-            src={capturedImage} 
-            alt="Captured selfie" 
+          <img
+            src={capturedImage}
+            alt="Captured selfie"
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-between p-4">
@@ -178,7 +178,7 @@ export function SelfieCapture({
               </p>
             </div>
             <div className="flex justify-center pb-6">
-              <Button 
+              <Button
                 onClick={onRetake}
                 disabled={isUploading}
                 variant="outline"
@@ -190,7 +190,7 @@ export function SelfieCapture({
             </div>
           </div>
         </div>
-        
+
         {isUploading && (
           <div className="mt-4 text-center">
             <p className="text-sm text-white/70">Uploading your selfie...</p>
@@ -206,10 +206,10 @@ export function SelfieCapture({
   // Show error state if camera access fails
   if (cameraError) {
     // Check if we're in a browser environment
-    const isInApp = typeof window !== 'undefined' && 
-                   ((window.navigator as { standalone?: boolean }).standalone || 
-                    window.matchMedia('(display-mode: standalone)').matches ||
-                    document.referrer.includes('android-app://'));
+    const isInApp = typeof window !== 'undefined' &&
+      ((window.navigator as { standalone?: boolean }).standalone ||
+        window.matchMedia('(display-mode: standalone)').matches ||
+        document.referrer.includes('android-app://'));
 
     // Determine the appropriate message based on context
     const getErrorMessage = () => {
@@ -228,29 +228,29 @@ export function SelfieCapture({
             <div className="absolute -top-20 -right-20 w-40 h-40 bg-red-500 rounded-full filter blur-3xl opacity-30"></div>
             <div className="absolute -bottom-16 -left-16 w-32 h-32 bg-purple-500 rounded-full filter blur-3xl opacity-20"></div>
           </div>
-          
+
           <div className="relative z-10">
             <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-red-500/10 mb-6 relative">
               <div className="absolute inset-0 rounded-full bg-red-500/20 animate-ping"></div>
               <Camera className="h-8 w-8 text-red-400" />
             </div>
-            
+
             <h3 className="text-2xl font-bold text-white mb-3">Camera Access Required</h3>
             <p className="text-white/70 mb-8 max-w-md mx-auto">
               {getErrorMessage()}
             </p>
-            
+
             <div className="space-y-4 max-w-xs mx-auto">
-              <Button 
-                onClick={startCamera} 
+              <Button
+                onClick={startCamera}
                 size="lg"
                 className="w-full bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white font-medium shadow-lg shadow-red-500/20 transition-all"
               >
                 Try Again
               </Button>
-              
+
               <p className="text-xs text-white/50 mt-4">
-                {isInApp 
+                {isInApp
                   ? 'Make sure the app has camera permissions enabled in your device settings.'
                   : 'Check your browser settings if the issue persists.'
                 }
@@ -272,12 +272,12 @@ export function SelfieCapture({
               <Camera className="h-8 w-8 text-purple-300" />
             </div>
           </div>
-          
+
           <h3 className="text-xl font-bold text-white mb-3">Take a Selfie</h3>
           <p className="text-white/60 mb-8 max-w-md mx-auto">
             We need to verify that you match your ID document. Make sure your face is clearly visible.
           </p>
-          
+
           <div className="grid grid-cols-2 gap-4 mb-8 text-left max-w-md mx-auto">
             {[
               { text: 'Good lighting', icon: '☀️' },
@@ -291,11 +291,11 @@ export function SelfieCapture({
               </div>
             ))}
           </div>
-          
-          <Button 
+
+          <Button
             onClick={startCamera}
             size="lg"
-            className="w-full max-w-xs mx-auto bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 transition-all shadow-lg shadow-purple-500/20"
+            className="w-full max-w-xs mx-auto bg-primary hover:bg-primary/90 transition-all shadow-lg shadow-primary/20"
           >
             Open Camera
           </Button>
@@ -311,7 +311,7 @@ export function SelfieCapture({
             className={`w-full h-full object-contain bg-black ${isCameraReady ? '' : 'hidden'}`}
             style={{ transform: 'scaleX(-1)' }} // Mirror the video for selfie
           />
-          
+
           {/* Camera preview when ready */}
           {isCameraReady ? (
             <>
@@ -320,7 +320,7 @@ export function SelfieCapture({
                 <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-80 border-2 border-white/30 rounded-3xl"></div>
                 <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-56 h-72 border-2 border-white/10 rounded-2xl"></div>
               </div>
-              
+
               {/* Camera controls */}
               <div className="absolute inset-0 flex flex-col justify-between p-4">
                 {/* Top bar */}
@@ -331,7 +331,7 @@ export function SelfieCapture({
                       <span>Camera active</span>
                     </p>
                   </div>
-                  
+
                   <button
                     onClick={toggleCamera}
                     className="p-2 rounded-full bg-black/50 backdrop-blur-sm text-white hover:bg-black/70 transition-colors"
@@ -340,7 +340,7 @@ export function SelfieCapture({
                     <RotateCw className="h-5 w-5" />
                   </button>
                 </div>
-                
+
                 {/* Capture button */}
                 <div className="flex flex-col items-center">
                   <div className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 backdrop-blur-sm p-1.5 rounded-full mb-8">
@@ -353,7 +353,7 @@ export function SelfieCapture({
                       <div className="h-14 w-14 rounded-full bg-white"></div>
                     </button>
                   </div>
-                  
+
                   <p className="text-sm text-white/70 mb-2">Center your face in the frame</p>
                   <p className="text-xs text-white/40">We&apos;ll verify it matches your ID</p>
                 </div>
@@ -380,7 +380,7 @@ export function SelfieCapture({
               )}
             </div>
           )}
-          
+
           {error && (
             <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-red-500/10 backdrop-blur-sm border border-red-500/20 text-red-300 text-xs px-3 py-1.5 rounded-full flex items-center">
               <XCircle className="h-3.5 w-3.5 mr-1.5" />

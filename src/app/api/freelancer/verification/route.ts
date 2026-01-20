@@ -12,9 +12,12 @@ export async function POST(request: NextRequest) {
         }
 
         const body = await request.json();
-        const { documentUrl, idType, idNumber, selfieUrl } = body;
+        const { documentUrls, idType, idNumber, selfieUrl } = body;
 
-        if (!documentUrl || !idType || !idNumber) {
+        // Support both old single URL and new array format for backward compatibility
+        const documentUrlsArray = Array.isArray(documentUrls) ? documentUrls : (body.documentUrl ? [body.documentUrl] : []);
+
+        if (documentUrlsArray.length === 0 || !idType || !idNumber) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }
 
@@ -31,7 +34,7 @@ export async function POST(request: NextRequest) {
         const verificationDocs = {
             idType,
             idNumber,
-            documentUrl,
+            documentUrls: documentUrlsArray, // Now an array
             selfieUrl,
             submittedAt: new Date().toISOString()
         };

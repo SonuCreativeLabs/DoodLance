@@ -486,16 +486,16 @@ export default function PersonalDetailsPage() {
                 </FormField>
 
 
-                <div className="space-y-4">
-                  <FormField label="Date of Birth" required>
-                    <Input
-                      type="date"
-                      value={editPersonalInfo.dateOfBirth}
-                      onChange={(e) => handleInputChange(e, 'personal', 'dateOfBirth')}
-                      className="bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50 [&::-webkit-calendar-picker-indicator]:invert"
-                    />
-                  </FormField>
+                <FormField label="Date of Birth" required>
+                  <Input
+                    type="date"
+                    value={editPersonalInfo.dateOfBirth}
+                    onChange={(e) => handleInputChange(e, 'personal', 'dateOfBirth')}
+                    className="bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50 [&::-webkit-calendar-picker-indicator]:invert"
+                  />
+                </FormField>
 
+                <div className="md:col-span-2">
                   <FormField label="Bio" required>
                     <Textarea
                       value={editPersonalInfo.bio}
@@ -503,25 +503,25 @@ export default function PersonalDetailsPage() {
                       className="min-h-[100px] bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50"
                     />
                   </FormField>
+                </div>
 
-                  <div className="flex justify-center gap-4">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => handleCancel('personal')}
-                      className="h-10 px-8 rounded-xl border-white/10 text-white/80 hover:bg-white/5 hover:text-white transition-colors"
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      type="button"
-                      onClick={() => handleSave('personal')}
-                      disabled={!editPersonalInfo.firstName || !editPersonalInfo.lastName || !editPersonalInfo.gender || !editPersonalInfo.dateOfBirth || !editPersonalInfo.bio}
-                      className="h-10 px-8 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-700 hover:to-purple-600 shadow-md hover:shadow-purple-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Save Changes
-                    </Button>
-                  </div>
+                <div className="md:col-span-2 flex justify-center gap-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => handleCancel('personal')}
+                    className="h-10 px-8 rounded-xl border-white/10 text-white/80 hover:bg-white/5 hover:text-white transition-colors"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={() => handleSave('personal')}
+                    disabled={!editPersonalInfo.firstName || !editPersonalInfo.lastName || !editPersonalInfo.gender || !editPersonalInfo.dateOfBirth || !editPersonalInfo.bio}
+                    className="h-10 px-8 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-700 hover:to-purple-600 shadow-md hover:shadow-purple-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Save Changes
+                  </Button>
                 </div>
               </>
             ) : (

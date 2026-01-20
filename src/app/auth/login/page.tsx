@@ -79,7 +79,7 @@ export default function Login() {
               />
             </div>
             <div className="text-center mb-8">
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-600 bg-clip-text text-transparent">
+              <h1 className="text-2xl font-bold text-white">
                 Welcome to BAILS
               </h1>
               <p className="text-gray-400 mt-2">Sign in to continue to your account</p>
