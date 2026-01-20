@@ -28,7 +28,6 @@
     "@huggingface/inference": "^4.11.3",
     "@microsoft/clarity": "^1.0.2",
     "@mui/material": "^7.3.4",
-    "@next/font": "^14.2.13",
     "@prisma/client": "^5.22.0",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-alert-dialog": "^1.1.15",

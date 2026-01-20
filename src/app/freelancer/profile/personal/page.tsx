@@ -24,6 +24,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { usePersonalDetails } from '@/contexts/PersonalDetailsContext';
 import { useFreelancerProfile } from '@/contexts/FreelancerProfileContext';
 import { UsernameInput } from '@/components/freelancer/profile/UsernameInput';
+import { CricketLoader } from '@/components/ui/cricket-loader';
 
 type PersonalInfo = {
   firstName: string;
@@ -183,6 +184,7 @@ export default function PersonalDetailsPage() {
 
   const [usernameStatus, setUsernameStatus] = useState<'idle' | 'checking' | 'available' | 'taken' | 'invalid'>('idle');
   const [usernameMessage, setUsernameMessage] = useState('');
+  const [isSavingUsername, setIsSavingUsername] = useState(false);
 
   const [personalInfo, setPersonalInfo] = useState<PersonalInfo>({
     firstName: personalDetails.firstName || "",
@@ -450,14 +452,14 @@ export default function PersonalDetailsPage() {
                     <Input
                       value={editPersonalInfo.firstName}
                       onChange={(e) => handleInputChange(e, 'personal', 'firstName')}
-                      className="bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50"
+                      className="rounded-lg bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50"
                     />
                   </FormField>
                   <FormField label="Last Name" required>
                     <Input
                       value={editPersonalInfo.lastName}
                       onChange={(e) => handleInputChange(e, 'personal', 'lastName')}
-                      className="bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50"
+                      className="rounded-lg bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50"
                     />
                   </FormField>
                 </div>
@@ -491,7 +493,7 @@ export default function PersonalDetailsPage() {
                     type="date"
                     value={editPersonalInfo.dateOfBirth}
                     onChange={(e) => handleInputChange(e, 'personal', 'dateOfBirth')}
-                    className="bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50 [&::-webkit-calendar-picker-indicator]:invert"
+                    className="rounded-lg bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50 [&::-webkit-calendar-picker-indicator]:invert"
                   />
                 </FormField>
 
@@ -500,7 +502,7 @@ export default function PersonalDetailsPage() {
                     <Textarea
                       value={editPersonalInfo.bio}
                       onChange={(e) => handleInputChange(e, 'personal', 'bio')}
-                      className="min-h-[100px] bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50"
+                      className="rounded-lg min-h-[100px] bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50"
                     />
                   </FormField>
                 </div>
@@ -597,7 +599,7 @@ export default function PersonalDetailsPage() {
                     type="email"
                     value={editContact.email}
                     onChange={(e) => handleInputChange(e, 'contact', 'email')}
-                    className="bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50"
+                    className="rounded-lg bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50"
                     placeholder="e.g. john@example.com"
                   />
                 </FormField>
@@ -607,7 +609,7 @@ export default function PersonalDetailsPage() {
                     type="tel"
                     value={editContact.phone}
                     onChange={(e) => handleInputChange(e, 'contact', 'phone')}
-                    className="bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50"
+                    className="rounded-lg bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50"
                     placeholder="e.g. +1 234 567 8900"
                   />
                 </FormField>
@@ -673,7 +675,7 @@ export default function PersonalDetailsPage() {
                   <Input
                     value={editLocation.address}
                     onChange={(e) => handleInputChange(e, 'location', 'address')}
-                    className="bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50"
+                    className="rounded-lg bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50"
                     placeholder="Street address"
                   />
                 </FormField>
@@ -682,7 +684,7 @@ export default function PersonalDetailsPage() {
                   <Input
                     value={editLocation.area}
                     onChange={(e) => handleInputChange(e, 'location', 'area')}
-                    className="bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50"
+                    className="rounded-lg bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50"
                     placeholder="e.g. Velachery"
                   />
                 </FormField>
@@ -691,7 +693,7 @@ export default function PersonalDetailsPage() {
                   <Input
                     value={editLocation.city}
                     onChange={(e) => handleInputChange(e, 'location', 'city')}
-                    className="bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50"
+                    className="rounded-lg bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50"
                     placeholder="City"
                   />
                 </FormField>
@@ -700,7 +702,7 @@ export default function PersonalDetailsPage() {
                   <Input
                     value={editLocation.country}
                     onChange={(e) => handleInputChange(e, 'location', 'country')}
-                    className="bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50"
+                    className="rounded-lg bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50"
                     placeholder="State/Province"
                   />
                 </FormField>
@@ -709,7 +711,7 @@ export default function PersonalDetailsPage() {
                   <Input
                     value={editLocation.postalCode}
                     onChange={(e) => handleInputChange(e, 'location', 'postalCode')}
-                    className="bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50"
+                    className="rounded-lg bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50"
                     placeholder="Zip/Postal Code"
                   />
                 </FormField>
@@ -859,52 +861,48 @@ export default function PersonalDetailsPage() {
                   </Button>
                   <Button
                     type="button"
-                    onClick={() => {
-                      // Same save logic as SectionCard onSave prop
+                    onClick={async () => {
                       if (editUsername && editUsername !== username) {
-                        // ... trigger save
-                        // For simplicity, we trigger the prop onSave
-                        // In SectionCard, onSave is passed directly. 
-                        // Here we need to invoke the logic defined in renderSection('username')'s onSave prop
-                        // But renderSection defines the onSave prop. 
-                        // To access it here inside children, we can't easily.
-                        // Better approach: Let SectionCard render the buttons? No, children override it.
-                        // We must reimplement the save button here to add disabled state.
-                        const saveFn = async () => {
-                          // Save username via API
-                          if (editUsername && editUsername !== username) {
-                            try {
-                              const response = await fetch('/api/user/username', {
-                                method: 'PATCH',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ username: editUsername }),
-                              });
+                        setIsSavingUsername(true);
+                        try {
+                          const response = await fetch('/api/user/username', {
+                            method: 'PATCH',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ username: editUsername }),
+                          });
 
-                              if (response.ok) {
-                                setUsername(editUsername);
-                                localStorage.setItem('username', editUsername); // Save to localStorage
-                                // Update global context so header reflects the change
-                                updatePersonalDetails({ username: editUsername });
-                                handleSave('username');
-                              } else {
-                                const data = await response.json();
-                                alert(data.error || 'Failed to save username');
-                              }
-                            } catch (error) {
-                              console.error('Error saving username:', error);
-                              alert('Error saving username');
-                            }
-                          } else {
+                          if (response.ok) {
+                            setUsername(editUsername);
+                            localStorage.setItem('username', editUsername);
+                            updatePersonalDetails({ username: editUsername });
+                            setUsernameStatus('idle');
+                            setUsernameMessage('');
                             handleSave('username');
+                          } else {
+                            const data = await response.json();
+                            alert(data.error || 'Failed to save username');
                           }
-                        };
-                        saveFn();
+                        } catch (error) {
+                          console.error('Error saving username:', error);
+                          alert('Error saving username');
+                        } finally {
+                          setIsSavingUsername(false);
+                        }
+                      } else {
+                        handleSave('username');
                       }
                     }}
-                    disabled={!editUsername || usernameStatus === 'taken' || usernameStatus === 'invalid' || usernameStatus === 'checking'}
-                    className="h-10 px-8 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-700 hover:to-purple-600 shadow-md hover:shadow-purple-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={isSavingUsername || !editUsername || usernameStatus === 'taken' || usernameStatus === 'invalid' || usernameStatus === 'checking'}
+                    className="h-10 px-8 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-700 hover:to-purple-600 shadow-md hover:shadow-purple-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                   >
-                    Save Changes
+                    {isSavingUsername ? (
+                      <>
+                        <CricketLoader size={16} color="white" />
+                        Saving...
+                      </>
+                    ) : (
+                      'Save Changes'
+                    )}
                   </Button>
                 </div>
               </div>
@@ -914,50 +912,6 @@ export default function PersonalDetailsPage() {
                   Your profile will be: bails.in/{editUsername}
                 </p>
               )}
-
-
-              <div className="flex justify-center gap-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => handleCancel('username')}
-                  className="h-10 px-8 rounded-xl border-white/10 text-white/80 hover:bg-white/5 hover:text-white transition-colors"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="button"
-                  onClick={async () => {
-                    // Save username via API
-                    if (editUsername && usernameStatus === 'available') {
-                      try {
-                        const response = await fetch('/api/user/username', {
-                          method: 'PATCH',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ username: editUsername }),
-                        });
-
-                        if (response.ok) {
-                          setUsername(editUsername);
-                          setUsernameStatus('idle');
-                          setUsernameMessage('');
-                          handleSave('username');
-                        } else {
-                          const data = await response.json();
-                          alert(data.error || 'Failed to save username');
-                        }
-                      } catch (error) {
-                        console.error('Error saving username:', error);
-                        alert('Error saving username');
-                      }
-                    }
-                  }}
-                  disabled={usernameStatus !== 'available'}
-                  className="h-10 px-8 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-700 hover:to-purple-600 shadow-md hover:shadow-purple-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Save Changes
-                </Button>
-              </div>
             </div>
           ) : (
             <div className="space-y-4">
@@ -1001,7 +955,7 @@ export default function PersonalDetailsPage() {
                   <Input
                     value={editCricket.cricketRole}
                     onChange={(e) => handleInputChange(e, 'cricket', 'cricketRole')}
-                    className="bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50"
+                    className="rounded-lg bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50"
                     placeholder="e.g., All-rounder, Batsman, Bowler"
                   />
                 </FormField>
@@ -1010,7 +964,7 @@ export default function PersonalDetailsPage() {
                   <Input
                     value={editCricket.battingStyle}
                     onChange={(e) => handleInputChange(e, 'cricket', 'battingStyle')}
-                    className="bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50"
+                    className="rounded-lg bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50"
                     placeholder="e.g., Right-handed, Left-handed"
                   />
                 </FormField>
@@ -1019,7 +973,7 @@ export default function PersonalDetailsPage() {
                   <Input
                     value={editCricket.bowlingStyle}
                     onChange={(e) => handleInputChange(e, 'cricket', 'bowlingStyle')}
-                    className="bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50"
+                    className="rounded-lg bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50"
                     placeholder="e.g., Right-arm off-spin, Left-arm orthodox"
                   />
                 </FormField>

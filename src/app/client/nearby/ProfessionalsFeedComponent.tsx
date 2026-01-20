@@ -117,7 +117,7 @@ export default function ProfessionalsFeed({ filteredProfessionals }: Professiona
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-[12px] font-medium text-white/80 whitespace-nowrap">{freelancer.cricketRole || 'All Rounder'}</span>
+                      <span className="text-[12px] font-medium text-white/80 whitespace-nowrap">{freelancer.cricketRole || 'Role not set'}</span>
                     </div>
                   </div>
                 </div>

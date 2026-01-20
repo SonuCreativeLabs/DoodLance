@@ -719,7 +719,7 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                                         {freelancer.username && (
                                             <p className="text-white/40 text-sm font-medium">@{freelancer.username}</p>
                                         )}
-                                        <p className="text-purple-400 mt-1">{freelancer.cricketRole || 'All Rounder'}</p>
+                                        <p className="text-purple-400 mt-1">{freelancer.cricketRole || 'Role not set'}</p>
 
                                         <div className="mt-2 flex flex-col items-center gap-0.5 text-sm text-white/70">
                                             <div className="flex items-center gap-2">
@@ -783,7 +783,7 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                                     <div className="flex-1 flex justify-center">
                                         <div className="flex flex-col items-center text-center">
                                             <span className="text-white font-medium text-sm truncate">{freelancer.name}</span>
-                                            <span className="text-white/60 text-xs truncate">{freelancer.cricketRole || 'All Rounder'}</span>
+                                            <span className="text-white/60 text-xs truncate">{freelancer.cricketRole || 'Role not set'}</span>
                                         </div>
                                     </div>
                                     <IconButton
