@@ -85,16 +85,82 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                   name: data.name
                 });
 
-                setUser(prev => ({
-                  ...prev!,
-                  phone: data.phone || prev!.phone,
-                  name: data.name || prev!.name,
-                  avatar: data.avatar || prev!.avatar,
-                  profileImage: data.avatar || prev!.profileImage,
-                  location: data.location || prev!.location,
-                  email: data.email || prev!.email || '',
-                  createdAt: data.createdAt || prev!.createdAt,
-                }));
+                // Check if metadata is stale and needs sync (Self-healing)
+                // Only sync if this is a login event or hard refresh, and if we haven't synced recently to prevent loops
+                const isRelevantEvent = event === 'INITIAL_SESSION' || event === 'SIGNED_IN';
+                // Only consider sync if last sync was more than 5 minutes ago to be safe
+                const lastSync = parseInt(sessionStorage.getItem('lastMetadataSync') || '0');
+                const timeSinceLastSync = Date.now() - lastSync;
+                const canSync = isRelevantEvent && (timeSinceLastSync > 300000); // Debounce 5 minutes
+
+                if (canSync) {
+                  const metadataUpdates: any = {};
+                  let needsUpdate = false;
+
+                  // Compare against session data which is the source of truth for "what is currently in the token"
+                  const currentMetadata = session.user.user_metadata || {};
+
+                  if (data.name && data.name !== currentMetadata.name) {
+                    metadataUpdates.name = data.name;
+                    metadataUpdates.full_name = data.name;
+                    needsUpdate = true;
+                  }
+                  if (data.phone && data.phone !== currentMetadata.phone) {
+                    metadataUpdates.phone = data.phone;
+                    needsUpdate = true;
+                  }
+                  if (data.avatar && data.avatar !== currentMetadata.avatar) {
+                    metadataUpdates.avatar_url = data.avatar;
+                    metadataUpdates.avatar = data.avatar;
+                    needsUpdate = true;
+                  }
+                  if (data.role && data.role !== currentMetadata.role) {
+                    metadataUpdates.role = data.role
+                    needsUpdate = true;
+                  }
+
+                  if (needsUpdate) {
+                    console.log(`🔄 [Auth] Syncing Supabase metadata (Event: ${event}, LastSync: ${timeSinceLastSync}ms ago)...`, metadataUpdates);
+                    sessionStorage.setItem('lastMetadataSync', Date.now().toString());
+
+                    // Don't await this to avoid blocking UI
+                    supabase.auth.updateUser({
+                      data: metadataUpdates
+                    }).then(({ error }) => {
+                      if (error) {
+                        console.error('Failed to sync metadata:', error);
+                        // If rate limit, update lastSync to prevent immediate retry
+                        if (error.status === 429) {
+                          console.warn('Rate limit hit, backing off metadata sync');
+                          sessionStorage.setItem('lastMetadataSync', (Date.now() + 600000).toString()); // Backoff 10 mins
+                        }
+                      }
+                      else console.log('✅ Metadata synced successfully');
+                    });
+                  } else {
+                    console.log('✅ Metadata is up to date');
+                    // Update sync time anyway to avoid constant checking
+                    sessionStorage.setItem('lastMetadataSync', Date.now().toString());
+                  }
+                } else {
+                  if (isRelevantEvent) {
+                    console.log(`Unknown sync skipped (Debounce active: ${timeSinceLastSync}ms ago)`);
+                  }
+                }
+
+                setUser(prev => {
+                  if (!prev) return prev; // Should not happen if we are logged in, but safety first
+                  return {
+                    ...prev,
+                    phone: data.phone || prev.phone,
+                    name: data.name || prev.name,
+                    avatar: data.avatar || prev.avatar,
+                    profileImage: data.avatar || prev.profileImage, // Sync profile image with avatar
+                    location: data.location || prev.location,
+                    email: data.email || prev.email || '',
+                    createdAt: data.createdAt || prev.createdAt,
+                  };
+                });
 
                 sessionStorage.setItem('lastAuthFetch', Date.now().toString());
               } else if (response.status === 404) {

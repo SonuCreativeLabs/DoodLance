@@ -92,7 +92,8 @@ export async function middleware(request: NextRequest) {
 
         // Check for ADMIN role
         const role = user.user_metadata?.role;
-        if (role !== 'ADMIN') {
+        // Fix: Role check should be case-insensitive to match AdminAuthContext
+        if (!role || role.toUpperCase() !== 'ADMIN') {
             console.warn('Unauthorized access attempt: User is not an ADMIN', { role, ip });
             if (request.nextUrl.pathname.startsWith('/api/admin')) {
                 return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 });

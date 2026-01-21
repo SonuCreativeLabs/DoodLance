@@ -99,7 +99,106 @@ export async function POST(request: NextRequest) {
         logActionType = 'UNVERIFY';
         break;
       case 'delete':
-        await prisma.user.delete({ where: { id: userId } });
+        // 1. Delete dependent relations acting as Client
+        try {
+          await prisma.booking.deleteMany({ where: { clientId: userId } });
+          await prisma.review.deleteMany({ where: { clientId: userId } });
+          await prisma.clientProfile.deleteMany({ where: { userId } });
+
+          // Jobs posted by this user (as client)
+          const clientJobs = await prisma.job.findMany({ where: { clientId: userId }, select: { id: true } });
+          const clientJobIds = clientJobs.map(j => j.id);
+          if (clientJobIds.length > 0) {
+            await prisma.application.deleteMany({ where: { jobId: { in: clientJobIds } } });
+            await prisma.job.deleteMany({ where: { id: { in: clientJobIds } } });
+          }
+        } catch (e: any) {
+          console.error('Error cleaning up client data:', e);
+          // Continue execution to try and clean up other parts
+        }
+
+        // 2. Delete dependent relations acting as Freelancer
+        try {
+          await prisma.application.deleteMany({ where: { freelancerId: userId } });
+          // Remove freelancer from jobs but keep the job
+          await prisma.job.updateMany({
+            where: { freelancerId: userId },
+            data: { freelancerId: null }
+          });
+
+          const freelancerProfile = await prisma.freelancerProfile.findUnique({ where: { userId } });
+          if (freelancerProfile) {
+            await prisma.achievement.deleteMany({ where: { profileId: freelancerProfile.id } });
+            await prisma.portfolio.deleteMany({ where: { profileId: freelancerProfile.id } });
+            await prisma.review.deleteMany({ where: { profileId: freelancerProfile.id } });
+            await prisma.freelancerProfile.delete({ where: { id: freelancerProfile.id } });
+          }
+        } catch (e: any) {
+          console.error('Error cleaning up freelancer data:', e);
+        }
+
+        // 3. Delete dependent relations acting as Service Provider
+        try {
+          const services = await prisma.service.findMany({ where: { providerId: userId }, select: { id: true } });
+          const serviceIds = services.map(s => s.id);
+          if (serviceIds.length > 0) {
+            await prisma.booking.deleteMany({ where: { serviceId: { in: serviceIds } } });
+            await prisma.service.deleteMany({ where: { id: { in: serviceIds } } });
+          }
+        } catch (e: any) {
+          console.error('Error cleaning up service provider data:', e);
+        }
+
+        // 4. Conversations and Messages
+        try {
+          const conversations = await prisma.conversation.findMany({
+            where: { OR: [{ clientId: userId }, { freelancerId: userId }] },
+            select: { id: true }
+          });
+          const conversationIds = conversations.map(c => c.id);
+          if (conversationIds.length > 0) {
+            // Delete messages in these conversations first
+            await prisma.message.deleteMany({ where: { conversationId: { in: conversationIds } } });
+            await prisma.conversation.deleteMany({ where: { id: { in: conversationIds } } });
+          }
+        } catch (e: any) {
+          console.error('Error cleaning up conversation data:', e);
+        }
+
+        // 5. Delete other dependent relations explicitly (Manual Cascade)
+        try {
+          await prisma.bankAccount.deleteMany({ where: { userId } });
+          await prisma.promoUsage.deleteMany({ where: { userId } });
+          await prisma.notification.deleteMany({ where: { userId } });
+
+          // Support tickets - messages first, then tickets
+          const supportTickets = await prisma.supportTicket.findMany({ where: { userId }, select: { id: true } });
+          const ticketIds = supportTickets.map(t => t.id);
+          if (ticketIds.length > 0) {
+            await prisma.ticketMessage.deleteMany({ where: { ticketId: { in: ticketIds } } });
+            await prisma.supportTicket.deleteMany({ where: { id: { in: ticketIds } } });
+          }
+
+          const wallet = await prisma.wallet.findUnique({ where: { userId } });
+          if (wallet) {
+            await prisma.transaction.deleteMany({ where: { walletId: wallet.id } });
+            await prisma.wallet.delete({ where: { id: wallet.id } });
+          }
+        } catch (e: any) {
+          console.error('Error cleaning up miscellaneous user data:', e);
+        }
+
+        // 6. Finally delete the user
+        try {
+          await prisma.user.delete({ where: { id: userId } });
+        } catch (e: any) {
+          console.error('Error deleting user record:', e);
+          return NextResponse.json(
+            { error: `Failed to delete user: ${e.message}` },
+            { status: 500 }
+          );
+        }
+
         logActionType = 'DELETE';
         // Return immediately as there is no user object to return
         await logAdminAction({

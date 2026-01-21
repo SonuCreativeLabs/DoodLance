@@ -40,7 +40,7 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
         const user = session.user;
         const metadata = user.user_metadata || {};
 
-        if (metadata.role === 'ADMIN') {
+        if (metadata.role && metadata.role.toUpperCase() === 'ADMIN') {
           setAdmin({
             id: user.id,
             email: user.email || '',
@@ -51,7 +51,8 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
             lastLoginAt: user.last_sign_in_at
           });
         } else {
-          // Not an admin, maybe redirect?
+          // Not an admin
+          console.warn('⛔ AuthStateChange: User is logged in but NOT an ADMIN. Role:', metadata.role);
           setAdmin(null);
         }
       } else {
@@ -66,19 +67,39 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
   }, [supabase]);
 
   const login = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
+    console.log('🔐 Attempting Admin Login for:', email);
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
     if (error) {
-      console.error('Supabase login error:', error.message);
-      // Throw or return error
+      console.error('❌ Supabase login error:', error.message);
       return { error };
     }
 
-    router.push('/admin/dashboard');
-    return { error: null };
+    if (data.session?.user) {
+      const metadata = data.session.user.user_metadata || {};
+      console.log('👤 Admin Login Success. Metadata:', metadata);
+
+      // Case-insensitive role check
+      const role = metadata.role || '';
+      if (role.toUpperCase() !== 'ADMIN') {
+        console.warn('⛔ User is logged in but NOT an ADMIN. Role:', role);
+        await supabase.auth.signOut();
+        return {
+          error: {
+            message: 'Access Denied: You do not have administrator privileges.'
+          }
+        };
+      }
+
+      console.log('✅ Role verified. Redirecting to dashboard...');
+      router.push('/admin/dashboard');
+      return { error: null };
+    }
+
+    return { error: { message: 'Session not created' } };
   };
 
   const logout = async () => {
