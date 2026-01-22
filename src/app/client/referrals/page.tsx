@@ -35,6 +35,9 @@ export default function ReferralsPage() {
     pendingRewards: 0,
   });
   const [referrals, setReferrals] = useState<Referral[]>([]);
+  const [manualCode, setManualCode] = useState("");
+  const [referredBy, setReferredBy] = useState<string | null>(null);
+  const [isSubmittingCode, setIsSubmittingCode] = useState(false);
 
   React.useEffect(() => {
     setNavbarVisibility(false);
@@ -48,6 +51,7 @@ export default function ReferralsPage() {
         if (response.ok) {
           const data = await response.json();
           setReferralCode(data.referralCode);
+          setReferredBy(data.referredBy);
           setStats(data.stats);
           setReferrals(data.referrals);
         }
@@ -74,7 +78,8 @@ export default function ReferralsPage() {
   const handleShare = async () => {
     if (!referralCode) return;
 
-    const shareUrl = `https://bails.in/join?ref=${referralCode}`;
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://bails.in';
+    const shareUrl = `${origin}/auth/login?ref=${referralCode}`;
     const shareText = `Join BAILS and get cricket training from the best professionals! Use my referral code ${referralCode} to get 500 App Coins! ${shareUrl}`;
 
     if (navigator.share) {
@@ -92,6 +97,33 @@ export default function ReferralsPage() {
       await navigator.clipboard.writeText(shareText);
       setCopiedCode("share");
       setTimeout(() => setCopiedCode(null), 2000);
+    }
+  };
+
+  const handleSubmitCode = async () => {
+    if (!manualCode) return;
+    setIsSubmittingCode(true);
+    try {
+      const response = await fetch('/api/client/referrals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: manualCode }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setReferredBy(manualCode);
+        setManualCode("");
+        // Optional: Show success toast
+      } else {
+        alert(data.error || "Failed to apply code");
+      }
+    } catch (error) {
+      console.error("Failed to submit code", error);
+      alert("Something went wrong");
+    } finally {
+      setIsSubmittingCode(false);
     }
   };
 
@@ -153,10 +185,12 @@ export default function ReferralsPage() {
             </div>
           </div>
 
+
+
           <button
             onClick={handleShare}
             disabled={loading || !referralCode}
-            className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-purple-400 hover:from-purple-700 hover:to-purple-500 text-white py-3 rounded-lg font-medium transition-all disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-purple-400 hover:from-purple-700 hover:to-purple-500 text-white py-3 rounded-lg font-medium transition-all disabled:opacity-50 mb-6"
           >
             {copiedCode === "share" ? (
               <>
@@ -170,7 +204,38 @@ export default function ReferralsPage() {
               </>
             )}
           </button>
-        </div>
+
+          {/* Manual Code Entry Section */}
+          <div className="border-t border-white/10 pt-6">
+            <h3 className="text-sm font-medium text-white mb-3">Have a referral code?</h3>
+            {referredBy ? (
+              <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg flex items-center gap-2">
+                <Check className="w-4 h-4 text-green-400" />
+                <p className="text-sm text-green-400">
+                  Referred by: <span className="font-mono font-medium">{referredBy}</span>
+                </p>
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={manualCode}
+                  onChange={(e) => setManualCode(e.target.value.toUpperCase())}
+                  placeholder="Enter code (e.g. BAILS55)"
+                  className="flex-1 bg-[#1a1a1a] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-purple-500/50"
+                  disabled={isSubmittingCode}
+                />
+                <button
+                  onClick={handleSubmitCode}
+                  disabled={!manualCode || isSubmittingCode}
+                  className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSubmittingCode ? 'Applying...' : 'Apply'}
+                </button>
+              </div>
+            )}
+          </div>
+        </div >
 
         {/* Stats Cards */}
         <div className="grid grid-cols-2 gap-4 mb-6">
@@ -205,49 +270,51 @@ export default function ReferralsPage() {
             </div>
             <p className="text-2xl font-bold text-blue-400">{stats.pendingRewards} Coins</p>
           </div>
-        </div>
+        </div >
 
         {/* Referral History */}
         <div className="bg-[#18181b] rounded-xl p-6 border border-white/10 shadow-lg">
           <h3 className="text-lg font-semibold text-white mb-4">Referral History</h3>
 
-          {loading ? (
-            <div className="space-y-3">
-              {[1, 2].map(i => (
-                <div key={i} className="h-16 bg-white/5 rounded-xl animate-pulse" />
-              ))}
-            </div>
-          ) : referrals.length > 0 ? (
-            <div className="space-y-3">
-              {referrals.map((referral) => (
-                <div key={referral.id} className="flex items-center justify-between p-4 bg-[#1a1a1a] rounded-xl border border-white/5">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-white font-medium truncate">{referral.name}</p>
-                    <p className="text-white/60 text-sm truncate">{referral.email}</p>
-                    <p className="text-white/50 text-xs">{referral.date}</p>
-                  </div>
-
-                  <div className="text-right ml-4">
-                    <div className={cn(
-                      "text-sm font-medium px-2 py-1 rounded-full",
-                      referral.status === "completed"
-                        ? "bg-green-500/20 text-green-400"
-                        : "bg-yellow-500/20 text-yellow-400"
-                    )}>
-                      {referral.status === "completed" ? "Completed" : "Pending"}
+          {
+            loading ? (
+              <div className="space-y-3">
+                {[1, 2].map(i => (
+                  <div key={i} className="h-16 bg-white/5 rounded-xl animate-pulse" />
+                ))}
+              </div>
+            ) : referrals.length > 0 ? (
+              <div className="space-y-3">
+                {referrals.map((referral) => (
+                  <div key={referral.id} className="flex items-center justify-between p-4 bg-[#1a1a1a] rounded-xl border border-white/5">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white font-medium truncate">{referral.name}</p>
+                      <p className="text-white/60 text-sm truncate">{referral.email}</p>
+                      <p className="text-white/50 text-xs">{referral.date}</p>
                     </div>
-                    {referral.reward > 0 && (
-                      <p className="text-green-400 text-sm font-semibold mt-1">+{referral.reward} Coins</p>
-                    )}
+
+                    <div className="text-right ml-4">
+                      <div className={cn(
+                        "text-sm font-medium px-2 py-1 rounded-full",
+                        referral.status === "completed"
+                          ? "bg-green-500/20 text-green-400"
+                          : "bg-yellow-500/20 text-yellow-400"
+                      )}>
+                        {referral.status === "completed" ? "Completed" : "Pending"}
+                      </div>
+                      {referral.reward > 0 && (
+                        <p className="text-green-400 text-sm font-semibold mt-1">+{referral.reward} Coins</p>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8 text-white/40">
-              <p>No referrals yet. Share your code to start earning!</p>
-            </div>
-          )}
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-white/40">
+                <p>No referrals yet. Share your code to start earning!</p>
+              </div>
+            )
+          }
         </div>
       </div>
     </div>

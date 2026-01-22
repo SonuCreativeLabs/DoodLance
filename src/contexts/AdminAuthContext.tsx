@@ -2,14 +2,12 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
-import { AuthChangeEvent, Session } from '@supabase/supabase-js';
 
 interface AdminUser {
   id: string;
   email: string;
   name: string;
-  role: 'SUPER_ADMIN' | 'SUPPORT' | 'FINANCE' | 'MARKETING';
+  role: 'SUPER_ADMIN' | 'SUPPORT' | 'FINANCE' | 'MARKETING' | 'ADMIN';
   permissions: string[];
   avatar?: string;
   lastLoginAt?: string;
@@ -30,59 +28,64 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
   const [admin, setAdmin] = useState<AdminUser | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-  const supabase = createClient();
 
+  // Check session on mount
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, session: Session | null) => {
-      if (session?.user) {
-        // Map session user to AdminUser
-        // Check if role is ADMIN
-        const user = session.user;
-        const metadata = user.user_metadata || {};
-
-        if (metadata.role === 'ADMIN') {
-          setAdmin({
-            id: user.id,
-            email: user.email || '',
-            name: metadata.name || 'Admin',
-            role: metadata.admin_role || 'SUPER_ADMIN',
-            permissions: [], // Load permissions if needed
-            avatar: metadata.avatar,
-            lastLoginAt: user.last_sign_in_at
-          });
-        } else {
-          // Not an admin, maybe redirect?
-          setAdmin(null);
+    async function checkSession() {
+      try {
+        const res = await fetch('/api/admin/auth/me');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.admin) {
+            setAdmin(data.admin);
+          }
         }
-      } else {
-        setAdmin(null);
+      } catch (err) {
+        console.error('Session check failed', err);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [supabase]);
+    }
+    checkSession();
+  }, []);
 
   const login = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    console.log('🔐 Attempting Admin Login (Custom) for:', email);
+    try {
+      const res = await fetch('/api/admin/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
 
-    if (error) {
-      console.error('Supabase login error:', error.message);
-      // Throw or return error
-      return { error };
+      const data = await res.json();
+
+      if (!res.ok) {
+        console.error('❌ Login error:', data.error);
+        return { error: { message: data.error || 'Login failed' } };
+      }
+
+      if (data.admin) {
+        console.log('👤 Admin Login Success:', data.admin);
+        setAdmin(data.admin);
+        router.push('/admin/dashboard');
+        return { error: null };
+      }
+
+    } catch (err: any) {
+      console.error('❌ Network login error:', err);
+      return { error: { message: err.message || 'Connection failed' } };
     }
 
-    router.push('/admin/dashboard');
-    return { error: null };
+    return { error: { message: 'Unexpected login failure' } };
   };
 
   const logout = async () => {
-    await supabase.auth.signOut();
+    try {
+      await fetch('/api/admin/auth/logout', { method: 'POST' });
+    } catch (e) {
+      console.error('Logout error', e);
+    }
     setAdmin(null);
     router.push('/admin/login');
   };
@@ -90,11 +93,11 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
   const checkPermission = (permission: string): boolean => {
     if (!admin) return false;
     const normalizedRole = admin.role.toUpperCase();
-    if (normalizedRole === 'SUPER_ADMIN') return true;
+    if (normalizedRole === 'SUPER_ADMIN' || normalizedRole === 'ADMIN') return true;
     return admin.permissions?.includes(permission) || false;
   };
 
-  const isSuper = admin?.role?.toUpperCase() === 'SUPER_ADMIN';
+  const isSuper = admin?.role?.toUpperCase() === 'SUPER_ADMIN' || admin?.role?.toUpperCase() === 'ADMIN';
 
   return (
     <AdminAuthContext.Provider value={{ admin, loading, login, logout, checkPermission, isSuper }}>

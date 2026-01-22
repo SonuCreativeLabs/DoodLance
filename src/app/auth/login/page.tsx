@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { ArrowLeft, Mail, ArrowRight, ShieldCheck } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { motion } from 'framer-motion'
@@ -12,6 +12,8 @@ import { isValidEmail } from '@/lib/validation'
 
 export default function Login() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const referralCode = searchParams.get('ref')
   const { sendOTP } = useAuth()
 
   const [email, setEmail] = useState('')
@@ -30,7 +32,7 @@ export default function Login() {
     setIsLoading(true)
     try {
       // Send OTP via API
-      await sendOTP(email, 'email')
+      await sendOTP(email, 'email', referralCode ? { referredBy: referralCode } : undefined)
 
       router.push(`/auth/otp?email=${encodeURIComponent(email)}`)
     } catch (err) {

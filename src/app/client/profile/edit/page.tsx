@@ -10,16 +10,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 import { compressImage } from '@/utils/compression'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogClose
-} from "@/components/ui/dialog"
+
 
 export default function EditProfile() {
   const { setNavbarVisibility } = useNavbar()
@@ -49,8 +40,11 @@ export default function EditProfile() {
   }>({})
 
   // Initialize form data from AuthContext user
+  // Initialize form data from AuthContext user
   useEffect(() => {
-    if (user) {
+    // Only set initial data if we haven't touched the form yet (or if it's first load)
+    // We check if name is empty to imply "not initialized"
+    if (user && !formData.name) {
       setFormData({
         name: user.name || '',
         email: user.email || '',
@@ -186,9 +180,9 @@ export default function EditProfile() {
       return
     }
 
-    // Validate file size (max 2MB)
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error('Image size must be less than 2MB')
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image size must be less than 5MB')
       return
     }
 
@@ -196,7 +190,7 @@ export default function EditProfile() {
     setUploadProgress(20)
     try {
       toast.info('Compressing image...')
-      const compressedFile = await compressImage(file, 0.7, 400) // Keep original settings: 0.7 quality, 400px max size
+      const compressedFile = await compressImage(file, 0.8, 500) // 0.8 quality, 500px max size
       setUploadProgress(60)
 
       // Create unique filename
@@ -412,6 +406,19 @@ export default function EditProfile() {
 
           {/* Save Button */}
           <div className="pt-6">
+            {/* Missing Fields Indicator */}
+            {(!formData.name || !formData.phone || !formData.location || !formData.avatar) && (
+              <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                <p className="text-red-400 text-sm font-medium mb-1">Please complete the following fields to save:</p>
+                <ul className="list-disc list-inside text-xs text-red-500/80">
+                  {!formData.name && <li>Full Name</li>}
+                  {!formData.phone && <li>Phone Number</li>}
+                  {!formData.location && <li>Location</li>}
+                  {!formData.avatar && <li>Profile Picture</li>}
+                </ul>
+              </div>
+            )}
+
             <button
               type="submit"
               disabled={saving || !formData.name || !formData.phone || !formData.location || !formData.avatar}
@@ -435,42 +442,6 @@ export default function EditProfile() {
 
 
 
-          {/* Danger Zone */}
-          <div className="pt-6 border-t border-white/10">
-            <h2 className="text-red-400 font-medium mb-4">Danger Zone</h2>
-
-            <Dialog>
-              <DialogTrigger asChild>
-                <button
-                  type="button"
-                  className="px-4 py-3 rounded-xl border border-red-500/20 text-red-400 hover:bg-red-500/10 transition-colors text-sm font-medium w-full"
-                >
-                  Delete Account
-                </button>
-              </DialogTrigger>
-              <DialogContent className="bg-[#18181b] text-white border-white/10">
-                <DialogHeader>
-                  <DialogTitle>Are you absolutely sure?</DialogTitle>
-                  <DialogDescription className="text-white/60">
-                    This action cannot be undone. This will permanently delete your account and remove your data from our servers.
-                  </DialogDescription>
-                </DialogHeader>
-                <DialogFooter className="gap-2 sm:gap-0">
-                  <DialogClose asChild>
-                    <button className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm font-medium transition-colors">
-                      Cancel
-                    </button>
-                  </DialogClose>
-                  <button
-                    onClick={() => toast.error("Account deletion is not available in demo")}
-                    className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-medium transition-colors"
-                  >
-                    Delete Account
-                  </button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          </div>
         </form>
       </div>
     </div>

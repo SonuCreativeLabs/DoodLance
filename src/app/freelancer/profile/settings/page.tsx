@@ -18,6 +18,16 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { useSettings } from '@/contexts/SettingsContext';
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose
+} from "@/components/ui/dialog";
 
 interface SectionCardProps {
   title: string;
@@ -68,7 +78,6 @@ const FormField = ({
 
 export default function SettingsPage() {
   const { settings, updateNotificationSettings, updateEmail, deactivateAccount, logout, isLoading } = useSettings();
-  const [showDeactivateConfirm, setShowDeactivateConfirm] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -335,56 +344,76 @@ export default function SettingsPage() {
 
           {/* Account Actions */}
           <div className="space-y-3">
-            <Button
-              onClick={logout}
-              variant="outline"
-              className="w-full h-12 border-white/20 text-white/80 hover:bg-white/5 hover:text-white"
-            >
-              <LogOut className="h-4 w-4 mr-2" />
-              Logout
-            </Button>
-
-            <Button
-              onClick={() => setShowDeactivateConfirm(true)}
-              variant="outline"
-              className="w-full h-12 border-white/20 text-white/80 hover:bg-white/5 hover:text-white"
-            >
-              <UserX className="h-4 w-4 mr-2" />
-              Deactivate Account
-            </Button>
-          </div>
-
-          {showDeactivateConfirm && (
-            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
-              <div className="flex items-start gap-2">
-                <AlertTriangle className="h-4 w-4 text-red-400 flex-shrink-0 mt-0.5" />
-                <div className="flex-1 min-w-0">
-                  <h4 className="text-red-400 font-semibold mb-1 text-sm leading-tight">Deactivate Account</h4>
-                  <p className="text-white/70 text-xs mb-2 leading-tight">
-                    This action cannot be undone. Your profile will be hidden and you will lose access to all features.
-                  </p>
-                  <div className="flex gap-2 mt-2">
-                    <Button
-                      size="sm"
-                      onClick={handleDeactivateAccount}
-                      disabled={isLoading}
-                      className="bg-red-600 hover:bg-red-700 text-white h-7 px-3 text-xs"
-                    >
-                      {isLoading ? 'Deactivating...' : 'Confirm'}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setShowDeactivateConfirm(false)}
-                      className="border-white/20 text-white/70 hover:text-white h-7 px-3 text-xs"
-                    >
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="w-full h-12 border-white/20 text-white/80 hover:bg-white/5 hover:text-white"
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Logout
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="bg-[#1E1E1E] text-white border-white/10 sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>Sign out</DialogTitle>
+                  <DialogDescription className="text-white/60">
+                    Are you sure you want to sign out of your account?
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter className="gap-2 sm:gap-0">
+                  <DialogClose asChild>
+                    <Button variant="outline" className="border-white/20 hover:bg-white/5 hover:text-white text-white/70">
                       Cancel
                     </Button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
+                  </DialogClose>
+                  <Button
+                    onClick={logout}
+                    className="bg-red-600 hover:bg-red-700 text-white"
+                  >
+                    Sign out
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="w-full h-12 border-white/20 text-white/80 hover:bg-white/5 hover:text-white"
+                >
+                  <UserX className="h-4 w-4 mr-2" />
+                  Deactivate Account
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="bg-[#1E1E1E] text-white border-white/10 sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle className="text-red-400 flex items-center gap-2">
+                    <AlertTriangle className="h-5 w-5" />
+                    Deactivate Account
+                  </DialogTitle>
+                  <DialogDescription className="text-white/60">
+                    This action cannot be undone. Your profile will be hidden and you will lose access to all features. Are you sure?
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter className="gap-2 sm:gap-0">
+                  <DialogClose asChild>
+                    <Button variant="outline" className="border-white/20 hover:bg-white/5 hover:text-white text-white/70">
+                      Cancel
+                    </Button>
+                  </DialogClose>
+                  <Button
+                    onClick={handleDeactivateAccount}
+                    disabled={isLoading}
+                    className="bg-red-600 hover:bg-red-700 text-white"
+                  >
+                    {isLoading ? 'Deactivating...' : 'Confirm Deactivation'}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
       </div>
     </div>

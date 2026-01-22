@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from 'sonner';
 import {
   Select,
   SelectContent,
@@ -438,7 +439,7 @@ export default function UserManagementPage() {
         fetchUsers();
         setDeleteConfirmOpen(false);
         setUserToDelete(null);
-        // TODO: Show success toast
+        toast.success("User deleted successfully");
       } else {
         const data = await res.json();
         alert(data.error || 'Failed to delete user');

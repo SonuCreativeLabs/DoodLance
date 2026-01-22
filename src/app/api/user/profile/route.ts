@@ -30,6 +30,29 @@ export async function GET(request: NextRequest) {
             }
         });
 
+        // Auto-Reactivate if inactive
+        if (dbUser && dbUser.status === 'inactive') {
+            console.log(`[API] User ${user.id} is inactive, reactivating...`);
+            await prisma.user.update({
+                where: { id: user.id },
+                data: { status: 'active' }
+            });
+            // Reflect the change in the returned object
+            dbUser.status = 'active';
+
+            // Optional: Create "Welcome Back" notification
+            await prisma.notification.create({
+                data: {
+                    userId: user.id,
+                    title: 'Welcome Back!',
+                    message: 'Your account has been reactivated successfully.',
+                    type: 'SYSTEM',
+                    entityId: user.id,
+                    entityType: 'user',
+                }
+            }).catch(e => console.error('Failed to create welcome back notification:', e));
+        }
+
         if (!dbUser) {
             console.log(`[API] User ${user.id} not found in DB, creating new record...`);
 
@@ -58,6 +81,10 @@ export async function GET(request: NextRequest) {
 
                 // Auto-create user if they exist in Auth but not in DB (Self-healing)
                 // Use upsert to handle race conditions where parallel requests try to create
+                const referredBy = user.user_metadata?.referredBy || null;
+                if (referredBy) {
+                    console.log(`[API] New user ${user.id} was referred by: ${referredBy}`);
+                }
                 const newDbUser = await prisma.user.upsert({
                     where: { id: user.id },
                     update: {},
@@ -69,7 +96,7 @@ export async function GET(request: NextRequest) {
                         coords: '[0,0]',
                         isVerified: false,
                         referralCode: referralCode, // Add generated code
-                        referredBy: user.user_metadata?.referredBy || null,
+                        referredBy: referredBy,
                     },
                     select: {
                         id: true,
@@ -150,38 +177,17 @@ export async function GET(request: NextRequest) {
 
                 // Handle email collision (P2002)
                 if (createError.code === 'P2002' && Array.isArray(createError.meta?.target) && createError.meta.target.includes('email')) {
-                    console.log('[API] Email conflict detected, linking to existing user...');
+                    console.log('[API] Email conflict detected, returning existing user...');
                     const existingUser = await prisma.user.findUnique({
                         where: { email: user.email }
                     });
                     if (existingUser) {
-                        // Link new Supabase ID to existing user
-                        const updated = await prisma.user.update({
-                            where: { id: existingUser.id },
-                            data: { supabaseUid: user.id },
-                            select: {
-                                id: true,
-                                email: true,
-                                name: true,
-                                phone: true,
-                                avatar: true,
-                                location: true,
-                                bio: true,
-                                gender: true,
-                                username: true,
-                                displayId: true,
-                                address: true,
-                                city: true,
-                                state: true,
-                                postalCode: true,
-                                role: true,
-                                currentRole: true,
-                                isVerified: true,
-                                phoneVerified: true,
-                                createdAt: true,
-                            }
-                        });
-                        return NextResponse.json(updated);
+                        // Return the existing user so the frontend receives data
+                        // We might want to log a warning that IDs mismatch
+                        console.warn(`[API] ID Mismatch: Supabase(${user.id}) vs DB(${existingUser.id}) for email ${user.email}`);
+
+                        // Optional: Try to update some fields if needed, but be careful with ID
+                        return NextResponse.json(existingUser);
                     }
                 }
 

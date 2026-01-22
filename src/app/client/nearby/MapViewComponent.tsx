@@ -257,6 +257,24 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({ professionals: propProfe
       });
     };
 
+    // Helper to add small offset to overlapping coordinates
+    const usedCoords = new Map<string, number>(); // Track how many markers at each coord
+    const getAdjustedCoords = (coords: [number, number]): [number, number] => {
+      const key = `${coords[0].toFixed(5)},${coords[1].toFixed(5)}`; // Round to ~1m precision
+      const count = usedCoords.get(key) || 0;
+      usedCoords.set(key, count + 1);
+
+      if (count === 0) return coords; // First marker at this location - no offset
+
+      // Add small offset in a circular pattern for subsequent markers
+      const angle = (count * 137.5) * (Math.PI / 180); // Golden angle for even distribution
+      const radius = 0.0001 * count; // ~11m per count
+      return [
+        coords[0] + radius * Math.cos(angle),
+        coords[1] + radius * Math.sin(angle)
+      ];
+    };
+
     professionals.forEach((pro: any, index: number) => {
       const currentIndex = index;
       const hasNext = currentIndex < professionals.length - 1;
@@ -303,24 +321,32 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({ professionals: propProfe
                     <span class="text-sm truncate">${pro.location}</span>
                   </div>
                   <div class="flex items-center gap-2 text-white/60">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                    <span class="text-sm">${pro.responseTime}</span>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
+                    <span class="text-sm">${pro.distance !== null && pro.distance !== undefined ? (pro.distance < 1 ? `${(pro.distance * 1000).toFixed(0)}m away` : `${pro.distance.toFixed(1)}km away`) : 'Distance N/A'}</span>
                   </div>
                 </div>
               </div>
               <div class="flex items-center justify-between pt-2 border-t border-white/5">
-                <div class="flex items-baseline gap-1"><span class="text-sm text-white/70">From</span><span class="text-xl font-bold text-white">₹${pro.price}</span></div>
-                <button class="px-4 py-1.5 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white rounded-lg text-xs font-medium transition-all duration-200 shadow-lg" onclick="event.stopPropagation(); window.location.href='/client/freelancer/${pro.id}?source=map&pinId=${pro.id}'">Hire Now</button>
+                ${pro.services && pro.services.length > 0 && pro.price > 0 ? `
+                  <div class="flex items-baseline gap-1"><span class="text-sm text-white/70">From</span><span class="text-xl font-bold text-white">₹${pro.price}</span></div>
+                  <button class="px-4 py-1.5 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white rounded-lg text-xs font-medium transition-all duration-200 shadow-lg" onclick="event.stopPropagation(); window.location.href='/client/freelancer/${pro.id}?source=map&pinId=${pro.id}'">Hire Now</button>
+                ` : `
+                  <div class="flex items-center gap-2 text-white/50 text-sm italic"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span>No services listed</span></div>
+                  <button class="px-4 py-1.5 bg-white/10 text-white/40 rounded-lg text-xs font-medium cursor-not-allowed" disabled>Unavailable</button>
+                `}
               </div>
             </div>
         `);
+
+      // Get adjusted coordinates to prevent overlapping
+      const adjustedCoords = getAdjustedCoords(pro.coords);
 
       const marker = new mapboxgl.Marker({
         color: "#9333EA",
         clickTolerance: 3,
         scale: 0.8
       })
-        .setLngLat(pro.coords)
+        .setLngLat(adjustedCoords)
         .addTo(map);
 
       markersRef.current.set(pro.id.toString(), { marker, popup });

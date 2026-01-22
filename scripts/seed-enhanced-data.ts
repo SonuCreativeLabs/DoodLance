@@ -4,24 +4,24 @@ const prisma = new PrismaClient()
 
 async function seedEnhancedData() {
   console.log('🌱 Seeding enhanced mock data...')
-  
+
   try {
     await prisma.$connect()
     console.log('✅ Connected to database')
-    
+
     // Get existing users and categories
     const client1 = await prisma.user.findUnique({ where: { email: 'client@doodlance.com' } })
     const freelancer1 = await prisma.user.findUnique({ where: { email: 'freelancer@doodlance.com' } })
     const freelancer2 = await prisma.user.findUnique({ where: { email: 'bowler@doodlance.com' } })
-    
+
     if (!client1 || !freelancer1 || !freelancer2) {
       console.log('❌ Base users not found. Please run seed-data.ts first.')
       return
     }
-    
+
     // Create additional clients for mock jobs
     console.log('\n👥 Creating additional clients...')
-    
+
     const cskAcademy = await prisma.user.upsert({
       where: { email: 'csk@doodlance.com' },
       update: {},
@@ -34,11 +34,11 @@ async function seedEnhancedData() {
         location: 'Chepauk, Chennai',
         coords: JSON.stringify([80.2095, 13.0850]),
         bio: 'Professional cricket academy affiliated with CSK',
-        referralCode: 'CSK2024',
+        referralCode: 'BAILS_CSK',
         isVerified: true,
       },
     })
-    
+
     const tncaClient = await prisma.user.upsert({
       where: { email: 'tnca@doodlance.com' },
       update: {},
@@ -51,11 +51,11 @@ async function seedEnhancedData() {
         location: 'Adyar Cricket Ground, Chennai',
         coords: JSON.stringify([80.2570, 13.0067]),
         bio: 'Official Tamil Nadu Cricket Association training facility',
-        referralCode: 'TNCA2024',
+        referralCode: 'BAILS_TNCA',
         isVerified: true,
       },
     })
-    
+
     const annaClub = await prisma.user.upsert({
       where: { email: 'annaclub@doodlance.com' },
       update: {},
@@ -68,11 +68,11 @@ async function seedEnhancedData() {
         location: 'Anna Nagar Cricket Club, Chennai',
         coords: JSON.stringify([80.2090, 13.0850]),
         bio: 'Premier cricket club in Anna Nagar',
-        referralCode: 'ANNA2024',
+        referralCode: 'BAILS_ANNA',
         isVerified: true,
       },
     })
-    
+
     const arjunMehta = await prisma.user.upsert({
       where: { email: 'arjun.mehta@doodlance.com' },
       update: {},
@@ -85,11 +85,11 @@ async function seedEnhancedData() {
         location: 'T Nagar Cricket Academy, Chennai',
         coords: JSON.stringify([80.2279, 13.0418]),
         bio: 'Parent looking for cricket coaching for my son',
-        referralCode: 'ARJUNM2024',
+        referralCode: 'BAILS_ARJUN',
         isVerified: true,
       },
     })
-    
+
     const ccaClient = await prisma.user.upsert({
       where: { email: 'cca@doodlance.com' },
       update: {},
@@ -102,11 +102,11 @@ async function seedEnhancedData() {
         location: 'M.A. Chidambaram Stadium, Chennai',
         coords: JSON.stringify([80.2095, 13.0850]),
         bio: 'Official Chennai Cricket Association',
-        referralCode: 'CCA2024',
+        referralCode: 'BAILS_CCA',
         isVerified: true,
       },
     })
-    
+
     const cclClient = await prisma.user.upsert({
       where: { email: 'ccl@doodlance.com' },
       update: {},
@@ -119,11 +119,11 @@ async function seedEnhancedData() {
         location: 'Various Grounds, Chennai',
         coords: JSON.stringify([80.2707, 13.0338]),
         bio: 'Organizing local cricket tournaments',
-        referralCode: 'CCL2024',
+        referralCode: 'BAILS_CCL',
         isVerified: true,
       },
     })
-    
+
     const nccClient = await prisma.user.upsert({
       where: { email: 'ncc@doodlance.com' },
       update: {},
@@ -136,11 +136,11 @@ async function seedEnhancedData() {
         location: 'Nungambakkam Cricket Club, Chennai',
         coords: JSON.stringify([80.2420, 13.0569]),
         bio: 'Elite cricket club with professional facilities',
-        referralCode: 'NCC2024',
+        referralCode: 'BAILS_NCC',
         isVerified: true,
       },
     })
-    
+
     const velacheryAcademy = await prisma.user.upsert({
       where: { email: 'velachery@doodlance.com' },
       update: {},
@@ -153,13 +153,13 @@ async function seedEnhancedData() {
         location: 'Velachery Cricket Academy, Chennai',
         coords: JSON.stringify([80.2209, 12.9756]),
         bio: 'Cricket academy focused on youth development',
-        referralCode: 'VCA2024',
+        referralCode: 'BAILS_VCA',
         isVerified: true,
       },
     })
-    
+
     console.log('✅ Created 8 additional clients')
-    
+
     // Create client profiles
     console.log('\n👤 Creating client profiles...')
     await prisma.clientProfile.upsert({
@@ -178,7 +178,7 @@ async function seedEnhancedData() {
         verifiedAt: new Date(),
       },
     })
-    
+
     await prisma.clientProfile.upsert({
       where: { userId: tncaClient.id },
       update: {},
@@ -195,7 +195,7 @@ async function seedEnhancedData() {
         verifiedAt: new Date(),
       },
     })
-    
+
     await prisma.clientProfile.upsert({
       where: { userId: ccaClient.id },
       update: {},
@@ -212,9 +212,9 @@ async function seedEnhancedData() {
         verifiedAt: new Date(),
       },
     })
-    
+
     console.log('✅ Created client profiles')
-    
+
     // Create wallets for new clients
     console.log('\n💰 Creating wallets...')
     const newClients = [cskAcademy, tncaClient, annaClub, arjunMehta, ccaClient, cclClient, nccClient, velacheryAcademy]
@@ -230,10 +230,10 @@ async function seedEnhancedData() {
       })
     }
     console.log('✅ Created wallets for new clients')
-    
+
     // Create mock jobs from the mock-data.ts file
     console.log('\n💼 Creating mock jobs...')
-    
+
     const job1 = await prisma.job.create({
       data: {
         title: 'U-16 Academy Coach',
@@ -254,7 +254,7 @@ async function seedEnhancedData() {
         proposals: 3,
       },
     })
-    
+
     const job2 = await prisma.job.create({
       data: {
         title: 'Sidearm Specialist — Powerplay & Death Overs',
@@ -275,7 +275,7 @@ async function seedEnhancedData() {
         proposals: 5,
       },
     })
-    
+
     const job3 = await prisma.job.create({
       data: {
         title: 'Mystery Spin Training — Carrom Ball & Doosra',
@@ -296,7 +296,7 @@ async function seedEnhancedData() {
         proposals: 2,
       },
     })
-    
+
     const job4 = await prisma.job.create({
       data: {
         title: 'Personal Batting Coach — Front-Foot Technique',
@@ -317,7 +317,7 @@ async function seedEnhancedData() {
         proposals: 4,
       },
     })
-    
+
     const job5 = await prisma.job.create({
       data: {
         title: 'Fast Bowling Practice — 140+ kph Nets',
@@ -338,7 +338,7 @@ async function seedEnhancedData() {
         proposals: 3,
       },
     })
-    
+
     const job6 = await prisma.job.create({
       data: {
         title: 'Match Footage Analysis — Technical Breakdown',
@@ -359,7 +359,7 @@ async function seedEnhancedData() {
         proposals: 2,
       },
     })
-    
+
     const job7 = await prisma.job.create({
       data: {
         title: 'Tournament Photography — Action Shots & Highlights',
@@ -380,7 +380,7 @@ async function seedEnhancedData() {
         proposals: 4,
       },
     })
-    
+
     const job8 = await prisma.job.create({
       data: {
         title: 'Social Media Content — Highlights & Player Profiles',
@@ -401,7 +401,7 @@ async function seedEnhancedData() {
         proposals: 6,
       },
     })
-    
+
     const job9 = await prisma.job.create({
       data: {
         title: 'Tournament Officiating — T20 Weekend Panel',
@@ -422,7 +422,7 @@ async function seedEnhancedData() {
         proposals: 8,
       },
     })
-    
+
     const job10 = await prisma.job.create({
       data: {
         title: 'Digital Scoring — Weekend T20 Tournament',
@@ -443,7 +443,7 @@ async function seedEnhancedData() {
         proposals: 3,
       },
     })
-    
+
     const job11 = await prisma.job.create({
       data: {
         title: 'Sports Physiotherapy — Injury Prevention Program',
@@ -464,12 +464,12 @@ async function seedEnhancedData() {
         proposals: 5,
       },
     })
-    
+
     console.log('✅ Created 11 mock jobs')
-    
+
     // Create mock applications
     console.log('\n📝 Creating mock applications...')
-    
+
     await prisma.application.create({
       data: {
         jobId: job2.id,
@@ -483,7 +483,7 @@ async function seedEnhancedData() {
         progress: 0,
       },
     })
-    
+
     await prisma.application.create({
       data: {
         jobId: job3.id,
@@ -497,7 +497,7 @@ async function seedEnhancedData() {
         progress: 0,
       },
     })
-    
+
     await prisma.application.create({
       data: {
         jobId: job4.id,
@@ -511,7 +511,7 @@ async function seedEnhancedData() {
         progress: 0,
       },
     })
-    
+
     await prisma.application.create({
       data: {
         jobId: job10.id,
@@ -525,7 +525,7 @@ async function seedEnhancedData() {
         progress: 100,
       },
     })
-    
+
     await prisma.application.create({
       data: {
         jobId: job6.id,
@@ -539,12 +539,12 @@ async function seedEnhancedData() {
         progress: 0,
       },
     })
-    
+
     console.log('✅ Created 5 mock applications')
-    
+
     // Create conversations and messages
     console.log('\n💬 Creating conversations and messages...')
-    
+
     const conv1 = await prisma.conversation.create({
       data: {
         clientId: client1.id,
@@ -558,7 +558,7 @@ async function seedEnhancedData() {
         isActive: true,
       },
     })
-    
+
     await prisma.message.createMany({
       data: [
         {
@@ -622,7 +622,7 @@ async function seedEnhancedData() {
         },
       ],
     })
-    
+
     const conv2 = await prisma.conversation.create({
       data: {
         clientId: cskAcademy.id,
@@ -636,7 +636,7 @@ async function seedEnhancedData() {
         isActive: true,
       },
     })
-    
+
     await prisma.message.createMany({
       data: [
         {
@@ -700,15 +700,15 @@ async function seedEnhancedData() {
         },
       ],
     })
-    
+
     console.log('✅ Created 2 conversations with messages')
-    
+
     // Create transactions for earnings
     console.log('\n💸 Creating transaction records...')
-    
+
     const freelancer1Wallet = await prisma.wallet.findUnique({ where: { userId: freelancer1.id } })
     const freelancer2Wallet = await prisma.wallet.findUnique({ where: { userId: freelancer2.id } })
-    
+
     if (freelancer1Wallet) {
       await prisma.transaction.createMany({
         data: [
@@ -755,7 +755,7 @@ async function seedEnhancedData() {
         ],
       })
     }
-    
+
     if (freelancer2Wallet) {
       await prisma.transaction.createMany({
         data: [
@@ -781,9 +781,9 @@ async function seedEnhancedData() {
         ],
       })
     }
-    
+
     console.log('✅ Created transaction records')
-    
+
     console.log('\n🎉 Enhanced mock data seeding complete!')
     console.log('\n📊 Summary:')
     console.log('   - 8 additional clients')
@@ -791,7 +791,7 @@ async function seedEnhancedData() {
     console.log('   - 5 job applications with proposals')
     console.log('   - 2 conversations with message threads')
     console.log('   - 6 transaction records')
-    
+
   } catch (error) {
     console.error('❌ Enhanced seeding failed:', error)
     throw error

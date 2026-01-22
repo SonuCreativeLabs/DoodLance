@@ -33,7 +33,8 @@ export async function GET(request: Request) {
             include: {
                 user: {
                     include: {
-                        services: true
+                        services: true,
+                        bankAccount: true
                     }
                 },
                 reviews: true,
@@ -111,19 +112,77 @@ export async function GET(request: Request) {
                 // coords stays null
             }
 
-            // Calculate profile completion
-            const hasName = p.user.name && p.user.name.trim().length > 0;
+            // Calculate profile completion with WEIGHTED scoring (12 CRITERIA)
 
-            // Bio is stored in User table, not FreelancerProfile
-            const bioText = p.user.bio || p.bio || p.about || '';
-            const hasBio = bioText.trim().length > 0;
-            const hasLocation = coords !== null;
-            const hasService = userServices.length > 0;
-            const hasPrice = finalPrice > 0;
+            // Define weights based on user priority (Critical > Important > Lower)
+            const weights = {
+                // CRITICAL (50%)
+                services: 20,        // Critical: What clients hire for
+                availability: 15,    // Critical: When freelancer is available
+                publicProfile: 15,   // Critical: Shareable profile link
+                // IMPORTANT (40%)
+                profilePic: 8,       // Important: Professional appearance
+                personalInfo: 8,     // Important: Builds trust
+                location: 8,         // Important: For local matching
+                contactInfo: 8,      // Important: Essential for communication
+                cricketInfo: 8,      // Important: Role/style matching
+                // LOWER PRIORITY (10%)
+                skills: 3,           // Lower: Nice to have
+                bankAccount: 3,      // Lower: Can add later
+                achievements: 2,     // Lower: Credibility boost
+                coverImage: 2        // Lower: Aesthetic
+            };
+
+            let completionPercentage = 0;
+
+            // 1. Personal Information Card: DOB, gender, name, bio
+            const hasPersonalInfo = !!(p.user.dateOfBirth && p.user.gender && p.user.name && p.user.bio);
+            if (hasPersonalInfo) completionPercentage += weights.personalInfo;
+
+            // 2. Public Profile Link: username
+            const hasPublicProfile = !!(p.user.username && p.user.username.trim().length > 0);
+            if (hasPublicProfile) completionPercentage += weights.publicProfile;
+
+            // 3. Cricket Information: role, batting style, bowling style
+            const hasCricketInfo = !!(p.cricketRole && p.battingStyle && p.bowlingStyle);
+            if (hasCricketInfo) completionPercentage += weights.cricketInfo;
+
+            // 4. Location Card: area, address, city, state, postalCode
+            const hasLocation = !!(p.user.area && p.user.address && p.user.city && p.user.state && p.user.postalCode);
+            if (hasLocation) completionPercentage += weights.location;
+
+            // 5. Cricket Services: count > 0
+            const hasServices = userServices.length > 0;
+            if (hasServices) completionPercentage += weights.services;
+
+            // 6. Skills: count > 0
             const hasSkills = skills.length > 0;
+            if (hasSkills) completionPercentage += weights.skills;
 
-            const completionFields = [hasName, hasBio, hasLocation, hasService, hasPrice, hasSkills];
-            const completionPercentage = (completionFields.filter(Boolean).length / completionFields.length) * 100;
+            // 7. Achievements: count > 0
+            const hasAchievements = p.achievements && p.achievements.length > 0;
+            if (hasAchievements) completionPercentage += weights.achievements;
+
+            // 8. Availability: schedule set
+            const hasAvailability = !!(p.availability && p.availability.trim().length > 0);
+            if (hasAvailability) completionPercentage += weights.availability;
+
+            // 9. Bank Account: relation exists
+            const hasBankAccount = !!p.user.bankAccount;
+            if (hasBankAccount) completionPercentage += weights.bankAccount;
+
+            // 10. Profile Picture: avatar not placeholder
+            const hasProfilePic = !!(p.user.avatar && p.user.avatar !== '/placeholder-user.jpg');
+            if (hasProfilePic) completionPercentage += weights.profilePic;
+
+            // 11. Cover Picture: coverImage set
+            const hasCoverPic = !!(p.coverImage && p.coverImage.trim().length > 0);
+            if (hasCoverPic) completionPercentage += weights.coverImage;
+
+            // 12. Contact Information: email, phone
+            const hasContactInfo = !!(p.user.email && p.user.phone);
+            if (hasContactInfo) completionPercentage += weights.contactInfo;
+
             const isComplete = completionPercentage === 100;
 
             return {
@@ -149,7 +208,7 @@ export async function GET(request: Request) {
                 coords: coords,
                 expertise: skills,
                 experience: experience,
-                description: bioText,
+                description: p.user.bio || p.about || '',
                 cricketRole: p.cricketRole,
                 services: userServices.map((s: any) => ({
                     id: s.id,

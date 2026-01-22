@@ -128,6 +128,7 @@ export async function GET(request: NextRequest) {
 
         return NextResponse.json({
             referralCode: dbUser.referralCode,
+            referredBy: dbUser.referredBy,
             stats: {
                 totalReferrals,
                 successfulReferrals,
@@ -139,6 +140,65 @@ export async function GET(request: NextRequest) {
 
     } catch (error) {
         console.error('Referrals API Error:', error);
+        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    }
+}
+
+export async function POST(request: NextRequest) {
+    try {
+        const supabase = createClient();
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+        if (authError || !user) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        const body = await request.json();
+        const { code } = body;
+
+        if (!code) {
+            return NextResponse.json({ error: 'Referral code is required' }, { status: 400 });
+        }
+
+        // Get current user
+        const dbUser = await prisma.user.findUnique({
+            where: { id: user.id },
+            select: { id: true, referralCode: true, referredBy: true }
+        });
+
+        if (!dbUser) {
+            return NextResponse.json({ error: 'User not found' }, { status: 404 });
+        }
+
+        // Check if already referred
+        if (dbUser.referredBy) {
+            return NextResponse.json({ error: 'You have already used a referral code' }, { status: 400 });
+        }
+
+        // Check validation
+        if (dbUser.referralCode === code) {
+            return NextResponse.json({ error: 'You cannot refer yourself' }, { status: 400 });
+        }
+
+        // Find referrer
+        const referrer = await prisma.user.findUnique({
+            where: { referralCode: code }
+        });
+
+        if (!referrer) {
+            return NextResponse.json({ error: 'Invalid referral code' }, { status: 404 });
+        }
+
+        // Update user
+        await prisma.user.update({
+            where: { id: user.id },
+            data: { referredBy: code }
+        });
+
+        return NextResponse.json({ success: true, message: 'Referral code applied successfully' });
+
+    } catch (error) {
+        console.error('Referral POST Error:', error);
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
 }

@@ -5,6 +5,16 @@ import { Menu, Bell, X, Wallet, LogOut, LogIn, User } from 'lucide-react'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose
+} from "@/components/ui/dialog"
 
 const menuItems = [
   { name: 'Settings', href: '/settings' },
@@ -217,13 +227,38 @@ export default function Header() {
                 {showAuth && (
                   <>
                     <hr className="my-2 border-gray-100" />
-                    <button
-                      onClick={handleLogout}
-                      className="w-full flex items-center gap-3 px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors text-left"
-                    >
-                      <LogOut className="w-4 h-4" />
-                      <span>Logout</span>
-                    </button>
+                    <hr className="my-2 border-gray-100" />
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <button
+                          className="w-full flex items-center gap-3 px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors text-left"
+                        >
+                          <LogOut className="w-4 h-4" />
+                          <span>Logout</span>
+                        </button>
+                      </DialogTrigger>
+                      <DialogContent className="bg-white text-black sm:max-w-[425px]">
+                        <DialogHeader>
+                          <DialogTitle>Sign out</DialogTitle>
+                          <DialogDescription>
+                            Are you sure you want to sign out of your account?
+                          </DialogDescription>
+                        </DialogHeader>
+                        <DialogFooter className="gap-2 sm:gap-0">
+                          <DialogClose asChild>
+                            <button className="px-4 py-2 border rounded-md hover:bg-gray-100 transition-colors text-sm font-medium">
+                              Cancel
+                            </button>
+                          </DialogClose>
+                          <button
+                            onClick={handleLogout}
+                            className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors text-sm font-medium"
+                          >
+                            Sign out
+                          </button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
                   </>
                 )}
               </nav>

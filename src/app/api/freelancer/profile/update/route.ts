@@ -237,6 +237,19 @@ export async function PATCH(request: NextRequest) {
                     coords: JSON.stringify([0, 0]) // Required by schema
                 }
             });
+
+            // PERMANENT ROLE UPGRADE:
+            // If the user's main role is 'client', upgrade it to 'freelancer' permanently.
+            // This grants them dual capabilities.
+            if (dbUser.role === 'client') {
+                await prisma.user.update({
+                    where: { id: dbUser.id },
+                    data: {
+                        role: 'freelancer',
+                        currentRole: 'freelancer' // Switch them to freelancer view immediately
+                    }
+                });
+            }
         }
 
         // Fetch the latest user data to return

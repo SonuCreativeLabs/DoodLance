@@ -45,6 +45,15 @@ export async function PATCH(request: NextRequest) {
                     ...updates
                 }
             });
+
+            // Sync with Supabase Auth Metadata
+            const { error: metadataError } = await supabase.auth.updateUser({
+                data: updates
+            });
+
+            if (metadataError) {
+                console.warn('Failed to sync metadata with Supabase:', metadataError);
+            }
         }
 
         return NextResponse.json({ success: true });

@@ -6,11 +6,50 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useNavbar } from '@/contexts/NavbarContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose
+} from "@/components/ui/dialog"
 
 export default function ClientProfile() {
   const { setNavbarVisibility } = useNavbar();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const [loading, setLoading] = useState(true);
+  const [deactivating, setDeactivating] = useState(false);
+
+  const handleDeactivateAccount = async () => {
+    try {
+      setDeactivating(true);
+      // Call the deactivation API (Temporary Hold)
+      const response = await fetch('/api/user/deactivate', {
+        method: 'POST',
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to deactivate account');
+      }
+
+      toast.success('Account deactivated successfully');
+
+      // Sign out and redirect
+      await signOut();
+      window.location.href = '/';
+
+    } catch (error: any) {
+      console.error('Deactivate account error:', error);
+      toast.error(error.message || 'Failed to deactivate account');
+    } finally {
+      setDeactivating(false);
+    }
+  };
 
   useEffect(() => {
     setNavbarVisibility(false);
@@ -146,6 +185,44 @@ export default function ClientProfile() {
                     <p className="text-white">{user.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : 'Not available'}</p>
                   </div>
                 </div>
+              </div>
+
+              {/* Danger Zone */}
+              <div className="mt-8 pt-6 border-t border-white/10">
+                <h2 className="text-red-400 font-medium mb-4">Danger Zone</h2>
+
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <button
+                      type="button"
+                      className="px-4 py-3 rounded-xl border border-red-500/20 text-red-400 hover:bg-red-500/10 transition-colors text-sm font-medium w-full"
+                    >
+                      Deactivate Account
+                    </button>
+                  </DialogTrigger>
+                  <DialogContent className="bg-[#18181b] text-white border-white/10">
+                    <DialogHeader>
+                      <DialogTitle>Deactivate Account?</DialogTitle>
+                      <DialogDescription className="text-white/60">
+                        Your account will be temporarily deactivated. Your data will be preserved, and you can reactivate your account anytime by simply logging in again.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter className="gap-2 sm:gap-0">
+                      <DialogClose asChild>
+                        <button className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm font-medium transition-colors">
+                          Cancel
+                        </button>
+                      </DialogClose>
+                      <button
+                        onClick={handleDeactivateAccount}
+                        disabled={deactivating}
+                        className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+                      >
+                        {deactivating ? 'Deactivating...' : 'Deactivate Account'}
+                      </button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </div>
             </div>
           </>
