@@ -127,9 +127,17 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       const { createClient } = await import('@/lib/supabase/client');
       const supabase = createClient();
 
-      // For now, we'll just sign out, but you could add an API call here
-      // await fetch('/api/user/deactivate', { method: 'POST' });
+      // Call the deactivation API (Temporary Hold)
+      const response = await fetch('/api/user/deactivate', {
+        method: 'POST',
+      });
 
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to deactivate account');
+      }
+
+      // Sign out from Supabase Auth
       await supabase.auth.signOut();
 
       // Clear data

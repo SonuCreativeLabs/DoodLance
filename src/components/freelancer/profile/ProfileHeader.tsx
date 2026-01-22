@@ -98,7 +98,7 @@ export function ProfileHeader({
   // Calculate Profile Completion and Missing Items
   const completionStatus = (() => {
     let completed = 0;
-    const total = 10;
+    const total = 12;
     const missing: string[] = [];
 
     // --- Personal Details Page (5 Points) ---
@@ -174,6 +174,20 @@ export function ProfileHeader({
       completed++;
     } else {
       missing.push("Bank Account");
+    }
+
+    // 11. Profile Picture
+    if (personalDetails?.avatarUrl) {
+      completed++;
+    } else {
+      missing.push("Profile Picture");
+    }
+
+    // 12. Cover Image
+    if (personalDetails?.coverImageUrl) {
+      completed++;
+    } else {
+      missing.push("Cover Image");
     }
 
     return {

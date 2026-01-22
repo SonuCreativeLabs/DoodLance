@@ -30,6 +30,29 @@ export async function GET(request: NextRequest) {
             }
         });
 
+        // Auto-Reactivate if inactive
+        if (dbUser && dbUser.status === 'inactive') {
+            console.log(`[API] User ${user.id} is inactive, reactivating...`);
+            await prisma.user.update({
+                where: { id: user.id },
+                data: { status: 'active' }
+            });
+            // Reflect the change in the returned object
+            dbUser.status = 'active';
+
+            // Optional: Create "Welcome Back" notification
+            await prisma.notification.create({
+                data: {
+                    userId: user.id,
+                    title: 'Welcome Back!',
+                    message: 'Your account has been reactivated successfully.',
+                    type: 'SYSTEM',
+                    entityId: user.id,
+                    entityType: 'user',
+                }
+            }).catch(e => console.error('Failed to create welcome back notification:', e));
+        }
+
         if (!dbUser) {
             console.log(`[API] User ${user.id} not found in DB, creating new record...`);
 
