@@ -277,13 +277,17 @@ export default function ProfessionalsFeed({
                 </svg>
                 <span className="drop-shadow-sm">{item.cricketRole || 'Role not set'}</span>
               </div>
-              <div className="flex items-center text-sm text-white/60 mb-1">
-                <MapPin className="w-3.5 h-3.5 mr-1.5" />
-                <span className="drop-shadow-sm">{item.location}{item.distance ? <><span className="text-white/30 mx-1 text-[10px]">|</span>{item.distance < 1 ? `${(item.distance * 1000).toFixed(0)}m` : `${item.distance.toFixed(1)}km`} away</> : ''}</span>
-              </div>
-              <div className="flex items-center text-sm text-white/60">
-                <Clock className="w-3.5 h-3.5 mr-1.5" />
-                <span className="drop-shadow-sm">{item.responseTime || 'Available now'}</span>
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center text-sm text-white/60">
+                  <MapPin className="w-3.5 h-3.5 mr-1.5" />
+                  <span className="drop-shadow-sm">{item.location}</span>
+                </div>
+                {item.distance !== null && item.distance !== undefined && (
+                  <div className="flex items-center text-sm text-white/60">
+                    <svg className="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
+                    <span className="drop-shadow-sm">{item.distance < 1 ? `${(item.distance * 1000).toFixed(0)}m` : `${item.distance.toFixed(1)}km`} away</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>

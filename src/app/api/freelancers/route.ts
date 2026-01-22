@@ -111,15 +111,20 @@ export async function GET(request: Request) {
                 // coords stays null
             }
 
-            // Calculate profile completion
+            // Calculate profile completion (STRICT - no fallbacks)
             const hasName = p.user.name && p.user.name.trim().length > 0;
 
             // Bio is stored in User table, not FreelancerProfile
             const bioText = p.user.bio || p.bio || p.about || '';
             const hasBio = bioText.trim().length > 0;
             const hasLocation = coords !== null;
+
+            // Only count if user has ACTUAL services created, not just hourlyRate fallback
             const hasService = userServices.length > 0;
-            const hasPrice = finalPrice > 0;
+
+            // Only count price if it comes from an actual service, not just hourlyRate fallback
+            const hasPrice = userServices.length > 0 && minServicePrice > 0;
+
             const hasSkills = skills.length > 0;
 
             const completionFields = [hasName, hasBio, hasLocation, hasService, hasPrice, hasSkills];

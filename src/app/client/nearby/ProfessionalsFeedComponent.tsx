@@ -122,15 +122,17 @@ export default function ProfessionalsFeed({ filteredProfessionals }: Professiona
                   </div>
                 </div>
                 <p className="text-[13px] text-white/80 line-clamp-2 leading-relaxed">{freelancer.description || `${freelancer.name} is available for ${freelancer.service || 'cricket services'}`}</p>
-                <div className="flex items-center gap-4 text-[12px] text-white/60">
+                <div className="flex flex-col gap-1 text-[12px] text-white/60">
                   <div className="flex items-center gap-1.5">
-                    <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
-                    <span className="truncate max-w-[120px]" title={`${freelancer.location}${freelancer.distance ? ` | ${freelancer.distance < 1 ? `${(freelancer.distance * 1000).toFixed(0)}m` : `${freelancer.distance.toFixed(1)}km`} away` : ''}`}>{freelancer.location}{freelancer.distance ? <><span className="text-white/30 mx-1 text-[10px]">|</span>{freelancer.distance < 1 ? `${(freelancer.distance * 1000).toFixed(0)}m` : `${freelancer.distance.toFixed(1)}km`} away</> : ''}</span>
+                    <MapPin className="w-3.5 h-3.5 flex-shrink-0 text-white/60" />
+                    <span className="truncate max-w-[200px]" title={freelancer.location}>{freelancer.location}</span>
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <Clock className="w-3.5 h-3.5 flex-shrink-0 text-green-400" />
-                    <span className="text-green-400 font-medium">{freelancer.responseTime}</span>
-                  </div>
+                  {freelancer.distance !== null && freelancer.distance !== undefined && (
+                    <div className="flex items-center gap-1.5">
+                      <svg className="w-3.5 h-3.5 flex-shrink-0 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
+                      <span className="text-white/60 font-medium">{freelancer.distance < 1 ? `${(freelancer.distance * 1000).toFixed(0)}m` : `${freelancer.distance.toFixed(1)}km`} away</span>
+                    </div>
+                  )}
                 </div>
                 <div className="flex gap-2 items-center">
                   <div className="flex items-center gap-1 text-[11px] text-white/60">
@@ -160,18 +162,32 @@ export default function ProfessionalsFeed({ filteredProfessionals }: Professiona
             </div>
 
             <div className="flex items-center justify-between pt-3 border-t border-white/5 mt-3">
-              <div className="flex items-baseline gap-1">
-                <span className="text-lg font-bold text-purple-400">₹{freelancer.price}</span>
-                <span className="text-[11px] text-white/50">/{freelancer.priceUnit}</span>
-              </div>
-              <div className="flex gap-2">
-                <button className="px-3 py-1.5 bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 rounded-lg text-xs font-medium transition-all duration-200 border border-purple-500/20">
-                  View Profile
-                </button>
-                <button className="px-3 py-1.5 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white rounded-lg text-xs font-medium transition-all duration-200 shadow-lg">
-                  Book Now
-                </button>
-              </div>
+              {freelancer.price && freelancer.price > 0 ? (
+                <>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-lg font-bold text-purple-400">₹{freelancer.price}</span>
+                    <span className="text-[11px] text-white/50">/{freelancer.priceUnit}</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <button className="px-3 py-1.5 bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 rounded-lg text-xs font-medium transition-all duration-200 border border-purple-500/20">
+                      View Profile
+                    </button>
+                    <button className="px-3 py-1.5 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white rounded-lg text-xs font-medium transition-all duration-200 shadow-lg">
+                      Book Now
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="flex items-center gap-2 text-white/50 text-sm italic">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <span>No services listed</span>
+                  </div>
+                  <button className="px-3 py-1.5 bg-white/10 text-white/40 rounded-lg text-xs font-medium cursor-not-allowed" disabled>
+                    Unavailable
+                  </button>
+                </>
+              )}
             </div>
           </div>
         );
