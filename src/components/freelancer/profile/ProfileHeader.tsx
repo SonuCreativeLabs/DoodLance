@@ -95,103 +95,116 @@ export function ProfileHeader({
   const { switchRole } = useRoleSwitch();
   const { updatePersonalDetails } = usePersonalDetails();
 
-  // Calculate Profile Completion and Missing Items
+  // Calculate Profile Completion with WEIGHTED scoring
   const completionStatus = (() => {
-    let completed = 0;
-    const total = 12;
+    // Define weights based on user priority (Critical > Important > Lower)
+    const weights = {
+      // CRITICAL (50%)
+      services: 20,        // Critical: What clients hire for
+      availability: 15,    // Critical: When freelancer is available
+      publicProfile: 15,   // Critical: Shareable profile link
+      // IMPORTANT (40%)
+      profilePic: 8,       // Important: Professional appearance
+      personalInfo: 8,     // Important: Builds trust
+      location: 8,         // Important: For local matching
+      contactInfo: 8,      // Important: Essential for communication
+      cricketInfo: 8,      // Important: Role/style matching
+      // LOWER PRIORITY (10%)
+      skills: 3,           // Lower: Nice to have
+      bankAccount: 3,      // Lower: Can add later
+      achievements: 2,     // Lower: Credibility boost
+      coverImage: 2        // Lower: Aesthetic
+    };
+
+    let percentage = 0;
     const missing: string[] = [];
 
-    // --- Personal Details Page (5 Points) ---
-
-    // 1. Personal Info Card
+    // 1. Personal Info Card (8%)
     if (personalDetails?.firstName && personalDetails?.lastName && personalDetails?.gender && personalDetails?.dateOfBirth && personalDetails?.bio) {
-      completed++;
+      percentage += weights.personalInfo;
     } else {
       missing.push("Personal Info");
     }
 
-    // 2. Contact Info Card
+    // 2. Contact Info Card (8%)
     if (personalDetails?.email && personalDetails?.phone) {
-      completed++;
+      percentage += weights.contactInfo;
     } else {
       missing.push("Contact Details");
     }
 
-    // 3. Location Card
+    // 3. Location Card (8%)
     if (personalDetails?.address && personalDetails?.city && personalDetails?.state && personalDetails?.postalCode) {
-      completed++;
+      percentage += weights.location;
     } else {
       missing.push("Location");
     }
 
-    // 4. Cricket Info Card
+    // 4. Cricket Info Card (8%)
     if (personalDetails?.cricketRole) {
-      completed++;
+      percentage += weights.cricketInfo;
     } else {
       missing.push("Cricket Role");
     }
 
-    // 5. Public Profile Link
+    // 5. Public Profile Link (15% - CRITICAL)
     if (personalDetails?.username) {
-      completed++;
+      percentage += weights.publicProfile;
     } else {
       missing.push("Username");
     }
 
-
-    // --- Other Sections (5 Points) ---
-
-    // 6. Skills
+    // 6. Skills (3%)
     if (skills && skills.length > 0) {
-      completed++;
+      percentage += weights.skills;
     } else {
       missing.push("Skills");
     }
 
-    // 7. Services
+    // 7. Services (20% - CRITICAL)
     if (services && services.length > 0) {
-      completed++;
+      percentage += weights.services;
     } else {
       missing.push("Services");
     }
 
-    // 8. Achievements
+    // 8. Achievements (2%)
     if (achievements && achievements.length > 0) {
-      completed++;
+      percentage += weights.achievements;
     } else {
       missing.push("Achievements");
     }
 
-    // 9. Availability
+    // 9. Availability (15% - CRITICAL)
     if (availabilityDays && availabilityDays.some((d: any) => d.available)) {
-      completed++;
+      percentage += weights.availability;
     } else {
       missing.push("Availability");
     }
 
-    // 10. Bank Account
+    // 10. Bank Account (3%)
     if (isBankComplete) {
-      completed++;
+      percentage += weights.bankAccount;
     } else {
       missing.push("Bank Account");
     }
 
-    // 11. Profile Picture
+    // 11. Profile Picture (8%)
     if (personalDetails?.avatarUrl) {
-      completed++;
+      percentage += weights.profilePic;
     } else {
       missing.push("Profile Picture");
     }
 
-    // 12. Cover Image
+    // 12. Cover Image (2%)
     if (personalDetails?.coverImageUrl) {
-      completed++;
+      percentage += weights.coverImage;
     } else {
       missing.push("Cover Image");
     }
 
     return {
-      percentage: Math.round((completed / total) * 100),
+      percentage: Math.round(percentage),
       missingItems: missing
     };
   })();
