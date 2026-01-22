@@ -81,7 +81,9 @@ export async function DELETE(request: NextRequest) {
         console.log(`[Account Deletion] Auth record renamed for ${userId}`);
 
         // 4. Force Logout (optional, usually handled by client, but we can revoke sessions)
-        await supabaseAdmin.auth.admin.signOut(user.token); // Sign out all sessions if possible, or just trust client.
+        // 4. Force Logout (optional, usually handled by client)
+        // We can't easily sign out all sessions via Admin API without the JWTs.
+        // But since we renamed the email/uid, the old tokens will eventually fail or become invalid for re-auth.
 
         return NextResponse.json({ success: true });
 
