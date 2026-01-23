@@ -2,6 +2,8 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
+export { }; // Treat as module to avoid global scope collision
+
 async function main() {
     console.log('Starting migration of booking locations...');
 

@@ -2,6 +2,8 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
+export { }; // Treat as module to avoid global scope collision
+
 async function main() {
     const sonuId = 'ce4fb54d-b674-44e7-8fb4-b0ea2a10b75a';
 

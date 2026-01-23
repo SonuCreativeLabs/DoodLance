@@ -8,13 +8,14 @@ mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN!;
 
 interface MapViewProps {
   professionals?: any[];
+  customCenter?: [number, number] | null;
 }
 
 interface MapViewRef {
   openPin: (pinId: string) => void;
 }
 
-const MapView = forwardRef<MapViewRef, MapViewProps>(({ professionals: propProfessionals }, ref) => {
+const MapView = forwardRef<MapViewRef, MapViewProps>(({ professionals: propProfessionals, customCenter }, ref) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
@@ -79,7 +80,7 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({ professionals: propProfe
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/streets-v12',
       center: [80.2707, 13.0827], // Default to Chennai
-      zoom: 11,
+      zoom: 8, // Decreased zoom to 8 as requested
       minZoom: 3,
       maxZoom: 18,
       dragRotate: true,
@@ -408,19 +409,27 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({ professionals: propProfe
 
   }, [propProfessionals, mapLoaded]); // Re-run when professionals change or map loads
 
-  // Handle Location Updates
+  // Handle Location Updates (User Location or Custom Center)
   useEffect(() => {
-    if (!mapRef.current || !userLocation) return;
+    if (!mapRef.current) return;
     const map = mapRef.current;
 
-    map.flyTo({
-      center: userLocation,
-      zoom: 13
-    });
+    // Prioritize customCenter if available (from manual search)
+    if (customCenter) {
+      map.flyTo({
+        center: customCenter,
+        zoom: 8 // Reduced to 8 as requested
+      });
+    }
+    // Otherwise use device location if available
+    else if (userLocation) {
+      map.flyTo({
+        center: userLocation,
+        zoom: 8 // Reduced to 8
+      });
+    }
 
-    // Add a marker for user location? Optional but good.
-    // For now, just centering.
-  }, [userLocation]);
+  }, [userLocation, customCenter]);
 
   return (
     <div
