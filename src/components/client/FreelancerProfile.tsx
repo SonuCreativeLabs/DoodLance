@@ -160,6 +160,8 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
     const [selectedService, setSelectedService] = useState<any>(null);
     const [isServiceDetailOpen, setIsServiceDetailOpen] = useState(false);
     const [isHireBottomSheetOpen, setIsHireBottomSheetOpen] = useState(false);
+    const [isViewingOwnProfile, setIsViewingOwnProfile] = useState(false);
+    const [profileOwnerId, setProfileOwnerId] = useState<string | null>(null);
     // showLoginDialog removed in favor of hook state
 
     const tabsContainerRef = useRef<HTMLDivElement>(null);
@@ -226,6 +228,11 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
 
                 const data = await res.json();
                 const profile = data.profile || {};
+
+                // Store the profile owner's Supabase UID for comparison
+                // The userId in the profile is the internal DB ID, not the Supabase UID
+                // We need to get the Supabase UID from the user
+                setProfileOwnerId(profile.userId);
 
                 // Parse skills/coords safely
                 let skills: string[] = [];
@@ -328,6 +335,31 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
             loadFreelancer();
         }
     }, [freelancerId]);
+
+    // Check if user is viewing their own profile
+    useEffect(() => {
+        async function checkIfOwnProfile() {
+            if (!user?.id || !profileOwnerId) {
+                setIsViewingOwnProfile(false);
+                return;
+            }
+
+            try {
+                // user.id from AuthContext is already the Supabase UID
+                // profileOwnerId is the userId (internal DB ID) from the freelancer profile
+                // We need to compare Supabase UIDs, so we need to get the Supabase UID of the profile owner
+                // The issue is that profileOwnerId is the internal User.id (UUID from DB)
+                // and that IS the Supabase UID because we use the same ID
+                // So we can directly compare!
+                setIsViewingOwnProfile(user.id === profileOwnerId);
+            } catch (error) {
+                console.error('Error checking profile ownership:', error);
+                setIsViewingOwnProfile(false);
+            }
+        }
+
+        checkIfOwnProfile();
+    }, [user, profileOwnerId]);
 
     // Handle scroll to specific section when returning from preview pages
     useLayoutEffect(() => {
@@ -1306,9 +1338,9 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                         !isViewOnly && (
                             <div className="fixed bottom-0 left-0 right-0 p-4 bg-[#0F0F0F]/95 backdrop-blur-sm border-t border-white/10 z-[50]">
                                 <button
-                                    disabled={!freelancer?.online}
+                                    disabled={!freelancer?.online || isViewingOwnProfile}
                                     onClick={() => {
-                                        if (!freelancer?.online) return;
+                                        if (!freelancer?.online || isViewingOwnProfile) return;
                                         if (isAuthenticated && isProfileComplete) {
                                             setIsHireBottomSheetOpen(true);
                                         } else {
@@ -1317,13 +1349,29 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                                             });
                                         }
                                     }}
-                                    className={`w-full py-2.5 font-medium rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg ${freelancer?.online
-                                        ? 'bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-700 hover:to-purple-600'
-                                        : 'bg-white/10 text-white/40 cursor-not-allowed border border-white/5'
+                                    className={`w-full py-2.5 font-medium rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg ${isViewingOwnProfile
+                                        ? 'bg-white/10 text-white/40 cursor-not-allowed border border-white/5'
+                                        : freelancer?.online
+                                            ? 'bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-700 hover:to-purple-600'
+                                            : 'bg-white/10 text-white/40 cursor-not-allowed border border-white/5'
                                         }`}
                                 >
-                                    {freelancer?.online ? <UserPlus className="w-4 h-4" /> : <div className="w-4 h-4" />}
-                                    {freelancer?.online ? `Hire ${freelancer?.name || 'Freelancer'}` : 'Currently Unavailable'}
+                                    {isViewingOwnProfile ? (
+                                        <>
+                                            <div className="w-4 h-4" />
+                                            This is your profile
+                                        </>
+                                    ) : freelancer?.online ? (
+                                        <>
+                                            <UserPlus className="w-4 h-4" />
+                                            {`Hire ${freelancer?.name || 'Freelancer'}`}
+                                        </>
+                                    ) : (
+                                        <>
+                                            <div className="w-4 h-4" />
+                                            Currently Unavailable
+                                        </>
+                                    )}
                                 </button>
                             </div>
                         )

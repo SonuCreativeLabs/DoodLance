@@ -55,21 +55,31 @@ export async function GET(request: NextRequest) {
         });
 
         if (!profile) {
-            return NextResponse.json({ listings: [] });
+            return NextResponse.json({ listings: [], pausedDates: [] });
         }
 
         let listings = [];
+        let pausedDates: string[] = [];
+
         if (profile.listings) {
             try {
-                listings = typeof profile.listings === 'string'
+                const parsedListings = typeof profile.listings === 'string'
                     ? JSON.parse(profile.listings)
                     : profile.listings;
+
+                // Check if listings is an object with pausedDates property
+                if (typeof parsedListings === 'object' && !Array.isArray(parsedListings)) {
+                    listings = parsedListings.listings || [];
+                    pausedDates = parsedListings.pausedDates || [];
+                } else if (Array.isArray(parsedListings)) {
+                    listings = parsedListings;
+                }
             } catch {
                 listings = [];
             }
         }
 
-        return NextResponse.json({ listings });
+        return NextResponse.json({ listings, pausedDates });
 
     } catch (error) {
         console.error('Listings fetch error:', error);
@@ -92,9 +102,31 @@ export async function PATCH(request: NextRequest) {
         const body = await request.json();
         const { listings } = body;
 
-        const listingsString = typeof listings === 'string'
-            ? listings
-            : JSON.stringify(listings);
+        // Get existing profile to preserve pausedDates
+        const existingProfile = await prisma.freelancerProfile.findUnique({
+            where: { userId: dbUser.id },
+            select: { listings: true }
+        });
+
+        let existingPausedDates: string[] = [];
+        if (existingProfile?.listings) {
+            try {
+                const parsed = typeof existingProfile.listings === 'string'
+                    ? JSON.parse(existingProfile.listings)
+                    : existingProfile.listings;
+                existingPausedDates = parsed.pausedDates || [];
+            } catch {
+                existingPausedDates = [];
+            }
+        }
+
+        // Merge listings with existing pausedDates
+        const updatedData = {
+            listings: Array.isArray(listings) ? listings : [],
+            pausedDates: existingPausedDates
+        };
+
+        const listingsString = JSON.stringify(updatedData);
 
         await prisma.freelancerProfile.upsert({
             where: { userId: dbUser.id },

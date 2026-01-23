@@ -12,9 +12,9 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        // Get database user
+        // Get database user - user.id from Supabase IS the same as User.id in our DB
         const dbUser = await prisma.user.findUnique({
-            where: { supabaseUid: user.id }
+            where: { id: user.id }
         });
 
         if (!dbUser) {
@@ -38,21 +38,33 @@ export async function POST(request: NextRequest) {
         }
 
         // Parse existing listings or create new object
-        let listings: any = {};
+        let listingsData: any = { listings: [], pausedDates: [] };
         try {
-            listings = profile.listings ? JSON.parse(profile.listings) : {};
+            const parsed = profile.listings ? JSON.parse(profile.listings) : {};
+
+            // Handle both old and new formats
+            if (Array.isArray(parsed)) {
+                // Old format: just an array of listings
+                listingsData = { listings: parsed, pausedDates: [] };
+            } else if (typeof parsed === 'object') {
+                // New format: { listings: [], pausedDates: [] }
+                listingsData = {
+                    listings: parsed.listings || [],
+                    pausedDates: parsed.pausedDates || []
+                };
+            }
         } catch (error) {
             console.error('Error parsing existing listings:', error);
-            listings = {};
+            listingsData = { listings: [], pausedDates: [] };
         }
 
         // Update paused dates
-        listings.pausedDates = pausedDates;
+        listingsData.pausedDates = pausedDates;
 
         // Save back to database
         await prisma.freelancerProfile.update({
             where: { userId: dbUser.id },
-            data: { listings: JSON.stringify(listings) }
+            data: { listings: JSON.stringify(listingsData) }
         });
 
         return NextResponse.json({ success: true, pausedDates });
