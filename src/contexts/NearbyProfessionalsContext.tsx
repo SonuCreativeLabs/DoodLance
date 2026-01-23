@@ -48,7 +48,10 @@ interface NearbyProfessionalsContextType {
   professionals: Professional[];
   loading: boolean;
   error: string | null;
+  currentCoordinates: { lat: number; lng: number } | null;
+  currentLocation: { city: string; state: string } | null;
   refreshProfessionals: (lat?: number, lng?: number) => void;
+  updateLocation: (lat: number, lng: number, city: string, state: string) => void;
 }
 
 const NearbyProfessionalsContext = createContext<NearbyProfessionalsContextType | undefined>(undefined);
@@ -58,7 +61,10 @@ const defaultValue: NearbyProfessionalsContextType = {
   professionals: [],
   loading: false,
   error: null,
-  refreshProfessionals: () => { }
+  currentCoordinates: null,
+  currentLocation: null,
+  refreshProfessionals: () => { },
+  updateLocation: () => { }
 };
 
 // Initial state
@@ -69,6 +75,8 @@ export function NearbyProfessionalsProvider({ children }: { children: ReactNode 
   const [professionals, setProfessionals] = useState<Professional[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentCoordinates, setCurrentCoordinates] = useState<{ lat: number; lng: number } | null>(null);
+  const [currentLocation, setCurrentLocation] = useState<{ city: string; state: string } | null>(null);
 
   const refreshProfessionals = async (lat?: number, lng?: number) => {
     setLoading(true);
@@ -76,8 +84,11 @@ export function NearbyProfessionalsProvider({ children }: { children: ReactNode 
     try {
       // Build query params
       const params = new URLSearchParams();
-      if (lat) params.append('lat', lat.toString());
-      if (lng) params.append('lng', lng.toString());
+      if (lat && lng) {
+        params.append('lat', lat.toString());
+        params.append('lng', lng.toString());
+        setCurrentCoordinates({ lat, lng });
+      }
 
       const queryString = params.toString();
       const url = `/api/freelancers${queryString ? `?${queryString}` : ''}`;
@@ -90,6 +101,7 @@ export function NearbyProfessionalsProvider({ children }: { children: ReactNode 
       const data = await response.json();
 
       if (data && Array.isArray(data)) {
+        console.log(`✅ Loaded ${data.length} professionals. First:`, data[0]?.name, 'Dist:', data[0]?.distance);
         setProfessionals(data);
       } else {
         setProfessionals([]);
@@ -104,13 +116,54 @@ export function NearbyProfessionalsProvider({ children }: { children: ReactNode 
     }
   };
 
+  const updateLocation = (lat: number, lng: number, city: string, state: string) => {
+    console.log('📍 updateLocation called:', { lat, lng, city, state });
+    setCurrentCoordinates({ lat, lng });
+    setCurrentLocation({ city, state });
+    refreshProfessionals(lat, lng);
+  };
+
+  // Function to reverse geocode coordinates to address
+  const reverseGeocode = async (lat: number, lng: number) => {
+    try {
+      const response = await fetch(
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN}&types=neighborhood,locality,place,region`
+      );
+      const data = await response.json();
+
+      if (data.features && data.features.length > 0) {
+        const neighborhood = data.features.find((f: any) => f.place_type.includes('neighborhood'));
+        const locality = data.features.find((f: any) => f.place_type.includes('locality'));
+        const place = data.features.find((f: any) => f.place_type.includes('place'));
+        const region = data.features.find((f: any) => f.place_type.includes('region'));
+
+        const areaName = neighborhood?.text || locality?.text || place?.text || "Unknown Location";
+        const cityName = place?.text || region?.text || "";
+
+        return { city: areaName, state: cityName };
+      }
+      return { city: "Location not found", state: "" };
+    } catch (error) {
+      console.error('Reverse geocoding error:', error);
+      return { city: "Error", state: "" };
+    }
+  };
+
   useEffect(() => {
     // Get location first, then fetch
-    if (typeof window !== 'undefined' && navigator.geolocation) {
+    // Get location first, then fetch
+    // Only fetch if we don't have coordinates yet (prevents reset on navigation)
+    if (!currentCoordinates && typeof window !== 'undefined' && navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        (position) => {
+        async (position) => {
           const { latitude, longitude } = position.coords;
           console.log('✅ Geolocation success:', { latitude, longitude });
+
+          // Reverse geocode to get city/state
+          const locationData = await reverseGeocode(latitude, longitude);
+
+          setCurrentCoordinates({ lat: latitude, lng: longitude });
+          setCurrentLocation(locationData);
           refreshProfessionals(latitude, longitude);
         },
         (error) => {
@@ -120,21 +173,25 @@ export function NearbyProfessionalsProvider({ children }: { children: ReactNode 
         },
         {
           enableHighAccuracy: true,
-          timeout: 10000, // Increased from 5000ms to 10000ms
-          maximumAge: 60000 // Use cached location up to 1 minute old
+          timeout: 10000,
+          maximumAge: 60000
         }
       );
-    } else {
+    } else if (!currentCoordinates) {
       console.warn('⚠️ Geolocation not available');
       refreshProfessionals();
     }
+    // If coordinates exist, we do nothing - preserving state
   }, []);
 
   const value = {
     professionals,
     loading,
     error,
-    refreshProfessionals
+    currentCoordinates,
+    currentLocation,
+    refreshProfessionals,
+    updateLocation
   };
 
   return (

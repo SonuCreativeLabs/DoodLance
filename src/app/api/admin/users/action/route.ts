@@ -1,27 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/db';
 import { logAdminAction, AdminAction } from '@/lib/audit-log';
-import { createClient } from '@/lib/supabase/server';
+import { jwtVerify } from 'jose';
 
 // POST /api/admin/users/action - Perform user actions
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createClient()
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    // Verify admin session via JWT token
+    const authToken = request.cookies.get('auth-token')?.value;
 
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!authToken) {
+      return NextResponse.json({ error: 'Unauthorized - No admin session found' }, { status: 401 });
     }
 
-    // Check admin role via database
-    const dbUser = await prisma.user.findUnique({
-      where: { supabaseUid: user.id },
-      select: { role: true, email: true }
-    });
+    const secret = new TextEncoder().encode(
+      process.env.JWT_SECRET || 'fallback-secret-for-dev'
+    );
 
-    if (!dbUser || dbUser.role !== 'admin') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    let adminPayload: any;
+    try {
+      const { payload } = await jwtVerify(authToken, secret);
+      adminPayload = payload;
+    } catch (error) {
+      return NextResponse.json({ error: 'Unauthorized - Invalid token' }, { status: 401 });
     }
+
+    if (adminPayload.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Unauthorized - Admin access required' }, { status: 403 });
+    }
+
+    const adminId = adminPayload.userId as string;
+    const adminEmail = adminPayload.email as string;
 
     const body = await request.json();
     const { userId, action, reason } = body;
@@ -202,8 +211,8 @@ export async function POST(request: NextRequest) {
         logActionType = 'DELETE';
         // Return immediately as there is no user object to return
         await logAdminAction({
-          adminId: user.id,
-          adminEmail: dbUser.email || 'unknown',
+          adminId: adminId,
+          adminEmail: adminEmail,
           action: logActionType,
           resource: 'USER',
           resourceId: userId,
@@ -220,8 +229,8 @@ export async function POST(request: NextRequest) {
 
     // Log audit action
     await logAdminAction({
-      adminId: user.id,
-      adminEmail: dbUser.email || 'unknown',
+      adminId: adminId,
+      adminEmail: adminEmail,
       action: logActionType,
       resource: 'USER',
       resourceId: userId,

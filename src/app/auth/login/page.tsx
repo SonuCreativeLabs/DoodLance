@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -14,15 +14,46 @@ export default function Login() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const rawRef = searchParams.get('ref')
-  // Extract just the code (alphanumeric, stops before 'Join' or other words)
-  // Matches BAILS1 from "BAILS1Join" or "BAILS1\nJoin"
-  // Using [\s\S]* to match across newlines or explicitly handling the split
-  const referralCode = rawRef ? (rawRef.match(/^[A-Za-z0-9]+/) || [rawRef])[0].substring(0, 10) : null
+
+  // Extract ONLY the referral code, strip away any share text
+  // Handles: "BAILS1", "BAILS1 Join BAILS...", "CAMPAIGN_BAILS7", etc.
+  let referralCode: string | null = null
+
+  if (rawRef) {
+    // Decode URL encoding and trim whitespace
+    const decoded = decodeURIComponent(rawRef).trim()
+
+    // Strategy: Extract the first valid referral code pattern
+    // Valid code: Starts with letter, can have underscores, MUST end with digits
+    // Examples: BAILS1, BAILS63, CAMPAIGN_BAILS7
+
+    // Pattern 1: Standard code ending in digits (most common)
+    const standardMatch = decoded.match(/^([A-Z][A-Z0-9_]*\d+)/i)
+    if (standardMatch) {
+      referralCode = standardMatch[1].substring(0, 50)
+      console.log('🔗 Referral Code Detected:', referralCode)
+    } else {
+      // Pattern 2: Fallback - any alphanumeric sequence before first space
+      const beforeSpace = decoded.split(/[\s,!]+/)[0]
+      if (beforeSpace && /^[A-Za-z0-9_]+$/.test(beforeSpace)) {
+        referralCode = beforeSpace.substring(0, 50)
+        console.log('🔗 Referral Code Detected (fallback):', referralCode)
+      }
+    }
+  }
   const { sendOTP } = useAuth()
 
   const [email, setEmail] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Save referral code to localStorage when detected
+  useEffect(() => {
+    if (referralCode) {
+      localStorage.setItem('pending_referral_code', referralCode)
+      console.log('💾 Saved referral code to localStorage:', referralCode)
+    }
+  }, [referralCode])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -35,8 +66,8 @@ export default function Login() {
 
     setIsLoading(true)
     try {
-      // Send OTP via API
-      await sendOTP(email, 'email', referralCode ? { referredBy: referralCode } : undefined)
+      // Send OTP (no need to pass metadata, we use localStorage)
+      await sendOTP(email, 'email')
 
       router.push(`/auth/otp?email=${encodeURIComponent(email)}`)
     } catch (err) {

@@ -238,12 +238,28 @@ export async function GET(request: Request) {
             );
         }
 
-        // Custom Sort: Prioritize 'sonucreativelabs@gmail.com'
+        // Custom Sort: Priority Email -> Distance -> Others
         const PRIORITY_EMAIL = 'sonucreativelabs@gmail.com';
+
         filtered.sort((a: any, b: any) => {
+            // 1. Priority Email (Featured)
             if (a.email === PRIORITY_EMAIL) return -1;
             if (b.email === PRIORITY_EMAIL) return 1;
-            return 0; // Keep original order for others
+
+            // 2. Distance sorting (if coordinates available)
+            if (userLat !== null && userLng !== null) {
+                const distA = a.distance ?? Infinity;
+                const distB = b.distance ?? Infinity;
+
+                // If distances are significantly different (e.g., > 1km diff), sort by distance
+                if (Math.abs(distA - distB) > 1) {
+                    return distA - distB;
+                }
+            }
+
+            // 3. Fallback to Rating/Reviews if review count > 0 // Secondary sort
+            // This maintains "Top Rated" order for equidistant profiles
+            return 0;
         });
 
         return NextResponse.json(filtered);

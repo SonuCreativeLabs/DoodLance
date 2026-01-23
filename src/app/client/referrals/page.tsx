@@ -80,7 +80,8 @@ export default function ReferralsPage() {
 
     const origin = typeof window !== 'undefined' ? window.location.origin : 'https://bails.in';
     const shareUrl = `${origin}/auth/login?ref=${referralCode}`;
-    const shareText = `Join BAILS and get cricket training from the best professionals! Use my referral code ${referralCode} to get 100 App Coins!`;
+    // Add newline at start to create space between URL and text
+    const shareText = `\nJoin BAILS and get cricket training from the best professionals! Use my referral code ${referralCode} to get 100 App Coins!`;
 
     if (navigator.share) {
       try {

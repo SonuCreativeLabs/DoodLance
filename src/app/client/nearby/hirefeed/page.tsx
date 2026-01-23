@@ -20,7 +20,7 @@ export default function IntegratedExplorePage() {
   const [sheetOffset, setSheetOffset] = useState(0);
   const [isDragTextVisible, setIsDragTextVisible] = useState(true);
   const router = useRouter();
-  const { professionals, loading } = useNearbyProfessionals();
+  const { professionals, loading, currentCoordinates } = useNearbyProfessionals();
   const mapViewRef = useRef<any>(null);
 
   // Check URL parameters to determine initial sheet state and pin to open
@@ -351,7 +351,11 @@ export default function IntegratedExplorePage() {
   return (
     <div className="h-screen w-full bg-transparent relative overflow-hidden">
       {/* Map View */}
-      <MapView ref={mapViewRef} professionals={filteredProfessionals} />
+      <MapView
+        ref={mapViewRef}
+        professionals={filteredProfessionals}
+        customCenter={currentCoordinates ? [currentCoordinates.lng, currentCoordinates.lat] : null}
+      />
 
       {/* Loading Overlay */}
       <AnimatePresence>
@@ -504,7 +508,10 @@ export default function IntegratedExplorePage() {
             {isSheetCollapsed ? (
               <div className="flex items-center justify-between w-full max-w-3xl mx-auto px-4 pt-4">
                 <div className="flex flex-col items-start gap-1.5">
-                  <div className="flex -space-x-3">
+                  <div
+                    className="flex -space-x-3 cursor-pointer hover:opacity-90 transition-opacity"
+                    onClick={() => setIsSheetCollapsed(false)}
+                  >
                     {loading ? (
                       // Skeleton Loader for collapsed avatars
                       [...Array(4)].map((_, index) => (

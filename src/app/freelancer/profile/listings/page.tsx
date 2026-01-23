@@ -68,14 +68,29 @@ export default function AvailabilityListingsPage() {
     setIsDateRangeModalOpen(true);
   };
 
-  const handlePauseClick = (availability: Availability) => {
+  const handlePauseClick = async (availability: Availability) => {
     setSelectedAvailability(availability);
-    // Load any previously paused dates for this availability
-    const savedPausedDates = typeof window !== 'undefined'
-      ? JSON.parse(localStorage.getItem(`pausedDates_${availability.id}`) || '[]')
-        .map((dateStr: string) => new Date(dateStr))
-      : [];
-    setPausedDates(savedPausedDates);
+
+    // Load paused dates from the API
+    try {
+      const res = await fetch('/api/freelancer/listings');
+      if (res.ok) {
+        const data = await res.json();
+        const pausedDatesFromAPI = data.pausedDates || [];
+
+        // Convert string dates (YYYY-MM-DD) to Date objects
+        const parsedDates = pausedDatesFromAPI.map((dateStr: string) => {
+          const [year, month, day] = dateStr.split('-').map(Number);
+          return new Date(year, month - 1, day);
+        });
+
+        setPausedDates(parsedDates);
+      }
+    } catch (error) {
+      console.error('Error loading paused dates:', error);
+      setPausedDates([]);
+    }
+
     setIsPauseModalOpen(true);
   };
 
@@ -117,18 +132,6 @@ export default function AvailabilityListingsPage() {
 
         if (!res.ok) {
           throw new Error('Failed to save paused dates');
-        }
-
-        // Also save to localStorage for immediate UI feedback
-        if (typeof window !== 'undefined') {
-          try {
-            localStorage.setItem(
-              `pausedDates_${selectedAvailability.id}`,
-              JSON.stringify(dates.map(date => date.toISOString()))
-            );
-          } catch (error) {
-            console.error('Error saving to localStorage:', error);
-          }
         }
 
         // Update the availability with paused dates

@@ -8,7 +8,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import ServiceCard from '@/components/client/services/service-card'
 import { useState, useEffect } from 'react'
-import { MapModal } from '@/components/freelancer/jobs/MapModal'
+import { LocationPickerModal } from '@/components/client/LocationPickerModal'
 import { useNearbyProfessionals } from '@/contexts/NearbyProfessionalsContext'
 import { usePopularServices } from '@/contexts/PopularServicesContext'
 import { useAuth } from '@/contexts/AuthContext';
@@ -18,13 +18,14 @@ import { TopRatedExpertSkeleton } from '@/components/skeletons/TopRatedExpertSke
 
 export default function ClientHome() {
   const router = useRouter();
-  const { professionals, loading } = useNearbyProfessionals();
+  const { professionals, loading, refreshProfessionals, currentLocation, updateLocation, currentCoordinates } = useNearbyProfessionals();
   const { popularServices } = usePopularServices();
   const [searchQuery, setSearchQuery] = useState("");
   const [placeholder, setPlaceholder] = useState("Search for services...");
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [showLocationPicker, setShowLocationPicker] = useState(false);
-  const [currentLocation, setCurrentLocation] = useState({ city: "Getting location...", state: "" });
+  // Remove local currentLocation state, use context
+  const displayLocation = currentLocation || { city: "Getting location...", state: "" };
   const [showSidebar, setShowSidebar] = useState(false);
   const [userName, setUserName] = useState("Guest");
   const [userAvatar, setUserAvatar] = useState("/images/default-avatar.svg"); // Fallback
@@ -56,67 +57,98 @@ export default function ClientHome() {
     }
   };
 
-  // Function to reverse geocode coordinates to address
-  const reverseGeocode = async (lat: number, lng: number) => {
+  // reverseGeocode removed (moved to Context)
+
+  // Function to forward geocode address to coordinates
+  const forwardGeocode = async (searchText: string) => {
     try {
-      // Added neighborhood and locality to types
       const response = await fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN}&types=neighborhood,locality,place,region`
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(searchText)}.json?access_token=${process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN}&types=place,locality,neighborhood&limit=1`
       );
       const data = await response.json();
 
       if (data.features && data.features.length > 0) {
-        // Parse features
-        const neighborhood = data.features.find((f: any) => f.place_type.includes('neighborhood'));
-        const locality = data.features.find((f: any) => f.place_type.includes('locality'));
-        const place = data.features.find((f: any) => f.place_type.includes('place'));
-        const region = data.features.find((f: any) => f.place_type.includes('region'));
+        const [lng, lat] = data.features[0].center;
 
-        // Prioritize: Neighborhood -> Locality -> Place (City)
-        const areaName = neighborhood?.text || locality?.text || place?.text || "Unknown Location";
-        // Use City (place) for the second part, fallback to Region (state) if city not found
-        const cityName = place?.text || region?.text || "";
+        // Also get the structured address components for better display
+        const place = data.features[0];
+        const context = place.context || [];
+        const region = context.find((c: any) => c.id.startsWith('region'))?.text;
 
         return {
-          city: areaName,
-          state: cityName
+          lat,
+          lng,
+          city: place.text,
+          state: region || ""
         };
       }
-      return { city: "Location not found", state: "" };
+      return null;
     } catch (error) {
-      console.error('Reverse geocoding error:', error);
-      return { city: "Error", state: "" };
+      console.error('Forward geocoding error:', error);
+      return null;
     }
   };
 
-  useEffect(() => {
-    const handleGeolocation = async () => {
+  const handleLocationUpdate = async (locationText: string) => {
+    const result = await forwardGeocode(locationText);
+    if (result) {
+      updateLocation(result.lat, result.lng, result.city, result.state);
+      return Promise.resolve();
+    } else {
+      return Promise.reject(new Error('Location not found'));
+    }
+  };
+
+  const handleUseCurrentLocation = async () => {
+    return new Promise<void>((resolve, reject) => {
       if (!navigator.geolocation) {
-        console.warn('Geolocation is not supported by your browser');
-        setCurrentLocation({ city: "Anna Nagar", state: "Chennai" });
+        reject(new Error('Geolocation not supported'));
         return;
       }
 
-      try {
-        const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(resolve, reject, {
-            enableHighAccuracy: true,
-            timeout: 10000,
-            maximumAge: 0
-          });
-        });
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+          // Trigger a context refresh which will handle reverse geocode internally if we treated it as a reset
+          // But here we want explicit update, so we need reverseGeocode logic or just force reset.
+          // Since reverseGeocode is inside context and not exposed, we might need to expose it or duplicate it? 
+          // Better: context.refreshProfessionals(lat, lng) doesn't update address.
+          // Actually, we can move reverseGeocode to utils or duplicate simplified version here, OR
+          // we can just call updateLocation with "Current Location" placeholder if we want.
+          // Let's rely on forwardGeocode logic for "current location"? No.
+          // Re-implementing simplified reverse geocode here for the "Use Current Location" button action
+          // to update the context state correctly.
+          try {
+            const response = await fetch(
+              `https://api.mapbox.com/geocoding/v5/mapbox.places/${longitude},${latitude}.json?access_token=${process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN}&types=neighborhood,locality,place,region`
+            );
+            const data = await response.json();
+            let city = "Unknown", state = "";
+            if (data.features && data.features.length > 0) {
+              const neighborhood = data.features.find((f: any) => f.place_type.includes('neighborhood'));
+              const locality = data.features.find((f: any) => f.place_type.includes('locality'));
+              const place = data.features.find((f: any) => f.place_type.includes('place'));
+              const region = data.features.find((f: any) => f.place_type.includes('region'));
+              city = neighborhood?.text || locality?.text || place?.text || "Unknown Location";
+              state = place?.text || region?.text || "";
+            }
 
-        const { latitude, longitude } = position.coords;
-        const locationData = await reverseGeocode(latitude, longitude);
-        setCurrentLocation(locationData);
-      } catch (error) {
-        console.warn('Geolocation error:', error);
-        setCurrentLocation({ city: "Anna Nagar", state: "Chennai" });
-      }
-    };
+            updateLocation(latitude, longitude, city, state);
+            resolve();
+          } catch (error) {
+            reject(error);
+          }
+        },
+        (error) => {
+          reject(error);
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
+    });
+  };
 
-    handleGeolocation();
-  }, []);
+  // Removed redundant useEffect that invoked handleGeolocation on mount
+
 
   const handleCopyCode = async (code: string) => {
     try {
@@ -300,7 +332,7 @@ export default function ClientHome() {
                 className="flex items-center gap-0.5 sm:gap-1 text-white font-semibold text-xs sm:text-sm hover:text-white/80 transition-colors"
                 title="Change Location"
               >
-                {currentLocation.city}{currentLocation.state ? `, ${currentLocation.state}` : ''}
+                {displayLocation.city}{displayLocation.state ? `, ${displayLocation.state}` : ''}
                 <ChevronDown className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white/80" />
               </button>
             </div>
@@ -393,16 +425,30 @@ export default function ClientHome() {
                     ))
                   ) : professionals.length > 0 ? (
                     professionals
-                      .filter(expert => (expert.area && expert.city) || (expert.location && expert.location.trim() !== ''))
                       .sort((a, b) => {
-                        // First sort by rating
+                        // Prioritize nearby experts (within 100km to be safe)
+                        const isANearby = a.distance !== undefined && a.distance !== null && a.distance <= 100;
+                        const isBNearby = b.distance !== undefined && b.distance !== null && b.distance <= 100;
+
+                        if (isANearby && !isBNearby) return -1;
+                        if (!isANearby && isBNearby) return 1;
+
+                        // If both nearby (or both far), sort by distance if they are close
+                        if (isANearby && isBNearby) {
+                          // If distance difference is significant, use distance
+                          if (Math.abs((a.distance || 0) - (b.distance || 0)) > 5) {
+                            return (a.distance || 0) - (b.distance || 0);
+                          }
+                        }
+
+                        // Then sort by Rating
                         if (b.rating !== a.rating) {
                           return b.rating - a.rating;
                         }
-                        // If ratings are equal, sort by number of reviews
+                        // Then by Review Count
                         return b.reviews - a.reviews;
                       })
-                      .slice(0, 5) // Only take top 5
+                      .slice(0, 10) // Show up to 10 fallback to 5 in UI via overflow
                       .map((expert) => (
                         <button
                           key={expert.id}
@@ -470,7 +516,7 @@ export default function ClientHome() {
                       ))
                   ) : (
                     <div className="w-full py-8 text-center mx-auto col-span-full">
-                      <p className="text-white/60 text-sm">No experts found nearby</p>
+                      <p className="text-white/60 text-sm">No experts found</p>
                     </div>
                   )}
                 </div>
@@ -639,10 +685,12 @@ export default function ClientHome() {
           </motion.section>
         </div>
       </div>
-      <MapModal
+      <LocationPickerModal
         isOpen={showLocationPicker}
         onClose={() => setShowLocationPicker(false)}
-        location={`${currentLocation.city}${currentLocation.state ? `, ${currentLocation.state}` : ''}`}
+        currentLocation={`${displayLocation.city}${displayLocation.state ? `, ${displayLocation.state}` : ''}`}
+        onUpdateLocation={handleLocationUpdate}
+        onUseCurrentLocation={handleUseCurrentLocation}
       />
     </ClientLayout>
   );
