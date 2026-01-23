@@ -175,14 +175,19 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'You have already used a referral code' }, { status: 400 });
         }
 
-        // Check validation
-        if (dbUser.referralCode === code) {
+        // Check validation (case-insensitive comparison)
+        if (dbUser.referralCode?.toLowerCase() === code.toLowerCase()) {
             return NextResponse.json({ error: 'You cannot refer yourself' }, { status: 400 });
         }
 
-        // Find referrer
-        const referrer = await prisma.user.findUnique({
-            where: { referralCode: code }
+        //Find referrer (case-insensitive to support both BAILS1 and campaign_bails1 formats)
+        const referrer = await prisma.user.findFirst({
+            where: {
+                referralCode: {
+                    equals: code,
+                    mode: 'insensitive'
+                }
+            }
         });
 
         if (!referrer) {

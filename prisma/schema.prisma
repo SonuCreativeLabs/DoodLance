@@ -51,6 +51,7 @@ model User {
   supportTickets         SupportTicket[]
   wallet                 Wallet?
   bankAccount            BankAccount?
+  campaigns              Campaign[]         @relation("CampaignUser")
 
   @@map("users")
 }
@@ -121,35 +122,35 @@ model Service {
 }
 
 model Booking {
-  id             String    @id @default(cuid())
-  clientId       String
-  serviceId      String
-  scheduledAt    DateTime?
-  duration       Int
-  totalPrice     Float
-  packageType    String?
-  status         String    @default("PENDING")
-  location       String?
-  coords         String
-  progress       Int       @default(0)
-  milestones     String?
-  conversationId String?
-  otp            String?   // For job start verification
-  transactionId  String?   // For manual UPI payment verification
-  paymentStatus  String    @default("PENDING") // PENDING, VERIFIED, FAILED
-  notes          String?
-  requirements   String?
-  deliveredAt    DateTime?
-  deliverables   String?
-  cancelledAt    DateTime?
+  id                 String    @id @default(cuid())
+  clientId           String
+  serviceId          String
+  scheduledAt        DateTime?
+  duration           Int
+  totalPrice         Float
+  packageType        String?
+  status             String    @default("PENDING")
+  location           String?
+  coords             String
+  progress           Int       @default(0)
+  milestones         String?
+  conversationId     String?
+  otp                String? // For job start verification
+  transactionId      String? // For manual UPI payment verification
+  paymentStatus      String    @default("PENDING") // PENDING, VERIFIED, FAILED
+  notes              String?
+  requirements       String?
+  deliveredAt        DateTime?
+  deliverables       String?
+  cancelledAt        DateTime?
   cancellationReason String?
-  clientRating   Json?     // Rating given by freelancer to client
-  services       Json?     // List of services included in this booking
-  freelancerRating Json?   // Rating given by client to freelancer
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-  client         User      @relation("UserBookings", fields: [clientId], references: [id])
-  service        Service   @relation(fields: [serviceId], references: [id])
+  clientRating       Json? // Rating given by freelancer to client
+  services           Json? // List of services included in this booking
+  freelancerRating   Json? // Rating given by client to freelancer
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  client             User      @relation("UserBookings", fields: [clientId], references: [id])
+  service            Service   @relation(fields: [serviceId], references: [id])
 
   @@map("bookings")
 }
@@ -207,7 +208,7 @@ model Job {
   progress     Int           @default(0)
   peopleNeeded Int           @default(1)
   notes        String?
-  otp          String?       // For job start verification
+  otp          String? // For job start verification
   completedAt  DateTime?
   completedBy  String?
   isActive     Boolean       @default(true)
@@ -284,8 +285,8 @@ model Message {
 }
 
 model FreelancerProfile {
-  id                   String       @id @default(cuid())
-  userId               String       @unique
+  id                   String        @id @default(cuid())
+  userId               String        @unique
   title                String?
   about                String?
   hourlyRate           Float?
@@ -295,34 +296,34 @@ model FreelancerProfile {
   battingStyle         String?
   bowlingStyle         String?
   dateOfBirth          DateTime?
-  rating               Float        @default(0)
-  reviewCount          Int          @default(0)
-  completedJobs        Int          @default(0)
+  rating               Float         @default(0)
+  reviewCount          Int           @default(0)
+  completedJobs        Int           @default(0)
   responseTime         String?
   deliveryTime         String?
-  completionRate       Float        @default(0)
-  repeatClientRate     Float        @default(0)
+  completionRate       Float         @default(0)
+  repeatClientRate     Float         @default(0)
   coords               String
   serviceRadius        Float?
   advanceNoticeHours   Int?
-  isOnline             Boolean      @default(false)
+  isOnline             Boolean       @default(false)
   availability         String?
   listings             String?
-  timeZone             String       @default("Asia/Kolkata")
-  isVerified           Boolean      @default(false)
+  timeZone             String        @default("Asia/Kolkata")
+  isVerified           Boolean       @default(false)
   verificationDocs     String?
   verifiedAt           DateTime?
-  totalEarnings        Float        @default(0)
-  thisMonthEarnings    Float        @default(0)
-  avgProjectValue      Float        @default(0)
-  isProfilePublic      Boolean      @default(true)
-  acceptsMessages      Boolean      @default(true)
+  totalEarnings        Float         @default(0)
+  thisMonthEarnings    Float         @default(0)
+  avgProjectValue      Float         @default(0)
+  isProfilePublic      Boolean       @default(true)
+  acceptsMessages      Boolean       @default(true)
   notificationSettings String?
   coverImage           String?
-  createdAt            DateTime     @default(now())
-  updatedAt            DateTime     @updatedAt
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
   achievements         Achievement[]
-  user                 User         @relation(fields: [userId], references: [id])
+  user                 User          @relation(fields: [userId], references: [id])
   portfolios           Portfolio[]
   reviews              Review[]
 
@@ -330,12 +331,12 @@ model FreelancerProfile {
 }
 
 model Achievement {
-  id          String            @id @default(cuid())
-  profileId   String
-  title       String
-  company     String
-  createdAt   DateTime          @default(now())
-  profile     FreelancerProfile @relation(fields: [profileId], references: [id])
+  id        String            @id @default(cuid())
+  profileId String
+  title     String
+  company   String
+  createdAt DateTime          @default(now())
+  profile   FreelancerProfile @relation(fields: [profileId], references: [id])
 
   @@map("achievements")
 }
@@ -575,4 +576,39 @@ model TicketMessage {
 
   @@index([ticketId])
   @@map("ticket_messages")
+}
+
+model Campaign {
+  id           String  @id @default(cuid())
+  referralCode String  @unique // Links to User.referralCode (e.g. bails001)
+  userId       String? @unique // Partner's client account (can be null initially)
+
+  // Campaign Details
+  name            String? // "Chennai Cricket Academy", "Smith Sports Shop"
+  locationType    String // "academy", "shop", "ground", "nets"
+  locationAddress String?
+  contactEmail    String?
+  contactPhone    String?
+  contactPerson   String?
+  city            String?
+  state           String?
+  notes           String? // Internal notes about the campaign
+
+  // Tracking
+  qrPrinted   Boolean   @default(false)
+  qrPrintedAt DateTime?
+  isActive    Boolean   @default(true)
+
+  // Metadata
+  createdBy String // Admin ID who created it
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Link to user when partner signs up or is assigned
+  user User? @relation(fields: [userId], references: [id], name: "CampaignUser")
+
+  @@index([referralCode])
+  @@index([locationType])
+  @@index([isActive])
+  @@map("campaigns")
 }

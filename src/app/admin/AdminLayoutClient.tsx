@@ -8,7 +8,7 @@ import {
     LayoutDashboard, Users, Calendar, CreditCard,
     Briefcase, HeadphonesIcon, FileText, TrendingUp,
     Settings, Shield, LogOut, ChevronRight, Bell,
-    Search, Menu, X, Package, Tag
+    Search, Menu, X, Package, Tag, QrCode
 } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -44,6 +44,7 @@ const sidebarItems = [
         category: 'Marketing',
         items: [
             { icon: Tag, label: 'Promo Codes', href: '/admin/promos', permission: 'promos.view' },
+            { icon: QrCode, label: 'QR Campaigns', href: '/admin/campaigns', permission: 'promos.view' },
             { icon: Users, label: 'Referrals', href: '/admin/referrals', permission: 'users.view' },
             { icon: TrendingUp, label: 'Analytics', href: '/admin/analytics', permission: 'analytics.view' },
         ]

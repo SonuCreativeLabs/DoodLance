@@ -96,6 +96,31 @@ function OTPContent() {
       await verifyOTP(identifier, code, type)
 
       console.log('✅ OTP verified successfully!')
+
+      // Check for pending referral code in localStorage
+      const pendingRefCode = localStorage.getItem('pending_referral_code')
+      if (pendingRefCode) {
+        console.log('💾 Found pending referral code:', pendingRefCode)
+
+        // Save to database via API
+        try {
+          const res = await fetch('/api/user/set-referral', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ referralCode: pendingRefCode })
+          })
+
+          if (res.ok) {
+            console.log('✅ Referral code saved to database!')
+            localStorage.removeItem('pending_referral_code')
+          } else {
+            console.error('❌ Failed to save referral code')
+          }
+        } catch (refErr) {
+          console.error('❌ Error saving referral code:', refErr)
+        }
+      }
+
       console.log('🚀 Redirecting to /client...')
 
       // Redirect to main app
