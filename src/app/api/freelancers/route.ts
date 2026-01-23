@@ -46,8 +46,8 @@ export async function GET(request: Request) {
 
         const latParam = searchParams.get('lat');
         const lngParam = searchParams.get('lng');
-        const userLat = latParam ? parseFloat(latParam) : 13.0827; // Default Chennai
-        const userLng = lngParam ? parseFloat(lngParam) : 80.2707;
+        const userLat = latParam ? parseFloat(latParam) : null;
+        const userLng = lngParam ? parseFloat(lngParam) : null;
 
         // Helper for distance calculation (Haversine formula)
         const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
@@ -105,7 +105,10 @@ export async function GET(request: Request) {
                     if (Array.isArray(parsed) && parsed.length === 2 &&
                         typeof parsed[0] === 'number' && typeof parsed[1] === 'number') {
                         coords = [parsed[0], parsed[1]];
-                        distance = calculateDistance(userLat, userLng, coords[1], coords[0]);
+                        // Only calculate distance if user coordinates are available
+                        if (userLat !== null && userLng !== null) {
+                            distance = calculateDistance(userLat, userLng, coords[1], coords[0]);
+                        }
                     }
                 }
             } catch (e) {
@@ -222,9 +225,9 @@ export async function GET(request: Request) {
         });
 
 
-        // Filter to show profiles with at least 50% completion (3/6 criteria)
-        // User requested to lower to 50% for now (allows ~4/6 incomplete profiles to show)
-        const qualityProfiles = formattedProfiles.filter((p: any) => p.completionPercentage >= 50);
+        // Filter to show profiles with at least 30% completion
+        // Lowered from 50% to 30% to show more freelancers
+        const qualityProfiles = formattedProfiles.filter((p: any) => p.completionPercentage >= 30);
 
         // Client-side filtering for category if strict filtering needed
         let filtered = qualityProfiles;

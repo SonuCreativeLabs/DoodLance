@@ -80,7 +80,7 @@ export default function ReferralsPage() {
 
     const origin = typeof window !== 'undefined' ? window.location.origin : 'https://bails.in';
     const shareUrl = `${origin}/auth/login?ref=${referralCode}`;
-    const shareText = `Join BAILS and get cricket training from the best professionals! Use my referral code ${referralCode} to get 500 App Coins! ${shareUrl}`;
+    const shareText = `Join BAILS and get cricket training from the best professionals! Use my referral code ${referralCode} to get 100 App Coins!`;
 
     if (navigator.share) {
       try {
@@ -221,7 +221,7 @@ export default function ReferralsPage() {
                   type="text"
                   value={manualCode}
                   onChange={(e) => setManualCode(e.target.value.toUpperCase())}
-                  placeholder="Enter code (e.g. BAILS55)"
+                  placeholder="Enter referral code"
                   className="flex-1 bg-[#1a1a1a] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-purple-500/50"
                   disabled={isSubmittingCode}
                 />

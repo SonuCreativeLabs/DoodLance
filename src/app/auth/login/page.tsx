@@ -13,7 +13,11 @@ import { isValidEmail } from '@/lib/validation'
 export default function Login() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const referralCode = searchParams.get('ref')
+  const rawRef = searchParams.get('ref')
+  // Extract just the code (alphanumeric, stops before 'Join' or other words)
+  // Matches BAILS1 from "BAILS1Join" or "BAILS1\nJoin"
+  // Using [\s\S]* to match across newlines or explicitly handling the split
+  const referralCode = rawRef ? (rawRef.match(/^[A-Za-z0-9]+/) || [rawRef])[0].substring(0, 10) : null
   const { sendOTP } = useAuth()
 
   const [email, setEmail] = useState('')
@@ -85,6 +89,12 @@ export default function Login() {
                 Welcome to BAILS
               </h1>
               <p className="text-gray-400 mt-2">Sign in to continue to your account</p>
+              {referralCode && (
+                <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 bg-purple-500/10 border border-purple-500/30 rounded-full">
+                  <div className="w-2 h-2 rounded-full bg-purple-400 animate-pulse"></div>
+                  <span className="text-xs text-purple-300">Using referral code: <span className="font-mono font-bold">{referralCode}</span></span>
+                </div>
+              )}
             </div>
           </div>
 
