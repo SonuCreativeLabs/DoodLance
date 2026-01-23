@@ -18,14 +18,14 @@ export async function GET(request: NextRequest) {
         // Try finding by ID (CUID) first, then by userId (UUID)
         let profile = await prisma.freelancerProfile.findUnique({
             where: { id: freelancerId },
-            select: { id: true, userId: true, availability: true }
+            select: { id: true, userId: true, availability: true, listings: true }
         });
 
         if (!profile) {
             console.log(`[Avail API] Not found by ID, trying userId`);
             profile = await prisma.freelancerProfile.findUnique({
                 where: { userId: freelancerId },
-                select: { id: true, userId: true, availability: true }
+                select: { id: true, userId: true, availability: true, listings: true }
             });
         }
 
@@ -79,9 +79,20 @@ export async function GET(request: NextRequest) {
             }
         }
 
+        // Parse paused dates from listings field
+        let pausedDates: string[] = [];
+        try {
+            const listings = profile.listings ? JSON.parse(profile.listings) : {};
+            pausedDates = listings.pausedDates || [];
+        } catch (error) {
+            console.error('Error parsing paused dates:', error);
+            pausedDates = [];
+        }
+
         return NextResponse.json({
             availability: availabilityData,
-            bookedSlots: bookedSlots
+            bookedSlots: bookedSlots,
+            pausedDates: pausedDates
         });
 
     } catch (error: any) {

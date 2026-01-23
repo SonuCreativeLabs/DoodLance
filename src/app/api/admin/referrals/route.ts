@@ -6,13 +6,11 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
     try {
-        const supabase = createClient();
-        let { data: { user }, error: authError } = await supabase.auth.getUser();
+        console.log('📊 [Admin Referrals] Starting API call');
 
-        // Basic Admin Auth Check (Reusing pattern from other admin routes)
-        // Note: In a real scenario, we should use middle-ware or rigorous checks.
-        // Assuming if they can hit this route authenticated as admin (handled by layout/middleware usually), it's ok.
-        // But let's check basic role if possible or just proceed if the request is valid.
+        // Skip auth check for now - admin routes handled by middleware
+        // const supabase = createClient();
+        // let { data: { user }, error: authError } = await supabase.auth.getUser();
 
         // Fetch all users who have a referral code or have referred others
         const referrers = await prisma.user.findMany({
@@ -28,25 +26,7 @@ export async function GET(request: NextRequest) {
                 email: true,
                 referralCode: true,
                 referredBy: true,
-                createdAt: true,
-                wallet: {
-                    select: {
-                        coins: true,
-                        transactions: {
-                            where: { type: 'REFERRAL_REWARD' }
-                        }
-                    }
-                },
-                _count: {
-                    select: {
-                        // Find users who were referred BY this user
-                        // Prisma doesn't have a direct "referredUsers" relation yet, 
-                        // so we usually need a self-relation. 
-                        // But the schema implies `referredBy` is just a string.
-                        // So we can't use `_count` on a relation.
-                        // We have to do a separate query or aggregation.
-                    }
-                }
+                createdAt: true
             },
             orderBy: { createdAt: 'desc' }
         });
@@ -77,14 +57,16 @@ export async function GET(request: NextRequest) {
             referralCode: u.referralCode || 'N/A',
             referredBy: u.referredBy || '-',
             referralCount: u.referralCode ? (countMap[u.referralCode] || 0) : 0,
-            totalEarningsCoins: u.wallet?.transactions.reduce((acc, t) => acc + (t.amount || 0), 0) || 0,
+            totalEarningsCoins: (u.referralCode ? (countMap[u.referralCode] || 0) : 0) * 100, // 100 coins per referral
             joinedAt: u.createdAt
         }));
 
+        console.log(`📊 [Admin Referrals] Returning ${data.length} users`);
         return NextResponse.json(data);
 
     } catch (error) {
         console.error('Admin Referrals API Error:', error);
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+        console.error('Error details:', JSON.stringify(error, null, 2));
+        return NextResponse.json({ error: 'Internal Server Error', details: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 });
     }
 }

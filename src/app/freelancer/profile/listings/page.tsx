@@ -98,35 +98,54 @@ export default function AvailabilityListingsPage() {
     setListingToDelete(null);
   };
 
-  const handlePauseDates = (dates: Date[]) => {
+  const handlePauseDates = async (dates: Date[]) => {
     if (selectedAvailability) {
-      // Save paused dates to localStorage
-      if (typeof window !== 'undefined') {
-        try {
-          localStorage.setItem(
-            `pausedDates_${selectedAvailability.id}`,
-            JSON.stringify(dates.map(date => date.toISOString()))
-          );
-        } catch (error) {
-          console.error('Error saving paused dates:', error);
+      // Save paused dates to database via API
+      try {
+        const res = await fetch('/api/freelancer/availability/pause', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            pausedDates: dates.map(date => {
+              const year = date.getFullYear();
+              const month = String(date.getMonth() + 1).padStart(2, '0');
+              const day = String(date.getDate()).padStart(2, '0');
+              return `${year}-${month}-${day}`;
+            })
+          })
+        });
+
+        if (!res.ok) {
+          throw new Error('Failed to save paused dates');
         }
-      }
 
-      // Update the availability with paused dates
-      const updatedAvailabilities = availabilities.map(avail =>
-        avail.id === selectedAvailability.id
-          ? {
-            ...avail,
-            pausedCount: dates.length,
-            // Here you would typically send this to your API
-            // and update the backend with the paused dates
+        // Also save to localStorage for immediate UI feedback
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem(
+              `pausedDates_${selectedAvailability.id}`,
+              JSON.stringify(dates.map(date => date.toISOString()))
+            );
+          } catch (error) {
+            console.error('Error saving to localStorage:', error);
           }
-          : avail
-      );
+        }
 
-      setAvailabilities(updatedAvailabilities);
-      setPausedDates([...dates]); // Create a new array reference
-      setIsPauseModalOpen(false);
+        // Update the availability with paused dates
+        const updatedAvailabilities = availabilities.map(avail =>
+          avail.id === selectedAvailability.id
+            ? { ...avail, pausedCount: dates.length }
+            : avail
+        );
+
+        setAvailabilities(updatedAvailabilities);
+        setPausedDates([...dates]);
+        setIsPauseModalOpen(false);
+
+      } catch (error) {
+        console.error('Error saving paused dates:', error);
+        alert('Failed to save paused dates. Please try again.');
+      }
     }
   };
 

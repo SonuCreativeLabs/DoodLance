@@ -111,7 +111,7 @@ export async function GET(request: NextRequest) {
         // Let's assume 1 Coin = 1 Unit in amount for REFERRAL_REWARD, but keep it integers.
 
         // Calculate Pending (users registered but no booking completed)
-        const pendingRewards = (totalReferrals - successfulReferrals) * 500;
+        const pendingRewards = (totalReferrals - successfulReferrals) * 100;
 
         // Format Referrals List
         const formattedReferrals = referrals.map(ref => {
@@ -122,7 +122,7 @@ export async function GET(request: NextRequest) {
                 email: ref.email,
                 date: new Date(ref.createdAt).toLocaleDateString(),
                 status: isCompleted ? 'completed' : 'pending',
-                reward: isCompleted ? 500 : 0
+                reward: isCompleted ? 100 : 0
             };
         });
 

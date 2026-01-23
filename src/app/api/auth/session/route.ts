@@ -63,6 +63,20 @@ export async function POST(request: Request) {
         // Set cookies
         await setAuthCookies(tokens.accessToken, tokens.refreshToken);
 
+        // If user has referredBy in metadata, save it to database
+        if (user.referredBy) {
+            try {
+                const prisma = (await import('@/lib/db')).default;
+                await prisma.user.update({
+                    where: { id: user.id },
+                    data: { referredBy: user.referredBy }
+                });
+                console.log(`✅ Saved referredBy: ${user.referredBy} for user ${user.id}`);
+            } catch (dbError) {
+                console.error('Failed to save referredBy:', dbError);
+            }
+        }
+
         return NextResponse.json({ success: true, user: { ...user, role: user.role || 'client' } });
     } catch (error) {
         console.error('Session API Error:', error);

@@ -110,15 +110,22 @@ export function NearbyProfessionalsProvider({ children }: { children: ReactNode 
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
+          console.log('✅ Geolocation success:', { latitude, longitude });
           refreshProfessionals(latitude, longitude);
         },
         (error) => {
-          console.warn('Geolocation error:', error);
-          refreshProfessionals(); // Fallback to default (Chennai in API)
+          console.warn('⚠️ Geolocation error:', error.message);
+          // Still try to fetch - API will use coordinates from request or default
+          refreshProfessionals();
         },
-        { timeout: 5000 }
+        {
+          enableHighAccuracy: true,
+          timeout: 10000, // Increased from 5000ms to 10000ms
+          maximumAge: 60000 // Use cached location up to 1 minute old
+        }
       );
     } else {
+      console.warn('⚠️ Geolocation not available');
       refreshProfessionals();
     }
   }, []);

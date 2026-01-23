@@ -19,6 +19,7 @@ export default function BookingDatePage() {
   const [freelancerId, setFreelancerId] = useState<string | null>(null);
   const [availability, setAvailability] = useState<any[]>([]);
   const [bookedSlots, setBookedSlots] = useState<any[]>([]);
+  const [pausedDates, setPausedDates] = useState<string[]>([]);
   const [isLoadingAvailability, setIsLoadingAvailability] = useState(false);
 
   // Initialize freelancerId from context
@@ -46,6 +47,7 @@ export default function BookingDatePage() {
           const data = await res.json();
           setAvailability(data.availability || []);
           setBookedSlots(data.bookedSlots || []);
+          setPausedDates(data.pausedDates || []);
         }
       } catch (error) {
         console.error("Failed to fetch availability", error);
@@ -68,6 +70,15 @@ export default function BookingDatePage() {
     return dayConfig ? dayConfig.available : false;
   };
 
+  // Helper to check if a date is paused
+  const isPausedDate = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const dayNum = String(date.getDate()).padStart(2, '0');
+    const dateStr = `${year}-${month}-${dayNum}`;
+    return pausedDates.includes(dateStr);
+  };
+
   // Generate next 14 days starting from tomorrow
   const dates = React.useMemo(() => {
     const d = [];
@@ -77,7 +88,7 @@ export default function BookingDatePage() {
       const date = new Date(today);
       date.setDate(today.getDate() + i);
 
-      const isAvailable = isWorkingDay(date);
+      const isAvailable = isWorkingDay(date) && !isPausedDate(date);
 
       // Construct YYYY-MM-DD manually from local time to avoid UTC shifts
       const year = date.getFullYear();
@@ -94,7 +105,7 @@ export default function BookingDatePage() {
       });
     }
     return d;
-  }, [availability]);
+  }, [availability, pausedDates]);
 
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);
