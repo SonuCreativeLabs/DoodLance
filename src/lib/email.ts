@@ -30,7 +30,7 @@ export async function sendEmail({ to, subject, text, html }: SendEmailParams) {
 
     console.log('📧 Attempting to send email to:', to);
     await transporter.sendMail({
-      from: process.env.SMTP_FROM || '"BAILS" <sonucreativelabs@gmail.com>',
+      from: process.env.SMTP_FROM,
       to,
       subject,
       text,
