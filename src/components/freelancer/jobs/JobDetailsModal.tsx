@@ -1390,13 +1390,13 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                 name: job.client.name,
                 image: job.client.image,
                 rating: job.client.rating,
-                moneySpent: undefined,
+                moneySpent: job.client.moneySpent,
                 jobsCompleted: job.client.jobsCompleted,
-                freelancersWorked: undefined,
-                freelancerAvatars: undefined,
-                experienceLevel: undefined
+                freelancersWorked: job.client.freelancersWorked,
+                memberSince: job.client.memberSince,
+                location: job.client.location,
+                freelancerAvatars: job.client.freelancerAvatars,
               } : null}
-              location={job.location}
               showCommunicationButtons={true}
               chatDisabled={true}
               onChat={() => handleChat({} as React.MouseEvent)}

@@ -50,11 +50,14 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
         client: {
           name: data.client?.name || 'Unknown Client',
           image: data.client?.avatar || data.client?.image || '/placeholder-user.jpg',
-          rating: data.client?.rating || 4.5,
+          rating: data.client?.rating,
           location: data.client?.location || '',
-          jobsCompleted: 10, // Placeholder if not in API
-          memberSince: '2023', // Placeholder
+          jobsCompleted: data.client?.jobsCompleted,
+          memberSince: data.client?.memberSince,
           phoneNumber: data.client?.phone || '',
+          moneySpent: data.client?.moneySpent,
+          freelancersWorked: data.client?.freelancersWorked,
+          freelancerAvatars: data.client?.freelancerAvatars,
         },
         otp: data.otp,
         startedAt: data.startedAt,

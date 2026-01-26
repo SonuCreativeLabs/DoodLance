@@ -76,6 +76,68 @@ export async function GET(
           });
         }
 
+        // Fetch comprehensive client statistics
+        const clientId = booking.clientId;
+
+        // Get client's full profile including createdAt
+        const clientProfile = await prisma.user.findUnique({
+          where: { id: clientId },
+          select: {
+            createdAt: true,
+            location: true,
+          }
+        });
+
+        // Get all completed bookings for this client
+        const completedBookings = await prisma.booking.findMany({
+          where: {
+            clientId: clientId,
+            status: 'completed'
+          },
+          select: {
+            totalPrice: true,
+            serviceId: true,
+            freelancerRating: true,
+          }
+        });
+
+        // Get all bookings to find unique freelancers (from service providers)
+        const allClientBookings = await prisma.booking.findMany({
+          where: {
+            clientId: clientId,
+            status: 'completed'
+          },
+          include: {
+            service: {
+              select: {
+                providerId: true
+              }
+            }
+          }
+        });
+
+        // Calculate statistics
+        const totalMoneySpent = completedBookings.reduce((sum, b) => sum + b.totalPrice, 0);
+        const totalCompletedBookings = completedBookings.length;
+
+        // Count unique freelancers (service providers)
+        const uniqueFreelancers = new Set(
+          allClientBookings
+            .map(b => b.service?.providerId)
+            .filter(id => id !== null && id !== undefined)
+        );
+        const freelancersWorkedWith = uniqueFreelancers.size;
+
+        // Calculate average rating given by client to freelancers
+        const ratingsGiven = completedBookings
+          .map(b => b.freelancerRating)
+          .filter(r => r && typeof r === 'object' && 'stars' in r)
+          .map(r => (r as any).stars);
+
+        const avgRating = ratingsGiven.length > 0
+          ? ratingsGiven.reduce((sum: number, r: number) => sum + r, 0) / ratingsGiven.length
+          : 0;
+
         // Map booking to job shape
         const responseHelper = {
           id: booking.id,
@@ -88,7 +150,16 @@ export async function GET(
           time: booking.scheduledAt ? booking.scheduledAt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }) : null,
           scheduledAt: booking.scheduledAt,
           duration: (booking.duration || 60) + " mins",
-          client: booking.client,
+          client: {
+            ...booking.client,
+            memberSince: clientProfile?.createdAt,
+            moneySpent: totalMoneySpent,
+            jobsCompleted: totalCompletedBookings,
+            freelancersWorked: freelancersWorkedWith,
+            rating: avgRating,
+            // Use profile location, not booking location
+            location: clientProfile?.location || booking.client.location,
+          },
           otp: otp,
           clientId: booking.clientId,
           category: 'Services', // Generic category
