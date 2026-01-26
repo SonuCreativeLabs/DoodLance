@@ -71,7 +71,7 @@ export function ClientProfile({
 
         {isExpanded ? (
           <div className="space-y-4">
-            <div className="flex items-center space-x-3 mb-4">
+            <div className="flex items-start space-x-3 mb-4">
               <div className="w-12 h-12 rounded-full bg-purple-500/10 flex items-center justify-center">
                 {client?.image ? (
                   <img
@@ -83,65 +83,36 @@ export function ClientProfile({
                   <User className="w-6 h-6 text-purple-400" />
                 )}
               </div>
-              <div>
-                <h3 className="font-medium text-white">{client?.name || 'Unknown Client'}</h3>
-                <p className="text-sm text-gray-400">{location || client?.location || 'Location not specified'}</p>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-medium text-white truncate">{client?.name || 'Unknown Client'}</h3>
+                    <p className="text-sm text-gray-400 truncate mt-0.5">
+                      {client?.location || 'Location not specified'}
+                    </p>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <p className="text-[10px] text-gray-500 uppercase tracking-wide">Member since</p>
+                    <p className="text-xs text-gray-300 font-medium mt-0.5">
+                      {client?.memberSince
+                        ? new Date(client.memberSince).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+                        : 'N/A'}
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
 
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <h4 className="text-xs font-medium text-gray-400 mb-1">Experience Level</h4>
-                  <p className="text-sm text-white">
-                    {getExperienceLevelDisplayName(client?.experienceLevel || 'Expert')}
-                  </p>
-                </div>
-                <div>
-                  <h4 className="text-xs font-medium text-gray-400 mb-1">Member Since</h4>
-                  <p className="text-sm text-white">
-                    {client?.memberSince ?
-                      new Date(client.memberSince).getFullYear() :
-                      '2023'}
-                  </p>
-                </div>
-              </div>
 
               <div className="pt-2 border-t border-gray-600/30">
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <div className="flex -space-x-2">
-                        {client?.freelancerAvatars?.length ? (
-                          client.freelancerAvatars.map((avatar, i) => (
-                            <img
-                              key={i}
-                              src={avatar}
-                              alt={`Freelancer ${i + 1}`}
-                              className="w-7 h-7 rounded-full border-2 border-[#111111] object-cover"
-                            />
-                          ))
-                        ) : (
-                          Array.from({ length: Math.min(3, client?.freelancersWorked || 1) }).map((_, i) => (
-                            <div key={i} className="w-7 h-7 rounded-full bg-purple-500/20 border-2 border-[#111111] flex items-center justify-center">
-                              <User className="w-3.5 h-3.5 text-purple-300" />
-                            </div>
-                          ))
-                        )}
-                        {client?.freelancersWorked && client.freelancersWorked > 3 && (
-                          <div className="w-7 h-7 rounded-full bg-purple-500/20 border-2 border-[#111111] flex items-center justify-center">
-                            <span className="text-xs font-medium text-purple-300">
-                              +{client.freelancersWorked - 3}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                      <div>
-                        <p className="text-xs text-gray-300 font-medium">
-                          {client?.freelancersWorked || 1} Freelancers
-                        </p>
-                        <p className="text-xs text-gray-500">Worked with this client</p>
-                      </div>
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-xs text-gray-300 font-medium leading-tight">
+                        {client?.freelancersWorked || 0} Freelancers
+                      </p>
+                      <p className="text-xs text-gray-500 leading-tight">Worked with this client</p>
                     </div>
 
                     <div className="flex flex-col items-end">
@@ -150,12 +121,12 @@ export function ClientProfile({
                           {[...Array(5)].map((_, i) => (
                             <Star
                               key={i}
-                              className={`w-3.5 h-3.5 ${i < Math.floor(client?.rating || 5) ? 'text-yellow-400 fill-current' : 'text-gray-600'}`}
+                              className={`w-3.5 h-3.5 ${i < Math.floor(client?.rating || 0) ? 'text-yellow-400 fill-current' : 'text-gray-600'}`}
                             />
                           ))}
                         </div>
                         <span className="text-sm font-medium text-white">
-                          {client?.rating?.toFixed(1) || '5.0'}
+                          {client?.rating?.toFixed(1) || '0.0'}
                         </span>
                       </div>
                       <p className="text-xs text-gray-500">Client Rating</p>
@@ -169,7 +140,7 @@ export function ClientProfile({
                   <div>
                     <h4 className="text-xs font-medium text-gray-400 mb-1">Money Spent</h4>
                     <p className="text-sm font-medium text-white">
-                      ₹{(client?.moneySpent || 0).toLocaleString('en-IN')}+
+                      ₹{(client?.moneySpent || 0).toLocaleString('en-IN')}
                     </p>
                     <p className="text-xs text-gray-500">On BAILS</p>
                   </div>
@@ -185,21 +156,10 @@ export function ClientProfile({
             </div>
 
             {showCommunicationButtons && (
-              <div className="flex space-x-2 mt-4">
-                <button
-                  onClick={onChat}
-                  disabled={chatDisabled}
-                  className={`flex-1 px-3 py-2 rounded-lg border text-sm font-medium flex items-center justify-center gap-2 transition-colors ${chatDisabled
-                    ? 'bg-white/5 border-white/5 text-white/30 cursor-not-allowed'
-                    : 'bg-white/5 hover:bg-white/10 border-white/10 text-white/90 hover:text-white'
-                    }`}
-                >
-                  <MessageCircle className="w-4 h-4" />
-                  Chat
-                </button>
+              <div className="mt-4">
                 <button
                   onClick={onCall}
-                  className="flex-1 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/90 hover:text-white transition-colors text-sm font-medium flex items-center justify-center gap-2"
+                  className="w-full px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/90 hover:text-white transition-colors text-sm font-medium flex items-center justify-center gap-2"
                 >
                   <Phone className="w-4 h-4" />
                   Call
@@ -209,7 +169,7 @@ export function ClientProfile({
           </div>
         ) : (
           <div className="space-y-4">
-            <div className="flex items-center space-x-3 mb-4">
+            <div className="flex items-start space-x-3 mb-4">
               <div className="w-12 h-12 rounded-full bg-purple-500/10 flex items-center justify-center">
                 {client?.image ? (
                   <img
@@ -221,28 +181,31 @@ export function ClientProfile({
                   <User className="w-6 h-6 text-purple-400" />
                 )}
               </div>
-              <div>
-                <h3 className="font-medium text-white">{client?.name || 'Unknown Client'}</h3>
-                <p className="text-sm text-gray-400">{location || client?.location || 'Location not specified'}</p>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-medium text-white truncate">{client?.name || 'Unknown Client'}</h3>
+                    <p className="text-sm text-gray-400 truncate mt-0.5">
+                      {client?.location || 'Location not specified'}
+                    </p>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <p className="text-[10px] text-gray-500 uppercase tracking-wide">Member since</p>
+                    <p className="text-xs text-gray-300 font-medium mt-0.5">
+                      {client?.memberSince
+                        ? new Date(client.memberSince).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+                        : 'Jan 2023'}
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
 
             {showCommunicationButtons && (
-              <div className="flex space-x-2">
-                {/* <button
-                  onClick={onChat}
-                  disabled={chatDisabled}
-                  className={`flex-1 px-3 py-2 rounded-lg border text-sm font-medium flex items-center justify-center gap-2 transition-colors ${chatDisabled
-                    ? 'bg-white/5 border-white/5 text-white/30 cursor-not-allowed'
-                    : 'bg-white/5 hover:bg-white/10 border-white/10 text-white/90 hover:text-white'
-                    }`}
-                >
-                  <MessageCircle className="w-4 h-4" />
-                  Chat
-                </button> */}
+              <div>
                 <button
                   onClick={onCall}
-                  className="flex-1 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/90 hover:text-white transition-colors text-sm font-medium flex items-center justify-center gap-2"
+                  className="w-full px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/90 hover:text-white transition-colors text-sm font-medium flex items-center justify-center gap-2"
                 >
                   <Phone className="w-4 h-4" />
                   Call
