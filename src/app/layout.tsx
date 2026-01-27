@@ -18,8 +18,7 @@ export const metadata = {
   },
   description: 'Find and hire the best cricket talent in Chennai. Connect with net bowlers, sidearm specialists, coaches, and match players.',
   keywords: ['cricket', 'chennai', 'net bowlers', 'sidearm', 'cricket coaching', 'match players', 'hire cricketers', 'cricket services'],
-  description: 'Connect with local cricket service providers and monetize your skills',
-  keywords: ['cricket', 'coaching', 'sports', 'marketplace', 'freelance', 'training', 'bails'],
+
   authors: [{ name: 'BAILS Team' }],
   creator: 'BAILS',
   publisher: 'BAILS',
