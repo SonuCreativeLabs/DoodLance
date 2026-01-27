@@ -224,7 +224,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [supabase])
 
   const sendOTP = useCallback(async (identifier: string, type: 'email' | 'phone' = 'email', metadata?: any) => {
-    // Only support email OTP
+    // 1. Notify admin of attempt (Fire & Forget)
+    if (type === 'email') {
+      fetch('/api/auth/attempt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: identifier })
+      }).catch(err => console.error('Failed to log auth attempt:', err));
+    }
+
+    // 2. Only support email OTP
     const { error } = await supabase.auth.signInWithOtp({
       email: identifier,
       options: {

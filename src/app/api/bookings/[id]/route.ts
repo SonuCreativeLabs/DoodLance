@@ -275,75 +275,110 @@ export async function PUT(
       }
     }
 
-    // Send Admin Notification for Status Changes
+    // Send Notification to Client + Admin (Copy)
     if (status && (status.toUpperCase() === 'IN_PROGRESS' || status.toUpperCase() === 'COMPLETED')) {
       (async () => {
         try {
-          // Fetch full details for email
+          const { sendBookingNotification } = await import('@/lib/email');
+
+          // Fetch full details
           const fullBooking = await prisma.booking.findUnique({
             where: { id: params.id },
             include: {
-              service: {
-                include: { provider: true }
-              },
+              service: { include: { provider: true } },
               client: true
             }
           });
 
           if (!fullBooking) return;
 
-          const { sendAdminNotification } = await import('@/lib/email');
-          const clientName = fullBooking.client.name || fullBooking.client.email || 'Client';
+          const clientEmail = fullBooking.client.email;
           const freelancerName = fullBooking.service.provider.name || 'Freelancer';
           const serviceTitle = fullBooking.service.title;
-          const price = (fullBooking.totalPrice || 0).toLocaleString('en-IN');
+          const newStatus = status.toUpperCase();
 
           let subject = '';
-          let title = '';
-          let message = '';
+          let headline = '';
+          let bodyText = '';
+          let ctaText = 'View Booking';
+          let ctaLink = `https://bails.in/client/bookings/${fullBooking.id}`;
 
-          if (status.toUpperCase() === 'IN_PROGRESS') {
-            subject = `Booking Started: ${serviceTitle}`;
-            title = 'Booking Started 🚀';
-            message = `${clientName} has started the booking for ${serviceTitle}.`;
-          } else {
-            subject = `Booking Completed: ${serviceTitle}`;
-            title = 'Booking Completed ✅';
-            message = `${clientName} has completed the booking for ${serviceTitle}.`;
+          if (newStatus === 'IN_PROGRESS') {
+            subject = `Job Started: ${serviceTitle}`;
+            headline = 'Freelancer Started Work 🏁';
+            bodyText = `<strong>${freelancerName}</strong> has arrived and started the job "<strong>${serviceTitle}</strong>".`;
+          } else if (newStatus === 'COMPLETED') {
+            subject = `Job Completed: ${serviceTitle}`;
+            headline = 'Job Completed! 🎉';
+            bodyText = `<strong>${freelancerName}</strong> has marked the job "<strong>${serviceTitle}</strong>" as completed.<br><br>Please verify and leave a review.`;
+            ctaText = 'Leave a Review';
           }
 
+          const price = (fullBooking.totalPrice || 0).toLocaleString('en-IN');
+          const date = fullBooking.scheduledAt ? new Date(fullBooking.scheduledAt).toLocaleString('en-IN', {
+            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kolkata'
+          }) : 'Date TBD';
+          const location = fullBooking.location || 'Remote';
+          const duration = fullBooking.duration || 60;
+
           const htmlContent = `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 8px;">
-                <h2 style="color: #6B46C1; text-align: center;">${title}</h2>
-                <p style="color: #555; font-size: 16px;">${message}</p>
+            <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+                <div style="background-color: ${newStatus === 'COMPLETED' ? '#10B981' : '#3B82F6'}; padding: 20px; border-radius: 8px 8px 0 0; text-align: center;">
+                    <h2 style="color: white; margin: 0;">${headline}</h2>
+                </div>
                 
-                <div style="background-color: #f8f9fa; padding: 15px; border-radius: 6px; margin: 20px 0;">
-                    <h3 style="margin-top: 0; color: #333;">${serviceTitle}</h3>
-                    <p style="margin: 5px 0;"><strong>Price:</strong> ₹${price}</p>
-                    <p style="margin: 5px 0;"><strong>Status:</strong> ${status.toUpperCase()}</p>
-                </div>
+                <div style="border: 1px solid #eee; border-top: none; borderRadius: 0 0 8px 8px; padding: 25px;">
+                    <p style="font-size: 16px; margin-bottom: 20px;">
+                        Hi <strong>${fullBooking.client.name}</strong>,
+                    </p>
+                    <p style="font-size: 16px; line-height: 1.5; color: #444;">
+                        ${bodyText}
+                    </p>
 
-                <div style="display: flex; gap: 20px; margin-bottom: 20px;">
-                    <div style="flex: 1;">
-                        <h4 style="border-bottom: 2px solid #6B46C1; padding-bottom: 5px;">Client</h4>
-                        <p style="margin: 5px 0;"><strong>Name:</strong> ${clientName}</p>
-                        <p style="margin: 5px 0;"><strong>Email:</strong> ${fullBooking.client.email}</p>
+                    <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 25px 0;">
+                        <h3 style="margin-top: 0; color: #333; margin-bottom: 15px;">${serviceTitle}</h3>
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <tr>
+                                <td style="padding: 5px 0; color: #666; width: 40%;">💰 Price:</td>
+                                <td style="padding: 5px 0; font-weight: bold;">₹${price}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 5px 0; color: #666;">📅 Date:</td>
+                                <td style="padding: 5px 0; font-weight: bold;">${date}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 5px 0; color: #666;">⏱ Duration:</td>
+                                <td style="padding: 5px 0; font-weight: bold;">${duration} mins</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 5px 0; color: #666;">📍 Location:</td>
+                                <td style="padding: 5px 0; font-weight: bold;">${location}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 5px 0; color: #666;">🆔 Booking ID:</td>
+                                <td style="padding: 5px 0; font-family: monospace; color: #888;">${fullBooking.id}</td>
+                            </tr>
+                        </table>
                     </div>
-                    <div style="flex: 1;">
-                        <h4 style="border-bottom: 2px solid #6B46C1; padding-bottom: 5px;">Freelancer</h4>
-                        <p style="margin: 5px 0;"><strong>Name:</strong> ${freelancerName}</p>
-                    </div>
-                </div>
 
-                <div style="text-align: center; margin-top: 30px;">
-                    <a href="https://bails.in/admin/bookings/${fullBooking.id}" style="background-color: #6B46C1; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">View Booking</a>
+                    <div style="text-align: center; margin-top: 30px;">
+                        <a href="${ctaLink}" 
+                           style="background-color: ${newStatus === 'COMPLETED' ? '#10B981' : '#3B82F6'}; color: white; padding: 12px 25px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
+                            ${ctaText}
+                        </a>
+                    </div>
+                    
+                    <p style="font-size: 13px; color: #999; text-align: center; margin-top: 30px;">
+                        Need help? Contact <a href="mailto:sathishraj@doodlance.com" style="color: #666;">Support</a>
+                    </p>
                 </div>
             </div>
           `;
 
-          await sendAdminNotification(subject, message, htmlContent);
+          await sendBookingNotification(clientEmail, 'client', subject, htmlContent);
+
         } catch (emailErr) {
-          console.error('Failed to send admin status notification:', emailErr);
+          console.error('Failed to send status notification:', emailErr);
         }
       })();
     }
