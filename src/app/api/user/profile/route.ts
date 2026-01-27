@@ -165,11 +165,13 @@ export async function GET(request: NextRequest) {
                     </div>
                 `;
 
+                console.log(`[API] 📧 Preparing to send admin notification for ${newDbUser.email}...`);
                 await sendAdminNotification(
                     subject,
                     `New user signed up: ${newDbUser.name} (${newDbUser.email})`,
                     htmlContent
-                ).catch(err => console.error('Failed to send admin notification:', err));
+                ).then(() => console.log(`[API] ✅ Admin notification sent for ${newDbUser.email}`))
+                    .catch(err => console.error(`[API] ❌ Failed to send admin notification for ${newDbUser.email}:`, err));
 
                 return NextResponse.json(newDbUser);
             } catch (createError: any) {

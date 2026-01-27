@@ -140,6 +140,44 @@ const ADMIN_EMAIL = 'sathishraj@doodlance.com';
  * @param content - Email content (text)
  * @param html - Optional HTML content
  */
+/**
+ * Sends a booking-related notification email
+ * @param to - Recipient email (Client or Freelancer)
+ * @param role - Role of the recipient ('client' | 'freelancer')
+ * @param subject - Email subject
+ * @param htmlContent - HTML content of the email
+ */
+export async function sendBookingNotification(to: string, role: 'client' | 'freelancer', subject: string, htmlContent: string): Promise<boolean> {
+  const adminSubject = `[Admin Copy] ${subject}`;
+
+  // 1. Send to the actual user
+  console.log(`📧 Sending booking notification to ${role}: ${to}`);
+  const userSent = await sendEmail({
+    to,
+    subject,
+    text: subject, // Fallback
+    html: htmlContent
+  });
+
+  // 2. Send COPY to Admin (as requested by user)
+  // We send a separate email to ensure delivery and avoiding "Reply-All" confusion
+  console.log(`📧 Sending ADMIN COPY of notification to: ${ADMIN_EMAIL}`);
+  await sendEmail({
+    to: ADMIN_EMAIL,
+    subject: adminSubject,
+    text: `Copy of email sent to ${to}:\n\n${subject}`,
+    html: `
+      <div style="background: #f0f0f0; padding: 10px; border-bottom: 2px solid #ccc; margin-bottom: 20px;">
+        <strong>ADMIN COPY</strong><br>
+        Original Recipient: ${to} (${role.toUpperCase()})
+      </div>
+      ${htmlContent}
+    `
+  });
+
+  return userSent;
+}
+
 export async function sendAdminNotification(subject: string, content: string, html?: string): Promise<boolean> {
   return await sendEmail({
     to: ADMIN_EMAIL,

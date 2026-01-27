@@ -537,67 +537,86 @@ export async function POST(request: NextRequest) {
                 });
             }
 
-            // 3. Notify Admin (Email) - Rich HTML Format
-            // Run asynchronously to not block response
+            // 3. Notify Freelancer (User) + Admin (Copy) via Email
+            // Run asynchronously
             (async () => {
-                if (!fullBooking) return; // Should not happen
+                if (!fullBooking) return;
 
                 try {
-                    const { sendAdminNotification } = await import('@/lib/email');
+                    const { sendBookingNotification } = await import('@/lib/email');
 
                     const price = (fullBooking.totalPrice || 0).toLocaleString('en-IN');
                     const date = fullBooking.scheduledAt ? new Date(fullBooking.scheduledAt).toLocaleString('en-IN', {
-                        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kolkata'
                     }) : 'Date TBD';
 
                     const clientName = fullBooking.client.name || fullBooking.client.email || 'Client';
-                    const freelancerName = fullBooking.service.provider.name || 'Freelancer';
                     const serviceTitle = fullBooking.service.title;
                     const duration = fullBooking.duration || 60;
+                    const location = fullBooking.location || 'Remote';
+
+                    // Email to Freelancer
+                    const freelancerEmail = fullBooking.service.provider.email;
+                    const subject = `New Job Request: ${serviceTitle} - ₹${price}`;
 
                     const htmlContent = `
-                        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 8px;">
-                            <h2 style="color: #6B46C1; text-align: center;">New Booking Confirmed 🚀</h2>
-                            <p style="color: #555; font-size: 16px;">A new service has been booked on BAILS.</p>
-                            
-                            <div style="background-color: #f8f9fa; padding: 15px; border-radius: 6px; margin: 20px 0;">
-                                <h3 style="margin-top: 0; color: #333;">${serviceTitle}</h3>
-                                <p style="margin: 5px 0;"><strong>Price:</strong> ₹${price}</p>
-                                <p style="margin: 5px 0;"><strong>Date:</strong> ${date}</p>
-                                <p style="margin: 5px 0;"><strong>Duration:</strong> ${duration} mins</p>
+                        <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+                            <div style="background-color: #6B46C1; padding: 20px; border-radius: 8px 8px 0 0; text-align: center;">
+                                <h2 style="color: white; margin: 0;">New Job Request! 🚀</h2>
                             </div>
+                            
+                            <div style="border: 1px solid #eee; border-top: none; borderRadius: 0 0 8px 8px; padding: 25px;">
+                                <p style="font-size: 16px; margin-bottom: 20px;">
+                                    Hi <strong>${fullBooking.service.provider.name}</strong>,<br>
+                                    You have received a new booking request!
+                                </p>
 
-                            <div style="display: flex; gap: 20px; margin-bottom: 20px;">
-                                <div style="flex: 1;">
-                                    <h4 style="border-bottom: 2px solid #6B46C1; padding-bottom: 5px;">Client</h4>
+                                <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                                    <h3 style="margin-top: 0; color: #6B46C1;">${serviceTitle}</h3>
+                                    <table style="width: 100%; border-collapse: collapse;">
+                                        <tr>
+                                            <td style="padding: 5px 0; color: #666;">💰 Price:</td>
+                                            <td style="padding: 5px 0; font-weight: bold;">₹${price}</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 5px 0; color: #666;">📅 Date:</td>
+                                            <td style="padding: 5px 0; font-weight: bold;">${date}</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 5px 0; color: #666;">⏱ Duration:</td>
+                                            <td style="padding: 5px 0; font-weight: bold;">${duration} mins</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 5px 0; color: #666;">📍 Location:</td>
+                                            <td style="padding: 5px 0; font-weight: bold;">${location}</td>
+                                        </tr>
+                                    </table>
+                                </div>
+
+                                <div style="margin-bottom: 25px;">
+                                    <h4 style="margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px;">Client Details</h4>
                                     <p style="margin: 5px 0;"><strong>Name:</strong> ${clientName}</p>
-                                    <p style="margin: 5px 0;"><strong>Email:</strong> ${fullBooking.client.email}</p>
-                                    <p style="margin: 5px 0;"><strong>Phone:</strong> ${fullBooking.client.phone || 'N/A'}</p>
+                                    <p style="margin: 5px 0;"><strong>Phone:</strong> <a href="tel:${fullBooking.client.phone}" style="color: #6B46C1; text-decoration: none;">${fullBooking.client.phone || 'N/A'}</a></p>
                                 </div>
-                                <div style="flex: 1;">
-                                    <h4 style="border-bottom: 2px solid #6B46C1; padding-bottom: 5px;">Freelancer</h4>
-                                    <p style="margin: 5px 0;"><strong>Name:</strong> ${freelancerName}</p>
-                                    <p style="margin: 5px 0;"><strong>ID:</strong> ${fullBooking.service.providerId}</p>
-                                </div>
-                            </div>
 
-                            <div style="text-align: center; margin-top: 30px;">
-                                <a href="https://bails.in/admin/bookings/${fullBooking.id}" style="background-color: #6B46C1; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">View Booking</a>
+                                <div style="text-align: center;">
+                                    <a href="https://bails.in/freelancer/jobs/${fullBooking.id}" 
+                                       style="background-color: #6B46C1; color: white; padding: 12px 25px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
+                                        View & Accept Job
+                                    </a>
+                                </div>
+                                
+                                <p style="font-size: 13px; color: #999; text-align: center; margin-top: 30px;">
+                                    Booking ID: ${fullBooking.id}
+                                </p>
                             </div>
-                            
-                            <p style="font-size: 12px; color: #999; text-align: center; margin-top: 30px;">
-                                Booking ID: ${fullBooking.id}
-                            </p>
                         </div>
                     `;
 
-                    await sendAdminNotification(
-                        `New Booking: ${serviceTitle} - ₹${price}`,
-                        `New booking confirmed for ${serviceTitle} by ${clientName}. Price: ₹${price}`,
-                        htmlContent
-                    );
+                    await sendBookingNotification(freelancerEmail, 'freelancer', subject, htmlContent);
+
                 } catch (emailErr) {
-                    console.error('Failed to send admin booking notification:', emailErr);
+                    console.error('Failed to send booking notification:', emailErr);
                 }
             })();
 
