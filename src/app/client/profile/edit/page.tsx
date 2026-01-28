@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { User, Camera, ArrowLeft, Trash2, Check, Loader2, AlertCircle } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -10,6 +10,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 import { compressImage } from '@/utils/compression'
+import { ImageCropper } from '@/components/common/ImageCropper'
 
 
 export default function EditProfile() {
@@ -23,6 +24,11 @@ export default function EditProfile() {
   const [uploading, setUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
   const supabase = createClient()
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Cropper State
+  const [isCropperOpen, setIsCropperOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -168,11 +174,9 @@ export default function EditProfile() {
     }
   }
 
-
-
-  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (!file || !user) return
+    if (!file) return
 
     // Validate file type
     if (!file.type.startsWith('image/')) {
@@ -180,11 +184,31 @@ export default function EditProfile() {
       return
     }
 
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image size must be less than 5MB')
-      return
-    }
+    // Size limit check removed as per requirement
+    // if (file.size > 5 * 1024 * 1024) { ... }
+
+    // Read file as Data URL for Cropper
+    const reader = new FileReader();
+    reader.addEventListener('load', () => setSelectedImage(reader.result as string));
+    reader.readAsDataURL(file);
+    setIsCropperOpen(true);
+
+    // Reset input so same file can be selected again if needed
+    e.target.value = '';
+  }
+
+  const handleCropSave = async (croppedBlob: Blob) => {
+    if (!user) return;
+
+    // Convert Blob to File
+    const file = new File([croppedBlob], "cropped-avatar.jpg", { type: "image/jpeg" });
+
+    // Proceed with Upload
+    await uploadAvatar(file);
+  }
+
+  const uploadAvatar = async (file: File) => {
+    if (!user) return;
 
     setUploading(true)
     setUploadProgress(20)
@@ -230,6 +254,7 @@ export default function EditProfile() {
       }, 300)
     }
   }
+
 
   return (
     <div className="min-h-screen bg-[#111111]">
@@ -290,8 +315,9 @@ export default function EditProfile() {
                 id="avatar-upload"
                 type="file"
                 accept="image/*"
-                onChange={handleAvatarUpload}
+                onChange={handleFileSelect}
                 className="hidden"
+                ref={fileInputRef}
               />
             </div>
             {errors.avatar && (
@@ -439,11 +465,16 @@ export default function EditProfile() {
               )}
             </button>
           </div>
-
-
-
         </form>
       </div>
+
+      <ImageCropper
+        image={selectedImage}
+        isOpen={isCropperOpen}
+        onClose={() => setIsCropperOpen(false)}
+        onSave={handleCropSave}
+        aspect={1} // Square for profile picture
+      />
     </div>
   )
 }

@@ -333,10 +333,8 @@ export function ProfileHeader({
   };
 
   const uploadCoverImage = async (file: File) => {
-    if (file.size > 5 * 1024 * 1024) { // Increased limit for cover
-      toast.error('Image size should be less than 5MB');
-      return;
-    }
+    // Size limit check removed as per requirement
+    // if (file.size > 5 * 1024 * 1024) { ... }
 
     setIsUploading(true);
 
@@ -392,10 +390,8 @@ export function ProfileHeader({
   };
 
   const uploadProfileImage = async (file: File) => {
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image size should be less than 5MB');
-      return;
-    }
+    // Size limit check removed as per requirement
+    // if (file.size > 5 * 1024 * 1024) { ... }
 
     setIsProfileUploading(true);
 
