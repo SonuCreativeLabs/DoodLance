@@ -4,7 +4,7 @@ export type JobStatus = 'pending' | 'completed' | 'cancelled' | 'upcoming' | 'st
 export type ApplicationStatus = 'pending' | 'accepted' | 'rejected' | 'withdrawn' | 'interview' | 'hired' | 'completed' | 'cancelled' | 'expired' | 'archived';
 export type TransactionStatus = 'pending' | 'failed' | 'completed';
 
-export type StatusType = JobStatus | ApplicationStatus | TransactionStatus;
+export type StatusType = JobStatus | ApplicationStatus | TransactionStatus | 'marked';
 
 // Job Categories
 export type JobCategory =
