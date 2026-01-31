@@ -109,6 +109,7 @@ async function handleGetBookings(request: NextRequest, user: { id: string, role?
                             }
                         },
                         title: true,
+                        category: true, // Added category
                         tags: true, // Fetch tags for skills
                         providerId: true,
                     }
@@ -140,6 +141,7 @@ async function handleGetBookings(request: NextRequest, user: { id: string, role?
             time: b.scheduledAt ? b.scheduledAt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }) : b.time,
             price: b.totalPrice,
             serviceId: b.serviceId,
+            category: b.service.category?.name || null, // Added category name
             clientId: b.clientId,
             otp: b.otp,
             completedAt: b.deliveredAt ? b.deliveredAt.toISOString() : null,
@@ -359,16 +361,28 @@ export async function POST(request: NextRequest) {
         // Setup: Subtotal + Fee - Discount.
         // So Fee is based on Subtotal. Discount is subtracted from (Subtotal + Fee).
 
-        finalPrice = baseTotal;
-        const platformFee = Math.round(finalPrice * commissionRate);
-        finalPrice += platformFee;
-        finalPrice -= discountAmount;
-        finalPrice = Math.max(0, finalPrice);
+        // Calculate Platform Fee (Client Commission)
+        // User Requirement: Client pays 5% on top of Service Price.
+        // Service Price = baseTotal.
+        // Fee = baseTotal * commissionRate (0.05).
+        // Final Price (Stored in DB) = baseTotal + Fee.
+
+        const platformFee = Math.round(baseTotal * commissionRate);
+        finalPrice = baseTotal + platformFee;
+
+        if (!scheduledAt) {
+            return NextResponse.json({ error: 'Scheduled time is required for booking' }, { status: 400 });
+        }
+
+        const scheduledDate = new Date(scheduledAt);
+        if (isNaN(scheduledDate.getTime())) {
+            return NextResponse.json({ error: 'Invalid scheduled time' }, { status: 400 });
+        }
 
         const bookingData = {
             clientId: userId,
             serviceId: service.id,
-            scheduledAt: scheduledAt ? new Date(scheduledAt) : null,
+            scheduledAt: scheduledDate,
             duration: service.duration,
             totalPrice: finalPrice,
             packageType: packageType || 'Standard',

@@ -110,7 +110,10 @@ export function NearbyProfessionalsProvider({ children }: { children: ReactNode 
     } catch (err) {
       console.error('Error fetching professionals:', err);
       setError('Failed to load professionals');
-      setProfessionals([]);
+      // Do not clear professionals on error, keep previous data if any
+      if (professionals.length === 0) {
+        setProfessionals([]);
+      }
     } finally {
       setLoading(false);
     }

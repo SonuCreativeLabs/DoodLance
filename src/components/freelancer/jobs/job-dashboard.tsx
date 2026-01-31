@@ -37,22 +37,28 @@ const convertBookingToJob = (booking: any): Job => {
   // Map booking status to job status
   // 'confirmed' bookings should show as 'pending' (upcoming) jobs
   // 'ongoing' bookings should show as 'started' jobs
-  let jobStatus: 'pending' | 'started' | 'completed' | 'cancelled' | 'delivered' = 'pending';
+  // 'completed_by_client' and 'completed_by_freelancer' preserved as-is from database
+  let jobStatus: 'pending' | 'started' | 'completed' | 'cancelled' | 'delivered' | 'completed_by_client' | 'completed_by_freelancer' = 'pending';
 
   const statusLower = (booking.status || '').toLowerCase();
 
-  if (statusLower === 'ongoing' || statusLower === 'started') {
+  // Keep statuses as lowercase to match database
+  if (statusLower === 'completed_by_client') {
+    jobStatus = 'completed_by_client';
+  } else if (statusLower === 'completed_by_freelancer') {
+    jobStatus = 'completed_by_freelancer';
+  } else if (statusLower === 'ongoing' || statusLower === 'started') {
     jobStatus = 'started';
   } else if (statusLower === 'completed') {
     jobStatus = 'completed';
   } else if (statusLower === 'delivered') {
-    jobStatus = 'delivered'; // keep as delivered
+    jobStatus = 'delivered';
   } else if (statusLower === 'cancelled') {
     jobStatus = 'cancelled';
   } else if (statusLower === 'confirmed' || statusLower === 'pending') {
     jobStatus = 'pending'; // Upcoming
   } else {
-    console.warn('Unknown booking status:', booking.status);
+    console.warn('Unknown booking status:', booking.status, 'defaulting to pending');
     jobStatus = 'pending'; // Default fallback
   }
 
@@ -78,15 +84,33 @@ const convertBookingToJob = (booking: any): Job => {
   return {
     id: booking.id || booking['#'] || `booking_${Date.now()}`,
     title: booking.title || booking.service || 'Service Booking',
-    category: (booking.category as JobCategory) || 'OTHER',
+    category: (booking.category || 'OTHER') as JobCategory,
     date: jobDate,
     time: booking.time || '10:00 AM',
     jobDate: jobDate,
     jobTime: booking.time || '10:00 AM',
     status: jobStatus,
-    payment: typeof booking.price === 'string'
-      ? parseInt(booking.price.replace(/[₹,]/g, '')) || 0
-      : Number(booking.price) || 0,
+    payment: (() => {
+      // Calculate from services to get the Base Price (Original Service Amount)
+      // This avoids showing the Client Fee (5%) which is included in total booking.price
+      if (booking.services && Array.isArray(booking.services) && booking.services.length > 0) {
+        return booking.services.reduce((sum: number, s: any) => {
+          const price = typeof s.price === 'string'
+            ? parseFloat(s.price.replace(/[^\d.]/g, ''))
+            : Number(s.price) || 0;
+          return sum + (price * (s.quantity || 1));
+        }, 0);
+      }
+      // Fallback: If no services array, try to reverse-calc or just show total
+      // If we assume standard 5% fee was added, we could divide by 1.05, but that's risky if fee changes.
+      // Better to return the stored price and let the UI handle it, OR just return it.
+      // But user specifically asked for "original amount".
+      const parsedPrice = typeof booking.price === 'string'
+        ? parseInt(booking.price.replace(/[₹,]/g, '')) || 0
+        : Number(booking.price) || 0;
+
+      return parsedPrice;
+    })(),
     location: booking.location || 'Remote',
     description: booking.notes || booking.description || 'No description provided',
     skills: booking.skills || [],
@@ -163,13 +187,17 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
   // Transform database job to JobCard expected format
   const transformJobForCard = (dbJob: any) => {
     // Map original job status to our 3-status system
-    let displayStatus: 'upcoming' | 'completed' | 'cancelled' | 'ongoing' | 'delivered' = 'upcoming';
+    let displayStatus: 'upcoming' | 'completed' | 'cancelled' | 'ongoing' | 'delivered' | 'marked' = 'upcoming';
+    const originalStatus = dbJob.status; // Preserve original status
+
     if (dbJob.status === 'completed') {
       displayStatus = 'completed';
     } else if (dbJob.status === 'delivered') {
       displayStatus = 'delivered';
     } else if (dbJob.status === 'cancelled') {
       displayStatus = 'cancelled';
+    } else if (dbJob.status === 'completed_by_client' || dbJob.status === 'completed_by_freelancer') {
+      displayStatus = 'marked';
     } else if (dbJob.status === 'started') {
       displayStatus = 'ongoing';
     }
@@ -183,7 +211,8 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
       time: dbJob.time || '09:00',
       jobDate: dbJob.date || new Date().toISOString(),
       jobTime: dbJob.time || '09:00',
-      status: displayStatus,
+      status: originalStatus, // Keep original status for modal
+      displayStatus: displayStatus, // Add display status for card UI
       payment: Number(dbJob.payment) || 0,
       location: dbJob.location || 'Location not specified',
       description: dbJob.description || 'No description available',
@@ -359,6 +388,11 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
         return jobs.filter(job => job.status === 'cancelled').map(transformJobForCard);
       } else if (statusFilter === 'ongoing') {
         return jobs.filter(job => job.status === 'started').map(transformJobForCard);
+      } else if (statusFilter === 'marked') {
+        return jobs.filter(job => {
+          const statusLower = (job.status || '').toLowerCase();
+          return statusLower === 'completed_by_client' || statusLower === 'completed_by_freelancer';
+        }).map(transformJobForCard);
       }
       // Default to upcoming (includes confirmed, pending jobs AND accepted applications)
       const regularJobs = jobs.filter(job => job.status === 'confirmed' || job.status === 'pending').map(transformJobForCard);
@@ -381,7 +415,8 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
       const matchesStatus = statusFilter === 'upcoming' ||
         (statusFilter === 'completed' && (job.status === 'completed' || job.status === 'delivered')) ||
         (statusFilter === 'cancelled' && job.status === 'cancelled') ||
-        (statusFilter === 'ongoing' && job.status === 'started');
+        (statusFilter === 'ongoing' && job.status === 'started') ||
+        (statusFilter === 'marked' && (job.status === 'COMPLETED_BY_CLIENT' || job.status === 'COMPLETED_BY_FREELANCER'));
 
       return matchesSearch && matchesStatus;
     });
@@ -441,6 +476,10 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
   const tabCounts = useMemo(() => {
     const upcomingJobs = jobs.filter(job => job.status === 'upcoming' || job.status === 'pending');
     const ongoingJobs = jobs.filter(job => job.status === 'started');
+    const markedJobs = jobs.filter(job => {
+      const statusLower = (job.status || '').toLowerCase();
+      return statusLower === 'completed_by_client' || statusLower === 'completed_by_freelancer';
+    });
     const completedJobs = jobs.filter(job => job.status === 'completed' || job.status === 'delivered');
     const cancelledJobs = jobs.filter(job => job.status === 'cancelled');
 
@@ -452,6 +491,7 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
     return {
       upcoming: upcomingJobs.length,
       ongoing: ongoingJobs.length,
+      marked: markedJobs.length,
       completed: completedJobs.length,
       cancelled: cancelledJobs.length,
       applications: applications.length,
@@ -468,6 +508,7 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
       return [
         { value: 'upcoming', label: 'Upcoming', count: tabCounts.upcoming },
         { value: 'ongoing', label: 'Ongoing', count: tabCounts.ongoing },
+        { value: 'marked', label: 'Marked', count: tabCounts.marked },
         { value: 'completed', label: 'Completed', count: tabCounts.completed },
         { value: 'cancelled', label: 'Cancelled', count: tabCounts.cancelled }
       ] as const;

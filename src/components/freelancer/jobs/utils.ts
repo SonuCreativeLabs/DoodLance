@@ -214,6 +214,12 @@ export const statusColors = {
     text: 'text-amber-400',
     border: 'border-amber-500/20',
     shadow: 'shadow-amber-500/10'
+  },
+  marked: {
+    bg: 'bg-orange-500/10',
+    text: 'text-orange-400',
+    border: 'border-orange-500/20',
+    shadow: 'shadow-orange-500/10'
   }
 } as const;
 

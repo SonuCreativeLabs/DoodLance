@@ -1,6 +1,6 @@
 // Status Types
 import { JobDuration } from '@/app/freelancer/feed/types';
-export type JobStatus = 'pending' | 'completed' | 'cancelled' | 'upcoming' | 'started' | 'ongoing' | 'delivered';
+export type JobStatus = 'pending' | 'completed' | 'cancelled' | 'upcoming' | 'started' | 'ongoing' | 'delivered' | 'COMPLETED_BY_CLIENT' | 'COMPLETED_BY_FREELANCER' | 'completed_by_client' | 'completed_by_freelancer' | 'confirmed';
 export type ApplicationStatus = 'pending' | 'accepted' | 'rejected' | 'withdrawn' | 'interview' | 'hired' | 'completed' | 'cancelled' | 'expired' | 'archived';
 export type TransactionStatus = 'pending' | 'failed' | 'completed';
 
@@ -89,6 +89,7 @@ export interface Job {
   scheduledAt?: string;
   postedAt?: string;
   status: JobStatus | 'upcoming' | 'completed' | 'cancelled';
+  displayStatus?: 'upcoming' | 'completed' | 'cancelled' | 'ongoing' | 'delivered' | 'marked'; // For UI display
   payment: number | string;
   location: string;
   description?: string;

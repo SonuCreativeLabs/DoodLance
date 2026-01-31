@@ -259,28 +259,42 @@ export default function BookingHistoryDetailPage() {
               </p>
             </div>
 
-            {historyItem.status === 'completed' && (
+            {historyItem.status === 'completed' && historyItem.clientRating && (
               <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
                 <div className="flex items-center gap-2 text-white/70 text-sm mb-3">
                   <Star className="w-4 h-4 text-purple-300" />
-                  <span>Your rating of provider</span>
+                  <span>Freelancer's Feedback</span>
                 </div>
-                {historyItem.yourRating > 0 ? (
-                  <>
-                    <div className="flex items-center gap-1">
-                      {ratingArray.map((_, idx) => (
-                        <Star
-                          key={idx}
-                          className="w-4 h-4 text-yellow-400 fill-yellow-400"
-                        />
-                      ))}
-                    </div>
-                    <p className="text-sm text-white/60 mt-1">
-                      Reflects your experience with {historyItem.freelancer.name}
-                    </p>
-                  </>
-                ) : (
-                  <p className="text-sm text-white/60 italic">No rating given</p>
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: 5 }, (_, i) => (
+                      <Star
+                        key={i}
+                        className={`w-5 h-5 ${i < (historyItem.clientRating?.stars || 0)
+                          ? 'text-yellow-400 fill-current'
+                          : 'text-gray-600'
+                          }`}
+                      />
+                    ))}
+                  </div>
+                  <span className="text-sm text-white/60">
+                    Rated {historyItem.clientRating?.stars}/5
+                  </span>
+                </div>
+                <p className="text-sm text-white/80 italic mb-3">
+                  {historyItem.clientRating?.review ? `"${historyItem.clientRating.review}"` : "No written review provided."}
+                </p>
+                {historyItem.clientRating?.feedbackChips && historyItem.clientRating.feedbackChips.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {historyItem.clientRating.feedbackChips.map((chip: string, index: number) => (
+                      <span
+                        key={index}
+                        className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-purple-900/30 text-purple-300 border border-purple-500/30"
+                      >
+                        {chip}
+                      </span>
+                    ))}
+                  </div>
                 )}
               </div>
             )}
@@ -330,33 +344,62 @@ export default function BookingHistoryDetailPage() {
             )}
           </div>
 
-          {/* Reviews Section - Show Freelancer's Feedback ABOUT the Client */}
-          {historyItem.status === 'completed' && historyItem.clientRating && (
+          {/* Your Rating of Provider - Now Full Width at Bottom */}
+          {historyItem.status === 'completed' && (
             <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl">
-              <h3 className="text-lg font-semibold text-white mb-3">Freelancer's Feedback About You</h3>
-              <div className="flex items-center gap-2 mb-4">
-                <div className="flex items-center gap-1">
-                  {Array.from({ length: 5 }, (_, i) => (
-                    <Star
-                      key={i}
-                      className={`w-4 h-4 ${i < (historyItem.clientRating?.stars || 0)
-                        ? 'text-yellow-400 fill-current'
-                        : 'text-gray-600'
-                        }`}
-                    />
-                  ))}
-                </div>
-                <span className="text-sm text-white/60">
-                  Rated {historyItem.clientRating?.stars?.toFixed(1)}/5
-                </span>
-              </div>
+              <h3 className="text-lg font-semibold text-white mb-3">Your Rating of Provider</h3>
 
-              {historyItem.clientRating?.review ? (
-                <div className="p-4 rounded-xl bg-white/5 border border-white/5">
-                  <p className="text-sm text-white/80 italic">"{historyItem.clientRating.review}"</p>
-                </div>
+              {historyItem.yourRating && (typeof historyItem.yourRating === 'object' || historyItem.yourRating > 0) ? (
+                <>
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="flex items-center gap-1">
+                      {Array.from({ length: 5 }, (_, i) => (
+                        <Star
+                          key={i}
+                          className={`w-5 h-5 ${i < ((historyItem.yourRating?.stars || historyItem.yourRating) || 0)
+                            ? 'text-yellow-400 fill-yellow-400'
+                            : 'text-gray-600'
+                            }`}
+                        />
+                      ))}
+                    </div>
+                    <span className="text-sm text-white/60">
+                      Rated {((historyItem.yourRating?.stars || historyItem.yourRating) || 0)}/5
+                    </span>
+                  </div>
+
+                  {/* Review Text */}
+                  {historyItem.yourRating?.review ? (
+                    <div className="p-4 rounded-xl bg-white/5 border border-white/5 mb-4">
+                      <p className="text-sm text-white/80 italic">"{historyItem.yourRating.review}"</p>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-white/50 italic mb-4">No written review provided.</p>
+                  )}
+
+                  {/* Chips - Updated to Purple & Larger */}
+                  {(historyItem.yourRating?.feedbackChips || historyItem.yourRating?.chips) &&
+                    (historyItem.yourRating.feedbackChips || historyItem.yourRating.chips).length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {(historyItem.yourRating.feedbackChips || historyItem.yourRating.chips).map((chip: string, index: number) => (
+                          <span
+                            key={index}
+                            className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-purple-900/30 text-purple-300 border border-purple-500/30"
+                          >
+                            {chip}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                  {!historyItem.yourRating?.review && !historyItem.yourRating?.feedbackChips && (
+                    <p className="text-sm text-white/60 mt-1">
+                      Reflects your experience with {historyItem.freelancer.name}
+                    </p>
+                  )}
+                </>
               ) : (
-                <p className="text-sm text-white/50 italic">No written review provided.</p>
+                <p className="text-sm text-white/60 italic">No rating given</p>
               )}
             </div>
           )}

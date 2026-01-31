@@ -20,46 +20,22 @@ const statusCopy: Record<string, string> = {
   confirmed: "Upcoming",
   pending: "Upcoming",
   completed: "Completed",
-  cancelled: "Cancelled",
+  cancelled: "Cancelled"
 };
 
-// Format date from YYYY-MM-DD to readable format
-const formatBookingDate = (dateStr: string): string => {
-  if (!dateStr) return '';
-  try {
-    // 1. Try YYYY-MM-DD format (preferred for consistency with context)
-    if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
-      const [year, month, day] = dateStr.split('-').map(Number);
-      const date = new Date(year, month - 1, day);
-      if (!isNaN(date.getTime())) {
-        return date.toLocaleDateString('en-US', {
-          weekday: 'short',
-          month: 'short',
-          day: 'numeric',
-          year: 'numeric'
-        });
-      }
-    }
-
-    // 2. Fallback: Try generic Date parsing
-    const date = new Date(dateStr);
-    if (!isNaN(date.getTime())) {
-      return date.toLocaleDateString('en-US', {
-        weekday: 'short',
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric'
-      });
-    }
-
-    // 3. Last valid result, return original
-    return dateStr;
-  } catch (e) {
-    return dateStr;
-  }
+const formatBookingDate = (dateString: string | undefined) => {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  return date.toLocaleDateString("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
 };
 
 export default function BookingDetailPage() {
+  // ... (keep hooks and state as is)
   const params = useParams();
   const router = useRouter();
   const { setNavbarVisibility } = useNavbar();
@@ -89,7 +65,7 @@ export default function BookingDetailPage() {
 
   const booking = useMemo(() => bookings.find((entry) => entry["#"] === (Array.isArray(params.id) ? params.id[0] : params.id) && entry["#"] === decodeURIComponent(entry["#"])), [params, bookings]);
 
-  // Redirect completed/cancelled to history view
+  // Redirect completed/cancelled to history view ONLY if fully completed
   useEffect(() => {
     if (booking && (booking.status === 'completed' || booking.status === 'cancelled')) {
       router.replace(`/client/bookings/history/${encodeURIComponent(booking["#"])}`);
@@ -175,8 +151,15 @@ export default function BookingDetailPage() {
 
       if (!res.ok) throw new Error("Failed to mark booking as complete");
 
-      // Refetch bookings to update UI
-      if (refreshBookings) refreshBookings();
+      const result = await res.json();
+      console.log('Mark complete response:', result);
+
+      // Refetch bookings to update list UI
+      if (refreshBookings) await refreshBookings();
+
+      // Refresh the page to ensure all data is updated
+      router.refresh();
+
       setShowCompleteDialog(false);
 
       // Reset form
@@ -184,8 +167,6 @@ export default function BookingDetailPage() {
       setReview('');
       setSelectedChips([]);
 
-      // Redirect directly to history details page
-      router.push(`/client/bookings/history/${encodeURIComponent(booking["#"])}`);
     } catch (error) {
       console.error("Error completing booking:", error);
       alert("Failed to complete booking. Please try again.");
@@ -195,35 +176,56 @@ export default function BookingDetailPage() {
   };
 
 
-
   const handleRescheduleSubmit = async (id: string, newDate: string, newTime: string, location?: string) => {
     if (!booking) return;
     await rescheduleBooking(id, newDate, newTime);
     await refreshBookings();
   };
 
-  // Show loading state
-  if (loading) {
+  // Show loading state with skeleton
+  if (loading || !booking) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-[#111111] to-[#050505] text-white/70">
-        <CricketLoader size={60} />
-        <div className="text-lg mt-4">Loading booking...</div>
+      <div className="flex flex-col min-h-screen bg-gradient-to-b from-[#111111] via-[#0b0b0b] to-[#050505] text-white">
+        <div className="animate-pulse">
+          {/* Header Skeleton */}
+          <div className="fixed top-0 left-0 right-0 z-30 bg-[#0F0F0F]/95 backdrop-blur-md border-b border-white/5">
+            <div className="container mx-auto px-4 py-3">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-white/10"></div>
+                <div className="space-y-2">
+                  <div className="h-4 w-32 bg-white/10 rounded"></div>
+                  <div className="h-3 w-24 bg-white/5 rounded"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Content Skeleton */}
+          <div className="pt-[80px] px-4">
+            <div className="max-w-4xl mx-auto space-y-6">
+              <div className="h-48 bg-white/5 rounded-2xl"></div>
+              <div className="h-64 bg-white/5 rounded-2xl"></div>
+              <div className="h-32 bg-white/5 rounded-2xl"></div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
 
-  if (!booking) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-[#111111] to-[#050505] text-white/70">
-        <div className="text-lg">Booking not found.</div>
-        <Button className="mt-4 bg-purple-600 hover:bg-purple-700" onClick={() => router.back()}>
-          Go Back
-        </Button>
-      </div>
-    );
-  }
 
-  const statusLabel = statusCopy[booking.status] ?? booking.status;
+
+  const categoryLabel = (booking.category === 'General' || !booking.category) ? 'Freelancer' : booking.category;
+  const statusUpper = (booking.status || '').toUpperCase();
+  let statusLabel = statusCopy[booking.status];
+
+  if (statusUpper === 'COMPLETED_BY_CLIENT') {
+    statusLabel = `Waiting for ${categoryLabel}`;
+  } else if (statusUpper === 'COMPLETED_BY_FREELANCER') {
+    statusLabel = "Action Required";
+  } else if (!statusLabel) {
+    statusLabel = booking.status;
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-[#111111] via-[#0b0b0b] to-[#050505] text-white">
@@ -246,12 +248,18 @@ export default function BookingDetailPage() {
 
               <div className="ml-3">
                 <h1 className="text-lg font-semibold text-white">{booking["#"]}</h1>
-                <p className="text-white/50 text-xs">{statusLabel}</p>
+                <p className={`text-xs ${statusUpper === 'COMPLETED_BY_FREELANCER'
+                  ? 'text-red-400 font-medium'
+                  : statusUpper === 'COMPLETED_BY_CLIENT'
+                    ? 'text-amber-400 font-medium'
+                    : 'text-white/50'
+                  }`}>
+                  {statusLabel}
+                </p>
               </div>
             </div>
 
             <div className="flex items-center gap-2">
-              {/* Chat Button Removed */}
               <Button
                 variant="ghost"
                 size="sm"
@@ -272,6 +280,29 @@ export default function BookingDetailPage() {
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto pt-[64px] pb-[88px]">
+
+        {/* New Status Banners */}
+        {statusUpper === 'COMPLETED_BY_CLIENT' && (
+          <div className="bg-amber-500/10 border-b border-amber-500/20 px-4 py-3">
+            <div className="flex items-center gap-3 container max-w-4xl mx-auto">
+              <Clock className="w-5 h-5 text-amber-400 flex-shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-amber-300">Waiting for {categoryLabel}</p>
+                <p className="text-xs text-amber-400/70">You have marked this job as complete. Waiting for the {categoryLabel.toLowerCase()} to confirm.</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {statusUpper === 'COMPLETED_BY_FREELANCER' && (
+          <div className="bg-orange-500/10 border-b border-orange-500/20 px-4 py-3">
+            <div className="flex items-center gap-3 container max-w-4xl mx-auto">
+              <AlertTriangle className="w-5 h-5 text-orange-400 flex-shrink-0" />
+              <p className="text-sm text-orange-300">{categoryLabel} has marked this job as complete. Please confirm completion to finish.</p>
+            </div>
+          </div>
+        )}
+
         <div className="relative bg-gradient-to-br from-purple-500/10 via-purple-500/5 to-transparent">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(168,85,247,0.25),transparent_60%)]" />
           <div className="relative px-4 py-10">
@@ -290,7 +321,7 @@ export default function BookingDetailPage() {
                   className="cursor-pointer group"
                   onClick={() => booking.freelancerId && router.push(`/client/freelancer/${booking.freelancerId}?viewOnly=true`)}
                 >
-                  <p className="text-sm text-white/60">Coach</p>
+                  <p className="text-sm text-white/60">{categoryLabel}</p>
                   <h2 className="text-2xl font-semibold text-white">{booking.provider}</h2>
                   <div className="mt-2 flex items-center gap-4 text-xs text-white/60">
                     <span className="flex items-center gap-1">
@@ -400,7 +431,7 @@ export default function BookingDetailPage() {
                   </svg>
                 </div>
                 <h3 className="text-lg font-semibold text-white mb-2">Your Verification Code</h3>
-                <p className="text-sm text-white/60 mb-4">Share this code with your coach at the venue to start the session</p>
+                <p className="text-sm text-white/60 mb-4">Share this code with your {categoryLabel.toLowerCase()} at the venue to start the session</p>
                 <div className="flex justify-center gap-3 mb-4">
                   {booking.otp.split('').map((digit, idx) => (
                     <div key={idx} className="w-14 h-14 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center shadow-lg">
@@ -514,51 +545,62 @@ export default function BookingDetailPage() {
 
       {/* Action Bar */}
       <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-white/10 bg-[#111111]/95 backdrop-blur-md px-4 py-4">
-        {booking.status === 'ongoing' ? (
-          <div className="grid grid-cols-2 gap-3">
+        {/* COMPLETED_BY_CLIENT: Waiting for Freelancer */}
+        {statusUpper === 'COMPLETED_BY_CLIENT' ? (
+          <Button
+            className="w-full bg-amber-600/50 hover:bg-amber-600/50 text-white cursor-not-allowed"
+            disabled
+          >
+            <Clock className="mr-2 h-4 w-4" />
+            Waiting for {categoryLabel} Review
+          </Button>
+        ) :
+          /* ONGOING OR COMPLETED_BY_FREELANCER: Can mark complete */
+          (statusUpper === 'ONGOING' || statusUpper === 'COMPLETED_BY_FREELANCER') ? (
+            <div className="grid grid-cols-2 gap-3">
+              <Button
+                variant="outline"
+                className="border-white/20 bg-white/5 text-red-400 hover:bg-white/10 hover:text-red-300"
+                onClick={handleCancelBooking}
+              >
+                <X className="mr-2 h-4 w-4" />
+                Cancel
+              </Button>
+              <Button
+                className="bg-green-600 hover:bg-green-700 text-white"
+                onClick={handleMarkComplete}
+              >
+                <CheckCircle className="mr-2 h-4 w-4" />
+                Mark Complete
+              </Button>
+            </div>
+          ) : booking.status === 'confirmed' ? (
+            <div className="grid grid-cols-2 gap-3">
+              <Button
+                variant="outline"
+                className="border-white/20 bg-white/5 text-red-400 hover:bg-white/10 hover:text-red-300"
+                onClick={handleCancelBooking}
+              >
+                <X className="mr-2 h-4 w-4" />
+                Cancel
+              </Button>
+              <Button
+                className="bg-purple-600 hover:bg-purple-700"
+                onClick={() => setShowRescheduleModal(true)}
+              >
+                <Calendar className="mr-2 h-4 w-4" />
+                Reschedule
+              </Button>
+            </div>
+          ) : (
             <Button
-              variant="outline"
-              className="border-white/20 bg-white/5 text-red-400 hover:bg-white/10 hover:text-red-300"
-              onClick={handleCancelBooking}
-            >
-              <X className="mr-2 h-4 w-4" />
-              Cancel
-            </Button>
-            <Button
-              className="bg-green-600 hover:bg-green-700 text-white"
-              onClick={handleMarkComplete}
-            >
-              <CheckCircle className="mr-2 h-4 w-4" />
-              Mark Complete
-            </Button>
-          </div>
-        ) : booking.status === 'confirmed' ? (
-          <div className="grid grid-cols-2 gap-3">
-            <Button
-              variant="outline"
-              className="border-white/20 bg-white/5 text-red-400 hover:bg-white/10 hover:text-red-300"
-              onClick={handleCancelBooking}
-            >
-              <X className="mr-2 h-4 w-4" />
-              Cancel
-            </Button>
-            <Button
-              className="bg-purple-600 hover:bg-purple-700"
+              className="w-full bg-purple-600 hover:bg-purple-700"
               onClick={() => setShowRescheduleModal(true)}
             >
               <Calendar className="mr-2 h-4 w-4" />
-              Reschedule
+              Reschedule session
             </Button>
-          </div>
-        ) : (
-          <Button
-            className="w-full bg-purple-600 hover:bg-purple-700"
-            onClick={() => setShowRescheduleModal(true)}
-          >
-            <Calendar className="mr-2 h-4 w-4" />
-            Reschedule session
-          </Button>
-        )}
+          )}
       </div>
 
       {/* Cancel Booking Full Page */}
@@ -633,7 +675,7 @@ export default function BookingDetailPage() {
                       </div>
                       <div className="border-t border-gray-600/30 pt-3 mt-3">
                         <div className="text-center space-y-1">
-                          <p className="text-sm text-gray-400">Coach</p>
+                          <p className="text-sm text-gray-400">{categoryLabel}</p>
                           <p className="text-lg font-medium text-white">{booking?.provider}</p>
                         </div>
                       </div>
@@ -741,7 +783,7 @@ export default function BookingDetailPage() {
                     <div className="space-y-1">
                       <h1 className="text-xl font-bold text-white">Mark as Complete</h1>
                       <p className="text-gray-400 text-sm leading-relaxed max-w-sm mx-auto">
-                        Please rate your experience with this coach and provide feedback.
+                        Please rate your experience with this {categoryLabel.toLowerCase()} and provide feedback.
                       </p>
                     </div>
                   </div>
@@ -762,7 +804,7 @@ export default function BookingDetailPage() {
                       </div>
                       <div className="border-t border-gray-600/30 pt-3 mt-3">
                         <div className="text-center space-y-1">
-                          <p className="text-sm text-gray-400">Coach</p>
+                          <p className="text-sm text-gray-400">{categoryLabel}</p>
                           <p className="text-lg font-medium text-white">{booking?.provider}</p>
                         </div>
                       </div>

@@ -58,7 +58,11 @@ export async function GET(
             phone: true,
           }
         },
-        service: true, // Include service details for job info
+        service: {
+          include: {
+            category: true // Include category to get the actual category name
+          }
+        },
       }
     })
 
@@ -143,7 +147,19 @@ export async function GET(
           id: booking.id,
           title: booking.service?.title || 'Unknown Job',
           description: booking.service?.description || '',
-          status: booking.status === 'PENDING' ? 'OPEN' : booking.status === 'CONFIRMED' ? 'OPEN' : booking.status === 'ONGOING' ? 'STARTED' : booking.status,
+          status: (() => {
+            const statusLower = booking.status.toLowerCase();
+            console.log('[API /jobs/[id]] Mapping status for booking:', booking.id, 'originalStatus:', booking.status, 'statusLower:', statusLower);
+
+            if (statusLower === 'pending') return 'open';
+            if (statusLower === 'confirmed') return 'open';
+            if (statusLower === 'ongoing') return 'started';
+            // Preserve marked statuses as lowercase
+            if (statusLower === 'completed_by_client') return 'completed_by_client';
+            if (statusLower === 'completed_by_freelancer') return 'completed_by_freelancer';
+            // Return as-is from database for other statuses
+            return booking.status;
+          })(),
           payment: booking.totalPrice,
           location: booking.location,
           date: booking.scheduledAt ? booking.scheduledAt.toISOString() : null,
@@ -162,7 +178,7 @@ export async function GET(
           },
           otp: otp,
           clientId: booking.clientId,
-          category: 'Services', // Generic category
+          category: booking.service?.category?.name || 'Services', // Use actual category name
           workMode: 'On-site', // Default or derive
           experience: 'N/A',
           skills: '', // Or derive from service tags
@@ -275,9 +291,29 @@ export async function PUT(
       // JobDashboard checks 'started' (mapped from 'ongoing').
 
       if (isBooking && status === 'started') {
-        updateData.status = 'ongoing'; // Client page expects 'ongoing'
+        updateData.status = 'ONGOING'; // Use UPPERCASE for consistency
+      } else if (status === 'completed' && isBooking) {
+        // Handle completion for bookings with marked status logic
+        const currentStatus = (isBooking.status || '').toUpperCase();
+
+        // Check if client has already marked it complete
+        if (currentStatus === 'COMPLETED_BY_CLIENT') {
+          // Both parties completed - set to COMPLETED
+          updateData.status = 'COMPLETED';
+          console.log('[Jobs API] Both parties completed, setting COMPLETED');
+        } else {
+          // Only freelancer marking complete - set to COMPLETED_BY_FREELANCER
+          updateData.status = 'COMPLETED_BY_FREELANCER';
+          console.log('[Jobs API] Freelancer marking complete, setting COMPLETED_BY_FREELANCER');
+        }
+
+        // Save freelancer's rating (rating FROM freelancer TO client)
+        if (reqFreelancerRating) {
+          updateData.clientRating = reqFreelancerRating;
+        }
       } else {
-        updateData.status = status; // Jobs use 'started'?
+        // For other statuses, convert to UPPERCASE for database consistency
+        updateData.status = status.toUpperCase();
       }
 
       if (status === 'started') {
@@ -304,12 +340,11 @@ export async function PUT(
         if (isBooking) {
           // Ensure deliveredAt is set if it wasn't before (e.g. direct complete)
           if (!isBooking.deliveredAt) updateData.deliveredAt = new Date();
-          // Booking doesn't have a specific completedAt field in schema distinct from deliveredAt? 
-          // Wait, schema has `deliveredAt` (DateTime?). 
-          // Schema doesn't have `completedAt`.
-          // Let's us `deliveredAt` for the freelancer's "Delivery" time.
-          // And we just rely on `status="completed"` for the final state.
-          // Or, we use `completedAt` if it exists on Job? Job has `completedAt`.
+
+          // If both parties have completed, set deliveredAt
+          if (updateData.status === 'COMPLETED') {
+            updateData.deliveredAt = new Date();
+          }
         }
         if (isJob) updateData.completedAt = new Date();
       }

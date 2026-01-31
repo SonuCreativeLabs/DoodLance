@@ -11,7 +11,7 @@ export interface Booking {
     image: string;
     date: string;
     time: string;
-    status: 'pending' | 'confirmed' | 'ongoing' | 'completed' | 'cancelled';
+    status: 'pending' | 'confirmed' | 'ongoing' | 'completed' | 'cancelled' | 'COMPLETED_BY_CLIENT' | 'COMPLETED_BY_FREELANCER';
     location: string;
     price: string;
     rating: number;
@@ -113,7 +113,7 @@ export function BookingsProvider({ children }: { children: ReactNode }) {
                         rating: 0,
                         completedJobs: 0,
                         description: '',
-                        category: 'General',
+                        category: b.category || b.serviceCategory || 'Freelancer',
                         otp: b.otp,
                         completedAt: b.completedAt ? new Date(b.completedAt).toLocaleDateString() : undefined,
                         notes: b.notes,

@@ -514,6 +514,17 @@ export default function ClientHome() {
                           </div>
                         </button>
                       ))
+                  ) : error ? (
+                    <div className="w-full py-8 text-center mx-auto col-span-full flex flex-col items-center gap-2">
+                      <p className="text-red-400 text-sm font-medium">Unable to load experts</p>
+                      <p className="text-white/40 text-xs">{error}</p>
+                      <button
+                        onClick={() => refreshProfessionals(currentCoordinates?.lat, currentCoordinates?.lng)}
+                        className="mt-2 px-3 py-1 bg-white/10 hover:bg-white/20 rounded-full text-xs text-white transition-colors"
+                      >
+                        Retry
+                      </button>
+                    </div>
                   ) : (
                     <div className="w-full py-8 text-center mx-auto col-span-full">
                       <p className="text-white/60 text-sm">No experts found</p>

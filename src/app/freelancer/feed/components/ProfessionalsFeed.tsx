@@ -301,7 +301,14 @@ export default function ProfessionalsFeed({
                 </div>
                 <button
                   className="bg-gradient-to-r from-purple-600 via-purple-500 to-purple-400 text-white py-1.5 px-3 rounded-lg text-sm font-medium transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/25 hover:from-purple-700 hover:to-purple-500 relative z-20"
-                  onClick={(e) => { e.stopPropagation(); }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (handleProfessionalClick) {
+                      handleProfessionalClick(item);
+                    } else {
+                      router.push(`/client/freelancer/${item.id}`);
+                    }
+                  }}
                 >
                   <span className="relative z-10">Hire Now</span>
                 </button>

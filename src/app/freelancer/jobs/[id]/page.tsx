@@ -36,7 +36,11 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
           if (s === 'ongoing' || s === 'started') return 'started';
           if (s === 'completed') return 'completed';
           if (s === 'cancelled') return 'cancelled';
-          if (s === 'confirmed' || s === 'pending') return 'upcoming';
+          // Handle marked statuses - preserve them
+          if (s === 'completed_by_client') return 'completed_by_client';
+          if (s === 'completed_by_freelancer') return 'completed_by_freelancer';
+          if (s === 'confirmed' || s === 'pending' || s === 'open') return 'upcoming';
+          // Default to upcoming for unknown statuses
           return 'upcoming';
         })(),
         payment: Math.round(Number(data.payment || data.budget || data.price || 0) / 1.05),
