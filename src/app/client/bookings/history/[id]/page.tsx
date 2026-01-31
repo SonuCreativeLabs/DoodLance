@@ -265,21 +265,16 @@ export default function BookingHistoryDetailPage() {
                   <Star className="w-4 h-4 text-purple-300" />
                   <span>Freelancer's Feedback</span>
                 </div>
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="flex items-center gap-1">
-                    {Array.from({ length: 5 }, (_, i) => (
-                      <Star
-                        key={i}
-                        className={`w-5 h-5 ${i < (historyItem.clientRating?.stars || 0)
-                          ? 'text-yellow-400 fill-current'
-                          : 'text-gray-600'
-                          }`}
-                      />
-                    ))}
-                  </div>
-                  <span className="text-sm text-white/60">
-                    Rated {historyItem.clientRating?.stars}/5
-                  </span>
+                <div className="flex items-center gap-1 mb-2">
+                  {Array.from({ length: 5 }, (_, i) => (
+                    <Star
+                      key={i}
+                      className={`w-5 h-5 ${i < (historyItem.clientRating?.stars || 0)
+                        ? 'text-yellow-400 fill-current'
+                        : 'text-gray-600'
+                        }`}
+                    />
+                  ))}
                 </div>
                 <p className="text-sm text-white/80 italic mb-3">
                   {historyItem.clientRating?.review ? `"${historyItem.clientRating.review}"` : "No written review provided."}
