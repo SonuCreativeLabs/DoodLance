@@ -168,7 +168,7 @@ export function PersonalDetailsProvider({ children }: { children: ReactNode }) {
     try {
       setIsLoading(true); // Start loading for header
       // Fetch only user data first (lightweight, no profile fetch)
-      const userResponse = await fetch('/api/user/profile');
+      const userResponse = await fetch('/api/user/profile', { cache: 'no-store' });
       if (!userResponse.ok) {
         console.error('Failed to fetch user profile from API');
         setIsLoading(false);
@@ -218,7 +218,7 @@ export function PersonalDetailsProvider({ children }: { children: ReactNode }) {
 
     try {
       // Fetch freelancer profile from API
-      const profileResponse = await fetch('/api/freelancer/profile');
+      const profileResponse = await fetch('/api/freelancer/profile', { cache: 'no-store' });
       let profile = null;
       if (profileResponse.ok) {
         const data = await profileResponse.json();
@@ -226,7 +226,7 @@ export function PersonalDetailsProvider({ children }: { children: ReactNode }) {
       }
 
       // Also re-fetch user data for complete details
-      const userResponse = await fetch('/api/user/profile');
+      const userResponse = await fetch('/api/user/profile', { cache: 'no-store' });
       const userData = userResponse.ok ? await userResponse.json() : null;
 
       // Map all fields from both sources

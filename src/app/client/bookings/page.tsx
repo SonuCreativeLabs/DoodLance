@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { useRouter, useSearchParams } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -58,23 +58,36 @@ const BookingCard = ({ booking, showActions = true }: BookingCardProps) => {
         className="p-5 rounded-xl bg-[#1E1E1E] border border-white/5 w-full shadow-lg cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-500/40 focus:ring-offset-2 focus:ring-offset-[#111111]"
       >
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className={`text-xs font-medium px-3 py-1 rounded-full border w-fit ${booking.status === 'ongoing'
-                ? 'bg-green-500/10 text-green-400 border-green-500/20'
-                : booking.status === 'confirmed' || booking.status === 'pending'
-                  ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
-                  : 'bg-green-500/10 text-green-400 border-green-500/20' // This will actually be handled by the first check if we reorder or use explicit 'ongoing'
-                }`}>
-                {booking.status === 'ongoing' ? 'Ongoing' : (booking.status === 'confirmed' || booking.status === 'pending') ? 'Upcoming' : 'Completed'}
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+              <div className={`text-xs font-medium px-3 py-1 rounded-full border w-fit max-w-full truncate ${(() => {
+                const statusLower = (booking.status || '').toLowerCase();
+                if (statusLower === 'completed_by_client' || statusLower === 'completed_by_freelancer') {
+                  return 'bg-orange-500/10 text-orange-400 border-orange-500/20';
+                } else if (statusLower === 'ongoing') {
+                  return 'bg-green-500/10 text-green-400 border-green-500/20';
+                } else if (statusLower === 'confirmed' || statusLower === 'pending') {
+                  return 'bg-amber-500/10 text-amber-400 border-amber-500/20';
+                } else {
+                  return 'bg-gray-500/10 text-gray-400 border-gray-500/20';
+                }
+              })()}`}>
+                {(() => {
+                  const statusLower = (booking.status || '').toLowerCase();
+                  if (statusLower === 'ongoing') return 'Ongoing';
+                  if (statusLower === 'completed_by_client') return `Mark Completed by You`;
+                  if (statusLower === 'completed_by_freelancer') return `Mark Completed by Freelancer`;
+                  if (statusLower === 'confirmed' || statusLower === 'pending') return 'Upcoming';
+                  return 'Completed';
+                })()}
               </div>
               {booking.paymentMethod === 'cod' && (
-                <div className="text-xs font-medium px-2 py-1 rounded-full border bg-blue-500/10 text-blue-400 border-blue-500/20">
+                <div className="text-xs font-medium px-2 py-1 rounded-full border bg-blue-500/10 text-blue-400 border-blue-500/20 flex-shrink-0">
                   COD
                 </div>
               )}
             </div>
-            <div className="flex items-center gap-1.5 text-sm text-white/60">
+            <div className="flex items-center gap-1.5 text-sm text-white/60 flex-shrink-0">
               <span className="font-mono text-xs">{booking["#"]}</span>
             </div>
           </div>
@@ -323,10 +336,13 @@ const AcceptedProposalCard = ({ application }: { application: Application }) => 
 const HistoryCard = ({ booking }: { booking: Booking }) => {
   const router = useRouter()
   // Mocking history job for useBookAgain hook, or we need to update hook
-  const historyJobMock: HistoryJob = {
+  // Memoize to prevent re-creation loops in useBookAgain
+  // Memoize to prevent re-creation loops in useBookAgain
+  const historyJobMock: HistoryJob = useMemo(() => ({
     "#": booking["#"],
     title: booking.service,
     freelancer: {
+      id: booking.freelancerId || '',
       name: booking.provider,
       image: booking.image,
       rating: booking.rating
@@ -334,8 +350,9 @@ const HistoryCard = ({ booking }: { booking: Booking }) => {
     completedDate: booking.completedAt || booking.date,
     status: booking.status === 'completed' ? 'Completed' : 'Cancelled',
     yourRating: booking.rating,
-    earnedMoney: booking.price
-  }
+    earnedMoney: booking.price,
+    serviceId: booking.services?.[0]?.id || (booking as any).serviceId
+  }), [booking]);
 
   const { showBookAgain, setShowBookAgain, BookAgainModal } = useBookAgain(historyJobMock)
 
@@ -629,12 +646,23 @@ function BookingsPageContent() {
   const [historyFilter, setHistoryFilter] = useState(initialHistoryFilter)
 
   const [isSearchOpen, setIsSearchOpen] = useState(false)
+  const [initialLoad, setInitialLoad] = useState(true)
 
   // 🔀 Conditional hook usage: React Query (POC) OR BookingsContext (fallback)
   const bookingsFromQuery = USE_REACT_QUERY ? useBookingsQuery() : { bookings: [], loading: false, error: null, refreshBookings: async () => { } }
   const bookingsFromContext = USE_REACT_QUERY ? { bookings: [], loading: false, error: null, refreshBookings: async () => { } } : useBookings()
 
   const { bookings, loading: bookingsLoading, error: bookingsError, refreshBookings } = USE_REACT_QUERY ? bookingsFromQuery : bookingsFromContext
+
+  // Set initial load to false once we have data or an error
+  useEffect(() => {
+    if (!bookingsLoading || bookingsError || (bookings && bookings.length >= 0)) {
+      setInitialLoad(false)
+    }
+  }, [bookingsLoading, bookingsError, bookings])
+
+  // Composite loading state: show skeleton on initial load OR when actively loading
+  const isLoading = initialLoad || bookingsLoading
 
   const { applications } = useApplications()
   const { historyJobs } = useHistoryJobs()
@@ -685,7 +713,9 @@ function BookingsPageContent() {
       const bookingDate = new Date(bookingYear, bookingMonth - 1, bookingDay)
 
       if (selectedFilter === 'all') {
-        return (booking.status === 'confirmed' || booking.status === 'ongoing' || booking.status === 'pending')
+        const statusLower = (booking.status || '').toLowerCase();
+        return (statusLower === 'confirmed' || statusLower === 'ongoing' || statusLower === 'pending' ||
+          statusLower === 'completed_by_client' || statusLower === 'completed_by_freelancer')
       }
 
       if (selectedFilter === 'ongoing') {
@@ -694,9 +724,21 @@ function BookingsPageContent() {
         return datesMatch && (booking.status === 'confirmed');
       }
 
+      if (selectedFilter === 'marked') {
+        const statusLower = (booking.status || '').toLowerCase();
+        const isMarked = statusLower === 'completed_by_client' || statusLower === 'completed_by_freelancer';
+        console.log(`🔍 Checking booking ${booking["#"]} for marked filter:`, {
+          status: booking.status,
+          statusLower,
+          isMarked,
+          service: booking.service
+        });
+        return isMarked;
+      }
+
       if (selectedFilter === 'upcoming') {
         return bookingDate > today &&
-          (booking.status === 'confirmed' || booking.status === 'ongoing' || booking.status === 'pending')
+          (booking.status === 'confirmed' || booking.status === 'pending')
       }
 
       return true
@@ -727,6 +769,66 @@ function BookingsPageContent() {
     const dateB = b.completedAt ? new Date(b.completedAt) : new Date(0)
     return dateB.getTime() - dateA.getTime()
   })
+
+  // Calculate counts for active tab filters
+  const activeFilterCounts = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const counts = {
+      all: 0,
+      ongoing: 0,
+      upcoming: 0,
+      marked: 0
+    };
+
+    (bookings || []).forEach(booking => {
+      const statusLower = (booking.status || '').toLowerCase();
+
+      // All: confirmed, ongoing, pending, or marked
+      if (statusLower === 'confirmed' || statusLower === 'ongoing' || statusLower === 'pending' ||
+        statusLower === 'completed_by_client' || statusLower === 'completed_by_freelancer') {
+        counts.all++;
+      }
+
+      // Marked
+      if (statusLower === 'completed_by_client' || statusLower === 'completed_by_freelancer') {
+        counts.marked++;
+      }
+
+      // Ongoing and Upcoming require date check
+      if (booking.date) {
+        const [year, month, day] = booking.date.split('-').map(Number);
+        const bookingDate = new Date(year, month - 1, day);
+        const isToday = bookingDate.toDateString() === today.toDateString();
+
+        if (booking.status === 'ongoing' || (isToday && booking.status === 'confirmed')) {
+          counts.ongoing++;
+        }
+
+        if (bookingDate > today && (booking.status === 'confirmed' || booking.status === 'pending')) {
+          counts.upcoming++;
+        }
+      }
+    });
+
+    return counts;
+  }, [bookings]);
+
+  // Calculate counts for history tab filters
+  const historyFilterCounts = useMemo(() => {
+    const counts = { all: 0, completed: 0, cancelled: 0 };
+
+    (bookings || []).forEach(booking => {
+      if (booking.status === 'completed' || booking.status === 'cancelled') {
+        counts.all++;
+        if (booking.status === 'completed') counts.completed++;
+        if (booking.status === 'cancelled') counts.cancelled++;
+      }
+    });
+
+    return counts;
+  }, [bookings]);
 
   const toggleSearch = () => {
     setIsSearchOpen(!isSearchOpen)
@@ -840,24 +942,39 @@ function BookingsPageContent() {
               <div className="container max-w-4xl mx-auto px-4">
                 <TabsContent value="active" className="mt-2 focus-visible:outline-none focus-visible:ring-0">
                   {/* Active Tab Filters */}
-                  <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-                    {['all', 'ongoing', 'upcoming'].map((filter) => (
-                      <button
-                        key={filter}
-                        onClick={() => setSelectedFilter(filter)}
-                        className={cn(
-                          "px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all",
-                          selectedFilter === filter
-                            ? "bg-purple-500/20 text-purple-400 border border-purple-500/30"
-                            : "bg-white/5 text-white/60 border border-white/10 hover:bg-white/10"
-                        )}
-                      >
-                        {filter.charAt(0).toUpperCase() + filter.slice(1)}
-                      </button>
-                    ))}
+                  <div className="flex gap-2 mb-6 overflow-x-auto pb-2 scroll-smooth" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                    {['all', 'ongoing', 'upcoming', 'marked'].map((filter) => {
+                      const buttonRef = useRef<HTMLButtonElement>(null);
+                      return (
+                        <button
+                          key={filter}
+                          ref={buttonRef}
+                          onClick={() => {
+                            setSelectedFilter(filter);
+                            buttonRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                          }}
+                          className={cn(
+                            "px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-all flex items-center gap-1.5",
+                            selectedFilter === filter
+                              ? "bg-purple-500/20 text-purple-400 border border-purple-500/30"
+                              : "bg-white/5 text-white/60 border border-white/10 hover:bg-white/10"
+                          )}
+                        >
+                          {filter.charAt(0).toUpperCase() + filter.slice(1)}
+                          <span className={cn(
+                            "text-[10px] px-1.5 py-0.5 rounded-full min-w-[16px] text-center",
+                            selectedFilter === filter
+                              ? "bg-purple-500/30 text-purple-300"
+                              : "bg-white/10 text-white/50"
+                          )}>
+                            {activeFilterCounts[filter as keyof typeof activeFilterCounts]}
+                          </span>
+                        </button>
+                      );
+                    })}
                   </div>
                   <div className="space-y-4">
-                    {bookingsLoading ? (
+                    {isLoading ? (
                       // Show skeleton cards while loading
                       [...Array(3)].map((_, i) => (
                         <BookingCardSkeleton key={i} />
@@ -878,9 +995,7 @@ function BookingsPageContent() {
                           Retry
                         </Button>
                       </div>
-                    ) : filteredBookings.filter(booking =>
-                      booking.status === 'confirmed' || booking.status === 'ongoing' || booking.status === 'pending'
-                    ).length === 0 ? (
+                    ) : filteredBookings.length === 0 ? (
                       <div className="text-center py-12">
                         <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-white/5 flex items-center justify-center">
                           <Calendar className="w-8 h-8 text-white/40" />
@@ -904,15 +1019,13 @@ function BookingsPageContent() {
                           ))
                         }
                         {/* Active Bookings */}
-                        {filteredBookings
-                          .filter(booking => booking.status === 'confirmed' || booking.status === 'ongoing' || booking.status === 'pending')
-                          .map((booking) => (
-                            <BookingCard
-                              key={booking["#"]}
-                              booking={booking}
-                              showActions={true}
-                            />
-                          ))
+                        {filteredBookings.map((booking) => (
+                          <BookingCard
+                            key={booking["#"]}
+                            booking={booking}
+                            showActions={true}
+                          />
+                        ))
                         }
                       </>
                     )}
@@ -937,24 +1050,39 @@ function BookingsPageContent() {
 
                 <TabsContent value="history" className="mt-2 focus-visible:outline-none focus-visible:ring-0">
                   {/* History Tab Filters */}
-                  <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-                    {['all', 'completed', 'cancelled'].map((filter) => (
-                      <button
-                        key={filter}
-                        onClick={() => setHistoryFilter(filter)}
-                        className={cn(
-                          "px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all",
-                          historyFilter === filter
-                            ? "bg-purple-500/20 text-purple-400 border border-purple-500/30"
-                            : "bg-white/5 text-white/60 border border-white/10 hover:bg-white/10"
-                        )}
-                      >
-                        {filter.charAt(0).toUpperCase() + filter.slice(1)}
-                      </button>
-                    ))}
+                  <div className="flex gap-2 mb-6 overflow-x-auto pb-2 scroll-smooth" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                    {['all', 'completed', 'cancelled'].map((filter) => {
+                      const buttonRef = useRef<HTMLButtonElement>(null);
+                      return (
+                        <button
+                          key={filter}
+                          ref={buttonRef}
+                          onClick={() => {
+                            setHistoryFilter(filter);
+                            buttonRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                          }}
+                          className={cn(
+                            "px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-all flex items-center gap-1.5",
+                            historyFilter === filter
+                              ? "bg-purple-500/20 text-purple-400 border border-purple-500/30"
+                              : "bg-white/5 text-white/60 border border-white/10 hover:bg-white/10"
+                          )}
+                        >
+                          {filter.charAt(0).toUpperCase() + filter.slice(1)}
+                          <span className={cn(
+                            "text-[10px] px-1.5 py-0.5 rounded-full min-w-[16px] text-center",
+                            historyFilter === filter
+                              ? "bg-purple-500/30 text-purple-300"
+                              : "bg-white/10 text-white/50"
+                          )}>
+                            {historyFilterCounts[filter as keyof typeof historyFilterCounts]}
+                          </span>
+                        </button>
+                      );
+                    })}
                   </div>
                   <div className="space-y-4">
-                    {bookingsLoading ? (
+                    {isLoading ? (
                       // Show skeleton cards while loading
                       [...Array(3)].map((_, i) => (
                         <BookingCardSkeleton key={i} />

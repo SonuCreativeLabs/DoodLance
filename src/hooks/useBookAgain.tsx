@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useBookings } from "@/contexts/BookingsContext";
 import { RescheduleModal } from "@/components/client/bookings/RescheduleModal";
@@ -10,6 +10,7 @@ interface HistoryJobData {
     "#": string;
     title: string;
     freelancer: {
+        id: string;
         name: string;
         image: string;
         rating: number;
@@ -19,6 +20,7 @@ interface HistoryJobData {
     location?: string;
     description?: string;
     category?: string;
+    serviceId?: string;
 }
 
 interface UseBookAgainReturn {
@@ -37,11 +39,12 @@ export function useBookAgain(historyJob: HistoryJobData | null, options?: { useR
     const [showBookAgain, setShowBookAgain] = useState(false);
 
     // Create the temporary booking object for the modal
-    const tempBooking = historyJob ? {
+    const tempBooking = useMemo(() => historyJob ? {
         "#": historyJob["#"],
         service: historyJob.title,
         provider: historyJob.freelancer.name,
         image: historyJob.freelancer.image,
+        freelancerId: historyJob.freelancer.id,
         date: new Date().toISOString().split('T')[0],
         time: '10:00 AM',
         status: 'confirmed' as const,
@@ -51,7 +54,8 @@ export function useBookAgain(historyJob: HistoryJobData | null, options?: { useR
         completedJobs: historyJob.freelancer.completedJobs || 50,
         description: historyJob.description || historyJob.title,
         category: historyJob.category || 'service',
-    } : null;
+        serviceId: historyJob.serviceId,
+    } : null, [historyJob]);
 
     // Handle the book again action
     const handleBookAgain = async (_id: string, date: string, time: string, bookingLocation?: string) => {
@@ -64,13 +68,14 @@ export function useBookAgain(historyJob: HistoryJobData | null, options?: { useR
                 image: historyJob.freelancer.image,
                 date: date,
                 time: time,
-                status: 'confirmed',
+                status: 'confirmed' as const,
                 location: bookingLocation || historyJob.location || '',
                 price: historyJob.earnedMoney,
                 rating: historyJob.freelancer.rating,
                 completedJobs: historyJob.freelancer.completedJobs || 50,
                 description: historyJob.description || historyJob.title,
                 category: historyJob.category || 'service',
+                serviceId: historyJob.serviceId,
             });
 
             setShowBookAgain(false);

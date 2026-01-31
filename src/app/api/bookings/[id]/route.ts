@@ -81,10 +81,12 @@ export async function GET(
 
     const mappedBooking = {
       "#": booking.id,
+      serviceId: booking.serviceId, // Added serviceId for Book Again functionalit
       service: booking.service?.title || 'Unknown Service',
       title: booking.service?.title || 'Unknown Service',
       provider: provider?.name || 'Unknown Provider',
       freelancer: {
+        id: provider?.id || '',
         name: provider?.name || 'Unknown',
         image: provider?.avatar || "/images/avatar-placeholder.png",
         rating: profile?.rating || 0,
@@ -102,7 +104,11 @@ export async function GET(
       review: (booking as any).review || '',
       completedJobs: profile?.completedJobs || 0,
       description: booking.service?.description || '',
-      category: booking.service?.category?.name || "General",
+      category: (() => {
+        const cat = booking.service?.category?.name;
+        console.log('Debugging Category for Booking:', booking.id, 'Service:', booking.service?.title, 'CategoryObj:', booking.service?.category, 'Resolved:', cat);
+        return cat || "Freelancer";
+      })(),
       duration: (booking.duration || 60) + " mins",
       earnedMoney: `₹${booking.totalPrice}`,
       completedDate: (booking as any).deliveredAt
@@ -110,7 +116,7 @@ export async function GET(
         : (booking.scheduledAt ? new Date(booking.scheduledAt).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' }) : ''),
       cancellationNotes: booking.notes || '',
       clientRating: booking.clientRating || null,
-      yourRating: 0 // Schema has complex Json rating
+      yourRating: booking.freelancerRating || null
     };
     return NextResponse.json(mappedBooking);
 

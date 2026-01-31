@@ -10,12 +10,14 @@ import { useAuth } from '@/contexts/AuthContext'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 import { compressImage } from '@/utils/compression'
+import { usePersonalDetails } from '@/contexts/PersonalDetailsContext';
 import { ImageCropper } from '@/components/common/ImageCropper'
 
 
 export default function EditProfile() {
   const { setNavbarVisibility } = useNavbar()
   const { user, signIn } = useAuth()
+  const { updatePersonalDetails } = usePersonalDetails();
   const router = useRouter()
   const searchParams = useSearchParams()
   const returnTo = searchParams.get('returnTo') // Get the return path if exists
@@ -158,6 +160,14 @@ export default function EditProfile() {
         user.avatar = formData.avatar
       }
 
+      // Update PersonalDetailsContext (Global Sync)
+      updatePersonalDetails({
+        name: formData.name,
+        phone: formData.phone,
+        location: formData.location,
+        avatarUrl: formData.avatar
+      });
+
       // Show success state
       setSaved(true)
       toast.success("Profile updated successfully")
@@ -243,6 +253,10 @@ export default function EditProfile() {
       // Update form data with optimistic update
       setFormData(prev => ({ ...prev, avatar: publicUrl }))
       setErrors(prev => ({ ...prev, avatar: undefined })) // Clear avatar error
+
+      // Update PersonalDetailsContext (Global Sync)
+      updatePersonalDetails({ avatarUrl: publicUrl });
+
       toast.success('Profile picture uploaded!')
     } catch (error) {
       console.error('Upload error:', error)

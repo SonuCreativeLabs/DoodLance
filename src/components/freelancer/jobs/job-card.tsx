@@ -56,10 +56,14 @@ export const JobCard: React.FC<JobCardProps> = ({ job, index, onStatusChange }) 
           {/* Status and Time */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className={`${getStatusStyles(job.status).bg} ${getStatusStyles(job.status).text} text-xs font-medium px-3 py-1 rounded-full border ${getStatusStyles(job.status).border} w-fit`}>
-                {job.status === 'ongoing' || job.status === 'started' ? 'Ongoing' :
-                  job.status === 'pending' ? 'Upcoming' :
-                    job.status.charAt(0).toUpperCase() + job.status.slice(1)}
+              <div className={`${getStatusStyles(job.displayStatus || job.status).bg} ${getStatusStyles(job.displayStatus || job.status).text} text-xs font-medium px-3 py-1 rounded-full border ${getStatusStyles(job.displayStatus || job.status).border} w-fit`}>
+                {(() => {
+                  const status = job.displayStatus || job.status;
+                  if (status === 'ongoing' || status === 'started') return 'Ongoing';
+                  if (status === 'pending') return 'Upcoming';
+                  if (status === 'marked') return 'Mark Completed';
+                  return status.charAt(0).toUpperCase() + status.slice(1);
+                })()}
               </div>
             </div>
             <div className="flex items-center gap-1.5 text-sm text-white/60">
@@ -144,8 +148,8 @@ export const JobCard: React.FC<JobCardProps> = ({ job, index, onStatusChange }) 
                 <MapPin className="w-4 h-4 text-purple-400 flex-shrink-0 mt-0.5" />
                 <div>
                   <div className="text-xs text-white/40">Location</div>
-                  <div className="text-white/80 line-clamp-1">
-                    {job.location.split(',').slice(0, -1).join(',').trim() || job.location}
+                  <div className="text-white/80 line-clamp-2">
+                    {job.location}
                   </div>
                 </div>
               </div>
@@ -154,7 +158,7 @@ export const JobCard: React.FC<JobCardProps> = ({ job, index, onStatusChange }) 
               <IndianRupee className="w-4 h-4 text-purple-400 flex-shrink-0 mt-0.5" />
               <div>
                 <div className="text-xs text-white/40">Payment</div>
-                <div className="text-white/80">₹{Math.round(Number(job.payment) / 1.05)}</div>
+                <div className="text-white/80">₹{Number(job.payment).toLocaleString()}</div>
               </div>
             </div>
             <div className="flex items-start gap-2 text-white/60">

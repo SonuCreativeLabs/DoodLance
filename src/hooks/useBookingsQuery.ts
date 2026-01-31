@@ -47,6 +47,7 @@ async function fetchBookings(): Promise<Booking[]> {
             freelancerId: b.freelancerId,
             paymentMethod: b.paymentMethod,
             scheduledAt: b.scheduledAt,
+            serviceId: b.serviceId, // Added serviceId mapping
         }
     })
 

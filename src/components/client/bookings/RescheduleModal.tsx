@@ -52,10 +52,13 @@ export function RescheduleModal({ isOpen, onClose, booking, onReschedule, mode =
             setSelectedTime(booking.time)
             setIsSuccess(false)
             setLocation(booking.location || "")
+        }
+    }, [isOpen, booking?.["#"]]) // Only reset form when booking ID changes or modal opens
 
-            // Fetch availability
+    // Fetch availability separately
+    useEffect(() => {
+        if (isOpen && booking?.freelancerId) {
             const fetchAvailability = async () => {
-                if (!booking.freelancerId) return;
                 setIsLoadingAvailability(true);
                 try {
                     const res = await fetch(`/api/freelancer/availability?userId=${booking.freelancerId}`);
@@ -71,7 +74,7 @@ export function RescheduleModal({ isOpen, onClose, booking, onReschedule, mode =
             };
             fetchAvailability();
         }
-    }, [isOpen, booking])
+    }, [isOpen, booking?.freelancerId]) // Only refetch if freelancer ID changes
 
     const handleConfirm = async () => {
         if (!booking || !date || !selectedTime) return
@@ -218,7 +221,12 @@ export function RescheduleModal({ isOpen, onClose, booking, onReschedule, mode =
                         </div>
                         <div className="grid grid-cols-3 gap-2">
                             {isLoadingAvailability ? (
-                                <div className="col-span-3 text-center text-xs text-white/40 py-2">Loading availability...</div>
+                                // Skeleton Loader for Time Slots
+                                Array.from({ length: 9 }).map((_, i) => (
+                                    <div key={i} className="px-1 py-2 rounded-xl border border-white/5 bg-white/5 animate-pulse">
+                                        <div className="h-4 w-12 bg-white/10 rounded mx-auto" />
+                                    </div>
+                                ))
                             ) : TIME_SLOTS.map((time) => {
                                 const isAvailable = isTimeSlotAvailable(time)
                                 const isDisabled = !date || !isAvailable

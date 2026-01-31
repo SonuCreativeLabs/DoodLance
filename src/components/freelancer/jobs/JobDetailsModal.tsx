@@ -389,7 +389,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
     console.log('Mark complete button clicked'); // Debug log
 
     // Check if job is started
-    if (!jobStarted) {
+    if (!jobStarted && job.status !== 'started' && job.status !== 'completed_by_client') {
       alert('Please start the job first before marking it as complete.');
       return;
     }
@@ -437,12 +437,15 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
 
         // Call the parent handler to update the job status
         if (onJobUpdate) {
-          onJobUpdate(job.id, 'delivered', undefined, {
+          onJobUpdate(job.id, 'completed', undefined, {
             rating: rating,
             review: review.trim(), // Keep only the review text, not the chips
             feedbackChips: selectedChips
           });
         }
+
+        // Force a router refresh to show the completed state immediately
+        router.refresh();
 
         // Show success message
         showSuccessMessage(
@@ -482,11 +485,11 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
               </button>
               <div className="ml-3">
                 <h1 className="text-lg font-semibold text-white">
-                  {jobStarted || job.status === 'started'
-                    ? 'Ongoing Job'
-                    : job.status === 'upcoming' || job.status === 'pending'
+                  {jobStarted || job.status === 'started' || job.status === 'completed_by_client' || job.status === 'completed_by_freelancer'
+                    ? (job.status === 'completed_by_client' ? 'Action Required' : job.status === 'completed_by_freelancer' ? 'Waiting for Client' : 'Ongoing Job')
+                    : job.status === 'upcoming' || job.status === 'pending' || job.status === 'confirmed'
                       ? 'Upcoming Job'
-                      : job.status === 'completed'
+                      : job.status === 'completed' || job.status === 'delivered'
                         ? 'Completed Job'
                         : 'Cancelled Job'}
                 </h1>
@@ -502,8 +505,45 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
 
       {/* Main Content */}
       <main className="pt-20 pb-32 px-4 w-full max-w-4xl mx-auto">
+
+        {/* Status Banners for Intermediate States */}
+        {job.status === 'completed_by_freelancer' && (
+          <div className="mb-6">
+            <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0">
+                  <ClockIcon className="w-4 h-4 text-blue-400" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-sm font-medium text-blue-400 mb-1">Waiting for Client</h3>
+                  <p className="text-sm text-white/80">
+                    You have marked this job as complete. Waiting for the client to confirm.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {job.status === 'completed_by_client' && (
+          <div className="mb-6">
+            <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4">
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center flex-shrink-0">
+                  <AlertCircle className="w-4 h-4 text-amber-400" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-sm font-medium text-amber-400 mb-1">Action Required</h3>
+                  <p className="text-sm text-white/80">
+                    Client has marked this job as complete. Please confirm completion to finish the job and receive payment.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
         {/* Client Rating Section - Show prominently at top */}
-        {job.status === 'completed' && job.clientRating && (
+        {job.status === 'completed' && job.freelancerRating && (
           <div className="mb-6">
             {/* Rating Header */}
             <div className="text-center mb-4">
@@ -517,10 +557,10 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                 {[1, 2, 3, 4, 5].map((star) => (
                   <svg
                     key={star}
-                    className={`w-14 h-14 ${star <= (job.clientRating?.stars || 0) ? 'text-yellow-400 fill-current' : ''}`}
+                    className={`w-14 h-14 ${star <= (job.freelancerRating?.stars || 0) ? 'text-yellow-400 fill-current' : ''}`}
                     fill="currentColor"
                     viewBox="0 0 20 20"
-                    style={star <= (job.clientRating?.stars || 0) ? {} : { color: '#404040' }}
+                    style={star <= (job.freelancerRating?.stars || 0) ? {} : { color: '#404040' }}
                   >
                     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                   </svg>
@@ -530,23 +570,23 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
 
             {/* Star count below */}
             <p className="text-center text-lg font-bold text-white mb-4">
-              {job.clientRating?.stars} stars
+              {job.freelancerRating?.stars} stars
             </p>
 
             {/* Client feedback */}
-            {job.clientRating?.review && (
+            {job.freelancerRating?.review && (
               <p className="text-center text-sm text-gray-300 mb-4 leading-relaxed max-w-2xl mx-auto">
-                "{job.clientRating.review}"
+                "{job.freelancerRating.review}"
               </p>
             )}
 
-            {/* Client feedback chips */}
-            {job.clientRating?.feedbackChips && job.clientRating.feedbackChips.length > 0 && (
+            {/* Client feedback chips - Support both new feedbackChips and legacy chips keys */}
+            {(job.freelancerRating?.feedbackChips || (job.freelancerRating as any)?.chips) && (job.freelancerRating.feedbackChips || (job.freelancerRating as any).chips).length > 0 && (
               <div className="flex flex-wrap justify-center gap-1.5 mb-4">
-                {job.clientRating.feedbackChips.map((chip: string, index: number) => (
+                {(job.freelancerRating.feedbackChips || (job.freelancerRating as any).chips).map((chip: string, index: number) => (
                   <span
                     key={index}
-                    className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-purple-900/30 text-purple-300 border border-purple-500/30"
+                    className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-purple-900/30 text-purple-300 border border-purple-500/30"
                   >
                     {chip}
                   </span>
@@ -888,7 +928,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
         {/* Job Header */}
         <div className="mb-8">
           {/* Job Status Message - Enhanced Design */}
-          {jobStarted && (
+          {(jobStarted || job.status === 'started' || job.status === 'completed_by_client') && (
             <div className="mb-8">
               <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-green-900/20 via-green-800/10 to-emerald-900/20 border border-green-500/30 shadow-lg shadow-green-500/5 animate-in fade-in slide-in-from-top-4 duration-500">
                 {/* Background decoration */}
@@ -940,18 +980,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                       </div>
                     </div>
 
-                    {/* Right Section - Action Button */}
-                    <div className="flex-shrink-0 lg:pt-0 pt-2">
-                      <button
-                        onClick={() => setShowCompleteDialog(true)}
-                        className="w-full sm:w-auto px-6 py-2.5 rounded-lg bg-green-500/10 hover:bg-green-500/20 border border-green-500/30 text-green-300 hover:text-green-200 transition-all duration-200 text-sm font-medium flex items-center justify-center gap-2"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        Mark Complete
-                      </button>
-                    </div>
+                    {/* Button moved to fixed bottom bar */}
                   </div>
                 </div>
               </div>
@@ -1252,135 +1281,52 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* Client Rating Dropdown - Freelancer rated the client */}
-            {(job.status === 'completed' || job.status === 'delivered') && job.clientRating && (
-              <div className="relative overflow-hidden rounded-xl bg-[#111111] border border-gray-600/30 shadow-lg">
-                <button
-                  onClick={() => setShowClientRating(!showClientRating)}
-                  className="absolute top-3 right-3 z-10 p-1 rounded-full hover:bg-white/10 transition-colors"
-                >
-                  <svg
-                    className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${showClientRating ? 'rotate-180' : ''}`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-                <div className="relative p-4">
-                  <button
-                    onClick={() => setShowClientRating(!showClientRating)}
-                    className="w-full text-center mb-3 group"
-                  >
-                    <div className="text-center text-sm text-white/70 font-medium mb-2">You rated the client</div>
-                    <div className="flex items-center justify-center gap-2">
-                      <div className="flex items-center gap-2">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <svg
-                            key={star}
-                            className={`w-8 h-8 ${star <= (job.clientRating?.stars || 0) ? 'text-yellow-400 fill-current' : ''}`}
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                            style={star <= (job.clientRating?.stars || 0) ? {} : { color: '#404040' }}
-                          >
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                          </svg>
-                        ))}
-                      </div>
-                    </div>
-                  </button>
-                  {showClientRating && (
-                    <div className="animate-in slide-in-from-top-2 duration-300">
-                      <p className="text-center text-sm font-bold text-white mb-3">
-                        {job.clientRating?.stars} stars
-                      </p>
-                      {job.clientRating?.review && (
-                        <p className="text-center text-sm text-gray-300 mb-3 leading-relaxed">
-                          "{job.clientRating.review}"
-                        </p>
-                      )}
-                      {job.clientRating?.feedbackChips && job.clientRating.feedbackChips.length > 0 && (
-                        <div className="flex flex-wrap justify-center gap-1.5">
-                          {job.clientRating.feedbackChips.map((chip: string, index: number) => (
-                            <span
-                              key={index}
-                              className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-purple-900/30 text-purple-300 border border-purple-500/30"
-                            >
-                              {chip}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
 
-            {/* Freelancer Rating Dropdown - Client rated the freelancer */}
-            {job.status === 'completed' && job.freelancerRating && (
-              <div className="relative overflow-hidden rounded-xl bg-[#111111] border border-gray-600/30 shadow-lg">
-                <button
-                  onClick={() => setShowFreelancerRating(!showFreelancerRating)}
-                  className="absolute top-3 right-3 z-10 p-1 rounded-full hover:bg-white/10 transition-colors"
-                >
-                  <svg
-                    className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${showFreelancerRating ? 'rotate-180' : ''}`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-                <div className="relative p-4">
-                  <button
-                    onClick={() => setShowFreelancerRating(!showFreelancerRating)}
-                    className="w-full text-center mb-3 group"
-                  >
-                    <div className="text-center text-sm text-white/70 font-medium mb-2">Client rated you</div>
-                    <div className="flex items-center justify-center gap-2">
-                      <div className="flex items-center gap-2">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <svg
-                            key={star}
-                            className={`w-8 h-8 ${star <= (job.freelancerRating?.stars || 0) ? 'text-yellow-400 fill-current' : ''}`}
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                            style={star <= (job.freelancerRating?.stars || 0) ? {} : { color: '#404040' }}
-                          >
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                          </svg>
-                        ))}
-                      </div>
-                    </div>
-                  </button>
-                  {showFreelancerRating && (
-                    <div className="animate-in slide-in-from-top-2 duration-300">
-                      <p className="text-center text-sm font-bold text-white mb-3">
-                        {job.freelancerRating?.stars} stars
-                      </p>
-                      {job.freelancerRating?.review && (
-                        <p className="text-center text-sm text-gray-300 mb-3 leading-relaxed">
-                          "{job.freelancerRating.review}"
-                        </p>
-                      )}
-                      {job.freelancerRating?.feedbackChips && job.freelancerRating.feedbackChips.length > 0 && (
-                        <div className="flex flex-wrap justify-center gap-1.5">
-                          {job.freelancerRating.feedbackChips.map((chip: string, index: number) => (
-                            <span
-                              key={index}
-                              className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-purple-900/30 text-purple-300 border border-purple-500/30"
-                            >
-                              {chip}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )}
+            {/* Your Feedback to Client */}
+            {job.clientRating && (
+              <div className="rounded-xl bg-[#111111] border border-gray-600/30 shadow-lg p-5">
+                <h3 className="text-sm font-semibold text-white mb-3">Your Feedback to Client</h3>
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: 5 }, (_, i) => (
+                      <svg
+                        key={i}
+                        className={`w-5 h-5 ${i < (job.clientRating?.stars || 0)
+                          ? 'text-yellow-400 fill-current'
+                          : 'text-gray-600'
+                          }`}
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                      </svg>
+                    ))}
+                  </div>
+                  <span className="text-sm text-white/60">
+                    Rated {job.clientRating?.stars}/5
+                  </span>
                 </div>
+
+                {job.clientRating?.review ? (
+                  <div className="p-3 rounded-lg bg-white/5 border border-white/5 mb-3">
+                    <p className="text-sm text-white/80 italic">"{job.clientRating.review}"</p>
+                  </div>
+                ) : (
+                  <p className="text-xs text-white/50 italic mb-3">No written review provided.</p>
+                )}
+
+                {(job.clientRating?.feedbackChips || (job.clientRating as any)?.chips) && (job.clientRating.feedbackChips || (job.clientRating as any).chips).length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {(job.clientRating.feedbackChips || (job.clientRating as any).chips).map((chip: string, index: number) => (
+                      <span
+                        key={index}
+                        className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-purple-900/30 text-purple-300 border border-purple-500/30"
+                      >
+                        {chip}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
@@ -1397,7 +1343,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                 location: job.client.location,
                 freelancerAvatars: job.client.freelancerAvatars,
               } : null}
-              showCommunicationButtons={true}
+              showCommunicationButtons={job.status !== 'completed'}
               chatDisabled={true}
               onChat={() => handleChat({} as React.MouseEvent)}
               onCall={() => handleCall({} as React.MouseEvent)}
@@ -1445,41 +1391,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
               defaultExpanded={false}
             />
 
-            {/* Action Buttons - Modern Design */}
-            {(job.status === 'upcoming' || job.status === 'pending') && !jobStarted && (
-              <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#111111] to-[#0a0a0a] border border-gray-600/30 shadow-lg">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-2xl"></div>
-                <div className="relative p-5">
-                  <div className="flex items-center gap-2 mb-4">
-                    <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center">
-                      <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                      </svg>
-                    </div>
-                    <h3 className="text-sm font-semibold text-white">Ready to Start?</h3>
-                  </div>
-                  {/* OTP Info removed as per user request */}
-                  <div className="space-y-3">
-                    <button
-                      onClick={handleStartJob}
-                      className="w-full py-3 px-6 rounded-xl font-semibold bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-500 hover:to-blue-600 shadow-lg shadow-blue-600/20 hover:shadow-blue-500/30 transition-all duration-300 flex items-center justify-center gap-2 group"
-                    >
-                      <svg className="w-5 h-5 group-hover:animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                      </svg>
-                      Enter OTP & Start Job
-                    </button>
-                    <button
-                      onClick={handleCancelJob}
-                      className="w-full py-3 px-6 rounded-xl font-medium bg-transparent text-red-400 border border-red-500/20 hover:bg-red-500/10 hover:border-red-400/40 transition-all duration-300 flex items-center justify-center gap-2"
-                    >
-                      <X className="w-4 h-4" />
-                      Cancel Booking
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
+            {/* Action buttons moved to fixed bottom bar */}
 
             {/* Support Info for Started Jobs */}
             {jobStarted && (
@@ -1595,11 +1507,8 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                       <div className="border-t border-gray-600/30 pt-3">
                         <div className="text-center space-y-1">
                           <p className="text-sm text-gray-400">Payment</p>
-                          <p className="text-xl font-bold text-green-400">₹{(() => {
-                            const earningsPreview = calculateJobEarnings(job);
-                            return earningsPreview.totalEarnings.toLocaleString('en-IN');
-                          })()}</p>
-                          <p className="text-xs text-green-300/70">Payment if completed</p>
+                          <p className="text-xl font-bold text-green-400">₹{Number(job.payment).toLocaleString()}</p>
+
                         </div>
                       </div>
                     </div>
@@ -1627,37 +1536,42 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                   </div>
                 </div>
 
-                {/* Action Buttons */}
-                <div className="flex gap-3 pt-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="flex-1 h-10 border-gray-600/50 text-white/90 hover:bg-[#111111] hover:text-white hover:border-gray-500/50 transition-all duration-200"
-                    onClick={() => {
-                      setShowCancelDialog(false);
-                      setCancelNotes('');
-                    }}
-                  >
-                    Keep Job Active
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    className="flex-1 h-10 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-medium shadow-lg shadow-red-600/25 hover:shadow-red-600/40 transition-all duration-200"
-                    onClick={confirmCancelJob}
-                    disabled={!cancelNotes.trim() || isCancelling}
-                  >
-                    {isCancelling ? (
-                      <div className="flex items-center gap-2">
-                        <CricketWhiteBallSpinner className="w-5 h-5 border-red-200" />
-                        <span>Cancelling...</span>
-                      </div>
-                    ) : (
-                      'Yes, Cancel Job'
-                    )}
-                  </Button>
-                </div>
+
+                {/* Buttons moved to fixed bottom bar */}
               </div>
+            </div>
+          </div>
+
+          {/* Fixed Bottom Action Bar */}
+          <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-[#111111]/95 backdrop-blur-md px-4 py-3">
+            <div className="flex gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1 h-10 border-gray-600/50 text-white/90 hover:bg-[#111111] hover:text-white hover:border-gray-500/50 transition-all duration-200"
+                onClick={() => {
+                  setShowCancelDialog(false);
+                  setCancelNotes('');
+                }}
+              >
+                Keep Job Active
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                className="flex-1 h-10 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-medium shadow-lg shadow-red-600/25 hover:shadow-red-600/40 transition-all duration-200"
+                onClick={confirmCancelJob}
+                disabled={!cancelNotes.trim() || isCancelling}
+              >
+                {isCancelling ? (
+                  <div className="flex items-center gap-2">
+                    <CricketWhiteBallSpinner className="w-5 h-5 border-red-200" />
+                    <span>Cancelling...</span>
+                  </div>
+                ) : (
+                  'Yes, Cancel Job'
+                )}
+              </Button>
             </div>
           </div>
         </div>
@@ -1794,36 +1708,41 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex gap-3 pt-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="flex-1 h-10 border-gray-600/50 text-white/90 hover:bg-[#111111] hover:text-white hover:border-gray-500/50 transition-all duration-200"
-                    onClick={() => {
-                      setShowStartJobDialog(false);
-                      setOtpInput('');
-                      setOtpDigits(['', '', '', '']);
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="button"
-                    className="flex-1 h-10 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40 transition-all duration-200"
-                    onClick={confirmStartJob}
-                    disabled={otpDigits.some(digit => digit === '') || isStarting}
-                  >
-                    {isStarting ? (
-                      <div className="flex items-center gap-2">
-                        <CricketWhiteBallSpinner className="w-5 h-5 border-blue-200" />
-                        <span>Starting...</span>
-                      </div>
-                    ) : (
-                      'Start Job'
-                    )}
-                  </Button>
-                </div>
+                {/* Buttons moved to fixed bottom bar */}
               </div>
+            </div>
+          </div>
+
+          {/* Fixed Bottom Action Bar */}
+          <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-[#111111]/95 backdrop-blur-md px-4 py-3">
+            <div className="flex gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1 h-10 border-gray-600/50 text-white/90 hover:bg-[#111111] hover:text-white hover:border-gray-500/50 transition-all duration-200"
+                onClick={() => {
+                  setShowStartJobDialog(false);
+                  setOtpInput('');
+                  setOtpDigits(['', '', '', '']);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                className="flex-1 h-10 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40 transition-all duration-200"
+                onClick={confirmStartJob}
+                disabled={otpDigits.some(digit => digit === '') || isStarting}
+              >
+                {isStarting ? (
+                  <div className="flex items-center gap-2">
+                    <CricketWhiteBallSpinner className="w-5 h-5 border-blue-200" />
+                    <span>Starting...</span>
+                  </div>
+                ) : (
+                  'Start Job'
+                )}
+              </Button>
             </div>
           </div>
         </div>
@@ -1901,11 +1820,8 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                       <div className="border-t border-gray-600/30 pt-3">
                         <div className="text-center space-y-1">
                           <p className="text-sm text-gray-400">Payment</p>
-                          <p className="text-xl font-bold text-green-400">₹{(() => {
-                            const earningsPreview = calculateJobEarnings(job);
-                            return earningsPreview.totalEarnings.toLocaleString('en-IN');
-                          })()}</p>
-                          <p className="text-xs text-green-300/70">After all fees & taxes</p>
+                          <p className="text-xl font-bold text-green-400">₹{Number(job.payment).toLocaleString()}</p>
+
                         </div>
                       </div>
                     </div>
@@ -2014,40 +1930,85 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                   </div>
                 </div>
 
-                {/* Action Buttons */}
-                <div className="flex gap-3 pt-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="flex-1 h-10 border-gray-600/50 text-white/90 hover:bg-[#111111] hover:text-white hover:border-gray-500/50 transition-all duration-200"
-                    onClick={() => {
-                      setShowCompleteDialog(false);
-                      setReview('');
-                      setRating(0);
-                      setSelectedChips([]);
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="button"
-                    className="flex-1 h-10 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-medium shadow-lg shadow-green-600/25 hover:shadow-green-600/40 transition-all duration-200"
-                    onClick={confirmMarkComplete}
-                    disabled={rating === 0 || !review.trim() || isCompleting}
-                  >
-                    {isCompleting ? (
-                      <div className="flex items-center gap-2">
-                        <CricketWhiteBallSpinner className="w-5 h-5 border-green-200" />
-                        <span>Completing...</span>
-                      </div>
-                    ) : (
-                      'Mark as Complete'
-                    )}
-                  </Button>
-                </div>
+
+                {/* Buttons moved to fixed bottom bar */}
               </div>
             </div>
           </div>
+
+          {/* Fixed Bottom Action Bar */}
+          <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-[#111111]/95 backdrop-blur-md px-4 py-3">
+            <div className="flex gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1 h-10 border-gray-600/50 text-white/90 hover:bg-[#111111] hover:text-white hover:border-gray-500/50 transition-all duration-200"
+                onClick={() => {
+                  setShowCompleteDialog(false);
+                  setReview('');
+                  setRating(0);
+                  setSelectedChips([]);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                className="flex-1 h-10 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-medium shadow-lg shadow-green-600/25 hover:shadow-green-600/40 transition-all duration-200"
+                onClick={confirmMarkComplete}
+                disabled={rating === 0 || !review.trim() || isCompleting}
+              >
+                {isCompleting ? (
+                  <div className="flex items-center gap-2">
+                    <CricketWhiteBallSpinner className="w-5 h-5 border-green-200" />
+                    <span>Completing...</span>
+                  </div>
+                ) : (
+                  'Mark as Complete'
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Fixed Bottom Action Bar for Upcoming Jobs */}
+      {(job.status === 'upcoming' || job.status === 'pending' || job.status === 'confirmed') && !jobStarted && (
+        <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-white/10 bg-[#111111]/95 backdrop-blur-md px-4 py-3">
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              className="flex-1 h-10 border-gray-600/50 text-white/90 hover:bg-[#111111] hover:text-white hover:border-gray-500/50 transition-all duration-200"
+              onClick={handleCancelJob}
+            >
+              <X className="w-4 h-4 mr-2" />
+              Cancel
+            </Button>
+            <Button
+              className="flex-1 h-10 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40 transition-all duration-200"
+              onClick={handleStartJob}
+            >
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              Start Job
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Fixed Bottom Action Bar for Ongoing Jobs */}
+      {(job.status === 'started' || job.status === 'ongoing' || job.status === 'completed_by_client') && (
+        <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-white/10 bg-[#111111]/95 backdrop-blur-md px-4 py-3">
+          <Button
+            className="w-full h-10 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-medium shadow-lg shadow-green-600/25 hover:shadow-green-600/40 transition-all duration-200"
+            onClick={() => setShowCompleteDialog(true)}
+          >
+            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            {job.status === 'completed_by_client' ? 'Confirm Completion' : 'Mark Job Complete'}
+          </Button>
         </div>
       )}
 
