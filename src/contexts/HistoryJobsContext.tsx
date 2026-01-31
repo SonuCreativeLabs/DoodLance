@@ -6,6 +6,7 @@ export interface HistoryJob {
   "#": string;
   title: string;
   freelancer: {
+    id: string;
     name: string;
     image: string;
     rating: number;
@@ -14,6 +15,7 @@ export interface HistoryJob {
   status: string;
   yourRating: number;
   earnedMoney: string;
+  serviceId?: string;
 }
 
 interface HistoryJobsContextType {
