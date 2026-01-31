@@ -73,101 +73,118 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const shouldFetch = !user?.phone || (now - lastAuthFetch > 5 * 60 * 1000);
 
         if (shouldFetch) {
+          // Set flag immediately to prevent race conditions from multiple events
+          sessionStorage.setItem('lastAuthFetch', Date.now().toString());
+
           setTimeout(async () => {
             try {
               console.log('🔍 Fetching user data from API...');
               const response = await fetch('/api/user/profile');
 
-              if (response.ok) {
-                const data = await response.json();
-                console.log('✅ Updating user with API data:', {
-                  phone: data.phone,
-                  name: data.name
-                });
+              if (!response.ok) {
+                // If failed, clear the flag so we retry next time
+                sessionStorage.removeItem('lastAuthFetch');
+                if (response.status === 404) {
+                  console.log('👤 User not found in DB - will be created on first profile update');
+                }
+                return;
+              }
 
-                // Check if metadata is stale and needs sync (Self-healing)
-                // Only sync if this is a login event or hard refresh, and if we haven't synced recently to prevent loops
-                const isRelevantEvent = event === 'INITIAL_SESSION' || event === 'SIGNED_IN';
-                // Only consider sync if last sync was more than 5 minutes ago to be safe
-                const lastSync = parseInt(sessionStorage.getItem('lastMetadataSync') || '0');
-                const timeSinceLastSync = Date.now() - lastSync;
-                const canSync = isRelevantEvent && (timeSinceLastSync > 300000); // Debounce 5 minutes
+              const data = await response.json();
+              console.log('✅ Updating user with API data:', {
+                phone: data.phone,
+                name: data.name
+              });
 
-                if (canSync) {
-                  const metadataUpdates: any = {};
-                  let needsUpdate = false;
+              // Check if metadata is stale and needs sync (Self-healing)
+              // Only sync if this is a login event or hard refresh, and if we haven't synced recently to prevent loops
+              const isRelevantEvent = event === 'INITIAL_SESSION' || event === 'SIGNED_IN';
+              // Only consider sync if last sync was more than 5 minutes ago to be safe
+              const lastSync = parseInt(sessionStorage.getItem('lastMetadataSync') || '0');
+              const timeSinceLastSync = Date.now() - lastSync;
+              const canSync = isRelevantEvent && (timeSinceLastSync > 300000); // Debounce 5 minutes
 
-                  // Compare against session data which is the source of truth for "what is currently in the token"
-                  const currentMetadata = session.user.user_metadata || {};
+              if (canSync) {
+                const metadataUpdates: any = {};
+                let needsUpdate = false;
 
-                  if (data.name && data.name !== currentMetadata.name) {
-                    metadataUpdates.name = data.name;
-                    metadataUpdates.full_name = data.name;
-                    needsUpdate = true;
-                  }
-                  if (data.phone && data.phone !== currentMetadata.phone) {
-                    metadataUpdates.phone = data.phone;
-                    needsUpdate = true;
-                  }
-                  if (data.avatar && data.avatar !== currentMetadata.avatar) {
-                    metadataUpdates.avatar_url = data.avatar;
-                    metadataUpdates.avatar = data.avatar;
-                    needsUpdate = true;
-                  }
-                  if (data.role && data.role !== currentMetadata.role) {
-                    metadataUpdates.role = data.role
-                    needsUpdate = true;
-                  }
+                // Compare against session data which is the source of truth for "what is currently in the token"
+                const currentMetadata = session.user.user_metadata || {};
 
-                  if (needsUpdate) {
-                    console.log(`🔄 [Auth] Syncing Supabase metadata (Event: ${event}, LastSync: ${timeSinceLastSync}ms ago)...`, metadataUpdates);
-                    sessionStorage.setItem('lastMetadataSync', Date.now().toString());
-
-                    // Don't await this to avoid blocking UI
-                    supabase.auth.updateUser({
-                      data: metadataUpdates
-                    }).then(({ error }) => {
-                      if (error) {
-                        console.error('Failed to sync metadata:', error);
-                        // If rate limit, update lastSync to prevent immediate retry
-                        if (error.status === 429) {
-                          console.warn('Rate limit hit, backing off metadata sync');
-                          sessionStorage.setItem('lastMetadataSync', (Date.now() + 600000).toString()); // Backoff 10 mins
-                        }
-                      }
-                      else console.log('✅ Metadata synced successfully');
-                    });
-                  } else {
-                    console.log('✅ Metadata is up to date');
-                    // Update sync time anyway to avoid constant checking
-                    sessionStorage.setItem('lastMetadataSync', Date.now().toString());
-                  }
-                } else {
-                  if (isRelevantEvent) {
-                    console.log(`Unknown sync skipped (Debounce active: ${timeSinceLastSync}ms ago)`);
-                  }
+                if (data.name && data.name !== currentMetadata.name) {
+                  metadataUpdates.name = data.name;
+                  metadataUpdates.full_name = data.name;
+                  needsUpdate = true;
+                }
+                if (data.phone && data.phone !== currentMetadata.phone) {
+                  metadataUpdates.phone = data.phone;
+                  needsUpdate = true;
+                }
+                if (data.avatar && data.avatar !== currentMetadata.avatar) {
+                  metadataUpdates.avatar_url = data.avatar;
+                  metadataUpdates.avatar = data.avatar;
+                  needsUpdate = true;
+                }
+                if (data.role && data.role !== currentMetadata.role) {
+                  metadataUpdates.role = data.role
+                  needsUpdate = true;
                 }
 
-                setUser(prev => {
-                  if (!prev) return prev; // Should not happen if we are logged in, but safety first
-                  return {
-                    ...prev,
-                    phone: data.phone || prev.phone,
-                    name: data.name || prev.name,
-                    avatar: data.avatar || prev.avatar,
-                    profileImage: data.avatar || prev.profileImage, // Sync profile image with avatar
-                    location: data.location || prev.location,
-                    email: data.email || prev.email || '',
-                    createdAt: data.createdAt || prev.createdAt,
-                  };
-                });
+                if (needsUpdate) {
+                  console.log(`🔄 [Auth] Syncing Supabase metadata (Event: ${event}, LastSync: ${timeSinceLastSync}ms ago)...`, metadataUpdates);
+                  sessionStorage.setItem('lastMetadataSync', Date.now().toString());
 
-                sessionStorage.setItem('lastAuthFetch', Date.now().toString());
-              } else if (response.status === 404) {
-                console.log('👤 User not found in DB - will be created on first profile update');
+                  // Don't await this to avoid blocking UI
+                  supabase.auth.updateUser({
+                    data: metadataUpdates
+                  }).then(({ error }) => {
+                    if (error) {
+                      console.error('Failed to sync metadata:', error);
+                      // If rate limit, update lastSync to prevent immediate retry
+                      if (error.status === 429) {
+                        console.warn('Rate limit hit, backing off metadata sync');
+                        sessionStorage.setItem('lastMetadataSync', (Date.now() + 600000).toString()); // Backoff 10 mins
+                      }
+                    }
+                    else console.log('✅ Metadata synced successfully');
+                  });
+                } else {
+                  console.log('✅ Metadata is up to date');
+                  // Update sync time anyway to avoid constant checking
+                  sessionStorage.setItem('lastMetadataSync', Date.now().toString());
+                }
+              } else {
+                if (isRelevantEvent) {
+                  console.log(`Unknown sync skipped (Debounce active: ${timeSinceLastSync}ms ago)`);
+                }
               }
+
+              setUser(prev => {
+                // Optimization: Don't update if data hasn't changed to prevent context cascade
+                if (prev &&
+                  prev.phone === (data.phone || prev.phone) &&
+                  prev.name === (data.name || prev.name) &&
+                  prev.avatar === (data.avatar || prev.avatar) &&
+                  prev.location === (data.location || prev.location)) {
+                  return prev;
+                }
+
+                if (!prev) return prev; // Should not happen if we are logged in, but safety first
+                return {
+                  ...prev,
+                  phone: data.phone || prev.phone,
+                  name: data.name || prev.name,
+                  avatar: data.avatar || prev.avatar,
+                  profileImage: data.avatar || prev.profileImage, // Sync profile image with avatar
+                  location: data.location || prev.location,
+                  email: data.email || prev.email || '',
+                  createdAt: data.createdAt || prev.createdAt,
+                };
+              });
+
             } catch (dbError) {
               console.warn('Failed to fetch user data:', dbError);
+              sessionStorage.removeItem('lastAuthFetch'); // Allow retry on error
             }
           }, 0);
         } else {

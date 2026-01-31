@@ -177,21 +177,23 @@ export default function BookingHistoryDetailPage() {
                 >
                   <MessageSquare className="h-4 w-4 text-purple-400" />
                 </Button> */}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 w-8 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 p-0 transition-all duration-200"
-                  aria-label="Call"
-                  onClick={() => {
-                    // Use phone from freelancer data
-                    const phone = historyItem.freelancer.phone || '';
-                    if (phone) {
-                      window.location.href = `tel:${phone.replace(/\s/g, '')}`;
-                    }
-                  }}
-                >
-                  <Phone className="h-4 w-4 text-purple-400" />
-                </Button>
+                {historyItem.status !== 'completed' && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 p-0 transition-all duration-200"
+                    aria-label="Call"
+                    onClick={() => {
+                      // Use phone from freelancer data
+                      const phone = historyItem.freelancer.phone || '';
+                      if (phone) {
+                        window.location.href = `tel:${phone.replace(/\s/g, '')}`;
+                      }
+                    }}
+                  >
+                    <Phone className="h-4 w-4 text-purple-400" />
+                  </Button>
+                )}
               </div>
             )}
           </div>

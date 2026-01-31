@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { useRouter, useSearchParams } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -336,10 +336,13 @@ const AcceptedProposalCard = ({ application }: { application: Application }) => 
 const HistoryCard = ({ booking }: { booking: Booking }) => {
   const router = useRouter()
   // Mocking history job for useBookAgain hook, or we need to update hook
-  const historyJobMock: HistoryJob = {
+  // Memoize to prevent re-creation loops in useBookAgain
+  // Memoize to prevent re-creation loops in useBookAgain
+  const historyJobMock: HistoryJob = useMemo(() => ({
     "#": booking["#"],
     title: booking.service,
     freelancer: {
+      id: booking.freelancerId || '',
       name: booking.provider,
       image: booking.image,
       rating: booking.rating
@@ -347,8 +350,9 @@ const HistoryCard = ({ booking }: { booking: Booking }) => {
     completedDate: booking.completedAt || booking.date,
     status: booking.status === 'completed' ? 'Completed' : 'Cancelled',
     yourRating: booking.rating,
-    earnedMoney: booking.price
-  }
+    earnedMoney: booking.price,
+    serviceId: booking.services?.[0]?.id || (booking as any).serviceId
+  }), [booking]);
 
   const { showBookAgain, setShowBookAgain, BookAgainModal } = useBookAgain(historyJobMock)
 
@@ -950,7 +954,7 @@ function BookingsPageContent() {
                             buttonRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
                           }}
                           className={cn(
-                            "px-2.5 py-0.5 rounded-full text-xs font-medium whitespace-nowrap transition-all flex items-center gap-1.5",
+                            "px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-all flex items-center gap-1.5",
                             selectedFilter === filter
                               ? "bg-purple-500/20 text-purple-400 border border-purple-500/30"
                               : "bg-white/5 text-white/60 border border-white/10 hover:bg-white/10"
@@ -958,7 +962,7 @@ function BookingsPageContent() {
                         >
                           {filter.charAt(0).toUpperCase() + filter.slice(1)}
                           <span className={cn(
-                            "text-[10px] px-1.5 py-0.5 rounded-full",
+                            "text-[10px] px-1.5 py-0.5 rounded-full min-w-[16px] text-center",
                             selectedFilter === filter
                               ? "bg-purple-500/30 text-purple-300"
                               : "bg-white/10 text-white/50"
@@ -1058,7 +1062,7 @@ function BookingsPageContent() {
                             buttonRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
                           }}
                           className={cn(
-                            "px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap transition-all flex items-center gap-2",
+                            "px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-all flex items-center gap-1.5",
                             historyFilter === filter
                               ? "bg-purple-500/20 text-purple-400 border border-purple-500/30"
                               : "bg-white/5 text-white/60 border border-white/10 hover:bg-white/10"
@@ -1066,7 +1070,7 @@ function BookingsPageContent() {
                         >
                           {filter.charAt(0).toUpperCase() + filter.slice(1)}
                           <span className={cn(
-                            "text-xs px-1.5 py-0.5 rounded-full",
+                            "text-[10px] px-1.5 py-0.5 rounded-full min-w-[16px] text-center",
                             historyFilter === filter
                               ? "bg-purple-500/30 text-purple-300"
                               : "bg-white/10 text-white/50"

@@ -18,7 +18,7 @@ import { TopRatedExpertSkeleton } from '@/components/skeletons/TopRatedExpertSke
 
 export default function ClientHome() {
   const router = useRouter();
-  const { professionals, loading, refreshProfessionals, currentLocation, updateLocation, currentCoordinates } = useNearbyProfessionals();
+  const { professionals, loading, error, refreshProfessionals, currentLocation, updateLocation, currentCoordinates } = useNearbyProfessionals();
   const { popularServices } = usePopularServices();
   const [searchQuery, setSearchQuery] = useState("");
   const [placeholder, setPlaceholder] = useState("Search for services...");

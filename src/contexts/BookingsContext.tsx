@@ -8,6 +8,7 @@ export interface Booking {
     service: string;
     provider: string;
     freelancerId?: string;
+    serviceId?: string; // Optional service ID for API reference
     image: string;
     date: string;
     time: string;

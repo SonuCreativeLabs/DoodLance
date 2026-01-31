@@ -1343,7 +1343,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                 location: job.client.location,
                 freelancerAvatars: job.client.freelancerAvatars,
               } : null}
-              showCommunicationButtons={true}
+              showCommunicationButtons={job.status !== 'completed'}
               chatDisabled={true}
               onChat={() => handleChat({} as React.MouseEvent)}
               onCall={() => handleCall({} as React.MouseEvent)}

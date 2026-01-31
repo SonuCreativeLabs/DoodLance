@@ -81,10 +81,12 @@ export async function GET(
 
     const mappedBooking = {
       "#": booking.id,
+      serviceId: booking.serviceId, // Added serviceId for Book Again functionalit
       service: booking.service?.title || 'Unknown Service',
       title: booking.service?.title || 'Unknown Service',
       provider: provider?.name || 'Unknown Provider',
       freelancer: {
+        id: provider?.id || '',
         name: provider?.name || 'Unknown',
         image: provider?.avatar || "/images/avatar-placeholder.png",
         rating: profile?.rating || 0,
