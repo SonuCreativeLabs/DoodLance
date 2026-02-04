@@ -729,7 +729,7 @@ const ProfilePreview = memo(({
         <div className="sticky -top-1 z-50 bg-[#0f0f0f] border-b border-white/5">
           <div className="relative w-full overflow-hidden">
             <div
-              className="flex overflow-x-auto hide-scrollbar px-4 max-w-4xl mx-auto tabs-container"
+              className="flex overflow-x-auto hide-scrollbar px-4 max-w-4xl mx-auto tabs-container md:justify-center"
               ref={tabsContainerRef}
               style={{
                 scrollBehavior: 'smooth',
@@ -744,7 +744,7 @@ const ProfilePreview = memo(({
                     key={tab.id}
                     data-tab-id={tab.id}
                     onClick={(e) => handleTabClick(tab.id, e)}
-                    className={`px-4 py-3 text-xs font-medium whitespace-nowrap transition-all duration-200 relative ${isActive
+                    className={`px-4 py-3 md:px-6 md:py-4 text-xs md:text-sm font-medium whitespace-nowrap transition-all duration-200 relative ${isActive
                       ? 'text-white font-semibold'
                       : 'text-white/60 hover:text-white/90'
                       }`}

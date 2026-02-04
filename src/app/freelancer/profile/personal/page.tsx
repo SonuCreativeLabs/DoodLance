@@ -1033,8 +1033,8 @@ export default function PersonalDetailsPage() {
   return (
     <div className="min-h-screen bg-[#0F0F0F] text-white flex flex-col">
       {/* Sticky Header */}
-      <div className="sticky top-0 z-10 bg-[#0F0F0F] border-b border-white/5 pt-2">
-        <div className="container mx-auto px-4 py-3">
+      <div className="sticky top-0 md:top-16 z-10 bg-[#0F0F0F] border-b border-white/5 pt-2">
+        <div className="container max-w-4xl mx-auto px-4 py-3">
           <div className="flex items-center">
             <Link
               href="/freelancer/profile#personal-details"
@@ -1060,7 +1060,7 @@ export default function PersonalDetailsPage() {
 
       {/* Scrollable Content */}
       <div className="flex-1 overflow-y-auto">
-        <div className="container mx-auto px-4 py-6 space-y-6">
+        <div className="container max-w-4xl mx-auto px-4 py-6 space-y-6">
           {isLoading ? (
             <div className="space-y-6">
               {/* Personal Information Skeleton */}

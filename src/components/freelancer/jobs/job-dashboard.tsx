@@ -749,17 +749,17 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
   }, []);
 
   return (
-    <div className="w-full text-foreground bg-[#111111] min-h-screen flex flex-col">
+    <div className="w-full text-foreground bg-[#111111] h-[calc(100vh-4rem)] md:h-[calc(100vh-8rem)] flex flex-col relative">
       {/* Fixed Header */}
-      <div className="fixed-header w-full bg-[#111111] fixed top-0 left-0 right-0 z-40 border-b border-gray-800">
-        <div className="w-full px-2">
+      <div className="fixed-header w-full bg-[#111111] fixed top-0 md:top-16 left-0 right-0 bottom-0 z-40 border-b border-gray-800">
+        <div className="w-full px-2 h-full flex flex-col max-w-5xl mx-auto">
           <Tabs
             value={activeTab}
             onValueChange={handleTabChange}
-            className="w-full pt-2"
+            className="w-full pt-2 flex flex-col h-full"
           >
-            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-2 py-2">
-              <TabsList className="grid w-full sm:w-auto grid-cols-2 h-12 bg-transparent p-1 gap-1">
+            <div className="flex flex-col md:flex-row justify-center items-center gap-4 py-2 flex-shrink-0">
+              <TabsList className="grid w-full sm:w-[400px] lg:w-auto grid-cols-2 h-12 bg-transparent p-1 gap-1">
                 <TabsTrigger
                   value="upcoming"
                   className="relative px-4 py-2 text-sm font-medium transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#8B66D1] data-[state=active]:to-[#9B76E1] data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-[#8B66D1]/25 data-[state=active]:rounded-lg data-[state=inactive]:text-gray-300 data-[state=inactive]:bg-transparent data-[state=inactive]:rounded-lg data-[state=inactive]:border data-[state=inactive]:border-gray-600/50"
@@ -774,8 +774,8 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
                 </TabsTrigger>
               </TabsList>
 
-              <div className={`flex items-center gap-3 ${showSearch ? 'w-full' : 'min-w-0'}`}>
-                <div className={`transition-all duration-300 ${showSearch ? 'ease-out' : 'ease-in'} ${showSearch ? 'flex-1' : 'w-10'}`}>
+              <div className={`flex items-center gap-3 w-full md:w-auto`}>
+                <div className={`transition-all duration-300 ${showSearch ? 'ease-out' : 'ease-in'} ${showSearch ? 'flex-1 md:w-64' : 'w-10'}`}>
                   {showSearch ? (
                     <div className={`relative w-full flex items-center transition-all duration-300 ease-out ${showSearch ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
                       <Search className="absolute left-3 h-4 w-4 text-gray-400" />
@@ -810,25 +810,25 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
                 </div>
 
                 {activeTab !== 'earnings' && statusOptions.length > 0 && !showSearch && (
-                  <div className="flex-shrink-0 w-80 sm:w-96">
+                  <div className="flex-1 min-w-0 md:w-auto overflow-hidden">
                     <div
                       ref={statusChipsRef}
-                      className="flex items-center gap-2 overflow-x-auto scrollbar-hide allow-horizontal-scroll"
+                      className="flex items-center gap-2 overflow-x-auto scrollbar-hide allow-horizontal-scroll pr-4"
                     >
                       {statusOptions.map((option) => (
                         <button
                           key={option.value}
                           data-value={option.value}
                           onClick={() => handleFilterChange(option.value)}
-                          className={`px-1.5 py-0.5 text-xs rounded-full border transition-colors flex items-center gap-1 flex-shrink-0 ${statusFilter === option.value
+                          className={`px-3 py-1 text-xs font-medium rounded-full border transition-colors flex items-center gap-1.5 flex-shrink-0 ${statusFilter === option.value
                             ? 'bg-[#8B66D1]/20 border-[#8B66D1]/40 text-white'
                             : 'bg-transparent border-[var(--border)] text-[var(--foreground)]/70 hover:bg-[var(--card-background)]/50'
                             }`}
                         >
                           {option.label}
-                          <span className={`text-xs px-0.5 py-0.5 rounded-full ${statusFilter === option.value
-                            ? 'text-gray-300'
-                            : 'text-gray-500'
+                          <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${statusFilter === option.value
+                            ? 'bg-[#8B66D1]/20 text-white'
+                            : 'bg-white/5 text-gray-400'
                             }`}>
                             {option.count}
                           </span>
@@ -840,7 +840,7 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
               </div>
             </div>
 
-            <div className="scrollable-content h-[calc(100vh-180px)] overflow-y-auto pt-2 pb-32 w-full scrollbar-hide">
+            <div className="scrollable-content flex-1 h-full min-h-0 overflow-y-auto pt-2 pb-32 md:pb-6 w-full scrollbar-hide">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={activeTab}
@@ -852,13 +852,13 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
                 >
                   <TabsContent value="upcoming" className="mt-0 w-full">
                     {loading ? (
-                      <div className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
                         {[...Array(3)].map((_, i) => (
                           <JobCardSkeleton key={i} />
                         ))}
                       </div>
                     ) : filteredJobs.length > 0 ? (
-                      <div className="space-y-4 w-full">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
                         {filteredJobs.map((job) => (
                           <JobCard
                             key={job.id}

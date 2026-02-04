@@ -231,7 +231,7 @@ export default function BookingDetailPage() {
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-[#111111] via-[#0b0b0b] to-[#050505] text-white">
       {/* Header */}
       <div className="fixed top-0 left-0 right-0 z-30 bg-[#0F0F0F]/95 backdrop-blur-md border-b border-white/5">
-        <div className="container mx-auto px-4 py-3">
+        <div className="container max-w-3xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               <Button
@@ -284,7 +284,7 @@ export default function BookingDetailPage() {
         {/* New Status Banners */}
         {statusUpper === 'COMPLETED_BY_CLIENT' && (
           <div className="bg-amber-500/10 border-b border-amber-500/20 px-4 py-3">
-            <div className="flex items-center gap-3 container max-w-4xl mx-auto">
+            <div className="flex items-center gap-3 container max-w-3xl mx-auto">
               <Clock className="w-5 h-5 text-amber-400 flex-shrink-0" />
               <div>
                 <p className="text-sm font-medium text-amber-300">Waiting for {categoryLabel}</p>
@@ -296,7 +296,7 @@ export default function BookingDetailPage() {
 
         {statusUpper === 'COMPLETED_BY_FREELANCER' && (
           <div className="bg-orange-500/10 border-b border-orange-500/20 px-4 py-3">
-            <div className="flex items-center gap-3 container max-w-4xl mx-auto">
+            <div className="flex items-center gap-3 container max-w-3xl mx-auto">
               <AlertTriangle className="w-5 h-5 text-orange-400 flex-shrink-0" />
               <p className="text-sm text-orange-300">{categoryLabel} has marked this job as complete. Please confirm completion to finish.</p>
             </div>
@@ -305,7 +305,7 @@ export default function BookingDetailPage() {
 
         <div className="relative bg-gradient-to-br from-purple-500/10 via-purple-500/5 to-transparent">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(168,85,247,0.25),transparent_60%)]" />
-          <div className="relative px-4 py-10">
+          <div className="relative px-4 py-10 max-w-3xl mx-auto">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
               <div className="flex items-center gap-4">
                 <Avatar
@@ -344,9 +344,9 @@ export default function BookingDetailPage() {
           </div>
         </div>
 
-        <div className="px-4 pb-24">
+        <div className="px-4 pb-24 max-w-3xl mx-auto w-full">
           {/* Info Grid */}
-          <div className="grid gap-4 md:grid-cols-3 mt-8">
+          <div className="grid gap-4 md:grid-cols-2 mt-8">
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl">
               <div className="flex items-center gap-2 text-white/70 text-sm mb-2">
                 <Calendar className="w-4 h-4 text-purple-300" />
@@ -368,7 +368,7 @@ export default function BookingDetailPage() {
             </div>
 
             <div
-              className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl cursor-pointer hover:bg-white/10 transition-colors"
+              className="md:col-span-2 rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl cursor-pointer hover:bg-white/10 transition-colors"
               onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(booking.location)}`, '_blank')}
             >
               <div className="flex items-center gap-2 text-white/70 text-sm mb-2">
@@ -545,62 +545,64 @@ export default function BookingDetailPage() {
 
       {/* Action Bar */}
       <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-white/10 bg-[#111111]/95 backdrop-blur-md px-4 py-4">
-        {/* COMPLETED_BY_CLIENT: Waiting for Freelancer */}
-        {statusUpper === 'COMPLETED_BY_CLIENT' ? (
-          <Button
-            className="w-full bg-amber-600/50 hover:bg-amber-600/50 text-white cursor-not-allowed"
-            disabled
-          >
-            <Clock className="mr-2 h-4 w-4" />
-            Waiting for {categoryLabel} Review
-          </Button>
-        ) :
-          /* ONGOING OR COMPLETED_BY_FREELANCER: Can mark complete */
-          (statusUpper === 'ONGOING' || statusUpper === 'COMPLETED_BY_FREELANCER') ? (
-            <div className="grid grid-cols-2 gap-3">
+        <div className="max-w-3xl mx-auto">
+          {/* COMPLETED_BY_CLIENT: Waiting for Freelancer */}
+          {statusUpper === 'COMPLETED_BY_CLIENT' ? (
+            <Button
+              className="w-full bg-amber-600/50 hover:bg-amber-600/50 text-white cursor-not-allowed"
+              disabled
+            >
+              <Clock className="mr-2 h-4 w-4" />
+              Waiting for {categoryLabel} Review
+            </Button>
+          ) :
+            /* ONGOING OR COMPLETED_BY_FREELANCER: Can mark complete */
+            (statusUpper === 'ONGOING' || statusUpper === 'COMPLETED_BY_FREELANCER') ? (
+              <div className="grid grid-cols-2 gap-3">
+                <Button
+                  variant="outline"
+                  className="border-white/20 bg-white/5 text-red-400 hover:bg-white/10 hover:text-red-300"
+                  onClick={handleCancelBooking}
+                >
+                  <X className="mr-2 h-4 w-4" />
+                  Cancel
+                </Button>
+                <Button
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                  onClick={handleMarkComplete}
+                >
+                  <CheckCircle className="mr-2 h-4 w-4" />
+                  Mark Complete
+                </Button>
+              </div>
+            ) : booking.status === 'confirmed' ? (
+              <div className="grid grid-cols-2 gap-3">
+                <Button
+                  variant="outline"
+                  className="border-white/20 bg-white/5 text-red-400 hover:bg-white/10 hover:text-red-300"
+                  onClick={handleCancelBooking}
+                >
+                  <X className="mr-2 h-4 w-4" />
+                  Cancel
+                </Button>
+                <Button
+                  className="bg-purple-600 hover:bg-purple-700"
+                  onClick={() => setShowRescheduleModal(true)}
+                >
+                  <Calendar className="mr-2 h-4 w-4" />
+                  Reschedule
+                </Button>
+              </div>
+            ) : (
               <Button
-                variant="outline"
-                className="border-white/20 bg-white/5 text-red-400 hover:bg-white/10 hover:text-red-300"
-                onClick={handleCancelBooking}
-              >
-                <X className="mr-2 h-4 w-4" />
-                Cancel
-              </Button>
-              <Button
-                className="bg-green-600 hover:bg-green-700 text-white"
-                onClick={handleMarkComplete}
-              >
-                <CheckCircle className="mr-2 h-4 w-4" />
-                Mark Complete
-              </Button>
-            </div>
-          ) : booking.status === 'confirmed' ? (
-            <div className="grid grid-cols-2 gap-3">
-              <Button
-                variant="outline"
-                className="border-white/20 bg-white/5 text-red-400 hover:bg-white/10 hover:text-red-300"
-                onClick={handleCancelBooking}
-              >
-                <X className="mr-2 h-4 w-4" />
-                Cancel
-              </Button>
-              <Button
-                className="bg-purple-600 hover:bg-purple-700"
+                className="w-full bg-purple-600 hover:bg-purple-700"
                 onClick={() => setShowRescheduleModal(true)}
               >
                 <Calendar className="mr-2 h-4 w-4" />
-                Reschedule
+                Reschedule session
               </Button>
-            </div>
-          ) : (
-            <Button
-              className="w-full bg-purple-600 hover:bg-purple-700"
-              onClick={() => setShowRescheduleModal(true)}
-            >
-              <Calendar className="mr-2 h-4 w-4" />
-              Reschedule session
-            </Button>
-          )}
+            )}
+        </div>
       </div>
 
       {/* Cancel Booking Full Page */}

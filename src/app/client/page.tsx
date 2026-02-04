@@ -1,6 +1,6 @@
 "use client"
 
-import { MapPin, Star, Clock, Calendar, ChevronDown, ChevronRight, ArrowRight, Copy, Check, Zap, Shield, Users, Award, TrendingUp, Heart, MessageCircle, Filter, X, Wallet, Bell, Sparkles } from 'lucide-react'
+import { MapPin, Star, Clock, Calendar, ChevronDown, ChevronRight, ArrowRight, Copy, Check, Zap, Shield, Users, Award, TrendingUp, Heart, MessageCircle, Filter, X, Wallet, Bell, Sparkles, Home, Compass } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { Input } from '@/components/ui/input'
 import ClientLayout from '@/components/layouts/client-layout'
@@ -12,12 +12,15 @@ import { LocationPickerModal } from '@/components/client/LocationPickerModal'
 import { useNearbyProfessionals } from '@/contexts/NearbyProfessionalsContext'
 import { usePopularServices } from '@/contexts/PopularServicesContext'
 import { useAuth } from '@/contexts/AuthContext';
+import { useRoleSwitch } from '@/contexts/RoleSwitchContext';
 import { TopRatedExpertSkeleton } from '@/components/skeletons/TopRatedExpertSkeleton'
 
 // Search functionality will be implemented with real data
 
 export default function ClientHome() {
   const router = useRouter();
+  const { switchRole } = useRoleSwitch();
+  const handleSwitchToFreelancer = () => switchRole('freelancer');
   const { professionals, loading, error, refreshProfessionals, currentLocation, updateLocation, currentCoordinates } = useNearbyProfessionals();
   const { popularServices } = usePopularServices();
   const [searchQuery, setSearchQuery] = useState("");
@@ -198,8 +201,9 @@ export default function ClientHome() {
     <ClientLayout>
       {/* Fixed Header */}
       <div className="fixed top-0 left-0 w-full z-30 bg-gradient-to-br from-[#6B46C1] via-[#4C1D95] to-[#2D1B69]">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between">
-          <div className="flex items-center space-x-3 sm:space-x-4">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between relative">
+          {/* Left Section: Avatar and Welcome */}
+          <div className="flex items-center gap-3 z-20">
             <div className="relative group">
               <div className="relative flex items-center justify-center">
                 <button
@@ -326,19 +330,56 @@ export default function ClientHome() {
 
             {/* Welcome & Location - RESTORED */}
             <div className="flex flex-col">
-              <span className="text-base sm:text-lg text-white/95 font-bold drop-shadow-sm">Good Morning, {userName}</span>
+              <span className="text-sm text-white/95 font-bold drop-shadow-sm">Good Morning, {userName}</span>
               <button
                 onClick={() => setShowLocationPicker(true)}
-                className="flex items-center gap-0.5 sm:gap-1 text-white font-semibold text-xs sm:text-sm hover:text-white/80 transition-colors"
+                className="flex items-center gap-0.5 sm:gap-1 text-white font-semibold text-xs hover:text-white/80 transition-colors justify-start"
                 title="Change Location"
               >
                 {displayLocation.city}{displayLocation.state ? `, ${displayLocation.state}` : ''}
-                <ChevronDown className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white/80" />
+                <ChevronDown className="w-3 h-3 text-white/80" />
               </button>
             </div>
           </div>
 
+          {/* Centered Navigation */}
+          <div className="hidden md:flex items-center gap-8 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
+            <Link
+              href="/client"
+              className={`px-4 py-2 rounded-xl flex items-center space-x-2 transition-all duration-300 group ${true // Home is active
+                ? "bg-black/40 text-white border border-white/20 shadow-lg"
+                : "text-white/60 hover:text-white hover:bg-black/20 border border-transparent"
+                }`}
+            >
+              <Home className="w-4 h-4 text-purple-400" />
+              <span className="text-sm font-medium">Home</span>
+            </Link>
+            <Link
+              href="/client/nearby/hirefeed"
+              className="px-4 py-2 rounded-xl flex items-center space-x-2 text-white/60 hover:text-white hover:bg-black/20 border border-transparent transition-all duration-300 group"
+            >
+              <Compass className="w-4 h-4 group-hover:text-purple-400 transition-colors duration-300" />
+              <span className="text-sm font-medium">Hire</span>
+            </Link>
+            <Link
+              href="/client/bookings"
+              className="px-4 py-2 rounded-xl flex items-center space-x-2 text-white/60 hover:text-white hover:bg-black/20 border border-transparent transition-all duration-300 group"
+            >
+              <Calendar className="w-4 h-4 group-hover:text-purple-400 transition-colors duration-300" />
+              <span className="text-sm font-medium">Bookings</span>
+            </Link>
+            {/* Earn Button */}
+            <button
+              onClick={handleSwitchToFreelancer}
+              className="px-4 py-2 rounded-xl flex items-center space-x-1.5 bg-gradient-to-r from-yellow-500 via-amber-400 to-yellow-300 text-black shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-300 border border-transparent"
+            >
+              <span className="text-sm font-bold whitespace-nowrap">Earn</span>
+              <span className="text-sm">💰</span>
+            </button>
+          </div>
+
           <div className="flex items-center space-x-3 sm:space-x-4">
+            {/* Earn Button Moved to Center */}
             {/* Wallet Hidden */}
             <div className="relative">
               <Link href="/client/notifications" className="relative group" aria-label="Notifications">
@@ -366,7 +407,7 @@ export default function ClientHome() {
           </div>
 
           {/* Hero Content */}
-          <div className="relative container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="relative container max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
             {/* Adjusted space for optimal position */}
             <div className="pt-16 sm:pt-20 md:pt-24 lg:pt-28">
               <div className="max-w-2xl mx-auto text-center">
@@ -402,7 +443,7 @@ export default function ClientHome() {
           </div>
         </div>
 
-        <div className="container mx-auto px-4 py-4 bg-[#111111] mb-8 relative z-0">
+        <div className="container max-w-5xl mx-auto px-4 py-4 bg-[#111111] mb-8 relative z-0">
           {/* Top Rated Experts Section */}
           <section className="mb-4 relative z-0">
             <div className="flex items-center justify-between mb-4">
@@ -556,8 +597,8 @@ export default function ClientHome() {
               </Link>
             </div>
             <div className="relative -mx-4">
-              <div className="overflow-x-auto scrollbar-hide px-4 pr-8">
-                <div className="flex space-x-4 pb-2">
+              <div className="overflow-x-auto scrollbar-hide px-4 pr-8 md:overflow-visible">
+                <div className="flex space-x-4 pb-2 md:grid md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 md:space-x-0 md:gap-4">
                   {popularServices.map((service) => (
                     <ServiceCard
                       key={service.id}
@@ -566,7 +607,7 @@ export default function ClientHome() {
                       image={service.image}
                       icon={service.icon}
                       providerCount={service.providerCount}
-                      className="w-[125px] flex-shrink-0"
+                      className="w-[125px] flex-shrink-0 md:w-auto"
                     />
                   ))}
                 </div>

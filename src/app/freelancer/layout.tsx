@@ -38,7 +38,8 @@ export default function FreelancerLayout({ children }: FreelancerLayoutProps) {
   const isWalletPage = pathname === '/freelancer/wallet';
 
   // Hide header and navbar for preview pages and profile sub-pages, but show navbar only on main profile page
-  const isHeaderVisible = (isPreviewPage || isNotificationsPage || isWalletPage) ? false : contextHeaderVisible;
+  const shouldShowHeader = pathname === '/freelancer' || pathname?.startsWith('/freelancer/jobs') || pathname?.startsWith('/freelancer/feed') || pathname?.startsWith('/freelancer/profile');
+  const isHeaderVisible = (isPreviewPage || isNotificationsPage || isWalletPage || isJobDetailsPage) ? false : (shouldShowHeader ? true : contextHeaderVisible);
   const isNavbarVisible = (isPreviewPage || isProfileSubPage || isJobDetailsPage || isProposalDetailsPage || isNotificationsPage || isWalletPage) ? false : (isMainProfilePage ? true : (contextNavbarVisible && navbarContextVisible));
 
   // Use a ref to track if we're in a browser environment
@@ -61,6 +62,9 @@ export default function FreelancerLayout({ children }: FreelancerLayoutProps) {
     return pathname?.startsWith(path);
   }
 
+  // Helper to check if we are on the home page (for mobile header visibility)
+  const isHomePage = pathname === '/freelancer' || pathname === '/freelancer/';
+
   const navItems = [
     { href: '/freelancer', label: 'Home', icon: Home },
     { href: '/freelancer/jobs', label: 'My Jobs', icon: Briefcase },
@@ -73,9 +77,9 @@ export default function FreelancerLayout({ children }: FreelancerLayoutProps) {
     <div className="min-h-screen bg-[#111111] text-white relative">
       {/* Header */}
       {isMounted && isHeaderVisible && !fullChatView && !isModalOpen && (
-        <nav className="fixed top-0 left-0 right-0 border-b border-white/10 bg-[#111111]/95 backdrop-blur-xl z-[100]">
-          <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-            <div className="flex items-center space-x-8">
+        <nav className={`${isHomePage ? '' : 'hidden md:block'} fixed top-0 left-0 right-0 border-b border-white/10 bg-[#111111]/95 backdrop-blur-xl z-[100]`}>
+          <div className="container mx-auto px-4 h-16 flex items-center justify-between relative">
+            <div className="flex items-center">
               <Link
                 href="/freelancer"
                 className="flex items-center ml-[5%]"
@@ -89,26 +93,29 @@ export default function FreelancerLayout({ children }: FreelancerLayoutProps) {
                   />
                 </div>
               </Link>
-              <div className="hidden md:flex items-center space-x-1">
-                {navItems.map((item) => {
-                  const Icon = item.icon
-                  const active = isActive(item.href)
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className={`px-4 py-2 rounded-xl flex items-center space-x-2 transition-all duration-300 group ${active
-                        ? 'bg-gradient-to-r from-purple-600/20 to-purple-400/20 text-white border border-purple-500/30'
-                        : 'text-white/60 hover:text-white hover:bg-white/5 border border-transparent'
-                        }`}
-                    >
-                      <Icon className={`w-4 h-4 transition-colors duration-300 ${active ? 'text-purple-400' : 'group-hover:text-purple-400'}`} />
-                      <span className="text-sm font-medium">{item.label}</span>
-                    </Link>
-                  )
-                })}
-              </div>
             </div>
+
+            {/* Centered Navigation */}
+            <div className="hidden md:flex items-center gap-8 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+              {navItems.map((item) => {
+                const Icon = item.icon
+                const active = isActive(item.href)
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`px-4 py-2 rounded-xl flex items-center space-x-2 transition-all duration-300 group ${active
+                      ? 'bg-gradient-to-r from-purple-600/20 to-purple-400/20 text-white border border-purple-500/30'
+                      : 'text-white/60 hover:text-white hover:bg-white/5 border border-transparent'
+                      }`}
+                  >
+                    <Icon className={`w-4 h-4 transition-colors duration-300 ${active ? 'text-purple-400' : 'group-hover:text-purple-400'}`} />
+                    <span className="text-sm font-medium">{item.label}</span>
+                  </Link>
+                )
+              })}
+            </div>
+
             <div className="flex items-center space-x-4">
               {/* Wallet Hidden */}
               <div className="relative">
@@ -150,7 +157,7 @@ export default function FreelancerLayout({ children }: FreelancerLayoutProps) {
           </div>
         </div>
       )}
-      {!fullChatView && !isModalOpen && isHeaderVisible && <div className="h-16" />}
+      {!fullChatView && !isModalOpen && isHeaderVisible && <div className={`${isHomePage ? '' : 'hidden md:block'} h-16`} />}
       <main className={`flex flex-col relative z-10 ${isHeaderVisible ? 'min-h-[calc(100vh-4rem)]' : 'min-h-screen'} ${isNavbarVisible ? 'pb-24 md:pb-0' : 'pb-6'}`}>
         {children}
       </main>

@@ -18,6 +18,7 @@ import { useBookAgain } from "@/hooks/useBookAgain"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClient } from '@/lib/query-client'
 import { useBookingsQuery } from '@/hooks/useBookingsQuery'
+import { FilterChip } from "@/components/client/bookings/FilterChip"
 
 
 interface BookingCardProps {
@@ -841,54 +842,15 @@ function BookingsPageContent() {
     <ClientLayout>
       <div className="min-h-screen bg-[#111111] flex flex-col">
         {/* Fixed Header */}
-        <div className="fixed top-0 left-0 right-0 z-50 bg-[#111111]">
+        <div className="fixed top-0 md:top-16 left-0 right-0 z-50 bg-[#111111]">
           <div className="container max-w-4xl mx-auto px-4 py-4">
             <div className="flex items-center justify-between relative">
-              <div className={cn(
-                "transition-all duration-200",
-                isSearchOpen ? "opacity-0" : "opacity-100"
-              )}>
+              <div>
                 <h1 className="text-2xl font-bold text-white tracking-tight">My Bookings</h1>
               </div>
               <div className="flex items-center gap-4">
-                {!isSearchOpen && (
-                  <Search
-                    className="w-5 h-5 text-white/70 cursor-pointer hover:text-white/90 transition-colors"
-                    onClick={toggleSearch}
-                  />
-                )}
+                {/* Search removed from here */}
               </div>
-
-              {/* Animated Search Input */}
-              <AnimatePresence>
-                {isSearchOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.2 }}
-                    className="absolute inset-0 flex items-center gap-2"
-                  >
-                    <div className="relative flex-1">
-                      <input
-                        type="text"
-                        placeholder="Search bookings..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full px-4 py-2 pr-10 rounded-full bg-white/5 border border-white/10 text-white placeholder-white/40 focus:outline-none focus:border-white/30 transition-colors duration-200"
-                        autoFocus
-                      />
-                      <X
-                        className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/70 cursor-pointer hover:text-white/90 transition-colors"
-                        onClick={() => {
-                          setIsSearchOpen(false);
-                          setSearchQuery('');
-                        }}
-                      />
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
             </div>
           </div>
         </div>
@@ -897,7 +859,7 @@ function BookingsPageContent() {
         <div className="flex-1 pb-24">
           <Tabs value={currentTab} onValueChange={setCurrentTab} className="h-full flex flex-col">
             {/* Fixed Tabs Header */}
-            <div className="fixed top-[64px] left-0 right-0 z-40 bg-[#111111]">
+            <div className="fixed top-[64px] md:top-32 left-0 right-0 z-40 bg-[#111111]">
               <div className="container max-w-4xl mx-auto px-4">
                 <TabsList className="flex w-full bg-transparent border-b border-white/10">
                   <TabsTrigger
@@ -938,42 +900,55 @@ function BookingsPageContent() {
             </div>
 
             {/* Scrollable Content */}
-            <div className="flex-1 overflow-y-auto pt-[120px] pb-6">
+            <div className="flex-1 overflow-y-auto pt-[120px] md:pt-[70px] pb-6">
               <div className="container max-w-4xl mx-auto px-4">
-                <TabsContent value="active" className="mt-2 focus-visible:outline-none focus-visible:ring-0">
+                <TabsContent value="active" className="mt-2 md:mt-0 focus-visible:outline-none focus-visible:ring-0">
                   {/* Active Tab Filters */}
-                  <div className="flex gap-2 mb-6 overflow-x-auto pb-2 scroll-smooth" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-                    {['all', 'ongoing', 'upcoming', 'marked'].map((filter) => {
-                      const buttonRef = useRef<HTMLButtonElement>(null);
-                      return (
+                  <div className="flex gap-2 mb-6 md:mb-4 overflow-x-auto pb-2 scroll-smooth items-center min-h-[44px]" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                    {/* Inline Search */}
+                    <div className={cn(
+                      "flex items-center transition-all duration-300 overflow-hidden",
+                      isSearchOpen ? "w-full opacity-100" : "w-8 opacity-100"
+                    )}>
+                      {isSearchOpen ? (
+                        <div className="flex items-center w-full bg-[#1E1E1E] rounded-xl border border-white/20 px-3 h-11 shadow-2xl">
+                          <Search className="w-4 h-4 text-white/50 mr-2 flex-shrink-0" />
+                          <input
+                            type="text"
+                            placeholder="Search bookings..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="bg-transparent border-none text-sm text-white placeholder-white/50 focus:outline-none w-full min-w-0 h-full"
+                            autoFocus
+                          />
+                          <X
+                            className="w-5 h-5 text-white/50 cursor-pointer hover:text-white flex-shrink-0 ml-2"
+                            onClick={() => {
+                              setIsSearchOpen(false);
+                              setSearchQuery('');
+                            }}
+                          />
+                        </div>
+                      ) : (
                         <button
-                          key={filter}
-                          ref={buttonRef}
-                          onClick={() => {
-                            setSelectedFilter(filter);
-                            buttonRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-                          }}
-                          className={cn(
-                            "px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-all flex items-center gap-1.5",
-                            selectedFilter === filter
-                              ? "bg-purple-500/20 text-purple-400 border border-purple-500/30"
-                              : "bg-white/5 text-white/60 border border-white/10 hover:bg-white/10"
-                          )}
+                          onClick={() => setIsSearchOpen(true)}
+                          className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center border border-white/10 hover:bg-white/10 transition-colors flex-shrink-0"
                         >
-                          {filter.charAt(0).toUpperCase() + filter.slice(1)}
-                          <span className={cn(
-                            "text-[10px] px-1.5 py-0.5 rounded-full min-w-[16px] text-center",
-                            selectedFilter === filter
-                              ? "bg-purple-500/30 text-purple-300"
-                              : "bg-white/10 text-white/50"
-                          )}>
-                            {activeFilterCounts[filter as keyof typeof activeFilterCounts]}
-                          </span>
+                          <Search className="w-4 h-4 text-white/70" />
                         </button>
-                      );
-                    })}
+                      )}
+                    </div>
+                    {!isSearchOpen && ['all', 'ongoing', 'upcoming', 'marked'].map((filter) => (
+                      <FilterChip
+                        key={filter}
+                        label={filter}
+                        count={activeFilterCounts[filter as keyof typeof activeFilterCounts]}
+                        isSelected={selectedFilter === filter}
+                        onClick={() => setSelectedFilter(filter)}
+                      />
+                    ))}
                   </div>
-                  <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {isLoading ? (
                       // Show skeleton cards while loading
                       [...Array(3)].map((_, i) => (
@@ -1050,38 +1025,51 @@ function BookingsPageContent() {
 
                 <TabsContent value="history" className="mt-2 focus-visible:outline-none focus-visible:ring-0">
                   {/* History Tab Filters */}
-                  <div className="flex gap-2 mb-6 overflow-x-auto pb-2 scroll-smooth" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-                    {['all', 'completed', 'cancelled'].map((filter) => {
-                      const buttonRef = useRef<HTMLButtonElement>(null);
-                      return (
+                  <div className="flex gap-2 mb-6 overflow-x-auto pb-2 scroll-smooth items-center min-h-[44px]" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                    {/* Inline Search */}
+                    <div className={cn(
+                      "flex items-center transition-all duration-300 overflow-hidden",
+                      isSearchOpen ? "w-full opacity-100" : "w-8 opacity-100"
+                    )}>
+                      {isSearchOpen ? (
+                        <div className="flex items-center w-full bg-[#1E1E1E] rounded-xl border border-white/20 px-3 h-11 shadow-2xl">
+                          <Search className="w-4 h-4 text-white/50 mr-2 flex-shrink-0" />
+                          <input
+                            type="text"
+                            placeholder="Search bookings..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="bg-transparent border-none text-sm text-white placeholder-white/50 focus:outline-none w-full min-w-0 h-full"
+                            autoFocus
+                          />
+                          <X
+                            className="w-5 h-5 text-white/50 cursor-pointer hover:text-white flex-shrink-0 ml-2"
+                            onClick={() => {
+                              setIsSearchOpen(false);
+                              setSearchQuery('');
+                            }}
+                          />
+                        </div>
+                      ) : (
                         <button
-                          key={filter}
-                          ref={buttonRef}
-                          onClick={() => {
-                            setHistoryFilter(filter);
-                            buttonRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-                          }}
-                          className={cn(
-                            "px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-all flex items-center gap-1.5",
-                            historyFilter === filter
-                              ? "bg-purple-500/20 text-purple-400 border border-purple-500/30"
-                              : "bg-white/5 text-white/60 border border-white/10 hover:bg-white/10"
-                          )}
+                          onClick={() => setIsSearchOpen(true)}
+                          className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center border border-white/10 hover:bg-white/10 transition-colors flex-shrink-0"
                         >
-                          {filter.charAt(0).toUpperCase() + filter.slice(1)}
-                          <span className={cn(
-                            "text-[10px] px-1.5 py-0.5 rounded-full min-w-[16px] text-center",
-                            historyFilter === filter
-                              ? "bg-purple-500/30 text-purple-300"
-                              : "bg-white/10 text-white/50"
-                          )}>
-                            {historyFilterCounts[filter as keyof typeof historyFilterCounts]}
-                          </span>
+                          <Search className="w-4 h-4 text-white/70" />
                         </button>
-                      );
-                    })}
+                      )}
+                    </div>
+                    {!isSearchOpen && ['all', 'completed', 'cancelled'].map((filter) => (
+                      <FilterChip
+                        key={filter}
+                        label={filter}
+                        count={historyFilterCounts[filter as keyof typeof historyFilterCounts]}
+                        isSelected={historyFilter === filter}
+                        onClick={() => setHistoryFilter(filter)}
+                      />
+                    ))}
                   </div>
-                  <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {isLoading ? (
                       // Show skeleton cards while loading
                       [...Array(3)].map((_, i) => (

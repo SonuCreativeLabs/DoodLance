@@ -33,7 +33,11 @@ export async function GET(request: Request) {
             include: {
                 user: {
                     include: {
-                        services: true,
+                        services: {
+                            where: {
+                                isActive: true
+                            }
+                        },
                         bankAccount: true
                     }
                 },

@@ -32,7 +32,7 @@ export default function JobsPage({ searchParams: initialSearchParams }: PageProp
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="container max-w-screen-xl mx-auto px-4 pb-24 pt-0"
+        className="container max-w-screen-xl mx-auto px-4 pb-24 md:pb-0 pt-0"
       >
         <div className="w-full flex flex-col items-center pt-0">
           <div className="hidden md:flex items-center gap-3">

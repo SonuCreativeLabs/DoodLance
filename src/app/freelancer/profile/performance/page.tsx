@@ -67,7 +67,7 @@ export default function PerformancePage() {
     <div className="min-h-screen bg-[#0F0F0F] text-white flex flex-col">
       {/* Sticky Header */}
       <div className="sticky top-0 z-10 bg-[#0F0F0F] border-b border-white/5">
-        <div className="container mx-auto px-4 py-3">
+        <div className="container max-w-4xl mx-auto px-4 py-3">
           <div className="flex items-center">
             <Link
               href="/freelancer/profile"
@@ -87,7 +87,7 @@ export default function PerformancePage() {
 
       {/* Scrollable Content */}
       <div className="flex-1 overflow-y-auto">
-        <div className="container mx-auto px-4 py-6">
+        <div className="container max-w-4xl mx-auto px-4 py-6">
           {/* Main Content with Stats */}
           {/* Main Content with Stats */}
           <div className="grid grid-cols-1 gap-6">

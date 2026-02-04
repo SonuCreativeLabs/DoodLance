@@ -211,7 +211,7 @@ export default function AvailabilityListingsPage() {
     <div className="min-h-screen bg-[#0F0F0F]">
       {/* Sticky Header */}
       <div className="sticky top-0 z-10 bg-[#0F0F0F] border-b border-white/5">
-        <div className="container mx-auto px-4 py-4">
+        <div className="container max-w-4xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               <Link
@@ -231,7 +231,7 @@ export default function AvailabilityListingsPage() {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-6">
+      <div className="container max-w-4xl mx-auto px-4 py-6">
         <div className="mb-4">
           <Button
             onClick={handleCreateNew}
@@ -243,7 +243,7 @@ export default function AvailabilityListingsPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-4 pb-8">
+      <div className="container max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-4 pb-8">
         {availabilities
           .filter(avail => avail.isActive)
           .map((availability) => (

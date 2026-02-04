@@ -111,7 +111,7 @@ export function HireBottomSheet({
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              className="fixed bottom-0 left-0 right-0 z-[9999] bg-[#1E1E1E] rounded-t-3xl max-h-[80vh] overflow-hidden flex flex-col"
+              className="fixed bottom-0 left-0 right-0 z-[9999] bg-[#1E1E1E] rounded-t-3xl max-h-[80vh] overflow-hidden flex flex-col max-w-3xl mx-auto border-x border-white/10"
             >
               {/* Header */}
               <div className="flex items-center justify-between p-6 border-b border-white/10">

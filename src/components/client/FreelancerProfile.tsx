@@ -650,7 +650,7 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                         {/* Profile Header - Using ProfileHeader component style */}
                         <section id="top" data-section="top" className="scroll-mt-20 relative overflow-hidden">
                             {/* Content Retention Watermark */}
-                            <div className="absolute top-[200px] inset-x-0 bottom-0 flex items-center justify-center opacity-[0.03] pointer-events-none select-none overflow-hidden">
+                            <div className="absolute top-[350px] inset-x-0 bottom-0 flex items-center justify-center opacity-[0.03] pointer-events-none select-none overflow-hidden">
                                 <Image
                                     src="/images/LOGOS/BAILS TG.png"
                                     alt="BAILS Background"
@@ -660,9 +660,9 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                                     priority
                                 />
                             </div>
-                            <div className="w-full bg-[#0f0f0f]">
+                            <div className="w-full max-w-4xl mx-auto bg-[#0f0f0f]">
                                 {/* Cover Photo */}
-                                <div className="relative h-48 md:h-64 w-full bg-gradient-to-r from-purple-900 to-purple-700">
+                                <div className="relative h-48 md:h-80 w-full bg-gradient-to-r from-purple-900 to-purple-700">
 
                                     <div className="absolute inset-0 w-full h-full bg-[#111111] overflow-hidden">
                                         <div className="absolute inset-0 flex items-center justify-center">
@@ -698,8 +698,8 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                                 </div>
 
                                 {/* Profile Content */}
-                                <div className="max-w-6xl mx-auto px-4 relative z-20">
-                                    <div className="flex flex-col items-center md:flex-row md:items-end md:justify-between -mt-16 mb-4 relative">
+                                <div className="max-w-4xl mx-auto px-4 relative z-20">
+                                    <div className="flex flex-col items-center -mt-16 mb-4 relative">
                                         {/* Profile Picture */}
                                         <div className="relative group">
                                             <div className="relative w-32 h-32 sm:w-40 sm:h-40 rounded-full border-4 border-[#1E1E1E] overflow-hidden bg-[#111111]">
@@ -708,12 +708,12 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                                                     <AvatarFallback>{freelancer.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
                                                 </Avatar>
                                             </div>
-                                            {/* ID Verified Badge - Mobile: left side of profile picture */}
-                                            <div className="md:hidden absolute top-[calc(50%+32px)] -translate-y-1/2 -left-28 ml-0">
+                                            {/* ID Verified Badge - Left side of profile picture */}
+                                            <div className="absolute top-[calc(50%+32px)] -translate-y-1/2 -left-28 ml-0">
                                                 <IdVerifiedBadge isVerified={!!freelancer.isVerified} />
                                             </div>
-                                            {/* Online Badge - Mobile: right side of profile picture */}
-                                            <div className="md:hidden absolute top-[calc(50%+32px)] -translate-y-1/2 left-full ml-10">
+                                            {/* Online Badge - Right side of profile picture */}
+                                            <div className="absolute top-[calc(50%+32px)] -translate-y-1/2 left-full ml-10">
                                                 <div className={`inline-flex items-center gap-1 px-2 py-1 text-[8px] font-bold border-2 shadow-lg whitespace-nowrap transform rotate-[-2deg] ${freelancer.online
                                                     ? 'bg-gradient-to-br from-green-400 to-green-600 border-green-300 text-white shadow-green-500/50 border-dashed'
                                                     : 'bg-gradient-to-br from-amber-400 to-orange-500 border-amber-300 text-white shadow-amber-500/50 border-dashed'
@@ -721,21 +721,6 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                                                     <span className="tracking-widest font-black">{freelancer.online ? 'GAME ON' : 'OFFLINE'}</span>
                                                 </div>
                                             </div>
-                                        </div>
-
-                                        {/* Online Badge - Desktop: top right corner */}
-                                        <div className="hidden md:block absolute top-8 right-3">
-                                            <div className={`inline-flex items-center gap-2 px-3 py-1.5 text-[10px] font-bold border-2 shadow-xl whitespace-nowrap transform rotate-[1deg] ${freelancer.online
-                                                ? 'bg-gradient-to-br from-green-400 to-green-600 border-green-300 text-white shadow-green-500/60 border-dashed'
-                                                : 'bg-gradient-to-br from-amber-400 to-orange-500 border-amber-300 text-white shadow-amber-500/60 border-dashed'
-                                                }`}>
-                                                <span className="tracking-widest font-black">{freelancer.online ? 'GAME ON' : 'OFFLINE'}</span>
-                                            </div>
-                                        </div>
-
-                                        {/* ID Verified Badge - Desktop: left corner of profile picture */}
-                                        <div className="hidden md:block absolute top-8 -left-28 transform rotate-[1deg]">
-                                            <IdVerifiedBadge isVerified={!!freelancer.isVerified} isDesktop={true} />
                                         </div>
                                     </div>
 
@@ -831,7 +816,7 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                                 <div className="flex items-center px-4 max-w-4xl mx-auto">
                                     {/* Tabs Container */}
                                     <div
-                                        className="flex overflow-x-auto hide-scrollbar flex-1 tabs-container"
+                                        className="flex overflow-x-auto hide-scrollbar flex-1 tabs-container sm:justify-center"
                                         ref={tabsContainerRef}
                                         style={{
                                             scrollBehavior: 'smooth',
@@ -846,7 +831,7 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                                                     key={tab.id}
                                                     data-tab-id={tab.id}
                                                     onClick={(e) => handleTabClick(tab.id, e)}
-                                                    className={`px-4 py-3 text-xs font-medium whitespace-nowrap transition-all duration-200 relative ${isActive
+                                                    className={`px-4 py-3 sm:px-6 sm:py-4 text-xs sm:text-sm font-medium whitespace-nowrap transition-all duration-200 relative ${isActive
                                                         ? 'text-white font-semibold'
                                                         : 'text-white/60 hover:text-white/90'
                                                         }`}
@@ -1337,42 +1322,44 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                     {
                         !isViewOnly && (
                             <div className="fixed bottom-0 left-0 right-0 p-4 bg-[#0F0F0F]/95 backdrop-blur-sm border-t border-white/10 z-[50]">
-                                <button
-                                    disabled={!freelancer?.online || isViewingOwnProfile}
-                                    onClick={() => {
-                                        if (!freelancer?.online || isViewingOwnProfile) return;
-                                        if (isAuthenticated && isProfileComplete) {
-                                            setIsHireBottomSheetOpen(true);
-                                        } else {
-                                            requireAuth(`hire_${freelancerId}`, {
-                                                redirectTo: pathname || window.location.pathname
-                                            });
-                                        }
-                                    }}
-                                    className={`w-full py-2.5 font-medium rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg ${isViewingOwnProfile
-                                        ? 'bg-white/10 text-white/40 cursor-not-allowed border border-white/5'
-                                        : freelancer?.online
-                                            ? 'bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-700 hover:to-purple-600'
-                                            : 'bg-white/10 text-white/40 cursor-not-allowed border border-white/5'
-                                        }`}
-                                >
-                                    {isViewingOwnProfile ? (
-                                        <>
-                                            <div className="w-4 h-4" />
-                                            This is your profile
-                                        </>
-                                    ) : freelancer?.online ? (
-                                        <>
-                                            <UserPlus className="w-4 h-4" />
-                                            {`Hire ${freelancer?.name || 'Freelancer'}`}
-                                        </>
-                                    ) : (
-                                        <>
-                                            <div className="w-4 h-4" />
-                                            Currently Unavailable
-                                        </>
-                                    )}
-                                </button>
+                                <div className="max-w-4xl mx-auto">
+                                    <button
+                                        disabled={!freelancer?.online || isViewingOwnProfile}
+                                        onClick={() => {
+                                            if (!freelancer?.online || isViewingOwnProfile) return;
+                                            if (isAuthenticated && isProfileComplete) {
+                                                setIsHireBottomSheetOpen(true);
+                                            } else {
+                                                requireAuth(`hire_${freelancerId}`, {
+                                                    redirectTo: pathname || window.location.pathname
+                                                });
+                                            }
+                                        }}
+                                        className={`w-full py-2.5 font-medium rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg ${isViewingOwnProfile
+                                            ? 'bg-white/10 text-white/40 cursor-not-allowed border border-white/5'
+                                            : freelancer?.online
+                                                ? 'bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-700 hover:to-purple-600'
+                                                : 'bg-white/10 text-white/40 cursor-not-allowed border border-white/5'
+                                            }`}
+                                    >
+                                        {isViewingOwnProfile ? (
+                                            <>
+                                                <div className="w-4 h-4" />
+                                                This is your profile
+                                            </>
+                                        ) : freelancer?.online ? (
+                                            <>
+                                                <UserPlus className="w-4 h-4" />
+                                                {`Hire ${freelancer?.name || 'Freelancer'}`}
+                                            </>
+                                        ) : (
+                                            <>
+                                                <div className="w-4 h-4" />
+                                                Currently Unavailable
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
                             </div>
                         )
                     }

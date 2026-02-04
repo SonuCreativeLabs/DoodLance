@@ -269,7 +269,7 @@ export default function CheckoutPage() {
     <div className="h-screen bg-[#0F0F0F] overflow-y-auto">
       {/* Header - Personal Details Style */}
       <div className="sticky top-0 z-10 bg-[#0F0F0F] border-b border-white/5 pt-2">
-        <div className="container mx-auto px-4 py-3">
+        <div className="container mx-auto px-4 py-3 max-w-3xl">
           <div className="flex items-center">
             <button
               onClick={() => router.back()}
@@ -287,7 +287,7 @@ export default function CheckoutPage() {
         </div>
       </div>
 
-      <div className="p-6 space-y-6 pb-8">
+      <div className="p-6 space-y-6 pb-8 max-w-3xl mx-auto">
         {/* Total Amount Display */}
         <div className="p-4 bg-gradient-to-r from-purple-600/20 to-purple-500/20 rounded-xl border border-purple-500/30">
           <div className="text-center">
