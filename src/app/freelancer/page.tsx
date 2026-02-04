@@ -174,10 +174,10 @@ export default function FreelancerHome() {
         </motion.div>
 
         {/* Earnings Cards Section */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
           {isLoadingStats ? (
             <>
-              <div className="sm:col-span-2 lg:col-span-1">
+              <div className="col-span-2 lg:col-span-1">
                 <DashboardCardSkeleton />
               </div>
               <DashboardCardSkeleton />
@@ -189,7 +189,7 @@ export default function FreelancerHome() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="bg-gradient-to-br from-[#1E1E1E] to-[#121212] rounded-2xl p-6 border border-white/10 transition-all duration-300 shadow-lg sm:col-span-2 lg:col-span-1"
+                className="bg-gradient-to-br from-[#1E1E1E] to-[#121212] rounded-2xl p-6 border border-white/10 transition-all duration-300 shadow-lg col-span-2 lg:col-span-1"
               >
                 <div className="relative">
                   <div className="flex items-center justify-between mb-4">
