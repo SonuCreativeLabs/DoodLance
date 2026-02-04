@@ -202,8 +202,8 @@ export default function AvailabilityPage() {
     return (
       <div className="min-h-screen bg-[#0F0F0F] text-white flex flex-col">
         {/* Sticky Header */}
-        <div className="sticky top-0 z-10 bg-[#0F0F0F] border-b border-white/5">
-          <div className="container mx-auto px-4 py-3">
+        <div className="sticky top-0 md:top-16 z-10 bg-[#0F0F0F] border-b border-white/5">
+          <div className="container max-w-4xl mx-auto px-4 py-3">
             <div className="flex items-center">
               <Skeleton className="h-8 w-8 rounded-full" />
               <div className="ml-3">
@@ -215,7 +215,7 @@ export default function AvailabilityPage() {
         </div>
 
         <div className="flex-1 overflow-y-auto">
-          <div className="container mx-auto px-4 py-6 space-y-6">
+          <div className="container max-w-4xl mx-auto px-4 py-6 space-y-6">
             <div className="mb-4">
               <Skeleton className="h-6 w-64 mb-2" />
               <Skeleton className="h-4 w-96" />
@@ -245,8 +245,8 @@ export default function AvailabilityPage() {
   return (
     <div className="min-h-screen bg-[#0F0F0F] text-white flex flex-col">
       {/* Sticky Header */}
-      <div className="sticky top-0 z-10 bg-[#0F0F0F] border-b border-white/5">
-        <div className="container mx-auto px-4 py-3">
+      <div className="sticky top-16 z-10 bg-[#0F0F0F] border-b border-white/5">
+        <div className="container max-w-4xl mx-auto px-4 py-3">
           <div className="flex items-center">
             <Link
               href="/freelancer/profile"
@@ -266,7 +266,7 @@ export default function AvailabilityPage() {
 
       {/* Scrollable Content */}
       <div className="flex-1 overflow-y-auto">
-        <div className="container mx-auto px-4 py-6">
+        <div className="container max-w-4xl mx-auto px-4 py-6">
 
           {/* Date Range Section */}
           <div className="mb-4">

@@ -79,8 +79,8 @@ export default function IdUploadPage() {
     return (
       <div className="min-h-screen bg-[#0F0F0F] text-white flex flex-col">
         {/* Sticky Header */}
-        <div className="sticky top-0 z-20 bg-[#0F0F0F] border-b border-white/5">
-          <div className="px-4 py-3">
+        <div className="sticky top-0 md:top-16 z-20 bg-[#0F0F0F] border-b border-white/5">
+          <div className="container max-w-4xl mx-auto px-4 py-3">
             <div className="flex items-start">
               <Skeleton className="h-8 w-8 rounded-full" />
               <div className="ml-3">
@@ -92,7 +92,7 @@ export default function IdUploadPage() {
         </div>
 
         <div className="flex-1 overflow-y-auto">
-          <div className="max-w-md mx-auto w-full px-4 py-4 space-y-8">
+          <div className="container max-w-4xl mx-auto w-full px-4 py-4 space-y-8">
             <div className="flex justify-between px-4">
               <Skeleton className="h-8 w-8 rounded-full" />
               <Skeleton className="h-8 w-8 rounded-full" />
@@ -726,10 +726,10 @@ export default function IdUploadPage() {
             value={idNumber}
             onChange={(e) => handleIdNumberChange(e.target.value)}
             className={`w-full px-3 py-2 text-sm bg-[#1E1E1E] border rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 transition-all ${idNumber && selectedIdType
-                ? idValidation.isValid
-                  ? 'border-green-500/50 focus:ring-green-500/50 focus:border-green-500'
-                  : 'border-red-500/50 focus:ring-red-500/50 focus:border-red-500'
-                : 'border-white/10 focus:ring-purple-500 focus:border-transparent'
+              ? idValidation.isValid
+                ? 'border-green-500/50 focus:ring-green-500/50 focus:border-green-500'
+                : 'border-red-500/50 focus:ring-red-500/50 focus:border-red-500'
+              : 'border-white/10 focus:ring-purple-500 focus:border-transparent'
               }`}
             placeholder={selectedIdType && idPatterns[selectedIdType] ? idPatterns[selectedIdType].placeholder : 'Enter your ID number'}
             maxLength={selectedIdType && idPatterns[selectedIdType] ? idPatterns[selectedIdType].maxLength : 50}
@@ -1027,7 +1027,7 @@ export default function IdUploadPage() {
   return (
     <div className="min-h-screen bg-[#0F0F0F] text-white flex flex-col">
       {/* Sticky Header with Description */}
-      <div className="sticky top-0 z-20 bg-[#0F0F0F] border-b border-white/5">
+      <div className="sticky top-16 z-20 bg-[#0F0F0F] border-b border-white/5">
         <div className="px-4 py-3">
           <div className="flex items-start">
             <button
@@ -1057,7 +1057,7 @@ export default function IdUploadPage() {
 
       {/* Main Content */}
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-md mx-auto w-full px-4 py-4">
+        <div className="container max-w-4xl mx-auto w-full px-4 py-4">
           {/* Centered Step Indicator */}
           <div className="mb-6">
             {renderStepIndicator()}

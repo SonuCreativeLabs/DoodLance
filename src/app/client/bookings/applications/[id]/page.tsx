@@ -468,7 +468,7 @@ export default function ApplicationDetailPage() {
             </div>
 
             {/* Profile Content */}
-            <div className="max-w-6xl mx-auto px-4 relative">
+            <div className="max-w-3xl mx-auto px-4 relative">
               <div className="flex flex-col items-center md:flex-row md:items-end md:justify-between -mt-16 mb-4 relative">
                 {/* Profile Picture */}
                 <div className="relative group">
@@ -593,7 +593,7 @@ export default function ApplicationDetailPage() {
 
           {/* Tab Navigation */}
           <div className="relative w-full overflow-hidden border-b border-white/5">
-            <div className="flex items-center px-4 max-w-4xl mx-auto">
+            <div className="flex items-center px-4 max-w-3xl mx-auto">
               <div
                 className="flex overflow-x-auto hide-scrollbar flex-1"
                 ref={tabsContainerRef}
@@ -631,7 +631,7 @@ export default function ApplicationDetailPage() {
           </div>
         </div>
 
-        <div className="w-full max-w-4xl mx-auto">
+        <div className="w-full max-w-3xl mx-auto">
           <div className="px-6 pb-32">
             <div className="space-y-8">
               {/* Application Summary Section */}

@@ -471,7 +471,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
     <div className="fixed inset-0 bg-[#0A0A0A] z-[9999] w-screen h-screen overflow-y-auto">
       {/* Header */}
       <div className="fixed top-0 left-0 right-0 z-50 bg-[#0F0F0F] border-b border-white/5">
-        <div className="container mx-auto px-4 py-3">
+        <div className="container mx-auto px-4 py-3 max-w-4xl">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               <button
@@ -1277,6 +1277,25 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
               <div className="space-y-6">
               </div>
             )}
+            {/* About the Client - Moved below Booking Details */}
+            <ClientProfile
+              client={job.client ? {
+                name: job.client.name,
+                image: job.client.image,
+                rating: job.client.rating,
+                moneySpent: job.client.moneySpent,
+                jobsCompleted: job.client.jobsCompleted,
+                freelancersWorked: job.client.freelancersWorked,
+                memberSince: job.client.memberSince,
+                location: job.client.location,
+                freelancerAvatars: job.client.freelancerAvatars,
+              } : null}
+              showCommunicationButtons={job.status !== 'completed'}
+              chatDisabled={true}
+              onChat={() => handleChat({} as React.MouseEvent)}
+              onCall={() => handleCall({} as React.MouseEvent)}
+              defaultExpanded={isClientProfileExpanded}
+            />
           </div>
 
           {/* Sidebar */}
@@ -1330,25 +1349,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
               </div>
             )}
 
-            {/* About the Client */}
-            <ClientProfile
-              client={job.client ? {
-                name: job.client.name,
-                image: job.client.image,
-                rating: job.client.rating,
-                moneySpent: job.client.moneySpent,
-                jobsCompleted: job.client.jobsCompleted,
-                freelancersWorked: job.client.freelancersWorked,
-                memberSince: job.client.memberSince,
-                location: job.client.location,
-                freelancerAvatars: job.client.freelancerAvatars,
-              } : null}
-              showCommunicationButtons={job.status !== 'completed'}
-              chatDisabled={true}
-              onChat={() => handleChat({} as React.MouseEvent)}
-              onCall={() => handleCall({} as React.MouseEvent)}
-              defaultExpanded={isClientProfileExpanded}
-            />
+
 
             {/* Safety Tips */}
             <div className="relative overflow-hidden rounded-xl bg-[#111111] border border-gray-600/30 shadow-lg">
@@ -1544,7 +1545,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
 
           {/* Fixed Bottom Action Bar */}
           <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-[#111111]/95 backdrop-blur-md px-4 py-3">
-            <div className="flex gap-3">
+            <div className="flex gap-3 max-w-3xl mx-auto">
               <Button
                 type="button"
                 variant="outline"
@@ -1581,20 +1582,22 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
       {showStartJobDialog && (
         <div className="fixed inset-0 z-50 bg-gradient-to-br from-[#111111] to-[#0a0a0a] overflow-y-auto">
           {/* Header */}
-          <div className="fixed top-0 left-0 right-0 z-50 bg-[#111111]/95 backdrop-blur-sm border-b border-gray-800/80 p-4 flex items-center">
-            <button
-              onClick={() => {
-                setShowStartJobDialog(false);
-                setOtpInput('');
-              }}
-              className="p-2 rounded-full hover:bg-white/10 transition-colors"
-              aria-label="Go back"
-            >
-              <ArrowLeft className="w-5 h-5 text-white/80" />
-            </button>
-            <div className="ml-4">
-              <div className="text-sm font-medium text-white">Job Verification</div>
-              <div className="text-xs font-mono text-white/60">ID: {job.id}</div>
+          <div className="fixed top-0 left-0 right-0 z-50 bg-[#111111]/95 backdrop-blur-sm border-b border-gray-800/80 p-4 flex items-center justify-center">
+            <div className="w-full max-w-3xl flex items-center">
+              <button
+                onClick={() => {
+                  setShowStartJobDialog(false);
+                  setOtpInput('');
+                }}
+                className="p-2 rounded-full hover:bg-white/10 transition-colors"
+                aria-label="Go back"
+              >
+                <ArrowLeft className="w-5 h-5 text-white/80" />
+              </button>
+              <div className="ml-4">
+                <div className="text-sm font-medium text-white">Job Verification</div>
+                <div className="text-xs font-mono text-white/60">ID: {job.id}</div>
+              </div>
             </div>
           </div>
 
@@ -1715,7 +1718,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
 
           {/* Fixed Bottom Action Bar */}
           <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-[#111111]/95 backdrop-blur-md px-4 py-3">
-            <div className="flex gap-3">
+            <div className="flex gap-3 max-w-3xl mx-auto">
               <Button
                 type="button"
                 variant="outline"
@@ -1750,22 +1753,24 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
       {showCompleteDialog && (
         <div className="fixed inset-0 z-50 bg-gradient-to-br from-[#111111] to-[#0a0a0a] overflow-y-auto">
           {/* Header */}
-          <div className="fixed top-0 left-0 right-0 z-50 bg-[#111111]/95 backdrop-blur-sm border-b border-gray-800/80 p-4 flex items-center">
-            <button
-              onClick={() => {
-                setShowCompleteDialog(false);
-                setReview('');
-                setRating(0);
-                setSelectedChips([]);
-              }}
-              className="p-2 rounded-full hover:bg-white/10 transition-colors"
-              aria-label="Go back"
-            >
-              <ArrowLeft className="w-5 h-5 text-white/80" />
-            </button>
-            <div className="ml-4">
-              <div className="text-sm font-medium text-white">Mark Job Complete</div>
-              <div className="text-xs font-mono text-white/60">ID: {job.id}</div>
+          <div className="fixed top-0 left-0 right-0 z-50 bg-[#111111]/95 backdrop-blur-sm border-b border-gray-800/80 p-4 flex items-center justify-center">
+            <div className="w-full max-w-3xl flex items-center">
+              <button
+                onClick={() => {
+                  setShowCompleteDialog(false);
+                  setReview('');
+                  setRating(0);
+                  setSelectedChips([]);
+                }}
+                className="p-2 rounded-full hover:bg-white/10 transition-colors"
+                aria-label="Go back"
+              >
+                <ArrowLeft className="w-5 h-5 text-white/80" />
+              </button>
+              <div className="ml-4">
+                <div className="text-sm font-medium text-white">Mark Job Complete</div>
+                <div className="text-xs font-mono text-white/60">ID: {job.id}</div>
+              </div>
             </div>
           </div>
 
@@ -1938,7 +1943,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
 
           {/* Fixed Bottom Action Bar */}
           <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-[#111111]/95 backdrop-blur-md px-4 py-3">
-            <div className="flex gap-3">
+            <div className="flex gap-3 max-w-3xl mx-auto">
               <Button
                 type="button"
                 variant="outline"
@@ -1975,7 +1980,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
       {/* Fixed Bottom Action Bar for Upcoming Jobs */}
       {(job.status === 'upcoming' || job.status === 'pending' || job.status === 'confirmed') && !jobStarted && (
         <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-white/10 bg-[#111111]/95 backdrop-blur-md px-4 py-3">
-          <div className="flex gap-3">
+          <div className="flex gap-3 max-w-4xl mx-auto">
             <Button
               variant="outline"
               className="flex-1 h-10 border-gray-600/50 text-white/90 hover:bg-[#111111] hover:text-white hover:border-gray-500/50 transition-all duration-200"
@@ -2000,15 +2005,17 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
       {/* Fixed Bottom Action Bar for Ongoing Jobs */}
       {(job.status === 'started' || job.status === 'ongoing' || job.status === 'completed_by_client') && (
         <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-white/10 bg-[#111111]/95 backdrop-blur-md px-4 py-3">
-          <Button
-            className="w-full h-10 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-medium shadow-lg shadow-green-600/25 hover:shadow-green-600/40 transition-all duration-200"
-            onClick={() => setShowCompleteDialog(true)}
-          >
-            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            {job.status === 'completed_by_client' ? 'Confirm Completion' : 'Mark Job Complete'}
-          </Button>
+          <div className="max-w-4xl mx-auto">
+            <Button
+              className="w-full h-10 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-medium shadow-lg shadow-green-600/25 hover:shadow-green-600/40 transition-all duration-200"
+              onClick={() => setShowCompleteDialog(true)}
+            >
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {job.status === 'completed_by_client' ? 'Confirm Completion' : 'Mark Job Complete'}
+            </Button>
+          </div>
         </div>
       )}
 

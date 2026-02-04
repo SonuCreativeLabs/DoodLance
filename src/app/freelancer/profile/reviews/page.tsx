@@ -17,8 +17,8 @@ export default function ReviewsPage() {
     return (
       <div className="min-h-screen bg-[#0F0F0F] text-white flex flex-col">
         {/* Sticky Header */}
-        <div className="sticky top-0 z-10 bg-[#0F0F0F] border-b border-white/5">
-          <div className="container mx-auto px-4 py-3">
+        <div className="sticky top-0 md:top-16 z-10 bg-[#0F0F0F] border-b border-white/5">
+          <div className="container max-w-4xl mx-auto px-4 py-3">
             <div className="flex items-center">
               <Link
                 href="/freelancer/profile"
@@ -39,7 +39,7 @@ export default function ReviewsPage() {
 
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto">
-          <div className="container mx-auto px-4 py-6 space-y-6">
+          <div className="container max-w-4xl mx-auto px-4 py-6 space-y-6">
             {/* Rating Summary Skeleton */}
             <div className="flex items-center justify-between w-full py-4 bg-[#1E1E1E] px-6 rounded-2xl border border-white/5">
               <div className="space-y-2">
@@ -128,7 +128,7 @@ export default function ReviewsPage() {
     <div className="min-h-screen bg-[#0F0F0F] text-white flex flex-col">
       {/* Sticky Header */}
       <div className="sticky top-0 z-10 bg-[#0F0F0F] border-b border-white/5">
-        <div className="container mx-auto px-4 py-3">
+        <div className="container max-w-4xl mx-auto px-4 py-3">
           <div className="flex items-center">
             <Link
               href="/freelancer/profile"
@@ -149,7 +149,7 @@ export default function ReviewsPage() {
 
       {/* Scrollable Content */}
       <div className="flex-1 overflow-y-auto">
-        <div className="container mx-auto px-4 py-6 space-y-6">
+        <div className="container max-w-4xl mx-auto px-4 py-6 space-y-6">
           {reviews.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
               <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4">

@@ -324,7 +324,7 @@ export default function BookingDatePage() {
     <div className="h-screen bg-[#0F0F0F] overflow-y-auto">
       {/* Header - Personal Details Style */}
       <div className="sticky top-0 z-10 bg-[#0F0F0F] border-b border-white/5 pt-2">
-        <div className="container mx-auto px-4 py-3">
+        <div className="container mx-auto px-4 py-3 max-w-3xl">
           <div className="flex items-center">
             <button
               onClick={() => router.back()}
@@ -342,7 +342,7 @@ export default function BookingDatePage() {
         </div>
       </div>
 
-      <div className="p-6 space-y-6 pb-32">
+      <div className="p-6 space-y-6 pb-32 max-w-3xl mx-auto">
         {/* Selected Services Card with Freelancer Info */}
         <div className="bg-white/5 rounded-xl border border-white/10 overflow-hidden">
           {/* Freelancer Header */}
@@ -528,23 +528,25 @@ export default function BookingDatePage() {
 
       </div>
       <div className="fixed bottom-0 left-0 right-0 p-6 bg-[#0F0F0F]/95 backdrop-blur-sm border-t border-white/10">
-        <Button
-          onClick={handleContinue}
-          disabled={!selectedDate || !selectedTimeSlot || !location.trim() || isNavigating}
-          className="w-full py-3 bg-gradient-to-r from-purple-600 to-purple-500 text-white font-medium rounded-xl hover:from-purple-700 hover:to-purple-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-        >
-          {isNavigating ? (
-            <>
-              <CricketWhiteBallSpinner className="w-4 h-4" />
-              <span>Processing...</span>
-            </>
-          ) : (
-            <>
-              <span>Continue</span>
-              <ArrowRight className="w-4 h-4" />
-            </>
-          )}
-        </Button>
+        <div className="max-w-3xl mx-auto">
+          <Button
+            onClick={handleContinue}
+            disabled={!selectedDate || !selectedTimeSlot || !location.trim() || isNavigating}
+            className="w-full py-3 bg-gradient-to-r from-purple-600 to-purple-500 text-white font-medium rounded-xl hover:from-purple-700 hover:to-purple-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            {isNavigating ? (
+              <>
+                <CricketWhiteBallSpinner className="w-4 h-4" />
+                <span>Processing...</span>
+              </>
+            ) : (
+              <>
+                <span>Continue</span>
+                <ArrowRight className="w-4 h-4" />
+              </>
+            )}
+          </Button>
+        </div>
       </div>
     </div>
   );

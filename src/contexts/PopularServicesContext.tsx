@@ -61,6 +61,22 @@ const initialPopularServices: PopularService[] = [
     providerCount: 45,
     image: '/images/Service Catagories/cricket umpire.png',
     mostBooked: true
+  },
+  {
+    id: 'scorer',
+    title: 'Scorer',
+    icon: '📝',
+    providerCount: 89,
+    image: '/images/Service Catagories/cricket scorer.png',
+    mostBooked: false
+  },
+  {
+    id: 'commentator',
+    title: 'Commentator',
+    icon: '🎙️',
+    providerCount: 12,
+    image: '/images/Service Catagories/cricket commentator.png',
+    mostBooked: false
   }
 ];
 

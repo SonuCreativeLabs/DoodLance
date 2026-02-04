@@ -26,6 +26,7 @@ import { compressImage } from '@/utils/compression';
 import { IdVerifiedBadge } from './IdVerifiedBadge';
 import { useRoleSwitch } from '@/contexts/RoleSwitchContext';
 import { Progress } from "@/components/ui/progress";
+import { cn } from "@/lib/utils";
 
 // CoverImage component defined outside the ProfileHeader component
 const CoverImage = ({ src, alt = 'Profile Cover' }: { src?: string | null, alt?: string }) => (
@@ -52,13 +53,15 @@ interface ProfileHeaderProps {
   avatarUrl?: string;
   coverImageUrl?: string;
   personalDetails?: any; // Optional override for personal details
+  compact?: boolean;
 }
 
 export function ProfileHeader({
   isPreview = false,
   avatarUrl,
   coverImageUrl,
-  personalDetails: propPersonalDetails
+  personalDetails: propPersonalDetails,
+  compact = false
 }: ProfileHeaderProps) {
   const { personalDetails: contextPersonalDetails } = usePersonalDetails();
   const { user } = useAuth();
@@ -439,9 +442,9 @@ export function ProfileHeader({
   };
 
   return (
-    <div className="relative w-full bg-[#0f0f0f] profile-header overflow-hidden">
+    <div className="relative w-full max-w-4xl mx-auto bg-[#0f0f0f] profile-header overflow-hidden">
       {/* Content Retention Watermark - Visible behind name/skills */}
-      <div className="absolute top-[200px] inset-x-0 bottom-0 flex items-center justify-center opacity-[0.03] pointer-events-none select-none overflow-hidden">
+      <div className="absolute top-[350px] inset-x-0 bottom-0 flex items-center justify-center opacity-[0.03] pointer-events-none select-none overflow-hidden">
         <Image
           src="/images/LOGOS/BAILS TG.png"
           alt="BAILS Background"
@@ -452,7 +455,7 @@ export function ProfileHeader({
         />
       </div>
       {/* Cover Photo */}
-      <div className="group relative h-48 md:h-64 w-full bg-gradient-to-r from-purple-900 to-purple-700">
+      <div className={cn("group relative h-48 sm:h-64 w-full bg-gradient-to-r from-purple-900 to-purple-700", !compact && "md:h-80")}>
         {/* Switch to Client Button - Top-right of cover */}
         {!isPreview && (
           <div className="absolute top-4 right-4 z-20">
@@ -502,8 +505,8 @@ export function ProfileHeader({
       </div>
 
       {/* Profile Content */}
-      <div className="max-w-6xl mx-auto px-4 relative z-20">
-        <div className="flex flex-col items-center md:flex-row md:items-end md:justify-between -mt-16 mb-4 relative">
+      <div className="max-w-4xl mx-auto px-4 relative z-20">
+        <div className="flex flex-col items-center -mt-16 mb-4 relative">
           {/* Profile Picture */}
           <div className="relative group">
             {/* Profile Picture */}
@@ -539,12 +542,12 @@ export function ProfileHeader({
                 </div>
               )}
             </div>
-            {/* ID Verified Badge - Mobile: left side of profile picture */}
-            <div className="md:hidden absolute top-[calc(50%+32px)] -translate-y-1/2 -left-28 ml-0">
+            {/* ID Verified Badge - Left side of profile picture */}
+            <div className="absolute top-[calc(50%+32px)] -translate-y-1/2 -left-24 ml-0">
               <IdVerifiedBadge isVerified={personalDetails.isVerified ?? false} />
             </div>
-            {/* Online/Offline Badge - Mobile: right side of profile picture */}
-            <div className="md:hidden absolute top-[calc(50%+32px)] -translate-y-1/2 left-full ml-10">
+            {/* Online/Offline Badge - Right side of profile picture */}
+            <div className="absolute top-[calc(50%+32px)] -translate-y-1/2 left-full ml-5">
               <div className={`inline-flex items-center gap-1 px-2 py-1 text-[8px] font-bold border-2 shadow-lg whitespace-nowrap transform rotate-[-2deg] ${personalDetails.online
                 ? 'bg-gradient-to-br from-green-400 to-green-600 border-green-300 text-white shadow-green-500/50 border-dashed'
                 : 'bg-gradient-to-br from-amber-400 to-orange-500 border-amber-300 text-white shadow-amber-500/50 border-dashed'
@@ -552,21 +555,6 @@ export function ProfileHeader({
                 <span className="tracking-widest font-black">{personalDetails.online ? 'GAME ON' : 'OFFLINE'}</span>
               </div>
             </div>
-          </div>
-
-          {/* Online/Offline Badge - Desktop: top right corner */}
-          <div className="hidden md:block absolute top-8 right-3">
-            <div className={`inline-flex items-center gap-2 px-3 py-1.5 text-[10px] font-bold border-2 shadow-xl whitespace-nowrap transform rotate-[1deg] ${personalDetails.online
-              ? 'bg-gradient-to-br from-green-400 to-green-600 border-green-300 text-white shadow-green-500/60 border-dashed'
-              : 'bg-gradient-to-br from-amber-400 to-orange-500 border-amber-300 text-white shadow-amber-500/60 border-dashed'
-              }`}>
-              <span className="tracking-widest font-black">{personalDetails.online ? 'GAME ON' : 'OFFLINE'}</span>
-            </div>
-          </div>
-
-          {/* ID Verified Badge - Desktop: left corner of profile picture */}
-          <div className="hidden md:block absolute top-8 -left-28 transform rotate-[1deg]">
-            <IdVerifiedBadge isVerified={personalDetails.isVerified ?? false} isDesktop={true} />
           </div>
         </div>
 
@@ -763,6 +751,6 @@ export function ProfileHeader({
         onSave={handleCropSave}
         aspect={cropperAspect}
       />
-    </div>
+    </div >
   );
 }

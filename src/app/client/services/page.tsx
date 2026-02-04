@@ -81,7 +81,7 @@ export default function ServicesPage() {
             {/* Split Layout */}
             <div className="flex max-w-[1400px] mx-auto flex-1">
               {/* Slim Sidebar */}
-              <div ref={sidebarRef} className="w-[70px] bg-[#161616] flex-none h-[calc(100vh-60px)] overflow-y-auto scrollbar-none sticky top-[60px] border-r border-white/[0.08]">
+              <div ref={sidebarRef} className="w-[80px] bg-[#161616] flex-none h-full overflow-y-auto scrollbar-none sticky top-0 border-r border-white/[0.08]">
                 <div className="py-3 flex flex-col min-h-full">
                   <div className="flex-1 px-2 space-y-1 pb-6">
                     {displayCategories.map((category) => (
@@ -119,10 +119,10 @@ export default function ServicesPage() {
               </div>
 
               {/* Main Content Area */}
-              <div className="flex-1 overflow-y-auto h-[calc(100vh-73px)]">
+              <div className="flex-1 overflow-y-auto h-full">
                 <div className="max-w-[1400px] mx-auto px-4">
                   <div className="py-6">
-                    <div className="grid grid-cols-2 gap-5 pb-24">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 pb-24">
                       {services
                         // TODO: Replace this heuristic with a real user-behavior-based ranking.
                         // Example future signal sources: recently viewed, clicks, bookings, category affinity.

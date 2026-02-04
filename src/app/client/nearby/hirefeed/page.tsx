@@ -376,7 +376,7 @@ export default function IntegratedExplorePage() {
       </AnimatePresence>
 
       {/* Fixed Header - Always at top */}
-      <div className={`fixed top-0 left-0 right-0 z-[3] px-0 pt-3 flex flex-col items-center transition-all duration-200 ${isSheetCollapsed
+      <div className={`fixed top-0 md:top-16 left-0 right-0 z-[3] px-0 pt-3 flex flex-col items-center transition-all duration-200 ${isSheetCollapsed
         ? 'bg-transparent'
         : 'bg-[#111111]'
         }`}>
@@ -414,8 +414,8 @@ export default function IntegratedExplorePage() {
           </div>
         </div>
         <div className="w-full flex flex-col px-0">
-          <div className="flex gap-2 w-full justify-start pb-2">
-            <div className="flex gap-1.5 no-scrollbar overflow-x-auto w-full px-3">
+          <div className="flex gap-2 w-full justify-start sm:justify-center pb-2">
+            <div className="flex gap-1.5 no-scrollbar overflow-x-auto w-full px-3 sm:w-auto sm:px-0">
               {categories.map((cat) => (
                 <button
                   key={cat.name}
@@ -442,10 +442,9 @@ export default function IntegratedExplorePage() {
 
       {/* Bottom Sheet */}
       <motion.div
-        className="fixed left-0 right-0 bg-[#111111] shadow-xl z-[2] flex flex-col"
+        className="fixed left-0 right-0 bg-[#111111] shadow-xl z-[2] flex flex-col sheet-responsive-top"
         style={{
-          top: '85px',
-          height: 'calc(100vh - 85px)',
+          // top and height are handled by CSS class .sheet-responsive-top and CSS variables injected below
           touchAction: "pan-y",
           transform: `translateY(${isSheetCollapsed ? `${(initialSheetY / (typeof window !== 'undefined' ? window.innerHeight : 1)) * 100}vh` : '0px'})`,
           willChange: 'transform',
@@ -671,6 +670,16 @@ export default function IntegratedExplorePage() {
         .smooth-scroll {
           -webkit-overflow-scrolling: touch;
           scroll-behavior: smooth;
+        }
+        .sheet-responsive-top {
+          --sheet-top: 85px;
+          top: var(--sheet-top);
+          height: calc(100vh - var(--sheet-top));
+        }
+        @media (min-width: 768px) {
+          .sheet-responsive-top {
+            --sheet-top: 149px; /* 85px + 64px header */
+          }
         }
       `}</style>
     </div>

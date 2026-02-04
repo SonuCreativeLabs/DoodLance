@@ -8,10 +8,10 @@ export default function PortfolioPage() {
     <div className="min-h-screen bg-[#0F0F0F] text-white flex flex-col">
       {/* Sticky Header */}
       <div className="sticky top-0 z-10 bg-[#0F0F0F] border-b border-white/5">
-        <div className="container mx-auto px-4 py-3">
+        <div className="container max-w-4xl mx-auto px-4 py-3">
           <div className="flex items-center">
-            <Link 
-              href="/freelancer/profile" 
+            <Link
+              href="/freelancer/profile"
               className="inline-flex items-center text-sm text-purple-400 hover:text-purple-300 transition-colors duration-200"
             >
               <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors duration-200">
@@ -28,7 +28,7 @@ export default function PortfolioPage() {
 
       {/* Scrollable Content */}
       <div className="flex-1 overflow-y-auto">
-        <div className="container mx-auto px-4 py-6">
+        <div className="container max-w-4xl mx-auto px-4 py-6">
           <div className="mb-8">
             <AddWorkButton />
           </div>

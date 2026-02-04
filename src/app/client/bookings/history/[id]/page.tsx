@@ -144,7 +144,7 @@ export default function BookingHistoryDetailPage() {
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-[#111111] via-[#0b0b0b] to-[#050505] text-white">
       {/* Header */}
       <div className="fixed top-0 left-0 right-0 z-30 bg-[#0F0F0F]/95 backdrop-blur-md border-b border-white/5">
-        <div className="container mx-auto px-4 py-3">
+        <div className="container max-w-3xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between w-full">
             <div className="flex items-center">
               <Button
@@ -204,7 +204,7 @@ export default function BookingHistoryDetailPage() {
       <div className="flex-1 overflow-y-auto pt-[64px] pb-[88px]">
         <div className={`relative bg-gradient-to-br ${historyItem.status === 'cancelled' ? 'from-red-500/10 via-red-500/5' : 'from-purple-500/10 via-purple-500/5'} to-transparent`}>
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(168,85,247,0.25),transparent_60%)]" />
-          <div className="relative px-4 py-10">
+          <div className="relative px-4 py-10 max-w-3xl mx-auto">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
               <div className="flex items-center gap-4">
                 <Avatar className="h-16 w-16 ring-4 ring-purple-500/20 backdrop-blur-xl">
@@ -248,8 +248,8 @@ export default function BookingHistoryDetailPage() {
           </div>
         </div>
 
-        <div className="px-4 pb-24">
-          <div className="grid gap-4 md:grid-cols-3 mt-8">
+        <div className="px-4 pb-24 max-w-3xl mx-auto w-full">
+          <div className="grid gap-4 md:grid-cols-2 mt-8">
             <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
               <div className="flex items-center gap-2 text-white/70 text-sm mb-3">
                 <Calendar className="w-4 h-4 text-purple-300" />
@@ -260,41 +260,6 @@ export default function BookingHistoryDetailPage() {
                 {historyItem.status === 'cancelled' ? 'Session was cancelled' : 'Concluded successfully'}
               </p>
             </div>
-
-            {historyItem.status === 'completed' && historyItem.clientRating && (
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
-                <div className="flex items-center gap-2 text-white/70 text-sm mb-3">
-                  <Star className="w-4 h-4 text-purple-300" />
-                  <span>Freelancer's Feedback</span>
-                </div>
-                <div className="flex items-center gap-1 mb-2">
-                  {Array.from({ length: 5 }, (_, i) => (
-                    <Star
-                      key={i}
-                      className={`w-5 h-5 ${i < (historyItem.clientRating?.stars || 0)
-                        ? 'text-yellow-400 fill-current'
-                        : 'text-gray-600'
-                        }`}
-                    />
-                  ))}
-                </div>
-                <p className="text-sm text-white/80 italic mb-3">
-                  {historyItem.clientRating?.review ? `"${historyItem.clientRating.review}"` : "No written review provided."}
-                </p>
-                {historyItem.clientRating?.feedbackChips && historyItem.clientRating.feedbackChips.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {historyItem.clientRating.feedbackChips.map((chip: string, index: number) => (
-                      <span
-                        key={index}
-                        className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-purple-900/30 text-purple-300 border border-purple-500/30"
-                      >
-                        {chip}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
 
             {historyItem.status === 'cancelled' && (
               <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl border-red-500/20">
@@ -337,6 +302,41 @@ export default function BookingHistoryDetailPage() {
                     </div>
                   </div>
                 </div>
+              </div>
+            )}
+
+            {historyItem.status === 'completed' && historyItem.clientRating && (
+              <div className="md:col-span-2 rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
+                <div className="flex items-center gap-2 text-white/70 text-sm mb-3">
+                  <Star className="w-4 h-4 text-purple-300" />
+                  <span>Freelancer's Feedback</span>
+                </div>
+                <div className="flex items-center gap-1 mb-2">
+                  {Array.from({ length: 5 }, (_, i) => (
+                    <Star
+                      key={i}
+                      className={`w-5 h-5 ${i < (historyItem.clientRating?.stars || 0)
+                        ? 'text-yellow-400 fill-current'
+                        : 'text-gray-600'
+                        }`}
+                    />
+                  ))}
+                </div>
+                <p className="text-sm text-white/80 italic mb-3">
+                  {historyItem.clientRating?.review ? `"${historyItem.clientRating.review}"` : "No written review provided."}
+                </p>
+                {historyItem.clientRating?.feedbackChips && historyItem.clientRating.feedbackChips.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {historyItem.clientRating.feedbackChips.map((chip: string, index: number) => (
+                      <span
+                        key={index}
+                        className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-purple-900/30 text-purple-300 border border-purple-500/30"
+                      >
+                        {chip}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -416,12 +416,14 @@ export default function BookingHistoryDetailPage() {
 
       {/* Action Bar */}
       <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-white/10 bg-[#111111]/95 backdrop-blur-md px-4 py-4">
-        <Button
-          className="w-full bg-purple-600 hover:bg-purple-700"
-          onClick={() => setShowBookAgain(true)}
-        >
-          Book again with {historyItem.freelancer.name}
-        </Button>
+        <div className="max-w-3xl mx-auto">
+          <Button
+            className="w-full bg-purple-600 hover:bg-purple-700"
+            onClick={() => setShowBookAgain(true)}
+          >
+            Book again with {historyItem.freelancer.name}
+          </Button>
+        </div>
       </div>
 
       {/* Book Again Modal - using shared hook */}

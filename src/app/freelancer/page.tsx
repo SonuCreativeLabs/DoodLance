@@ -161,7 +161,7 @@ export default function FreelancerHome() {
         </div>
       </motion.div>
 
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 md:py-12 bg-[#111111] relative z-0">
+      <div className="container max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 md:py-12 bg-[#111111] relative z-0">
         {/* Section Title */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -177,11 +177,11 @@ export default function FreelancerHome() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
           {isLoadingStats ? (
             <>
-              <DashboardCardSkeleton />
-              <div className="grid grid-cols-2 gap-4 sm:gap-6 sm:col-span-2">
-                <DashboardCardSkeleton />
+              <div className="sm:col-span-2 lg:col-span-1">
                 <DashboardCardSkeleton />
               </div>
+              <DashboardCardSkeleton />
+              <DashboardCardSkeleton />
             </>
           ) : (
             <>
@@ -189,7 +189,7 @@ export default function FreelancerHome() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="bg-gradient-to-br from-[#1E1E1E] to-[#121212] rounded-2xl p-6 border border-white/10 transition-all duration-300 shadow-lg"
+                className="bg-gradient-to-br from-[#1E1E1E] to-[#121212] rounded-2xl p-6 border border-white/10 transition-all duration-300 shadow-lg sm:col-span-2 lg:col-span-1"
               >
                 <div className="relative">
                   <div className="flex items-center justify-between mb-4">
@@ -203,50 +203,50 @@ export default function FreelancerHome() {
                   </div>
                 </div>
               </motion.div>
-              <div className="grid grid-cols-2 gap-4 md:col-span-2">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
-                  className="bg-gradient-to-br from-[#1E1E1E] to-[#121212] rounded-2xl p-6 border border-white/10 transition-all duration-300 shadow-lg"
-                >
-                  <div className="relative">
-                    <div className="flex flex-col h-full justify-between">
-                      <div>
-                        <div className="flex items-start justify-between mb-4">
-                          <h2 className="text-lg font-semibold text-white">Total Earnings</h2>
-                        </div>
-                        <p className="text-2xl sm:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#bf82fb] to-[#9537ea] mb-2 break-words truncate w-full">₹{stats?.totalEarnings?.toLocaleString() || 0}</p>
-                        <div className="flex items-center gap-2 flex-nowrap min-w-0 w-full overflow-hidden">
-                          <p className="text-sm text-white/60 truncate">
-                            {stats?.totalJobs || 0} total job{stats?.totalJobs !== 1 ? 's' : ''}
-                          </p>
-                        </div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="bg-gradient-to-br from-[#1E1E1E] to-[#121212] rounded-2xl p-6 border border-white/10 transition-all duration-300 shadow-lg"
+              >
+                <div className="relative">
+                  <div className="flex flex-col h-full justify-between">
+                    <div>
+                      <div className="flex items-start justify-between mb-4">
+                        <h2 className="text-lg font-semibold text-white">Total Earnings</h2>
+                      </div>
+                      <p className="text-2xl sm:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#bf82fb] to-[#9537ea] mb-2 break-words truncate w-full">₹{stats?.totalEarnings?.toLocaleString() || 0}</p>
+                      <div className="flex items-center gap-2 flex-nowrap min-w-0 w-full overflow-hidden">
+                        <p className="text-sm text-white/60 truncate">
+                          {stats?.totalJobs || 0} total job{stats?.totalJobs !== 1 ? 's' : ''}
+                        </p>
                       </div>
                     </div>
                   </div>
-                </motion.div>
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4 }}
-                  className="bg-gradient-to-br from-[#1E1E1E] to-[#121212] rounded-2xl p-6 border border-white/10 transition-all duration-300 shadow-lg"
-                >
-                  <div className="relative">
-                    <div className="flex flex-col h-full justify-between">
-                      <div>
-                        <div className="flex items-start justify-between mb-4">
-                          <h2 className="text-lg font-semibold text-white">Active Hours</h2>
-                        </div>
-                        <p className="text-2xl sm:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#bf82fb] to-[#9537ea] mb-2 break-words truncate w-full">{stats?.activeHours || 0}h</p>
-                        <div className="flex items-center gap-2 flex-nowrap min-w-0 w-full overflow-hidden">
-                          <p className="text-sm text-white/60 truncate">This week</p>
-                        </div>
+                </div>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="bg-gradient-to-br from-[#1E1E1E] to-[#121212] rounded-2xl p-6 border border-white/10 transition-all duration-300 shadow-lg"
+              >
+                <div className="relative">
+                  <div className="flex flex-col h-full justify-between">
+                    <div>
+                      <div className="flex items-start justify-between mb-4">
+                        <h2 className="text-lg font-semibold text-white">Active Hours</h2>
+                      </div>
+                      <p className="text-2xl sm:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#bf82fb] to-[#9537ea] mb-2 break-words truncate w-full">{stats?.activeHours || 0}h</p>
+                      <div className="flex items-center gap-2 flex-nowrap min-w-0 w-full overflow-hidden">
+                        <p className="text-sm text-white/60 truncate">This week</p>
                       </div>
                     </div>
                   </div>
-                </motion.div>
-              </div>
+                </div>
+              </motion.div>
             </>
           )}
         </div>
