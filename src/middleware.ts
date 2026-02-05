@@ -125,12 +125,23 @@ export async function middleware(request: NextRequest) {
         // Allowed
     }
 
+    // Redirect /client to / (root) to avoid duplicate home page
+    if (request.nextUrl.pathname === '/client' || request.nextUrl.pathname === '/client/') {
+        return NextResponse.redirect(new URL('/', request.url));
+    }
+
     return await updateSession(request);
 }
 
 export const config = {
     matcher: [
-        '/admin/:path*',
-        '/api/:path*'
+        /*
+         * Match all request paths except for the ones starting with:
+         * - _next/static (static files)
+         * - _next/image (image optimization files)
+         * - favicon.ico (favicon file)
+         * - public folder files (images, etc) - handled by regex below
+         */
+        '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
     ],
 };

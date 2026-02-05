@@ -9,15 +9,19 @@
 ### Demo Credentials
 
 #### Super Admin (Full Access)
-- **Email:** admin@doodlance.com
-- **Password:** admin123
+- **Email:** admin@bails.in
+- **Password:** (Set in database)
 
-#### Support Team (Limited Access)
-- **Email:** support@doodlance.com
-- **Password:** support123
+## Support
 
-#### Finance Team (Financial Access)
-- **Email:** finance@doodlance.com
+If you encounter any issues, please contact the support team:
+- **Email:** support@bails.in
+- **Slack:** #admin-support
+
+## Finance
+
+For payment related queries:
+- **Email:** finance@bails.in
 - **Password:** finance123
 
 ## 📊 Modules Completed

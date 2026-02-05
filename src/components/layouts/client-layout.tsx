@@ -9,6 +9,7 @@ import { useRouter, usePathname } from "next/navigation"
 import { ChatViewProvider } from "@/contexts/ChatViewContext"
 import { useNavbar } from "@/contexts/NavbarContext"
 import { useRoleSwitch } from "@/contexts/RoleSwitchContext"
+import { useAuth } from "@/contexts/AuthContext"
 
 interface ClientLayoutProps {
   children: ReactNode
@@ -18,11 +19,12 @@ interface ClientLayoutProps {
 export default function ClientLayout({ children, className }: ClientLayoutProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const isClientHome = pathname === '/client' || pathname === '/client/';
+  const isClientHome = pathname === '/' || pathname === '/client' || pathname === '/client/';
   const isServicePage = pathname === '/client/services';
   const isBookingDetails = pathname?.startsWith('/client/bookings/') && pathname !== '/client/bookings';
   const shouldHideGlobalHeader = isClientHome || isServicePage || isBookingDetails;
   const { switchRole } = useRoleSwitch();
+  const { isAuthenticated } = useAuth();
 
   const handleSwitchToFreelancer = () => {
     switchRole('freelancer');
@@ -31,14 +33,14 @@ export default function ClientLayout({ children, className }: ClientLayoutProps)
   const { isNavbarVisible } = useNavbar();
 
   const isActive = (path: string) => {
-    if (path === '/client') {
-      return pathname === '/client' || pathname === '/client/';
+    if (path === '/') {
+      return pathname === '/' || pathname === '/client' || pathname === '/client/';
     }
     return pathname?.startsWith(path);
   }
 
   const navItems = [
-    { href: '/client', label: 'Home', icon: Home },
+    { href: '/', label: 'Home', icon: Home },
     { href: '/client/nearby/hirefeed', label: 'Hire', icon: Compass },
     { href: '/client/bookings', label: 'Bookings', icon: Calendar },
   ]
@@ -52,7 +54,7 @@ export default function ClientLayout({ children, className }: ClientLayoutProps)
           <nav className="hidden md:block fixed top-0 left-0 right-0 border-b border-white/10 bg-[#111111]/95 backdrop-blur-xl z-[100]">
             <div className="container mx-auto px-4 h-16 flex items-center justify-between relative">
               <div className="flex items-center">
-                <Link href="/client" className="flex items-center ml-[5%]">
+                <Link href="/" className="flex items-center ml-[5%]">
                   <div className="relative h-12 w-32">
                     <Image
                       src="/images/LOGOS/BAILS TG.png"
@@ -96,12 +98,22 @@ export default function ClientLayout({ children, className }: ClientLayoutProps)
               </div>
 
               <div className="flex items-center space-x-4">
-                {/* Notifications Placeholder */}
-                <div className="relative">
-                  <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 backdrop-blur-lg transition-all duration-300 border border-white/5 hover:border-purple-500/30 cursor-pointer group">
-                    <Bell className="w-5 h-5 text-white/80 group-hover:text-purple-400 transition-colors duration-300" />
+                {/* Unauthenticated State: Show Login Button */}
+                {!isAuthenticated ? (
+                  <Link
+                    href="/welcome"
+                    className="px-5 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold shadow-lg hover:shadow-purple-500/20 transition-all duration-300"
+                  >
+                    Login
+                  </Link>
+                ) : (
+                  /* Authenticated State: Show Notifications (Placeholder) */
+                  <div className="relative">
+                    <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 backdrop-blur-lg transition-all duration-300 border border-white/5 hover:border-purple-500/30 cursor-pointer group">
+                      <Bell className="w-5 h-5 text-white/80 group-hover:text-purple-400 transition-colors duration-300" />
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             </div>
           </nav>
@@ -122,12 +134,12 @@ export default function ClientLayout({ children, className }: ClientLayoutProps)
             <div className="max-w-screen-xl mx-auto">
               <div className="flex justify-around items-center h-16 px-2 sm:px-4">
                 <Link
-                  href="/client"
+                  href="/"
                   className="flex flex-col items-center justify-center p-2 min-w-[64px]"
                 >
                   <div className={cn(
                     "flex flex-col items-center transition-all duration-300 px-3 py-1.5 rounded-xl",
-                    pathname === "/client" || pathname === "/client/"
+                    pathname === "/" || pathname === "/client" || pathname === "/client/"
                       ? "text-[var(--purple)] bg-[var(--purple)]/10 font-bold"
                       : "text-gray-400 hover:text-gray-300"
                   )}>

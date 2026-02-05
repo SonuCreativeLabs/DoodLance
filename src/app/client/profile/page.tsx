@@ -70,7 +70,7 @@ export default function ClientProfile() {
       {/* Fixed Header */}
       <div className="fixed top-0 left-0 w-full z-30 bg-gradient-to-br from-[#6B46C1] via-[#4C1D95] to-[#2D1B69] border-b border-white/10 shadow-md">
         <div className="container mx-auto px-4 h-16 flex items-center relative">
-          <Link href="/client" aria-label="Back to Dashboard" className="relative z-10">
+          <Link href="/" aria-label="Back to Dashboard" className="relative z-10">
             <button className="flex items-center justify-center text-white/80 hover:text-white/100 p-2 -ml-2 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-purple-400/40" aria-label="Back">
               <svg width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
             </button>

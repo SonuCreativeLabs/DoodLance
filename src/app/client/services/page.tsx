@@ -58,7 +58,7 @@ export default function ServicesPage() {
           <div className="container mx-auto px-4 py-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center">
-                <Link href="/client" className="inline-flex items-center text-sm text-purple-400 hover:text-purple-300 transition-colors duration-200">
+                <Link href="/" className="inline-flex items-center text-sm text-purple-400 hover:text-purple-300 transition-colors duration-200">
                   <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors duration-200">
                     <ArrowLeft className="h-4 w-4" />
                   </div>

@@ -23,7 +23,7 @@ export function FreelancerHeader() {
       <div className="container max-w-screen-xl mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center gap-3">
-            <Link href="/client" onClick={handleSwitchToClient}>
+            <Link href="/" onClick={handleSwitchToClient}>
               <ArrowLeftCircle className="h-6 w-6 text-gray-500" />
             </Link>
             <div className="flex items-center gap-2">

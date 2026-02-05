@@ -283,21 +283,20 @@ export async function PUT(
 
     // Send Notification to Client + Admin (Copy)
     if (status && (status.toUpperCase() === 'IN_PROGRESS' || status.toUpperCase() === 'COMPLETED')) {
-      (async () => {
-        try {
-          const { sendBookingNotification } = await import('@/lib/email');
+      // Run synchronously to ensure delivery in serverless env
+      try {
+        const { sendBookingNotification } = await import('@/lib/email');
 
-          // Fetch full details
-          const fullBooking = await prisma.booking.findUnique({
-            where: { id: params.id },
-            include: {
-              service: { include: { provider: true } },
-              client: true
-            }
-          });
+        // Fetch full details
+        const fullBooking = await prisma.booking.findUnique({
+          where: { id: params.id },
+          include: {
+            service: { include: { provider: true } },
+            client: true
+          }
+        });
 
-          if (!fullBooking) return;
-
+        if (fullBooking) {
           const clientEmail = fullBooking.client.email;
           const freelancerName = fullBooking.service.provider.name || 'Freelancer';
           const serviceTitle = fullBooking.service.title;
@@ -375,18 +374,17 @@ export async function PUT(
                     </div>
                     
                     <p style="font-size: 13px; color: #999; text-align: center; margin-top: 30px;">
-                        Need help? Contact <a href="mailto:sathishraj@doodlance.com" style="color: #666;">Support</a>
+                        Need help? Contact <a href="mailto:sathishraj@bails.in" style="color: #666;">Support</a>
                     </p>
                 </div>
             </div>
           `;
 
           await sendBookingNotification(clientEmail, 'client', subject, htmlContent);
-
-        } catch (emailErr) {
-          console.error('Failed to send status notification:', emailErr);
         }
-      })();
+      } catch (emailErr) {
+        console.error('Failed to send status notification:', emailErr);
+      }
     }
 
     return NextResponse.json({

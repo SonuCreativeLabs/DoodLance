@@ -345,7 +345,7 @@ export default function ClientHome() {
           {/* Centered Navigation */}
           <div className="hidden md:flex items-center gap-8 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
             <Link
-              href="/client"
+              href="/"
               className={`px-4 py-2 rounded-xl flex items-center space-x-2 transition-all duration-300 group ${true // Home is active
                 ? "bg-black/40 text-white border border-white/20 shadow-lg"
                 : "text-white/60 hover:text-white hover:bg-black/20 border border-transparent"
