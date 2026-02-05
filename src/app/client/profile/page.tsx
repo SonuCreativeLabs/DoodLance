@@ -8,15 +8,16 @@ import { useNavbar } from '@/contexts/NavbarContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogClose
-} from "@/components/ui/dialog"
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 export default function ClientProfile() {
   const { setNavbarVisibility } = useNavbar();
@@ -191,38 +192,34 @@ export default function ClientProfile() {
               <div className="mt-8 pt-6 border-t border-white/10">
                 <h2 className="text-red-400 font-medium mb-4">Danger Zone</h2>
 
-                <Dialog>
-                  <DialogTrigger asChild>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
                     <button
                       type="button"
                       className="px-4 py-3 rounded-xl border border-red-500/20 text-red-400 hover:bg-red-500/10 transition-colors text-sm font-medium w-full"
                     >
                       Deactivate Account
                     </button>
-                  </DialogTrigger>
-                  <DialogContent className="bg-[#18181b] text-white border-white/10">
-                    <DialogHeader>
-                      <DialogTitle>Deactivate Account?</DialogTitle>
-                      <DialogDescription className="text-white/60">
+                  </AlertDialogTrigger>
+                  <AlertDialogContent className="bg-[#18181b] text-white border-white/10 w-[90%] max-w-sm rounded-lg z-[100]">
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Deactivate Account?</AlertDialogTitle>
+                      <AlertDialogDescription className="text-white/60">
                         Your account will be temporarily deactivated. Your data will be preserved, and you can reactivate your account anytime by simply logging in again.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter className="gap-2 sm:gap-0">
-                      <DialogClose asChild>
-                        <button className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm font-medium transition-colors">
-                          Cancel
-                        </button>
-                      </DialogClose>
-                      <button
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className="gap-2 sm:gap-0">
+                      <AlertDialogCancel className="bg-transparent border-white/10 text-white hover:bg-white/5 hover:text-white mt-0">Cancel</AlertDialogCancel>
+                      <AlertDialogAction
                         onClick={handleDeactivateAccount}
                         disabled={deactivating}
-                        className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+                        className="bg-red-500 hover:bg-red-600 text-white border-none"
                       >
                         {deactivating ? 'Deactivating...' : 'Deactivate Account'}
-                      </button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             </div>
           </>

@@ -3,6 +3,17 @@
 import { MapPin, Star, Clock, Calendar, ChevronDown, ChevronRight, ArrowRight, Copy, Check, Zap, Shield, Users, Award, TrendingUp, Heart, MessageCircle, Filter, X, Wallet, Bell, Sparkles, Home, Compass } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { Input } from '@/components/ui/input'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import ClientLayout from '@/components/layouts/client-layout'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -33,6 +44,7 @@ export default function ClientHome() {
   const [userName, setUserName] = useState("Guest");
   const [userAvatar, setUserAvatar] = useState("/images/default-avatar.svg"); // Fallback
   const [notificationCount, setNotificationCount] = useState(0);
+  const [showLogoutAlert, setShowLogoutAlert] = useState(false);
 
   const { user, refreshUser, signOut, isAuthenticated } = useAuth();
 
@@ -300,8 +312,8 @@ export default function ClientHome() {
                     {/* Logout at the bottom */}
                     {isAuthenticated ? (
                       <button
-                        onClick={handleLogout}
-                        className="flex items-center gap-3 px-6 py-3 text-left text-red-400 hover:bg-white/10 hover:text-red-300 transition-colors"
+                        onClick={() => setShowLogoutAlert(true)}
+                        className="flex items-center gap-3 px-6 py-3 text-left text-red-400 hover:bg-white/10 hover:text-red-300 transition-colors w-full"
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7" /><path d="M3 21V3" /></svg>
                         Logout
@@ -382,25 +394,16 @@ export default function ClientHome() {
             {/* Earn Button Moved to Center */}
             {/* Wallet Hidden */}
             <div className="relative">
-              {!isAuthenticated ? (
-                <Link
-                  href="/welcome"
-                  className="px-4 py-1.5 sm:px-5 sm:py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold shadow-lg hover:shadow-purple-500/20 transition-all duration-300 text-sm"
-                >
-                  Login
-                </Link>
-              ) : (
-                <Link href="/client/notifications" className="relative group" aria-label="Notifications">
-                  <span className="relative inline-flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/10 hover:bg-white/20 transition-colors">
-                    <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-                    {notificationCount > 0 && (
-                      <span className="pointer-events-none absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 bg-gradient-to-r from-purple-600 to-purple-400 rounded-full flex items-center justify-center shadow-lg shadow-purple-600/20 z-10">
-                        <span className="text-[9px] sm:text-[10px] font-medium text-white leading-none">{notificationCount}</span>
-                      </span>
-                    )}
-                  </span>
-                </Link>
-              )}
+              <Link href="/client/notifications" className="relative group" aria-label="Notifications">
+                <span className="relative inline-flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/10 hover:bg-white/20 transition-colors">
+                  <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                  {notificationCount > 0 && (
+                    <span className="pointer-events-none absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 bg-gradient-to-r from-purple-600 to-purple-400 rounded-full flex items-center justify-center shadow-lg shadow-purple-600/20 z-10">
+                      <span className="text-[9px] sm:text-[10px] font-medium text-white leading-none">{notificationCount}</span>
+                    </span>
+                  )}
+                </span>
+              </Link>
             </div>
           </div>
         </div>
@@ -753,6 +756,20 @@ export default function ClientHome() {
         onUpdateLocation={handleLocationUpdate}
         onUseCurrentLocation={handleUseCurrentLocation}
       />
+      <AlertDialog open={showLogoutAlert} onOpenChange={setShowLogoutAlert}>
+        <AlertDialogContent className="bg-[#18181b] border-white/10 text-white z-[100] w-[90%] max-w-sm rounded-lg">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Sign out?</AlertDialogTitle>
+            <AlertDialogDescription className="text-white/60">
+              Are you sure you want to sign out of your account?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="bg-transparent border-white/10 text-white hover:bg-white/5 hover:text-white">Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleLogout} className="bg-red-500 hover:bg-red-600 text-white border-none">Logout</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </ClientLayout>
   );
 }
