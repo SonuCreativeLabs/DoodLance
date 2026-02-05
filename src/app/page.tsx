@@ -394,16 +394,25 @@ export default function ClientHome() {
             {/* Earn Button Moved to Center */}
             {/* Wallet Hidden */}
             <div className="relative">
-              <Link href="/client/notifications" className="relative group" aria-label="Notifications">
-                <span className="relative inline-flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/10 hover:bg-white/20 transition-colors">
-                  <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-                  {notificationCount > 0 && (
-                    <span className="pointer-events-none absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 bg-gradient-to-r from-purple-600 to-purple-400 rounded-full flex items-center justify-center shadow-lg shadow-purple-600/20 z-10">
-                      <span className="text-[9px] sm:text-[10px] font-medium text-white leading-none">{notificationCount}</span>
-                    </span>
-                  )}
-                </span>
-              </Link>
+              {!isAuthenticated ? (
+                <Link
+                  href="/auth/login"
+                  className="px-4 py-1.5 sm:px-5 sm:py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold shadow-lg hover:shadow-purple-500/20 transition-all duration-300 text-sm"
+                >
+                  Login
+                </Link>
+              ) : (
+                <Link href="/client/notifications" className="relative group" aria-label="Notifications">
+                  <span className="relative inline-flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/10 hover:bg-white/20 transition-colors">
+                    <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                    {notificationCount > 0 && (
+                      <span className="pointer-events-none absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 bg-gradient-to-r from-purple-600 to-purple-400 rounded-full flex items-center justify-center shadow-lg shadow-purple-600/20 z-10">
+                        <span className="text-[9px] sm:text-[10px] font-medium text-white leading-none">{notificationCount}</span>
+                      </span>
+                    )}
+                  </span>
+                </Link>
+              )}
             </div>
           </div>
         </div>
