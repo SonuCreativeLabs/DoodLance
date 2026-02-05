@@ -98,6 +98,7 @@ model Service {
   duration     Int
   categoryId   String
   providerId   String
+  sport        String?   // "Cricket", "Football", etc.
   images       String
   videoUrl     String[]  @default([])
   tags         String
@@ -292,9 +293,17 @@ model FreelancerProfile {
   hourlyRate           Float?
   skills               String
   specializations      String
+  
+  // Sports Expansion
+  mainSport           String         @default("Cricket") // Cricket, Football, etc.
+  otherSports         String[]       @default([])   // Secondary sports
+  sportsDetails       Json?          // Flexible JSON for sport-specific details
+  
+  // Legacy Cricket Fields (Kept for backward compatibility)
   cricketRole          String?
   battingStyle         String?
   bowlingStyle         String?
+  
   dateOfBirth          DateTime?
   rating               Float         @default(0)
   reviewCount          Int           @default(0)

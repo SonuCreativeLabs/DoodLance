@@ -608,6 +608,106 @@ export default function ClientHome() {
             }
           `}</style>
 
+          {/* Popular Sports Section */}
+          <section className="mb-4 relative z-0">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-base font-semibold text-white tracking-wide text-left">Popular Sports</h2>
+            </div>
+            <div className="relative -mx-4">
+              <div className="overflow-x-auto scrollbar-hide px-4 pr-8 md:overflow-visible">
+                <div className="flex space-x-4 pb-2 md:grid md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 md:space-x-0 md:gap-4">
+                  {/* Cricket */}
+                  <div
+                    onClick={() => router.push('/client/nearby/hirefeed?category=Cricket')}
+                    className="flex-shrink-0 w-[125px] flex flex-col items-center gap-3 p-4 rounded-3xl bg-[#161616] border border-white/5 hover:border-purple-500/30 transition-all cursor-pointer group"
+                  >
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500/10 to-blue-600/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                      <span className="text-2xl">🏏</span>
+                    </div>
+                    <span className="text-sm font-medium text-white/90 group-hover:text-white">Cricket</span>
+                  </div>
+
+                  {/* Football */}
+                  <div
+                    onClick={() => router.push('/client/nearby/hirefeed?category=Football')}
+                    className="flex-shrink-0 w-[125px] flex flex-col items-center gap-3 p-4 rounded-3xl bg-[#161616] border border-white/5 hover:border-purple-500/30 transition-all cursor-pointer group"
+                  >
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-green-500/10 to-emerald-600/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                      <span className="text-2xl">⚽️</span>
+                    </div>
+                    <span className="text-sm font-medium text-white/90 group-hover:text-white">Football</span>
+                  </div>
+
+                  {/* Badminton */}
+                  <div
+                    onClick={() => router.push('/client/nearby/hirefeed?category=Badminton')}
+                    className="flex-shrink-0 w-[125px] flex flex-col items-center gap-3 p-4 rounded-3xl bg-[#161616] border border-white/5 hover:border-purple-500/30 transition-all cursor-pointer group"
+                  >
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-yellow-500/10 to-orange-600/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                      <span className="text-2xl">🏸</span>
+                    </div>
+                    <span className="text-sm font-medium text-white/90 group-hover:text-white">Badminton</span>
+                  </div>
+
+                  {/* Tennis */}
+                  <div
+                    onClick={() => router.push('/client/nearby/hirefeed?category=Tennis')}
+                    className="flex-shrink-0 w-[125px] flex flex-col items-center gap-3 p-4 rounded-3xl bg-[#161616] border border-white/5 hover:border-purple-500/30 transition-all cursor-pointer group"
+                  >
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-lime-500/10 to-green-600/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                      <span className="text-2xl">🎾</span>
+                    </div>
+                    <span className="text-sm font-medium text-white/90 group-hover:text-white">Tennis</span>
+                  </div>
+
+                  {/* Kabaddi */}
+                  <div
+                    onClick={() => router.push('/client/nearby/hirefeed?category=Kabaddi')}
+                    className="flex-shrink-0 w-[125px] flex flex-col items-center gap-3 p-4 rounded-3xl bg-[#161616] border border-white/5 hover:border-purple-500/30 transition-all cursor-pointer group"
+                  >
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-red-500/10 to-orange-600/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                      <span className="text-2xl">🤼</span>
+                    </div>
+                    <span className="text-sm font-medium text-white/90 group-hover:text-white">Kabaddi</span>
+                  </div>
+
+                  {/* Basketball */}
+                  <div
+                    onClick={() => router.push('/client/nearby/hirefeed?category=Basketball')}
+                    className="flex-shrink-0 w-[125px] flex flex-col items-center gap-3 p-4 rounded-3xl bg-[#161616] border border-white/5 hover:border-purple-500/30 transition-all cursor-pointer group"
+                  >
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500/10 to-red-600/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                      <span className="text-2xl">🏀</span>
+                    </div>
+                    <span className="text-sm font-medium text-white/90 group-hover:text-white">Basketball</span>
+                  </div>
+
+                  {/* Padel */}
+                  <div
+                    onClick={() => router.push('/client/nearby/hirefeed?category=Padel')}
+                    className="flex-shrink-0 w-[125px] flex flex-col items-center gap-3 p-4 rounded-3xl bg-[#161616] border border-white/5 hover:border-purple-500/30 transition-all cursor-pointer group"
+                  >
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500/10 to-cyan-600/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                      <span className="text-2xl">🎾</span>
+                    </div>
+                    <span className="text-sm font-medium text-white/90 group-hover:text-white">Padel</span>
+                  </div>
+
+                  {/* Pickleball */}
+                  <div
+                    onClick={() => router.push('/client/nearby/hirefeed?category=Pickleball')}
+                    className="flex-shrink-0 w-[125px] flex flex-col items-center gap-3 p-4 rounded-3xl bg-[#161616] border border-white/5 hover:border-purple-500/30 transition-all cursor-pointer group"
+                  >
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-lime-500/10 to-green-600/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                      <span className="text-2xl">🏓</span>
+                    </div>
+                    <span className="text-sm font-medium text-white/90 group-hover:text-white">Pickleball</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
           {/* Service Categories */}
           <section className="mb-4 relative z-0">
             <div className="flex items-center justify-between mb-4">

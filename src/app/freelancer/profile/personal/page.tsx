@@ -15,7 +15,11 @@ import {
   MapPin,
   MailIcon,
   Trophy,
-  Loader2
+  Loader2,
+  Plus,
+  CircleDot,
+  Activity,
+  Target
 } from 'lucide-react';
 import Link from "next/link";
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -25,6 +29,22 @@ import { usePersonalDetails } from '@/contexts/PersonalDetailsContext';
 import { useFreelancerProfile } from '@/contexts/FreelancerProfileContext';
 import { UsernameInput } from '@/components/freelancer/profile/UsernameInput';
 import { CricketLoader } from '@/components/ui/cricket-loader';
+import { SPORTS_CONFIG, POPULAR_SPORTS, SportConfig } from '@/constants/sports';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+// Sport icon mapping
+const SPORT_ICONS: Record<string, any> = {
+  Cricket: Trophy,
+  Football: CircleDot,
+  Badminton: Activity,
+  Tennis: Target,
+  Basketball: CircleDot,
+  Padel: Target,
+  Pickleball: Target,
+  Kabaddi: Activity,
+};
+
 
 type PersonalInfo = {
   firstName: string;
@@ -208,6 +228,18 @@ export default function PersonalDetailsPage() {
     area: personalDetails.area || ""
   });
 
+  // Sport State
+  const [mainSport, setMainSport] = useState(personalDetails.mainSport || "Cricket");
+  const [otherSports, setOtherSports] = useState<string[]>(personalDetails.otherSports || []);
+  const [sportsDetails, setSportsDetails] = useState<any>(personalDetails.sportsDetails || {
+    cricketRole: personalDetails.cricketRole,
+    battingStyle: personalDetails.battingStyle,
+    bowlingStyle: personalDetails.bowlingStyle
+  } || {});
+
+
+
+  // Legacy Cricket State (Sync for backward compatibility)
   const [cricketInfo, setCricketInfo] = useState<CricketInfo>({
     cricketRole: personalDetails.cricketRole || "",
     battingStyle: personalDetails.battingStyle || "",
@@ -225,6 +257,14 @@ export default function PersonalDetailsPage() {
       dateOfBirth: personalDetails.dateOfBirth ? new Date(personalDetails.dateOfBirth).toISOString().split('T')[0] : "",
       bio: personalDetails.bio || ""
     }));
+    setMainSport(personalDetails.mainSport || "Cricket");
+    setOtherSports(personalDetails.otherSports || []);
+    setSportsDetails(personalDetails.sportsDetails || {
+      cricketRole: personalDetails.cricketRole,
+      battingStyle: personalDetails.battingStyle,
+      bowlingStyle: personalDetails.bowlingStyle
+    });
+
     setCricketInfo(prev => ({
       ...prev,
       cricketRole: personalDetails.cricketRole || "",
@@ -251,6 +291,11 @@ export default function PersonalDetailsPage() {
   const [editPersonalInfo, setEditPersonalInfo] = useState<PersonalInfo>({ ...personalInfo });
   const [editContact, setEditContact] = useState<ContactInfo>({ ...contactInfo });
   const [editLocation, setEditLocation] = useState<LocationInfo>({ ...locationInfo });
+  // Dynamic Edit State
+  const [editMainSport, setEditMainSport] = useState(mainSport);
+  const [editOtherSports, setEditOtherSports] = useState<string[]>(otherSports);
+  const [editSportsDetails, setEditSportsDetails] = useState<any>({ ...sportsDetails });
+
   const [editCricket, setEditCricket] = useState<CricketInfo>({ ...cricketInfo });
   const [editUsername, setEditUsername] = useState(username);
 
@@ -338,23 +383,35 @@ export default function PersonalDetailsPage() {
       updateLocalProfile({
         location: `${editLocation.area ? editLocation.area + ', ' : ''}${editLocation.city}`,
       });
+      // Sync with FreelancerProfileContext
+      updateLocalProfile({
+        location: `${editLocation.area ? editLocation.area + ', ' : ''}${editLocation.city}`,
+      });
     } else if (section === 'cricket') {
-      const newCricketInfo = { ...editCricket };
-      setCricketInfo(newCricketInfo);
-      // Sync cricket role with PersonalDetailsContext
+      // Save Main Sport & Details
+      setMainSport(editMainSport);
+      setOtherSports(editOtherSports);
+      setSportsDetails(editSportsDetails);
+
+      // Sync with Context
       updatePersonalDetails({
-        name: `${personalInfo.firstName} ${personalInfo.lastName}`.trim(),
-        title: editCricket.cricketRole || 'Cricketer',
-        cricketRole: editCricket.cricketRole,
-        battingStyle: editCricket.battingStyle,
-        bowlingStyle: editCricket.bowlingStyle,
-        location: locationInfo.city + ', ' + locationInfo.country,
-        dateOfBirth: personalInfo.dateOfBirth
+        mainSport: editMainSport,
+        otherSports: editOtherSports,
+        sportsDetails: editSportsDetails,
+        // Legacy Sync (if Cricket)
+        ...(editMainSport === 'Cricket' ? {
+          cricketRole: editSportsDetails.cricketRole,
+          battingStyle: editSportsDetails.battingStyle,
+          bowlingStyle: editSportsDetails.bowlingStyle,
+          title: editSportsDetails.cricketRole || 'Cricketer'
+        } : {
+          title: `${editMainSport} Player` // Default title for other sports
+        })
       });
 
       // Sync with FreelancerProfileContext
       updateLocalProfile({
-        title: editCricket.cricketRole || 'Cricketer',
+        title: editMainSport === 'Cricket' ? (editSportsDetails.cricketRole || 'Cricketer') : `${editMainSport} Player`,
       });
     } else if (section === 'username') {
       setUsername(editUsername);
@@ -378,7 +435,10 @@ export default function PersonalDetailsPage() {
     } else if (section === 'location') {
       setEditLocation({ ...locationInfo });
     } else if (section === 'cricket') {
-      setEditCricket({ ...cricketInfo });
+      // Reset Sport State
+      setEditMainSport(mainSport);
+      setEditOtherSports([...otherSports]);
+      setEditSportsDetails({ ...sportsDetails });
     } else if (section === 'username') {
       setEditUsername(username);
     }
@@ -417,7 +477,12 @@ export default function PersonalDetailsPage() {
     setEditPersonalInfo({ ...personalInfo });
     setEditContact({ ...contactInfo });
     setEditLocation({ ...locationInfo });
-    setEditCricket({ ...cricketInfo });
+
+    // Initialize Sport Edit State
+    setEditMainSport(mainSport);
+    setEditOtherSports([...otherSports]);
+    setEditSportsDetails({ ...sportsDetails });
+
     setEditUsername(username);
   };
 
@@ -937,94 +1002,344 @@ export default function PersonalDetailsPage() {
         </SectionCard>
       );
     } else if (section === 'cricket') {
+      const activeConfig = SPORTS_CONFIG[editMainSport] || SPORTS_CONFIG['Cricket'];
+
       return (
         <SectionCard
           key="cricket"
-          title="Cricket Information"
+          title="Sport Details"
           icon={Trophy}
           onEdit={!isEditing ? () => startEditing('cricket') : undefined}
           isEditing={isEditing}
           onSave={() => handleSave('cricket')}
           onCancel={() => handleCancel('cricket')}
-          isSaveDisabled={!editCricket.cricketRole || !editCricket.battingStyle || !editCricket.bowlingStyle}
+          // Disable save if required fields are missing
+          isSaveDisabled={isEditing && activeConfig.attributes.some(attr =>
+            attr.required && !editSportsDetails[attr.key]
+          )}
         >
           {isEditing ? (
-            <div className="space-y-4">
+            <div className="space-y-6">
+              {/* Main Sport Selector */}
+              <FormField label="Main Sport" required>
+                <div className="relative">
+                  <select
+                    value={editMainSport}
+                    onChange={(e) => {
+                      const newSport = e.target.value;
+                      setEditMainSport(newSport);
+                      // Reset details when sport changes
+                      setEditSportsDetails({});
+                    }}
+                    className="flex h-10 w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/50 transition-colors cursor-pointer appearance-none pr-10 text-white"
+                  >
+                    {POPULAR_SPORTS.map(sport => (
+                      <option key={sport} value={sport} className="bg-[#1E1E1E] text-white">
+                        {sport}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </FormField>
+
+
+              {/* Dynamic Attributes based on config */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField label="Cricket Role" required>
-                  <Input
-                    value={editCricket.cricketRole}
-                    onChange={(e) => handleInputChange(e, 'cricket', 'cricketRole')}
-                    className="rounded-lg bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50"
-                    placeholder="e.g., All-rounder, Batsman, Bowler"
-                  />
-                </FormField>
-
-                <FormField label="Batting Style" required>
-                  <Input
-                    value={editCricket.battingStyle}
-                    onChange={(e) => handleInputChange(e, 'cricket', 'battingStyle')}
-                    className="rounded-lg bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50"
-                    placeholder="e.g., Right-handed, Left-handed"
-                  />
-                </FormField>
-
-                <FormField label="Bowling Style" required>
-                  <Input
-                    value={editCricket.bowlingStyle}
-                    onChange={(e) => handleInputChange(e, 'cricket', 'bowlingStyle')}
-                    className="rounded-lg bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50"
-                    placeholder="e.g., Right-arm off-spin, Left-arm orthodox"
-                  />
-                </FormField>
+                {activeConfig.attributes.map(attr => (
+                  <FormField key={attr.key} label={attr.label} required={attr.required}>
+                    {attr.type === 'select' ? (
+                      <div className="flex flex-wrap gap-2">
+                        {attr.options?.map(opt => {
+                          const selected = (editSportsDetails[attr.key] || "") === opt;
+                          return (
+                            <button
+                              key={opt}
+                              type="button"
+                              onClick={() => setEditSportsDetails({ ...editSportsDetails, [attr.key]: opt })}
+                              className={cn(
+                                "px-3 py-1.5 rounded-full text-sm font-medium border transition-all duration-200",
+                                selected
+                                  ? "bg-purple-500 text-white border-purple-500 shadow-lg shadow-purple-500/25"
+                                  : "bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:border-white/20 hover:text-white"
+                              )}
+                            >
+                              {opt}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    ) : attr.type === 'multi-select' ? (
+                      <div className="space-y-2">
+                        <p className="text-xs text-white/40 italic">(Select multiple)</p>
+                        <div className="flex flex-wrap gap-2">
+                          {attr.options?.map(opt => {
+                            const selected = (editSportsDetails[attr.key] || []).includes(opt);
+                            return (
+                              <button
+                                key={opt}
+                                type="button"
+                                onClick={() => {
+                                  const current = editSportsDetails[attr.key] || [];
+                                  const updated = selected
+                                    ? current.filter((i: string) => i !== opt)
+                                    : [...current, opt];
+                                  setEditSportsDetails({ ...editSportsDetails, [attr.key]: updated });
+                                }}
+                                className={cn(
+                                  "px-3 py-1.5 rounded-full text-sm font-medium border transition-all duration-200",
+                                  selected
+                                    ? "bg-purple-500 text-white border-purple-500 shadow-lg shadow-purple-500/25"
+                                    : "bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:border-white/20 hover:text-white"
+                                )}
+                              >
+                                {opt}
+                              </button>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    ) : (
+                      <Input
+                        value={editSportsDetails[attr.key] || ""}
+                        onChange={(e) => setEditSportsDetails({ ...editSportsDetails, [attr.key]: e.target.value })}
+                        className="rounded-lg bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50"
+                        placeholder={attr.placeholder}
+                      />
+                    )}
+                  </FormField>
+                ))}
               </div>
 
-              <div className="pt-4 border-t border-white/10">
-                <div className="flex justify-center gap-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => handleCancel('cricket')}
-                    className="h-10 px-8 rounded-xl border-white/10 text-white/80 hover:bg-white/5 hover:text-white transition-colors"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="button"
-                    onClick={() => handleSave('cricket')}
-                    disabled={!editCricket.cricketRole || !editCricket.battingStyle || !editCricket.bowlingStyle}
-                    className="h-10 px-8 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-700 hover:to-purple-600 shadow-md hover:shadow-purple-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Save Changes
-                  </Button>
+              <div className="h-px bg-white/10 my-4" />
+
+              {/* Secondary Sports Title */}
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-medium text-white/90">Secondary Sports (Optional)</h3>
+              </div>
+
+              {/* Secondary Sports List */}
+              <div className="space-y-6">
+                {editOtherSports.map(sport => {
+                  const config = SPORTS_CONFIG[sport];
+                  return (
+                    <div key={sport} className="relative pb-6 mb-6 border-b border-white/10 last:border-0 last:pb-0 last:mb-0">
+                      <FormField label="Sport" required className="mb-4">
+                        <div className="relative">
+                          <div className="flex h-10 w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm items-center justify-between">
+                            <span className="text-white">{sport}</span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditOtherSports(current => current.filter(s => s !== sport));
+                                // Cleanup details
+                                const newDetails = { ...editSportsDetails };
+                                delete newDetails[sport];
+                                setEditSportsDetails(newDetails);
+                              }}
+                              className="p-1 rounded-md text-white/50 hover:text-red-400 hover:bg-red-500/10 transition-colors -mr-1"
+                              title="Remove Sport"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </div>
+                      </FormField>
+
+                      {/* Inline Dynamic Attributes */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {config?.attributes.map(attr => (
+                          <FormField key={`${sport}-${attr.key}`} label={attr.label} required={attr.required}>
+                            {attr.type === 'select' ? (
+                              <div className="flex flex-wrap gap-2">
+                                {attr.options?.map(opt => {
+                                  const currentVal = editSportsDetails[sport]?.[attr.key];
+                                  const selected = currentVal === opt;
+                                  return (
+                                    <button
+                                      key={opt}
+                                      type="button"
+                                      onClick={() => setEditSportsDetails((prev: any) => ({
+                                        ...prev,
+                                        [sport]: {
+                                          ...(prev[sport] || {}),
+                                          [attr.key]: opt
+                                        }
+                                      }))}
+                                      className={cn(
+                                        "px-3 py-1.5 rounded-full text-sm font-medium border transition-all duration-200",
+                                        selected
+                                          ? "bg-purple-500 text-white border-purple-500 shadow-lg shadow-purple-500/25"
+                                          : "bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:border-white/20 hover:text-white"
+                                      )}
+                                    >
+                                      {opt}
+                                    </button>
+                                  )
+                                })}
+                              </div>
+                            ) : attr.type === 'multi-select' ? (
+                              <div className="space-y-2">
+                                <p className="text-xs text-white/40 italic">(Select multiple)</p>
+                                <div className="flex flex-wrap gap-2">
+                                  {attr.options?.map(opt => {
+                                    const currentDetails = editSportsDetails[sport] || {};
+                                    const currentValues = currentDetails[attr.key] || [];
+                                    // Ensure we handle both string (legacy) and array
+                                    const selected = Array.isArray(currentValues)
+                                      ? currentValues.includes(opt)
+                                      : currentValues === opt;
+
+                                    return (
+                                      <button
+                                        key={opt}
+                                        type="button"
+                                        onClick={() => {
+                                          const current = editSportsDetails[sport] || {};
+                                          const currentVals = Array.isArray(current[attr.key]) ? current[attr.key] : [];
+
+                                          const updated = currentVals.includes(opt)
+                                            ? currentVals.filter((i: string) => i !== opt)
+                                            : [...currentVals, opt];
+
+                                          setEditSportsDetails((prev: any) => ({
+                                            ...prev,
+                                            [sport]: {
+                                              ...(prev[sport] || {}),
+                                              [attr.key]: updated
+                                            }
+                                          }));
+                                        }}
+                                        className={cn(
+                                          "px-3 py-1.5 rounded-full text-sm font-medium border transition-all duration-200",
+                                          selected
+                                            ? "bg-purple-500 text-white border-purple-500 shadow-lg shadow-purple-500/25"
+                                            : "bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:border-white/20 hover:text-white"
+                                        )}
+                                      >
+                                        {opt}
+                                      </button>
+                                    )
+                                  })}
+                                </div>
+                              </div>
+                            ) : (
+                              <Input
+                                value={editSportsDetails[sport]?.[attr.key] || ""}
+                                onChange={(e) => setEditSportsDetails((prev: any) => ({
+                                  ...prev,
+                                  [sport]: {
+                                    ...(prev[sport] || {}),
+                                    [attr.key]: e.target.value
+                                  }
+                                }))}
+                                className="rounded-lg bg-white/5 border-white/10 text-white placeholder-white/30 focus-visible:ring-purple-500/50"
+                                placeholder={attr.placeholder}
+                              />
+                            )}
+                          </FormField>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {/* Inline Add Sport Dropdown */}
+                <div className="pt-2">
+                  <div className="relative">
+                    <select
+                      value=""
+                      onChange={(e) => {
+                        const sportToAdd = e.target.value;
+                        if (sportToAdd) {
+                          setEditOtherSports(prev => [...prev, sportToAdd]);
+                          // Initialize empty details object for this sport
+                          setEditSportsDetails((prev: any) => ({
+                            ...prev,
+                            [sportToAdd]: {}
+                          }));
+                        }
+                      }}
+                      className="flex h-10 w-full md:w-1/2 rounded-lg bg-white/5 border border-dashed border-white/20 px-3 py-2 text-sm text-white/70 hover:border-purple-500/50 hover:bg-purple-500/5 hover:text-purple-300 transition-all cursor-pointer appearance-none focus-visible:outline-none"
+                    >
+                      <option value="" disabled className="bg-[#0F0F0F] text-white/50">
+                        + Add another sport
+                      </option>
+                      {POPULAR_SPORTS
+                        .filter(s => s !== editMainSport && !editOtherSports.includes(s))
+                        .map(sport => (
+                          <option key={sport} value={sport} className="bg-[#0F0F0F] text-white hover:bg-purple-500/20 py-2">
+                            {sport}
+                          </option>
+                        ))}
+                    </select>
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-white/50 md:right-[50%] md:mr-3">
+                      <Plus className="h-4 w-4" />
+                    </div>
+                  </div>
                 </div>
               </div>
+
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div>
-                <p className="text-sm font-medium text-white/70 mb-1">Cricket Role</p>
-                <div className={cn("text-white/90 inline-flex items-center gap-1.5", !cricketInfo.cricketRole && "text-white/50 italic")}>
-                  {cricketInfo.cricketRole || "Not specified"}
+            <div className="space-y-6">
+              <div className="p-6 rounded-xl bg-white/5 border border-white/10">
+                <div className="flex items-center gap-2 mb-4">
+                  {(() => {
+                    const MainSportIcon = SPORT_ICONS[mainSport] || Trophy;
+                    return <MainSportIcon className="h-5 w-5 text-purple-400" />;
+                  })()}
+                  <span className="text-lg font-medium text-white">{mainSport}</span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {(SPORTS_CONFIG[mainSport] || SPORTS_CONFIG['Cricket']).attributes.map(attr => (
+                    <div key={attr.key}>
+                      <p className="text-xs font-medium text-white/50 mb-1">{attr.label}</p>
+                      <div className={cn("text-white inline-flex items-center gap-1.5", !sportsDetails[attr.key] && "text-white/50 italic")}>
+                        {Array.isArray(sportsDetails[attr.key])
+                          ? sportsDetails[attr.key].join(', ')
+                          : (sportsDetails[attr.key] || "Not specified")}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
 
-              <div>
-                <p className="text-sm font-medium text-white/70 mb-1">Batting Style</p>
-                <div className={cn("text-white/90 inline-flex items-center gap-1.5", !cricketInfo.battingStyle && "text-white/50 italic")}>
-                  {cricketInfo.battingStyle || "Not specified"}
-                </div>
-              </div>
+              {/* Display Secondary Sports */}
+              {otherSports.length > 0 && (
+                <div className="space-y-4">
+                  {otherSports.map(sport => {
+                    const config = SPORTS_CONFIG[sport];
+                    const details = sportsDetails[sport] || {};
+                    const SportIcon = SPORT_ICONS[sport] || Trophy;
 
-              <div>
-                <p className="text-sm font-medium text-white/70 mb-1">Bowling Style</p>
-                <div className={cn("text-white/90 inline-flex items-center gap-1.5", !cricketInfo.bowlingStyle && "text-white/50 italic")}>
-                  {cricketInfo.bowlingStyle || "Not specified"}
+                    return (
+                      <div key={sport} className="p-6 rounded-xl bg-white/5 border border-white/10 space-y-4">
+                        <div className="flex items-center gap-2 mb-4">
+                          <SportIcon className="h-5 w-5 text-purple-400" />
+                          <span className="text-lg font-medium text-white">{sport}</span>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                          {config?.attributes.map(attr => (
+                            <div key={attr.key}>
+                              <p className="text-xs font-medium text-white/50 mb-1">{attr.label}</p>
+                              <div className={cn("text-white inline-flex items-center gap-1.5", !details[attr.key] && "text-white/50 italic")}>
+                                {Array.isArray(details[attr.key])
+                                  ? details[attr.key].join(', ')
+                                  : (details[attr.key] || "Not specified")}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-              </div>
+              )}
             </div>
           )}
-        </SectionCard>
+        </SectionCard >
       );
     }
     return null;
@@ -1158,7 +1473,53 @@ export default function PersonalDetailsPage() {
             <>{renderSection(editingSection)}</>
           )}
         </div>
+
+        {/* Bottom padding when editing cricket section */}
+        {editingSection === 'cricket' && <div className="h-24" />}
+
+        {/* Sticky Action Buttons for Sport Details */}
+        {editingSection === 'cricket' && (
+          <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-[#0F0F0F] via-[#1A1A1A] to-[#1A1A1A]/95 border-t border-white/5 backdrop-blur-md z-50">
+            <div className="max-w-4xl mx-auto px-6 py-3 flex justify-center gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => handleCancel('cricket')}
+                className="h-10 w-36 rounded-xl border-white/10 text-white/80 hover:bg-white/5 hover:text-white transition-colors"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                onClick={() => handleSave('cricket')}
+                disabled={
+                  // Check main sport requirements
+                  (SPORTS_CONFIG[editMainSport]?.attributes.some(attr => {
+                    if (!attr.required) return false;
+                    const value = editSportsDetails[attr.key];
+                    return !value || (Array.isArray(value) && value.length === 0);
+                  })) ||
+                  // Check secondary sports requirements
+                  editOtherSports.some(sport => {
+                    const config = SPORTS_CONFIG[sport];
+                    const details = editSportsDetails[sport] || {};
+                    return config?.attributes.some(attr => {
+                      if (!attr.required) return false;
+                      const value = details[attr.key];
+                      return !value || (Array.isArray(value) && value.length === 0);
+                    });
+                  })
+                }
+                className="h-10 w-36 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-700 hover:to-purple-600 shadow-md hover:shadow-purple-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Save Changes
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
+
+
     </div>
   );
 }

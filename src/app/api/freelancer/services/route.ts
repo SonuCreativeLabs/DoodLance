@@ -51,7 +51,8 @@ export async function GET(request: Request) {
             // Looking at schema: packages String?
             // Let's use 'packages' for features JSON.
             category: service.category.name,
-            skill: service.serviceType === 'Match Player' ? service.tags : undefined // Storing skill in tags for Match Player if needed, or we can just return category name
+            skill: service.serviceType === 'Match Player' ? service.tags : undefined, // Storing skill in tags for Match Player if needed, or we can just return category name
+            sport: service.sport // Map sport field
         }));
 
         return NextResponse.json({ services: formattedServices });
@@ -91,7 +92,8 @@ export async function POST(request: Request) {
             features,
             category,
             skill,
-            videoUrls
+            videoUrls,
+            sport
         } = body;
 
         // Validate required fields
@@ -141,6 +143,7 @@ export async function POST(request: Request) {
                 coords: '', // Required field
                 images: '[]', // Required field
                 tags: skill || '', // Store skill in tags if present
+                sport: sport || 'Cricket', // Save sport
                 location: '', // Optional
                 serviceType: type || 'online',
                 deliveryTime,
@@ -170,7 +173,8 @@ export async function POST(request: Request) {
             type: service.serviceType,
             features: service.packages ? JSON.parse(service.packages) : [],
             category: service.category.name,
-            skill: service.tags
+            skill: service.tags,
+            sport: service.sport
         };
 
         return NextResponse.json({ service: formattedService });

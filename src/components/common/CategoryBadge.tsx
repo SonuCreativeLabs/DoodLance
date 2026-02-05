@@ -50,9 +50,10 @@ export function CategorySelect({
   type,
   placeholder = "Select a category",
   required = false,
-  className = ''
-}: CategorySelectProps) {
-  const categories = type === 'service' ? SERVICE_CATEGORIES : PORTFOLIO_CATEGORIES;
+  className = '',
+  options // New prop for dynamic options
+}: CategorySelectProps & { options?: string[] }) {
+  const categories = options || (type === 'service' ? SERVICE_CATEGORIES : PORTFOLIO_CATEGORIES);
 
   return (
     <div className={`relative ${className}`}>
@@ -112,8 +113,8 @@ export function CategoryFilter({
             key={category}
             onClick={() => toggleCategory(category)}
             className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${isSelected
-                ? 'bg-purple-500/20 text-purple-300 border border-purple-500/50'
-                : 'bg-white/5 text-white/60 border border-white/10 hover:bg-white/10'
+              ? 'bg-purple-500/20 text-purple-300 border border-purple-500/50'
+              : 'bg-white/5 text-white/60 border border-white/10 hover:bg-white/10'
               }`}
           >
             {category}

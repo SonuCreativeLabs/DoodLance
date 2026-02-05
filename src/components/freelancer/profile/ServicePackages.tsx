@@ -17,7 +17,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { VideoEmbed, getVideoAspectRatio } from '@/components/common/VideoEmbed';
 
-// Local form interface (different from context ServicePackage)
+import { POPULAR_SPORTS, SPORTS_CONFIG } from '@/constants/sports';
+
 // Local form interface (different from context ServicePackage)
 interface ServicePackage {
   id: string;
@@ -31,6 +32,7 @@ interface ServicePackage {
   type?: 'online' | 'in-person' | 'hybrid';
   category?: string;
   skill?: string;
+  sport?: string;
 };
 
 // Normalize various category labels to the fixed dropdown options
@@ -198,8 +200,24 @@ function PackageForm({
       setFormData(prev => ({ ...prev, price: numeric }));
       return;
     }
+
+    // Reset category if sport changes
+    if (name === 'sport') {
+      setFormData(prev => ({ ...prev, sport: value, category: '' }));
+      return;
+    }
+
     setFormData(prev => ({ ...prev, [name]: value }));
   };
+
+  const getSportCategories = () => {
+    const sportName = formData.sport || 'Cricket';
+    const config = SPORTS_CONFIG[sportName];
+    // Use roles from config as categories, fall back to default if not found
+    return config ? config.roles.map(r => r.name) : [];
+  };
+
+  const currentCategories = getSportCategories();
 
   const handleFeatureChange = (index: number, value: string) => {
     const newFeatures = [...(formData.features || [''])];
@@ -536,6 +554,21 @@ function PackageForm({
             className="bg-[#2D2D2D] border-white/10 text-white placeholder-white/40 focus:border-white/50 focus:ring-1 focus:ring-white/30 transition-all w-full"
             required
           />
+        </div>
+
+        <div className="space-y-2">
+          <Label className="text-sm font-medium text-white/80">Sport</Label>
+          <select
+            name="sport"
+            value={formData.sport || initialData?.sport || 'Cricket'}
+            onChange={handleChange}
+            className="flex h-10 w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+            required
+          >
+            {POPULAR_SPORTS.map(sport => (
+              <option key={sport} value={sport} className="bg-[#1E1E1E]">{sport}</option>
+            ))}
+          </select>
         </div>
       </div>
 

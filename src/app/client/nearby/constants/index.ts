@@ -2,10 +2,14 @@ import { Category } from '../types';
 
 export const categories: Category[] = [
   { id: 1, name: 'All', icon: '' },
-  { id: 10, name: 'Players', icon: '' },
-  { id: 11, name: 'Coaching & Training', icon: '' },
-  { id: 12, name: 'Support Staff & Others', icon: '' },
-  { id: 13, name: 'Media & Content', icon: '' },
+  { id: 10, name: 'Cricket', icon: '' },
+  { id: 11, name: 'Football', icon: '' },
+  { id: 12, name: 'Badminton', icon: '' },
+  { id: 13, name: 'Tennis', icon: '' },
+  { id: 14, name: 'Kabaddi', icon: '' },
+  { id: 15, name: 'Basketball', icon: '' },
+  { id: 16, name: 'Padel', icon: '' },
+  { id: 17, name: 'Pickleball', icon: '' },
 ];
 
 export const areas = [

@@ -1,6 +1,8 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef } from 'react';
+import { createClient } from '@/lib/supabase/client';
+import { useAuth } from './AuthContext';
 
 export interface PersonalDetails {
   name: string;
@@ -13,6 +15,11 @@ export interface PersonalDetails {
   online: boolean;
   readyToWork: boolean;
   dateOfBirth?: string;
+  // Multi-Sport Fields
+  mainSport?: string;
+  otherSports?: string[];
+  sportsDetails?: any; // Flexible JSON
+  // Legacy fields (kept for backward compatibility/types)
   cricketRole?: string;
   battingStyle?: string;
   bowlingStyle?: string;
@@ -61,6 +68,9 @@ const initialPersonalDetails: PersonalDetails = {
   online: false,
   readyToWork: false,
   dateOfBirth: "",
+  mainSport: "Cricket",
+  otherSports: [],
+  sportsDetails: {},
   cricketRole: "",
   battingStyle: "",
   bowlingStyle: "",
@@ -87,9 +97,6 @@ const PersonalDetailsContext = createContext<PersonalDetailsContextType | undefi
 function isValidEmail(email: string | null | undefined): boolean {
   return !!email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
-
-import { createClient } from '@/lib/supabase/client';
-import { useAuth } from './AuthContext';
 
 export function PersonalDetailsProvider({ children }: { children: ReactNode }) {
   const [personalDetails, setPersonalDetails] = useState<PersonalDetails>(initialPersonalDetails);
@@ -243,6 +250,9 @@ export function PersonalDetailsProvider({ children }: { children: ReactNode }) {
         online: profile?.isOnline ?? false,
         readyToWork: profile?.isOnline ?? false,
         dateOfBirth: profile?.dateOfBirth ? new Date(profile.dateOfBirth).toISOString().split('T')[0] : (userData?.dateOfBirth || ""),
+        mainSport: profile?.mainSport || "Cricket",
+        otherSports: profile?.otherSports || [],
+        sportsDetails: profile?.sportsDetails || {},
         cricketRole: profile?.cricketRole || "",
         battingStyle: profile?.battingStyle || "",
         bowlingStyle: profile?.bowlingStyle || "",

@@ -173,46 +173,33 @@ export default function IntegratedExplorePage() {
     let result = professionals.map(mapToProfessional);
 
     // 2. Apply Category Filter
+    // 2. Apply Category Filter (Now Sports)
     if (selectedCategory && selectedCategory !== "All") {
-      const categoryKeywords: { [key: string]: string[] } = {
-        'Players': [
-          'match player', 'net bowler', 'net batsman', 'sidearm', 'sidearm specialist',
-          'bowler', 'batsman', 'player', 'cricketer', 'all rounder',
-          'wicket keeper', 'spinner', 'pacer', 'leg spinner', 'off spinner', 'fast bowler'
-        ],
-        'Coaching & Training': [
-          'coach', 'coaching', 'training', 'trainer', 'conditioning',
-          'fitness', 'drill', 'practice', 'mentor', 'strength'
-        ],
-        'Support Staff & Others': [
-          'analyst', 'analysis', 'physio', 'physiotherapist', 'scorer',
-          'umpire', 'groundsman', 'manager', 'support', 'medic', 'doctor',
-          'statistician', 'masseur', 'other'
-        ],
-        'Media & Content': [
-          'photo', 'video', 'videography', 'content', 'commentator',
-          'media', 'social', 'editor', 'creator', 'streaming',
-          'photographer', 'videographer'
-        ]
-      };
+      // Logic for Multi-Sport Filtering
 
-      const keywords = categoryKeywords[selectedCategory] || [];
-      if (keywords.length > 0) {
+      // If "Cricket" is selected, we include all profiles that match "Cricket" criteria
+      // Since we just migrated everyone to 'mainSport'="Cricket", we can check that field 
+      // OR fallback to the legacy keyword matching for robustness during transition.
+      if (selectedCategory === 'Cricket') {
+        // Filter for Cricket
         result = result.filter(pro => {
-          // Check services array categories
-          if (pro.services && pro.services.length > 0) {
-            return pro.services.some((svc: any) => {
-              const svcCategory = (svc.category || '').toLowerCase();
-              const svcTitle = (svc.title || '').toLowerCase();
-              return keywords.some(keyword =>
-                svcCategory.includes(keyword) || svcTitle.includes(keyword)
-              );
-            });
-          }
-          // Fallback to main service field
+          // If we have mainSport available (we should after migration), use it.
+          // @ts-ignore
+          if (pro.mainSport === 'Cricket') return true;
+
+          // Fallback: Check if it looks like a cricket profile (legacy logic)
+          const cricketKeywords = [
+            'match player', 'net bowler', 'net batsman', 'sidearm',
+            'bowler', 'batsman', 'cricketer', 'all rounder', 'wicket keeper',
+            'coach', 'umpire', 'scorer', 'analyst'
+          ];
           const proService = (pro.service || '').toLowerCase();
-          return keywords.some(keyword => proService.includes(keyword));
+          return cricketKeywords.some(keyword => proService.includes(keyword)) || pro.cricketRole;
         });
+      } else {
+        // For other sports (Football, etc.)
+        // @ts-ignore
+        result = result.filter(pro => pro.mainSport === selectedCategory);
       }
     }
 

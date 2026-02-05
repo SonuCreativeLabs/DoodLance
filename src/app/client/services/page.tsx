@@ -15,25 +15,17 @@ export default function ServicesPage() {
   const selectedButtonRef = useRef<HTMLButtonElement>(null)
   const { services, categories } = useClientServices()
 
-  // Add 'For You' to categories if not present (it's a frontend pseudo-category)
+  // Add 'For You' and 'All Sports'
   const displayCategories = [
     { id: 'for-you', name: 'For You', icon: <Sparkles className="w-6 h-6" />, slug: 'for-you' },
-    ...categories.map(cat => {
-      let iconNode;
-      switch (cat.id) {
-        case 'playing': iconNode = <CricketWickets className="w-6 h-6" />; break; // Custom Cricket Wickets
-        case 'coaching': iconNode = <GraduationCap className="w-6 h-6" />; break;
-        case 'support': iconNode = <HeartHandshake className="w-6 h-6" />; break;
-        case 'media': iconNode = <Camera className="w-6 h-6" />; break;
-        default: iconNode = <Grid className="w-6 h-6" />;
-      }
-      return {
-        id: cat.slug,
-        name: cat.name,
-        icon: iconNode,
-        slug: cat.slug
-      }
-    })
+    { id: 'Cricket', name: 'Cricket', icon: <CricketWickets className="w-6 h-6" />, slug: 'Cricket' },
+    { id: 'Football', name: 'Football', icon: <span className="text-2xl">⚽️</span>, slug: 'Football' },
+    { id: 'Badminton', name: 'Badminton', icon: <span className="text-2xl">🏸</span>, slug: 'Badminton' },
+    { id: 'Tennis', name: 'Tennis', icon: <span className="text-2xl">🎾</span>, slug: 'Tennis' },
+    { id: 'Kabaddi', name: 'Kabaddi', icon: <span className="text-2xl">🤼</span>, slug: 'Kabaddi' },
+    { id: 'Basketball', name: 'Basketball', icon: <span className="text-2xl">🏀</span>, slug: 'Basketball' },
+    { id: 'Padel', name: 'Padel', icon: <span className="text-2xl">🎾</span>, slug: 'Padel' },
+    { id: 'Pickleball', name: 'Pickleball', icon: <span className="text-2xl">🏓</span>, slug: 'Pickleball' },
   ];
 
   // Function to scroll selected category into view
@@ -126,7 +118,23 @@ export default function ServicesPage() {
                       {services
                         // TODO: Replace this heuristic with a real user-behavior-based ranking.
                         // Example future signal sources: recently viewed, clicks, bookings, category affinity.
-                        .filter(service => selectedCategory === 'for-you' ? !!service.mostBooked : service.category === selectedCategory)
+                        // Filter by Sport (assuming existing services are Cricket by default)
+                        .filter(service => {
+                          if (selectedCategory === 'for-you') return !!service.mostBooked;
+
+                          // If generic Cricket is selected, show all legacy services (which are cricket by default)
+                          // In future, services will have a 'sport' field to check against.
+                          if (selectedCategory === 'Cricket') return true;
+
+                          // For other sports, we would check service.sport === selectedCategory
+                          // Currently returns nothing as we haven't seeded other sports services yet
+                          if (['Football', 'Badminton', 'Tennis', 'Kabaddi'].includes(selectedCategory)) {
+                            // @ts-ignore
+                            return service.sport === selectedCategory;
+                          }
+
+                          return service.category === selectedCategory
+                        })
                         .map((service) => (
                           <Link
                             href={`/client/nearby?view=list&category=${service.category}&search=${encodeURIComponent(service.name)}`}
