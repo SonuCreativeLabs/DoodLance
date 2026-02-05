@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
-    const to = searchParams.get('to') || 'sathishraj@doodlance.com';
+    const to = searchParams.get('to') || 'sathishraj@bails.in';
 
     // 1. Check Env Vars availability (mask values for security)
     const envStatus = {

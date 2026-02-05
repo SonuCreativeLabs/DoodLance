@@ -132,7 +132,7 @@ export function isValidEmail(email: string): boolean {
   return emailRegex.test(email);
 }
 
-const ADMIN_EMAIL = 'sathishraj@doodlance.com';
+const ADMIN_EMAIL = 'sathishraj@bails.in';
 
 /**
  * Sends a notification email to the admin

@@ -124,7 +124,7 @@ function OTPContent() {
       console.log('🚀 Redirecting to /client...')
 
       // Redirect to main app
-      router.push('/client')
+      router.push('/')
     } catch (err: any) {
       console.error('❌ OTP verification failed:', err)
       setError(err.message || 'Invalid verification code. Please try again.')

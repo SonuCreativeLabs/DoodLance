@@ -90,21 +90,24 @@ npm run db:studio      # Open Prisma Studio (database GUI)
 
 ---
 
-## 👥 Mock Users
+## 👥 Test Users
 
-### **Base Users**
-1. **Rajesh Kumar** (client@doodlance.com)
-   - Role: Client
-   - Company: Chennai Cricket Academy
-   - Location: Chennai, Tamil Nadu
+### 1. Test Users
 
-2. **Sathish Sonu** (freelancer@doodlance.com)
-   - Role: Freelancer
-   - Title: Cricket All-Rounder
-   - Skills: RH Batsman, Sidearm Specialist, Off Spin, Coach, Analyst
-   - Rating: 4.9/5
+We have pre-configured test users for different roles. Use these credentials to test the application flows.
 
-3. **Arjun Singh** (bowler@doodlance.com)
+#### Client Role
+1. **Rajesh Kumar** (client@bails.in)
+   - **Role:** Client (Team Manager)
+   - **Use Case:** Posting jobs, hiring freelancers, managing bookings.
+
+#### Freelancer Role
+2. **Sathish Sonu** (freelancer@bails.in)
+   - **Role:** Freelancer (Batsman)
+   - **Skills:** Batting, Wicket Keeping
+   - **Use Case:** Applying for jobs, accepting bookings.
+
+3. **Arjun Singh** (bowler@bails.in)
    - Role: Freelancer
    - Title: Fast Bowler & Net Specialist
    - Skills: Fast Bowling, Net Bowling, Pace Variations

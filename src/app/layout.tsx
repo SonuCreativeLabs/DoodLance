@@ -11,7 +11,7 @@ import { MicrosoftClarity } from "@/components/MicrosoftClarity";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  metadataBase: new URL('https://doodlance.com'),
+  metadataBase: new URL('https://bails.in'),
   title: {
     default: 'BAILS - Cricket Services Marketplace',
     template: '%s | BAILS',
@@ -73,8 +73,8 @@ const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Organization',
   name: 'BAILS',
-  url: 'https://doodlance.com',
-  logo: 'https://doodlance.com/images/LOGOS/BAILS%20TG.png',
+  url: 'https://bails.in',
+  logo: 'https://bails.in/images/LOGOS/BAILS%20TG.png',
   sameAs: [
     'https://twitter.com/bails_official',
     'https://instagram.com/bails_official',

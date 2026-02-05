@@ -553,10 +553,10 @@ export async function POST(request: NextRequest) {
 
             // 3. Notify Freelancer (User) + Admin (Copy) via Email
             // Run asynchronously
-            (async () => {
-                if (!fullBooking) return;
-
-                try {
+            // 3. Notify Freelancer (User) + Admin (Copy) via Email
+            // Run synchronously to ensure delivery in serverless env
+            try {
+                if (fullBooking) {
                     const { sendBookingNotification } = await import('@/lib/email');
 
                     const price = (fullBooking.totalPrice || 0).toLocaleString('en-IN');
@@ -628,11 +628,10 @@ export async function POST(request: NextRequest) {
                     `;
 
                     await sendBookingNotification(freelancerEmail, 'freelancer', subject, htmlContent);
-
-                } catch (emailErr) {
-                    console.error('Failed to send booking notification:', emailErr);
                 }
-            })();
+            } catch (emailErr) {
+                console.error('Failed to send booking notification:', emailErr);
+            }
 
             console.log('Booking created successfully:', result.id);
             return NextResponse.json({ success: true, booking: result });

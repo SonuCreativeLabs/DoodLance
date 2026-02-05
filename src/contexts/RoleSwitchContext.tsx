@@ -25,7 +25,7 @@ export function RoleSwitchProvider({ children }: { children: ReactNode }) {
     // Wait for minimum splash animation duration
     setTimeout(() => {
       if (role === 'client') {
-        router.push('/client');
+        router.push('/');
       } else {
         router.push('/freelancer/profile');
       }
@@ -38,7 +38,7 @@ export function RoleSwitchProvider({ children }: { children: ReactNode }) {
   React.useEffect(() => {
     if (isSwitching) {
       const isTargetReached =
-        (targetRole === 'client' && pathname.startsWith('/client')) ||
+        (targetRole === 'client' && (pathname === '/' || pathname.startsWith('/client'))) ||
         (targetRole === 'freelancer' && pathname.startsWith('/freelancer'));
 
       if (isTargetReached) {

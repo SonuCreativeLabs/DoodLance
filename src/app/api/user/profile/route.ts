@@ -140,7 +140,7 @@ export async function GET(request: NextRequest) {
                 }
 
                 // Send Admin Notification
-                const { sendAdminNotification } = await import('@/lib/email');
+                const { sendAdminNotification, sendEmail } = await import('@/lib/email');
 
                 const subject = `New User Signup: ${newDbUser.name || 'User'}`;
                 const htmlContent = `
@@ -170,8 +170,56 @@ export async function GET(request: NextRequest) {
                     subject,
                     `New user signed up: ${newDbUser.name} (${newDbUser.email})`,
                     htmlContent
-                ).then(() => console.log(`[API] ✅ Admin notification sent for ${newDbUser.email}`))
-                    .catch(err => console.error(`[API] ❌ Failed to send admin notification for ${newDbUser.email}:`, err));
+                ).catch(err => console.error(`[API] ❌ Failed to send admin notification for ${newDbUser.email}:`, err));
+
+                // Send Welcome Email to User
+                const welcomeSubject = `Welcome to BAILS, ${newDbUser.name}! 🏏`;
+                const welcomeHtml = `
+                    <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+                        <div style="background-color: #6B46C1; padding: 30px 20px; text-align: center; border-radius: 8px 8px 0 0;">
+                             <h1 style="color: white; margin: 0;">Welcome to BAILS! 🏏</h1>
+                        </div>
+                        
+                        <div style="border: 1px solid #eee; border-top: none; border-radius: 0 0 8px 8px; padding: 30px;">
+                            <p style="font-size: 18px; margin-bottom: 20px;">
+                                Hi <strong>${newDbUser.name}</strong>,
+                            </p>
+                            <p style="font-size: 16px; line-height: 1.6; color: #555;">
+                                We're thrilled to have you join our community! BAILS is designed to connect cricket enthusiasts like you with the best coaches and facilities.
+                            </p>
+
+                            <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 25px 0;">
+                                <h3 style="margin-top: 0; color: #6B46C1;">Get Started 🚀</h3>
+                                <ul style="padding-left: 20px; color: #555;">
+                                    <li style="margin-bottom: 10px;">Before you book, please complete your profile.</li>
+                                    <li style="margin-bottom: 10px;">Explore nearby coaches and academies.</li>
+                                    <li>Book your first session!</li>
+                                </ul>
+                            </div>
+
+                            <div style="text-align: center; margin-top: 30px; margin-bottom: 20px;">
+                                <a href="https://bails.in/client/profile" 
+                                   style="background-color: #6B46C1; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 16px; display: inline-block;">
+                                    Complete Your Profile
+                                </a>
+                            </div>
+                            
+                            <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+                            
+                            <p style="font-size: 14px; color: #888; text-align: center;">
+                                If you have any questions, feel free to reply to this email or contact support.
+                            </p>
+                        </div>
+                    </div>
+                `;
+
+                console.log(`[API] 📧 Sending Welcome Email to ${newDbUser.email}...`);
+                await sendEmail({
+                    to: newDbUser.email,
+                    subject: welcomeSubject,
+                    text: `Welcome to BAILS, ${newDbUser.name}! We're thrilled to have you.`,
+                    html: welcomeHtml
+                }).catch(err => console.error(`[API] ❌ Failed to send Welcome Email to ${newDbUser.email}:`, err));
 
                 return NextResponse.json(newDbUser);
             } catch (createError: any) {
