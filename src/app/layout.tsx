@@ -13,11 +13,11 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata = {
   metadataBase: new URL('https://bails.in'),
   title: {
-    default: 'BAILS - Cricket Services Marketplace',
+    default: 'BAILS - Sports Freelance Marketplace',
     template: '%s | BAILS',
   },
-  description: 'Find and hire the best cricket talent in Chennai. Connect with net bowlers, sidearm specialists, coaches, and match players.',
-  keywords: ['cricket', 'chennai', 'net bowlers', 'sidearm', 'cricket coaching', 'match players', 'hire cricketers', 'cricket services'],
+  description: 'Find and hire the best sports freelancers. Connect with coaches, players, and specialized sport professionals.',
+  keywords: ['sports freelance', 'coaching', 'athletes', 'hire sports talent', 'sports marketplace', 'cricket', 'football', 'badminton'],
 
   authors: [{ name: 'BAILS Team' }],
   creator: 'BAILS',
@@ -28,8 +28,8 @@ export const metadata = {
     telephone: false,
   },
   openGraph: {
-    title: 'BAILS - Cricket Services Marketplace',
-    description: 'Connect with local cricket service providers and monetize your skills',
+    title: 'BAILS - Sports Freelance Marketplace',
+    description: 'Connect with local sports freelancers and monetize your skills',
     url: 'https://bails.in',
     siteName: 'BAILS',
     images: [
@@ -37,7 +37,7 @@ export const metadata = {
         url: '/images/LOGOS/BAILS TG.png',
         width: 1200,
         height: 630,
-        alt: 'BAILS - Cricket Services Marketplace',
+        alt: 'BAILS - Sports Freelance Marketplace',
       },
     ],
     locale: 'en_US',
@@ -45,8 +45,8 @@ export const metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'BAILS - Cricket Services Marketplace',
-    description: 'Connect with local cricket service providers and monetize your skills',
+    title: 'BAILS - Sports Freelance Marketplace',
+    description: 'Connect with local sports freelancers and monetize your skills',
     creator: '@bails_in', // Assuming handle, can be generic if unknown
     images: ['/images/LOGOS/BAILS TG.png'],
   },
@@ -80,7 +80,7 @@ const jsonLd = {
     'https://instagram.com/bails_official',
     // Add other social links
   ],
-  description: 'A hyper-local cricket services platform connecting cricket players, coaches, teams, and enthusiasts with specialized cricket service providers.',
+  description: 'A hyper-local sports freelance marketplace connecting players, coaches, teams, and enthusiasts with specialized sports professionals.',
   address: {
     '@type': 'PostalAddress',
     addressLocality: 'Chennai',

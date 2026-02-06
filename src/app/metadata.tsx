@@ -2,10 +2,10 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: {
-    default: 'BAILS - Cricket Services Marketplace',
+    default: 'BAILS - Sports Freelance Marketplace',
     template: '%s | BAILS'
   },
-  description: 'Connect with professional cricket coaches, players, and support staff in Chennai. BAILS is the premier marketplace for cricket services.',
+  description: 'Connect with professional sports freelancers, coaches, and support staff. BAILS is the premier freelance marketplace for sports.',
   icons: {
     icon: "/favicon.ico",
   },

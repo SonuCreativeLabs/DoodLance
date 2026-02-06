@@ -206,7 +206,7 @@ export default function ProfilePage() {
               </div>
 
               <ProfileSectionCard
-                title="Cricket Services"
+                title="Sports Services"
                 description="List your services with videos, descriptions, and pricing"
                 href="/freelancer/profile/services"
                 icon={<FileText className="h-4 w-4" />}

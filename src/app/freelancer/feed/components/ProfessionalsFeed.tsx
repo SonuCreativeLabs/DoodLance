@@ -41,6 +41,8 @@ export type BaseProfessional = {
   expertise?: string[];
   experience?: string;
   cricketRole?: string;
+  mainSport?: string;
+  otherSports?: string[];
   // Services array for dynamic pricing - used to show lowest price from freelancer's service list
   services?: {
     id: string;

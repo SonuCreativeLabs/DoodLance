@@ -158,29 +158,57 @@ export const SPORTS_CONFIG: Record<string, SportConfig> = {
             }
         ]
     },
-    Kabaddi: {
-        name: 'Kabaddi',
+    'Table Tennis': {
+        name: 'Table Tennis',
         roles: [
-            { id: 'raider', name: 'Raider' },
-            { id: 'defender', name: 'Defender' },
-            { id: 'all_rounder', name: 'All Rounder' },
+            { id: 'match_player', name: 'Match Player' },
+            { id: 'practice_partner', name: 'Practice Partner' },
+            { id: 'coach', name: 'Coach' },
+            { id: 'umpire', name: 'Umpire' },
+        ],
+        attributes: [
+            {
+                key: 'playingStyle',
+                label: 'Playing Style',
+                type: 'select',
+                options: ['Offensive', 'Defensive', 'All-Round'],
+                required: true
+            },
+            {
+                key: 'gripType',
+                label: 'Grip Type',
+                type: 'select',
+                options: ['Shakehand', 'Penhold']
+            }
+        ]
+    },
+    'Combat Sports': {
+        name: 'Combat Sports',
+        roles: [
+            { id: 'fighter', name: 'Fighter' },
+            { id: 'sparring_partner', name: 'Sparring Partner' },
             { id: 'coach', name: 'Coach' },
             { id: 'referee', name: 'Referee' },
         ],
         attributes: [
             {
-                key: 'position',
-                label: 'Position',
+                key: 'discipline',
+                label: 'Discipline',
                 type: 'select',
-                options: ['Left Corner', 'Right Corner', 'Left Cover', 'Right Cover', 'Center', 'Raider'],
+                options: ['Boxing', 'MMA', 'Wrestling', 'Judo', 'Karate', 'Taekwondo', 'Muay Thai', 'Kickboxing'],
                 required: true
             },
             {
-                key: 'weightCategory',
-                label: 'Weight Category',
-                type: 'select',
-                options: ['Under 50kg', 'Under 60kg', 'Under 70kg', 'Under 80kg', 'Open'],
-                required: false
+                key: 'weightClass',
+                label: 'Weight Class',
+                type: 'text',
+                placeholder: 'e.g., Welterweight'
+            },
+            {
+                key: 'record',
+                label: 'Record',
+                type: 'text',
+                placeholder: 'e.g., 15-3-0'
             }
         ]
     },
@@ -273,4 +301,4 @@ export const SPORTS_CONFIG: Record<string, SportConfig> = {
     }
 };
 
-export const POPULAR_SPORTS = ['Cricket', 'Football', 'Badminton', 'Tennis', 'Basketball', 'Padel', 'Pickleball', 'Kabaddi'];
+export const POPULAR_SPORTS = ['Cricket', 'Football', 'Badminton', 'Tennis', 'Basketball', 'Padel', 'Pickleball', 'Table Tennis', 'Combat Sports'];

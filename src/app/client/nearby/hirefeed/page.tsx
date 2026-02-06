@@ -67,10 +67,7 @@ export default function IntegratedExplorePage() {
       };
 
       const mappedCategory = categoryMap[category.toLowerCase()] || category;
-      // Verify if valid category, otherwise default or keep current
-      if (['All', 'Players', 'Coaching & Training', 'Support Staff & Others', 'Media & Content'].includes(mappedCategory)) {
-        setSelectedCategory(mappedCategory);
-      }
+      setSelectedCategory(mappedCategory);
     }
 
     // If there's a pinId, we need to open that specific pin on the map
@@ -184,7 +181,6 @@ export default function IntegratedExplorePage() {
         // Filter for Cricket
         result = result.filter(pro => {
           // If we have mainSport available (we should after migration), use it.
-          // @ts-ignore
           if (pro.mainSport === 'Cricket') return true;
 
           // Fallback: Check if it looks like a cricket profile (legacy logic)
@@ -198,8 +194,10 @@ export default function IntegratedExplorePage() {
         });
       } else {
         // For other sports (Football, etc.)
-        // @ts-ignore
-        result = result.filter(pro => pro.mainSport === selectedCategory);
+        result = result.filter(pro =>
+          pro.mainSport === selectedCategory ||
+          pro.otherSports?.includes(selectedCategory)
+        );
       }
     }
 
@@ -606,6 +604,8 @@ export default function IntegratedExplorePage() {
       <SearchFilters
         showFilterModal={showFilterModal}
         setShowFilterModal={setShowFilterModal}
+        selectedCategory={selectedCategory}
+        setSelectedCategory={setSelectedCategory}
         selectedArea={selectedArea}
         setSelectedArea={setSelectedArea}
         selectedService={selectedService}

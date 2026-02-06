@@ -6,10 +6,12 @@ export const categories: Category[] = [
   { id: 11, name: 'Football', icon: '' },
   { id: 12, name: 'Badminton', icon: '' },
   { id: 13, name: 'Tennis', icon: '' },
-  { id: 14, name: 'Kabaddi', icon: '' },
-  { id: 15, name: 'Basketball', icon: '' },
-  { id: 16, name: 'Padel', icon: '' },
-  { id: 17, name: 'Pickleball', icon: '' },
+  { id: 16, name: 'Pickleball', icon: '' },
+  { id: 14, name: 'Basketball', icon: '' },
+  { id: 15, name: 'Padel', icon: '' },
+  { id: 17, name: 'Table Tennis', icon: '' },
+  { id: 18, name: 'Combat Sports', icon: '' },
+  { id: 19, name: 'Others', icon: '' },
 ];
 
 export const areas = [

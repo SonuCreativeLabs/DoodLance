@@ -217,6 +217,8 @@ export async function GET(request: Request) {
                 experience: experience,
                 description: p.user.bio || p.about || '',
                 cricketRole: p.cricketRole,
+                mainSport: p.mainSport,
+                otherSports: p.otherSports,
                 services: userServices.map((s: any) => ({
                     id: s.id,
                     title: s.title,

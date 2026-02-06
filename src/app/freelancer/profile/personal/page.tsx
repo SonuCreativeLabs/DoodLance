@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,7 +31,8 @@ import { UsernameInput } from '@/components/freelancer/profile/UsernameInput';
 import { CricketLoader } from '@/components/ui/cricket-loader';
 import { SPORTS_CONFIG, POPULAR_SPORTS, SportConfig } from '@/constants/sports';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectScrollUpButton, SelectScrollDownButton } from "@/components/ui/select"
+import * as SelectPrimitive from "@radix-ui/react-select";
 
 // Sport icon mapping
 const SPORT_ICONS: Record<string, any> = {
@@ -206,6 +207,7 @@ export default function PersonalDetailsPage() {
   const [usernameMessage, setUsernameMessage] = useState('');
   const [isSavingUsername, setIsSavingUsername] = useState(false);
 
+
   const [personalInfo, setPersonalInfo] = useState<PersonalInfo>({
     firstName: personalDetails.firstName || "",
     lastName: personalDetails.lastName || "",
@@ -295,6 +297,7 @@ export default function PersonalDetailsPage() {
   const [editMainSport, setEditMainSport] = useState(mainSport);
   const [editOtherSports, setEditOtherSports] = useState<string[]>(otherSports);
   const [editSportsDetails, setEditSportsDetails] = useState<any>({ ...sportsDetails });
+
 
   const [editCricket, setEditCricket] = useState<CricketInfo>({ ...cricketInfo });
   const [editUsername, setEditUsername] = useState(username);
@@ -1122,7 +1125,10 @@ export default function PersonalDetailsPage() {
                 {editOtherSports.map(sport => {
                   const config = SPORTS_CONFIG[sport];
                   return (
-                    <div key={sport} className="relative pb-6 mb-6 border-b border-white/10 last:border-0 last:pb-0 last:mb-0">
+                    <div
+                      key={sport}
+                      className="relative pb-6 mb-6 border-b border-white/10 last:border-0 last:pb-0 last:mb-0"
+                    >
                       <FormField label="Sport" required className="mb-4">
                         <div className="relative">
                           <div className="flex h-10 w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm items-center justify-between">
@@ -1243,13 +1249,12 @@ export default function PersonalDetailsPage() {
                   );
                 })}
 
-                {/* Inline Add Sport Dropdown */}
+                {/* Inline Add Sport Dropdown - Premium Radix UI Select */}
                 <div className="pt-2">
                   <div className="relative">
-                    <select
+                    <SelectPrimitive.Root
                       value=""
-                      onChange={(e) => {
-                        const sportToAdd = e.target.value;
+                      onValueChange={(sportToAdd) => {
                         if (sportToAdd) {
                           setEditOtherSports(prev => [...prev, sportToAdd]);
                           // Initialize empty details object for this sport
@@ -1259,22 +1264,44 @@ export default function PersonalDetailsPage() {
                           }));
                         }
                       }}
-                      className="flex h-10 w-full md:w-1/2 rounded-lg bg-white/5 border border-dashed border-white/20 px-3 py-2 text-sm text-white/70 hover:border-purple-500/50 hover:bg-purple-500/5 hover:text-purple-300 transition-all cursor-pointer appearance-none focus-visible:outline-none"
                     >
-                      <option value="" disabled className="bg-[#0F0F0F] text-white/50">
-                        + Add another sport
-                      </option>
-                      {POPULAR_SPORTS
-                        .filter(s => s !== editMainSport && !editOtherSports.includes(s))
-                        .map(sport => (
-                          <option key={sport} value={sport} className="bg-[#0F0F0F] text-white hover:bg-purple-500/20 py-2">
-                            {sport}
-                          </option>
-                        ))}
-                    </select>
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-white/50 md:right-[50%] md:mr-3">
-                      <Plus className="h-4 w-4" />
-                    </div>
+                      <SelectPrimitive.Trigger
+                        className="flex h-10 w-full md:w-1/2 rounded-lg bg-white/5 border border-dashed border-white/20 px-3 py-2 text-sm text-white/70 hover:border-purple-500/50 hover:bg-purple-500/5 hover:text-purple-300 transition-all cursor-pointer items-center justify-between outline-none"
+                      >
+                        <span className="flex items-center gap-2">
+                          <Plus className="h-4 w-4" />
+                          Add another sport
+                        </span>
+                      </SelectPrimitive.Trigger>
+
+                      <SelectPrimitive.Portal>
+                        <SelectPrimitive.Content
+                          position="popper"
+                          side="bottom"
+                          sideOffset={5}
+                          className="overflow-hidden bg-[#18181b] rounded-xl border border-white/10 shadow-xl z-50 w-[var(--radix-select-trigger-width)] max-h-[235px] relative"
+                        >
+                          <SelectScrollUpButton className="flex items-center justify-center h-6 bg-gradient-to-b from-[#18181b] to-transparent text-white/50 cursor-default pointer-events-none" />
+                          <SelectPrimitive.Viewport className="p-1">
+                            {POPULAR_SPORTS
+                              .filter(s => s !== editMainSport && !editOtherSports.includes(s))
+                              .map(sport => (
+                                <SelectPrimitive.Item
+                                  key={sport}
+                                  value={sport}
+                                  className="relative flex items-center h-10 px-8 text-sm text-white rounded-lg select-none hover:bg-white hover:text-black data-[highlighted]:bg-white data-[highlighted]:text-black outline-none cursor-pointer mb-1 transition-colors"
+                                >
+                                  <SelectPrimitive.ItemText>{sport}</SelectPrimitive.ItemText>
+                                  <SelectPrimitive.ItemIndicator className="absolute left-2 inline-flex items-center justify-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                                  </SelectPrimitive.ItemIndicator>
+                                </SelectPrimitive.Item>
+                              ))}
+                          </SelectPrimitive.Viewport>
+                          <SelectScrollDownButton className="flex items-center justify-center h-8 bg-gradient-to-t from-[#18181b] to-transparent text-purple-400 cursor-default animate-pulse pointer-events-none" />
+                        </SelectPrimitive.Content>
+                      </SelectPrimitive.Portal>
+                    </SelectPrimitive.Root>
                   </div>
                 </div>
               </div>

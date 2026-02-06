@@ -25,6 +25,8 @@ export interface Professional {
   experience: string;
   description?: string;
   cricketRole?: string;
+  mainSport?: string;
+  otherSports?: string[];
 
   // Additional fields
   services?: {

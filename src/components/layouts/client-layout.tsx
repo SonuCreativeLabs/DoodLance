@@ -19,7 +19,7 @@ interface ClientLayoutProps {
 export default function ClientLayout({ children, className }: ClientLayoutProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const isClientHome = pathname === '/' || pathname === '/client' || pathname === '/client/';
+  const isClientHome = !pathname || pathname === '/' || pathname === '/client' || pathname === '/client/';
   const isServicePage = pathname === '/client/services';
   const isBookingDetails = pathname?.startsWith('/client/bookings/') && pathname !== '/client/bookings';
   const shouldHideGlobalHeader = isClientHome || isServicePage || isBookingDetails;

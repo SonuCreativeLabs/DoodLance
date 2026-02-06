@@ -14,6 +14,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { categories } from './client/nearby/constants';
 import ClientLayout from '@/components/layouts/client-layout'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -25,8 +26,6 @@ import { usePopularServices } from '@/contexts/PopularServicesContext'
 import { useAuth } from '@/contexts/AuthContext';
 import { useRoleSwitch } from '@/contexts/RoleSwitchContext';
 import { TopRatedExpertSkeleton } from '@/components/skeletons/TopRatedExpertSkeleton'
-
-// Search functionality will be implemented with real data
 
 export default function ClientHome() {
   const router = useRouter();
@@ -47,6 +46,86 @@ export default function ClientHome() {
   const [showLogoutAlert, setShowLogoutAlert] = useState(false);
 
   const { user, refreshUser, signOut, isAuthenticated } = useAuth();
+
+  // Configuration for Sport Card Styles
+  const sportStyles: Record<string, {
+    borderHover: string;
+    gradientTo: string;
+    iconShadow: string;
+    textHover: string;
+    icon: string;
+  }> = {
+    'Cricket': {
+      borderHover: 'group-hover:border-blue-500/50',
+      gradientTo: 'to-blue-900/20',
+      iconShadow: 'drop-shadow-[0_0_15px_rgba(59,130,246,0.3)]',
+      textHover: 'group-hover:text-blue-400',
+      icon: '🏏'
+    },
+    'Football': {
+      borderHover: 'group-hover:border-emerald-500/50',
+      gradientTo: 'to-emerald-900/20',
+      iconShadow: 'drop-shadow-[0_0_15px_rgba(16,185,129,0.3)]',
+      textHover: 'group-hover:text-emerald-400',
+      icon: '⚽️'
+    },
+    'Badminton': {
+      borderHover: 'group-hover:border-yellow-500/50',
+      gradientTo: 'to-yellow-900/20',
+      iconShadow: 'drop-shadow-[0_0_15px_rgba(234,179,8,0.3)]',
+      textHover: 'group-hover:text-yellow-400',
+      icon: '🏸'
+    },
+    'Tennis': {
+      borderHover: 'group-hover:border-lime-500/50',
+      gradientTo: 'to-lime-900/20',
+      iconShadow: 'drop-shadow-[0_0_15px_rgba(132,204,22,0.3)]',
+      textHover: 'group-hover:text-lime-400',
+      icon: '🎾'
+    },
+    'Basketball': {
+      borderHover: 'group-hover:border-orange-500/50',
+      gradientTo: 'to-orange-900/20',
+      iconShadow: 'drop-shadow-[0_0_15px_rgba(249,115,22,0.3)]',
+      textHover: 'group-hover:text-orange-400',
+      icon: '🏀'
+    },
+    'Padel': {
+      borderHover: 'group-hover:border-cyan-500/50',
+      gradientTo: 'to-cyan-900/20',
+      iconShadow: 'drop-shadow-[0_0_15px_rgba(6,182,212,0.3)]',
+      textHover: 'group-hover:text-cyan-400',
+      icon: '🎾'
+    },
+    'Pickleball': {
+      borderHover: 'group-hover:border-green-500/50',
+      gradientTo: 'to-green-900/20',
+      iconShadow: 'drop-shadow-[0_0_15px_rgba(34,197,94,0.3)]',
+      textHover: 'group-hover:text-green-400',
+      icon: '🏓'
+    },
+    'Table Tennis': {
+      borderHover: 'group-hover:border-teal-500/50',
+      gradientTo: 'to-teal-900/20',
+      iconShadow: 'drop-shadow-[0_0_15px_rgba(20,184,166,0.3)]',
+      textHover: 'group-hover:text-teal-400',
+      icon: '🏓'
+    },
+    'Combat Sports': {
+      borderHover: 'group-hover:border-rose-500/50',
+      gradientTo: 'to-rose-900/20',
+      iconShadow: 'drop-shadow-[0_0_15px_rgba(244,63,94,0.3)]',
+      textHover: 'group-hover:text-rose-400',
+      icon: '🥊'
+    },
+    'Others': {
+      borderHover: 'group-hover:border-purple-500/50',
+      gradientTo: 'to-purple-900/20',
+      iconShadow: 'drop-shadow-[0_0_15px_rgba(168,85,247,0.3)]',
+      textHover: 'group-hover:text-purple-400',
+      icon: '🏅'
+    }
+  };
 
   // Set local state when user from context changes
   useEffect(() => {
@@ -612,97 +691,34 @@ export default function ClientHome() {
           <section className="mb-4 relative z-0">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-base font-semibold text-white tracking-wide text-left">Popular Sports</h2>
+              <Link href="/client/services" className="text-white/80 hover:text-white text-xs font-medium flex items-center transition-colors">
+                View All
+                <ChevronRight className="w-3 h-3 ml-1" />
+              </Link>
             </div>
             <div className="relative -mx-4">
               <div className="overflow-x-auto scrollbar-hide px-4 pr-8 md:overflow-visible">
-                <div className="flex space-x-4 pb-2 md:grid md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 md:space-x-0 md:gap-4">
-                  {/* Cricket */}
-                  <div
-                    onClick={() => router.push('/client/nearby/hirefeed?category=Cricket')}
-                    className="flex-shrink-0 w-[125px] flex flex-col items-center gap-3 p-4 rounded-3xl bg-[#161616] border border-white/5 hover:border-purple-500/30 transition-all cursor-pointer group"
-                  >
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500/10 to-blue-600/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                      <span className="text-2xl">🏏</span>
-                    </div>
-                    <span className="text-sm font-medium text-white/90 group-hover:text-white">Cricket</span>
-                  </div>
-
-                  {/* Football */}
-                  <div
-                    onClick={() => router.push('/client/nearby/hirefeed?category=Football')}
-                    className="flex-shrink-0 w-[125px] flex flex-col items-center gap-3 p-4 rounded-3xl bg-[#161616] border border-white/5 hover:border-purple-500/30 transition-all cursor-pointer group"
-                  >
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-green-500/10 to-emerald-600/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                      <span className="text-2xl">⚽️</span>
-                    </div>
-                    <span className="text-sm font-medium text-white/90 group-hover:text-white">Football</span>
-                  </div>
-
-                  {/* Badminton */}
-                  <div
-                    onClick={() => router.push('/client/nearby/hirefeed?category=Badminton')}
-                    className="flex-shrink-0 w-[125px] flex flex-col items-center gap-3 p-4 rounded-3xl bg-[#161616] border border-white/5 hover:border-purple-500/30 transition-all cursor-pointer group"
-                  >
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-yellow-500/10 to-orange-600/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                      <span className="text-2xl">🏸</span>
-                    </div>
-                    <span className="text-sm font-medium text-white/90 group-hover:text-white">Badminton</span>
-                  </div>
-
-                  {/* Tennis */}
-                  <div
-                    onClick={() => router.push('/client/nearby/hirefeed?category=Tennis')}
-                    className="flex-shrink-0 w-[125px] flex flex-col items-center gap-3 p-4 rounded-3xl bg-[#161616] border border-white/5 hover:border-purple-500/30 transition-all cursor-pointer group"
-                  >
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-lime-500/10 to-green-600/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                      <span className="text-2xl">🎾</span>
-                    </div>
-                    <span className="text-sm font-medium text-white/90 group-hover:text-white">Tennis</span>
-                  </div>
-
-                  {/* Kabaddi */}
-                  <div
-                    onClick={() => router.push('/client/nearby/hirefeed?category=Kabaddi')}
-                    className="flex-shrink-0 w-[125px] flex flex-col items-center gap-3 p-4 rounded-3xl bg-[#161616] border border-white/5 hover:border-purple-500/30 transition-all cursor-pointer group"
-                  >
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-red-500/10 to-orange-600/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                      <span className="text-2xl">🤼</span>
-                    </div>
-                    <span className="text-sm font-medium text-white/90 group-hover:text-white">Kabaddi</span>
-                  </div>
-
-                  {/* Basketball */}
-                  <div
-                    onClick={() => router.push('/client/nearby/hirefeed?category=Basketball')}
-                    className="flex-shrink-0 w-[125px] flex flex-col items-center gap-3 p-4 rounded-3xl bg-[#161616] border border-white/5 hover:border-purple-500/30 transition-all cursor-pointer group"
-                  >
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500/10 to-red-600/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                      <span className="text-2xl">🏀</span>
-                    </div>
-                    <span className="text-sm font-medium text-white/90 group-hover:text-white">Basketball</span>
-                  </div>
-
-                  {/* Padel */}
-                  <div
-                    onClick={() => router.push('/client/nearby/hirefeed?category=Padel')}
-                    className="flex-shrink-0 w-[125px] flex flex-col items-center gap-3 p-4 rounded-3xl bg-[#161616] border border-white/5 hover:border-purple-500/30 transition-all cursor-pointer group"
-                  >
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500/10 to-cyan-600/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                      <span className="text-2xl">🎾</span>
-                    </div>
-                    <span className="text-sm font-medium text-white/90 group-hover:text-white">Padel</span>
-                  </div>
-
-                  {/* Pickleball */}
-                  <div
-                    onClick={() => router.push('/client/nearby/hirefeed?category=Pickleball')}
-                    className="flex-shrink-0 w-[125px] flex flex-col items-center gap-3 p-4 rounded-3xl bg-[#161616] border border-white/5 hover:border-purple-500/30 transition-all cursor-pointer group"
-                  >
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-lime-500/10 to-green-600/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                      <span className="text-2xl">🏓</span>
-                    </div>
-                    <span className="text-sm font-medium text-white/90 group-hover:text-white">Pickleball</span>
-                  </div>
+                <div className="flex space-x-4 pb-4 md:grid md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-8 md:space-x-0 md:gap-4">
+                  {categories
+                    .filter(c => c.name !== 'All')
+                    .map((category) => {
+                      const style = sportStyles[category.name] || sportStyles['Others'];
+                      return (
+                        <div
+                          key={category.id}
+                          onClick={() => router.push(`/client/nearby/hirefeed?category=${encodeURIComponent(category.name)}`)}
+                          className={`relative group w-[130px] h-[150px] sm:w-[140px] sm:h160px] rounded-2xl overflow-hidden cursor-pointer flex-shrink-0 bg-[#161616] border border-white/5 ${style.borderHover} transition-colors duration-300`}
+                        >
+                          <div className={`absolute inset-0 bg-gradient-to-b from-transparent via-transparent ${style.gradientTo} opacity-0 group-hover:opacity-100 transition-opacity duration-500`}></div>
+                          <div className="absolute inset-0 flex items-center justify-center pb-6">
+                            <span className={`text-5xl sm:text-6xl filter ${style.iconShadow} transform transition-transform duration-500 group-hover:scale-110 group-hover:-translate-y-2`}>{style.icon}</span>
+                          </div>
+                          <div className="absolute bottom-0 left-0 right-0 p-3 text-center bg-gradient-to-t from-black/90 to-transparent">
+                            <span className={`text-sm sm:text-base font-bold text-white tracking-wide ${style.textHover} transition-colors`}>{category.name}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
                 </div>
               </div>
             </div>
@@ -742,7 +758,7 @@ export default function ClientHome() {
               <h2 className="text-base font-semibold text-white tracking-wide text-left">Why BAILS?</h2>
             </div>
             <div className="flex flex-row justify-center gap-2 md:gap-3 pb-4">
-              {/* Local Delivery */}
+              {/* Fast Service */}
               <div className="flex flex-col items-center w-24 md:w-28 py-2">
                 <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center mb-2">
                   <MapPin className="w-5 h-5 text-purple-500" />
@@ -755,7 +771,6 @@ export default function ClientHome() {
               {/* Smart Matching */}
               <div className="flex flex-col items-center w-24 md:w-28 py-2">
                 <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center mb-2">
-                  {/* AI-related icon - Sparkles */}
                   <Sparkles className="w-5 h-5 text-purple-500" />
                 </div>
                 <div className="text-center">
@@ -784,7 +799,7 @@ export default function ClientHome() {
             className="mb-4 relative z-0"
           >
             <div className="mb-4">
-              <h2 className="text-base font-semibold text-white tracking-wide text-left" data-component-name="ClientHome">Exclusive Offers</h2>
+              <h2 className="text-base font-semibold text-white tracking-wide text-left">Exclusive Offers</h2>
             </div>
             <div className="relative -mx-4">
               <div className="overflow-x-auto scrollbar-hide px-4 pr-8">
@@ -796,7 +811,6 @@ export default function ClientHome() {
                     ))
                   ) : promos.length > 0 ? (
                     promos.map((promo, index) => {
-                      // Determine accent color based on index or discount type
                       const colors = [
                         { gradient: 'from-purple-400/80 to-purple-600/80', text: 'text-purple-300', bg: 'bg-purple-500/20', border: 'border-purple-300/30', text2: 'text-purple-200' },
                         { gradient: 'from-blue-400/80 to-blue-600/80', text: 'text-blue-300', bg: 'bg-blue-500/20', border: 'border-blue-300/30', text2: 'text-blue-200' },
@@ -858,6 +872,7 @@ export default function ClientHome() {
           </motion.section>
         </div>
       </div>
+
       <LocationPickerModal
         isOpen={showLocationPicker}
         onClose={() => setShowLocationPicker(false)}
@@ -865,6 +880,7 @@ export default function ClientHome() {
         onUpdateLocation={handleLocationUpdate}
         onUseCurrentLocation={handleUseCurrentLocation}
       />
+
       <AlertDialog open={showLogoutAlert} onOpenChange={setShowLogoutAlert}>
         <AlertDialogContent className="bg-[#18181b] border-white/10 text-white z-[100] w-[90%] max-w-sm rounded-lg">
           <AlertDialogHeader>
