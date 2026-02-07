@@ -13,7 +13,6 @@ import { ProfileSectionCard } from '@/components/freelancer/profile/ProfileSecti
 
 import { useSearchParams } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
-import { type PortfolioItem } from '@/contexts/PortfolioContext';
 import { getSessionFlag, removeSessionItem } from '@/utils/sessionStorage';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
 import { useAuth } from '@/contexts/AuthContext';
@@ -73,7 +72,6 @@ type FreelancerData = {
   location: string;
   skills: Skill[];
   services: Service[];
-  portfolio: PortfolioItem[];
   clientReviews: Review[];
   availability: Availability[];
 };
@@ -94,7 +92,6 @@ import { createClient } from '@/lib/supabase/client';
 export default function ProfilePage() {
   const searchParams = useSearchParams();
   const personalDetailsRef = useRef<HTMLDivElement>(null);
-  const portfolioRef = useRef<HTMLDivElement>(null);
   const skillsRef = useRef<HTMLDivElement>(null);
 
 
@@ -136,16 +133,12 @@ export default function ProfilePage() {
   useEffect(() => {
     // Handle hash scrolling on mount or hash change
     const hash = window.location.hash;
-    const isFromPortfolio = searchParams.get('from') === 'profile';
-
     // Debug log
-    console.log("Hash change detected:", hash, "isFromPortfolio:", isFromPortfolio);
+    console.log("Hash change detected:", hash);
 
     if (hash === '#personal-details' && personalDetailsRef.current) {
       // Small timeout to ensure layout is stable
       setTimeout(() => scrollToSection(personalDetailsRef), 100);
-    } else if (hash === '#portfolio' && portfolioRef.current) {
-      setTimeout(() => scrollToSection(portfolioRef), 100);
     } else if (hash === '#skills' && skillsRef.current) {
       setTimeout(() => scrollToSection(skillsRef), 100);
     }

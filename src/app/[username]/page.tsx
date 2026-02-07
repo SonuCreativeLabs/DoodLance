@@ -20,7 +20,6 @@ async function getFreelancerByUsername(username: string) {
             freelancerProfile: {
                 include: {
                     achievements: true,
-                    portfolios: true,
                     reviews: true,
                 },
             },

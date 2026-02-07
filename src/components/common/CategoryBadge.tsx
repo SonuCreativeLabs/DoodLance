@@ -1,19 +1,13 @@
 import React from 'react';
-import { SERVICE_CATEGORIES, PORTFOLIO_CATEGORIES, ServiceCategory, PortfolioCategory } from '@/constants/categories';
+import { SERVICE_CATEGORIES, ServiceCategory } from '@/constants/categories';
 
 interface CategoryBadgeProps {
   category: string;
-  type?: 'service' | 'portfolio' | 'auto';
   size?: 'sm' | 'md' | 'lg';
   className?: string;
 }
 
-export function CategoryBadge({ category, type = 'auto', size = 'sm', className = '' }: CategoryBadgeProps) {
-  // Auto-detect category type
-  const categoryType = type === 'auto'
-    ? (SERVICE_CATEGORIES.includes(category as ServiceCategory) ? 'service' : 'portfolio')
-    : type;
-
+export function CategoryBadge({ category, size = 'sm', className = '' }: CategoryBadgeProps) {
   const sizeClasses = {
     sm: 'px-2 py-0.5 text-xs',
     md: 'px-3 py-1 text-sm',
@@ -21,11 +15,7 @@ export function CategoryBadge({ category, type = 'auto', size = 'sm', className 
   };
 
   const baseClasses = `inline-flex items-center rounded-full font-medium whitespace-nowrap border backdrop-blur-sm ${sizeClasses[size]} ${className}`;
-
-  const serviceClasses = 'bg-white/10 text-white/80 border-white/20';
-  const portfolioClasses = 'bg-purple-500/10 text-purple-300 border-purple-500/30';
-
-  const classes = categoryType === 'service' ? serviceClasses : portfolioClasses;
+  const classes = 'bg-white/10 text-white/80 border-white/20';
 
   return (
     <span className={`${baseClasses} ${classes}`}>
@@ -38,7 +28,6 @@ export function CategoryBadge({ category, type = 'auto', size = 'sm', className 
 interface CategorySelectProps {
   value: string;
   onChange: (value: string) => void;
-  type: 'service' | 'portfolio';
   placeholder?: string;
   required?: boolean;
   className?: string;
@@ -47,13 +36,12 @@ interface CategorySelectProps {
 export function CategorySelect({
   value,
   onChange,
-  type,
   placeholder = "Select a category",
   required = false,
   className = '',
   options // New prop for dynamic options
 }: CategorySelectProps & { options?: string[] }) {
-  const categories = options || (type === 'service' ? SERVICE_CATEGORIES : PORTFOLIO_CATEGORIES);
+  const categories = options || SERVICE_CATEGORIES;
 
   return (
     <div className={`relative ${className}`}>
@@ -84,17 +72,15 @@ export function CategorySelect({
 interface CategoryFilterProps {
   selectedCategories: string[];
   onCategoryChange: (categories: string[]) => void;
-  type: 'service' | 'portfolio';
   className?: string;
 }
 
 export function CategoryFilter({
   selectedCategories,
   onCategoryChange,
-  type,
   className = ''
 }: CategoryFilterProps) {
-  const categories = type === 'service' ? SERVICE_CATEGORIES : PORTFOLIO_CATEGORIES;
+  const categories = SERVICE_CATEGORIES;
 
   const toggleCategory = (category: string) => {
     if (selectedCategories.includes(category)) {

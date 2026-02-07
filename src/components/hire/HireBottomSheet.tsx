@@ -6,7 +6,7 @@ import { X, Check, ArrowRight, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useHire, ServiceItem } from '@/contexts/HireContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { CricketWhiteBallSpinner } from '@/components/ui/CricketWhiteBallSpinner';
+import { SportsRandomSpinner } from '@/components/ui/SportsRandomSpinner';
 
 interface HireBottomSheetProps {
   isOpen: boolean;
@@ -227,7 +227,7 @@ export function HireBottomSheet({
                 >
                   {isNavigating ? (
                     <>
-                      <CricketWhiteBallSpinner className="w-4 h-4" />
+                      <SportsRandomSpinner className="w-4 h-4" />
                       <span>Processing...</span>
                     </>
                   ) : (

@@ -333,7 +333,6 @@ model FreelancerProfile {
   updatedAt            DateTime      @updatedAt
   achievements         Achievement[]
   user                 User          @relation(fields: [userId], references: [id])
-  portfolios           Portfolio[]
   reviews              Review[]
 
   @@map("freelancer_profiles")
@@ -350,21 +349,6 @@ model Achievement {
   @@map("achievements")
 }
 
-model Portfolio {
-  id          String            @id @default(cuid())
-  profileId   String
-  title       String
-  category    String
-  description String?
-  images      String
-  skills      String
-  clientName  String?
-  completedAt DateTime?
-  createdAt   DateTime          @default(now())
-  profile     FreelancerProfile @relation(fields: [profileId], references: [id])
-
-  @@map("portfolios")
-}
 
 model Review {
   id                  String            @id @default(cuid())

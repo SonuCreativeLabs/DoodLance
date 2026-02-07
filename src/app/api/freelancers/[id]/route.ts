@@ -30,9 +30,6 @@ export async function GET(
         },
         achievements: {
           orderBy: { createdAt: 'desc' }
-        },
-        portfolios: {
-          orderBy: { createdAt: 'desc' }
         }
       }
     });
@@ -60,9 +57,6 @@ export async function GET(
           },
           achievements: {
             orderBy: { createdAt: 'desc' }
-          },
-          portfolios: {
-            orderBy: { createdAt: 'desc' }
           }
         }
       });
@@ -73,7 +67,6 @@ export async function GET(
     }
 
     // Transform to match expected format
-    // Transformation logic 
     const formattedProfile = {
       id: profile.id,
       userId: profile.userId,
@@ -109,7 +102,6 @@ export async function GET(
       username: profile.user.username,
       reviews: profile.reviews,
       achievements: profile.achievements,
-      portfolios: profile.portfolios,
       services: profile.user.services?.map((s: any) => ({
         ...s,
         features: s.packages ? JSON.parse(s.packages) : [],

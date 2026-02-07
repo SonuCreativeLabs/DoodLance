@@ -43,7 +43,6 @@ import { formatTime } from '@/utils/profileUtils';
 import { calculateAge } from '@/utils/personalUtils';
 import Image from 'next/image';
 import { IconButton } from '@/components/ui/icon-button';
-import { PortfolioItemModal } from '@/components/common/PortfolioItemModal';
 import { HireBottomSheet } from '@/components/hire/HireBottomSheet';
 import { VideoEmbed } from '@/components/common/VideoEmbed';
 import { ServiceVideoCarousel } from '@/components/common/ServiceVideoCarousel';
@@ -104,14 +103,6 @@ interface FreelancerDetail {
         videoUrls?: string[];
     }[];
 
-    // Portfolio data
-    portfolio?: {
-        id: string;
-        title: string;
-        image: string;
-        category: string;
-    }[];
-
     // Achievements data
     achievements?: {
         id: string;
@@ -161,8 +152,6 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
     const [isHoursDropdownOpen, setIsHoursDropdownOpen] = useState(false);
     const [isScrolledPastCover, setIsScrolledPastCover] = useState(false);
     const [activeTab, setActiveTab] = useState('top');
-    const [selectedPortfolioItem, setSelectedPortfolioItem] = useState<any>(null);
-    const [isPortfolioModalOpen, setIsPortfolioModalOpen] = useState(false);
     const [selectedService, setSelectedService] = useState<any>(null);
     const [isServiceDetailOpen, setIsServiceDetailOpen] = useState(false);
     const [isHireBottomSheetOpen, setIsHireBottomSheetOpen] = useState(false);
@@ -313,12 +302,7 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                         company: String(exp.company)
                     })) || [],
 
-                    portfolio: profile.portfolios?.map((p: any) => ({
-                        id: String(p.id),
-                        title: String(p.title),
-                        image: p.images ? String(JSON.parse(p.images)[0] || '') : '',
-                        category: String(p.category)
-                    })) || [],
+
 
                     reviewsData: profile.reviews?.map((r: any) => ({
                         id: String(r.id),
@@ -375,24 +359,16 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
     useLayoutEffect(() => {
         if (typeof window !== 'undefined' && freelancer) {
             const hash = window.location.hash;
-            const shouldScrollToPortfolio = sessionStorage.getItem('scrollToPortfolio') === 'true' || hash === '#portfolio';
             const shouldScrollToServices = sessionStorage.getItem('scrollToServices') === 'true' || hash === '#services';
             const shouldScrollToReviews = sessionStorage.getItem('scrollToReviews') === 'true' || hash === '#reviews';
 
             // Clear the sessionStorage flags
-            sessionStorage.removeItem('scrollToPortfolio');
             sessionStorage.removeItem('scrollToServices');
             sessionStorage.removeItem('scrollToReviews');
 
             // Use requestAnimationFrame for better timing
             const handleScroll = () => {
-                if (shouldScrollToPortfolio) {
-                    const portfolioElement = document.getElementById('portfolio');
-                    if (portfolioElement) {
-                        portfolioElement.scrollIntoView({ behavior: 'instant', block: 'start' });
-                        setActiveTab('portfolio');
-                    }
-                } else if (shouldScrollToServices) {
+                if (shouldScrollToServices) {
                     const servicesElement = document.getElementById('services');
                     if (servicesElement) {
                         servicesElement.scrollIntoView({ behavior: 'instant', block: 'start' });
@@ -455,7 +431,6 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
 
     const handleViewAllServices = () => {
         if (typeof window !== 'undefined') {
-            sessionStorage.removeItem('fromPortfolio');
             sessionStorage.removeItem('fromReviews');
             sessionStorage.setItem('fromServices', 'true');
             sessionStorage.setItem('lastVisitedSection', 'services');
@@ -474,7 +449,6 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
     const handleViewAllReviews = () => {
         if (typeof window !== 'undefined') {
             sessionStorage.removeItem('fromServices');
-            sessionStorage.removeItem('fromPortfolio');
             sessionStorage.setItem('fromReviews', 'true');
 
             const url = new URL(window.location.href);
@@ -672,7 +646,7 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                             </div>
                             <div className="w-full max-w-4xl mx-auto bg-[#0f0f0f]">
                                 {/* Cover Photo */}
-                                <div className="relative h-48 md:h-80 w-full bg-gradient-to-r from-purple-900 to-purple-700">
+                                <div className="relative h-48 sm:h-80 md:h-96 w-full bg-gradient-to-r from-purple-900 to-purple-700">
 
                                     <div className="absolute inset-0 w-full h-full bg-[#111111] overflow-hidden">
                                         <div className="absolute inset-0 flex items-center justify-center">
@@ -902,12 +876,12 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                                                     <div className="space-y-3">
                                                         <div className="flex items-center gap-2 px-1">
                                                             <Trophy className="h-4 w-4 text-white/40" />
-                                                            <h3 className="text-xs font-bold text-white/50 uppercase tracking-wider">{mainSport}</h3>
+                                                            <h3 className="text-xs font-bold text-white/70 uppercase tracking-wider">{mainSport}</h3>
                                                         </div>
                                                         <div className="flex flex-wrap gap-2">
                                                             {attributes.map((attr, idx) => (
                                                                 <div key={idx} className="bg-white/[0.02] backdrop-blur-sm border border-white/5 px-3 py-1.5 rounded-lg flex items-center gap-3 hover:bg-white/[0.04] transition-all duration-300">
-                                                                    <span className="text-[9px] uppercase tracking-wide text-white/20 font-medium">{attr.label}</span>
+                                                                    <span className="text-[9px] uppercase tracking-wide text-white/40 font-medium">{attr.label}</span>
                                                                     <span className="text-[11px] text-white font-medium">
                                                                         {(() => {
                                                                             const val = Array.isArray(attr.value) ? attr.value.join(', ') : attr.value;
@@ -937,12 +911,12 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                                                             <div key={i} className="space-y-3">
                                                                 <div className="flex items-center gap-2 px-1">
                                                                     <Activity className="h-4 w-4 text-white/40" />
-                                                                    <h3 className="text-xs font-bold text-white/50 uppercase tracking-wider">{sport}</h3>
+                                                                    <h3 className="text-xs font-bold text-white/70 uppercase tracking-wider">{sport}</h3>
                                                                 </div>
                                                                 <div className="flex flex-wrap gap-2">
                                                                     {attributes.map((attr, idx) => (
                                                                         <div key={idx} className="bg-white/[0.02] backdrop-blur-sm border border-white/5 px-3 py-1.5 rounded-lg flex items-center gap-3 hover:bg-white/[0.04] transition-all duration-300">
-                                                                            <span className="text-[9px] uppercase tracking-wide text-white/20 font-medium">{attr.label}</span>
+                                                                            <span className="text-[9px] uppercase tracking-wide text-white/40 font-medium">{attr.label}</span>
                                                                             <span className="text-[11px] text-white font-medium">
                                                                                 {(() => {
                                                                                     const val = Array.isArray(attr.value) ? attr.value.join(', ') : attr.value;
@@ -1154,89 +1128,6 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                                         )}
                                     </section>
 
-                                    {/* Portfolio Section */}
-                                    {freelancer.portfolio && freelancer.portfolio.length > 0 && (
-                                        <section id="portfolio" data-section="portfolio" className="pt-8 scroll-mt-20 relative group">
-                                            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
-                                            <div className="mb-4">
-                                                <h2 className="text-xl font-semibold text-white mb-1">My Portfolio</h2>
-                                                <p className="text-white/60 text-sm">Showcase of my best work and projects</p>
-                                            </div>
-
-                                            <div className="relative">
-                                                <div className="flex -mx-2 overflow-x-auto scrollbar-hide pb-2">
-                                                    <div className="flex gap-4 px-2">
-                                                        {freelancer.portfolio.map((item) => (
-                                                            <div
-                                                                key={item.id}
-                                                                className="w-80 flex-shrink-0 group relative aspect-video rounded-xl overflow-hidden border border-white/10 hover:border-white/20 transition-all duration-300 cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-500"
-                                                                role="button"
-                                                                tabIndex={0}
-                                                                aria-label={`Open portfolio item: ${item.title}`}
-                                                                onClick={() => {
-                                                                    setSelectedPortfolioItem(item);
-                                                                    setIsPortfolioModalOpen(true);
-                                                                }}
-                                                                onKeyDown={e => {
-                                                                    if (e.key === 'Enter' || e.key === ' ') {
-                                                                        setSelectedPortfolioItem(item);
-                                                                        setIsPortfolioModalOpen(true);
-                                                                    }
-                                                                }}
-                                                            >
-                                                                <div className="absolute inset-0 flex items-center justify-center bg-gray-800/50 rounded-xl">
-                                                                    <img
-                                                                        src={item.image}
-                                                                        alt={item.title}
-                                                                        className="w-full h-full object-cover transition-all duration-300 group-hover:scale-105 rounded-xl"
-                                                                        onError={(e) => {
-                                                                            e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjAwIiBoZWlnaHQ9IjgwMCIgdmlld0JveD0iMCAwIDYwMCA0MDAiPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiMxQTFBMUEiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE4IiBmb250LXdlaWdodD0iYm9sZCIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGRvbWluYW50LWJhc2VsaW5lPSJtaWRkbGUiPk5vIFRodW1ibmFpbCBBdmFpbGFibGU8L3RleHQ+PC9zdmc+'
-                                                                        }}
-                                                                    />
-                                                                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                                    </div>
-                                                                </div>
-                                                                <div className="absolute inset-0 p-4 flex flex-col justify-end bg-gradient-to-t from-black/70 via-black/40 to-transparent rounded-xl">
-                                                                    <div className="flex justify-between items-end mb-8">
-                                                                        <div className="pr-2 flex-1">
-                                                                            <h3 className="font-medium text-white line-clamp-1 text-sm">{item.title}</h3>
-                                                                        </div>
-                                                                    </div>
-                                                                    <div className="absolute bottom-3 left-3 bg-white/10 text-white/80 border-white/20 px-2 py-0.5 text-xs rounded-full border">
-                                                                        {item.category}
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <button
-                                                onClick={() => {
-                                                    if (typeof window !== 'undefined') {
-                                                        sessionStorage.removeItem('fromServices');
-                                                        sessionStorage.removeItem('fromReviews');
-                                                        sessionStorage.setItem('fromPortfolio', 'true');
-                                                        sessionStorage.setItem('lastVisitedSection', 'portfolio');
-
-                                                        const url = new URL(window.location.href);
-                                                        url.hash = '#portfolio';
-                                                        const currentUrl = url.toString();
-
-                                                        sessionStorage.setItem('returnToProfilePreview', currentUrl);
-
-                                                        // Use router.push instead of window.location.href for better navigation
-                                                        router.push(`/freelancer/profile/preview/portfolio?freelancerId=${freelancerId}${isViewOnly ? '&viewOnly=true' : ''}#fromPreview`);
-                                                    }
-                                                }}
-                                                className="w-full mt-2 py-2.5 px-4 border border-white/30 hover:bg-white/5 transition-colors text-sm font-medium flex items-center justify-center gap-2 text-white rounded-[6px]"
-                                            >
-                                                View All {freelancer.portfolio.length} Portfolio Items
-                                                <ArrowRight className="h-4 w-4" />
-                                            </button>
-                                        </section>
-                                    )}
-
                                     {/* Achievements Section */}
                                     <section id="achievements" data-section="achievements" className="pt-8 scroll-mt-20 relative group z-0">
                                         <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
@@ -1359,16 +1250,6 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                         isOpen={isSkillDialogOpen}
                         onClose={() => setIsSkillDialogOpen(false)}
                         skillInfo={selectedSkillInfo}
-                    />
-
-                    {/* Portfolio Modal */}
-                    <PortfolioItemModal
-                        item={selectedPortfolioItem}
-                        isOpen={isPortfolioModalOpen}
-                        onClose={() => {
-                            setIsPortfolioModalOpen(false);
-                            setSelectedPortfolioItem(null);
-                        }}
                     />
 
                     {/* Service Detail Modal */}

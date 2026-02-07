@@ -40,10 +40,10 @@ import {
   Inbox, Archive, Star, Plus, DollarSign, Shield
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-const CricketBallLoader = () => (
-  <div className="w-5 h-5 rounded-full bg-red-600 border border-red-800 relative animate-spin">
-    <div className="absolute inset-0 border-2 border-white rounded-full border-dashed opacity-70"></div>
-    <div className="absolute top-1/2 left-0 w-full h-[1px] bg-white opacity-50 transform -translate-y-1/2"></div>
+const SportsBallLoader = () => (
+  <div className="w-5 h-5 rounded-full bg-purple-600 border border-purple-800 relative animate-spin">
+    <div className="absolute inset-0 border-2 border-white/30 rounded-full border-dashed opacity-70"></div>
+    <div className="absolute top-1/2 left-0 w-full h-[1px] bg-white/20 transform -translate-y-1/2"></div>
   </div>
 );
 
@@ -772,7 +772,7 @@ export default function SupportPage() {
             >
               {isCreating ? (
                 <>
-                  <CricketBallLoader />
+                  <SportsBallLoader />
                   <span className="ml-2">Creating...</span>
                 </>
               ) : (

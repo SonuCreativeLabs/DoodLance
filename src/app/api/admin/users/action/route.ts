@@ -138,7 +138,6 @@ export async function POST(request: NextRequest) {
           const freelancerProfile = await prisma.freelancerProfile.findUnique({ where: { userId } });
           if (freelancerProfile) {
             await prisma.achievement.deleteMany({ where: { profileId: freelancerProfile.id } });
-            await prisma.portfolio.deleteMany({ where: { profileId: freelancerProfile.id } });
             await prisma.review.deleteMany({ where: { profileId: freelancerProfile.id } });
             await prisma.freelancerProfile.delete({ where: { id: freelancerProfile.id } });
           }

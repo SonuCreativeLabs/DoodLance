@@ -515,7 +515,7 @@ export default function ClientHome() {
                   Practice like a pro, with a pro
                 </h1>
                 <p className="text-sm sm:text-base md:text-lg text-white/90 mb-3 sm:mb-4 drop-shadow-[0_2px_4px_rgba(0,0,0,0.2)]">
-                  Your shortcut to better cricket starts here
+                  Your shortcut to better sports starts here
                 </p>
               </div>
 

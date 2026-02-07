@@ -15,7 +15,7 @@ import { ClientProfile } from './ClientProfile';
 import { SuccessMessage } from '@/components/ui/success-message';
 import { CollapsibleTimeline, createTimelineItems } from './CollapsibleTimeline';
 import { getJobDurationLabel, getWorkModeLabel } from '@/app/freelancer/feed/types';
-import { CricketWhiteBallSpinner } from '@/components/ui/CricketWhiteBallSpinner';
+import { SportsRandomSpinner } from '@/components/ui/SportsRandomSpinner';
 
 // Experience level mapping for display
 const getExperienceLevelDisplayName = (level: string) => {
@@ -1566,7 +1566,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
               >
                 {isCancelling ? (
                   <div className="flex items-center gap-2">
-                    <CricketWhiteBallSpinner className="w-5 h-5 border-red-200" />
+                    <SportsRandomSpinner className="w-5 h-5" />
                     <span>Cancelling...</span>
                   </div>
                 ) : (
@@ -1739,7 +1739,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
               >
                 {isStarting ? (
                   <div className="flex items-center gap-2">
-                    <CricketWhiteBallSpinner className="w-5 h-5 border-blue-200" />
+                    <SportsRandomSpinner className="w-5 h-5" />
                     <span>Starting...</span>
                   </div>
                 ) : (
@@ -1965,7 +1965,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
               >
                 {isCompleting ? (
                   <div className="flex items-center gap-2">
-                    <CricketWhiteBallSpinner className="w-5 h-5 border-green-200" />
+                    <SportsRandomSpinner className="w-5 h-5" />
                     <span>Completing...</span>
                   </div>
                 ) : (

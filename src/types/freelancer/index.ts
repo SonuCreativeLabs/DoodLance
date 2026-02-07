@@ -9,20 +9,7 @@ export interface FreelancerProfile {
   rate: number;
   rating: number;
   totalJobs: number;
-  portfolio: PortfolioItem[];
   availability: 'available' | 'busy' | 'unavailable';
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface PortfolioItem {
-  id: string;
-  title: string;
-  description: string;
-  images: string[];
-  skills: string[];
-  clientName?: string;
-  completedAt: Date;
 }
 
 export interface JobApplication {

@@ -35,7 +35,6 @@ export async function GET(request: NextRequest) {
                 profile: null,
                 skills: [],
                 achievements: [],
-                portfolios: [],
                 reviews: [],
                 bankAccount: null
             });
@@ -49,7 +48,6 @@ export async function GET(request: NextRequest) {
             freelancerProfile,
             skills,
             achievements,
-            portfolios,
             reviews,
             bankAccount
         ] = await Promise.all([
@@ -81,13 +79,6 @@ export async function GET(request: NextRequest) {
                 orderBy: { createdAt: 'desc' }
             }),
 
-            // 5. Portfolios
-            prisma.portfolio.findMany({
-                where: {
-                    profile: { userId }
-                },
-                orderBy: { createdAt: 'desc' }
-            }),
 
             // 6. Reviews
             prisma.review.findMany({
@@ -126,7 +117,6 @@ export async function GET(request: NextRequest) {
             profile: freelancerProfile,
             skills: formattedSkills,
             achievements: achievements || [],
-            portfolios: portfolios || [],
             reviews: reviews || [],
             bankAccount: bankAccount || null
         });

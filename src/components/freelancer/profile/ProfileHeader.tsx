@@ -13,7 +13,6 @@ import { usePersonalDetails } from '@/contexts/PersonalDetailsContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSkills } from '@/contexts/SkillsContext';
 import { useReviews } from '@/contexts/ReviewsContext';
-import { usePortfolio } from '@/contexts/PortfolioContext';
 import { useAchievements } from '@/contexts/AchievementsContext';
 import { useServices } from '@/contexts/ServicesContext';
 import { useAvailability } from '@/contexts/AvailabilityContext';
@@ -71,7 +70,6 @@ export function ProfileHeader({
 
   const { skills } = useSkills();
   const { reviewsData } = useReviews();
-  const { portfolio } = usePortfolio();
   const { achievements } = useAchievements();
   const { services } = useServices();
   const { days: availabilityDays, getWorkingHoursText } = useAvailability();
@@ -234,9 +232,9 @@ export function ProfileHeader({
       const hash = window.location.hash;
 
       if (hash) {
-        // Check if it's a section hash (e.g., #services, #portfolio, #reviews)
+        // Check if it's a section hash (e.g., #services, #reviews)
         const section = hash.replace('#', '');
-        const validSections = ['services', 'portfolio', 'reviews'];
+        const validSections = ['services', 'reviews'];
 
         if (validSections.includes(section)) {
           // Open the preview modal
@@ -455,7 +453,7 @@ export function ProfileHeader({
         />
       </div>
       {/* Cover Photo */}
-      <div className={cn("group relative h-48 sm:h-64 w-full bg-gradient-to-r from-purple-900 to-purple-700", !compact && "md:h-80")}>
+      <div className={cn("group relative h-48 sm:h-80 w-full bg-gradient-to-r from-purple-900 to-purple-700", !compact && "md:h-96")}>
         {/* Switch to Client Button - Top-right of cover */}
         {!isPreview && (
           <div className="absolute top-4 right-4 z-20">
@@ -718,14 +716,6 @@ export function ProfileHeader({
             features: svc.features || [],
             videoUrls: svc.videoUrls || [],
             category: svc.category
-          })) : [],
-          portfolio: Array.isArray(portfolio) ? portfolio.map((item: any) => ({
-            id: item.id,
-            title: item.title,
-            category: item.category,
-            image: item.image,
-            description: item.description,
-            skills: item.skills
           })) : [],
           reviews: reviewsData?.reviews ? reviewsData.reviews.map((review: any) => ({
             id: review.id,

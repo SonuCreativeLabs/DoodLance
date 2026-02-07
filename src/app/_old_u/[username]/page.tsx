@@ -26,7 +26,6 @@ async function getFreelancerByUsername(username: string) {
             freelancerProfile: {
                 include: {
                     achievements: true,
-                    portfolios: true,
                     reviews: true,
                 },
             },
@@ -205,36 +204,6 @@ export default async function PublicProfilePage({ params }: PageProps) {
                             </div>
                         )}
 
-                        {/* Portfolio */}
-                        {profile.portfolios && profile.portfolios.length > 0 && (
-                            <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
-                                <h2 className="text-2xl font-bold mb-6">Portfolio</h2>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {profile.portfolios.map((item: any) => (
-                                        <div
-                                            key={item.id}
-                                            className="bg-white/5 rounded-lg overflow-hidden border border-white/10 hover:border-purple-500/30 transition-colors"
-                                        >
-                                            {item.imageUrl && (
-                                                <img
-                                                    src={item.imageUrl}
-                                                    alt={item.title}
-                                                    className="w-full h-48 object-cover"
-                                                />
-                                            )}
-                                            <div className="p-4">
-                                                <h3 className="font-semibold mb-2">{item.title}</h3>
-                                                {item.description && (
-                                                    <p className="text-sm text-gray-400 line-clamp-2">
-                                                        {item.description}
-                                                    </p>
-                                                )}
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
 
                         {/* Reviews */}
                         {profile.reviews && profile.reviews.length > 0 && (

@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { useHire } from '@/contexts/HireContext';
 import { useNavbar } from '@/contexts/NavbarContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { CricketWhiteBallSpinner } from '@/components/ui/CricketWhiteBallSpinner';
+import { SportsRandomSpinner } from '@/components/ui/SportsRandomSpinner';
 
 export default function BookingDatePage() {
   const router = useRouter();
@@ -536,7 +536,7 @@ export default function BookingDatePage() {
           >
             {isNavigating ? (
               <>
-                <CricketWhiteBallSpinner className="w-4 h-4" />
+                <SportsRandomSpinner className="w-4 h-4" />
                 <span>Processing...</span>
               </>
             ) : (

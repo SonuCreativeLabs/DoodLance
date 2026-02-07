@@ -27,8 +27,8 @@ export const CATEGORY_CODES: Record<string, string> = {
     'scorer': 'SU',
     'umpire': 'SU',
 
-    'cricket photo/videography': 'ME',
-    'cricket content creator': 'ME',
+    'sports photo/videography': 'ME',
+    'sports content creator': 'ME',
     'commentator': 'ME',
 };
 

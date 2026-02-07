@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation'
 import { Mail, ArrowRight, ShieldCheck } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { motion } from 'framer-motion'
-import { CricketLoader } from '@/components/ui/cricket-loader'
+import { SportsRandomSpinner } from '@/components/ui/SportsRandomSpinner'
 import { isValidEmail } from '@/lib/validation'
 
 export default function FreelancerProfileLogin() {
@@ -160,7 +160,7 @@ export default function FreelancerProfileLogin() {
                                 >
                                     {isLoading ? (
                                         <>
-                                            <CricketLoader size={20} color="white" /> Sending Code...
+                                            <SportsRandomSpinner className="w-5 h-5" /> Sending Code...
                                         </>
                                     ) : (
                                         <>
@@ -206,7 +206,7 @@ export default function FreelancerProfileLogin() {
                                 >
                                     {isLoading ? (
                                         <>
-                                            <CricketLoader size={20} color="white" /> Verifying...
+                                            <SportsRandomSpinner className="w-5 h-5" /> Verifying...
                                         </>
                                     ) : (
                                         'Verify Code'

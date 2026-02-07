@@ -42,8 +42,7 @@ export interface Professional {
     day: string;
     available: boolean;
   }[];
-  portfolio?: any[];
-  reviewsData?: any[];
+  reviewsData?: unknown[];
 }
 
 interface NearbyProfessionalsContextType {
@@ -69,9 +68,6 @@ const defaultValue: NearbyProfessionalsContextType = {
   updateLocation: () => { }
 };
 
-// Initial state
-// Data import removed
-const initialProfessionals: Professional[] = [];
 
 export function NearbyProfessionalsProvider({ children }: { children: ReactNode }) {
   const [professionals, setProfessionals] = useState<Professional[]>([]);

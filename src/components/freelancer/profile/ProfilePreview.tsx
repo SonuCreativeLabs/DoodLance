@@ -31,7 +31,6 @@ import { SkillInfoDialog } from '@/components/common/SkillInfoDialog';
 import { getSkillInfo, type SkillInfo } from '@/utils/skillUtils';
 import { IconButton } from '@/components/ui/icon-button';
 import { ProfileHeader } from './ProfileHeader';
-import { PortfolioItemModal } from '@/components/common/PortfolioItemModal';
 import { ServiceDetailModal } from '@/components/common/ServiceDetailModal';
 
 // Types
@@ -65,8 +64,6 @@ const ProfilePreview = memo(({
   const activeTabRef = useRef('top');
   const isScrollingRef = useRef(false);
   const [activeTab, setActiveTab] = useState('top');
-  const [isPortfolioModalOpen, setIsPortfolioModalOpen] = useState(false);
-  const [selectedPortfolioItem, setSelectedPortfolioItem] = useState<any>(null);
   const [isSkillDialogOpen, setIsSkillDialogOpen] = useState(false);
   const [selectedSkillInfo, setSelectedSkillInfo] = useState<SkillInfo | null>(null);
   const [isHoursDropdownOpen, setIsHoursDropdownOpen] = useState(false);
@@ -165,28 +162,6 @@ const ProfilePreview = memo(({
       return;
     }
 
-    // Special handling for portfolio section
-    if (tabId === 'portfolio') {
-      const portfolioSection = document.querySelector('[data-section="portfolio"]');
-      if (portfolioSection) {
-        console.log('Scrolling to portfolio section');
-        portfolioSection.scrollIntoView({
-          behavior: 'smooth',
-          block: 'start'
-        });
-        // Update URL hash without causing a scroll
-        if (history.pushState) {
-          history.pushState(null, '', '#portfolio');
-        } else {
-          window.location.hash = '#portfolio';
-        }
-        // Reset scroll flag after a delay
-        setTimeout(() => {
-          isScrollingRef.current = false;
-        }, 1000);
-        return;
-      }
-    }
 
     // Function to reset the scrolling flag
     const resetScrollFlag = () => {
@@ -297,37 +272,18 @@ const ProfilePreview = memo(({
    * @param delayMs Delay between retries in milliseconds
    */
 
-  // Handle navigation to full page views
-  const navigateToFullView = useCallback((type: 'portfolio' | 'reviews') => {
-    if (typeof window === 'undefined') return;
-
-    const url = new URL(window.location.href);
-    url.hash = `#${type}`;
-    const currentUrl = url.toString();
-
-    // Store current state for return navigation
-    sessionStorage.setItem('returnToProfilePreview', currentUrl);
-    sessionStorage.setItem(`${type}PreviewData`, JSON.stringify(profileData[type]));
-    sessionStorage.setItem('freelancerName', profileData.name);
-
-    // Navigate to the full view
-    router.push(`/freelancer/profile/preview/${type}#fromPreview`);
-  }, [profileData, router]);
-
-  // Handle view all portfolio click
-  const handleViewAllPortfolio = useCallback(() => {
-    // Clear other section flags
-    sessionStorage.removeItem('fromServices');
-    sessionStorage.removeItem('fromReviews');
-    sessionStorage.setItem('fromPortfolio', 'true');
-    navigateToFullView('portfolio');
-  }, [navigateToFullView]);
+  // Navigation to full profile view
+  const navigateToFullView = useCallback((section: string) => {
+    onClose();
+    // Use the username to construct the full profile URL if available
+    const baseUrl = profileData.username ? `/${profileData.username}` : '/freelancer/profile';
+    router.push(`${baseUrl}#${section}`);
+  }, [onClose, router, profileData.username]);
 
   // Handle view all reviews click
   const handleViewAllReviews = useCallback(() => {
     // Clear other section flags
     sessionStorage.removeItem('fromServices');
-    sessionStorage.removeItem('fromPortfolio');
     sessionStorage.setItem('fromReviews', 'true');
     navigateToFullView('reviews');
   }, [navigateToFullView]);
@@ -335,7 +291,6 @@ const ProfilePreview = memo(({
   // Handle view all services click
   const handleViewAllServices = () => {
     // Clear other section flags
-    sessionStorage.removeItem('fromPortfolio');
     sessionStorage.removeItem('fromReviews');
     sessionStorage.setItem('fromServices', 'true');
     sessionStorage.setItem('lastVisitedSection', 'services');
@@ -808,16 +763,17 @@ const ProfilePreview = memo(({
                       <div className="space-y-3">
                         <div className="flex items-center gap-2 px-1">
                           <Trophy className="h-4 w-4 text-white/40" />
-                          <h3 className="text-xs font-bold text-white/50 uppercase tracking-wider">{mainSport}</h3>
+                          <h3 className="text-xs font-bold text-white/70 uppercase tracking-wider">{mainSport}</h3>
                         </div>
                         <div className="flex flex-wrap gap-2">
                           {attributes.map((attr, idx) => (
                             <div key={idx} className="bg-white/[0.02] backdrop-blur-sm border border-white/5 px-3 py-1.5 rounded-lg flex items-center gap-3 hover:bg-white/[0.04] transition-all duration-300">
-                              <span className="text-[9px] uppercase tracking-wide text-white/20 font-medium">{attr.label}</span>
+                              <span className="text-[9px] uppercase tracking-wide text-white/40 font-medium">{attr.label}</span>
                               <span className="text-[11px] text-white font-medium">
                                 {(() => {
                                   const val = Array.isArray(attr.value) ? attr.value.join(', ') : attr.value;
-                                  return typeof val === 'string' ? val.replace(/-/g, ' ') : val;
+                                  const displayVal = typeof val === 'string' ? val.replace(/-/g, ' ') : val;
+                                  return (displayVal as React.ReactNode) || '';
                                 })()}
                               </span>
                             </div>
@@ -832,7 +788,7 @@ const ProfilePreview = memo(({
                     <div className="space-y-4 pt-2">
                       {profileData.otherSports.map((sport, i) => {
                         const config = SPORTS_CONFIG[sport];
-                        const details = profileData.sportsDetails?.[sport] || {};
+                        const details = (profileData.sportsDetails?.[sport] as Record<string, any>) || {};
 
                         const attributes = config?.attributes.map(attr => ({
                           ...attr,
@@ -843,16 +799,17 @@ const ProfilePreview = memo(({
                           <div key={i} className="space-y-3">
                             <div className="flex items-center gap-2 px-1">
                               <Activity className="h-4 w-4 text-white/40" />
-                              <h3 className="text-xs font-bold text-white/50 uppercase tracking-wider">{sport}</h3>
+                              <h3 className="text-xs font-bold text-white/70 uppercase tracking-wider">{sport}</h3>
                             </div>
                             <div className="flex flex-wrap gap-2">
                               {attributes.map((attr, idx) => (
                                 <div key={idx} className="bg-white/[0.02] backdrop-blur-sm border border-white/5 px-3 py-1.5 rounded-lg flex items-center gap-3 hover:bg-white/[0.04] transition-all duration-300">
-                                  <span className="text-[9px] uppercase tracking-wide text-white/20 font-medium">{attr.label}</span>
+                                  <span className="text-[9px] uppercase tracking-wide text-white/40 font-medium">{attr.label}</span>
                                   <span className="text-[11px] text-white font-medium">
                                     {(() => {
                                       const val = Array.isArray(attr.value) ? attr.value.join(', ') : attr.value;
-                                      return typeof val === 'string' ? val.replace(/-/g, ' ') : val;
+                                      const displayVal = typeof val === 'string' ? val.replace(/-/g, ' ') : val;
+                                      return (displayVal as React.ReactNode) || '';
                                     })()}
                                   </span>
                                 </div>
@@ -881,7 +838,7 @@ const ProfilePreview = memo(({
                             onClick={() => handleSkillClick(skill)}
                             className="px-1.5 py-0.5 bg-white/10 text-white/80 border border-white/20 text-xs rounded-full transition-colors cursor-pointer hover:bg-white/20"
                           >
-                            {skillName}
+                            {(skillName as React.ReactNode) || ''}
                           </button>
                         );
                       })}
@@ -1165,15 +1122,6 @@ const ProfilePreview = memo(({
         skillInfo={selectedSkillInfo}
       />
 
-      {/* Portfolio Modal */}
-      <PortfolioItemModal
-        item={selectedPortfolioItem}
-        isOpen={isPortfolioModalOpen}
-        onClose={() => {
-          setIsPortfolioModalOpen(false);
-          setSelectedPortfolioItem(null);
-        }}
-      />
 
       {/* Service Detail Modal */}
       <ServiceDetailModal

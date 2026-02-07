@@ -4,7 +4,8 @@ import { useState, useRef, useEffect, Suspense } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { ArrowLeft, Loader2, RotateCcw, Info } from 'lucide-react'
+import { ArrowLeft, RotateCcw, Info } from 'lucide-react'
+import { CricketLoader } from '@/components/ui/cricket-loader'
 import { useAuth } from '@/contexts/AuthContext'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -232,7 +233,7 @@ function OTPContent() {
               >
                 {isLoading ? (
                   <span className="inline-flex items-center gap-2">
-                    <Loader2 className="w-4 h-4 animate-spin" /> Verifying...
+                    <CricketLoader size={16} color="white" /> Verifying...
                   </span>
                 ) : 'Verify & Continue'}
               </button>
@@ -266,7 +267,7 @@ export default function OTP() {
   return (
     <Suspense fallback={
       <div className="min-h-screen w-full bg-[#0a0a0a] text-white flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
+        <CricketLoader size={32} color="white" />
       </div>
     }>
       <OTPContent />

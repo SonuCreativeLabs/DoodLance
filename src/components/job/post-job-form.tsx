@@ -15,7 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
-type ServiceCategory = 'Match Player' | 'Net Bowler' | 'Net Batsman' | 'Sidearm' | 'Coach' | 'Trainer' | 'Analyst' | 'Physio' | 'Scorer' | 'Umpire' | 'Commentator' | 'Cricket Content Creator' | 'Cricket Photo / Videography' | 'Other'
+type ServiceCategory = 'Match Player' | 'Net Bowler' | 'Net Batsman' | 'Sidearm' | 'Coach' | 'Trainer' | 'Analyst' | 'Physio' | 'Scorer' | 'Umpire' | 'Commentator' | 'Sports Content Creator' | 'Sports Photo / Videography' | 'Other'
 
 interface BudgetSuggestion {
   min: number
@@ -261,8 +261,8 @@ export default function PostJobForm() {
                 <SelectItem value="Scorer">Scorer</SelectItem>
                 <SelectItem value="Umpire">Umpire</SelectItem>
                 <SelectItem value="Commentator">Commentator</SelectItem>
-                <SelectItem value="Cricket Content Creator">Cricket Content Creator</SelectItem>
-                <SelectItem value="Cricket Photo / Videography">Cricket Photo / Videography</SelectItem>
+                <SelectItem value="Sports Content Creator">Sports Content Creator</SelectItem>
+                <SelectItem value="Sports Photo / Videography">Sports Photo / Videography</SelectItem>
                 <SelectItem value="Other">Other</SelectItem>
               </SelectContent>
             </Select>
@@ -378,7 +378,7 @@ export default function PostJobForm() {
               id="location"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
-              placeholder="Marina Cricket Ground, Chennai or specific address"
+              placeholder="Enter venue or address (e.g., Marina Sports Ground, Chennai)"
               className="border-white/20 focus:border-purple-300 focus:ring-1 focus:ring-purple-400 bg-black/50 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-200 text-white placeholder:text-white/50 break-words whitespace-normal"
             />
           </div>

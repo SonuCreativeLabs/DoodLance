@@ -19,8 +19,8 @@ export type JobCategory =
   | 'Physio'
   | 'Scorer'
   | 'Umpire'
-  | 'Cricket Photo / Videography'
-  | 'Cricket Content Creator'
+  | 'Sports Photo / Videography'
+  | 'Sports Content Creator'
   | 'Commentator'
   | 'OTHER';
 
@@ -36,8 +36,8 @@ export const JOB_CATEGORIES = [
   'Physio',
   'Scorer',
   'Umpire',
-  'Cricket Photo / Videography',
-  'Cricket Content Creator',
+  'Sports Photo / Videography',
+  'Sports Content Creator',
   'Commentator',
   'OTHER'
 ] as const;

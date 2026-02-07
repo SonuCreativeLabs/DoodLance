@@ -12,7 +12,7 @@ import { useBookingsQuery } from "@/hooks/useBookingsQuery";
 import { useNavbar } from "@/contexts/NavbarContext";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { CricketWhiteBallSpinner } from '@/components/ui/CricketWhiteBallSpinner';
+import { SportsRandomSpinner } from '@/components/ui/SportsRandomSpinner';
 import { RescheduleModal } from "@/components/client/bookings/RescheduleModal";
 
 const statusCopy: Record<string, string> = {
@@ -939,7 +939,7 @@ export default function BookingDetailPage() {
                 >
                   {isCompleting ? (
                     <>
-                      <CricketWhiteBallSpinner className="w-5 h-5 mr-2" />
+                      <SportsRandomSpinner className="w-5 h-5 mr-2" />
                       Processing...
                     </>
                   ) : (

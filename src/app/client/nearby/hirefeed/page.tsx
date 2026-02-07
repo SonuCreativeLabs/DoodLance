@@ -9,7 +9,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { categories } from '../constants';
 import { useNearbyProfessionals, Professional } from '@/contexts/NearbyProfessionalsContext';
 import SearchFilters from '../components/SearchFilters';
-import { CricketWhiteBallSpinner } from '@/components/ui/CricketWhiteBallSpinner';
+import { SportsRandomSpinner } from '@/components/ui/SportsRandomSpinner';
 
 export default function IntegratedExplorePage() {
   const searchParams = useSearchParams();
@@ -106,8 +106,8 @@ export default function IntegratedExplorePage() {
         'Physio': 'Physiotherapist',
         'Scorer': 'Scorer',
         'Umpire': 'Umpire',
-        'Cricket Photo/Videography': 'Videographer',
-        'Cricket Content Creator': 'Content Creator',
+        'Sports Photo/Videography': 'Videographer',
+        'Sports Content Creator': 'Content Creator',
         'Commentator': 'Commentator',
         'Match Player': 'All Rounder',
         'Net Batsman': 'Batsman',
@@ -353,7 +353,7 @@ export default function IntegratedExplorePage() {
             style={{ paddingBottom: '20vh' }}
           >
             <div className="bg-[#111111]/80 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 shadow-xl flex items-center gap-3">
-              <CricketWhiteBallSpinner className="w-5 h-5" />
+              <SportsRandomSpinner className="w-5 h-5" />
               <span className="text-white text-sm font-medium">Finding nearby experts...</span>
             </div>
           </motion.div>

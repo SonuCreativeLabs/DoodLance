@@ -19,9 +19,6 @@ export default function FreelancerLayout({ children, className }: FreelancerLayo
               <a href="/freelancer/jobs" className="transition-colors hover:text-foreground/80">
                 Jobs
               </a>
-              <a href="/freelancer/portfolio" className="transition-colors hover:text-foreground/80">
-                Portfolio
-              </a>
               <a href="/freelancer/profile" className="transition-colors hover:text-foreground/80">
                 Profile
               </a>

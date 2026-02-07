@@ -30,11 +30,11 @@ interface SearchFiltersProps {
 
 const serviceCategories = [
   { id: 'all', name: 'All', online: true, offline: true },
-  // Add specific cricket services from unified categories
+  // Add specific sports services from unified categories
   ...SERVICE_CATEGORIES.map(category => ({
     id: category.toLowerCase().replace(/\s*\/\s*/g, '-').replace(/\s+/g, '-'),
     name: category,
-    online: ['Cricket Content Creator', 'Analyst', 'Coach', 'Trainer'].includes(category) || category.includes('Content'),
+    online: ['Sports Content Creator', 'Analyst', 'Coach', 'Trainer'].includes(category) || category.includes('Content'),
     offline: true
   }))
 ];
@@ -104,16 +104,16 @@ export default function SearchFilters({
         `&limit=5`
       );
       const data = await response.json();
-      
+
       // Filter to ensure we only get Chennai-related results
       const chennaiResults = (data.features || []).filter((feature: any) => {
         const context = feature.context || [];
-        return context.some((ctx: any) => 
+        return context.some((ctx: any) =>
           (ctx.id && ctx.id.includes('place') && ctx.text.toLowerCase().includes('chennai')) ||
           (ctx.id && ctx.id.includes('region') && ctx.text.toLowerCase().includes('tamil'))
         );
       });
-      
+
       setLocationSuggestions(chennaiResults);
     } catch (error) {
       console.error('Error searching locations:', error);
@@ -145,7 +145,7 @@ export default function SearchFilters({
   const handleWorkModeButtonClick = (mode: WorkMode) => {
     setWorkMode(mode);
   };
-  
+
   // Type guard for WorkMode
   const isWorkMode = (value: string): value is WorkMode => {
     return ['remote', 'onsite', 'all'].includes(value);
@@ -253,11 +253,11 @@ export default function SearchFilters({
                     </div>
                   )}
                 </div>
-                
+
                 {/* Location suggestions */}
                 <AnimatePresence>
                   {showSuggestions && (locationSuggestions.length > 0 || isLoading) && (
-                    <motion.div 
+                    <motion.div
                       className="absolute z-50 w-full mt-1 bg-[#1E1E1E] border border-white/10 rounded-lg shadow-xl overflow-hidden"
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -273,12 +273,12 @@ export default function SearchFilters({
                         locationSuggestions.map((suggestion) => {
                           // Get the full place name
                           const placeName = suggestion.place_name || suggestion.text || '';
-                          
+
                           // Split into parts and clean up
                           const parts = placeName.split(',')
                             .map((part: string) => part.trim())
                             .filter((part: string) => part);
-                          
+
                           // If no parts, show default
                           if (parts.length === 0) {
                             return (
@@ -287,19 +287,19 @@ export default function SearchFilters({
                               </div>
                             );
                           }
-                          
+
                           // First part is the main area
                           const mainArea = parts[0];
-                          
+
                           // Get unique location parts (excluding the main area)
                           const uniqueParts = parts
                             .slice(1) // Skip the main area
                             .filter((part: string) => part !== mainArea) // Remove duplicates of main area
                             .filter((part: string, index: number, self: string[]) => self.indexOf(part) === index); // Remove duplicates
-                          
+
                           // Join the remaining parts for the hierarchy
                           const hierarchy = uniqueParts.join(', ');
-                          
+
                           return (
                             <button
                               key={suggestion.id}
@@ -361,11 +361,10 @@ export default function SearchFilters({
                   <button
                     key={mode.id}
                     onClick={() => handleWorkModeButtonClick(mode.id as WorkMode)}
-                    className={`w-full px-3 py-2 text-xs rounded-lg transition-colors ${
-                      workMode === mode.id
+                    className={`w-full px-3 py-2 text-xs rounded-lg transition-colors ${workMode === mode.id
                         ? 'bg-purple-500/90 text-white shadow-lg shadow-purple-500/20'
                         : 'bg-white/5 text-white/70 hover:bg-white/10'
-                    }`}
+                      }`}
                   >
                     <span>{mode.label}</span>
                   </button>
@@ -384,11 +383,10 @@ export default function SearchFilters({
                     <button
                       key={category.id}
                       onClick={() => setServiceCategory(category.id)}
-                      className={`px-3 py-2 text-sm rounded-lg transition-colors text-left ${
-                        serviceCategory === category.id
+                      className={`px-3 py-2 text-sm rounded-lg transition-colors text-left ${serviceCategory === category.id
                           ? 'bg-purple-500/90 text-white shadow-lg shadow-purple-500/20'
                           : 'bg-white/5 text-white/70 hover:bg-white/10'
-                      }`}
+                        }`}
                     >
                       {category.name}
                     </button>
@@ -436,11 +434,10 @@ export default function SearchFilters({
                   applyFilters();
                   onClose();
                 }}
-                className={`flex-1 px-4 py-3 text-sm font-medium text-white transition-colors rounded-xl ${
-                  filtersApplied
+                className={`flex-1 px-4 py-3 text-sm font-medium text-white transition-colors rounded-xl ${filtersApplied
                     ? 'bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600'
                     : 'bg-gradient-to-r from-purple-500 to-purple-400 hover:from-purple-600 hover:to-purple-500'
-                }`}
+                  }`}
               >
                 {filtersApplied ? 'Update Filters' : 'Apply Filters'}
               </button>
