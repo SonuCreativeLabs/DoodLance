@@ -8,6 +8,7 @@ import { useParams, useRouter, useSearchParams, usePathname } from 'next/navigat
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from "@/components/ui/badge";
+import { SPORTS_CONFIG } from '@/constants/sports';
 import {
     ArrowLeft,
     Star,
@@ -25,7 +26,9 @@ import {
     User,
     Play,
     CheckCircle2,
-    MessageSquare
+    MessageSquare,
+    Trophy,
+    Activity
 } from 'lucide-react';
 import { useNavbar } from '@/contexts/NavbarContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -80,6 +83,9 @@ interface FreelancerDetail {
     cricketRole?: string;
     battingStyle?: string;
     bowlingStyle?: string;
+    mainSport?: string;
+    otherSports?: string[];
+    sportsDetails?: any;
     languages?: string;
     completionRate?: number;
     skills?: string[];
@@ -281,6 +287,10 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                     skills: skills,
                     coverImage: String(profile.coverImage || ''),
                     dateOfBirth: profile.dateOfBirth,
+
+                    mainSport: profile.mainSport,
+                    otherSports: profile.otherSports,
+                    sportsDetails: profile.sportsDetails,
 
                     services: profile.services?.map((s: any) => {
                         // DEBUG LOG
@@ -736,7 +746,7 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                                         {freelancer.username && (
                                             <p className="text-white/40 text-sm font-medium">@{freelancer.username}</p>
                                         )}
-                                        <p className="text-purple-400 mt-1">{freelancer.cricketRole || 'Role not set'}</p>
+                                        <p className="text-purple-400 mt-1">{freelancer.mainSport === 'Cricket' ? (freelancer.cricketRole || 'Cricketer') : (freelancer.service || 'Freelancer')}</p>
 
                                         <div className="mt-2 flex flex-col items-center gap-0.5 text-sm text-white/70">
                                             <div className="flex items-center gap-2">
@@ -863,24 +873,91 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                                         {freelancer.bio || freelancer.about ? (
                                             <p className="text-white mb-3 whitespace-pre-line">{freelancer.bio || freelancer.about}</p>
                                         ) : (
-                                            <p className="text-white/40 text-sm italic mb-6">No bio available</p>
+                                            <div className="bg-white/[0.02] backdrop-blur-sm border border-white/5 rounded-2xl p-6 text-center mb-8">
+                                                <div className="text-white/40 text-sm italic">Biography not shared yet</div>
+                                            </div>
                                         )}
 
-                                        {/* Cricket Information */}
-                                        <div className="space-y-2 mb-6">
-                                            {freelancer.cricketRole && (
-                                                <div className="text-white/80">
-                                                    <span className="text-white/50">Role:</span> <span className="text-white">{freelancer.cricketRole}</span>
-                                                </div>
-                                            )}
-                                            {freelancer.battingStyle && (
-                                                <div className="text-white/80">
-                                                    <span className="text-white/50">Batting Style:</span> <span className="text-white">{freelancer.battingStyle}</span>
-                                                </div>
-                                            )}
-                                            {freelancer.bowlingStyle && (
-                                                <div className="text-white/80">
-                                                    <span className="text-white/50">Bowling Style:</span> <span className="text-white">{freelancer.bowlingStyle}</span>
+                                        {/* Sport-Specific Information */}
+                                        {/* Sport-Specific Information - Minimalist Stat Pills */}
+                                        <div className="space-y-6 mb-8">
+                                            {/* Main Sport Pills */}
+                                            {(() => {
+                                                const mainSport = freelancer.mainSport || 'Cricket';
+                                                const config = SPORTS_CONFIG[mainSport];
+                                                if (!config) return null;
+
+                                                const attributes = config.attributes.map(attr => {
+                                                    let value = freelancer.sportsDetails?.[attr.key];
+                                                    // Legacy fallback for Cricket
+                                                    if (!value && mainSport === 'Cricket') {
+                                                        if (attr.key === 'cricketRole') value = freelancer.cricketRole;
+                                                        if (attr.key === 'battingStyle') value = freelancer.battingStyle;
+                                                        if (attr.key === 'bowlingStyle') value = freelancer.bowlingStyle;
+                                                    }
+                                                    return { ...attr, value };
+                                                }).filter(attr => attr.value);
+
+                                                return (
+                                                    <div className="space-y-3">
+                                                        <div className="flex items-center gap-2 px-1">
+                                                            <Trophy className="h-4 w-4 text-white/40" />
+                                                            <h3 className="text-xs font-bold text-white/50 uppercase tracking-wider">{mainSport}</h3>
+                                                        </div>
+                                                        <div className="flex flex-wrap gap-2">
+                                                            {attributes.map((attr, idx) => (
+                                                                <div key={idx} className="bg-white/[0.02] backdrop-blur-sm border border-white/5 px-3 py-1.5 rounded-lg flex items-center gap-3 hover:bg-white/[0.04] transition-all duration-300">
+                                                                    <span className="text-[9px] uppercase tracking-wide text-white/20 font-medium">{attr.label}</span>
+                                                                    <span className="text-[11px] text-white font-medium">
+                                                                        {(() => {
+                                                                            const val = Array.isArray(attr.value) ? attr.value.join(', ') : attr.value;
+                                                                            return typeof val === 'string' ? val.replace(/-/g, ' ') : val;
+                                                                        })()}
+                                                                    </span>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })()}
+
+                                            {/* Secondary Sports Pills */}
+                                            {freelancer.otherSports && freelancer.otherSports.length > 0 && (
+                                                <div className="space-y-4 pt-2">
+                                                    {freelancer.otherSports.map((sport, i) => {
+                                                        const config = SPORTS_CONFIG[sport];
+                                                        const details = freelancer.sportsDetails?.[sport] || {};
+
+                                                        const attributes = config?.attributes.map(attr => ({
+                                                            ...attr,
+                                                            value: details[attr.key]
+                                                        })).filter(attr => attr.value) || [];
+
+                                                        return (
+                                                            <div key={i} className="space-y-3">
+                                                                <div className="flex items-center gap-2 px-1">
+                                                                    <Activity className="h-4 w-4 text-white/40" />
+                                                                    <h3 className="text-xs font-bold text-white/50 uppercase tracking-wider">{sport}</h3>
+                                                                </div>
+                                                                <div className="flex flex-wrap gap-2">
+                                                                    {attributes.map((attr, idx) => (
+                                                                        <div key={idx} className="bg-white/[0.02] backdrop-blur-sm border border-white/5 px-3 py-1.5 rounded-lg flex items-center gap-3 hover:bg-white/[0.04] transition-all duration-300">
+                                                                            <span className="text-[9px] uppercase tracking-wide text-white/20 font-medium">{attr.label}</span>
+                                                                            <span className="text-[11px] text-white font-medium">
+                                                                                {(() => {
+                                                                                    const val = Array.isArray(attr.value) ? attr.value.join(', ') : attr.value;
+                                                                                    return typeof val === 'string' ? val.replace(/-/g, ' ') : val;
+                                                                                })()}
+                                                                            </span>
+                                                                        </div>
+                                                                    ))}
+                                                                    {attributes.length === 0 && (
+                                                                        <span className="text-[10px] text-white/20 italic px-2">No additional details</span>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })}
                                                 </div>
                                             )}
                                         </div>
@@ -914,7 +991,9 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                                                     })}
                                                 </div>
                                             ) : (
-                                                <p className="text-white/40 text-sm italic">No skills listed</p>
+                                                <div className="bg-white/[0.02] backdrop-blur-sm border border-white/5 rounded-xl p-4 text-center">
+                                                    <p className="text-white/30 text-xs italic">Skills not listed yet</p>
+                                                </div>
                                             )}
                                         </div>
 
@@ -1067,10 +1146,10 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                                                 </button>
                                             </>
                                         ) : (
-                                            <div className="text-center py-12 rounded-3xl border border-white/10 bg-white/5">
-                                                <Briefcase className="h-12 w-12 mx-auto text-white/20 mb-4" />
-                                                <h3 className="text-lg font-medium text-white">No services listed yet</h3>
-                                                <p className="text-white/60 mt-1">This freelancer hasn&apos;t added any service packages yet.</p>
+                                            <div className="text-center py-12 rounded-2xl border border-white/5 bg-white/[0.02] backdrop-blur-sm">
+                                                <Briefcase className="h-10 w-10 mx-auto text-white/10 mb-3" />
+                                                <h3 className="text-lg font-medium text-white/90">No services listed yet</h3>
+                                                <p className="text-sm text-white/50 mt-1 max-w-xs mx-auto">This athlete hasn't added any professional services yet.</p>
                                             </div>
                                         )}
                                     </section>
@@ -1181,10 +1260,10 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                                                 ))}
                                             </div>
                                         ) : (
-                                            <div className="text-center py-8 rounded-2xl border border-white/10 bg-white/5">
-                                                <Award className="h-10 w-10 mx-auto text-white/20 mb-3" />
-                                                <h3 className="text-lg font-medium text-white">No achievements added yet</h3>
-                                                <p className="text-white/60 mt-1">This freelancer hasn&apos;t added any achievements yet.</p>
+                                            <div className="text-center py-12 rounded-2xl border border-white/5 bg-white/[0.02] backdrop-blur-sm">
+                                                <Award className="h-10 w-10 mx-auto text-white/10 mb-3" />
+                                                <h3 className="text-lg font-medium text-white/90">No achievements added yet</h3>
+                                                <p className="text-sm text-white/50 mt-1 max-w-xs mx-auto">Sports highlights and career milestones will appear here.</p>
                                             </div>
                                         )}
                                     </section>
@@ -1263,10 +1342,10 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                                                 </button>
                                             </>
                                         ) : (
-                                            <div className="text-center py-12 rounded-3xl border border-white/10 bg-white/5">
-                                                <MessageSquare className="h-12 w-12 mx-auto text-white/20 mb-4" />
-                                                <h3 className="text-lg font-medium text-white">No reviews yet</h3>
-                                                <p className="text-white/60 mt-1">Reviews from clients will appear here</p>
+                                            <div className="text-center py-12 rounded-2xl border border-white/5 bg-white/[0.02] backdrop-blur-sm">
+                                                <MessageSquare className="h-10 w-10 mx-auto text-white/10 mb-3" />
+                                                <h3 className="text-lg font-medium text-white/90">No reviews yet</h3>
+                                                <p className="text-sm text-white/50 mt-1 max-w-xs mx-auto">Client feedback and ratings will be showcased here.</p>
                                             </div>
                                         )}
                                     </section>

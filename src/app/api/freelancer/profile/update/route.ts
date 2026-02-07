@@ -76,7 +76,12 @@ export async function PATCH(request: NextRequest) {
             city,
             state,
             postalCode,
-            area
+            area,
+
+            // Multi-Sport fields
+            mainSport,
+            otherSports,
+            sportsDetails
         } = body;
 
         // 1. Update User Table
@@ -178,6 +183,11 @@ export async function PATCH(request: NextRequest) {
             profileUpdates.coverImage = coverImageUrl; // map coverImageUrl -> coverImage
         }
 
+        // Multi-Sport fields update
+        if (mainSport !== undefined) profileUpdates.mainSport = mainSport;
+        if (otherSports !== undefined) profileUpdates.otherSports = otherSports;
+        if (sportsDetails !== undefined) profileUpdates.sportsDetails = sportsDetails;
+
         const profile = await prisma.freelancerProfile.findUnique({
             where: { userId: dbUser.id }
         });
@@ -234,7 +244,12 @@ export async function PATCH(request: NextRequest) {
                     avgProjectValue: 0,
                     dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
                     coverImage: coverImageUrl || null,
-                    coords: JSON.stringify([0, 0]) // Required by schema
+                    coords: JSON.stringify([0, 0]), // Required by schema
+
+                    // Multi-Sport fields for creation
+                    mainSport: mainSport || 'Cricket',
+                    otherSports: otherSports || [],
+                    sportsDetails: sportsDetails || {}
                 }
             });
 

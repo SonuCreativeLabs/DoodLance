@@ -43,7 +43,9 @@ const SPORT_ICONS: Record<string, any> = {
   Basketball: CircleDot,
   Padel: Target,
   Pickleball: Target,
-  Kabaddi: Activity,
+  'Combat Sports': Activity,
+  Fitness: Target,
+  Other: Activity,
 };
 
 

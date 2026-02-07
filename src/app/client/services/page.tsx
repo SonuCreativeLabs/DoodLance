@@ -28,6 +28,7 @@ export default function ServicesPage() {
     { id: 'Padel', name: 'Padel', icon: <span className="text-2xl">🎾</span>, slug: 'Padel' },
     { id: 'Table Tennis', name: 'Table Tennis', icon: <span className="text-2xl">🏓</span>, slug: 'Table Tennis' },
     { id: 'Combat Sports', name: 'Combat Sports', icon: <span className="text-2xl">🥊</span>, slug: 'Combat Sports' },
+    { id: 'Fitness', name: 'Fitness', icon: <span className="text-2xl">🏋️</span>, slug: 'Fitness' },
     { id: 'other', name: 'Others', icon: <Grid className="w-6 h-6" />, slug: 'other' },
   ];
 
@@ -160,12 +161,12 @@ export default function ServicesPage() {
                         if (selectedCategory === 'for-you') return !!service.mostBooked;
 
                         // For sports, check service.sport === selectedCategory
-                        if (['Cricket', 'Football', 'Badminton', 'Tennis', 'Basketball', 'Padel', 'Pickleball', 'Table Tennis', 'Combat Sports'].includes(selectedCategory)) {
+                        if (['Cricket', 'Football', 'Badminton', 'Tennis', 'Basketball', 'Padel', 'Pickleball', 'Table Tennis', 'Combat Sports', 'Fitness', 'Others'].includes(selectedCategory)) {
                           // @ts-ignore
                           return service.sport === selectedCategory;
                         }
 
-                        return service.category === selectedCategory
+                        if (selectedCategory === 'other') return service.category === 'other';
                       })
                       .map((service) => {
                         // Dynamically prepend sport name if not present and sport is known

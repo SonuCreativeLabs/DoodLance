@@ -100,6 +100,9 @@ export async function GET(
       cricketRole: profile.cricketRole,
       battingStyle: profile.battingStyle,
       bowlingStyle: profile.bowlingStyle,
+      mainSport: profile.mainSport,
+      otherSports: profile.otherSports,
+      sportsDetails: profile.sportsDetails,
       languages: [], // profile.languages removed as it doesn't exist in schema
       isOnline: profile.isOnline,
       isVerified: profile.isVerified || profile.user.isVerified,

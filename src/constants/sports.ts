@@ -33,7 +33,6 @@ export const SPORTS_CONFIG: Record<string, SportConfig> = {
             { id: 'coach', name: 'Coach' },
             { id: 'umpire', name: 'Umpire' },
             { id: 'scorer', name: 'Scorer' },
-            { id: 'curator', name: 'Pitch Curator' },
             { id: 'commentator', name: 'Commentator' },
         ],
         attributes: [
@@ -83,7 +82,7 @@ export const SPORTS_CONFIG: Record<string, SportConfig> = {
             { id: 'goalkeeper', name: 'Goalkeeper' },
             { id: 'referee', name: 'Referee' },
             { id: 'coach', name: 'Coach' },
-            { id: 'physio', name: 'Physiotherapist' },
+            { id: 'physio', name: 'Sports Physio' },
         ],
         attributes: [
             {
@@ -197,18 +196,6 @@ export const SPORTS_CONFIG: Record<string, SportConfig> = {
                 type: 'select',
                 options: ['Boxing', 'MMA', 'Wrestling', 'Judo', 'Karate', 'Taekwondo', 'Muay Thai', 'Kickboxing'],
                 required: true
-            },
-            {
-                key: 'weightClass',
-                label: 'Weight Class',
-                type: 'text',
-                placeholder: 'e.g., Welterweight'
-            },
-            {
-                key: 'record',
-                label: 'Record',
-                type: 'text',
-                placeholder: 'e.g., 15-3-0'
             }
         ]
     },
@@ -298,7 +285,45 @@ export const SPORTS_CONFIG: Record<string, SportConfig> = {
                 required: false
             }
         ]
+    },
+    Fitness: {
+        name: 'Fitness',
+        roles: [
+            { id: 'trainer', name: 'Fitness Trainer' },
+            { id: 'conditioning', name: 'Strength & Conditioning' },
+            { id: 'yoga', name: 'Yoga Instructor' },
+            { id: 'crossfit', name: 'Crossfit Coach' },
+            { id: 'nutritionist', name: 'Sports Nutritionist' },
+            { id: 'physio', name: 'Sports Physio' },
+        ],
+        attributes: [
+            {
+                key: 'specialization',
+                label: 'Specialization',
+                type: 'multi-select',
+                options: ['Weight Loss', 'Muscle Gain', 'Endurance', 'Flexibility', 'Rehabilitation', 'Sport Specific'],
+                required: true
+            }
+        ]
+    },
+    Other: {
+        name: 'Other',
+        roles: [
+            { id: 'player', name: 'Player' },
+            { id: 'coach', name: 'Coach' },
+            { id: 'official', name: 'Official/Referee' },
+            { id: 'other', name: 'Other' },
+        ],
+        attributes: [
+            {
+                key: 'manualInfo',
+                label: 'Additional Information',
+                type: 'text',
+                placeholder: 'Add details about your sport/role',
+                required: false
+            }
+        ]
     }
 };
 
-export const POPULAR_SPORTS = ['Cricket', 'Football', 'Badminton', 'Tennis', 'Basketball', 'Padel', 'Pickleball', 'Table Tennis', 'Combat Sports'];
+export const POPULAR_SPORTS = ['Cricket', 'Football', 'Badminton', 'Tennis', 'Basketball', 'Padel', 'Pickleball', 'Table Tennis', 'Combat Sports', 'Fitness', 'Other'];

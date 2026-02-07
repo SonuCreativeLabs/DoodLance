@@ -67,6 +67,9 @@ export interface ProfileData {
   cricketRole?: string;
   battingStyle?: string;
   bowlingStyle?: string;
+  mainSport?: string;
+  otherSports?: string[];
+  sportsDetails?: any;
   dateOfBirth?: string;
   avatar?: string;
   coverImage?: string;

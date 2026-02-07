@@ -92,13 +92,49 @@ const initialServices: ServiceItem[] = [
     sport: 'Cricket'
   },
   {
-    id: 'cricket-trainer',
+    id: 'fitness-trainer',
     name: 'Fitness Trainer',
     category: 'coaching',
     providerCount: 56,
     image: '/images/Service Catagories/cricket trainer.png',
     fallbackEmoji: '🏋️',
-    sport: 'Cricket'
+    sport: 'Fitness'
+  },
+  {
+    id: 'yoga-instructor',
+    name: 'Yoga Instructor',
+    category: 'coaching',
+    providerCount: 42,
+    image: '',
+    fallbackEmoji: '🧘',
+    sport: 'Fitness'
+  },
+  {
+    id: 'conditioning-coach',
+    name: 'Strength & Conditioning',
+    category: 'coaching',
+    providerCount: 38,
+    image: '',
+    fallbackEmoji: '💪',
+    sport: 'Fitness'
+  },
+  {
+    id: 'crossfit-coach',
+    name: 'Crossfit Coach',
+    category: 'coaching',
+    providerCount: 22,
+    image: '',
+    fallbackEmoji: '🏋️',
+    sport: 'Fitness'
+  },
+  {
+    id: 'sports-nutritionist',
+    name: 'Sports Nutritionist',
+    category: 'coaching',
+    providerCount: 18,
+    image: '',
+    fallbackEmoji: '🥗',
+    sport: 'Fitness'
   },
 
   // Support
@@ -123,11 +159,11 @@ const initialServices: ServiceItem[] = [
   {
     id: 'physio',
     name: 'Sports Physio',
-    category: 'support',
+    category: 'other',
     providerCount: 28,
     image: '/images/Service Catagories/cricket physio.png',
     fallbackEmoji: '👨‍⚕️',
-    sport: 'Cricket'
+    sport: 'Others'
   },
 
   // Media
@@ -151,7 +187,7 @@ const initialServices: ServiceItem[] = [
   },
   {
     id: 'photographer',
-    name: 'Photographer',
+    name: 'Sports Photo/Videographer',
     category: 'other',
     providerCount: 45,
     image: '/images/Service Catagories/cricket photography.jpeg',

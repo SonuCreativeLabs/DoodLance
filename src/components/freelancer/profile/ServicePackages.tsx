@@ -9,8 +9,18 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useServices, type ServicePackage as CtxService } from '@/contexts/ServicesContext';
-import { CategorySelect } from "@/components/common/CategoryBadge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  SelectScrollUpButton,
+  SelectScrollDownButton,
+} from "@/components/ui/select";
+import * as SelectPrimitive from "@radix-ui/react-select";
 import { Label } from "@/components/ui/label";
+import { ChevronDown } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { EmptyState } from '@/components/freelancer/profile/EmptyState';
 import { Skeleton } from "@/components/ui/skeleton";
@@ -35,23 +45,31 @@ interface ServicePackage {
   sport?: string;
 };
 
-// Normalize various category labels to the fixed dropdown options
+// Normalize various category labels to the fixed dropdown options from SPORTS_CONFIG
 function normalizeCategory(input?: string): string | undefined {
   const c = (input || '').toLowerCase().trim();
   if (!c) return undefined;
+
+  // First, check if there's an exact match in any sport's roles
+  for (const sport of Object.values(SPORTS_CONFIG)) {
+    const matchingRole = sport.roles.find(r => r.name.toLowerCase() === c);
+    if (matchingRole) return matchingRole.name;
+  }
+
+  // Fallback fuzzy matching for legacy data
   if (c.includes('match player')) return 'Match Player';
-  if (c.includes('net bowler')) return 'Net Bowler';
-  if (c.includes('net batsman')) return 'Net Batsman';
-  if (c.includes('sidearm')) return 'Sidearm';
-  if (c.includes('coach') || c.includes('batting')) return 'Coach';
-  if (c.includes('sports conditioning') || c.includes('fitness') || c.includes('trainer')) return 'Trainer';
-  if (c.includes('analyst')) return 'Analyst';
-  if (c.includes('physio')) return 'Physio';
-  if (c.includes('scorer')) return 'Scorer';
-  if (c.includes('umpire')) return 'Umpire';
-  if (c.includes('video') || c.includes('photo')) return 'Cricket Photo / Videography';
-  if (c.includes('content')) return 'Cricket Content Creator';
+  if (c.includes('net') && c.includes('bowl')) return 'Net Bowler';
+  if (c.includes('net') && c.includes('bat')) return 'Net Batsman';
+  if (c.includes('sidearm')) return 'Sidearm Specialist';
+  if (c.includes('coach')) return 'Coach';
   if (c.includes('commentator')) return 'Commentator';
+  if (c.includes('umpire')) return 'Umpire';
+  if (c.includes('scorer')) return 'Scorer';
+  if (c.includes('analyst')) return 'Analyst';
+  if (c.includes('physio')) return 'Sports Physio';
+  if (c.includes('trainer')) return 'Trainer';
+  if (c.includes('photo') || c.includes('video')) return 'Sports Photo/Videographer';
+
   return input;
 }
 
@@ -183,8 +201,17 @@ function PackageForm({
       formData.description?.trim() &&
       formData.videoUrls?.some(url => url.trim()) &&
       hasValidUrl &&
+      // Mode is required if 'analytic' is in the category name
       (!String(formData.category || '').toLowerCase().includes('analytic') || formData.type) &&
-      (!String(formData.category || '').toLowerCase().includes('match player') || formData.skill?.trim())
+      // Skill is required for specific categories that have sub-types (Match Player, Coach, Analyst, etc)
+      (!(
+        String(formData.category || '').toLowerCase().includes('match player') ||
+        String(formData.category || '').toLowerCase().includes('coach') ||
+        String(formData.category || '').toLowerCase().includes('analyst') ||
+        String(formData.category || '').toLowerCase().includes('trainer') ||
+        String(formData.category || '').toLowerCase().includes('commentator') ||
+        String(formData.category || '').toLowerCase().includes('physio')
+      ) || formData.skill?.trim())
     );
     setIsFormValid(isValid);
     onValidationChange?.(isValid);
@@ -214,7 +241,12 @@ function PackageForm({
     const sportName = formData.sport || 'Cricket';
     const config = SPORTS_CONFIG[sportName];
     // Use roles from config as categories, fall back to default if not found
-    return config ? config.roles.map(r => r.name) : [];
+    const roles = config ? config.roles.map(r => r.name) : [];
+
+    // Always include these specific services and a general 'Other Services', but deduplicate
+    const otherServices = ['Sports Physio', 'Sports Photo/Videographer', 'Other Services'];
+    const combined = Array.from(new Set([...roles, ...otherServices]));
+    return combined;
   };
 
   const currentCategories = getSportCategories();
@@ -305,23 +337,108 @@ function PackageForm({
           name="name"
           value={formData.name || ''}
           onChange={handleChange}
-          placeholder="Cricket Coaching - Batting Basics"
+          placeholder="Service Name (e.g. Pro Coaching Session)"
           style={{ borderRadius: '0.5rem' }}
           className="h-11 bg-[#2A2A2A] border-white/10 text-white placeholder-white/40 focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 transition-all focus:outline-none"
           required
         />
       </div>
 
-      {/* Category with dropdown */}
+      {/* Sport selection - Premium Radix UI Select */}
       <div className="space-y-2">
-        <Label className="text-sm font-medium text-white/80">Category <span className="text-red-500">*</span></Label>
-        <CategorySelect
-          value={formData.category || ''}
-          onChange={(value) => setFormData(prev => ({ ...prev, category: value }))}
-          type="service"
-          placeholder="Select a category"
-          required
-        />
+        <Label className="text-sm font-medium text-white/80">Sport <span className="text-red-500">*</span></Label>
+        <div className="relative">
+          <SelectPrimitive.Root
+            value={formData.sport || initialData?.sport || 'Cricket'}
+            onValueChange={(value) => {
+              setFormData(prev => ({ ...prev, sport: value, category: '' }));
+            }}
+          >
+            <SelectPrimitive.Trigger
+              className="flex h-11 w-full rounded-lg bg-[#2D2D2D] border border-white/10 px-3 py-2 text-sm text-white transition-all cursor-pointer items-center justify-between outline-none focus:ring-1 focus:ring-purple-500/30"
+            >
+              <SelectPrimitive.Value placeholder="Select Sport" />
+              <SelectPrimitive.Icon asChild>
+                <ChevronDown className="h-4 w-4 opacity-50" />
+              </SelectPrimitive.Icon>
+            </SelectPrimitive.Trigger>
+
+            <SelectPrimitive.Portal>
+              <SelectPrimitive.Content
+                position="popper"
+                side="bottom"
+                sideOffset={5}
+                className="overflow-hidden bg-[#18181b] rounded-xl border border-white/10 shadow-xl z-50 w-[var(--radix-select-trigger-width)] max-h-[235px] relative"
+              >
+                <SelectScrollUpButton className="flex items-center justify-center h-6 bg-gradient-to-b from-[#18181b] to-transparent text-white/50 cursor-default pointer-events-none" />
+                <SelectPrimitive.Viewport className="p-1">
+                  {POPULAR_SPORTS.map(sport => (
+                    <SelectPrimitive.Item
+                      key={sport}
+                      value={sport}
+                      className="relative flex items-center h-10 px-8 text-sm text-white rounded-lg select-none hover:bg-white hover:text-black data-[highlighted]:bg-white data-[highlighted]:text-black outline-none cursor-pointer mb-1 transition-colors"
+                    >
+                      <SelectPrimitive.ItemText>{sport}</SelectPrimitive.ItemText>
+                      <SelectPrimitive.ItemIndicator className="absolute left-2 inline-flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                      </SelectPrimitive.ItemIndicator>
+                    </SelectPrimitive.Item>
+                  ))}
+                </SelectPrimitive.Viewport>
+                <SelectScrollDownButton className="flex items-center justify-center h-8 bg-gradient-to-t from-[#18181b] to-transparent text-purple-400 cursor-default animate-pulse pointer-events-none" />
+              </SelectPrimitive.Content>
+            </SelectPrimitive.Portal>
+          </SelectPrimitive.Root>
+        </div>
+      </div>
+
+      {/* Service Type with dropdown - Premium Radix UI Select */}
+      <div className="space-y-2">
+        <Label className="text-sm font-medium text-white/80">Service Type <span className="text-red-500">*</span></Label>
+        <div className="relative">
+          <SelectPrimitive.Root
+            value={formData.category || ''}
+            onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}
+          >
+            <SelectPrimitive.Trigger
+              className="flex h-11 w-full rounded-lg bg-[#2D2D2D] border border-white/10 px-3 py-2 text-sm text-white transition-all cursor-pointer items-center justify-between outline-none focus:ring-1 focus:ring-purple-500/30"
+            >
+              <SelectPrimitive.Value placeholder="Select Service Type" />
+              <SelectPrimitive.Icon asChild>
+                <ChevronDown className="h-4 w-4 opacity-50" />
+              </SelectPrimitive.Icon>
+            </SelectPrimitive.Trigger>
+
+            <SelectPrimitive.Portal>
+              <SelectPrimitive.Content
+                position="popper"
+                side="bottom"
+                sideOffset={5}
+                className="overflow-hidden bg-[#18181b] rounded-xl border border-white/10 shadow-xl z-50 w-[var(--radix-select-trigger-width)] max-h-[235px] relative"
+              >
+                <SelectScrollUpButton className="flex items-center justify-center h-6 bg-gradient-to-b from-[#18181b] to-transparent text-white/50 cursor-default pointer-events-none" />
+                <SelectPrimitive.Viewport className="p-1">
+                  {currentCategories.map(cat => (
+                    <SelectPrimitive.Item
+                      key={cat}
+                      value={cat}
+                      className="relative flex items-center h-10 px-8 text-sm text-white rounded-lg select-none hover:bg-white hover:text-black data-[highlighted]:bg-white data-[highlighted]:text-black outline-none cursor-pointer mb-1 transition-colors"
+                    >
+                      <SelectPrimitive.ItemText>{cat}</SelectPrimitive.ItemText>
+                      <SelectPrimitive.ItemIndicator className="absolute left-2 inline-flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                      </SelectPrimitive.ItemIndicator>
+                    </SelectPrimitive.Item>
+                  ))}
+                  {currentCategories.length === 0 && (
+                    <div className="px-8 py-2 text-sm text-white/40 italic">Select a sport first</div>
+                  )}
+                </SelectPrimitive.Viewport>
+                <SelectScrollDownButton className="flex items-center justify-center h-8 bg-gradient-to-t from-[#18181b] to-transparent text-purple-400 cursor-default animate-pulse pointer-events-none" />
+              </SelectPrimitive.Content>
+            </SelectPrimitive.Portal>
+          </SelectPrimitive.Root>
+        </div>
       </div>
 
       {/* Mode (only for analytics) */}
@@ -345,8 +462,8 @@ function PackageForm({
         </div>
       )}
 
-      {/* Player Skill (only for Match Player) */}
-      {String(formData.category || '').toLowerCase().includes('match player') && (
+      {/* Player Skill (only for Match Player in Cricket) */}
+      {formData.sport === 'Cricket' && String(formData.category || '').toLowerCase().includes('match player') && (
         <div className="space-y-2">
           <Label className="text-sm font-medium text-white/80">Player Skill <span className="text-red-500">*</span></Label>
           <div className="relative">
@@ -377,8 +494,24 @@ function PackageForm({
         </div>
       )}
 
-      {/* Coach Specialization (only for Coach) */}
-      {String(formData.category || '').toLowerCase().includes('coach') && (
+      {/* Specialty (for Match Players in other sports) */}
+      {formData.sport !== 'Cricket' && String(formData.category || '').toLowerCase().includes('match player') && (
+        <div className="space-y-2">
+          <Label className="text-sm font-medium text-white/80">Specialty / Role <span className="text-red-500">*</span></Label>
+          <Input
+            name="skill"
+            value={formData.skill || ''}
+            onChange={handleChange}
+            placeholder="e.g. Center Forward, Playmaker"
+            style={{ borderRadius: '0.5rem' }}
+            className="h-11 bg-[#2A2A2A] border-white/10 text-white placeholder-white/40 focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 transition-all focus:outline-none"
+            required
+          />
+        </div>
+      )}
+
+      {/* Coach Specialization (only for Coach in Cricket) */}
+      {formData.sport === 'Cricket' && String(formData.category || '').toLowerCase().includes('coach') && (
         <div className="space-y-2">
           <Label className="text-sm font-medium text-white/80">Coaching Specialization <span className="text-red-500">*</span></Label>
           <div className="relative">
@@ -404,6 +537,22 @@ function PackageForm({
               </svg>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Specialty (for Coaches in other sports) */}
+      {formData.sport !== 'Cricket' && String(formData.category || '').toLowerCase().includes('coach') && (
+        <div className="space-y-2">
+          <Label className="text-sm font-medium text-white/80">Coaching Specialty <span className="text-red-500">*</span></Label>
+          <Input
+            name="skill"
+            value={formData.skill || ''}
+            onChange={handleChange}
+            placeholder="e.g. Tactical Training, Defense"
+            style={{ borderRadius: '0.5rem' }}
+            className="h-11 bg-[#2A2A2A] border-white/10 text-white placeholder-white/40 focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 transition-all focus:outline-none"
+            required
+          />
         </div>
       )}
 
@@ -555,21 +704,6 @@ function PackageForm({
             required
           />
         </div>
-
-        <div className="space-y-2">
-          <Label className="text-sm font-medium text-white/80">Sport</Label>
-          <select
-            name="sport"
-            value={formData.sport || initialData?.sport || 'Cricket'}
-            onChange={handleChange}
-            className="flex h-10 w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50"
-            required
-          >
-            {POPULAR_SPORTS.map(sport => (
-              <option key={sport} value={sport} className="bg-[#1E1E1E]">{sport}</option>
-            ))}
-          </select>
-        </div>
       </div>
 
       <div className="space-y-2">
@@ -578,7 +712,7 @@ function PackageForm({
           name="description"
           value={formData.description || ''}
           onChange={handleChange}
-          placeholder="Personalized cricket coaching with drills, footwork, and technique refinement"
+          placeholder="Professional training session with drills, footwork, and technique refinement"
           style={{ borderRadius: '0.5rem' }}
           className="bg-[#2A2A2A] border-white/10 text-white placeholder-white/40 focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 transition-all min-h-[100px]"
           required

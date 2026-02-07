@@ -19,10 +19,12 @@ import {
   Calendar,
   CheckCircle,
   MessageSquare,
-  Trophy
+  Trophy,
+  Activity
 } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { SPORTS_CONFIG } from '@/constants/sports';
 import { ServiceVideoCarousel } from '@/components/common/ServiceVideoCarousel';
 import { VideoEmbed, getVideoAspectRatio } from '@/components/common/VideoEmbed';
 import { SkillInfoDialog } from '@/components/common/SkillInfoDialog';
@@ -651,7 +653,6 @@ const ProfilePreview = memo(({
                         return;
                       } catch (err) {
                         // If user cancels or share fails, auto-copy to clipboard as fallback (matching public profile)
-                        // This ensures "auto copying" even if the share sheet was dismissed or failed.
                         console.debug('Share API interactions:', err);
                       }
                     }
@@ -720,6 +721,9 @@ const ProfilePreview = memo(({
                 online: profileData.online,
                 username: profileData.username,
                 isVerified: profileData.isVerified,
+                mainSport: profileData.mainSport,
+                otherSports: profileData.otherSports,
+                sportsDetails: profileData.sportsDetails
               }}
             />
           </div>
@@ -734,8 +738,8 @@ const ProfilePreview = memo(({
               style={{
                 scrollBehavior: 'smooth',
                 WebkitOverflowScrolling: 'touch',
-                scrollbarWidth: 'none', // Hide scrollbar in Firefox
-                msOverflowStyle: 'none' // Hide scrollbar in IE/Edge
+                scrollbarWidth: 'none',
+                msOverflowStyle: 'none'
               }}>
               {tabs.map((tab) => {
                 const isActive = activeTab === tab.id;
@@ -773,44 +777,120 @@ const ProfilePreview = memo(({
               {/* About Section */}
               <section id="about" data-section="about" className="scroll-mt-20 pt-4">
                 <h2 className="text-lg font-semibold text-white mb-3">About Me</h2>
-                <p className="text-white mb-6 whitespace-pre-line">{profileData.bio || profileData.about}</p>
-
-                {/* Cricket Information */}
-                <div className="space-y-4 mb-6">
-                  <h3 className="font-medium text-white border-b border-white/10 pb-2">Cricket Profile</h3>
-                  <div className="grid grid-cols-1 gap-2">
-                    <div className="flex items-center gap-2">
-                      <span className="text-white/50 w-24">Role:</span>
-                      <span className="text-white">{profileData.cricketRole || 'Not specified'}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-white/50 w-24">Batting:</span>
-                      <span className="text-white">{profileData.battingStyle || 'Not specified'}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-white/50 w-24">Bowling:</span>
-                      <span className="text-white">{profileData.bowlingStyle || 'Not specified'}</span>
-                    </div>
+                {profileData.bio || profileData.about ? (
+                  <p className="text-white mb-6 whitespace-pre-line">{profileData.bio || profileData.about}</p>
+                ) : (
+                  <div className="bg-white/[0.02] backdrop-blur-sm border border-white/5 rounded-2xl p-6 text-center mb-8">
+                    <div className="text-white/40 text-sm italic">Biography not shared yet</div>
                   </div>
+                )}
+
+                {/* Sport-Specific Information - Minimalist Stat Pills */}
+                <div className="space-y-6 mb-8">
+                  {/* Main Sport Pills */}
+                  {(() => {
+                    const mainSport = profileData.mainSport || 'Cricket';
+                    const config = SPORTS_CONFIG[mainSport];
+                    if (!config) return null;
+
+                    const attributes = config.attributes.map(attr => {
+                      let value = profileData.sportsDetails?.[attr.key];
+                      // Legacy fallback for Cricket
+                      if (!value && mainSport === 'Cricket') {
+                        if (attr.key === 'cricketRole') value = profileData.cricketRole;
+                        if (attr.key === 'battingStyle') value = profileData.battingStyle;
+                        if (attr.key === 'bowlingStyle') value = profileData.bowlingStyle;
+                      }
+                      return { ...attr, value };
+                    }).filter(attr => attr.value);
+
+                    return (
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2 px-1">
+                          <Trophy className="h-4 w-4 text-white/40" />
+                          <h3 className="text-xs font-bold text-white/50 uppercase tracking-wider">{mainSport}</h3>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {attributes.map((attr, idx) => (
+                            <div key={idx} className="bg-white/[0.02] backdrop-blur-sm border border-white/5 px-3 py-1.5 rounded-lg flex items-center gap-3 hover:bg-white/[0.04] transition-all duration-300">
+                              <span className="text-[9px] uppercase tracking-wide text-white/20 font-medium">{attr.label}</span>
+                              <span className="text-[11px] text-white font-medium">
+                                {(() => {
+                                  const val = Array.isArray(attr.value) ? attr.value.join(', ') : attr.value;
+                                  return typeof val === 'string' ? val.replace(/-/g, ' ') : val;
+                                })()}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Secondary Sports Pills */}
+                  {profileData.otherSports && profileData.otherSports.length > 0 && (
+                    <div className="space-y-4 pt-2">
+                      {profileData.otherSports.map((sport, i) => {
+                        const config = SPORTS_CONFIG[sport];
+                        const details = profileData.sportsDetails?.[sport] || {};
+
+                        const attributes = config?.attributes.map(attr => ({
+                          ...attr,
+                          value: details[attr.key]
+                        })).filter(attr => attr.value) || [];
+
+                        return (
+                          <div key={i} className="space-y-3">
+                            <div className="flex items-center gap-2 px-1">
+                              <Activity className="h-4 w-4 text-white/40" />
+                              <h3 className="text-xs font-bold text-white/50 uppercase tracking-wider">{sport}</h3>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                              {attributes.map((attr, idx) => (
+                                <div key={idx} className="bg-white/[0.02] backdrop-blur-sm border border-white/5 px-3 py-1.5 rounded-lg flex items-center gap-3 hover:bg-white/[0.04] transition-all duration-300">
+                                  <span className="text-[9px] uppercase tracking-wide text-white/20 font-medium">{attr.label}</span>
+                                  <span className="text-[11px] text-white font-medium">
+                                    {(() => {
+                                      const val = Array.isArray(attr.value) ? attr.value.join(', ') : attr.value;
+                                      return typeof val === 'string' ? val.replace(/-/g, ' ') : val;
+                                    })()}
+                                  </span>
+                                </div>
+                              ))}
+                              {attributes.length === 0 && (
+                                <span className="text-[10px] text-white/20 italic px-2">No additional details</span>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
 
                 {/* Skills Section - Moved above response time */}
                 <div className="mb-6">
                   <h3 className="font-medium text-white mb-2">Skills</h3>
-                  <div className="flex flex-wrap gap-1.5">
-                    {profileData.skills.map((skill, i) => {
-                      const skillName = typeof skill === 'object' && skill !== null ? (skill.name || skill.title || 'Unknown') : skill;
-                      return (
-                        <button
-                          key={i}
-                          onClick={() => handleSkillClick(skill)}
-                          className="px-1.5 py-0.5 bg-white/10 text-white/80 border border-white/20 text-xs rounded-full transition-colors cursor-pointer hover:bg-white/20"
-                        >
-                          {skillName}
-                        </button>
-                      );
-                    })}
-                  </div>
+                  {profileData.skills && profileData.skills.length > 0 ? (
+                    <div className="flex flex-wrap gap-1.5">
+                      {profileData.skills.map((skill, i) => {
+                        const skillName = typeof skill === 'object' && skill !== null ? (skill.name || skill.title || 'Unknown') : skill;
+                        return (
+                          <button
+                            key={i}
+                            onClick={() => handleSkillClick(skill)}
+                            className="px-1.5 py-0.5 bg-white/10 text-white/80 border border-white/20 text-xs rounded-full transition-colors cursor-pointer hover:bg-white/20"
+                          >
+                            {skillName}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="bg-white/[0.02] backdrop-blur-sm border border-white/5 rounded-xl p-4 text-center">
+                      <p className="text-white/30 text-xs italic">Skills not listed yet</p>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-6 mb-6 text-sm">
@@ -858,7 +938,6 @@ const ProfilePreview = memo(({
                       ))}
                     </div>
 
-
                     {/* Working Hours Dropdown */}
                     <div className="mt-4">
                       <button
@@ -874,7 +953,6 @@ const ProfilePreview = memo(({
 
                       {isHoursDropdownOpen && (
                         <div className="mt-2 p-3 bg-[#1E1E1E] border border-white/10 rounded-lg">
-                          {/* Detailed hours by day */}
                           <div className="space-y-1">
                             {profileData.availability.filter(day => day.available).map((day, index) => (
                               <div key={index} className="flex justify-between items-center text-sm">
@@ -891,7 +969,6 @@ const ProfilePreview = memo(({
                       )}
                     </div>
                   </div>
-
                 </div>
               </section>
 
@@ -903,54 +980,61 @@ const ProfilePreview = memo(({
                   <p className="text-white/60 text-sm">Professional services tailored to your needs</p>
                 </div>
 
-                <div className="relative">
-                  <div className="flex -mx-2 overflow-x-auto scrollbar-hide pb-2">
-                    <div className="flex gap-4 px-2 items-start">
-                      {profileData.services.map((service) => (
-                        <div key={service.id} className="w-80 flex-shrink-0 rounded-xl border border-white/5 bg-[#1E1E1E] overflow-hidden flex flex-col relative group hover:border-white/10 transition-colors h-full">
-                          <ServiceVideoCarousel
-                            videoUrls={service.videoUrls?.filter(url => url) || []}
-                            onVideoClick={(url) => window.open(url, '_blank')}
-                            className="w-full"
-                          />
+                {profileData.services && profileData.services.length > 0 ? (
+                  <div className="relative">
+                    <div className="flex -mx-2 overflow-x-auto scrollbar-hide pb-2">
+                      <div className="flex gap-4 px-2 items-start">
+                        {profileData.services.map((service) => (
+                          <div key={service.id} className="w-80 flex-shrink-0 rounded-xl border border-white/5 bg-[#1E1E1E] overflow-hidden flex flex-col relative group hover:border-white/10 transition-colors h-full">
+                            <ServiceVideoCarousel
+                              videoUrls={service.videoUrls?.filter(url => url) || []}
+                              onVideoClick={(url) => window.open(url, '_blank')}
+                              className="w-full"
+                            />
 
-                          <div
-                            className="p-5 flex flex-col flex-1 cursor-pointer"
-                            onClick={() => {
-                              setSelectedService(service);
-                              setIsServiceDetailOpen(true);
-                            }}
-                          >
-                            {service.category && (
-                              <div className="mb-3 flex justify-start">
-                                <Badge className="bg-white/10 text-white/80 border-white/20 px-2 py-0.5 text-xs">
-                                  {service.category}
-                                </Badge>
-                              </div>
-                            )}
-
-                            <h3 className="text-lg font-semibold text-white mb-3 line-clamp-2">{service.title}</h3>
-
-                            <p className="text-sm text-white/60 line-clamp-3 mb-6">{service.description}</p>
-
-                            <div className="mt-6 pt-4 relative mt-auto">
-                              <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
-                              <div className="flex items-center justify-between">
-                                <div className="text-xl font-bold text-white">
-                                  ₹{String(service.price).replace(/^₹/, '')}
+                            <div
+                              className="p-5 flex flex-col flex-1 cursor-pointer"
+                              onClick={() => {
+                                setSelectedService(service);
+                                setIsServiceDetailOpen(true);
+                              }}
+                            >
+                              {service.category && (
+                                <div className="mb-3 flex justify-start">
+                                  <Badge className="bg-white/10 text-white/80 border-white/20 px-2 py-0.5 text-xs">
+                                    {service.category}
+                                  </Badge>
                                 </div>
-                                <div className="text-sm text-white/60 bg-white/5 px-3 py-1 rounded-full border border-white/5">
-                                  {service.deliveryTime}
+                              )}
+
+                              <h3 className="text-lg font-semibold text-white mb-3 line-clamp-2">{service.title}</h3>
+
+                              <p className="text-sm text-white/60 line-clamp-3 mb-6">{service.description}</p>
+
+                              <div className="mt-6 pt-4 relative mt-auto">
+                                <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
+                                <div className="flex items-center justify-between">
+                                  <div className="text-xl font-bold text-white">
+                                    ₹{String(service.price).replace(/^₹/, '')}
+                                  </div>
+                                  <div className="text-sm text-white/60 bg-white/5 px-3 py-1 rounded-full border border-white/5">
+                                    {service.deliveryTime}
+                                  </div>
                                 </div>
                               </div>
                             </div>
                           </div>
-                        </div>
-
-                      ))}
+                        ))}
+                      </div>
                     </div>
                   </div>
-                </div >
+                ) : (
+                  <div className="text-center py-12 rounded-2xl border border-white/5 bg-white/[0.02] backdrop-blur-sm">
+                    <Briefcase className="h-10 w-10 mx-auto text-white/10 mb-3" />
+                    <h3 className="text-lg font-medium text-white/90">No services listed yet</h3>
+                    <p className="text-sm text-white/50 mt-1 max-w-xs mx-auto">Add your professional services to start your journey.</p>
+                  </div>
+                )}
                 <button
                   onClick={handleViewAllServices}
                   className="w-full mt-4 py-3 px-4 border border-white/30 hover:bg-white/5 transition-colors text-sm font-medium flex items-center justify-center gap-2 text-white rounded-[6px]"
@@ -958,25 +1042,17 @@ const ProfilePreview = memo(({
                   View All {profileData.services.length} Services
                   <ArrowRight className="h-4 w-4" />
                 </button>
-              </section >
+              </section>
 
-              {/* Portfolio Section */}
-
-
-              {/* Experience Section */}
               {/* Achievements Section */}
-              <section
-                id="achievements"
-                data-section="achievements"
-                className="pt-8 scroll-mt-20 relative group z-0"
-              >
+              <section id="achievements" data-section="achievements" className="pt-8 scroll-mt-20 relative group z-0">
                 <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
                 <div className="mb-6">
                   <h2 className="text-xl font-semibold text-white mb-1">Achievements</h2>
                   <p className="text-white/60 text-sm">My sports achievements and highlights</p>
                 </div>
 
-                {profileData.achievements?.length > 0 ? (
+                {profileData.achievements && profileData.achievements.length > 0 ? (
                   <div className="space-y-4">
                     {profileData.achievements.map((ach) => (
                       <div key={ach.id} className="bg-white/5 rounded-xl p-4 border border-white/5 flex items-start gap-4 hover:border-white/10 transition-colors">
@@ -991,19 +1067,16 @@ const ProfilePreview = memo(({
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-8 rounded-2xl border border-white/10 bg-white/5">
-                    <Trophy className="h-10 w-10 mx-auto text-white/20 mb-3" />
-                    <h3 className="text-lg font-medium text-white">No achievements added yet</h3>
-                    <p className="text-white/60 mt-1">Add your sports highlights to showcase your journey</p>
+                  <div className="text-center py-12 rounded-2xl border border-white/5 bg-white/[0.02] backdrop-blur-sm">
+                    <Trophy className="h-10 w-10 mx-auto text-white/10 mb-3" />
+                    <h3 className="text-lg font-medium text-white/90">No achievements added yet</h3>
+                    <p className="text-sm text-white/50 mt-1 max-w-xs mx-auto">Add your sports highlights to showcase your journey</p>
                   </div>
                 )}
               </section>
 
               {/* Reviews Section */}
-              <section
-                id="reviews"
-                data-section="reviews"
-                className="pt-8 scroll-mt-20 relative group">
+              <section id="reviews" data-section="reviews" className="pt-8 scroll-mt-20 relative group">
                 <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
                   <div>
@@ -1026,7 +1099,7 @@ const ProfilePreview = memo(({
                   </div>
                 </div>
 
-                {profileData.reviews?.length > 0 ? (
+                {profileData.reviews && profileData.reviews.length > 0 ? (
                   <div className="relative">
                     <div className="flex -mx-2 overflow-x-auto scrollbar-hide pb-2">
                       <div className="flex gap-4 px-2">
@@ -1073,27 +1146,27 @@ const ProfilePreview = memo(({
                     </button>
                   </div>
                 ) : (
-                  <div className="text-center py-12 rounded-3xl border border-white/10 bg-white/5">
-                    <MessageSquare className="h-12 w-12 mx-auto text-white/20 mb-4" />
-                    <h3 className="text-lg font-medium text-white">No reviews yet</h3>
-                    <p className="text-white/60 mt-1">Your reviews will appear here once clients leave feedback</p>
+                  <div className="text-center py-12 rounded-2xl border border-white/5 bg-white/[0.02] backdrop-blur-sm">
+                    <MessageSquare className="h-10 w-10 mx-auto text-white/10 mb-3" />
+                    <h3 className="text-lg font-medium text-white/90">No reviews yet</h3>
+                    <p className="text-sm text-white/50 mt-1 max-w-xs mx-auto">Your reviews will appear here once clients leave feedback</p>
                   </div>
                 )}
               </section>
-            </div >
-          </div >
-        </div >
-      </div >
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Skill Info Dialog */}
-      < SkillInfoDialog
+      <SkillInfoDialog
         isOpen={isSkillDialogOpen}
         onClose={() => setIsSkillDialogOpen(false)}
         skillInfo={selectedSkillInfo}
       />
 
       {/* Portfolio Modal */}
-      < PortfolioItemModal
+      <PortfolioItemModal
         item={selectedPortfolioItem}
         isOpen={isPortfolioModalOpen}
         onClose={() => {
@@ -1111,10 +1184,9 @@ const ProfilePreview = memo(({
           setSelectedService(null);
         }}
       />
-    </div >
+    </div>
   ), document.body);
-}, (prevProps, nextProps) => {
-  // Only re-render if isOpen or profileData changes
+}, (prevProps: any, nextProps: any) => {
   return (
     prevProps.isOpen === nextProps.isOpen &&
     prevProps.profileData === nextProps.profileData

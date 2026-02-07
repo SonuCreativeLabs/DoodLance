@@ -143,11 +143,11 @@ export function ProfileHeader({
       missing.push("Location");
     }
 
-    // 4. Cricket Info Card (8%)
-    if (personalDetails?.cricketRole) {
+    // 4. Sport Info Card (8%)
+    if (personalDetails?.mainSport) {
       percentage += weights.cricketInfo;
     } else {
-      missing.push("Cricket Role");
+      missing.push("Primary Sport");
     }
 
     // 5. Public Profile Link (15% - CRITICAL)
@@ -573,7 +573,11 @@ export function ProfileHeader({
             <p className="text-xs text-gray-500 mt-1">ID: {personalDetails.displayId}</p>
           )} 
           */}
-          <p className="text-purple-400 font-medium mt-1">{personalDetails.cricketRole || 'Role not set'}</p>
+          <p className="text-purple-400 font-medium mt-1">
+            {personalDetails.mainSport === 'Cricket'
+              ? (personalDetails.cricketRole || 'Cricketer')
+              : (personalDetails.mainSport || 'Freelancer')}
+          </p>
 
           <div className="mt-2 flex flex-col items-center gap-0.5 text-sm text-white/70">
             <div className="flex items-center gap-2">
@@ -688,6 +692,9 @@ export function ProfileHeader({
           about: personalDetails.about,
           bio: personalDetails.bio,
           cricketRole: personalDetails.cricketRole,
+          mainSport: personalDetails.mainSport,
+          otherSports: personalDetails.otherSports,
+          sportsDetails: personalDetails.sportsDetails,
           battingStyle: personalDetails.battingStyle || '',
           bowlingStyle: personalDetails.bowlingStyle || '',
           responseTime: personalDetails.responseTime || 'Not set',
