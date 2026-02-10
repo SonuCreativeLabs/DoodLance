@@ -51,7 +51,12 @@ export const TutorialTour = () => {
                 const animationId = setInterval(updateRect, 32);
 
                 setIsReady(true);
-                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                // Only scroll into view if element is not fixed position
+                const computedStyle = window.getComputedStyle(element);
+                if (computedStyle.position !== 'fixed') {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
 
                 return () => {
                     window.removeEventListener('resize', updateRect);

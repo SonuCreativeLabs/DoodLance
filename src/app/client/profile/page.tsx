@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { User, Mail, Phone, MapPin, Calendar, Star, Edit, ShieldCheck, Bell } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Calendar, Star, Edit, ShieldCheck, Bell, ChevronRight } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useNavbar } from '@/contexts/NavbarContext';

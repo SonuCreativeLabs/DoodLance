@@ -558,31 +558,34 @@ export default function ClientHome() {
               <Home className="w-4 h-4 text-purple-400" />
               <span className="text-sm font-medium">Home</span>
             </Link>
-            <Link
-              href="/client/nearby/hirefeed"
-              id="nav-hire-desktop"
-              className="px-4 py-2 rounded-xl flex items-center space-x-2 text-white/60 hover:text-white hover:bg-black/20 border border-transparent transition-all duration-300 group"
-            >
-              <Compass className="w-4 h-4 group-hover:text-purple-400 transition-colors duration-300" />
-              <span className="text-sm font-medium">Hire</span>
-            </Link>
-            <Link
-              href="/client/bookings"
-              id="nav-bookings-desktop"
-              className="px-4 py-2 rounded-xl flex items-center space-x-2 text-white/60 hover:text-white hover:bg-black/20 border border-transparent transition-all duration-300 group"
-            >
-              <Calendar className="w-4 h-4 group-hover:text-purple-400 transition-colors duration-300" />
-              <span className="text-sm font-medium">Bookings</span>
-            </Link>
+            <div id="nav-hire-desktop">
+              <Link
+                href="/client/nearby/hirefeed"
+                className="px-4 py-2 rounded-xl flex items-center space-x-2 text-white/60 hover:text-white hover:bg-black/20 border border-transparent transition-all duration-300 group"
+              >
+                <Compass className="w-4 h-4 group-hover:text-purple-400 transition-colors duration-300" />
+                <span className="text-sm font-medium">Hire</span>
+              </Link>
+            </div>
+            <div id="nav-bookings-desktop">
+              <Link
+                href="/client/bookings"
+                className="px-4 py-2 rounded-xl flex items-center space-x-2 text-white/60 hover:text-white hover:bg-black/20 border border-transparent transition-all duration-300 group"
+              >
+                <Calendar className="w-4 h-4 group-hover:text-purple-400 transition-colors duration-300" />
+                <span className="text-sm font-medium">Bookings</span>
+              </Link>
+            </div>
             {/* Earn Button */}
-            <button
-              id="nav-earn-desktop"
-              onClick={handleSwitchToFreelancer}
-              className="px-4 py-2 rounded-xl flex items-center space-x-1.5 bg-gradient-to-r from-yellow-500 via-amber-400 to-yellow-300 text-black shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-300 border border-transparent"
-            >
-              <span className="text-sm font-bold whitespace-nowrap">Earn</span>
-              <span className="text-sm">💰</span>
-            </button>
+            <div id="nav-earn-desktop">
+              <button
+                onClick={handleSwitchToFreelancer}
+                className="px-4 py-2 rounded-xl flex items-center space-x-1.5 bg-gradient-to-r from-yellow-500 via-amber-400 to-yellow-300 text-black shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-300 border border-transparent"
+              >
+                <span className="text-sm font-bold whitespace-nowrap">Earn</span>
+                <span className="text-sm">💰</span>
+              </button>
+            </div>
           </div>
 
           <div className="flex items-center space-x-3 sm:space-x-4">

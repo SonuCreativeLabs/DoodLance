@@ -244,10 +244,10 @@ export default function ProfessionalsFeed({
   }
 
   // Helper function to render each item
-  const renderItem = (item: any) => {
+  const renderItem = (item: any, index: number = -1) => {
     if (filteredProfessionals) {
       return (
-        <div key={item.id || item.name} className="bg-[#111111] shadow-lg rounded-xl p-3 border border-white/10 backdrop-blur-xl cursor-pointer overflow-hidden group relative" onClick={() => handleProfessionalClick(item)}>
+        <div key={item.id || item.name} id={index === 0 ? "first-expert-card" : undefined} className="bg-[#111111] shadow-lg rounded-xl p-3 border border-white/10 backdrop-blur-xl cursor-pointer overflow-hidden group relative" onClick={() => handleProfessionalClick(item)}>
           {/* Shine Effect */}
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-out pointer-events-none"></div>
           <div className="flex items-start gap-4 relative z-10">
@@ -459,11 +459,7 @@ export default function ProfessionalsFeed({
   // Otherwise show the list of items
   return (
     <div className="space-y-4 pb-24">
-      {items.map((item: any, index: number) => (
-        <div key={item.id || item.name} id={index === 0 ? "first-expert-card" : undefined}>
-          {renderItem(item)}
-        </div>
-      ))}
+      {items.map((item: any, index: number) => renderItem(item, index))}
     </div>
   );
 }

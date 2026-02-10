@@ -34,10 +34,19 @@ export default function IntegratedExplorePage() {
         position: 'bottom'
       },
       {
-        targetId: 'hire-sheet-handle',
+        targetId: 'hire-visible-map-area',
+        title: 'Interactive Map',
+        description: 'See all nearby experts on the map. Each pin represents an available professional in your area.',
+        position: 'center',
+        onStart: () => setIsSheetCollapsed(true)
+      },
+      {
+        targetId: 'hire-sheet-tutorial-target',
         title: 'Explore the List',
-        description: 'Drag this handle UP to see the full list of experts or DOWN to return to the map view.',
-        position: 'top'
+        description: 'Pull up this section to see the full list of experts, or keep it minimized to focus on the map view.',
+        position: 'top',
+        alignment: 'start',
+        onStart: () => setIsSheetCollapsed(true)
       },
       {
         targetId: 'first-expert-card',
@@ -380,6 +389,17 @@ export default function IntegratedExplorePage() {
     <div className="h-screen w-full bg-transparent relative overflow-hidden">
       {/* Map View */}
       <div id="hire-map-view" className="absolute inset-0 z-0">
+        {/* Tutorial target for visible map area only */}
+        <div
+          id="hire-visible-map-area"
+          className="absolute top-0 left-0 right-0 pointer-events-none"
+          style={{
+            height: isSheetCollapsed
+              ? `${initialSheetY * 1.2}px`
+              : '100vh',
+            zIndex: 1
+          }}
+        />
         <MapView
           ref={mapViewRef}
           professionals={filteredProfessionals}
@@ -472,6 +492,7 @@ export default function IntegratedExplorePage() {
 
       {/* Bottom Sheet */}
       <motion.div
+        id="hire-bottom-sheet"
         className="fixed left-0 right-0 bg-[#111111] shadow-xl z-[2] flex flex-col sheet-responsive-top"
         style={{
           // top and height are handled by CSS class .sheet-responsive-top and CSS variables injected below
@@ -509,86 +530,118 @@ export default function IntegratedExplorePage() {
           }
         }}
       >
-        {/* Drag Handle */}
-        <div id="hire-sheet-handle" className="sticky top-0 pt-3 pb-1 flex flex-col items-center z-10">
-          <div className="w-10 h-1 bg-white/20 rounded-full" />
-          <AnimatePresence>
-            {isDragTextVisible && (
-              <motion.div
-                initial={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                className="text-white/50 text-xs py-1"
-              >
-                {isSheetCollapsed ? "↑ Pull up for list view" : "↓ Pull down to minimize"}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-
-        {/* Content */}
+        {/* Tutorial wrapper - excludes bottom navbar */}
         <div
-          className={`flex-1 ${isSheetCollapsed ? 'overflow-hidden' : 'overflow-y-auto smooth-scroll'} `}
-          onScroll={handleScroll}
+          id="hire-sheet-tutorial-target"
           style={{
-            maxHeight: isSheetCollapsed ? 'auto' : 'calc(100vh - 85px - 48px)' // 48px accounts for the drag handle
+            height: isSheetCollapsed ? 'auto' : 'calc(100vh - 80px)' // Exclude 80px navbar
           }}
         >
-          <div className="container max-w-2xl mx-auto px-3 pb-6">
-            {isSheetCollapsed ? (
-              <div className="flex items-center justify-between w-full max-w-3xl mx-auto px-4 pt-4">
-                <div className="flex flex-col items-start gap-1.5">
-                  <div
-                    id="hire-map-avatars"
-                    className="flex -space-x-3 cursor-pointer hover:opacity-90 transition-opacity"
-                    onClick={() => setIsSheetCollapsed(false)}
-                  >
-                    {loading ? (
-                      // Skeleton Loader for collapsed avatars
-                      [...Array(4)].map((_, index) => (
-                        <div key={index} className="relative w-9 h-9 rounded-full border-2 border-white/5 bg-white/10 animate-pulse" style={{ zIndex: 4 - index }} />
-                      ))
-                    ) : (
-                      <>
-                        {filteredProfessionals.slice(0, 4).map((freelancer, index) => (
-                          <motion.div
-                            key={freelancer.id}
-                            className="relative"
-                            style={{ zIndex: 4 - index }}
-                            initial={{ opacity: 0, x: -10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: index * 0.1 }}
-                          >
-                            <div className="relative w-9 h-9">
-                              <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full opacity-20 blur-sm"></div>
-                              <div className="relative w-9 h-9 rounded-full border-2 border-purple-200/20 overflow-hidden backdrop-blur-sm shadow-lg">
-                                <img
-                                  src={freelancer.avatar || freelancer.image}
-                                  alt=""
-                                  className="w-full h-full object-cover"
-                                />
+          {/* Drag Handle */}
+          <div id="hire-sheet-handle" className="sticky top-0 pt-3 pb-1 flex flex-col items-center z-10">
+            <div className="w-10 h-1 bg-white/20 rounded-full" />
+            <AnimatePresence>
+              {isDragTextVisible && (
+                <motion.div
+                  initial={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="text-white/50 text-xs py-1"
+                >
+                  {isSheetCollapsed ? "↑ Pull up for list view" : "↓ Pull down to minimize"}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Content */}
+          <div
+            className={`flex-1 ${isSheetCollapsed ? 'overflow-hidden' : 'overflow-y-auto smooth-scroll'} `}
+            onScroll={handleScroll}
+            style={{
+              maxHeight: isSheetCollapsed ? 'auto' : 'calc(100vh - 85px - 48px)' // 48px accounts for the drag handle
+            }}
+          >
+            <div className="container max-w-2xl mx-auto px-3 pb-6">
+              {isSheetCollapsed ? (
+                <div id="hire-collapsed-sheet" className="flex items-center justify-between w-full max-w-3xl mx-auto px-4 pt-4">
+                  <div className="flex flex-col items-start gap-1.5">
+                    <div
+                      id="hire-map-avatars"
+                      className="flex -space-x-3 cursor-pointer hover:opacity-90 transition-opacity"
+                      onClick={() => setIsSheetCollapsed(false)}
+                    >
+                      {loading ? (
+                        // Skeleton Loader for collapsed avatars
+                        [...Array(4)].map((_, index) => (
+                          <div key={index} className="relative w-9 h-9 rounded-full border-2 border-white/5 bg-white/10 animate-pulse" style={{ zIndex: 4 - index }} />
+                        ))
+                      ) : (
+                        <>
+                          {filteredProfessionals.slice(0, 4).map((freelancer, index) => (
+                            <motion.div
+                              key={freelancer.id}
+                              className="relative"
+                              style={{ zIndex: 4 - index }}
+                              initial={{ opacity: 0, x: -10 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: index * 0.1 }}
+                            >
+                              <div className="relative w-9 h-9">
+                                <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full opacity-20 blur-sm"></div>
+                                <div className="relative w-9 h-9 rounded-full border-2 border-purple-200/20 overflow-hidden backdrop-blur-sm shadow-lg">
+                                  <img
+                                    src={freelancer.avatar || freelancer.image}
+                                    alt=""
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
                               </div>
-                            </div>
-                          </motion.div>
-                        ))}
-                        {filteredProfessionals.length > 4 && (
-                          <motion.div
-                            className="relative"
-                            style={{ zIndex: 0 }}
-                            initial={{ opacity: 0, scale: 0.8 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ delay: 0.4 }}
-                          >
-                            <div className="relative w-9 h-9">
-                              <div className="absolute inset-0 bg-gradient-to-br from-purple-400/20 to-purple-600/20 rounded-full blur-sm"></div>
-                              <div className="relative w-9 h-9 rounded-full border-2 border-purple-200/20 overflow-hidden backdrop-blur-sm bg-[#111111]/90 flex items-center justify-center">
-                                <span className="text-xs font-bold text-white/70">+{filteredProfessionals.length - 4}</span>
+                            </motion.div>
+                          ))}
+                          {filteredProfessionals.length > 4 && (
+                            <motion.div
+                              className="relative"
+                              style={{ zIndex: 0 }}
+                              initial={{ opacity: 0, scale: 0.8 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              transition={{ delay: 0.4 }}
+                            >
+                              <div className="relative w-9 h-9">
+                                <div className="absolute inset-0 bg-gradient-to-br from-purple-400/20 to-purple-600/20 rounded-full blur-sm"></div>
+                                <div className="relative w-9 h-9 rounded-full border-2 border-purple-200/20 overflow-hidden backdrop-blur-sm bg-[#111111]/90 flex items-center justify-center">
+                                  <span className="text-xs font-bold text-white/70">+{filteredProfessionals.length - 4}</span>
+                                </div>
                               </div>
-                            </div>
-                          </motion.div>
-                        )}
-                      </>
-                    )}
+                            </motion.div>
+                          )}
+                        </>
+                      )}
+                    </div>
+                    <div className="text-white/80 text-sm font-medium">
+                      {loading ? (
+                        <span className="animate-pulse">Finding experts...</span>
+                      ) : (
+                        <span>{filteredProfessionals.length} experts available</span>
+                      )}
+                    </div>
                   </div>
+                  <div className="self-center">
+                    <button
+                      id="hire-post-job"
+                      onClick={() => router.push('/client/post')}
+                      className="group relative flex items-center gap-1.5 px-4 py-2 bg-white/95 backdrop-blur-xl rounded-xl text-sm font-semibold transition-all duration-300 hover:bg-white shadow-lg hover:shadow-xl"
+                    >
+                      <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-purple-500/5 to-purple-600/5 opacity-80 group-hover:opacity-100 transition-opacity" />
+                      <div className="absolute inset-0 rounded-xl border border-purple-200/20 group-hover:border-purple-300/30 transition-colors" />
+                      <div className="absolute inset-0 rounded-xl shadow-inner shadow-purple-100/10" />
+                      <Plus className="w-3.5 h-3.5 text-purple-600 group-hover:text-purple-700 transition-colors relative z-10" />
+                      <span className="text-purple-600 group-hover:text-purple-700 relative z-10 transition-colors">Post A Job</span>
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                // Expanded List Header
+                <div className="flex items-center justify-between w-full max-w-3xl mx-auto px-4 mb-5 pt-1">
                   <div className="text-white/80 text-sm font-medium">
                     {loading ? (
                       <span className="animate-pulse">Finding experts...</span>
@@ -596,12 +649,10 @@ export default function IntegratedExplorePage() {
                       <span>{filteredProfessionals.length} experts available</span>
                     )}
                   </div>
-                </div>
-                <div className="self-center">
                   <button
                     id="hire-post-job"
                     onClick={() => router.push('/client/post')}
-                    className="group relative flex items-center gap-1.5 px-4 py-2 bg-white/95 backdrop-blur-xl rounded-xl text-sm font-semibold transition-all duration-300 hover:bg-white shadow-lg hover:shadow-xl"
+                    className="group relative flex items-center gap-1.5 px-3 py-1.5 bg-white/95 backdrop-blur-xl rounded-xl text-sm font-semibold transition-all duration-300 hover:bg-white shadow-lg hover:shadow-xl"
                   >
                     <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-purple-500/5 to-purple-600/5 opacity-80 group-hover:opacity-100 transition-opacity" />
                     <div className="absolute inset-0 rounded-xl border border-purple-200/20 group-hover:border-purple-300/30 transition-colors" />
@@ -610,42 +661,21 @@ export default function IntegratedExplorePage() {
                     <span className="text-purple-600 group-hover:text-purple-700 relative z-10 transition-colors">Post A Job</span>
                   </button>
                 </div>
-              </div>
-            ) : (
-              // Expanded List Header
-              <div className="flex items-center justify-between w-full max-w-3xl mx-auto px-4 mb-5 pt-1">
-                <div className="text-white/80 text-sm font-medium">
-                  {loading ? (
-                    <span className="animate-pulse">Finding experts...</span>
-                  ) : (
-                    <span>{filteredProfessionals.length} experts available</span>
-                  )}
+              )}
+              {!isSheetCollapsed && (
+                <div className="space-y-2.5 px-1">
+                  <ProfessionalsFeed
+                    filteredProfessionals={filteredProfessionals}
+                    searchQuery={searchQuery}
+                    selectedCategory={selectedCategory}
+                    loading={loading}
+                  />
                 </div>
-                <button
-                  id="hire-post-job"
-                  onClick={() => router.push('/client/post')}
-                  className="group relative flex items-center gap-1.5 px-3 py-1.5 bg-white/95 backdrop-blur-xl rounded-xl text-sm font-semibold transition-all duration-300 hover:bg-white shadow-lg hover:shadow-xl"
-                >
-                  <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-purple-500/5 to-purple-600/5 opacity-80 group-hover:opacity-100 transition-opacity" />
-                  <div className="absolute inset-0 rounded-xl border border-purple-200/20 group-hover:border-purple-300/30 transition-colors" />
-                  <div className="absolute inset-0 rounded-xl shadow-inner shadow-purple-100/10" />
-                  <Plus className="w-3.5 h-3.5 text-purple-600 group-hover:text-purple-700 transition-colors relative z-10" />
-                  <span className="text-purple-600 group-hover:text-purple-700 relative z-10 transition-colors">Post A Job</span>
-                </button>
-              </div>
-            )}
-            {!isSheetCollapsed && (
-              <div className="space-y-2.5 px-1">
-                <ProfessionalsFeed
-                  filteredProfessionals={filteredProfessionals}
-                  searchQuery={searchQuery}
-                  selectedCategory={selectedCategory}
-                  loading={loading}
-                />
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
+        {/* End tutorial wrapper */}
       </motion.div>
 
       {/* Search Filters */}
