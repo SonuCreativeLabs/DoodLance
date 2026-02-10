@@ -28,6 +28,7 @@ interface TutorialContextType {
     hasSeenTutorial: (id: string) => boolean;
     markTutorialSeen: (id: string) => void;
     resetTutorials: () => void;
+    clearTutorialHistory: (id: string) => void;
 }
 
 const TutorialContext = createContext<TutorialContextType | undefined>(undefined);
@@ -82,6 +83,15 @@ export const TutorialProvider = ({ children }: { children: ReactNode }) => {
     const closeTutorial = () => {
         if (config) {
             markTutorialSeen(config.id);
+
+            // Remove tutorial query parameter from URL to prevent restart
+            if (typeof window !== 'undefined') {
+                const url = new URL(window.location.href);
+                if (url.searchParams.get('tutorial') === config.id) {
+                    url.searchParams.delete('tutorial');
+                    window.history.replaceState({}, '', url.toString());
+                }
+            }
         }
         setIsOpen(false);
         setConfig(null);
@@ -92,6 +102,12 @@ export const TutorialProvider = ({ children }: { children: ReactNode }) => {
         setSeenTours([]);
         localStorage.removeItem('doodlance_seen_tutorials');
         window.location.reload(); // Reload to trigger the auto-tours
+    };
+
+    const clearTutorialHistory = (id: string) => {
+        const updated = seenTours.filter(tourId => tourId !== id);
+        setSeenTours(updated);
+        localStorage.setItem('doodlance_seen_tutorials', JSON.stringify(updated));
     };
 
     return (
@@ -107,6 +123,7 @@ export const TutorialProvider = ({ children }: { children: ReactNode }) => {
                 hasSeenTutorial,
                 markTutorialSeen,
                 resetTutorials,
+                clearTutorialHistory
             }}
         >
             {children}

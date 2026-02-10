@@ -759,7 +759,7 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
             className="w-full pt-2 flex flex-col h-full"
           >
             <div className="flex flex-col md:flex-row justify-center items-center gap-4 py-2 flex-shrink-0">
-              <TabsList className="grid w-full sm:w-[400px] lg:w-auto grid-cols-2 h-12 bg-transparent p-1 gap-1">
+              <TabsList id="jobs-tabs" className="grid w-full sm:w-[400px] lg:w-auto grid-cols-2 h-12 bg-transparent p-1 gap-1">
                 <TabsTrigger
                   value="upcoming"
                   className="relative px-4 py-2 text-sm font-medium transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#8B66D1] data-[state=active]:to-[#9B76E1] data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-[#8B66D1]/25 data-[state=active]:rounded-lg data-[state=inactive]:text-gray-300 data-[state=inactive]:bg-transparent data-[state=inactive]:rounded-lg data-[state=inactive]:border data-[state=inactive]:border-gray-600/50"
@@ -800,6 +800,7 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
                     </div>
                   ) : (
                     <button
+                      id="jobs-search-button"
                       className={`h-10 w-10 p-0 text-gray-400 hover:text-white flex items-center justify-center transition-all duration-300 ease-in ${!showSearch ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}
                       onClick={() => setShowSearch(true)}
                     >
@@ -812,6 +813,7 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
                 {activeTab !== 'earnings' && statusOptions.length > 0 && !showSearch && (
                   <div className="flex-1 min-w-0 md:w-auto overflow-hidden">
                     <div
+                      id="jobs-status-filters"
                       ref={statusChipsRef}
                       className="flex items-center gap-2 overflow-x-auto scrollbar-hide allow-horizontal-scroll pr-4"
                     >
@@ -852,20 +854,23 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
                 >
                   <TabsContent value="upcoming" className="mt-0 w-full">
                     {loading ? (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+                      <div id="jobs-skeleton-container" className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
                         {[...Array(3)].map((_, i) => (
-                          <JobCardSkeleton key={i} />
+                          <div key={i} id={i === 0 ? 'first-skeleton-card' : undefined} className="w-full">
+                            <JobCardSkeleton />
+                          </div>
                         ))}
                       </div>
                     ) : filteredJobs.length > 0 ? (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
-                        {filteredJobs.map((job) => (
-                          <JobCard
-                            key={job.id}
-                            job={job}
-                            index={filteredJobs.indexOf(job)}
-                            onStatusChange={handleJobStatusChange}
-                          />
+                      <div id="jobs-grid-container" className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+                        {filteredJobs.map((job, index) => (
+                          <div key={job.id} id={index === 0 ? 'first-job-card' : undefined}>
+                            <JobCard
+                              job={job}
+                              index={index}
+                              onStatusChange={handleJobStatusChange}
+                            />
+                          </div>
                         ))}
                       </div>
                     ) : (
@@ -900,7 +905,7 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
                   </TabsContent>
 
                   <TabsContent value="applications" className="mt-0 w-full h-full">
-                    <div className="h-[60vh] flex flex-col items-center justify-center">
+                    <div id="applications-status-container" className="h-[60vh] flex flex-col items-center justify-center">
                       <CricketComingSoon
                         title="Pitch Inspection in Progress!"
                         description={

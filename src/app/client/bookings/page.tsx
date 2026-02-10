@@ -1026,7 +1026,7 @@ function BookingsPageContent() {
                         </Button>
                       </div>
                     ) : filteredBookings.length === 0 ? (
-                      <div className="text-center py-12">
+                      <div className="text-center py-12 md:col-span-2">
                         <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-white/5 flex items-center justify-center">
                           <Calendar className="w-8 h-8 text-white/40" />
                         </div>

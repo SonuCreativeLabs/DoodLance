@@ -22,7 +22,23 @@ export const TutorialTour = () => {
         }
 
         const findElementAndSetRect = () => {
-            const element = document.getElementById(step.targetId);
+            let element: HTMLElement | null = null;
+
+            // Check if targetId contains commas (multiple targets)
+            if (step.targetId.includes(',')) {
+                const targetIds = step.targetId.split(',').map(id => id.trim());
+                for (const id of targetIds) {
+                    const el = document.getElementById(id);
+                    // Check if element exists and is visible (has dimensions)
+                    if (el && (el.offsetWidth > 0 || el.offsetHeight > 0 || el.getClientRects().length > 0)) {
+                        element = el;
+                        break;
+                    }
+                }
+            } else {
+                element = document.getElementById(step.targetId);
+            }
+
             if (element) {
                 const lastRectRef = { current: element.getBoundingClientRect() };
                 setTargetRect(lastRectRef.current);
@@ -109,7 +125,7 @@ export const TutorialTour = () => {
             left = targetRect.left - spacing - popoverWidth;
             top = targetRect.top + (targetRect.height / 2) - (popoverHeight / 2);
         } else if (currentStep.position === 'right') {
-            left = targetRect.right + spacing + 10; // Extra spacing to prevent overlap
+            left = targetRect.right + spacing + 10;
             top = targetRect.top + (targetRect.height / 2) - (popoverHeight / 2);
         } else {
             // Auto-position fallback
@@ -118,48 +134,31 @@ export const TutorialTour = () => {
             }
         }
 
-        // Keep within viewport
+        // Auto-flip if top position is too close to viewport top
+        if (top < 10 && currentStep.position === 'top') {
+            top = targetRect.bottom + spacing;
+        }
+
+        // Auto-flip if bottom position is too close to viewport bottom
+        if (top + popoverHeight > window.innerHeight - 10 && currentStep.position === 'bottom') {
+            top = targetRect.top - spacing - popoverHeight;
+        }
+
+        // CLAMP: Keep within viewport horizontally
         if (left < 10) left = 10;
         if (left + popoverWidth > window.innerWidth - 10) left = window.innerWidth - popoverWidth - 10;
 
-        const style: React.CSSProperties = {
+        // CLAMP: Keep within viewport vertically
+        if (top < 10) top = 10;
+        if (top + popoverHeight > window.innerHeight - 10) top = window.innerHeight - popoverHeight - 10;
+
+        return {
             position: 'fixed',
-            zIndex: 1000,
+            zIndex: 9999,
             width: `${popoverWidth}px`,
             left: `${left}px`,
+            top: `${top}px`,
         };
-
-        let effectivePosition = currentStep.position;
-
-        // Auto-flip if top position is too close to viewport top
-        if (effectivePosition === 'top' && targetRect.top < popoverHeight + spacing + 20) {
-            effectivePosition = 'bottom';
-        }
-
-        if (effectivePosition === 'top') {
-            // For top position, pin to bottom to avoid ensuring height calculation
-            // Bottom of popover should be at targetRect.top - spacing
-            style.bottom = `${window.innerHeight - (targetRect.top - spacing)}px`;
-            // Reset top
-            style.top = 'auto';
-        } else if (effectivePosition === 'bottom') {
-            const offsetY = currentStep.offsetY || 0;
-            style.top = `${targetRect.bottom + spacing + offsetY}px`;
-        } else {
-            // Default top calculation
-            const offsetY = currentStep.offsetY || 0;
-            style.top = `${top + offsetY}px`;
-
-            // Handle alignment overrides for side-positioned elements
-            if ((currentStep.position === 'left' || currentStep.position === 'right') && currentStep.alignment === 'end') {
-                // Align to bottom of target with extra spacing
-                style.bottom = `${window.innerHeight - targetRect.bottom + spacing + 10 - offsetY}px`;
-                style.top = 'auto'; // release top
-            }
-        }
-
-
-        return style;
     };
 
     return (
@@ -178,7 +177,7 @@ export const TutorialTour = () => {
                                 height: targetRect.height + 4,
                                 rx: Math.abs(targetRect.width - targetRect.height) < 2 ? 999 : 12,
                             }}
-                            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                            transition={{ type: 'tween', ease: 'easeInOut', duration: 0.3 }}
                             fill="black"
                         />
                     </mask>
@@ -198,7 +197,7 @@ export const TutorialTour = () => {
                 initial={{ opacity: 0, scale: 0.9, y: 10 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.9, y: 10 }}
-                transition={{ type: 'spring', damping: 20, stiffness: 250 }}
+                transition={{ type: 'tween', ease: 'easeOut', duration: 0.3 }}
                 style={getPopoverStyles()}
                 className="pointer-events-auto bg-[#1E1E1E] border border-white/10 rounded-2xl p-6 shadow-2xl backdrop-blur-xl"
             >
@@ -218,12 +217,32 @@ export const TutorialTour = () => {
 
                 <div className="flex items-center justify-between">
                     <div className="flex gap-1">
-                        {config.steps.map((_, idx) => (
-                            <div
-                                key={idx}
-                                className={`h-1 rounded-full transition-all duration-300 ${idx === activeStep ? 'w-4 bg-purple-500' : 'w-1 bg-white/20'}`}
-                            />
-                        ))}
+                        {config.steps.map((_, idx) => {
+                            // Logic to show only 5 dots: active step, 2 before, 2 after
+                            // Adjust window if near start or end
+                            let start = activeStep - 2;
+                            let end = activeStep + 2;
+
+                            if (start < 0) {
+                                end += Math.abs(start);
+                                start = 0;
+                            }
+                            if (end >= config.steps.length) {
+                                start -= (end - config.steps.length + 1);
+                                end = config.steps.length - 1;
+                            }
+                            start = Math.max(0, start);
+
+                            if (idx >= start && idx <= end) {
+                                return (
+                                    <div
+                                        key={idx}
+                                        className={`h-1 rounded-full transition-all duration-300 ${idx === activeStep ? 'w-4 bg-purple-500' : 'w-1 bg-white/20'}`}
+                                    />
+                                );
+                            }
+                            return null;
+                        })}
                     </div>
 
                     <div className="flex gap-2">

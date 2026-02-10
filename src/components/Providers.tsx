@@ -26,6 +26,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from '@/lib/query-client';
 import { Toaster } from 'sonner';
 import { TutorialProvider } from '@/contexts/TutorialContext';
+import { TutorialTour } from '@/components/common/tutorial/TutorialTour';
 
 interface ProvidersProps {
   children: ReactNode;
@@ -74,6 +75,7 @@ export function Providers({ children }: ProvidersProps) {
                   </ChatViewProvider>
                 </LayoutProvider>
               </NavbarProvider>
+              <TutorialTour />
             </TutorialProvider>
           </RealtimeProvider>
         </RoleProvider>

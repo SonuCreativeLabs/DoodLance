@@ -4,7 +4,7 @@ import Image from "next/image"
 import { motion } from "framer-motion"
 import { Calendar, ChevronRight, Star, MapPin, TrendingUp, Award, Clock, Target, Trophy } from "lucide-react"
 import Link from "next/link"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { useLayout } from "@/contexts/LayoutContext"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useSkills } from "@/contexts/SkillsContext"
@@ -30,35 +30,35 @@ export default function FreelancerHome() {
   const { personalDetails, toggleReadyToWork } = usePersonalDetails();
   const { getWorkingHoursText } = useAvailability();
   const { user } = useAuth();
-  const { startTutorial, hasSeenTutorial } = useTutorial();
+  const { startTutorial, hasSeenTutorial, isOpen } = useTutorial();
 
-  const freelancerTutorial: TutorialConfig = {
+  const freelancerTutorial: TutorialConfig = useMemo(() => ({
     id: 'freelancer-tour',
     steps: [
       {
         targetId: 'freelancer-stats',
-        title: 'Track Your Earnings',
-        description: 'See your daily and total earnings, plus active hours worked this week.',
+        title: 'Track Your Performance',
+        description: 'Monitor your daily and total earnings, plus active hours worked this week.',
         position: 'bottom'
       },
       {
-        targetId: 'ready-to-work-toggle',
-        title: 'Set Your Availability',
-        description: 'Toggle "Ready to work" to show up in client search results and start receiving offers.',
-        position: 'left'
+        targetId: 'freelancer-profile-card',
+        title: 'Your Professional Profile',
+        description: 'Manage your availability and "Ready to Work" status here. Use this for quick updates.',
+        position: 'bottom'
       }
     ]
-  };
+  }), []);
 
   useEffect(() => {
     const shouldStart = !hasSeenTutorial('freelancer-tour') || searchParams.get('tutorial') === 'freelancer-tour';
-    if (shouldStart) {
+    if (shouldStart && !isOpen) {
       const timer = setTimeout(() => {
         startTutorial(freelancerTutorial);
       }, 2000);
       return () => clearTimeout(timer);
     }
-  }, [searchParams]);
+  }, [searchParams, hasSeenTutorial, startTutorial, freelancerTutorial, isOpen]);
 
   const [jobCount, setJobCount] = useState(0);
   const [recommendedJobs, setRecommendedJobs] = useState<Job[]>([]);
@@ -290,6 +290,7 @@ export default function FreelancerHome() {
           <ProfileCardSkeleton />
         ) : (
           <motion.div
+            id="freelancer-profile-card"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
@@ -366,6 +367,7 @@ export default function FreelancerHome() {
                   </div>
                 </motion.div>
                 <motion.div
+                  id="freelancer-availability-card"
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.8 }}

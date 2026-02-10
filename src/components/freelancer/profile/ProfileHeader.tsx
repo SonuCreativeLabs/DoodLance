@@ -453,7 +453,7 @@ export function ProfileHeader({
         />
       </div>
       {/* Cover Photo */}
-      <div className={cn("group relative h-48 sm:h-80 w-full bg-gradient-to-r from-purple-900 to-purple-700", !compact && "md:h-96")}>
+      <div id="profile-header-cover" className={cn("group relative h-48 sm:h-80 w-full bg-gradient-to-r from-purple-900 to-purple-700", !compact && "md:h-96")}>
         {/* Switch to Client Button - Top-right of cover */}
         {!isPreview && (
           <div className="absolute top-4 right-4 z-20">
@@ -472,21 +472,21 @@ export function ProfileHeader({
           <CoverImage src={coverImage || coverImageUrl || personalDetails.coverImageUrl} alt={`${personalDetails.name || 'User'}'s cover`} />
         </div>
 
-        {/* Edit Cover Button - Only show in edit mode */}
+        {/* Edit Cover Button - Always show if not preview */}
         {!isPreview && (
           <div className="absolute bottom-4 right-4 z-30">
-            <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+            <div>
               <Button
                 variant="secondary"
                 size="sm"
                 onClick={handleEditCoverClick}
                 disabled={isUploading}
-                className="h-10 w-10 rounded-full bg-white hover:bg-white/90 p-0 flex items-center justify-center shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer"
+                className="h-8 w-8 rounded-full bg-white hover:bg-gray-200 text-black shadow-lg border-none p-0 flex items-center justify-center transition-all duration-200 cursor-pointer"
               >
                 {isUploading ? (
-                  <Loader2 className="h-5 w-5 animate-spin text-[#1E1E1E]" />
+                  <Loader2 className="h-3.5 w-3.5 animate-spin text-black" />
                 ) : (
-                  <Camera className="h-5 w-5 text-[#1E1E1E]" />
+                  <Camera className="h-3.5 w-3.5 text-black" />
                 )}
               </Button>
               <input
@@ -508,44 +508,45 @@ export function ProfileHeader({
           {/* Profile Picture */}
           <div className="relative group">
             {/* Profile Picture */}
-            <div className="relative w-32 h-32 sm:w-40 sm:h-40 rounded-full border-4 border-[#1E1E1E] overflow-hidden bg-[#111111]">
+            <div id="profile-header-avatar" className="relative w-32 h-32 sm:w-40 sm:h-40 rounded-full border-4 border-[#1E1E1E] overflow-hidden bg-[#111111]">
               <Avatar className="w-full h-full">
                 <AvatarImage src={profileImage || avatarUrl || personalDetails.avatarUrl} alt={personalDetails.name} />
                 <AvatarFallback className="bg-[#1a1a1a] flex items-center justify-center">
                   <User className="w-16 h-16 text-white/20" />
                 </AvatarFallback>
               </Avatar>
-              {!isPreview && (
-                <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <Button
-                    variant="default"
-                    size="icon"
-                    className="h-10 w-10 rounded-full bg-white hover:bg-white/90"
-                    onClick={handleEditProfileClick}
-                    disabled={isProfileUploading}
-                  >
-                    {isProfileUploading ? (
-                      <Loader2 className="h-5 w-5 animate-spin text-[#1E1E1E]" />
-                    ) : (
-                      <Camera className="h-5 w-5 text-[#1E1E1E]" />
-                    )}
-                  </Button>
-                  <input
-                    type="file"
-                    ref={profileInputRef}
-                    onChange={handleProfileImageChange}
-                    accept="image/*"
-                    className="hidden"
-                  />
-                </div>
-              )}
             </div>
+
+            {!isPreview && (
+              <div className="absolute bottom-2 right-2 z-50">
+                <Button
+                  variant="default"
+                  size="icon"
+                  className="h-8 w-8 rounded-full bg-white hover:bg-gray-200 text-black shadow-lg border-none flex items-center justify-center p-0 transition-transform hover:scale-105"
+                  onClick={handleEditProfileClick}
+                  disabled={isProfileUploading}
+                >
+                  {isProfileUploading ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin text-black" />
+                  ) : (
+                    <Camera className="h-3.5 w-3.5 text-black" />
+                  )}
+                </Button>
+                <input
+                  type="file"
+                  ref={profileInputRef}
+                  onChange={handleProfileImageChange}
+                  accept="image/*"
+                  className="hidden"
+                />
+              </div>
+            )}
             {/* ID Verified Badge - Left side of profile picture */}
-            <div className="absolute top-[calc(50%+32px)] -translate-y-1/2 -left-24 ml-0">
+            <div id="profile-header-verification" className="absolute top-[calc(50%+32px)] -translate-y-1/2 -left-24 ml-0">
               <IdVerifiedBadge isVerified={personalDetails.isVerified ?? false} />
             </div>
             {/* Online/Offline Badge - Right side of profile picture */}
-            <div className="absolute top-[calc(50%+32px)] -translate-y-1/2 left-full ml-5">
+            <div id="profile-header-status" className="absolute top-[calc(50%+32px)] -translate-y-1/2 left-full ml-5">
               <div className={`inline-flex items-center gap-1 px-2 py-1 text-[8px] font-bold border-2 shadow-lg whitespace-nowrap transform rotate-[-2deg] ${personalDetails.online
                 ? 'bg-gradient-to-br from-green-400 to-green-600 border-green-300 text-white shadow-green-500/50 border-dashed'
                 : 'bg-gradient-to-br from-amber-400 to-orange-500 border-amber-300 text-white shadow-amber-500/50 border-dashed'
@@ -610,7 +611,7 @@ export function ProfileHeader({
         </div>
 
         {/* Preview Profile Button */}
-        <div className="flex justify-center mt-3 mb-4">
+        <div id="profile-header-preview" className="flex justify-center mt-3 mb-4">
           {!isPreview && (
             <Button
               variant="ghost"

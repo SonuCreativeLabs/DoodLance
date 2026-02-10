@@ -12,7 +12,7 @@ import { MonthlyActivities } from '@/components/freelancer/profile/MonthlyActivi
 import { ProfileSectionCard } from '@/components/freelancer/profile/ProfileSectionCard';
 
 import { useSearchParams } from 'next/navigation';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { getSessionFlag, removeSessionItem } from '@/utils/sessionStorage';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
 import { useAuth } from '@/contexts/AuthContext';
@@ -20,6 +20,7 @@ import FreelancerProfileLogin from '@/components/freelancer/FreelancerProfileLog
 import { ProfileSkeleton } from '@/components/skeletons/ProfileSkeleton';
 import { useFreelancerProfile } from '@/contexts/FreelancerProfileContext';
 import { usePersonalDetails } from '@/contexts/PersonalDetailsContext';
+import { useTutorial, TutorialConfig } from '@/contexts/TutorialContext';
 
 // Types
 type Experience = {
@@ -93,7 +94,7 @@ export default function ProfilePage() {
   const searchParams = useSearchParams();
   const personalDetailsRef = useRef<HTMLDivElement>(null);
   const skillsRef = useRef<HTMLDivElement>(null);
-
+  const { startTutorial, hasSeenTutorial, isOpen } = useTutorial();
 
   // Use cached profile data from context
   const { headerDataLoaded, isLoading: contextLoading } = usePersonalDetails();
@@ -107,6 +108,118 @@ export default function ProfilePage() {
       skipProfileCheck: true // Allow viewing profile dashboard even if incomplete
     });
   }, [requireAuth]);
+
+  const profileTutorial: TutorialConfig = useMemo(() => ({
+    id: 'profile-tour',
+    steps: [
+      {
+        targetId: 'profile-header-avatar',
+        title: 'Profile Picture',
+        description: 'Upload a professional photo to build trust with clients.',
+        position: 'bottom'
+      },
+      {
+        targetId: 'profile-header-cover',
+        title: 'Cover Image',
+        description: 'Add a cover image to personalize your profile appearance.',
+        position: 'bottom'
+      },
+      {
+        targetId: 'profile-header-verification',
+        title: 'Verification Badge',
+        description: 'Get verified to show clients you are a trusted professional. "Not Verified" means KYC is pending.',
+        position: 'bottom'
+      },
+      {
+        targetId: 'profile-header-status',
+        title: 'Online Status',
+        description: '"GAME ON" means you are online and ready to work. "OFFLINE" means you turned off your availability.',
+        position: 'bottom'
+      },
+      {
+        targetId: 'profile-header-preview',
+        title: 'Profile Preview',
+        description: 'See how your profile looks to clients before publishing changes.',
+        position: 'bottom'
+      },
+      {
+        targetId: 'profile-personal-card',
+        title: 'Personal Details',
+        description: 'Manage your username, sports info, profile and contact information',
+        position: 'bottom'
+      },
+      {
+        targetId: 'profile-services-card',
+        title: 'Sports Services',
+        description: 'List your services with videos, descriptions, and pricing',
+        position: 'bottom'
+      },
+      {
+        targetId: 'profile-skills-card',
+        title: 'Skills',
+        description: 'Highlight your expertise and proficiency levels',
+        position: 'bottom'
+      },
+      {
+        targetId: 'profile-achievements-card',
+        title: 'Achievements',
+        description: 'Showcase your sports achievements and highlights',
+        position: 'bottom'
+      },
+      {
+        targetId: 'profile-availability-card',
+        title: 'Availability',
+        description: 'Set your working hours and availability',
+        position: 'bottom'
+      },
+      {
+        targetId: 'profile-bank-card',
+        title: 'Bank Account',
+        description: 'Manage your bank account details for payments',
+        position: 'bottom'
+      },
+      {
+        targetId: 'profile-verification-card',
+        title: 'Identity Verification',
+        description: 'Complete your KYC verification to unlock all features',
+        position: 'bottom'
+      },
+      {
+        targetId: 'profile-reviews-card',
+        title: 'Client Reviews',
+        description: 'View and manage client feedback',
+        position: 'bottom'
+      },
+      {
+        targetId: 'profile-performance-card',
+        title: 'Performance Activity',
+        description: 'Track your performance metrics and analytics',
+        position: 'bottom'
+      },
+      {
+        targetId: 'profile-settings-card',
+        title: 'Settings',
+        description: 'Manage your account, notifications and preferences',
+        position: 'bottom'
+      },
+      {
+        targetId: 'profile-switch-client-card',
+        title: 'Switch to Client',
+        description: 'Access client dashboard',
+        position: 'bottom'
+      }
+    ]
+  }), []);
+
+  useEffect(() => {
+    const shouldStart = !hasSeenTutorial('profile-tour') || searchParams.get('tutorial') === 'profile-tour';
+    if (shouldStart && isAuthenticated && !isOpen) {
+      const timer = setTimeout(() => {
+        startTutorial(profileTutorial);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [searchParams, isAuthenticated, hasSeenTutorial, startTutorial, profileTutorial, isOpen]);
 
   const scrollToSection = (ref: React.RefObject<HTMLElement>) => {
     if (ref.current) {
@@ -184,90 +297,111 @@ export default function ProfilePage() {
               <p className="text-sm text-white/60">Manage your professional profile and settings</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
+            <div id="profile-sections-grid" className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
               <div
                 id="personal-details"
                 ref={personalDetailsRef}
                 className="scroll-mt-24"
               >
-                <ProfileSectionCard
-                  title="Personal Details"
-                  description="Manage your profile and contact information"
-                  href="/freelancer/profile/personal?from=profile#personal-details"
-                  icon={<User className="h-4 w-4" />}
-                />
+                <div id="profile-personal-card">
+                  <ProfileSectionCard
+                    title="Personal Details"
+                    description="Manage your profile and contact information"
+                    href="/freelancer/profile/personal?from=profile#personal-details"
+                    icon={<User className="h-4 w-4" />}
+                  />
+                </div>
               </div>
 
-              <ProfileSectionCard
-                title="Sports Services"
-                description="List your services with videos, descriptions, and pricing"
-                href="/freelancer/profile/services"
-                icon={<FileText className="h-4 w-4" />}
-              />
+              <div id="profile-services-card">
+                <ProfileSectionCard
+                  title="Sports Services"
+                  description="List your services with videos, descriptions, and pricing"
+                  href="/freelancer/profile/services"
+                  icon={<FileText className="h-4 w-4" />}
+                />
+              </div>
 
               <div
                 id="skills"
                 ref={skillsRef}
                 className="scroll-mt-24"
               >
+                <div id="profile-skills-card">
+                  <ProfileSectionCard
+                    title="Skills"
+                    description="Highlight your expertise and proficiency levels"
+                    href="/freelancer/profile/skills?from=profile#skills"
+                    icon={<Code className="h-4 w-4" />}
+                  />
+                </div>
+              </div>
+
+              <div id="profile-achievements-card">
                 <ProfileSectionCard
-                  title="Skills"
-                  description="Highlight your expertise and proficiency levels"
-                  href="/freelancer/profile/skills?from=profile#skills"
-                  icon={<Code className="h-4 w-4" />}
+                  title="Achievements"
+                  description="Showcase your sports achievements and highlights"
+                  href="/freelancer/profile/achievements"
+                  icon={<Award className="h-4 w-4" />}
                 />
               </div>
 
-              <ProfileSectionCard
-                title="Achievements"
-                description="Showcase your sports achievements and highlights"
-                href="/freelancer/profile/achievements"
-                icon={<Award className="h-4 w-4" />}
-              />
+              <div id="profile-availability-card">
+                <ProfileSectionCard
+                  title="Availability"
+                  description="Set your working hours and availability"
+                  href="/freelancer/profile/availability"
+                  icon={<Calendar className="h-4 w-4" />}
+                />
+              </div>
 
-              <ProfileSectionCard
-                title="Availability"
-                description="Set your working hours and availability"
-                href="/freelancer/profile/availability"
-                icon={<Calendar className="h-4 w-4" />}
-              />
+              <div id="profile-bank-card">
+                <ProfileSectionCard
+                  title="Bank Account"
+                  description="Manage your bank account details for payments"
+                  href="/freelancer/profile/bank-account"
+                  icon={<CreditCard className="h-4 w-4" />}
+                />
+              </div>
 
-              <ProfileSectionCard
-                title="Bank Account"
-                description="Manage your bank account details for payments"
-                href="/freelancer/profile/bank-account"
-                icon={<CreditCard className="h-4 w-4" />}
-              />
+              <div id="profile-verification-card">
+                <ProfileSectionCard
+                  title="Identity Verification"
+                  description="Complete your KYC verification to unlock all features"
+                  href="/freelancer/profile/verification"
+                  icon={<CheckCircle className="h-4 w-4" />}
+                />
+              </div>
 
-              <ProfileSectionCard
-                title="Identity Verification"
-                description="Complete your KYC verification to unlock all features"
-                href="/freelancer/profile/verification"
-                icon={<CheckCircle className="h-4 w-4" />}
-              />
+              <div id="profile-reviews-card">
+                <ProfileSectionCard
+                  title="Client Reviews"
+                  description="View and manage client feedback"
+                  href="/freelancer/profile/reviews"
+                  icon={<Star className="h-4 w-4" />}
+                />
+              </div>
 
-              <ProfileSectionCard
-                title="Client Reviews"
-                description="View and manage client feedback"
-                href="/freelancer/profile/reviews"
-                icon={<Star className="h-4 w-4" />}
-              />
+              <div id="profile-performance-card">
+                <ProfileSectionCard
+                  title="Performance Activity"
+                  description="Track your performance metrics and analytics"
+                  href="/freelancer/profile/performance"
+                  icon={<BarChart2 className="h-4 w-4" />}
+                />
+              </div>
 
-              <ProfileSectionCard
-                title="Performance Activity"
-                description="Track your performance metrics and analytics"
-                href="/freelancer/profile/performance"
-                icon={<BarChart2 className="h-4 w-4" />}
-              />
-
-              <ProfileSectionCard
-                title="Settings"
-                description="Manage your account, notifications and preferences"
-                href="/freelancer/profile/settings"
-                icon={<SettingsIcon className="h-4 w-4" />}
-              />
+              <div id="profile-settings-card">
+                <ProfileSectionCard
+                  title="Settings"
+                  description="Manage your account, notifications and preferences"
+                  href="/freelancer/profile/settings"
+                  icon={<SettingsIcon className="h-4 w-4" />}
+                />
+              </div>
 
               <Link
+                id="profile-switch-client-card"
                 href="/client"
                 className="col-span-1 md:col-span-2 w-full flex items-center justify-between p-4 bg-gradient-to-l from-[var(--purple)] to-[var(--purple-hover)] hover:opacity-90 rounded-xl transition-all duration-200 group shadow-md shadow-purple-500/20 hover:shadow-purple-500/30"
               >
