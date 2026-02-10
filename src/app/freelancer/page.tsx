@@ -6,7 +6,7 @@ import { Calendar, ChevronRight, Star, MapPin, TrendingUp, Award, Clock, Target,
 import Link from "next/link"
 import { useState, useEffect } from "react"
 import { useLayout } from "@/contexts/LayoutContext"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useSkills } from "@/contexts/SkillsContext"
 import { usePersonalDetails } from "@/contexts/PersonalDetailsContext"
 import { useAvailability } from "@/contexts/AvailabilityContext"
@@ -17,17 +17,49 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { DashboardCardSkeleton } from "@/components/freelancer/skeletons/DashboardCardSkeleton"
 import { ProfileCardSkeleton } from "@/components/freelancer/skeletons/ProfileCardSkeleton"
 import { useAuth } from "@/contexts/AuthContext"
+import { useTutorial, TutorialConfig } from "@/contexts/TutorialContext"
 
 export const dynamic = 'force-dynamic'
 
 export default function FreelancerHome() {
   const { showHeader, showNavbar } = useLayout();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { skills } = useSkills();
   const { forYouJobs } = useForYouJobs();
   const { personalDetails, toggleReadyToWork } = usePersonalDetails();
   const { getWorkingHoursText } = useAvailability();
   const { user } = useAuth();
+  const { startTutorial, hasSeenTutorial } = useTutorial();
+
+  const freelancerTutorial: TutorialConfig = {
+    id: 'freelancer-tour',
+    steps: [
+      {
+        targetId: 'freelancer-stats',
+        title: 'Track Your Earnings',
+        description: 'See your daily and total earnings, plus active hours worked this week.',
+        position: 'bottom'
+      },
+      {
+        targetId: 'ready-to-work-toggle',
+        title: 'Set Your Availability',
+        description: 'Toggle "Ready to work" to show up in client search results and start receiving offers.',
+        position: 'left'
+      }
+    ]
+  };
+
+  useEffect(() => {
+    const shouldStart = !hasSeenTutorial('freelancer-tour') || searchParams.get('tutorial') === 'freelancer-tour';
+    if (shouldStart) {
+      const timer = setTimeout(() => {
+        startTutorial(freelancerTutorial);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [searchParams]);
+
   const [jobCount, setJobCount] = useState(0);
   const [recommendedJobs, setRecommendedJobs] = useState<Job[]>([]);
   const [isLoadingStats, setIsLoadingStats] = useState(true);
@@ -174,81 +206,83 @@ export default function FreelancerHome() {
         </motion.div>
 
         {/* Earnings Cards Section */}
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
-          {isLoadingStats ? (
-            <>
-              <div className="col-span-2 lg:col-span-1">
+        <div id="freelancer-stats">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
+            {isLoadingStats ? (
+              <>
+                <div className="col-span-2 lg:col-span-1">
+                  <DashboardCardSkeleton />
+                </div>
                 <DashboardCardSkeleton />
-              </div>
-              <DashboardCardSkeleton />
-              <DashboardCardSkeleton />
-            </>
-          ) : (
-            <>
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="bg-gradient-to-br from-[#1E1E1E] to-[#121212] rounded-2xl p-6 border border-white/10 transition-all duration-300 shadow-lg col-span-2 lg:col-span-1"
-              >
-                <div className="relative">
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-semibold text-white">Today&apos;s Earnings</h2>
+                <DashboardCardSkeleton />
+              </>
+            ) : (
+              <>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="bg-gradient-to-br from-[#1E1E1E] to-[#121212] rounded-2xl p-6 border border-white/10 transition-all duration-300 shadow-lg col-span-2 lg:col-span-1"
+                >
+                  <div className="relative">
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 className="text-lg font-semibold text-white">Today&apos;s Earnings</h2>
+                    </div>
+                    <p className="text-2xl sm:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#bf82fb] to-[#9537ea] mb-2 break-words truncate w-full">₹{stats?.todayEarnings?.toLocaleString() || 0}</p>
+                    <div className="flex items-center gap-2 flex-nowrap min-w-0 w-full overflow-hidden">
+                      <p className="text-sm text-white/60 truncate">
+                        {stats?.todayJobs || 0} job{stats?.todayJobs !== 1 ? 's' : ''} completed
+                      </p>
+                    </div>
                   </div>
-                  <p className="text-2xl sm:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#bf82fb] to-[#9537ea] mb-2 break-words truncate w-full">₹{stats?.todayEarnings?.toLocaleString() || 0}</p>
-                  <div className="flex items-center gap-2 flex-nowrap min-w-0 w-full overflow-hidden">
-                    <p className="text-sm text-white/60 truncate">
-                      {stats?.todayJobs || 0} job{stats?.todayJobs !== 1 ? 's' : ''} completed
-                    </p>
-                  </div>
-                </div>
-              </motion.div>
+                </motion.div>
 
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="bg-gradient-to-br from-[#1E1E1E] to-[#121212] rounded-2xl p-6 border border-white/10 transition-all duration-300 shadow-lg"
-              >
-                <div className="relative">
-                  <div className="flex flex-col h-full justify-between">
-                    <div>
-                      <div className="flex items-start justify-between mb-4">
-                        <h2 className="text-lg font-semibold text-white">Total Earnings</h2>
-                      </div>
-                      <p className="text-2xl sm:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#bf82fb] to-[#9537ea] mb-2 break-words truncate w-full">₹{stats?.totalEarnings?.toLocaleString() || 0}</p>
-                      <div className="flex items-center gap-2 flex-nowrap min-w-0 w-full overflow-hidden">
-                        <p className="text-sm text-white/60 truncate">
-                          {stats?.totalJobs || 0} total job{stats?.totalJobs !== 1 ? 's' : ''}
-                        </p>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="bg-gradient-to-br from-[#1E1E1E] to-[#121212] rounded-2xl p-6 border border-white/10 transition-all duration-300 shadow-lg"
+                >
+                  <div className="relative">
+                    <div className="flex flex-col h-full justify-between">
+                      <div>
+                        <div className="flex items-start justify-between mb-4">
+                          <h2 className="text-lg font-semibold text-white">Total Earnings</h2>
+                        </div>
+                        <p className="text-2xl sm:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#bf82fb] to-[#9537ea] mb-2 break-words truncate w-full">₹{stats?.totalEarnings?.toLocaleString() || 0}</p>
+                        <div className="flex items-center gap-2 flex-nowrap min-w-0 w-full overflow-hidden">
+                          <p className="text-sm text-white/60 truncate">
+                            {stats?.totalJobs || 0} total job{stats?.totalJobs !== 1 ? 's' : ''}
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              </motion.div>
+                </motion.div>
 
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-                className="bg-gradient-to-br from-[#1E1E1E] to-[#121212] rounded-2xl p-6 border border-white/10 transition-all duration-300 shadow-lg"
-              >
-                <div className="relative">
-                  <div className="flex flex-col h-full justify-between">
-                    <div>
-                      <div className="flex items-start justify-between mb-4">
-                        <h2 className="text-lg font-semibold text-white">Active Hours</h2>
-                      </div>
-                      <p className="text-2xl sm:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#bf82fb] to-[#9537ea] mb-2 break-words truncate w-full">{stats?.activeHours || 0}h</p>
-                      <div className="flex items-center gap-2 flex-nowrap min-w-0 w-full overflow-hidden">
-                        <p className="text-sm text-white/60 truncate">This week</p>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                  className="bg-gradient-to-br from-[#1E1E1E] to-[#121212] rounded-2xl p-6 border border-white/10 transition-all duration-300 shadow-lg"
+                >
+                  <div className="relative">
+                    <div className="flex flex-col h-full justify-between">
+                      <div>
+                        <div className="flex items-start justify-between mb-4">
+                          <h2 className="text-lg font-semibold text-white">Active Hours</h2>
+                        </div>
+                        <p className="text-2xl sm:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#bf82fb] to-[#9537ea] mb-2 break-words truncate w-full">{stats?.activeHours || 0}h</p>
+                        <div className="flex items-center gap-2 flex-nowrap min-w-0 w-full overflow-hidden">
+                          <p className="text-sm text-white/60 truncate">This week</p>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              </motion.div>
-            </>
-          )}
+                </motion.div>
+              </>
+            )}
+          </div>
         </div>
 
         {/* Your Profile Section */}
@@ -323,6 +357,7 @@ export default function FreelancerHome() {
                     <p className="text-xs text-white/60">Toggle your availability</p>
                   </div>
                   <div
+                    id="ready-to-work-toggle"
                     className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer shadow-inner ${personalDetails.readyToWork ? 'bg-green-500 hover:bg-green-600' : 'bg-gray-600 hover:bg-gray-500'}`}
                     onClick={() => toggleReadyToWork()}
                   >

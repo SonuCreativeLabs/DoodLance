@@ -14,6 +14,7 @@ import { CricketLoader } from "@/components/ui/cricket-loader"
 import { useHistoryJobs, HistoryJob } from "@/contexts/HistoryJobsContext"
 import { usePostedJobs } from "@/contexts/PostedJobsContext"
 import { useBookAgain } from "@/hooks/useBookAgain"
+import { useTutorial, TutorialConfig } from "@/contexts/TutorialContext"
 // 🚀 React Query POC imports
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClient } from '@/lib/query-client'
@@ -646,6 +647,36 @@ function BookingsPageContent() {
   const [applicationFilter, setApplicationFilter] = useState('all')
   const [historyFilter, setHistoryFilter] = useState(initialHistoryFilter)
 
+  const { startTutorial, hasSeenTutorial } = useTutorial();
+
+  const bookingsTutorial: TutorialConfig = {
+    id: 'bookings-tour',
+    steps: [
+      {
+        targetId: 'bookings-tabs',
+        title: 'Booking Categories',
+        description: 'Switch between Active sessions, Job Applications, and your Booking History.',
+        position: 'bottom'
+      },
+      {
+        targetId: 'bookings-list',
+        title: 'Manage Your Sessions',
+        description: 'Find your Start Codes (OTP), Call buttons, and Reschedule options for all sessions.',
+        position: 'top'
+      }
+    ]
+  };
+
+  useEffect(() => {
+    const shouldStart = !hasSeenTutorial('bookings-tour') || searchParams.get('tutorial') === 'bookings-tour';
+    if (shouldStart) {
+      const timer = setTimeout(() => {
+        startTutorial(bookingsTutorial);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [searchParams]);
+
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [initialLoad, setInitialLoad] = useState(true)
 
@@ -857,7 +888,7 @@ function BookingsPageContent() {
 
         {/* Main Content */}
         <div className="flex-1 pb-24">
-          <Tabs value={currentTab} onValueChange={setCurrentTab} className="h-full flex flex-col">
+          <Tabs id="bookings-tabs" value={currentTab} onValueChange={setCurrentTab} className="h-full flex flex-col">
             {/* Fixed Tabs Header */}
             <div className="fixed top-[64px] md:top-32 left-0 right-0 z-40 bg-[#111111]">
               <div className="container max-w-4xl mx-auto px-4">
@@ -902,7 +933,7 @@ function BookingsPageContent() {
             {/* Scrollable Content */}
             <div className="flex-1 overflow-y-auto pt-[120px] md:pt-[70px] pb-6">
               <div className="container max-w-4xl mx-auto px-4">
-                <TabsContent value="active" className="mt-2 md:mt-0 focus-visible:outline-none focus-visible:ring-0">
+                <TabsContent id="bookings-list" value="active" className="mt-2 md:mt-0 focus-visible:outline-none focus-visible:ring-0">
                   {/* Active Tab Filters */}
                   <div className="flex gap-2 mb-6 md:mb-4 overflow-x-auto pb-2 scroll-smooth items-center min-h-[44px]" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                     {/* Inline Search */}

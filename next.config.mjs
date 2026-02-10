@@ -131,13 +131,18 @@ const pwaConfig = withPWA({
 const nextConfig = {
   // Image optimization settings
   images: {
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: 'https',
         hostname: 'images.unsplash.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'plus.unsplash.com',
+      },
     ],
-    domains: ['localhost', '127.0.0.1', 'atmxiuindyakhqmdqzal.supabase.co', 'umeqaqwidjdgnwkxedaw.supabase.co', 'ykbvbtegmxawgrqctddt.supabase.co', 'api.dicebear.com', 'images.unsplash.com', 'ui-avatars.com', 'i.pravatar.cc'],
+    domains: ['localhost', '127.0.0.1', 'atmxiuindyakhqmdqzal.supabase.co', 'umeqaqwidjdgnwkxedaw.supabase.co', 'ykbvbtegmxawgrqctddt.supabase.co', 'api.dicebear.com', 'images.unsplash.com', 'plus.unsplash.com', 'ui-avatars.com', 'i.pravatar.cc'],
   },
 
   // Static asset handling

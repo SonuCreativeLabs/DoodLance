@@ -459,7 +459,11 @@ export default function ProfessionalsFeed({
   // Otherwise show the list of items
   return (
     <div className="space-y-4 pb-24">
-      {items.map((item: any) => renderItem(item))}
+      {items.map((item: any, index: number) => (
+        <div key={item.id || item.name} id={index === 0 ? "first-expert-card" : undefined}>
+          {renderItem(item)}
+        </div>
+      ))}
     </div>
   );
 }

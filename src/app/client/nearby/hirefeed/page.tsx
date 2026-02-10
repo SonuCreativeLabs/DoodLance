@@ -10,6 +10,7 @@ import { categories } from '../constants';
 import { useNearbyProfessionals, Professional } from '@/contexts/NearbyProfessionalsContext';
 import SearchFilters from '../components/SearchFilters';
 import { SportsRandomSpinner } from '@/components/ui/SportsRandomSpinner';
+import { useTutorial, TutorialConfig } from '@/contexts/TutorialContext';
 
 export default function IntegratedExplorePage() {
   const searchParams = useSearchParams();
@@ -21,6 +22,48 @@ export default function IntegratedExplorePage() {
   const [isDragTextVisible, setIsDragTextVisible] = useState(true);
   const router = useRouter();
   const { professionals, loading, currentCoordinates } = useNearbyProfessionals();
+  const { startTutorial, hasSeenTutorial } = useTutorial();
+
+  const hireTutorial: TutorialConfig = {
+    id: 'hire-tour',
+    steps: [
+      {
+        targetId: 'hire-search-bar',
+        title: 'Find Experts NEARBY',
+        description: 'Search for specific services or areas to find the best experts near you.',
+        position: 'bottom'
+      },
+      {
+        targetId: 'hire-sheet-handle',
+        title: 'Explore the List',
+        description: 'Drag this handle UP to see the full list of experts or DOWN to return to the map view.',
+        position: 'top'
+      },
+      {
+        targetId: 'first-expert-card',
+        title: 'Expert Details',
+        description: 'Browse all details here. Each card shows their rating, role, and starting price. Tap any card to view their full profile.',
+        position: 'top',
+        onStart: () => setIsSheetCollapsed(false)
+      },
+      {
+        targetId: 'hire-post-job',
+        title: 'Post a Custom Job',
+        description: 'Can\'t find what you need? Post a custom requirement and let qualified experts apply to you.',
+        position: 'top'
+      }
+    ]
+  };
+
+  useEffect(() => {
+    const shouldStart = !hasSeenTutorial('hire-tour') || searchParams.get('tutorial') === 'hire-tour';
+    if (shouldStart) {
+      const timer = setTimeout(() => {
+        startTutorial(hireTutorial);
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [searchParams]);
   const mapViewRef = useRef<any>(null);
 
   // Check URL parameters to determine initial sheet state and pin to open
@@ -336,11 +379,13 @@ export default function IntegratedExplorePage() {
   return (
     <div className="h-screen w-full bg-transparent relative overflow-hidden">
       {/* Map View */}
-      <MapView
-        ref={mapViewRef}
-        professionals={filteredProfessionals}
-        customCenter={currentCoordinates ? [currentCoordinates.lng, currentCoordinates.lat] : null}
-      />
+      <div id="hire-map-view" className="absolute inset-0 z-0">
+        <MapView
+          ref={mapViewRef}
+          professionals={filteredProfessionals}
+          customCenter={currentCoordinates ? [currentCoordinates.lng, currentCoordinates.lat] : null}
+        />
+      </div>
 
       {/* Loading Overlay */}
       <AnimatePresence>
@@ -367,7 +412,7 @@ export default function IntegratedExplorePage() {
         }`}>
         <div className="w-full max-w-md mb-2 px-3">
           <div className="flex gap-2">
-            <div className={`flex-1 flex items-center gap-2 px-3 py-2 rounded-full border shadow transition-all duration-200 ${isSheetCollapsed
+            <div id="hire-search-bar" className={`flex-1 flex items-center gap-2 px-3 py-2 rounded-full border shadow transition-all duration-200 ${isSheetCollapsed
               ? 'bg-black/60 backdrop-blur-sm border-white/20'
               : 'bg-[#111111] border-white/30'
               }`}>
@@ -465,7 +510,7 @@ export default function IntegratedExplorePage() {
         }}
       >
         {/* Drag Handle */}
-        <div className="sticky top-0 pt-3 pb-1 flex flex-col items-center z-10">
+        <div id="hire-sheet-handle" className="sticky top-0 pt-3 pb-1 flex flex-col items-center z-10">
           <div className="w-10 h-1 bg-white/20 rounded-full" />
           <AnimatePresence>
             {isDragTextVisible && (
@@ -493,6 +538,7 @@ export default function IntegratedExplorePage() {
               <div className="flex items-center justify-between w-full max-w-3xl mx-auto px-4 pt-4">
                 <div className="flex flex-col items-start gap-1.5">
                   <div
+                    id="hire-map-avatars"
                     className="flex -space-x-3 cursor-pointer hover:opacity-90 transition-opacity"
                     onClick={() => setIsSheetCollapsed(false)}
                   >
@@ -553,6 +599,7 @@ export default function IntegratedExplorePage() {
                 </div>
                 <div className="self-center">
                   <button
+                    id="hire-post-job"
                     onClick={() => router.push('/client/post')}
                     className="group relative flex items-center gap-1.5 px-4 py-2 bg-white/95 backdrop-blur-xl rounded-xl text-sm font-semibold transition-all duration-300 hover:bg-white shadow-lg hover:shadow-xl"
                   >
@@ -575,6 +622,7 @@ export default function IntegratedExplorePage() {
                   )}
                 </div>
                 <button
+                  id="hire-post-job"
                   onClick={() => router.push('/client/post')}
                   className="group relative flex items-center gap-1.5 px-3 py-1.5 bg-white/95 backdrop-blur-xl rounded-xl text-sm font-semibold transition-all duration-300 hover:bg-white shadow-lg hover:shadow-xl"
                 >

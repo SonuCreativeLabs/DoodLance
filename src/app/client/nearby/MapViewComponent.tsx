@@ -289,7 +289,7 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({ professionals: propProfe
         className: 'custom-popup animate-popup',
         anchor: 'bottom'
       }).setHTML(`
-            <div class="bg-gradient-to-br from-[#111111]/95 to-[#000000]/95 backdrop-blur-sm shadow-lg rounded-2xl p-4 border border-white/10 hover:border-white/20 relative cursor-pointer" style="width: 340px;" onclick="window.location.href='/client/freelancer/${pro.id}?source=map&pinId=${pro.id}'">
+            <div id="map-pin-popup" class="bg-gradient-to-br from-[#111111]/95 to-[#000000]/95 backdrop-blur-sm shadow-lg rounded-2xl p-4 border border-white/10 hover:border-white/20 relative cursor-pointer" style="width: 340px;" onclick="window.location.href='/client/freelancer/${pro.id}?source=map&pinId=${pro.id}'">
               <div class="flex justify-between items-center mb-2">
                 <button class="nav-btn prev-btn flex items-center justify-center w-6 h-6 rounded-full bg-black/20 hover:bg-black/30 transition-colors text-white/60 hover:text-white ${!hasPrev ? 'opacity-50 cursor-not-allowed' : ''}" ${!hasPrev ? 'disabled' : ''} data-index="${currentIndex - 1}">
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
@@ -349,6 +349,10 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({ professionals: propProfe
       })
         .setLngLat(adjustedCoords)
         .addTo(map);
+
+      const markerElement = marker.getElement();
+      markerElement.classList.add('map-marker-pin');
+      if (index === 0) markerElement.id = 'first-map-marker';
 
       markersRef.current.set(pro.id.toString(), { marker, popup });
 

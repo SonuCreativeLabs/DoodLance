@@ -26,6 +26,9 @@ import { usePopularServices } from '@/contexts/PopularServicesContext'
 import { useAuth } from '@/contexts/AuthContext';
 import { useRoleSwitch } from '@/contexts/RoleSwitchContext';
 import { TopRatedExpertSkeleton } from '@/components/skeletons/TopRatedExpertSkeleton'
+import { useTutorial, TutorialConfig } from '@/contexts/TutorialContext';
+import { useSearchParams } from 'next/navigation';
+import { AppGuideModal } from '@/components/common/tutorial/AppGuideModal';
 
 export default function ClientHome() {
   const router = useRouter();
@@ -44,8 +47,104 @@ export default function ClientHome() {
   const [userAvatar, setUserAvatar] = useState("/images/default-avatar.svg"); // Fallback
   const [notificationCount, setNotificationCount] = useState(0);
   const [showLogoutAlert, setShowLogoutAlert] = useState(false);
+  const [showAppGuide, setShowAppGuide] = useState(false);
+  const searchParams = useSearchParams();
 
   const { user, refreshUser, signOut, isAuthenticated } = useAuth();
+  const { startTutorial, hasSeenTutorial, resetTutorials } = useTutorial();
+
+  // introduction tutorial configuration
+  // Handle window resize for mobile check
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.matchMedia('(max-width: 767px)').matches);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Helper to get correct ID based on screen size
+  const getNavId = (base: string) => {
+    if (base === 'nav-earn' && isMobile) return 'nav-earn-mobile-final';
+    return isMobile ? `${base}-mobile` : `${base}-desktop`;
+  };
+
+  // introduction tutorial configuration with dynamic IDs
+  const introTutorial: TutorialConfig = {
+    id: 'intro-tour',
+    steps: [
+      {
+        targetId: 'hero-search',
+        title: 'Find Your Expert',
+        description: 'Search for any sports service like cricket coaching, net bowlers, or physiotherapists.',
+        position: 'bottom'
+      },
+      {
+        targetId: 'experts-section',
+        title: 'Top Rated Experts',
+        description: 'Browse through our hand picked top rated professionals in your neighborhood.',
+        position: 'top'
+      },
+      {
+        targetId: 'sports-categories',
+        title: 'Explore Sports',
+        description: 'Discover experts across various sports including Football, Badminton, and more.',
+        position: 'top'
+      },
+      {
+        targetId: 'popular-services',
+        title: 'Popular Services',
+        description: 'Quickly find the most requested services like cricket coaching or net bowlers in your area.',
+        position: 'top'
+      },
+      {
+        targetId: getNavId('nav-hire'),
+        title: 'Hire Professionals',
+        description: 'Explore our interactive map to find and book sports experts in your neighborhood.',
+        position: isMobile ? 'top' : 'bottom'
+      },
+      {
+        targetId: getNavId('nav-bookings'),
+        title: 'Manage Bookings',
+        description: 'Keep track of all your active sessions and job applications here.',
+        position: isMobile ? 'top' : 'bottom'
+      },
+      {
+        targetId: getNavId('nav-earn'),
+        title: 'Start Earning',
+        description: 'Switch to freelancer mode to offer your sports services (e.g. netbowler, practice partner, 1 on 1 coach) and start earning.',
+        position: isMobile ? 'top' : 'bottom'
+      },
+      {
+        targetId: 'sidebar-container',
+        title: 'Your Account',
+        description: 'Access My Profile, My Bookings, My Referrals, Notifications, Support, and App Guide from here.',
+        position: 'right',
+        alignment: 'end',
+        onStart: () => setShowSidebar(true)
+      }
+    ]
+  };
+
+  useEffect(() => {
+    const shouldStart = !hasSeenTutorial('intro-tour') || searchParams.get('tutorial') === 'intro-tour';
+    if (shouldStart) {
+      if (searchParams.get('tutorial') === 'intro-tour') {
+        // Clear param after starting? Or keep it?
+        // Let's keep it simple, just start.
+        // Wait, if we keep the param, a reload will restart it again. That's fine for "replay".
+      }
+
+      // Delay slightly for better entrance
+      const timer = setTimeout(() => {
+        startTutorial(introTutorial);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [searchParams, isMobile]);
 
   // Configuration for Sport Card Styles
   const sportStyles: Record<string, {
@@ -290,14 +389,16 @@ export default function ClientHome() {
 
   return (
     <ClientLayout>
+      <AppGuideModal isOpen={showAppGuide} onClose={() => setShowAppGuide(false)} />
       {/* Fixed Header */}
-      <div className="fixed top-0 left-0 w-full z-30 bg-gradient-to-br from-[#6B46C1] via-[#4C1D95] to-[#2D1B69]">
+      <div className="fixed top-0 left-0 w-full z-[110] bg-gradient-to-br from-[#6B46C1] via-[#4C1D95] to-[#2D1B69]">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between relative">
           {/* Left Section: Avatar and Welcome */}
           <div className="flex items-center gap-3 z-20">
             <div className="relative group">
               <div className="relative flex items-center justify-center">
                 <button
+                  id="sidebar-trigger"
                   className="flex items-center justify-center w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 transition-colors relative"
                   onClick={() => setShowSidebar(true)}
                   aria-label="Open profile menu"
@@ -314,6 +415,7 @@ export default function ClientHome() {
 
                 </button>
               </div>
+
               {/* Sidebar & Backdrop */}
               {/* Sidebar & Backdrop - always mounted for animation */}
               <div>
@@ -324,7 +426,7 @@ export default function ClientHome() {
                   aria-label="Close sidebar"
                 />
                 {/* Sidebar */}
-                <div className={`fixed top-0 left-0 z-50 h-full w-64 sm:w-72 bg-[#18181b] border-r border-white/10 shadow-2xl flex flex-col transition-transform duration-300 ${showSidebar ? 'translate-x-0' : '-translate-x-full'}`}>
+                <div id="sidebar-container" className={`fixed top-0 left-0 z-50 h-full w-64 sm:w-72 bg-[#18181b] border-r border-white/10 shadow-2xl flex flex-col transition-transform duration-300 ${showSidebar ? 'translate-x-0' : '-translate-x-full'}`}>
                   <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
                     <div className="flex items-center gap-3">
                       <img src={userAvatar} alt="Profile" className="w-10 h-10 rounded-full object-cover border-2 border-purple-400"
@@ -385,6 +487,17 @@ export default function ClientHome() {
                     >
                       <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><path d="M12 8v4l3 2" /></svg>
                       Support
+                    </button>
+                    {/* App Guide Button */}
+                    <button
+                      className="flex items-center gap-3 px-6 py-3 text-left bg-purple-500/10 hover:bg-purple-500/20 text-purple-200 hover:text-white transition-all duration-300 mx-4 my-1 rounded-xl border border-purple-500/20"
+                      onClick={() => {
+                        setShowSidebar(false);
+                        setShowAppGuide(true);
+                      }}
+                    >
+                      <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
+                      App Guide
                     </button>
 
                     <div className="border-t border-white/10 my-2" />
@@ -447,6 +560,7 @@ export default function ClientHome() {
             </Link>
             <Link
               href="/client/nearby/hirefeed"
+              id="nav-hire-desktop"
               className="px-4 py-2 rounded-xl flex items-center space-x-2 text-white/60 hover:text-white hover:bg-black/20 border border-transparent transition-all duration-300 group"
             >
               <Compass className="w-4 h-4 group-hover:text-purple-400 transition-colors duration-300" />
@@ -454,6 +568,7 @@ export default function ClientHome() {
             </Link>
             <Link
               href="/client/bookings"
+              id="nav-bookings-desktop"
               className="px-4 py-2 rounded-xl flex items-center space-x-2 text-white/60 hover:text-white hover:bg-black/20 border border-transparent transition-all duration-300 group"
             >
               <Calendar className="w-4 h-4 group-hover:text-purple-400 transition-colors duration-300" />
@@ -461,6 +576,7 @@ export default function ClientHome() {
             </Link>
             {/* Earn Button */}
             <button
+              id="nav-earn-desktop"
               onClick={handleSwitchToFreelancer}
               className="px-4 py-2 rounded-xl flex items-center space-x-1.5 bg-gradient-to-r from-yellow-500 via-amber-400 to-yellow-300 text-black shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-300 border border-transparent"
             >
@@ -521,7 +637,7 @@ export default function ClientHome() {
 
               {/* Modern Search Bar */}
               <div className="max-w-3xl mx-auto mb-4 sm:mb-6 px-2 sm:px-0">
-                <div className="relative w-full">
+                <div id="hero-search" className="relative w-full">
                   <Input
                     type="text"
                     placeholder={searchQuery ? `Find services in Chennai...` : placeholder || `Find services in Chennai...`}
@@ -545,7 +661,7 @@ export default function ClientHome() {
 
         <div className="container max-w-5xl mx-auto px-4 py-4 bg-[#111111] mb-8 relative z-0">
           {/* Top Rated Experts Section */}
-          <section className="mb-4 relative z-0">
+          <section id="experts-section" className="mb-4 relative z-0">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-base font-semibold text-white tracking-wide text-left">
                 <span className="bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 text-transparent bg-clip-text">Top Rated</span>
@@ -688,7 +804,7 @@ export default function ClientHome() {
           `}</style>
 
           {/* Popular Sports Section */}
-          <section className="mb-4 relative z-0">
+          <section id="sports-categories" className="mb-4 relative z-0">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-base font-semibold text-white tracking-wide text-left">Popular Sports</h2>
               <Link href="/client/services" className="text-white/80 hover:text-white text-xs font-medium flex items-center transition-colors">
@@ -697,10 +813,11 @@ export default function ClientHome() {
               </Link>
             </div>
             <div className="relative -mx-4">
-              <div className="overflow-x-auto scrollbar-hide px-4 pr-8 md:overflow-visible">
-                <div className="flex space-x-4 pb-4 md:grid md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-8 md:space-x-0 md:gap-4">
+              <div className="overflow-x-auto scrollbar-hide px-4 pr-8">
+                <div className="flex space-x-4 pb-4">
                   {categories
                     .filter(c => c.name !== 'All')
+                    .slice(0, 10)
                     .map((category) => {
                       const style = sportStyles[category.name] || sportStyles['Others'];
                       return (
@@ -725,7 +842,7 @@ export default function ClientHome() {
           </section>
 
           {/* Service Categories */}
-          <section className="mb-4 relative z-0">
+          <section id="popular-services" className="mb-4 relative z-0">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-base font-semibold text-white tracking-wide text-left">Popular Services in your area</h2>
               <Link href="/client/services" className="text-white/80 hover:text-white text-xs font-medium flex items-center transition-colors">
@@ -733,10 +850,10 @@ export default function ClientHome() {
                 <ChevronRight className="w-3 h-3 ml-1" />
               </Link>
             </div>
-            <div className="relative -mx-4">
-              <div className="overflow-x-auto scrollbar-hide px-4 pr-8 md:overflow-visible">
-                <div className="flex space-x-4 pb-2 md:grid md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 md:space-x-0 md:gap-4">
-                  {popularServices.map((service) => (
+            <div className="relative -mx-4 text-left">
+              <div className="overflow-x-auto scrollbar-hide px-4 pr-8">
+                <div className="flex space-x-4 pb-2">
+                  {popularServices.slice(0, 10).map((service) => (
                     <ServiceCard
                       key={service.id}
                       id={service.id}
@@ -744,7 +861,7 @@ export default function ClientHome() {
                       image={service.image}
                       icon={service.icon}
                       providerCount={service.providerCount}
-                      className="w-[125px] flex-shrink-0 md:w-auto"
+                      className="w-[140px] flex-shrink-0"
                     />
                   ))}
                 </div>
