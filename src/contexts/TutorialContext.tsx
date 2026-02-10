@@ -8,6 +8,7 @@ export interface TutorialStep {
     description: string;
     position?: 'top' | 'bottom' | 'left' | 'right' | 'center';
     alignment?: 'start' | 'center' | 'end';
+    offsetY?: number; // Vertical offset in pixels (negative moves up, positive moves down)
     onStart?: () => void;
 }
 

@@ -649,23 +649,6 @@ function BookingsPageContent() {
 
   const { startTutorial, hasSeenTutorial } = useTutorial();
 
-  const bookingsTutorial: TutorialConfig = {
-    id: 'bookings-tour',
-    steps: [
-      {
-        targetId: 'bookings-tabs',
-        title: 'Booking Categories',
-        description: 'Switch between Active sessions, Job Applications, and your Booking History.',
-        position: 'bottom'
-      },
-      {
-        targetId: 'bookings-list',
-        title: 'Manage Your Sessions',
-        description: 'Find your Start Codes (OTP), Call buttons, and Reschedule options for all sessions.',
-        position: 'top'
-      }
-    ]
-  };
 
   useEffect(() => {
     const shouldStart = !hasSeenTutorial('bookings-tour') || searchParams.get('tutorial') === 'bookings-tour';
@@ -862,6 +845,47 @@ function BookingsPageContent() {
     return counts;
   }, [bookings]);
 
+  // Tutorial configuration - defined after filteredBookings
+  const bookingsTutorial: TutorialConfig = useMemo(() => ({
+    id: 'bookings-tour',
+    steps: [
+      {
+        targetId: 'bookings-tabs',
+        title: 'Your Bookings Hub',
+        description: 'Navigate between Active sessions, Job Applications (where experts apply to your posts), and your complete Booking History.',
+        position: 'bottom'
+      },
+      {
+        targetId: 'bookings-active-filters',
+        title: 'Filter Active Bookings',
+        description: 'Quickly filter by All, Ongoing (in-progress), Upcoming (scheduled), or Marked (sessions you\'ve marked as completed).',
+        position: 'bottom'
+      },
+      // Only include booking card step if bookings exist
+      ...(filteredBookings.length > 0 ? [{
+        targetId: 'first-booking-card',
+        title: 'Share Your Start Code (OTP)',
+        description: 'Each booking has a unique OTP. Share this code with the freelancer to start your session. You\'ll also find Call and Reschedule options here.',
+        position: 'top' as const
+      }] : []),
+      {
+        targetId: 'bookings-applications-tab',
+        title: 'Job Applications',
+        description: 'View and manage applications from experts who want to work on your posted job requirements.',
+        position: 'bottom',
+        offsetY: -80, // Move up by 80px (~10% of typical mobile viewport)
+        onStart: () => setCurrentTab('applications')
+      },
+      {
+        targetId: 'bookings-history-tab',
+        title: 'Booking History',
+        description: 'Browse all your completed sessions. You can easily re-book your favorite experts from here.',
+        position: 'bottom',
+        onStart: () => setCurrentTab('history')
+      }
+    ]
+  }), [filteredBookings.length]);
+
   const toggleSearch = () => {
     setIsSearchOpen(!isSearchOpen)
     if (!isSearchOpen) {
@@ -888,11 +912,11 @@ function BookingsPageContent() {
 
         {/* Main Content */}
         <div className="flex-1 pb-24">
-          <Tabs id="bookings-tabs" value={currentTab} onValueChange={setCurrentTab} className="h-full flex flex-col">
+          <Tabs value={currentTab} onValueChange={setCurrentTab} className="h-full flex flex-col">
             {/* Fixed Tabs Header */}
             <div className="fixed top-[64px] md:top-32 left-0 right-0 z-40 bg-[#111111]">
               <div className="container max-w-4xl mx-auto px-4">
-                <TabsList className="flex w-full bg-transparent border-b border-white/10">
+                <TabsList id="bookings-tabs" className="flex w-full bg-transparent border-b border-white/10">
                   <TabsTrigger
                     value="active"
                     className={cn(
@@ -935,7 +959,7 @@ function BookingsPageContent() {
               <div className="container max-w-4xl mx-auto px-4">
                 <TabsContent id="bookings-list" value="active" className="mt-2 md:mt-0 focus-visible:outline-none focus-visible:ring-0">
                   {/* Active Tab Filters */}
-                  <div className="flex gap-2 mb-6 md:mb-4 overflow-x-auto pb-2 scroll-smooth items-center min-h-[44px]" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                  <div id="bookings-active-filters" className="flex gap-2 mb-6 md:mb-4 overflow-x-auto pb-2 scroll-smooth items-center min-h-[44px]" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                     {/* Inline Search */}
                     <div className={cn(
                       "flex items-center transition-all duration-300 overflow-hidden",
@@ -1025,12 +1049,13 @@ function BookingsPageContent() {
                           ))
                         }
                         {/* Active Bookings */}
-                        {filteredBookings.map((booking) => (
-                          <BookingCard
-                            key={booking["#"]}
-                            booking={booking}
-                            showActions={true}
-                          />
+                        {filteredBookings.map((booking, index) => (
+                          <div key={booking["#"]} id={index === 0 ? "first-booking-card" : undefined}>
+                            <BookingCard
+                              booking={booking}
+                              showActions={true}
+                            />
+                          </div>
                         ))
                         }
                       </>
@@ -1040,7 +1065,7 @@ function BookingsPageContent() {
 
 
 
-                <TabsContent value="applications" className="mt-0 h-full">
+                <TabsContent id="bookings-applications-tab" value="applications" className="mt-0 h-full">
                   <div className="h-[60vh] flex flex-col items-center justify-center">
                     <CricketComingSoon
                       title="Field Setting Change!"
@@ -1054,9 +1079,9 @@ function BookingsPageContent() {
                   </div>
                 </TabsContent>
 
-                <TabsContent value="history" className="mt-2 focus-visible:outline-none focus-visible:ring-0">
+                <TabsContent id="bookings-history-tab" value="history" className="mt-2 focus-visible:outline-none focus-visible:ring-0">
                   {/* History Tab Filters */}
-                  <div className="flex gap-2 mb-6 overflow-x-auto pb-2 scroll-smooth items-center min-h-[44px]" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                  <div id="bookings-history-filters" className="flex gap-2 mb-6 overflow-x-auto pb-2 scroll-smooth items-center min-h-[44px]" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                     {/* Inline Search */}
                     <div className={cn(
                       "flex items-center transition-all duration-300 overflow-hidden",

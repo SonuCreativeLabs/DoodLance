@@ -143,18 +143,21 @@ export const TutorialTour = () => {
             // Reset top
             style.top = 'auto';
         } else if (effectivePosition === 'bottom') {
-            style.top = `${targetRect.bottom + spacing}px`;
+            const offsetY = currentStep.offsetY || 0;
+            style.top = `${targetRect.bottom + spacing + offsetY}px`;
         } else {
             // Default top calculation
-            style.top = `${top}px`;
+            const offsetY = currentStep.offsetY || 0;
+            style.top = `${top + offsetY}px`;
 
             // Handle alignment overrides for side-positioned elements
             if ((currentStep.position === 'left' || currentStep.position === 'right') && currentStep.alignment === 'end') {
                 // Align to bottom of target with extra spacing
-                style.bottom = `${window.innerHeight - targetRect.bottom + spacing + 10}px`;
+                style.bottom = `${window.innerHeight - targetRect.bottom + spacing + 10 - offsetY}px`;
                 style.top = 'auto'; // release top
             }
         }
+
 
         return style;
     };
