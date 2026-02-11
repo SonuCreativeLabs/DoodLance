@@ -778,7 +778,9 @@ function BookingsPageContent() {
 
     if (!isHistoryStatus) return false;
 
-    if (historyFilter === 'all') return matchesSearch
+    // Fix: Ensure 'all' shows both completed and cancelled
+    if (historyFilter === 'all') return matchesSearch;
+
     return matchesSearch && booking.status.toLowerCase() === historyFilter.toLowerCase()
   }).sort((a, b) => {
     const dateA = a.completedAt ? new Date(a.completedAt) : new Date(0)
@@ -854,21 +856,16 @@ function BookingsPageContent() {
         targetId: 'bookings-tabs',
         title: 'Your Bookings Hub',
         description: 'Navigate between Active sessions, Job Applications (where experts apply to your posts), and your complete Booking History.',
-        position: 'bottom'
+        position: 'bottom',
+        onStart: () => setCurrentTab('active')
       },
       {
         targetId: 'bookings-active-filters',
         title: 'Filter Active Bookings',
         description: 'Quickly filter by All, Ongoing (in-progress), Upcoming (scheduled), or Marked (sessions you\'ve marked as completed).',
-        position: 'bottom'
+        position: 'bottom',
+        onStart: () => setCurrentTab('active')
       },
-      // Only include booking card step if bookings exist
-      ...(filteredBookings.length > 0 ? [{
-        targetId: 'first-booking-card',
-        title: 'Share Your Start Code (OTP)',
-        description: 'Each booking has a unique OTP. Share this code with the freelancer to start your session. You\'ll also find Call and Reschedule options here.',
-        position: 'top' as const
-      }] : []),
       {
         targetId: 'bookings-applications-tab',
         title: 'Job Applications',
@@ -877,22 +874,24 @@ function BookingsPageContent() {
         offsetY: -80, // Move up by 80px (~10% of typical mobile viewport)
         onStart: () => setCurrentTab('applications')
       },
-      {
+      // Only include history step if history exists, targeting the first card
+      ...(filteredHistory.length > 0 ? [{
+        targetId: 'first-history-card',
+        title: 'Booking History',
+        description: 'Browse all your completed sessions. You can easily re-book your favorite experts from here.',
+        position: 'bottom' as const,
+        offsetY: 20, // Position well below the card
+        onStart: () => setCurrentTab('history')
+      }] : [{
+        // Fallback to targeting tab if no history exists
         targetId: 'bookings-history-tab',
         title: 'Booking History',
         description: 'Browse all your completed sessions. You can easily re-book your favorite experts from here.',
-        position: 'bottom',
+        position: 'bottom' as const,
         onStart: () => setCurrentTab('history')
-      },
-      // Only include history card step if history exists
-      ...(filteredHistory.length > 0 ? [{
-        targetId: 'first-history-card',
-        title: 'Past Bookings',
-        description: 'View details of your past sessions. You can verify completion, rate experts, or book them again.',
-        position: 'top' as const
-      }] : [])
+      }])
     ]
-  }), [filteredBookings.length]);
+  }), [filteredBookings.length, filteredHistory.length]);
 
   const toggleSearch = () => {
     setIsSearchOpen(!isSearchOpen)
@@ -1150,7 +1149,7 @@ function BookingsPageContent() {
                         </p>
                       </div>
                     ) : (
-                      filteredHistory.slice(0, 1).map((booking, index) => (
+                      filteredHistory.map((booking, index) => (
                         <HistoryCard key={booking["#"]} booking={booking} id={index === 0 ? "first-history-card" : undefined} />
                       ))
                     )}

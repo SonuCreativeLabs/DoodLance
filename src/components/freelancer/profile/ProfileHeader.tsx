@@ -611,9 +611,10 @@ export function ProfileHeader({
         </div>
 
         {/* Preview Profile Button */}
-        <div id="tour-profile-preview" className="flex justify-center mt-3 mb-4">
+        <div className="flex justify-center mt-3 mb-4">
           {!isPreview && (
             <Button
+              id="tour-profile-preview"
               variant="ghost"
               onClick={() => setIsPreviewOpen(true)}
               className="group relative overflow-hidden px-4 py-1.5 h-8 bg-gradient-to-r from-[#6B46C1] via-[#4C1D95] to-[#2D1B69] text-white text-xs font-normal rounded-full shadow hover:shadow-md hover:shadow-[#4C1D95]/40 transition-all duration-200 transform hover:-translate-y-0.5 focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-[#6B46C1]"

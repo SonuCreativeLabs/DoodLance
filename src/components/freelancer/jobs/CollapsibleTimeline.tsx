@@ -118,12 +118,14 @@ export function CollapsibleTimeline({ items, title = "Timeline", defaultExpanded
                 </div>
                 {item.date ? (
                   <p className="text-xs text-white/60">
-                    {new Date(item.date).toLocaleDateString('en-US', {
-                      month: 'short',
+                    {new Date(item.date).toLocaleString('en-IN', {
+                      timeZone: 'Asia/Kolkata',
                       day: 'numeric',
+                      month: 'long',
                       year: 'numeric',
                       hour: '2-digit',
-                      minute: '2-digit'
+                      minute: '2-digit',
+                      hour12: true
                     })}
                   </p>
                 ) : (
@@ -355,6 +357,40 @@ export const createTimelineItems = (type: 'proposal' | 'job', item: any) => {
       });
     }
 
+    if (item.status === 'completed_by_freelancer') {
+      timelineItems.push({
+        label: '📝 Work Delivered - Waiting for Umpire\'s Signal',
+        date: item.completedAt || new Date().toISOString(),
+        completed: true,
+        icon: CheckCircle,
+        color: 'bg-indigo-500'
+      });
+      timelineItems.push({
+        label: '⏳ Waiting for Client Approval',
+        date: null,
+        completed: false,
+        icon: CheckCircle,
+        color: 'bg-white/10'
+      });
+    }
+
+    if (item.status === 'completed_by_client') {
+      timelineItems.push({
+        label: '☝️ Umpire\'s Signal - Client Marked Complete',
+        date: item.completedAt || new Date().toISOString(),
+        completed: true,
+        icon: CheckCircle,
+        color: 'bg-amber-500'
+      });
+      timelineItems.push({
+        label: '⏳ Waiting for You to Confirm',
+        date: null,
+        completed: false,
+        icon: CheckCircle,
+        color: 'bg-white/10'
+      });
+    }
+
     if (item.status === 'completed') {
       // Add who marked job complete first (typically freelancer)
       timelineItems.push({
@@ -366,7 +402,7 @@ export const createTimelineItems = (type: 'proposal' | 'job', item: any) => {
       });
 
       timelineItems.push({
-        label: '🎯 Deal Secured - Client Confirmed!',
+        label: '🎯 Deal Secured - Job Fully Completed!',
         date: item.completedAt || new Date().toISOString(),
         completed: true,
         icon: CheckCircle,
