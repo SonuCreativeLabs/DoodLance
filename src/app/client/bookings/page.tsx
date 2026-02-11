@@ -335,7 +335,7 @@ const AcceptedProposalCard = ({ application }: { application: Application }) => 
 }
 
 // Card for history jobs
-const HistoryCard = ({ booking }: { booking: Booking }) => {
+const HistoryCard = ({ booking, id }: { booking: Booking; id?: string }) => {
   const router = useRouter()
   // Mocking history job for useBookAgain hook, or we need to update hook
   // Memoize to prevent re-creation loops in useBookAgain
@@ -375,6 +375,7 @@ const HistoryCard = ({ booking }: { booking: Booking }) => {
             handleOpenDetails()
           }
         }}
+        id={id}
         className="p-5 rounded-xl bg-[#1E1E1E] border border-white/5 w-full shadow-lg cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-500/40 focus:ring-offset-2 focus:ring-offset-[#111111]"
       >
         <div className="space-y-4">
@@ -882,7 +883,14 @@ function BookingsPageContent() {
         description: 'Browse all your completed sessions. You can easily re-book your favorite experts from here.',
         position: 'bottom',
         onStart: () => setCurrentTab('history')
-      }
+      },
+      // Only include history card step if history exists
+      ...(filteredHistory.length > 0 ? [{
+        targetId: 'first-history-card',
+        title: 'Past Bookings',
+        description: 'View details of your past sessions. You can verify completion, rate experts, or book them again.',
+        position: 'top' as const
+      }] : [])
     ]
   }), [filteredBookings.length]);
 
@@ -1142,8 +1150,8 @@ function BookingsPageContent() {
                         </p>
                       </div>
                     ) : (
-                      filteredHistory.map((booking) => (
-                        <HistoryCard key={booking["#"]} booking={booking} />
+                      filteredHistory.slice(0, 1).map((booking, index) => (
+                        <HistoryCard key={booking["#"]} booking={booking} id={index === 0 ? "first-history-card" : undefined} />
                       ))
                     )}
                   </div>

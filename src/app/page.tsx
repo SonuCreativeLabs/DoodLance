@@ -1,6 +1,7 @@
+
 "use client"
 
-import { MapPin, Star, Clock, Calendar, ChevronDown, ChevronRight, ArrowRight, Copy, Check, Zap, Shield, Users, Award, TrendingUp, Heart, MessageCircle, Filter, X, Wallet, Bell, Sparkles, Home, Compass } from 'lucide-react'
+import { MapPin, Search, Bell, Menu, X, Home, User, Calendar, Briefcase, Star, ChevronLeft, LogOut, ChevronRight, BookOpen, Copy, Check, Zap, Shield, Users, Award, TrendingUp, Heart, MessageCircle, Filter, Wallet, Sparkles, Compass, ChevronDown, Clock } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { Input } from '@/components/ui/input'
 import {
@@ -122,8 +123,7 @@ export default function ClientHome() {
         targetId: 'sidebar-container',
         title: 'Your Account',
         description: 'Access My Profile, My Bookings, My Referrals, Notifications, Support, and App Guide from here.',
-        position: 'right',
-        alignment: 'end',
+        position: 'bottom-center',
         onStart: () => setShowSidebar(true)
       }
     ]
@@ -144,7 +144,7 @@ export default function ClientHome() {
       }, 500);
       return () => clearTimeout(timer);
     }
-  }, [searchParams, isMobile]);
+  }, [searchParams, isMobile, hasSeenTutorial, startTutorial]);
 
   // Configuration for Sport Card Styles
   const sportStyles: Record<string, {
@@ -496,7 +496,7 @@ export default function ClientHome() {
                         setShowAppGuide(true);
                       }}
                     >
-                      <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
+                      <BookOpen className="w-5 h-5 text-purple-400" />
                       App Guide
                     </button>
 
@@ -505,6 +505,7 @@ export default function ClientHome() {
                     {isAuthenticated ? (
                       <button
                         onClick={() => setShowLogoutAlert(true)}
+                        id="sidebar-logout"
                         className="flex items-center gap-3 px-6 py-3 text-left text-red-400 hover:bg-white/10 hover:text-red-300 transition-colors w-full"
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7" /><path d="M3 21V3" /></svg>
@@ -1002,7 +1003,7 @@ export default function ClientHome() {
       />
 
       <AlertDialog open={showLogoutAlert} onOpenChange={setShowLogoutAlert}>
-        <AlertDialogContent className="bg-[#18181b] border-white/10 text-white z-[100] w-[90%] max-w-sm rounded-lg">
+        <AlertDialogContent className="bg-[#18181b] border-white/10 text-white z-[999] w-[90%] max-w-sm rounded-lg">
           <AlertDialogHeader>
             <AlertDialogTitle>Sign out?</AlertDialogTitle>
             <AlertDialogDescription className="text-white/60">

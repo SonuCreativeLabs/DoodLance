@@ -11,84 +11,106 @@ export const TutorialTour = () => {
     const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
     const [isReady, setIsReady] = useState(false);
 
+    // Ref to store cleanup function
+    const cleanupRef = useRef<(() => void) | null>(null);
+
     useEffect(() => {
         if (!isOpen || !config) return;
 
         const step = config.steps[activeStep];
 
-        // Trigger onStart if defined (before checking for element)
+        // Trigger onStart
         if (step.onStart) {
             step.onStart();
         }
 
-        const findElementAndSetRect = () => {
-            let element: HTMLElement | null = null;
+        let retries = 0;
+        const maxRetries = 150; // 15 seconds
+        let retryTimer: NodeJS.Timeout;
+        let animationId: NodeJS.Timeout;
 
-            // Check if targetId contains commas (multiple targets)
+        // Define handleResize first so it can be used in cleanup
+        let element: HTMLElement | null = null;
+        let lastRect = { left: 0, top: 0, width: 0, height: 0, bottom: 0, right: 0, x: 0, y: 0, toJSON: () => { } } as DOMRect;
+
+        const handleResize = () => {
+            if (!element) return;
+            const newRect = element.getBoundingClientRect();
+            if (
+                Math.abs(newRect.left - lastRect.left) > 0.5 ||
+                Math.abs(newRect.top - lastRect.top) > 0.5 ||
+                Math.abs(newRect.width - lastRect.width) > 0.5 ||
+                Math.abs(newRect.height - lastRect.height) > 0.5
+            ) {
+                lastRect = newRect;
+                setTargetRect(newRect);
+            }
+        };
+
+        const cleanup = () => {
+            if (retryTimer) clearTimeout(retryTimer);
+            if (animationId) clearInterval(animationId);
+            window.removeEventListener('resize', handleResize);
+            window.removeEventListener('scroll', handleResize);
+            cleanupRef.current = null;
+        };
+        cleanupRef.current = cleanup;
+
+        const attemptFind = () => {
+            const findVisibleElement = (id: string) => {
+                // Use querySelectorAll to find all elements with the ID (handles duplicate IDs in responsive layouts)
+                const elements = document.querySelectorAll(`[id="${id}"]`);
+                for (let i = 0; i < elements.length; i++) {
+                    const el = elements[i] as HTMLElement;
+                    if (el.offsetWidth > 0 || el.offsetHeight > 0 || el.getClientRects().length > 0) {
+                        return el;
+                    }
+                }
+                return null;
+            };
+
             if (step.targetId.includes(',')) {
                 const targetIds = step.targetId.split(',').map(id => id.trim());
                 for (const id of targetIds) {
-                    const el = document.getElementById(id);
-                    // Check if element exists and is visible (has dimensions)
-                    if (el && (el.offsetWidth > 0 || el.offsetHeight > 0 || el.getClientRects().length > 0)) {
+                    const el = findVisibleElement(id);
+                    if (el) {
                         element = el;
                         break;
                     }
                 }
             } else {
-                element = document.getElementById(step.targetId);
+                element = findVisibleElement(step.targetId);
             }
 
             if (element) {
-                const lastRectRef = { current: element.getBoundingClientRect() };
-                setTargetRect(lastRectRef.current);
-
-                const updateRect = () => {
-                    const newRect = element.getBoundingClientRect();
-                    const lastRect = lastRectRef.current;
-
-                    // Only update state if position or size changed significantly (threshold: 0.5px)
-                    if (
-                        Math.abs(newRect.left - lastRect.left) > 0.5 ||
-                        Math.abs(newRect.top - lastRect.top) > 0.5 ||
-                        Math.abs(newRect.width - lastRect.width) > 0.5 ||
-                        Math.abs(newRect.height - lastRect.height) > 0.5
-                    ) {
-                        lastRectRef.current = newRect;
-                        setTargetRect(newRect);
-                    }
-                };
-
-                updateRect();
-                window.addEventListener('resize', updateRect);
-                window.addEventListener('scroll', updateRect);
-
-                // Continuous updates to handle animating targets
-                const animationId = setInterval(updateRect, 32);
-
+                lastRect = element.getBoundingClientRect();
+                setTargetRect(lastRect);
                 setIsReady(true);
 
-                // Only scroll into view if element is not fixed position
+                window.addEventListener('resize', handleResize);
+                window.addEventListener('scroll', handleResize);
+
+                // Poll for rect changes (handles inner scrolls)
+                animationId = setInterval(handleResize, 32);
+
                 const computedStyle = window.getComputedStyle(element);
                 if (computedStyle.position !== 'fixed') {
                     element.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
-
-                return () => {
-                    window.removeEventListener('resize', updateRect);
-                    window.removeEventListener('scroll', updateRect);
-                    clearInterval(animationId);
-                };
             } else {
-                console.warn(`Tutorial target not found: ${step.targetId}`);
-                setIsReady(false);
-                setTargetRect(null);
+                if (retries < maxRetries) {
+                    retries++;
+                    retryTimer = setTimeout(attemptFind, 100);
+                } else {
+                    console.warn(`Tutorial target not found: ${step.targetId}`);
+                    setIsReady(false);
+                }
             }
         };
 
-        // Small delay to allow onStart UI transitions to begin
-        const timer = setTimeout(findElementAndSetRect, 100);
-        return () => clearTimeout(timer);
+        attemptFind();
+
+        return cleanup;
     }, [isOpen, config, activeStep]);
 
     if (!isOpen || !config || !isReady || !targetRect) return null;
@@ -110,6 +132,18 @@ export const TutorialTour = () => {
                 transform: 'translate(-50%, -50%)',
                 width: `${popoverWidth}px`,
                 zIndex: 1000,
+            };
+        }
+
+        if (currentStep.position === 'bottom-center') {
+            return {
+                position: 'fixed',
+                bottom: '24px',
+                left: '0',
+                right: '0',
+                margin: '0 auto',
+                width: 'min(320px, 90vw)',
+                zIndex: 9999,
             };
         }
 

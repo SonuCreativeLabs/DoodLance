@@ -113,31 +113,31 @@ export default function ProfilePage() {
     id: 'profile-tour',
     steps: [
       {
-        targetId: 'profile-header-avatar',
+        targetId: 'tour-profile-avatar',
         title: 'Profile Picture',
         description: 'Upload a professional photo to build trust with clients.',
         position: 'bottom'
       },
       {
-        targetId: 'profile-header-cover',
+        targetId: 'tour-profile-cover',
         title: 'Cover Image',
         description: 'Add a cover image to personalize your profile appearance.',
         position: 'bottom'
       },
       {
-        targetId: 'profile-header-verification',
+        targetId: 'tour-profile-verification',
         title: 'Verification Badge',
         description: 'Get verified to show clients you are a trusted professional. "Not Verified" means KYC is pending.',
         position: 'bottom'
       },
       {
-        targetId: 'profile-header-status',
+        targetId: 'tour-profile-status',
         title: 'Online Status',
         description: '"GAME ON" means you are online and ready to work. "OFFLINE" means you turned off your availability.',
         position: 'bottom'
       },
       {
-        targetId: 'profile-header-preview',
+        targetId: 'tour-profile-preview',
         title: 'Profile Preview',
         description: 'See how your profile looks to clients before publishing changes.',
         position: 'bottom'
@@ -213,13 +213,13 @@ export default function ProfilePage() {
 
   useEffect(() => {
     const shouldStart = !hasSeenTutorial('profile-tour') || searchParams.get('tutorial') === 'profile-tour';
-    if (shouldStart && isAuthenticated && !isOpen) {
+    if (shouldStart && isAuthenticated && headerDataLoaded && !isOpen) {
       const timer = setTimeout(() => {
         startTutorial(profileTutorial);
       }, 2000);
       return () => clearTimeout(timer);
     }
-  }, [searchParams, isAuthenticated, hasSeenTutorial, startTutorial, profileTutorial, isOpen]);
+  }, [searchParams, isAuthenticated, headerDataLoaded, hasSeenTutorial, startTutorial, profileTutorial, isOpen]);
 
   const scrollToSection = (ref: React.RefObject<HTMLElement>) => {
     if (ref.current) {

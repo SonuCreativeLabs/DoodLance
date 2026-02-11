@@ -27,21 +27,21 @@ export const AppGuideModal: React.FC<AppGuideModalProps> = ({ isOpen, onClose })
             id: 'intro-tour',
             title: 'Welcome Tour',
             description: 'Explore the dashboard, search, and key features.',
-            icon: <Star className="w-5 h-5 text-yellow-400" />,
+            icon: <Star className="w-5 h-5 text-purple-400" />,
             path: '/'
         },
         {
             id: 'hire-tour',
             title: 'How to Hire',
             description: 'Learn to find experts, use filters, and book services.',
-            icon: <Map className="w-5 h-5 text-blue-400" />,
+            icon: <Map className="w-5 h-5 text-purple-400" />,
             path: '/client/nearby/hirefeed'
         },
         {
             id: 'bookings-tour',
             title: 'Manage Bookings',
             description: 'Track ongoing sessions, history, and applications.',
-            icon: <Calendar className="w-5 h-5 text-green-400" />,
+            icon: <Calendar className="w-5 h-5 text-purple-400" />,
             path: '/client/bookings'
         },
         {
@@ -73,7 +73,7 @@ export const AppGuideModal: React.FC<AppGuideModalProps> = ({ isOpen, onClose })
             <DialogContent className="sm:max-w-md bg-[#18181b] border-white/10 text-white">
                 <DialogHeader>
                     <DialogTitle className="text-xl font-bold flex items-center gap-2">
-                        <Zap className="w-5 h-5 text-yellow-400" />
+                        <Zap className="w-5 h-5 text-purple-400" />
                         App Guide
                     </DialogTitle>
                     <DialogDescription className="text-white/60">

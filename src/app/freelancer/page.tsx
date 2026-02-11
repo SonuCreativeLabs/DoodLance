@@ -29,7 +29,7 @@ export default function FreelancerHome() {
   const { forYouJobs } = useForYouJobs();
   const { personalDetails, toggleReadyToWork } = usePersonalDetails();
   const { getWorkingHoursText } = useAvailability();
-  const { user } = useAuth();
+  const { user, isLoading: isAuthLoading } = useAuth();
   const { startTutorial, hasSeenTutorial, isOpen } = useTutorial();
 
   const freelancerTutorial: TutorialConfig = useMemo(() => ({
@@ -86,7 +86,15 @@ export default function FreelancerHome() {
   // Fetch dashboard stats
   useEffect(() => {
     const fetchStats = async () => {
-      if (!user?.id) return;
+      // Wait for auth to initialize
+      if (isAuthLoading) return;
+
+      if (!user?.id) {
+        setStats(null);
+        setIsLoadingStats(false);
+        return;
+      }
+
       try {
         setIsLoadingStats(true);
         const response = await fetch(`/api/freelancer/stats?userId=${user.id}`);
@@ -101,14 +109,21 @@ export default function FreelancerHome() {
       }
     };
     fetchStats();
-  }, [user?.id]);
+  }, [user?.id, isAuthLoading]);
 
   // Simulate profile loading (personalDetails loads via context)
   useEffect(() => {
+    if (isAuthLoading) return;
+
+    if (!user?.id) {
+      setIsLoadingProfile(false);
+      return;
+    }
+
     if (personalDetails.name) {
       setIsLoadingProfile(false);
     }
-  }, [personalDetails.name]);
+  }, [personalDetails.name, isAuthLoading, user?.id]);
 
   const handleJobClick = (job: Job) => {
     router.push(`/freelancer/feed?jobId=${job.id}`);

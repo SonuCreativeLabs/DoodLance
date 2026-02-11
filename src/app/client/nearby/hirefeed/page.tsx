@@ -37,7 +37,7 @@ export default function IntegratedExplorePage() {
         targetId: 'hire-visible-map-area',
         title: 'Interactive Map',
         description: 'See all nearby experts on the map. Each pin represents an available professional in your area.',
-        position: 'center',
+        position: 'top',
         onStart: () => setIsSheetCollapsed(true)
       },
       {

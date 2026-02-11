@@ -646,7 +646,7 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                             </div>
                             <div className="w-full max-w-4xl mx-auto bg-[#0f0f0f]">
                                 {/* Cover Photo */}
-                                <div className="relative h-48 sm:h-80 md:h-96 w-full bg-gradient-to-r from-purple-900 to-purple-700">
+                                <div className="relative h-48 sm:h-64 md:h-72 w-full bg-gradient-to-r from-purple-900 to-purple-700">
 
                                     <div className="absolute inset-0 w-full h-full bg-[#111111] overflow-hidden">
                                         <div className="absolute inset-0 flex items-center justify-center">
@@ -693,11 +693,11 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                                                 </Avatar>
                                             </div>
                                             {/* ID Verified Badge - Left side of profile picture */}
-                                            <div className="absolute top-[calc(50%+32px)] -translate-y-1/2 -left-28 ml-0">
+                                            <div className="absolute top-[calc(50%+32px)] -translate-y-1/2 right-full mr-5">
                                                 <IdVerifiedBadge isVerified={!!freelancer.isVerified} />
                                             </div>
                                             {/* Online Badge - Right side of profile picture */}
-                                            <div className="absolute top-[calc(50%+32px)] -translate-y-1/2 left-full ml-10">
+                                            <div className="absolute top-[calc(50%+32px)] -translate-y-1/2 left-full ml-5">
                                                 <div className={`inline-flex items-center gap-1 px-2 py-1 text-[8px] font-bold border-2 shadow-lg whitespace-nowrap transform rotate-[-2deg] ${freelancer.online
                                                     ? 'bg-gradient-to-br from-green-400 to-green-600 border-green-300 text-white shadow-green-500/50 border-dashed'
                                                     : 'bg-gradient-to-br from-amber-400 to-orange-500 border-amber-300 text-white shadow-amber-500/50 border-dashed'
@@ -709,10 +709,10 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                                     </div>
 
                                     <div className="text-center mb-4">
-                                        <div className="flex items-center justify-center gap-2">
-                                            <h1 className="text-2xl font-bold text-white">{freelancer.name}</h1>
+                                        <div className="relative inline-block">
+                                            <h1 className="text-2xl font-bold text-white leading-tight">{freelancer.name}</h1>
                                             {freelancer.dateOfBirth && (
-                                                <span className="text-lg font-semibold text-white/70">
+                                                <span className="absolute left-full top-1/2 -translate-y-1/2 ml-3 text-lg font-semibold text-white/70 whitespace-nowrap">
                                                     {calculateAge(freelancer.dateOfBirth)}
                                                 </span>
                                             )}

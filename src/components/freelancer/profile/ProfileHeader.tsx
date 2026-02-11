@@ -453,7 +453,7 @@ export function ProfileHeader({
         />
       </div>
       {/* Cover Photo */}
-      <div id="profile-header-cover" className={cn("group relative h-48 sm:h-80 w-full bg-gradient-to-r from-purple-900 to-purple-700", !compact && "md:h-96")}>
+      <div id="tour-profile-cover" className={cn("group relative h-48 sm:h-64 w-full bg-gradient-to-r from-purple-900 to-purple-700", !compact && "md:h-72")}>
         {/* Switch to Client Button - Top-right of cover */}
         {!isPreview && (
           <div className="absolute top-4 right-4 z-20">
@@ -508,7 +508,7 @@ export function ProfileHeader({
           {/* Profile Picture */}
           <div className="relative group">
             {/* Profile Picture */}
-            <div id="profile-header-avatar" className="relative w-32 h-32 sm:w-40 sm:h-40 rounded-full border-4 border-[#1E1E1E] overflow-hidden bg-[#111111]">
+            <div id="tour-profile-avatar" className="relative w-32 h-32 sm:w-40 sm:h-40 rounded-full border-4 border-[#1E1E1E] overflow-hidden bg-[#111111]">
               <Avatar className="w-full h-full">
                 <AvatarImage src={profileImage || avatarUrl || personalDetails.avatarUrl} alt={personalDetails.name} />
                 <AvatarFallback className="bg-[#1a1a1a] flex items-center justify-center">
@@ -542,11 +542,11 @@ export function ProfileHeader({
               </div>
             )}
             {/* ID Verified Badge - Left side of profile picture */}
-            <div id="profile-header-verification" className="absolute top-[calc(50%+32px)] -translate-y-1/2 -left-24 ml-0">
+            <div id="tour-profile-verification" className="absolute top-[calc(50%+32px)] -translate-y-1/2 right-full mr-5">
               <IdVerifiedBadge isVerified={personalDetails.isVerified ?? false} />
             </div>
             {/* Online/Offline Badge - Right side of profile picture */}
-            <div id="profile-header-status" className="absolute top-[calc(50%+32px)] -translate-y-1/2 left-full ml-5">
+            <div id="tour-profile-status" className="absolute top-[calc(50%+32px)] -translate-y-1/2 left-full ml-5">
               <div className={`inline-flex items-center gap-1 px-2 py-1 text-[8px] font-bold border-2 shadow-lg whitespace-nowrap transform rotate-[-2deg] ${personalDetails.online
                 ? 'bg-gradient-to-br from-green-400 to-green-600 border-green-300 text-white shadow-green-500/50 border-dashed'
                 : 'bg-gradient-to-br from-amber-400 to-orange-500 border-amber-300 text-white shadow-amber-500/50 border-dashed'
@@ -558,10 +558,10 @@ export function ProfileHeader({
         </div>
 
         <div className="text-center mb-4">
-          <div className="flex items-center justify-center gap-2">
-            <h1 className="text-2xl font-bold text-white">{personalDetails.name?.split(' ')[0] || personalDetails.name}</h1>
+          <div className="relative inline-block">
+            <h1 className="text-2xl font-bold text-white leading-tight">{personalDetails.name?.split(' ')[0] || personalDetails.name}</h1>
             {age && (
-              <span className="text-lg font-semibold text-white/70">{age}</span>
+              <span className="absolute left-full top-1/2 -translate-y-1/2 ml-3 text-lg font-semibold text-white/70 whitespace-nowrap">{age}</span>
             )}
           </div>
           {personalDetails.username && (
@@ -611,7 +611,7 @@ export function ProfileHeader({
         </div>
 
         {/* Preview Profile Button */}
-        <div id="profile-header-preview" className="flex justify-center mt-3 mb-4">
+        <div id="tour-profile-preview" className="flex justify-center mt-3 mb-4">
           {!isPreview && (
             <Button
               variant="ghost"
