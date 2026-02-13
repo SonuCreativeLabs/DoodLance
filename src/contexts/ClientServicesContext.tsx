@@ -105,7 +105,7 @@ const initialServices: ServiceItem[] = [
     name: 'Yoga Instructor',
     category: 'coaching',
     providerCount: 42,
-    image: 'https://images.unsplash.com/photo-1544367563-12123d8965cd?q=80&w=800&auto=format&fit=crop',
+    image: '/images/Service Catagories/fitness yoga instructor.png',
     fallbackEmoji: '🧘',
     sport: 'Fitness'
   },
@@ -114,7 +114,7 @@ const initialServices: ServiceItem[] = [
     name: 'Strength & Conditioning',
     category: 'coaching',
     providerCount: 38,
-    image: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=800&auto=format&fit=crop',
+    image: '/images/Service Catagories/fitness strength conditioning.png',
     fallbackEmoji: '💪',
     sport: 'Fitness'
   },
@@ -123,7 +123,7 @@ const initialServices: ServiceItem[] = [
     name: 'Crossfit Coach',
     category: 'coaching',
     providerCount: 22,
-    image: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=800&auto=format&fit=crop',
+    image: '/images/Service Catagories/fitness crossfit coach.png',
     fallbackEmoji: '🏋️',
     sport: 'Fitness'
   },
@@ -132,7 +132,7 @@ const initialServices: ServiceItem[] = [
     name: 'Sports Nutritionist',
     category: 'coaching',
     providerCount: 18,
-    image: 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?q=80&w=800&auto=format&fit=crop',
+    image: '/images/Service Catagories/fitness sports nutritionist.png',
     fallbackEmoji: '🥗',
     sport: 'Fitness'
   },
@@ -190,7 +190,7 @@ const initialServices: ServiceItem[] = [
     name: 'Sports Photo/Videographer',
     category: 'other',
     providerCount: 45,
-    image: '/images/Service Catagories/cricket photography.jpeg',
+    image: '/images/Service Catagories/other sports photographer.png',
     fallbackEmoji: '📸',
     sport: 'Others'
   },
@@ -327,7 +327,7 @@ const initialServices: ServiceItem[] = [
     name: 'Analyst',
     category: 'media',
     providerCount: 8,
-    image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=800&auto=format&fit=crop',
+    image: '/images/Service Catagories/badminton analyst.png',
     fallbackEmoji: '📊',
     sport: 'Badminton'
   },
@@ -336,7 +336,7 @@ const initialServices: ServiceItem[] = [
     name: 'Commentator',
     category: 'media',
     providerCount: 5,
-    image: 'https://images.unsplash.com/photo-1478737270239-2f02b77ac618?q=80&w=800&auto=format&fit=crop',
+    image: '/images/Service Catagories/badminton commentator.png',
     fallbackEmoji: '🎙️',
     sport: 'Badminton'
   },
@@ -345,7 +345,7 @@ const initialServices: ServiceItem[] = [
     name: 'Influencer',
     category: 'media',
     providerCount: 12,
-    image: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?q=80&w=800&auto=format&fit=crop',
+    image: '/images/Service Catagories/badminton influencer.png',
     fallbackEmoji: '📱',
     sport: 'Badminton'
   },
@@ -375,7 +375,7 @@ const initialServices: ServiceItem[] = [
     name: 'Tennis Coach',
     category: 'coaching',
     providerCount: 40,
-    image: 'https://images.unsplash.com/photo-1626154628424-666324976c66?q=80&w=800&auto=format&fit=crop',
+    image: '/images/Service Catagories/tennis coach.png',
     fallbackEmoji: '📋',
     mostBooked: true,
     sport: 'Tennis'
@@ -385,7 +385,7 @@ const initialServices: ServiceItem[] = [
     name: 'Umpire',
     category: 'support',
     providerCount: 15,
-    image: 'https://images.unsplash.com/photo-1595435934249-5df7ed86e1c0?q=80&w=800&auto=format&fit=crop',
+    image: '/images/Service Catagories/tennis umpire.png',
     fallbackEmoji: '☝️',
     sport: 'Tennis'
   },
@@ -394,7 +394,7 @@ const initialServices: ServiceItem[] = [
     name: 'Analyst',
     category: 'media',
     providerCount: 6,
-    image: 'https://images.unsplash.com/photo-1531685218883-29a721329fb8?q=80&w=800&auto=format&fit=crop',
+    image: '/images/Service Catagories/tennis analyst.png',
     fallbackEmoji: '📊',
     sport: 'Tennis'
   },
@@ -403,7 +403,7 @@ const initialServices: ServiceItem[] = [
     name: 'Commentator',
     category: 'media',
     providerCount: 4,
-    image: 'https://images.unsplash.com/photo-1594909122845-11baa439b7bf?q=80&w=800&auto=format&fit=crop',
+    image: '/images/Service Catagories/tennis commentator.png',
     fallbackEmoji: '🎙️',
     sport: 'Tennis'
   },
@@ -412,7 +412,7 @@ const initialServices: ServiceItem[] = [
     name: 'Influencer',
     category: 'media',
     providerCount: 10,
-    image: 'https://images.unsplash.com/photo-1515224526905-51c7d77c7bb8?q=80&w=800&auto=format&fit=crop',
+    image: '/images/Service Catagories/tennis influencer.png',
     fallbackEmoji: '📱',
     sport: 'Tennis'
   },
@@ -423,7 +423,7 @@ const initialServices: ServiceItem[] = [
     name: 'Match Player',
     category: 'playing',
     providerCount: 40,
-    image: 'https://images.unsplash.com/photo-1546519638-68e109498ee3?q=80&w=800&auto=format&fit=crop',
+    image: '/images/Service Catagories/basketball match player.png',
     fallbackEmoji: '🏀',
     mostBooked: true,
     sport: 'Basketball'
@@ -433,7 +433,7 @@ const initialServices: ServiceItem[] = [
     name: 'Practice Partner',
     category: 'playing',
     providerCount: 30,
-    image: 'https://images.unsplash.com/photo-1519861531473-9200262188bf?q=80&w=800&auto=format&fit=crop',
+    image: '/images/Service Catagories/basketball practice partner.png',
     fallbackEmoji: '🏀',
     sport: 'Basketball'
   },
@@ -442,7 +442,7 @@ const initialServices: ServiceItem[] = [
     name: 'Basketball Coach',
     category: 'coaching',
     providerCount: 35,
-    image: 'https://images.unsplash.com/photo-1448387473223-5c37445527e7?q=80&w=800&auto=format&fit=crop',
+    image: '/images/Service Catagories/basketball coach.png',
     fallbackEmoji: '📋',
     mostBooked: true,
     sport: 'Basketball'
@@ -452,7 +452,7 @@ const initialServices: ServiceItem[] = [
     name: 'Referee',
     category: 'support',
     providerCount: 20,
-    image: 'https://images.unsplash.com/photo-1595186937579-2708323a6369?q=80&w=800&auto=format&fit=crop',
+    image: '/images/Service Catagories/basketball referee.png',
     fallbackEmoji: '🟨',
     sport: 'Basketball'
   },
@@ -461,7 +461,7 @@ const initialServices: ServiceItem[] = [
     name: 'Analyst',
     category: 'media',
     providerCount: 10,
-    image: 'https://images.unsplash.com/photo-1504384308090-c54be3853247?q=80&w=800&auto=format&fit=crop',
+    image: '/images/Service Catagories/basketball analyst.png',
     fallbackEmoji: '📊',
     sport: 'Basketball'
   },
@@ -470,7 +470,7 @@ const initialServices: ServiceItem[] = [
     name: 'Commentator',
     category: 'media',
     providerCount: 6,
-    image: 'https://images.unsplash.com/photo-1521345995540-1e5f84fc4763?q=80&w=800&auto=format&fit=crop',
+    image: '/images/Service Catagories/basketball commentator.png',
     fallbackEmoji: '🎙️',
     sport: 'Basketball'
   },
@@ -479,7 +479,7 @@ const initialServices: ServiceItem[] = [
     name: 'Influencer',
     category: 'media',
     providerCount: 15,
-    image: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?q=80&w=800&auto=format&fit=crop',
+    image: '/images/Service Catagories/basketball influencer.png',
     fallbackEmoji: '📱',
     sport: 'Basketball'
   },
@@ -490,7 +490,7 @@ const initialServices: ServiceItem[] = [
     name: 'Match Player',
     category: 'playing',
     providerCount: 25,
-    image: 'https://plus.unsplash.com/premium_photo-1681832626188-7253d82f254b?q=80&w=800&auto=format&fit=crop',
+    image: '/images/Service Catagories/padel match player.png',
     fallbackEmoji: '🎾',
     mostBooked: true,
     sport: 'Padel'
@@ -500,7 +500,7 @@ const initialServices: ServiceItem[] = [
     name: 'Practice Partner',
     category: 'playing',
     providerCount: 20,
-    image: 'https://plus.unsplash.com/premium_photo-1681832626188-7253d82f254b?q=80&w=800&auto=format&fit=crop',
+    image: '/images/Service Catagories/padel practice partner.png',
     fallbackEmoji: '🎾',
     sport: 'Padel'
   },
@@ -509,7 +509,7 @@ const initialServices: ServiceItem[] = [
     name: 'Padel Coach',
     category: 'coaching',
     providerCount: 15,
-    image: 'https://images.unsplash.com/photo-1599474924187-334a4ae513ea?q=80&w=800&auto=format&fit=crop',
+    image: '/images/Service Catagories/padel coach.png',
     fallbackEmoji: '📋',
     mostBooked: true,
     sport: 'Padel'
@@ -519,7 +519,7 @@ const initialServices: ServiceItem[] = [
     name: 'Umpire',
     category: 'support',
     providerCount: 8,
-    image: 'https://images.unsplash.com/photo-1589315415701-d77d704944d5?q=80&w=800&auto=format&fit=crop',
+    image: '/images/Service Catagories/padel umpire.png',
     fallbackEmoji: '☝️',
     sport: 'Padel'
   },
@@ -528,7 +528,7 @@ const initialServices: ServiceItem[] = [
     name: 'Analyst',
     category: 'media',
     providerCount: 4,
-    image: 'https://images.unsplash.com/photo-1663185564858-6927d6d54d24?q=80&w=800&auto=format&fit=crop',
+    image: '/images/Service Catagories/padel analyst.png',
     fallbackEmoji: '📊',
     sport: 'Padel'
   },
@@ -537,7 +537,7 @@ const initialServices: ServiceItem[] = [
     name: 'Commentator',
     category: 'media',
     providerCount: 3,
-    image: 'https://images.unsplash.com/photo-1589829085413-56de8ae18c73?q=80&w=800&auto=format&fit=crop',
+    image: '/images/Service Catagories/padel commentator.png',
     fallbackEmoji: '🎙️',
     sport: 'Padel'
   },
@@ -546,7 +546,7 @@ const initialServices: ServiceItem[] = [
     name: 'Influencer',
     category: 'media',
     providerCount: 8,
-    image: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?q=80&w=800&auto=format&fit=crop',
+    image: '/images/Service Catagories/padel influencer.png',
     fallbackEmoji: '📱',
     sport: 'Padel'
   },
@@ -557,7 +557,7 @@ const initialServices: ServiceItem[] = [
     name: 'Match Player',
     category: 'playing',
     providerCount: 28,
-    image: 'https://images.unsplash.com/photo-1626242858807-6a4a1651556e?q=80&w=800&auto=format&fit=crop',
+    image: '/images/Service Catagories/pickleball match player.png',
     fallbackEmoji: '🏓',
     mostBooked: true,
     sport: 'Pickleball'
@@ -567,7 +567,7 @@ const initialServices: ServiceItem[] = [
     name: 'Practice Partner',
     category: 'playing',
     providerCount: 22,
-    image: 'https://images.unsplash.com/photo-1626242858807-6a4a1651556e?q=80&w=800&auto=format&fit=crop',
+    image: '/images/Service Catagories/pickleball practice partner.png',
     fallbackEmoji: '🏓',
     sport: 'Pickleball'
   },
@@ -576,7 +576,7 @@ const initialServices: ServiceItem[] = [
     name: 'Pickleball Coach',
     category: 'coaching',
     providerCount: 18,
-    image: 'https://images.unsplash.com/photo-1591123720664-323631489606?q=80&w=800&auto=format&fit=crop',
+    image: '/images/Service Catagories/pickleball coach.png',
     fallbackEmoji: '📋',
     mostBooked: true,
     sport: 'Pickleball'
@@ -586,7 +586,7 @@ const initialServices: ServiceItem[] = [
     name: 'Referee',
     category: 'support',
     providerCount: 10,
-    image: 'https://images.unsplash.com/photo-1529668383828-5929656efda4?q=80&w=800&auto=format&fit=crop',
+    image: '/images/Service Catagories/pickleball referee.png',
     fallbackEmoji: '☝️',
     sport: 'Pickleball'
   },
@@ -595,7 +595,7 @@ const initialServices: ServiceItem[] = [
     name: 'Analyst',
     category: 'media',
     providerCount: 5,
-    image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=800&auto=format&fit=crop',
+    image: '/images/Service Catagories/pickleball analyst.png',
     fallbackEmoji: '📊',
     sport: 'Pickleball'
   },
@@ -604,7 +604,7 @@ const initialServices: ServiceItem[] = [
     name: 'Commentator',
     category: 'media',
     providerCount: 3,
-    image: 'https://images.unsplash.com/photo-1478737270239-2f02b77ac618?q=80&w=800&auto=format&fit=crop',
+    image: '/images/Service Catagories/pickleball commentator.png',
     fallbackEmoji: '🎙️',
     sport: 'Pickleball'
   },
@@ -613,7 +613,7 @@ const initialServices: ServiceItem[] = [
     name: 'Influencer',
     category: 'media',
     providerCount: 8,
-    image: 'https://images.unsplash.com/photo-1611162617472-c28b63183b8c?q=80&w=800&auto=format&fit=crop',
+    image: '/images/Service Catagories/pickleball influencer.png',
     fallbackEmoji: '📱',
     sport: 'Pickleball'
   },
@@ -624,7 +624,7 @@ const initialServices: ServiceItem[] = [
     name: 'Match Player',
     category: 'playing',
     providerCount: 25,
-    image: 'https://images.unsplash.com/photo-1534158914592-062992fbe900?q=80&w=800&auto=format&fit=crop',
+    image: '/images/Service Catagories/table tennis match player.png',
     fallbackEmoji: '🏓',
     mostBooked: true,
     sport: 'Table Tennis'
@@ -634,7 +634,7 @@ const initialServices: ServiceItem[] = [
     name: 'Practice Partner',
     category: 'playing',
     providerCount: 20,
-    image: 'https://images.unsplash.com/photo-1534158914592-062992fbe900?q=80&w=800&auto=format&fit=crop',
+    image: '/images/Service Catagories/table tennis practice partner.png',
     fallbackEmoji: '🏓',
     sport: 'Table Tennis'
   },
@@ -643,7 +643,7 @@ const initialServices: ServiceItem[] = [
     name: 'Table Tennis Coach',
     category: 'coaching',
     providerCount: 18,
-    image: 'https://images.unsplash.com/photo-1534158914592-062992fbe900?q=80&w=800&auto=format&fit=crop',
+    image: '/images/Service Catagories/table tennis coach.png',
     fallbackEmoji: '📋',
     mostBooked: true,
     sport: 'Table Tennis'
@@ -653,7 +653,7 @@ const initialServices: ServiceItem[] = [
     name: 'Umpire',
     category: 'support',
     providerCount: 10,
-    image: 'https://images.unsplash.com/photo-1609710228159-0fa9bd7c0827?q=80&w=800&auto=format&fit=crop',
+    image: '/images/Service Catagories/table tennis umpire.png',
     fallbackEmoji: '☝️',
     sport: 'Table Tennis'
   },
@@ -662,7 +662,7 @@ const initialServices: ServiceItem[] = [
     name: 'Analyst',
     category: 'media',
     providerCount: 5,
-    image: 'https://images.unsplash.com/photo-1504384308090-c54be3853247?q=80&w=800&auto=format&fit=crop',
+    image: '/images/Service Catagories/table tennis analyst.png',
     fallbackEmoji: '📊',
     sport: 'Table Tennis'
   },
@@ -671,7 +671,7 @@ const initialServices: ServiceItem[] = [
     name: 'Commentator',
     category: 'media',
     providerCount: 3,
-    image: 'https://images.unsplash.com/photo-1594909122845-11baa439b7bf?q=80&w=800&auto=format&fit=crop',
+    image: '/images/Service Catagories/table tennis commentator.png',
     fallbackEmoji: '🎙️',
     sport: 'Table Tennis'
   },
@@ -680,7 +680,7 @@ const initialServices: ServiceItem[] = [
     name: 'Influencer',
     category: 'media',
     providerCount: 6,
-    image: 'https://images.unsplash.com/photo-1515224526905-51c7d77c7bb8?q=80&w=800&auto=format&fit=crop',
+    image: '/images/Service Catagories/table tennis influencer.png',
     fallbackEmoji: '📱',
     sport: 'Table Tennis'
   },
@@ -693,7 +693,7 @@ const initialServices: ServiceItem[] = [
     name: 'Fighter',
     category: 'playing',
     providerCount: 28,
-    image: 'https://images.unsplash.com/photo-1599058945522-28d584b6f0ff?q=80&w=800&auto=format&fit=crop',
+    image: '/images/Service Catagories/combat sports fighter.png',
     fallbackEmoji: '🥊',
     mostBooked: true,
     sport: 'Combat Sports'
@@ -703,7 +703,7 @@ const initialServices: ServiceItem[] = [
     name: 'Sparring Partner',
     category: 'playing',
     providerCount: 24,
-    image: 'https://images.unsplash.com/photo-1599058945522-28d584b6f0ff?q=80&w=800&auto=format&fit=crop',
+    image: '/images/Service Catagories/combat sports sparring partner.png',
     fallbackEmoji: '🥊',
     sport: 'Combat Sports'
   },
@@ -712,7 +712,7 @@ const initialServices: ServiceItem[] = [
     name: 'Combat Sports Coach',
     category: 'coaching',
     providerCount: 26,
-    image: 'https://images.unsplash.com/photo-1544367563-12123d8965cd?q=80&w=800&auto=format&fit=crop',
+    image: '/images/Service Catagories/combat sports coach.png',
     fallbackEmoji: '📋',
     mostBooked: true,
     sport: 'Combat Sports'
@@ -722,7 +722,7 @@ const initialServices: ServiceItem[] = [
     name: 'Referee',
     category: 'support',
     providerCount: 14,
-    image: 'https://images.unsplash.com/photo-1599058945522-28d584b6f0ff?q=80&w=800&auto=format&fit=crop',
+    image: '/images/Service Catagories/combat sports referee.png',
     fallbackEmoji: '🟨',
     sport: 'Combat Sports'
   },
@@ -731,7 +731,7 @@ const initialServices: ServiceItem[] = [
     name: 'Analyst',
     category: 'media',
     providerCount: 6,
-    image: 'https://images.unsplash.com/photo-1531685218883-29a721329fb8?q=80&w=800&auto=format&fit=crop',
+    image: '/images/Service Catagories/combat sports analyst.png',
     fallbackEmoji: '📊',
     sport: 'Combat Sports'
   },
@@ -740,7 +740,7 @@ const initialServices: ServiceItem[] = [
     name: 'Commentator',
     category: 'media',
     providerCount: 5,
-    image: 'https://images.unsplash.com/photo-1521345995540-1e5f84fc4763?q=80&w=800&auto=format&fit=crop',
+    image: '/images/Service Catagories/combat sports commentator.png',
     fallbackEmoji: '🎙️',
     sport: 'Combat Sports'
   },
@@ -749,7 +749,7 @@ const initialServices: ServiceItem[] = [
     name: 'Influencer',
     category: 'media',
     providerCount: 10,
-    image: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?q=80&w=800&auto=format&fit=crop',
+    image: '/images/Service Catagories/combat sports influencer.png',
     fallbackEmoji: '📱',
     sport: 'Combat Sports'
   }
