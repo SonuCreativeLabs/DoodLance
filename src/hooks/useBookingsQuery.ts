@@ -48,6 +48,13 @@ async function fetchBookings(): Promise<Booking[]> {
             paymentMethod: b.paymentMethod,
             scheduledAt: b.scheduledAt,
             serviceId: b.serviceId, // Added serviceId mapping
+            duration: (() => {
+                if (b.services && Array.isArray(b.services)) {
+                    const customTime = b.services.find((s: any) => s.deliveryTime && typeof s.deliveryTime === 'string');
+                    if (customTime) return customTime.deliveryTime;
+                }
+                return b.duration && typeof b.duration === 'number' ? `${b.duration} mins` : b.duration;
+            })(),
         }
     })
 

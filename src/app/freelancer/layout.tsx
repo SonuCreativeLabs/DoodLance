@@ -9,6 +9,7 @@ import { useChatView } from '@/contexts/ChatViewContext';
 import { useModal } from '@/contexts/ModalContext';
 import { useLayout } from '@/contexts/LayoutContext';
 import { useNavbar } from '@/contexts/NavbarContext';
+import { cn } from "@/lib/utils";
 
 interface FreelancerLayoutProps {
   children: React.ReactNode
@@ -135,7 +136,7 @@ export default function FreelancerLayout({ children }: FreelancerLayoutProps) {
       {isMounted && isNavbarVisible && !fullChatView && !isModalOpen && (
         <div className="md:hidden fixed bottom-0 left-0 right-0 border-t border-white/10 bg-[#111111]/95 backdrop-blur-lg z-50">
           <div className="container mx-auto px-4">
-            <div className="grid grid-cols-3 items-center h-16">
+            <div className="flex justify-around items-center h-16 px-2 sm:px-4">
               {navItems.map((item) => {
                 const Icon = item.icon
                 const active = isActive(item.href)
@@ -143,13 +144,18 @@ export default function FreelancerLayout({ children }: FreelancerLayoutProps) {
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={`flex flex-col items-center space-y-1 px-2 py-1 rounded-xl transition-all duration-300 ${active
-                      ? 'text-purple-400'
-                      : 'text-white/60'
-                      }`}
+                    className="flex flex-col items-center justify-center p-2 min-w-[64px]"
                   >
-                    <Icon className={`w-5 h-5 transition-colors duration-300 ${active ? 'text-purple-400' : ''}`} />
-                    <span className="text-[12px] mt-1 font-medium">{item.label}</span>
+                    <div className={cn(
+                      "flex flex-col items-center justify-center transition-all duration-300 px-1 py-1.5 rounded-xl border border-transparent min-w-[64px]",
+                      active
+                        ? "bg-gradient-to-r from-purple-600/20 to-purple-400/20 text-white border-purple-500/30"
+                        : "text-white/60 hover:text-white/80"
+                    )}
+                    >
+                      <Icon className={`w-5 h-5 transition-colors duration-300 ${active ? 'text-purple-400' : ''}`} />
+                      <span className="text-[12px] mt-1 font-medium">{item.label}</span>
+                    </div>
                   </Link>
                 )
               })}

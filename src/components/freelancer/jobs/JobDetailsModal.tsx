@@ -68,7 +68,9 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
     status: job.status,
     hasFreelancerRating: !!job.freelancerRating,
     freelancerRating: job.freelancerRating,
-    completedAt: job.completedAt
+    completedAt: job.completedAt,
+    createdAt: job.createdAt, // Added debug for createdAt
+    scheduledAt: job.scheduledAt
   });
   const router = useRouter();
   const [showRatingForm, setShowRatingForm] = useState(false);
@@ -84,6 +86,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
   const [cancelNotes, setCancelNotes] = useState('');
   const [rating, setRating] = useState(0);
   const [review, setReview] = useState('');
+  const [hoverRating, setHoverRating] = useState(0);
   const [selectedChips, setSelectedChips] = useState<string[]>([]);
   const [isEarningsExpanded, setIsEarningsExpanded] = useState(false);
   const [isClientProfileExpanded, setIsClientProfileExpanded] = useState(false);
@@ -485,13 +488,15 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
               </button>
               <div className="ml-3">
                 <h1 className="text-lg font-semibold text-white">
-                  {jobStarted || job.status === 'started' || job.status === 'completed_by_client' || job.status === 'completed_by_freelancer'
-                    ? (job.status === 'completed_by_client' ? 'Action Required' : job.status === 'completed_by_freelancer' ? 'Waiting for Client' : 'Ongoing Job')
-                    : job.status === 'upcoming' || job.status === 'pending' || job.status === 'confirmed'
-                      ? 'Upcoming Job'
-                      : job.status === 'completed' || job.status === 'delivered'
-                        ? 'Completed Job'
-                        : 'Cancelled Job'}
+                  {(() => {
+                    const s = job.status.toLowerCase();
+                    if (s === 'completed' || s === 'delivered') return 'Completed Job';
+                    if (s === 'cancelled') return 'Cancelled Job';
+                    if (s === 'completed_by_client') return 'Action Required';
+                    if (s === 'completed_by_freelancer') return 'Waiting for Client';
+                    if (s === 'started' || s === 'ongoing' || jobStarted) return 'Ongoing Job';
+                    return 'Upcoming Job';
+                  })()}
                 </h1>
                 <p className="text-white/50 text-xs">
                   {getCategoryDisplayName(job.category)}
@@ -968,7 +973,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                         <div className="pt-3 border-t border-green-500/20">
                           <div className="flex items-center gap-2 text-sm mb-1">
                             <ClockIcon className="w-4 h-4 text-green-300/70 flex-shrink-0" />
-                            <span className="text-green-300/70">Started {new Date().toLocaleDateString('en-US', {
+                            <span className="text-green-300/70">Started {new Date(job.startedAt || new Date()).toLocaleDateString('en-US', {
                               month: 'short',
                               day: 'numeric',
                               year: 'numeric',
@@ -1061,7 +1066,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                 <div className="text-sm text-gray-400">Duration</div>
                 <div className="text-white font-medium capitalize break-words whitespace-normal leading-tight">
                   {job.isDirectHire
-                    ? `${String(job.duration || '60').replace(/mins/gi, '').trim()} mins`
+                    ? (job.duration || '60 mins')
                     : getJobDurationLabel(job as any)}
                 </div>
               </div>
@@ -1215,7 +1220,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                             </div>
                             <span className="text-white font-medium">
                               {typeof service.price === 'number' ? `₹${service.price.toLocaleString('en-IN')}` : service.price}
-                              {service.duration ? ` / ${String(service.duration).replace(/mins/gi, '').trim()} mins` : ''}
+                              {service.deliveryTime ? ` / ${service.deliveryTime}` : (service.duration ? ` / ${service.duration}${typeof service.duration === 'number' ? ' mins' : ''}` : '')}
                             </span>
                           </div>
                         ))}
@@ -1843,12 +1848,14 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                       {[1, 2, 3, 4, 5].map((star) => (
                         <button
                           key={star}
+                          onMouseEnter={() => setHoverRating(star)}
+                          onMouseLeave={() => setHoverRating(0)}
                           onClick={() => setRating(star)}
-                          className={`transition-all duration-200 ${star <= rating
+                          className={`transition-all duration-200 ${star <= (hoverRating || rating)
                             ? 'text-yellow-400 scale-110 drop-shadow-sm'
-                            : 'hover:text-yellow-400/50 hover:scale-105'
+                            : 'text-gray-600 hover:text-yellow-400/50 hover:scale-105'
                             }`}
-                          style={star <= rating ? {} : { color: '#404040' }}
+                          style={star <= (hoverRating || rating) ? {} : { color: '#404040' }}
                         >
                           <Star className="w-12 h-12 fill-current" />
                         </button>
@@ -1885,9 +1892,9 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                   <Label className="text-base font-medium text-white">
                     What did you appreciate about the client? <span className="text-gray-400">(Optional)</span>
                   </Label>
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                     {[
-                      'Professional cricketer',
+                      'Professional Player',
                       'Clear communication',
                       'Good sportsmanship',
                       'Punctual arrival',
@@ -1903,7 +1910,7 @@ export function JobDetailsModal({ job, onClose, onJobUpdate, initialShowComplete
                               : [...prev, chip]
                           );
                         }}
-                        className={`px-1.5 py-0.5 text-xs rounded-lg border transition-all duration-200 ${selectedChips.includes(chip)
+                        className={`px-3 py-2 text-sm md:px-4 md:py-2.5 md:text-base rounded-lg border transition-all duration-200 ${selectedChips.includes(chip)
                           ? 'bg-purple-500/10 border-gray-500/50 text-purple-300'
                           : 'bg-[#111111] border-gray-500/50 text-gray-300 hover:bg-[#1E1E1E] hover:border-gray-400/50'
                           }`}

@@ -141,7 +141,10 @@ model Booking {
   paymentStatus      String    @default("PENDING") // PENDING, VERIFIED, FAILED
   notes              String?
   requirements       String?
+  startedAt          DateTime? // When job was started with OTP
   deliveredAt        DateTime?
+  clientConfirmedAt  DateTime? // When client marked as complete
+  completedAt        DateTime? // When job was fully completed
   deliverables       String?
   cancelledAt        DateTime?
   cancellationReason String?

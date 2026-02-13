@@ -36,6 +36,7 @@ export interface Booking {
     transactionId?: string;
     paymentStatus?: string;
     scheduledAt?: string; // ISO String for exact scheduling
+    duration?: string; // Duration string from API (e.g. "60 mins", "T20")
 }
 
 interface BookingsContextType {
@@ -121,6 +122,7 @@ export function BookingsProvider({ children }: { children: ReactNode }) {
                         services: b.services,
                         freelancerId: b.freelancerId,
                         scheduledAt: b.scheduledAt,
+                        duration: b.duration,
                     };
                 });
 

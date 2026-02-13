@@ -174,12 +174,12 @@ export default function ClientLayout({ children, className }: ClientLayoutProps)
                   <div
                     id="nav-home"
                     className={cn(
-                      "flex flex-col items-center transition-all duration-300 px-3 py-1.5 rounded-xl",
+                      "flex flex-col items-center justify-center transition-all duration-300 px-1 py-1.5 rounded-xl border border-transparent min-w-[64px]",
                       pathname === "/" || pathname === "/client" || pathname === "/client/"
-                        ? "text-[var(--purple)] bg-[var(--purple)]/10 font-bold"
+                        ? "bg-gradient-to-r from-purple-600/20 to-purple-400/20 text-white border-purple-500/30"
                         : "text-gray-400 hover:text-gray-300"
                     )}>
-                    <Home className="h-5 w-5" strokeWidth={2} />
+                    <Home className={cn("h-5 w-5", pathname === "/" || pathname === "/client" || pathname === "/client/" ? "text-purple-400" : "")} strokeWidth={2} />
                     <span className="text-[12px] mt-1 font-medium">Home</span>
                   </div>
                 </Link>
@@ -191,12 +191,12 @@ export default function ClientLayout({ children, className }: ClientLayoutProps)
                   <div
                     id="nav-hire-mobile"
                     className={cn(
-                      "flex flex-col items-center transition-all duration-300 px-3 py-1.5 rounded-xl",
+                      "flex flex-col items-center justify-center transition-all duration-300 px-1 py-1.5 rounded-xl border border-transparent min-w-[64px]",
                       pathname.startsWith("/client/nearby")
-                        ? "text-[var(--purple)] bg-[var(--purple)]/10 font-bold"
+                        ? "bg-gradient-to-r from-purple-600/20 to-purple-400/20 text-white border-purple-500/30"
                         : "text-gray-400 hover:text-gray-300"
                     )}>
-                    <Compass className="h-5 w-5" strokeWidth={2} />
+                    <Compass className={cn("h-5 w-5", pathname.startsWith("/client/nearby") ? "text-purple-400" : "")} strokeWidth={2} />
                     <span className="text-[12px] mt-1 font-medium">Hire</span>
                   </div>
                 </Link>
@@ -208,12 +208,12 @@ export default function ClientLayout({ children, className }: ClientLayoutProps)
                   <div
                     id="nav-bookings-mobile"
                     className={cn(
-                      "flex flex-col items-center transition-all duration-300 px-3 py-1.5 rounded-xl",
+                      "flex flex-col items-center justify-center transition-all duration-300 px-1 py-1.5 rounded-xl border border-transparent min-w-[64px]",
                       pathname.startsWith("/client/bookings")
-                        ? "text-[var(--purple)] bg-[var(--purple)]/10 font-bold"
+                        ? "bg-gradient-to-r from-purple-600/20 to-purple-400/20 text-white border-purple-500/30"
                         : "text-gray-400 hover:text-gray-300"
                     )}>
-                    <Calendar className="h-5 w-5" strokeWidth={2} />
+                    <Calendar className={cn("h-5 w-5", pathname.startsWith("/client/bookings") ? "text-purple-400" : "")} strokeWidth={2} />
                     <span className="text-[12px] mt-1 font-medium">Bookings</span>
                   </div>
                 </Link>

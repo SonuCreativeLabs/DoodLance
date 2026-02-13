@@ -28,7 +28,7 @@ export default function FreelancerHome() {
   const { skills } = useSkills();
   const { forYouJobs } = useForYouJobs();
   const { personalDetails, toggleReadyToWork } = usePersonalDetails();
-  const { getWorkingHoursText } = useAvailability();
+  const { getWorkingHoursText, days } = useAvailability();
   const { user, isLoading: isAuthLoading } = useAuth();
   const { startTutorial, hasSeenTutorial, isOpen } = useTutorial();
 
@@ -65,7 +65,25 @@ export default function FreelancerHome() {
   const [isLoadingStats, setIsLoadingStats] = useState(true);
   const [stats, setStats] = useState<any>(null);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+  const [serviceRadius, setServiceRadius] = useState(10);
   const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const response = await fetch('/api/freelancer/availability-settings');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.serviceRadius !== undefined) {
+            setServiceRadius(data.serviceRadius);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load availability settings:', error);
+      }
+    };
+    fetchSettings();
+  }, []);
 
   useEffect(() => {
     setIsMounted(true);
@@ -393,11 +411,22 @@ export default function FreelancerHome() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-white group-hover:opacity-90 transition-colors whitespace-nowrap overflow-hidden text-ellipsis">Availability & Radius</p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1">
+                    <div className="grid grid-cols-1 gap-1 mt-1">
                       <div className="flex items-center gap-2">
                         <Clock className="w-3 h-3 text-white/40" />
-                        <span className="text-xs text-white/60 truncate" title={getWorkingHoursText()}>
-                          {getWorkingHoursText()}
+                        <span className="text-xs text-white/60 truncate">
+                          {(() => {
+                            const available = days.filter(d => d.available);
+                            if (available.length === 0) return 'Not available';
+                            if (available.length === 7) return 'Every day';
+                            return available.map(d => d.name.substring(0, 3)).join(', ');
+                          })()}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <MapPin className="w-3 h-3 text-white/40" />
+                        <span className="text-xs text-white/60 truncate">
+                          {serviceRadius} km radius
                         </span>
                       </div>
                     </div>

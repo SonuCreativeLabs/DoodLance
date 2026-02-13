@@ -14,8 +14,43 @@ export async function POST(
         const supabase = createClient();
         let { data: { user }, error: authError } = await supabase.auth.getUser();
 
+        console.log('[Complete API] Auth Debug:', {
+            hasUser: !!user,
+            userId: user?.id,
+            authError: authError ? authError.message : null
+        });
+
         if (authError || !user) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+            console.log('[Complete API] Supabase auth failed, trying JWT fallback...');
+
+            // Fallback: Check for 'access_token' (Legacy/JWT)
+            const { cookies } = await import('next/headers');
+            const cookieStore = cookies();
+            const token = cookieStore.get('access_token')?.value;
+
+            if (token) {
+                try {
+                    const { verifyAccessToken } = await import('@/lib/auth/jwt');
+                    const decoded = verifyAccessToken(token);
+                    if (decoded && decoded.userId) {
+                        const dbUser = await prisma.user.findUnique({
+                            where: { id: decoded.userId }
+                        });
+                        if (dbUser) {
+                            // Re-assign 'user' variable for downstream logic
+                            user = { id: dbUser.id, role: dbUser.role || 'client' } as any;
+                            console.log('[Complete API] JWT Fallback successful for user:', user!.id);
+                        }
+                    }
+                } catch (e) {
+                    console.warn('[Complete API] JWT Fallback failed:', e);
+                }
+            }
+        }
+
+        if (!user) {
+            console.error('[Complete API] Unauthorized access attempt - No valid session or token');
+            return NextResponse.json({ error: 'Unauthorized', details: authError }, { status: 401 });
         }
 
         const body = await request.json();
@@ -40,8 +75,8 @@ export async function POST(
 
         // Allow Provider (Freelancer) OR Client to complete
         // Usually Freelancer triggers this endpoint
-        const isFreelancer = booking.service.providerId === user.id;
-        const isClient = booking.clientId === user.id;
+        const isFreelancer = booking.service.providerId === user!.id;
+        const isClient = booking.clientId === user!.id;
 
         if (!isFreelancer && !isClient) {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -110,8 +145,19 @@ export async function POST(
         console.log('[Complete API] Final status to save:', newStatus);
 
         if (newStatus === 'COMPLETED') {
-            updateData.deliveredAt = new Date();
-            // Ensure payment status is updated if needed?
+            updateData.completedAt = new Date(); // Final completion time
+
+            // Set missing intermediate timestamps if needed
+            if (!(booking as any).deliveredAt && isFreelancer) {
+                updateData.deliveredAt = new Date();
+            }
+            if (!(booking as any).clientConfirmedAt && isClient) {
+                updateData.clientConfirmedAt = new Date();
+            }
+        } else if (newStatus === 'COMPLETED_BY_FREELANCER') {
+            updateData.deliveredAt = new Date(); // Freelancer finished work
+        } else if (newStatus === 'COMPLETED_BY_CLIENT') {
+            updateData.clientConfirmedAt = new Date(); // Client finished work
         }
 
         // Update booking

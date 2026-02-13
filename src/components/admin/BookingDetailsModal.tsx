@@ -134,6 +134,47 @@ export function BookingDetailsModal({ booking, open, onClose, onStatusChange }: 
             </div>
           </Card>
 
+          {/* Timeline & Milestones */}
+          <Card className="bg-[#2a2a2a] border-gray-700 p-4">
+            <h3 className="text-sm font-medium text-gray-400 mb-3">Timeline & Milestones</h3>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-gray-400">Created At:</span>
+                <span className="text-white font-mono">{new Date(booking.createdAt).toLocaleString()}</span>
+              </div>
+              {booking.startedAt && (
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-gray-400">Started At:</span>
+                  <span className="text-white font-mono">{new Date(booking.startedAt).toLocaleString()}</span>
+                </div>
+              )}
+              {booking.deliveredAt && (
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-gray-400">Work Delivered:</span>
+                  <span className="text-indigo-400 font-mono">{new Date(booking.deliveredAt).toLocaleString()}</span>
+                </div>
+              )}
+              {booking.clientConfirmedAt && (
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-gray-400">Client Confirmed:</span>
+                  <span className="text-amber-400 font-mono">{new Date(booking.clientConfirmedAt).toLocaleString()}</span>
+                </div>
+              )}
+              {booking.completedAt && (
+                <div className="flex justify-between items-center text-sm border-t border-gray-600 pt-2 mt-2">
+                  <span className="text-gray-400 font-medium">Fully Completed:</span>
+                  <span className="text-green-400 font-bold font-mono">{new Date(booking.completedAt).toLocaleString()}</span>
+                </div>
+              )}
+              {booking.disputeRaisedAt && (
+                <div className="flex justify-between items-center text-sm border-t border-gray-600 pt-2 mt-2">
+                  <span className="text-red-400 font-medium">Cancelled/Disputed:</span>
+                  <span className="text-red-400 font-bold font-mono">{new Date(booking.disputeRaisedAt).toLocaleString()}</span>
+                </div>
+              )}
+            </div>
+          </Card>
+
           {/* Client & Freelancer Info */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Card className="bg-[#2a2a2a] border-gray-700 p-4">

@@ -93,6 +93,10 @@ export async function GET(request: NextRequest) {
       disputeRaisedAt: b.cancelledAt ? b.cancelledAt.toISOString() : null,
       transactionId: b.transactionId,
       paymentStatus: b.paymentStatus,
+      startedAt: b.startedAt ? b.startedAt.toISOString() : null,
+      deliveredAt: b.deliveredAt ? b.deliveredAt.toISOString() : null,
+      clientConfirmedAt: b.clientConfirmedAt ? b.clientConfirmedAt.toISOString() : null,
+      completedAt: b.completedAt ? b.completedAt.toISOString() : null,
     }));
 
     // Calculate stats
