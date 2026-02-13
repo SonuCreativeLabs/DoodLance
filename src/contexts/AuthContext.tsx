@@ -79,15 +79,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setTimeout(async () => {
             try {
               console.log('🔍 Fetching user data from API...');
-              const response = await fetch('/api/user/profile');
+              let response = await fetch('/api/user/profile');
 
               if (!response.ok) {
-                // If failed, clear the flag so we retry next time
-                sessionStorage.removeItem('lastAuthFetch');
-                if (response.status === 404) {
-                  console.log('👤 User not found in DB - will be created on first profile update');
+                // Retry once for 401s (Cookie propagation delay)
+                if (response.status === 401) {
+                  console.log('🔄 401 Unauthorized - Retrying profile fetch in 1s...');
+                  await new Promise(r => setTimeout(r, 1000));
+                  response = await fetch('/api/user/profile');
                 }
-                return;
+
+                if (!response.ok) {
+                  // If still failed, clear the flag so we retry next time
+                  sessionStorage.removeItem('lastAuthFetch');
+                  if (response.status === 404) {
+                    console.log('👤 User not found in DB - will be created on first profile update');
+                  }
+                  return;
+                }
               }
 
               const data = await response.json();

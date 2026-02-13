@@ -63,12 +63,13 @@ export function FreelancerDataLoader() {
                 if (data.reviews) {
                     const mappedReviews = data.reviews.map((r: any) => ({
                         id: r.id,
-                        author: r.client?.name || 'Anonymous',
+                        author: r.client?.name || r.clientName || 'Anonymous',
                         rating: r.rating,
                         comment: r.comment,
                         date: new Date(r.createdAt).toISOString().split('T')[0],
                         role: 'Client',
-                        isVerified: r.isVerified
+                        isVerified: r.isVerified,
+                        avatar: r.client?.avatar || r.clientAvatar
                     }));
                     hydrateReviews(mappedReviews);
                 }

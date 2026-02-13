@@ -62,7 +62,11 @@ export async function POST(
             include: {
                 service: {
                     include: {
-                        provider: true // Need provider info for notifications
+                        provider: {
+                            include: {
+                                freelancerProfile: true
+                            }
+                        }
                     }
                 },
                 client: true
@@ -113,6 +117,32 @@ export async function POST(
                 // Only client has completed, waiting for freelancer
                 newStatus = 'COMPLETED_BY_CLIENT';
                 console.log('[Complete API] Only client completed. Setting status to COMPLETED_BY_CLIENT');
+            }
+
+            // --- CREATE PUBLIC REVIEW ---
+            // Create a Review record for the Freelancer's public profile
+            if (booking.service.provider.freelancerProfile) {
+                try {
+                    await prisma.review.create({
+                        data: {
+                            profileId: booking.service.provider.freelancerProfile.id,
+                            clientId: booking.clientId,
+                            clientName: booking.client.name || 'Client', // Use booking.client data
+                            clientAvatar: booking.client.avatar,
+                            rating: rating,
+                            comment: review || '',
+                            isVerified: true,
+                            bookingId: booking.id,
+                            createdAt: new Date()
+                        }
+                    });
+                    console.log('[Complete API] Created public review for freelancer');
+                } catch (reviewError) {
+                    console.error('[Complete API] Failed to create public review:', reviewError);
+                    // Don't fail the entire request if review creation fails, just log it
+                }
+            } else {
+                console.warn('[Complete API] Could not create review: Freelancer has no profile');
             }
 
         } else if (isFreelancer) {
