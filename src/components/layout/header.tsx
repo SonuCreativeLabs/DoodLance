@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter, usePathname } from 'next/navigation'
 import { RequestServiceDialog } from '@/components/client/RequestServiceDialog'
+import LoginDialog from '@/components/auth/LoginDialog'
 import {
   Dialog,
   DialogContent,
@@ -30,6 +31,7 @@ export default function Header() {
   const [unreadCount, setUnreadCount] = useState(3)
   const { user, isAuthenticated, signOut } = useAuth()
   const [showRequestDialog, setShowRequestDialog] = useState(false)
+  const [showLoginDialog, setShowLoginDialog] = useState(false)
   const router = useRouter()
 
   const [notifications, setNotifications] = useState<any[]>([])
@@ -226,13 +228,17 @@ export default function Header() {
                     </Link>
                     {item.name === 'Help & Support' && (
                       <button
-                        className="w-full flex items-center gap-3 px-3 py-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors text-left group"
+                        className="w-full flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors text-left group"
                         onClick={() => {
                           setIsMenuOpen(false);
-                          setShowRequestDialog(true);
+                          if (isAuthenticated) {
+                            setShowRequestDialog(true);
+                          } else {
+                            setShowLoginDialog(true);
+                          }
                         }}
                       >
-                        <Sparkles className="w-4 h-4 transition-transform group-hover:scale-110" />
+                        <Sparkles className="w-4 h-4 text-purple-600 transition-transform group-hover:scale-110" />
                         <span className="font-medium">Request a Feature</span>
                       </button>
                     )}
@@ -284,6 +290,11 @@ export default function Header() {
         open={showRequestDialog}
         onOpenChange={setShowRequestDialog}
         userId={user?.id}
+      />
+      <LoginDialog
+        open={showLoginDialog}
+        onOpenChange={setShowLoginDialog}
+        onSuccess={() => setShowRequestDialog(true)}
       />
     </header>
   )

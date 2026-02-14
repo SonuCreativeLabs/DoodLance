@@ -159,10 +159,10 @@ export default function ServicesPage() {
                       // Example future signal sources: recently viewed, clicks, bookings, category affinity.
                       // Filter by Sport (assuming existing services are Cricket by default)
                       .filter(service => {
-                        // Apply search filter if active
+                        // Universal Search: if searchQuery is present, ignore category
                         if (searchQuery) {
-                          const matchesSearch = service.name.toLowerCase().includes(searchQuery.toLowerCase());
-                          if (!matchesSearch) return false;
+                          return service.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            (service.sport && service.sport.toLowerCase().includes(searchQuery.toLowerCase()));
                         }
 
                         if (selectedCategory === 'for-you') return !!service.mostBooked;
@@ -174,6 +174,7 @@ export default function ServicesPage() {
                         }
 
                         if (selectedCategory === 'other') return service.category === 'other';
+                        return true;
                       })
                       .map((service) => {
                         // Dynamically prepend sport name if not present and sport is known
@@ -274,9 +275,6 @@ export default function ServicesPage() {
                         <span className="text-[15px] tracking-wide group-hover:text-purple-100 transition-colors">Request a Service</span>
                         <span className="text-[10px] text-white/40 mt-1 font-normal group-hover:text-white/60 transition-colors">Custom solution for your unique needs</span>
                       </div>
-
-                      {/* Animated Sparkle */}
-                      <Sparkles className="absolute top-2 right-4 w-3 h-3 text-purple-400/30 group-hover:text-purple-400 group-hover:animate-pulse transition-all" />
                     </button>
                   </div>
                 </div>

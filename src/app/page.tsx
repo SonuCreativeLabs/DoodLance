@@ -31,6 +31,7 @@ import { useTutorial, TutorialConfig } from '@/contexts/TutorialContext';
 import { useSearchParams } from 'next/navigation';
 import { AppGuideModal } from '@/components/common/tutorial/AppGuideModal';
 import { RequestServiceDialog } from '@/components/client/RequestServiceDialog';
+import LoginDialog from '@/components/auth/LoginDialog';
 
 export default function ClientHome() {
   const router = useRouter();
@@ -51,6 +52,7 @@ export default function ClientHome() {
   const [showLogoutAlert, setShowLogoutAlert] = useState(false);
   const [showAppGuide, setShowAppGuide] = useState(false);
   const [showRequestDialog, setShowRequestDialog] = useState(false);
+  const [showLoginDialog, setShowLoginDialog] = useState(false);
   const searchParams = useSearchParams();
 
   const { user, refreshUser, signOut, isAuthenticated } = useAuth();
@@ -397,6 +399,11 @@ export default function ClientHome() {
         onOpenChange={setShowRequestDialog}
         userId={user?.id}
       />
+      <LoginDialog
+        open={showLoginDialog}
+        onOpenChange={setShowLoginDialog}
+        onSuccess={() => setShowRequestDialog(true)}
+      />
       {/* Fixed Header */}
       <div className="fixed top-0 left-0 w-full z-[110] bg-gradient-to-br from-[#6B46C1] via-[#4C1D95] to-[#2D1B69]">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between relative">
@@ -497,10 +504,14 @@ export default function ClientHome() {
                     </button>
                     {/* Request a Feature */}
                     <button
-                      className="flex items-center gap-3 px-6 py-3 text-left text-purple-300 hover:bg-purple-500/10 hover:text-white transition-colors group"
+                      className="flex items-center gap-3 px-6 py-3 text-left text-white/90 hover:bg-white/10 hover:text-white transition-colors group"
                       onClick={() => {
                         setShowSidebar(false);
-                        setShowRequestDialog(true);
+                        if (isAuthenticated) {
+                          setShowRequestDialog(true);
+                        } else {
+                          setShowLoginDialog(true);
+                        }
                       }}
                     >
                       <Sparkles className="w-5 h-5 text-purple-400 transition-transform group-hover:scale-110" />
