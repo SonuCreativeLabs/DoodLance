@@ -8,8 +8,15 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useClientServices } from '@/contexts/ClientServicesContext'
 
+import { RequestServiceDialog } from '@/components/client/RequestServiceDialog'
+import LoginDialog from '@/components/auth/LoginDialog'
+import { useAuth } from '@/contexts/AuthContext'
+import { Plus } from 'lucide-react'
 
 export default function ServicesPage() {
+  const { user } = useAuth()
+  const [showRequestDialog, setShowRequestDialog] = useState(false)
+  const [showLoginDialog, setShowLoginDialog] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState('Cricket')
   const [showSearch, setShowSearch] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -146,7 +153,7 @@ export default function ServicesPage() {
               {/* Enhanced Content Area */}
               <div className="flex-1 bg-[#111111] h-full overflow-y-auto w-full">
                 <div className="p-4 md:p-6 pb-24 max-w-7xl mx-auto">
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+                  <div className="grid grid-cols-2 min-[640px]:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
                     {services
                       // TODO: Replace this heuristic with a real user-behavior-based ranking.
                       // Example future signal sources: recently viewed, clicks, bookings, category affinity.
@@ -240,12 +247,57 @@ export default function ServicesPage() {
                         )
                       })}
                   </div>
+
+                  {/* Premium Request Service Button */}
+                  <div className="mt-12 flex justify-center pb-12">
+                    <button
+                      onClick={() => {
+                        if (user) {
+                          setShowRequestDialog(true)
+                        } else {
+                          setShowLoginDialog(true)
+                        }
+                      }}
+                      className="group relative w-full max-w-md flex items-center justify-center gap-3 px-8 py-4 bg-[#161616]/80 backdrop-blur-xl border border-white/10 hover:border-purple-500/50 text-white rounded-2xl font-semibold transition-all duration-500 shadow-[0_8px_32px_rgba(0,0,0,0.5)] overflow-hidden"
+                    >
+                      {/* Shimmer Effect */}
+                      <div className="absolute inset-0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/5 to-transparent shadow-[0_0_40px_rgba(168,85,247,0.2)]" />
+
+                      {/* Glow Background */}
+                      <div className="absolute inset-0 bg-gradient-to-r from-purple-500/0 via-purple-500/5 to-purple-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+                      <div className="relative flex items-center justify-center w-8 h-8 rounded-xl bg-purple-500/10 border border-purple-500/20 group-hover:bg-purple-500/20 group-hover:scale-110 transition-all duration-300">
+                        <Plus className="w-5 h-5 text-purple-400 group-hover:rotate-90 transition-transform duration-500" />
+                      </div>
+
+                      <div className="relative flex flex-col items-start leading-none mt-0.5">
+                        <span className="text-[15px] tracking-wide group-hover:text-purple-100 transition-colors">Request a Service</span>
+                        <span className="text-[10px] text-white/40 mt-1 font-normal group-hover:text-white/60 transition-colors">Custom solution for your unique needs</span>
+                      </div>
+
+                      {/* Animated Sparkle */}
+                      <Sparkles className="absolute top-2 right-4 w-3 h-3 text-purple-400/30 group-hover:text-purple-400 group-hover:animate-pulse transition-all" />
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      <RequestServiceDialog
+        open={showRequestDialog}
+        onOpenChange={setShowRequestDialog}
+        defaultSport={selectedCategory !== 'for-you' && selectedCategory !== 'other' ? selectedCategory : ''}
+        userId={user?.id}
+      />
+
+      <LoginDialog
+        open={showLoginDialog}
+        onOpenChange={setShowLoginDialog}
+        onSuccess={() => setShowRequestDialog(true)}
+      />
     </ClientLayout>
   )
-} 
+}

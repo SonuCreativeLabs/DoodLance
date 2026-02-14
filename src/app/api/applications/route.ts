@@ -12,6 +12,14 @@ export async function GET(request: NextRequest) {
     const jobId = searchParams.get('jobId')
     const status = searchParams.get('status')
 
+    console.log('🔍 GET /api/applications - Params:', {
+      userId,
+      jobId,
+      status,
+      myApplications: searchParams.get('myApplications'),
+      myJobs: searchParams.get('myJobs')
+    })
+
     if (!userId) {
       return NextResponse.json(
         { error: 'User ID required' },
@@ -98,7 +106,7 @@ export async function GET(request: NextRequest) {
         description: app.job?.description || '',
         postedDate: app.job?.createdAt,
         appliedDate: app.createdAt,
-        status: app.status.toLowerCase(), // Normalize status to lowercase
+        status: (app.status || 'PENDING').toLowerCase(), // Normalize status to lowercase
         budget: {
           min: app.job?.budgetMin || 0,
           max: app.job?.budgetMax || 0
@@ -119,9 +127,16 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(parsedApplications)
   } catch (error) {
-    console.error('Error fetching applications:', error)
+    console.error('❌ FATAL: Error in GET /api/applications:', error)
+    if (error instanceof Error) {
+      console.error('Error Message:', error.message)
+      console.error('Error Stack:', error.stack)
+    }
     return NextResponse.json(
-      { error: 'Failed to fetch applications' },
+      {
+        error: 'Failed to fetch applications',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     )
   }

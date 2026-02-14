@@ -30,6 +30,7 @@ import { TopRatedExpertSkeleton } from '@/components/skeletons/TopRatedExpertSke
 import { useTutorial, TutorialConfig } from '@/contexts/TutorialContext';
 import { useSearchParams } from 'next/navigation';
 import { AppGuideModal } from '@/components/common/tutorial/AppGuideModal';
+import { RequestServiceDialog } from '@/components/client/RequestServiceDialog';
 
 export default function ClientHome() {
   const router = useRouter();
@@ -49,6 +50,7 @@ export default function ClientHome() {
   const [notificationCount, setNotificationCount] = useState(0);
   const [showLogoutAlert, setShowLogoutAlert] = useState(false);
   const [showAppGuide, setShowAppGuide] = useState(false);
+  const [showRequestDialog, setShowRequestDialog] = useState(false);
   const searchParams = useSearchParams();
 
   const { user, refreshUser, signOut, isAuthenticated } = useAuth();
@@ -390,6 +392,11 @@ export default function ClientHome() {
   return (
     <ClientLayout>
       <AppGuideModal isOpen={showAppGuide} onClose={() => setShowAppGuide(false)} />
+      <RequestServiceDialog
+        open={showRequestDialog}
+        onOpenChange={setShowRequestDialog}
+        userId={user?.id}
+      />
       {/* Fixed Header */}
       <div className="fixed top-0 left-0 w-full z-[110] bg-gradient-to-br from-[#6B46C1] via-[#4C1D95] to-[#2D1B69]">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between relative">
@@ -487,6 +494,17 @@ export default function ClientHome() {
                     >
                       <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><path d="M12 8v4l3 2" /></svg>
                       Support
+                    </button>
+                    {/* Request a Feature */}
+                    <button
+                      className="flex items-center gap-3 px-6 py-3 text-left text-purple-300 hover:bg-purple-500/10 hover:text-white transition-colors group"
+                      onClick={() => {
+                        setShowSidebar(false);
+                        setShowRequestDialog(true);
+                      }}
+                    >
+                      <Sparkles className="w-5 h-5 text-purple-400 transition-transform group-hover:scale-110" />
+                      Request a Feature
                     </button>
                     {/* App Guide Button */}
                     <button

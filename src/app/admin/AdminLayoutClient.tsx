@@ -8,7 +8,7 @@ import {
     LayoutDashboard, Users, Calendar, CreditCard,
     Briefcase, HeadphonesIcon, FileText, TrendingUp,
     Settings, Shield, LogOut, ChevronRight, Bell,
-    Search, Menu, X, Package, Tag, QrCode
+    Search, Menu, X, Package, Tag, QrCode, User
 } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -38,6 +38,7 @@ const sidebarItems = [
             { icon: HeadphonesIcon, label: 'Support Tickets', href: '/admin/support', permission: 'support.view' },
             { icon: FileText, label: 'Reports', href: '/admin/reports', permission: 'reports.view' },
             { icon: Shield, label: 'KYC Verification', href: '/admin/verification', permission: 'verification.view' },
+            { icon: User, label: 'Service Requests', href: '/admin/requests', permission: 'services.view' },
         ]
     },
     {
