@@ -162,8 +162,8 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
     const tabsContainerRef = useRef<HTMLDivElement>(null);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-    // Prioritize propId, fallback to params.id
-    const freelancerId = propId || (params.id as string);
+    // Prioritize propId, fallback to params.id or params.username (for public profiles)
+    const freelancerId = propId || (params.id as string) || (params.username as string);
 
     // Auto-open hire sheet if returning from a completed auth/profile flow
     usePendingActionCheck(
@@ -216,7 +216,13 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
             try {
                 const res = await fetch(`/api/freelancers/${freelancerId}`);
                 if (!res.ok) {
-                    if (!cachedData) setFreelancer(null); // Only clear if no cache
+                    const errorData = await res.json().catch(() => ({}));
+                    console.error('[FreelancerProfile] API Error:', res.status, errorData);
+
+                    if (!cachedData) {
+                        setFreelancer(null);
+                        toast.error(errorData.error || 'Freelancer profile not found');
+                    }
                     setLoading(false);
                     return;
                 }

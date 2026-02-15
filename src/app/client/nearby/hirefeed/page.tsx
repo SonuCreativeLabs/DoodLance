@@ -200,7 +200,8 @@ export default function IntegratedExplorePage() {
       experience: freelancer.experience,
       location: displayLocation, // Use the formatted location
       area: freelancer.area,
-      city: freelancer.city
+      city: freelancer.city,
+      username: freelancer.username
     };
   };
 

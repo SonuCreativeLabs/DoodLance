@@ -1,12 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/db';
 
+const safeParse = (data: any, fallback: any = []) => {
+  if (!data) return fallback;
+  if (typeof data === 'object') return data;
+  try {
+    return JSON.parse(data);
+  } catch (e) {
+    console.warn('[API] JSON Parse failure:', data);
+    return fallback;
+  }
+};
+
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
     const { id } = params;
+    console.log('[API] Fetching freelancer detail for ID:', id);
 
     // Try finding by Profile ID first
     let profile = await prisma.freelancerProfile.findUnique({
@@ -62,9 +74,47 @@ export async function GET(
       });
     }
 
+    // If still not found, try finding by Username
     if (!profile) {
+      profile = await prisma.freelancerProfile.findFirst({
+        where: {
+          user: {
+            username: {
+              equals: id,
+              mode: 'insensitive'
+            }
+          }
+        },
+        include: {
+          user: {
+            include: {
+              services: {
+                where: { isActive: true },
+                include: {
+                  category: {
+                    select: { name: true }
+                  }
+                },
+                orderBy: { createdAt: 'desc' }
+              }
+            }
+          },
+          reviews: {
+            orderBy: { createdAt: 'desc' }
+          },
+          achievements: {
+            orderBy: { createdAt: 'desc' }
+          }
+        }
+      });
+    }
+
+    if (!profile) {
+      console.log('[API] Profile not found for ID:', id);
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
     }
+
+    console.log('[API] Profile found:', profile.user.name, 'ID:', profile.id);
 
     // Transform to match expected format
     const formattedProfile = {
@@ -89,7 +139,7 @@ export async function GET(
       completedJobs: profile.completedJobs,
       responseTime: profile.responseTime,
       deliveryTime: profile.deliveryTime,
-      skills: typeof profile.skills === 'string' ? JSON.parse(profile.skills || '[]') : profile.skills,
+      skills: safeParse(profile.skills),
       cricketRole: profile.cricketRole,
       battingStyle: profile.battingStyle,
       bowlingStyle: profile.bowlingStyle,
@@ -104,7 +154,7 @@ export async function GET(
       achievements: profile.achievements,
       services: profile.user.services?.map((s: any) => ({
         ...s,
-        features: s.packages ? JSON.parse(s.packages) : [],
+        features: safeParse(s.packages),
         videoUrls: s.videoUrl || []
       })) || [],
       availability: (() => {

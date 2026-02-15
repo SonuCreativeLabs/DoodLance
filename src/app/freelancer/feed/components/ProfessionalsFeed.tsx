@@ -43,6 +43,7 @@ export type BaseProfessional = {
   cricketRole?: string;
   mainSport?: string;
   otherSports?: string[];
+  username?: string;
   // Services array for dynamic pricing - used to show lowest price from freelancer's service list
   services?: {
     id: string;
@@ -127,7 +128,13 @@ export default function ProfessionalsFeed({
     } else {
       // Default behavior if no onProfessionalSelect handler is provided
       const categoryParam = selectedCategory && selectedCategory !== 'All' ? `&category=${encodeURIComponent(selectedCategory)}` : '';
-      router.push(`/client/freelancer/${professional.id}?source=list${categoryParam}`);
+
+      // Prefer username-based routing if available
+      if (professional.username) {
+        router.push(`/${professional.username}?source=list${categoryParam}`);
+      } else {
+        router.push(`/client/freelancer/${professional.id}?source=list${categoryParam}`);
+      }
     }
   };
 
