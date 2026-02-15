@@ -16,12 +16,6 @@ export interface Service {
   category?: string;
 }
 
-export interface PortfolioItem {
-  id: string;
-  title: string;
-  category: string;
-  image: string;
-}
 
 export interface Review {
   id: string;
@@ -54,10 +48,9 @@ export interface ProfileData {
   location: string;
   area?: string;
   city?: string;
-  skills: (string | any)[];
+  skills: (string | Record<string, unknown>)[];
   achievements: Achievement[];
   services: Service[];
-  portfolio: PortfolioItem[];
   reviews: Review[];
   availability: Availability[];
   workingHours?: string;
@@ -67,6 +60,9 @@ export interface ProfileData {
   cricketRole?: string;
   battingStyle?: string;
   bowlingStyle?: string;
+  mainSport?: string;
+  otherSports?: string[];
+  sportsDetails?: Record<string, unknown>;
   dateOfBirth?: string;
   avatar?: string;
   coverImage?: string;

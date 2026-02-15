@@ -2,10 +2,16 @@ import { Category } from '../types';
 
 export const categories: Category[] = [
   { id: 1, name: 'All', icon: '' },
-  { id: 10, name: 'Players', icon: '' },
-  { id: 11, name: 'Coaching & Training', icon: '' },
-  { id: 12, name: 'Support Staff & Others', icon: '' },
-  { id: 13, name: 'Media & Content', icon: '' },
+  { id: 10, name: 'Cricket', icon: '' },
+  { id: 11, name: 'Football', icon: '' },
+  { id: 12, name: 'Badminton', icon: '' },
+  { id: 13, name: 'Tennis', icon: '' },
+  { id: 16, name: 'Pickleball', icon: '' },
+  { id: 14, name: 'Basketball', icon: '' },
+  { id: 15, name: 'Padel', icon: '' },
+  { id: 17, name: 'Table Tennis', icon: '' },
+  { id: 18, name: 'Combat Sports', icon: '' },
+  { id: 19, name: 'Others', icon: '' },
 ];
 
 export const areas = [
@@ -25,9 +31,9 @@ export const areas = [
 
 export const serviceTypes = [
   "Bowler", "Batsman", "Sidearm Specialist", "Coach",
-  "Trainer", "Analyst", "Physio", "Scorer", "Umpire",
-  "Cricket Photo/Videography", "Cricket Content Creator", "Commentator",
-  "Match Player", "Other"
+  "Trainer", "Analyst", "Sports Physio", "Scorer", "Umpire",
+  "Sports Photo/Videographer", "Sports Content Creator", "Commentator",
+  "Match Player", "Other Services"
 ];
 
 export const availabilityOptions = [

@@ -13,13 +13,13 @@ interface FreelancerProfileData {
     completionRate: number;
     online: boolean;
     location: string;
-    skills: string[];
-    services: any[];
-    portfolio: any[];
-    clientReviews: any[];
-    availability: any[];
+    skills: (string | Record<string, unknown>)[];
+    services: unknown[];
+    clientReviews: unknown[];
+    availability: unknown[];
     completedJobs: number;
     activeJobs: number;
+    sportsDetails?: Record<string, unknown>;
 }
 
 interface FreelancerProfileContextType {

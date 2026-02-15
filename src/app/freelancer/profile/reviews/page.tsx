@@ -4,7 +4,7 @@ import { ArrowLeft, Star, StarHalf, MessageSquare } from "lucide-react";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useEffect } from 'react';
+
 import { useReviews } from '@/contexts/ReviewsContext';
 import { Skeleton } from "@/components/ui/skeleton";
 import { reviews, getInitialRatingStats } from '@/data/reviewsData';
@@ -100,12 +100,7 @@ export default function ReviewsPage() {
     );
   }
 
-  useEffect(() => {
-    // If we needed to sync local calcs back to context, we'd do it here, 
-    // but context already manages this providing we used hydrateReviews/updateReviews correctly.
-    // Actually, ReviewsContext calculates these itself when we hydrate. 
-    // We just display what's in context.
-  }, [reviewsData]);
+
 
   const renderStars = (rating: number) => {
     const stars = [];
@@ -193,7 +188,7 @@ export default function ReviewsPage() {
                         <div className="flex items-start space-x-4">
                           <Avatar className="h-12 w-12 border border-white/10">
                             {/* Assuming avatar URL might be missing, adding fallback */}
-                            <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${review.author}`} alt={review.author} />
+                            <AvatarImage src={review.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${review.author}`} alt={review.author} />
                             <AvatarFallback className="bg-gradient-to-br from-purple-600 to-blue-500 text-white font-medium">
                               {review.author.split(' ').map(n => n[0]).join('')}
                             </AvatarFallback>

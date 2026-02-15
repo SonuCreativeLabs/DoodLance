@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 
 export interface Availability {
     id: string;
@@ -23,6 +24,7 @@ interface ListingsContextType {
 const ListingsContext = createContext<ListingsContextType | undefined>(undefined);
 
 export function ListingsProvider({ children }: { children: ReactNode }) {
+    const { isAuthenticated } = useAuth();
     const [listings, setListings] = useState<Availability[]>([]);
     const [isHydrated, setIsHydrated] = useState(false);
 
@@ -42,20 +44,22 @@ export function ListingsProvider({ children }: { children: ReactNode }) {
                     setListings(listingsWithDates);
                 }
 
-                // Fetch from API
-                const response = await fetch('/api/freelancer/listings');
-                if (response.ok) {
-                    const { listings: dbListings } = await response.json();
+                // Fetch from API only if authenticated
+                if (isAuthenticated) {
+                    const response = await fetch('/api/freelancer/listings');
+                    if (response.ok) {
+                        const { listings: dbListings } = await response.json();
 
-                    if (Array.isArray(dbListings) && dbListings.length > 0) {
-                        // Convert date strings to Date objects
-                        const listingsWithDates = dbListings.map((listing: any) => ({
-                            ...listing,
-                            fromDate: new Date(listing.fromDate),
-                            toDate: new Date(listing.toDate)
-                        }));
-                        setListings(listingsWithDates);
-                        localStorage.setItem('availabilityListings', JSON.stringify(listingsWithDates));
+                        if (Array.isArray(dbListings) && dbListings.length > 0) {
+                            // Convert date strings to Date objects
+                            const listingsWithDates = dbListings.map((listing: any) => ({
+                                ...listing,
+                                fromDate: new Date(listing.fromDate),
+                                toDate: new Date(listing.toDate)
+                            }));
+                            setListings(listingsWithDates);
+                            localStorage.setItem('availabilityListings', JSON.stringify(listingsWithDates));
+                        }
                     }
                 }
             } catch (error) {
@@ -66,7 +70,7 @@ export function ListingsProvider({ children }: { children: ReactNode }) {
         };
 
         fetchListings();
-    }, []);
+    }, [isAuthenticated]);
 
     // Save to localStorage whenever it changes
     useEffect(() => {

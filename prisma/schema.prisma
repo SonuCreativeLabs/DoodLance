@@ -52,6 +52,7 @@ model User {
   wallet                 Wallet?
   bankAccount            BankAccount?
   campaigns              Campaign[]         @relation("CampaignUser")
+  serviceRequests        ServiceRequest[]
 
   @@map("users")
 }
@@ -98,6 +99,7 @@ model Service {
   duration     Int
   categoryId   String
   providerId   String
+  sport        String?   // "Cricket", "Football", etc.
   images       String
   videoUrl     String[]  @default([])
   tags         String
@@ -140,7 +142,10 @@ model Booking {
   paymentStatus      String    @default("PENDING") // PENDING, VERIFIED, FAILED
   notes              String?
   requirements       String?
+  startedAt          DateTime? // When job was started with OTP
   deliveredAt        DateTime?
+  clientConfirmedAt  DateTime? // When client marked as complete
+  completedAt        DateTime? // When job was fully completed
   deliverables       String?
   cancelledAt        DateTime?
   cancellationReason String?
@@ -292,9 +297,17 @@ model FreelancerProfile {
   hourlyRate           Float?
   skills               String
   specializations      String
+  
+  // Sports Expansion
+  mainSport           String         @default("Cricket") // Cricket, Football, etc.
+  otherSports         String[]       @default([])   // Secondary sports
+  sportsDetails       Json?          // Flexible JSON for sport-specific details
+  
+  // Legacy Cricket Fields (Kept for backward compatibility)
   cricketRole          String?
   battingStyle         String?
   bowlingStyle         String?
+  
   dateOfBirth          DateTime?
   rating               Float         @default(0)
   reviewCount          Int           @default(0)
@@ -324,7 +337,6 @@ model FreelancerProfile {
   updatedAt            DateTime      @updatedAt
   achievements         Achievement[]
   user                 User          @relation(fields: [userId], references: [id])
-  portfolios           Portfolio[]
   reviews              Review[]
 
   @@map("freelancer_profiles")
@@ -341,21 +353,6 @@ model Achievement {
   @@map("achievements")
 }
 
-model Portfolio {
-  id          String            @id @default(cuid())
-  profileId   String
-  title       String
-  category    String
-  description String?
-  images      String
-  skills      String
-  clientName  String?
-  completedAt DateTime?
-  createdAt   DateTime          @default(now())
-  profile     FreelancerProfile @relation(fields: [profileId], references: [id])
-
-  @@map("portfolios")
-}
 
 model Review {
   id                  String            @id @default(cuid())
@@ -611,4 +608,19 @@ model Campaign {
   @@index([locationType])
   @@index([isActive])
   @@map("campaigns")
+}
+
+model ServiceRequest {
+  id          String   @id @default(cuid())
+  userId      String?
+  name        String?
+  email       String?
+  sport       String?  // e.g., "Cricket", "Football" (Optional now)
+  details     String
+  status      String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User?    @relation(fields: [userId], references: [id])
+  
+  @@map("service_requests")
 }

@@ -14,8 +14,43 @@ export async function POST(
         const supabase = createClient();
         let { data: { user }, error: authError } = await supabase.auth.getUser();
 
+        console.log('[Complete API] Auth Debug:', {
+            hasUser: !!user,
+            userId: user?.id,
+            authError: authError ? authError.message : null
+        });
+
         if (authError || !user) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+            console.log('[Complete API] Supabase auth failed, trying JWT fallback...');
+
+            // Fallback: Check for 'access_token' (Legacy/JWT)
+            const { cookies } = await import('next/headers');
+            const cookieStore = cookies();
+            const token = cookieStore.get('access_token')?.value;
+
+            if (token) {
+                try {
+                    const { verifyAccessToken } = await import('@/lib/auth/jwt');
+                    const decoded = verifyAccessToken(token);
+                    if (decoded && decoded.userId) {
+                        const dbUser = await prisma.user.findUnique({
+                            where: { id: decoded.userId }
+                        });
+                        if (dbUser) {
+                            // Re-assign 'user' variable for downstream logic
+                            user = { id: dbUser.id, role: dbUser.role || 'client' } as any;
+                            console.log('[Complete API] JWT Fallback successful for user:', user!.id);
+                        }
+                    }
+                } catch (e) {
+                    console.warn('[Complete API] JWT Fallback failed:', e);
+                }
+            }
+        }
+
+        if (!user) {
+            console.error('[Complete API] Unauthorized access attempt - No valid session or token');
+            return NextResponse.json({ error: 'Unauthorized', details: authError }, { status: 401 });
         }
 
         const body = await request.json();
@@ -27,7 +62,11 @@ export async function POST(
             include: {
                 service: {
                     include: {
-                        provider: true // Need provider info for notifications
+                        provider: {
+                            include: {
+                                freelancerProfile: true
+                            }
+                        }
                     }
                 },
                 client: true
@@ -40,8 +79,8 @@ export async function POST(
 
         // Allow Provider (Freelancer) OR Client to complete
         // Usually Freelancer triggers this endpoint
-        const isFreelancer = booking.service.providerId === user.id;
-        const isClient = booking.clientId === user.id;
+        const isFreelancer = booking.service.providerId === user!.id;
+        const isClient = booking.clientId === user!.id;
 
         if (!isFreelancer && !isClient) {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -80,6 +119,32 @@ export async function POST(
                 console.log('[Complete API] Only client completed. Setting status to COMPLETED_BY_CLIENT');
             }
 
+            // --- CREATE PUBLIC REVIEW ---
+            // Create a Review record for the Freelancer's public profile
+            if (booking.service.provider.freelancerProfile) {
+                try {
+                    await prisma.review.create({
+                        data: {
+                            profileId: booking.service.provider.freelancerProfile.id,
+                            clientId: booking.clientId,
+                            clientName: booking.client.name || 'Client', // Use booking.client data
+                            clientAvatar: booking.client.avatar,
+                            rating: rating,
+                            comment: review || '',
+                            isVerified: true,
+                            bookingId: booking.id,
+                            createdAt: new Date()
+                        }
+                    });
+                    console.log('[Complete API] Created public review for freelancer');
+                } catch (reviewError) {
+                    console.error('[Complete API] Failed to create public review:', reviewError);
+                    // Don't fail the entire request if review creation fails, just log it
+                }
+            } else {
+                console.warn('[Complete API] Could not create review: Freelancer has no profile');
+            }
+
         } else if (isFreelancer) {
             // Freelancer is completing
             // Check if Client has already marked it complete by checking the booking status
@@ -110,8 +175,19 @@ export async function POST(
         console.log('[Complete API] Final status to save:', newStatus);
 
         if (newStatus === 'COMPLETED') {
-            updateData.deliveredAt = new Date();
-            // Ensure payment status is updated if needed?
+            updateData.completedAt = new Date(); // Final completion time
+
+            // Set missing intermediate timestamps if needed
+            if (!(booking as any).deliveredAt && isFreelancer) {
+                updateData.deliveredAt = new Date();
+            }
+            if (!(booking as any).clientConfirmedAt && isClient) {
+                updateData.clientConfirmedAt = new Date();
+            }
+        } else if (newStatus === 'COMPLETED_BY_FREELANCER') {
+            updateData.deliveredAt = new Date(); // Freelancer finished work
+        } else if (newStatus === 'COMPLETED_BY_CLIENT') {
+            updateData.clientConfirmedAt = new Date(); // Client finished work
         }
 
         // Update booking

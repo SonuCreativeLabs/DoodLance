@@ -1,12 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/db';
 
+const safeParse = (data: any, fallback: any = []) => {
+  if (!data) return fallback;
+  if (typeof data === 'object') return data;
+  try {
+    return JSON.parse(data);
+  } catch (e) {
+    console.warn('[API] JSON Parse failure:', data);
+    return fallback;
+  }
+};
+
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
     const { id } = params;
+    console.log('[API] Fetching freelancer detail for ID:', id);
 
     // Try finding by Profile ID first
     let profile = await prisma.freelancerProfile.findUnique({
@@ -29,9 +41,6 @@ export async function GET(
           orderBy: { createdAt: 'desc' }
         },
         achievements: {
-          orderBy: { createdAt: 'desc' }
-        },
-        portfolios: {
           orderBy: { createdAt: 'desc' }
         }
       }
@@ -60,8 +69,40 @@ export async function GET(
           },
           achievements: {
             orderBy: { createdAt: 'desc' }
+          }
+        }
+      });
+    }
+
+    // If still not found, try finding by Username
+    if (!profile) {
+      profile = await prisma.freelancerProfile.findFirst({
+        where: {
+          user: {
+            username: {
+              equals: id,
+              mode: 'insensitive'
+            }
+          }
+        },
+        include: {
+          user: {
+            include: {
+              services: {
+                where: { isActive: true },
+                include: {
+                  category: {
+                    select: { name: true }
+                  }
+                },
+                orderBy: { createdAt: 'desc' }
+              }
+            }
           },
-          portfolios: {
+          reviews: {
+            orderBy: { createdAt: 'desc' }
+          },
+          achievements: {
             orderBy: { createdAt: 'desc' }
           }
         }
@@ -69,11 +110,13 @@ export async function GET(
     }
 
     if (!profile) {
+      console.log('[API] Profile not found for ID:', id);
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
     }
 
+    console.log('[API] Profile found:', profile.user.name, 'ID:', profile.id);
+
     // Transform to match expected format
-    // Transformation logic 
     const formattedProfile = {
       id: profile.id,
       userId: profile.userId,
@@ -96,20 +139,22 @@ export async function GET(
       completedJobs: profile.completedJobs,
       responseTime: profile.responseTime,
       deliveryTime: profile.deliveryTime,
-      skills: typeof profile.skills === 'string' ? JSON.parse(profile.skills || '[]') : profile.skills,
+      skills: safeParse(profile.skills),
       cricketRole: profile.cricketRole,
       battingStyle: profile.battingStyle,
       bowlingStyle: profile.bowlingStyle,
+      mainSport: profile.mainSport,
+      otherSports: profile.otherSports,
+      sportsDetails: profile.sportsDetails,
       languages: [], // profile.languages removed as it doesn't exist in schema
       isOnline: profile.isOnline,
       isVerified: profile.isVerified || profile.user.isVerified,
       username: profile.user.username,
       reviews: profile.reviews,
       achievements: profile.achievements,
-      portfolios: profile.portfolios,
       services: profile.user.services?.map((s: any) => ({
         ...s,
-        features: s.packages ? JSON.parse(s.packages) : [],
+        features: safeParse(s.packages),
         videoUrls: s.videoUrl || []
       })) || [],
       availability: (() => {

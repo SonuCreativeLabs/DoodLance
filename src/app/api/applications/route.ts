@@ -12,6 +12,14 @@ export async function GET(request: NextRequest) {
     const jobId = searchParams.get('jobId')
     const status = searchParams.get('status')
 
+    console.log('🔍 GET /api/applications - Params:', {
+      userId,
+      jobId,
+      status,
+      myApplications: searchParams.get('myApplications'),
+      myJobs: searchParams.get('myJobs')
+    })
+
     if (!userId) {
       return NextResponse.json(
         { error: 'User ID required' },
@@ -69,42 +77,66 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    // Parse string fields and structure for frontend
-    const parsedApplications = applications.map((app: any) => ({
-      ...app,
-      "#": app.id, // Map ID to '#' for frontend table component compatibility
-      jobTitle: app.job?.title || 'Unknown Job',
-      category: app.job?.category || 'Other',
-      location: app.job?.location || app.freelancer?.location || '',
-      clientName: app.job?.client?.name || 'Unknown Client',
-      clientImage: app.job?.client?.avatar || '',
-      clientId: app.job?.clientId,
-      description: app.job?.description || '',
-      postedDate: app.job?.createdAt,
-      appliedDate: app.createdAt,
-      status: app.status.toLowerCase(), // Normalize status to lowercase
-      budget: {
-        min: app.job?.budgetMin || 0,
-        max: app.job?.budgetMax || 0
-      },
-      skills: typeof app.skills === 'string' ? JSON.parse(app.skills) : (app.skills || []),
-      attachments: typeof app.attachments === 'string' ? JSON.parse(app.attachments) : (app.attachments || []),
-
-      // Add 'proposal' object alias providing backward compatibility
-      proposal: {
-        proposedRate: app.proposedRate,
-        estimatedDays: app.estimatedDays,
-        coverLetter: app.coverLetter,
-        skills: typeof app.skills === 'string' ? JSON.parse(app.skills) : (app.skills || []),
-        attachments: typeof app.attachments === 'string' ? JSON.parse(app.attachments) : (app.attachments || [])
+    // Helper to safely parse JSON
+    const safeParse = (data: any, fallback: any = []) => {
+      if (!data) return fallback;
+      if (typeof data === 'object') return data;
+      try {
+        return JSON.parse(data);
+      } catch (e) {
+        console.warn('Failed to parse JSON:', data);
+        return fallback;
       }
-    }))
+    };
+
+    // Parse string fields and structure for frontend
+    const parsedApplications = applications.map((app: any) => {
+      const skills = safeParse(app.skills);
+      const attachments = safeParse(app.attachments);
+
+      return {
+        ...app,
+        "#": app.id, // Map ID to '#' for frontend table component compatibility
+        jobTitle: app.job?.title || 'Unknown Job',
+        category: app.job?.category || 'Other',
+        location: app.job?.location || app.freelancer?.location || '',
+        clientName: app.job?.client?.name || 'Unknown Client',
+        clientImage: app.job?.client?.avatar || '',
+        clientId: app.job?.clientId,
+        description: app.job?.description || '',
+        postedDate: app.job?.createdAt,
+        appliedDate: app.createdAt,
+        status: (app.status || 'PENDING').toLowerCase(), // Normalize status to lowercase
+        budget: {
+          min: app.job?.budgetMin || 0,
+          max: app.job?.budgetMax || 0
+        },
+        skills,
+        attachments,
+
+        // Add 'proposal' object alias providing backward compatibility
+        proposal: {
+          proposedRate: app.proposedRate,
+          estimatedDays: app.estimatedDays,
+          coverLetter: app.coverLetter,
+          skills,
+          attachments
+        }
+      };
+    })
 
     return NextResponse.json(parsedApplications)
   } catch (error) {
-    console.error('Error fetching applications:', error)
+    console.error('❌ FATAL: Error in GET /api/applications:', error)
+    if (error instanceof Error) {
+      console.error('Error Message:', error.message)
+      console.error('Error Stack:', error.stack)
+    }
     return NextResponse.json(
-      { error: 'Failed to fetch applications' },
+      {
+        error: 'Failed to fetch applications',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     )
   }

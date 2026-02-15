@@ -1,12 +1,13 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { User, Mail, Phone, MapPin, Calendar, Star, Edit, ShieldCheck, Bell } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Calendar, Star, Edit, ShieldCheck, Bell, ChevronRight } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useNavbar } from '@/contexts/NavbarContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { useTutorial } from "@/contexts/TutorialContext";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,6 +23,7 @@ import {
 export default function ClientProfile() {
   const { setNavbarVisibility } = useNavbar();
   const { user, signOut } = useAuth();
+  const { resetTutorials } = useTutorial();
   const [loading, setLoading] = useState(true);
   const [deactivating, setDeactivating] = useState(false);
 
@@ -186,6 +188,24 @@ export default function ClientProfile() {
                     <p className="text-white">{user.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : 'Not available'}</p>
                   </div>
                 </div>
+              </div>
+
+              {/* Help & Tutorials Section */}
+              <div className="mt-6 pt-6 border-t border-white/10">
+                <h2 className="text-white/80 font-medium mb-4 flex items-center gap-2">
+                  <Bell className="w-4 h-4 text-purple-400" />
+                  Help & Tutorials
+                </h2>
+                <button
+                  onClick={resetTutorials}
+                  className="w-full flex items-center justify-between p-4 bg-[#1a1a1a] hover:bg-[#222222] border border-white/5 rounded-xl transition-all group"
+                >
+                  <div className="flex flex-col items-start">
+                    <span className="text-white text-sm font-medium">Restart Onboarding Tours</span>
+                    <span className="text-white/40 text-xs">See the feature guides again</span>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-white/20 group-hover:text-purple-400 transition-colors" />
+                </button>
               </div>
 
               {/* Danger Zone */}

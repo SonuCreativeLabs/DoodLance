@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSkills } from '@/contexts/SkillsContext';
 import { useAchievements } from '@/contexts/AchievementsContext';
-import { usePortfolio } from '@/contexts/PortfolioContext';
 import { useReviews } from '@/contexts/ReviewsContext';
 import { useBankAccount } from '@/contexts/BankAccountContext';
 import { usePersonalDetails } from '@/contexts/PersonalDetailsContext';
@@ -13,7 +12,6 @@ export function FreelancerDataLoader() {
     const { user } = useAuth();
     const { hydrateSkills } = useSkills();
     const { hydrateAchievements } = useAchievements();
-    const { hydratePortfolio } = usePortfolio();
     const { hydrateReviews } = useReviews();
     const { hydrateBankAccount } = useBankAccount();
     // PersonalDetailsContext might handle its own or we can just ignore it if it's fast enough 
@@ -60,29 +58,18 @@ export function FreelancerDataLoader() {
                     hydrateAchievements([]); // Ensure loading stops even on error
                 }
 
-                // 3. Hydrate Portfolio
-                if (data.portfolios) {
-                    const mappedPort = data.portfolios.map((item: any) => ({
-                        id: item.id,
-                        title: item.title,
-                        category: item.category,
-                        description: item.description,
-                        image: item.images,
-                        skills: typeof item.skills === 'string' ? item.skills.split(',') : (Array.isArray(item.skills) ? item.skills : [])
-                    }));
-                    hydratePortfolio(mappedPort);
-                }
 
                 // 4. Hydrate Reviews
                 if (data.reviews) {
                     const mappedReviews = data.reviews.map((r: any) => ({
                         id: r.id,
-                        author: r.client?.name || 'Anonymous',
+                        author: r.client?.name || r.clientName || 'Anonymous',
                         rating: r.rating,
                         comment: r.comment,
                         date: new Date(r.createdAt).toISOString().split('T')[0],
                         role: 'Client',
-                        isVerified: r.isVerified
+                        isVerified: r.isVerified,
+                        avatar: r.client?.avatar || r.clientAvatar
                     }));
                     hydrateReviews(mappedReviews);
                 }

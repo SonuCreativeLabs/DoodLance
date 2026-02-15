@@ -12,7 +12,11 @@ import {
   Mail,
   UserX,
   LogOut,
-  AlertTriangle
+  AlertTriangle,
+  GraduationCap,
+  Home,
+  User,
+  Briefcase
 } from 'lucide-react';
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -28,6 +32,8 @@ import {
   DialogTrigger,
   DialogClose
 } from "@/components/ui/dialog";
+import { useTutorial } from '@/contexts/TutorialContext';
+import { useRouter } from 'next/navigation';
 
 interface SectionCardProps {
   title: string;
@@ -78,6 +84,8 @@ const FormField = ({
 
 export default function SettingsPage() {
   const { settings, updateNotificationSettings, updateEmail, deactivateAccount, logout, isLoading } = useSettings();
+  const { clearTutorialHistory } = useTutorial();
+  const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -339,6 +347,54 @@ export default function SettingsPage() {
                   Update Email
                 </Button>
               </div>
+            </div>
+          </SectionCard>
+
+          {/* Guided Tours */}
+          <SectionCard
+            title="Guided Tours"
+            icon={GraduationCap}
+          >
+            <div className="space-y-3">
+              <p className="text-white/60 text-sm mb-4">
+                Replay guided tours to learn about different features of the platform.
+              </p>
+
+              <Button
+                onClick={() => {
+                  clearTutorialHistory('freelancer-tour');
+                  router.push('/freelancer?tutorial=freelancer-tour');
+                }}
+                variant="outline"
+                className="w-full h-12 border-white/20 text-white/80 hover:bg-white/5 hover:text-white justify-start"
+              >
+                <Home className="h-4 w-4 mr-2" />
+                Home Page Tour
+              </Button>
+
+              <Button
+                onClick={() => {
+                  clearTutorialHistory('jobs-tour');
+                  router.push('/freelancer/jobs?tutorial=jobs-tour');
+                }}
+                variant="outline"
+                className="w-full h-12 border-white/20 text-white/80 hover:bg-white/5 hover:text-white justify-start"
+              >
+                <Briefcase className="h-4 w-4 mr-2" />
+                Jobs Page Tour
+              </Button>
+
+              <Button
+                onClick={() => {
+                  clearTutorialHistory('profile-tour');
+                  router.push('/freelancer/profile?tutorial=profile-tour');
+                }}
+                variant="outline"
+                className="w-full h-12 border-white/20 text-white/80 hover:bg-white/5 hover:text-white justify-start"
+              >
+                <User className="h-4 w-4 mr-2" />
+                Profile Page Tour
+              </Button>
             </div>
           </SectionCard>
 

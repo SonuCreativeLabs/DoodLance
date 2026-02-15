@@ -1,13 +1,4 @@
 // Shared profile data for freelancer
-export interface PortfolioItem {
-  id: string;
-  title: string;
-  category: string;
-  image: string;
-  description?: string;
-  skills?: string[];
-}
-
 export interface ExtendedFreelancerData {
   name: string;
   title: string;
@@ -21,7 +12,6 @@ export interface ExtendedFreelancerData {
   location: string;
   skills: string[];
   services: Service[];
-  portfolio: PortfolioItem[];
   clientReviews: ClientReview[];
   availability: AvailabilityEntry[];
   completedJobs: number;
@@ -64,7 +54,6 @@ export const freelancerData: ExtendedFreelancerData = {
   location: "",
   skills: [],
   services: [],
-  portfolio: [],
   clientReviews: [],
   availability: [],
   completedJobs: 0,

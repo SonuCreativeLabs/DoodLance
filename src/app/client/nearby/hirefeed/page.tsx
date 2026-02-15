@@ -9,7 +9,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { categories } from '../constants';
 import { useNearbyProfessionals, Professional } from '@/contexts/NearbyProfessionalsContext';
 import SearchFilters from '../components/SearchFilters';
-import { CricketWhiteBallSpinner } from '@/components/ui/CricketWhiteBallSpinner';
+import { SportsRandomSpinner } from '@/components/ui/SportsRandomSpinner';
+import { useTutorial, TutorialConfig } from '@/contexts/TutorialContext';
 
 export default function IntegratedExplorePage() {
   const searchParams = useSearchParams();
@@ -21,6 +22,57 @@ export default function IntegratedExplorePage() {
   const [isDragTextVisible, setIsDragTextVisible] = useState(true);
   const router = useRouter();
   const { professionals, loading, currentCoordinates } = useNearbyProfessionals();
+  const { startTutorial, hasSeenTutorial } = useTutorial();
+
+  const hireTutorial: TutorialConfig = {
+    id: 'hire-tour',
+    steps: [
+      {
+        targetId: 'hire-search-bar',
+        title: 'Find Experts NEARBY',
+        description: 'Search for specific services or areas to find the best experts near you.',
+        position: 'bottom'
+      },
+      {
+        targetId: 'hire-visible-map-area',
+        title: 'Interactive Map',
+        description: 'See all nearby experts on the map. Each pin represents an available professional in your area.',
+        position: 'top',
+        onStart: () => setIsSheetCollapsed(true)
+      },
+      {
+        targetId: 'hire-sheet-tutorial-target',
+        title: 'Explore the List',
+        description: 'Pull up this section to see the full list of experts, or keep it minimized to focus on the map view.',
+        position: 'top',
+        alignment: 'start',
+        onStart: () => setIsSheetCollapsed(true)
+      },
+      {
+        targetId: 'first-expert-card',
+        title: 'Expert Details',
+        description: 'Browse all details here. Each card shows their rating, role, and starting price. Tap any card to view their full profile.',
+        position: 'top',
+        onStart: () => setIsSheetCollapsed(false)
+      },
+      {
+        targetId: 'hire-post-job',
+        title: 'Post a Custom Job',
+        description: 'Can\'t find what you need? Post a custom requirement and let qualified experts apply to you.',
+        position: 'top'
+      }
+    ]
+  };
+
+  useEffect(() => {
+    const shouldStart = !hasSeenTutorial('hire-tour') || searchParams.get('tutorial') === 'hire-tour';
+    if (shouldStart) {
+      const timer = setTimeout(() => {
+        startTutorial(hireTutorial);
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [searchParams]);
   const mapViewRef = useRef<any>(null);
 
   // Check URL parameters to determine initial sheet state and pin to open
@@ -67,10 +119,7 @@ export default function IntegratedExplorePage() {
       };
 
       const mappedCategory = categoryMap[category.toLowerCase()] || category;
-      // Verify if valid category, otherwise default or keep current
-      if (['All', 'Players', 'Coaching & Training', 'Support Staff & Others', 'Media & Content'].includes(mappedCategory)) {
-        setSelectedCategory(mappedCategory);
-      }
+      setSelectedCategory(mappedCategory);
     }
 
     // If there's a pinId, we need to open that specific pin on the map
@@ -109,8 +158,8 @@ export default function IntegratedExplorePage() {
         'Physio': 'Physiotherapist',
         'Scorer': 'Scorer',
         'Umpire': 'Umpire',
-        'Cricket Photo/Videography': 'Videographer',
-        'Cricket Content Creator': 'Content Creator',
+        'Sports Photo/Videography': 'Videographer',
+        'Sports Content Creator': 'Content Creator',
         'Commentator': 'Commentator',
         'Match Player': 'All Rounder',
         'Net Batsman': 'Batsman',
@@ -151,7 +200,8 @@ export default function IntegratedExplorePage() {
       experience: freelancer.experience,
       location: displayLocation, // Use the formatted location
       area: freelancer.area,
-      city: freelancer.city
+      city: freelancer.city,
+      username: freelancer.username
     };
   };
 
@@ -173,46 +223,34 @@ export default function IntegratedExplorePage() {
     let result = professionals.map(mapToProfessional);
 
     // 2. Apply Category Filter
+    // 2. Apply Category Filter (Now Sports)
     if (selectedCategory && selectedCategory !== "All") {
-      const categoryKeywords: { [key: string]: string[] } = {
-        'Players': [
-          'match player', 'net bowler', 'net batsman', 'sidearm', 'sidearm specialist',
-          'bowler', 'batsman', 'player', 'cricketer', 'all rounder',
-          'wicket keeper', 'spinner', 'pacer', 'leg spinner', 'off spinner', 'fast bowler'
-        ],
-        'Coaching & Training': [
-          'coach', 'coaching', 'training', 'trainer', 'conditioning',
-          'fitness', 'drill', 'practice', 'mentor', 'strength'
-        ],
-        'Support Staff & Others': [
-          'analyst', 'analysis', 'physio', 'physiotherapist', 'scorer',
-          'umpire', 'groundsman', 'manager', 'support', 'medic', 'doctor',
-          'statistician', 'masseur', 'other'
-        ],
-        'Media & Content': [
-          'photo', 'video', 'videography', 'content', 'commentator',
-          'media', 'social', 'editor', 'creator', 'streaming',
-          'photographer', 'videographer'
-        ]
-      };
+      // Logic for Multi-Sport Filtering
 
-      const keywords = categoryKeywords[selectedCategory] || [];
-      if (keywords.length > 0) {
+      // If "Cricket" is selected, we include all profiles that match "Cricket" criteria
+      // Since we just migrated everyone to 'mainSport'="Cricket", we can check that field 
+      // OR fallback to the legacy keyword matching for robustness during transition.
+      if (selectedCategory === 'Cricket') {
+        // Filter for Cricket
         result = result.filter(pro => {
-          // Check services array categories
-          if (pro.services && pro.services.length > 0) {
-            return pro.services.some((svc: any) => {
-              const svcCategory = (svc.category || '').toLowerCase();
-              const svcTitle = (svc.title || '').toLowerCase();
-              return keywords.some(keyword =>
-                svcCategory.includes(keyword) || svcTitle.includes(keyword)
-              );
-            });
-          }
-          // Fallback to main service field
+          // If we have mainSport available (we should after migration), use it.
+          if (pro.mainSport === 'Cricket') return true;
+
+          // Fallback: Check if it looks like a cricket profile (legacy logic)
+          const cricketKeywords = [
+            'match player', 'net bowler', 'net batsman', 'sidearm',
+            'bowler', 'batsman', 'cricketer', 'all rounder', 'wicket keeper',
+            'coach', 'umpire', 'scorer', 'analyst'
+          ];
           const proService = (pro.service || '').toLowerCase();
-          return keywords.some(keyword => proService.includes(keyword));
+          return cricketKeywords.some(keyword => proService.includes(keyword)) || pro.cricketRole;
         });
+      } else {
+        // For other sports (Football, etc.)
+        result = result.filter(pro =>
+          pro.mainSport === selectedCategory ||
+          pro.otherSports?.includes(selectedCategory)
+        );
       }
     }
 
@@ -351,11 +389,24 @@ export default function IntegratedExplorePage() {
   return (
     <div className="h-screen w-full bg-transparent relative overflow-hidden">
       {/* Map View */}
-      <MapView
-        ref={mapViewRef}
-        professionals={filteredProfessionals}
-        customCenter={currentCoordinates ? [currentCoordinates.lng, currentCoordinates.lat] : null}
-      />
+      <div id="hire-map-view" className="absolute inset-0 z-0">
+        {/* Tutorial target for visible map area only */}
+        <div
+          id="hire-visible-map-area"
+          className="absolute top-0 left-0 right-0 pointer-events-none"
+          style={{
+            height: isSheetCollapsed
+              ? `${initialSheetY * 1.2}px`
+              : '100vh',
+            zIndex: 1
+          }}
+        />
+        <MapView
+          ref={mapViewRef}
+          professionals={filteredProfessionals}
+          customCenter={currentCoordinates ? [currentCoordinates.lng, currentCoordinates.lat] : null}
+        />
+      </div>
 
       {/* Loading Overlay */}
       <AnimatePresence>
@@ -368,7 +419,7 @@ export default function IntegratedExplorePage() {
             style={{ paddingBottom: '20vh' }}
           >
             <div className="bg-[#111111]/80 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 shadow-xl flex items-center gap-3">
-              <CricketWhiteBallSpinner className="w-5 h-5" />
+              <SportsRandomSpinner className="w-5 h-5" />
               <span className="text-white text-sm font-medium">Finding nearby experts...</span>
             </div>
           </motion.div>
@@ -382,7 +433,7 @@ export default function IntegratedExplorePage() {
         }`}>
         <div className="w-full max-w-md mb-2 px-3">
           <div className="flex gap-2">
-            <div className={`flex-1 flex items-center gap-2 px-3 py-2 rounded-full border shadow transition-all duration-200 ${isSheetCollapsed
+            <div id="hire-search-bar" className={`flex-1 flex items-center gap-2 px-3 py-2 rounded-full border shadow transition-all duration-200 ${isSheetCollapsed
               ? 'bg-black/60 backdrop-blur-sm border-white/20'
               : 'bg-[#111111] border-white/30'
               }`}>
@@ -442,6 +493,7 @@ export default function IntegratedExplorePage() {
 
       {/* Bottom Sheet */}
       <motion.div
+        id="hire-bottom-sheet"
         className="fixed left-0 right-0 bg-[#111111] shadow-xl z-[2] flex flex-col sheet-responsive-top"
         style={{
           // top and height are handled by CSS class .sheet-responsive-top and CSS variables injected below
@@ -479,85 +531,118 @@ export default function IntegratedExplorePage() {
           }
         }}
       >
-        {/* Drag Handle */}
-        <div className="sticky top-0 pt-3 pb-1 flex flex-col items-center z-10">
-          <div className="w-10 h-1 bg-white/20 rounded-full" />
-          <AnimatePresence>
-            {isDragTextVisible && (
-              <motion.div
-                initial={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                className="text-white/50 text-xs py-1"
-              >
-                {isSheetCollapsed ? "↑ Pull up for list view" : "↓ Pull down to minimize"}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-
-        {/* Content */}
+        {/* Tutorial wrapper - excludes bottom navbar */}
         <div
-          className={`flex-1 ${isSheetCollapsed ? 'overflow-hidden' : 'overflow-y-auto smooth-scroll'} `}
-          onScroll={handleScroll}
+          id="hire-sheet-tutorial-target"
           style={{
-            maxHeight: isSheetCollapsed ? 'auto' : 'calc(100vh - 85px - 48px)' // 48px accounts for the drag handle
+            height: isSheetCollapsed ? 'auto' : 'calc(100vh - 80px)' // Exclude 80px navbar
           }}
         >
-          <div className="container max-w-2xl mx-auto px-3 pb-6">
-            {isSheetCollapsed ? (
-              <div className="flex items-center justify-between w-full max-w-3xl mx-auto px-4 pt-4">
-                <div className="flex flex-col items-start gap-1.5">
-                  <div
-                    className="flex -space-x-3 cursor-pointer hover:opacity-90 transition-opacity"
-                    onClick={() => setIsSheetCollapsed(false)}
-                  >
-                    {loading ? (
-                      // Skeleton Loader for collapsed avatars
-                      [...Array(4)].map((_, index) => (
-                        <div key={index} className="relative w-9 h-9 rounded-full border-2 border-white/5 bg-white/10 animate-pulse" style={{ zIndex: 4 - index }} />
-                      ))
-                    ) : (
-                      <>
-                        {filteredProfessionals.slice(0, 4).map((freelancer, index) => (
-                          <motion.div
-                            key={freelancer.id}
-                            className="relative"
-                            style={{ zIndex: 4 - index }}
-                            initial={{ opacity: 0, x: -10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: index * 0.1 }}
-                          >
-                            <div className="relative w-9 h-9">
-                              <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full opacity-20 blur-sm"></div>
-                              <div className="relative w-9 h-9 rounded-full border-2 border-purple-200/20 overflow-hidden backdrop-blur-sm shadow-lg">
-                                <img
-                                  src={freelancer.avatar || freelancer.image}
-                                  alt=""
-                                  className="w-full h-full object-cover"
-                                />
+          {/* Drag Handle */}
+          <div id="hire-sheet-handle" className="sticky top-0 pt-3 pb-1 flex flex-col items-center z-10">
+            <div className="w-10 h-1 bg-white/20 rounded-full" />
+            <AnimatePresence>
+              {isDragTextVisible && (
+                <motion.div
+                  initial={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="text-white/50 text-xs py-1"
+                >
+                  {isSheetCollapsed ? "↑ Pull up for list view" : "↓ Pull down to minimize"}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Content */}
+          <div
+            className={`flex-1 ${isSheetCollapsed ? 'overflow-hidden' : 'overflow-y-auto smooth-scroll'} `}
+            onScroll={handleScroll}
+            style={{
+              maxHeight: isSheetCollapsed ? 'auto' : 'calc(100vh - 85px - 48px)' // 48px accounts for the drag handle
+            }}
+          >
+            <div className="container max-w-2xl mx-auto px-3 pb-6">
+              {isSheetCollapsed ? (
+                <div id="hire-collapsed-sheet" className="flex items-center justify-between w-full max-w-3xl mx-auto px-4 pt-4">
+                  <div className="flex flex-col items-start gap-1.5">
+                    <div
+                      id="hire-map-avatars"
+                      className="flex -space-x-3 cursor-pointer hover:opacity-90 transition-opacity"
+                      onClick={() => setIsSheetCollapsed(false)}
+                    >
+                      {loading ? (
+                        // Skeleton Loader for collapsed avatars
+                        [...Array(4)].map((_, index) => (
+                          <div key={index} className="relative w-9 h-9 rounded-full border-2 border-white/5 bg-white/10 animate-pulse" style={{ zIndex: 4 - index }} />
+                        ))
+                      ) : (
+                        <>
+                          {filteredProfessionals.slice(0, 4).map((freelancer, index) => (
+                            <motion.div
+                              key={freelancer.id}
+                              className="relative"
+                              style={{ zIndex: 4 - index }}
+                              initial={{ opacity: 0, x: -10 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: index * 0.1 }}
+                            >
+                              <div className="relative w-9 h-9">
+                                <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full opacity-20 blur-sm"></div>
+                                <div className="relative w-9 h-9 rounded-full border-2 border-purple-200/20 overflow-hidden backdrop-blur-sm shadow-lg">
+                                  <img
+                                    src={freelancer.avatar || freelancer.image}
+                                    alt=""
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
                               </div>
-                            </div>
-                          </motion.div>
-                        ))}
-                        {filteredProfessionals.length > 4 && (
-                          <motion.div
-                            className="relative"
-                            style={{ zIndex: 0 }}
-                            initial={{ opacity: 0, scale: 0.8 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ delay: 0.4 }}
-                          >
-                            <div className="relative w-9 h-9">
-                              <div className="absolute inset-0 bg-gradient-to-br from-purple-400/20 to-purple-600/20 rounded-full blur-sm"></div>
-                              <div className="relative w-9 h-9 rounded-full border-2 border-purple-200/20 overflow-hidden backdrop-blur-sm bg-[#111111]/90 flex items-center justify-center">
-                                <span className="text-xs font-bold text-white/70">+{filteredProfessionals.length - 4}</span>
+                            </motion.div>
+                          ))}
+                          {filteredProfessionals.length > 4 && (
+                            <motion.div
+                              className="relative"
+                              style={{ zIndex: 0 }}
+                              initial={{ opacity: 0, scale: 0.8 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              transition={{ delay: 0.4 }}
+                            >
+                              <div className="relative w-9 h-9">
+                                <div className="absolute inset-0 bg-gradient-to-br from-purple-400/20 to-purple-600/20 rounded-full blur-sm"></div>
+                                <div className="relative w-9 h-9 rounded-full border-2 border-purple-200/20 overflow-hidden backdrop-blur-sm bg-[#111111]/90 flex items-center justify-center">
+                                  <span className="text-xs font-bold text-white/70">+{filteredProfessionals.length - 4}</span>
+                                </div>
                               </div>
-                            </div>
-                          </motion.div>
-                        )}
-                      </>
-                    )}
+                            </motion.div>
+                          )}
+                        </>
+                      )}
+                    </div>
+                    <div className="text-white/80 text-sm font-medium">
+                      {loading ? (
+                        <span className="animate-pulse">Finding experts...</span>
+                      ) : (
+                        <span>{filteredProfessionals.length} experts available</span>
+                      )}
+                    </div>
                   </div>
+                  <div className="self-center">
+                    <button
+                      id="hire-post-job"
+                      onClick={() => router.push('/client/post')}
+                      className="group relative flex items-center gap-1.5 px-4 py-2 bg-white/95 backdrop-blur-xl rounded-xl text-sm font-semibold transition-all duration-300 hover:bg-white shadow-lg hover:shadow-xl"
+                    >
+                      <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-purple-500/5 to-purple-600/5 opacity-80 group-hover:opacity-100 transition-opacity" />
+                      <div className="absolute inset-0 rounded-xl border border-purple-200/20 group-hover:border-purple-300/30 transition-colors" />
+                      <div className="absolute inset-0 rounded-xl shadow-inner shadow-purple-100/10" />
+                      <Plus className="w-3.5 h-3.5 text-purple-600 group-hover:text-purple-700 transition-colors relative z-10" />
+                      <span className="text-purple-600 group-hover:text-purple-700 relative z-10 transition-colors">Post A Job</span>
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                // Expanded List Header
+                <div className="flex items-center justify-between w-full max-w-3xl mx-auto px-4 mb-5 pt-1">
                   <div className="text-white/80 text-sm font-medium">
                     {loading ? (
                       <span className="animate-pulse">Finding experts...</span>
@@ -565,11 +650,10 @@ export default function IntegratedExplorePage() {
                       <span>{filteredProfessionals.length} experts available</span>
                     )}
                   </div>
-                </div>
-                <div className="self-center">
                   <button
+                    id="hire-post-job"
                     onClick={() => router.push('/client/post')}
-                    className="group relative flex items-center gap-1.5 px-4 py-2 bg-white/95 backdrop-blur-xl rounded-xl text-sm font-semibold transition-all duration-300 hover:bg-white shadow-lg hover:shadow-xl"
+                    className="group relative flex items-center gap-1.5 px-3 py-1.5 bg-white/95 backdrop-blur-xl rounded-xl text-sm font-semibold transition-all duration-300 hover:bg-white shadow-lg hover:shadow-xl"
                   >
                     <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-purple-500/5 to-purple-600/5 opacity-80 group-hover:opacity-100 transition-opacity" />
                     <div className="absolute inset-0 rounded-xl border border-purple-200/20 group-hover:border-purple-300/30 transition-colors" />
@@ -578,47 +662,29 @@ export default function IntegratedExplorePage() {
                     <span className="text-purple-600 group-hover:text-purple-700 relative z-10 transition-colors">Post A Job</span>
                   </button>
                 </div>
-              </div>
-            ) : (
-              // Expanded List Header
-              <div className="flex items-center justify-between w-full max-w-3xl mx-auto px-4 mb-5 pt-1">
-                <div className="text-white/80 text-sm font-medium">
-                  {loading ? (
-                    <span className="animate-pulse">Finding experts...</span>
-                  ) : (
-                    <span>{filteredProfessionals.length} experts available</span>
-                  )}
+              )}
+              {!isSheetCollapsed && (
+                <div className="space-y-2.5 px-1">
+                  <ProfessionalsFeed
+                    filteredProfessionals={filteredProfessionals}
+                    searchQuery={searchQuery}
+                    selectedCategory={selectedCategory}
+                    loading={loading}
+                  />
                 </div>
-                <button
-                  onClick={() => router.push('/client/post')}
-                  className="group relative flex items-center gap-1.5 px-3 py-1.5 bg-white/95 backdrop-blur-xl rounded-xl text-sm font-semibold transition-all duration-300 hover:bg-white shadow-lg hover:shadow-xl"
-                >
-                  <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-purple-500/5 to-purple-600/5 opacity-80 group-hover:opacity-100 transition-opacity" />
-                  <div className="absolute inset-0 rounded-xl border border-purple-200/20 group-hover:border-purple-300/30 transition-colors" />
-                  <div className="absolute inset-0 rounded-xl shadow-inner shadow-purple-100/10" />
-                  <Plus className="w-3.5 h-3.5 text-purple-600 group-hover:text-purple-700 transition-colors relative z-10" />
-                  <span className="text-purple-600 group-hover:text-purple-700 relative z-10 transition-colors">Post A Job</span>
-                </button>
-              </div>
-            )}
-            {!isSheetCollapsed && (
-              <div className="space-y-2.5 px-1">
-                <ProfessionalsFeed
-                  filteredProfessionals={filteredProfessionals}
-                  searchQuery={searchQuery}
-                  selectedCategory={selectedCategory}
-                  loading={loading}
-                />
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
+        {/* End tutorial wrapper */}
       </motion.div>
 
       {/* Search Filters */}
       <SearchFilters
         showFilterModal={showFilterModal}
         setShowFilterModal={setShowFilterModal}
+        selectedCategory={selectedCategory}
+        setSelectedCategory={setSelectedCategory}
         selectedArea={selectedArea}
         setSelectedArea={setSelectedArea}
         selectedService={selectedService}

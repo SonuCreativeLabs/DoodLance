@@ -29,6 +29,11 @@ export async function middleware(request: NextRequest) {
     // Rate limiting for API routes
     if (request.nextUrl.pathname.startsWith('/api/')) {
 
+        // SKIP MIDDLEWARE FOR BACKFILL ROUTE (TEMPORARY)
+        if (request.nextUrl.pathname === '/api/admin/backfill-reviews') {
+            return NextResponse.next();
+        }
+
         const isAdminApi = request.nextUrl.pathname.startsWith('/api/admin/');
         const isAuthApi = request.nextUrl.pathname.startsWith('/api/auth/');
 

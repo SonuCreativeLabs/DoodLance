@@ -1,10 +1,12 @@
 "use client"
 
-import { useState, useEffect } from 'react'
-import { Menu, Bell, X, Wallet, LogOut, LogIn, User } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+import { Menu, Bell, X, Wallet, LogOut, LogIn, User, Sparkles } from 'lucide-react'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
+import { RequestServiceDialog } from '@/components/client/RequestServiceDialog'
+import LoginDialog from '@/components/auth/LoginDialog'
 import {
   Dialog,
   DialogContent,
@@ -28,6 +30,8 @@ export default function Header() {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
   const [unreadCount, setUnreadCount] = useState(3)
   const { user, isAuthenticated, signOut } = useAuth()
+  const [showRequestDialog, setShowRequestDialog] = useState(false)
+  const [showLoginDialog, setShowLoginDialog] = useState(false)
   const router = useRouter()
 
   const [notifications, setNotifications] = useState<any[]>([])
@@ -214,19 +218,35 @@ export default function Header() {
 
               <nav className="p-4 space-y-1">
                 {menuItems.map((item) => (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <span>{item.name}</span>
-                  </Link>
+                  <React.Fragment key={item.name}>
+                    <Link
+                      href={item.href}
+                      className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <span>{item.name}</span>
+                    </Link>
+                    {item.name === 'Help & Support' && (
+                      <button
+                        className="w-full flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors text-left group"
+                        onClick={() => {
+                          setIsMenuOpen(false);
+                          if (isAuthenticated) {
+                            setShowRequestDialog(true);
+                          } else {
+                            setShowLoginDialog(true);
+                          }
+                        }}
+                      >
+                        <Sparkles className="w-4 h-4 text-purple-600 transition-transform group-hover:scale-110" />
+                        <span className="font-medium">Request a Feature</span>
+                      </button>
+                    )}
+                  </React.Fragment>
                 ))}
 
                 {showAuth && (
                   <>
-                    <hr className="my-2 border-gray-100" />
                     <hr className="my-2 border-gray-100" />
                     <Dialog>
                       <DialogTrigger asChild>
@@ -266,6 +286,16 @@ export default function Header() {
           </div>
         )}
       </div>
+      <RequestServiceDialog
+        open={showRequestDialog}
+        onOpenChange={setShowRequestDialog}
+        userId={user?.id}
+      />
+      <LoginDialog
+        open={showLoginDialog}
+        onOpenChange={setShowLoginDialog}
+        onSuccess={() => setShowRequestDialog(true)}
+      />
     </header>
   )
-} 
+}

@@ -38,7 +38,7 @@ import { IdVerifiedBadge } from "@/components/freelancer/profile/IdVerifiedBadge
 import { SkillInfoDialog } from "@/components/common/SkillInfoDialog";
 import { getSkillInfo, type SkillInfo } from "@/utils/skillUtils";
 import { IconButton } from "@/components/ui/icon-button";
-import { PortfolioItemModal } from "@/components/common/PortfolioItemModal";
+
 
 export default function ApplicationDetailPage() {
   const params = useParams();
@@ -57,8 +57,6 @@ export default function ApplicationDetailPage() {
   const [isHoursDropdownOpen, setIsHoursDropdownOpen] = useState(false);
   const [isScrolledPastCover, setIsScrolledPastCover] = useState(false);
   const [activeTab, setActiveTab] = useState('top');
-  const [selectedPortfolioItem, setSelectedPortfolioItem] = useState<any>(null);
-  const [isPortfolioModalOpen, setIsPortfolioModalOpen] = useState(false);
   const tabsContainerRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -67,7 +65,6 @@ export default function ApplicationDetailPage() {
     { id: 'application', label: 'Application' },
     { id: 'about', label: 'About' },
     { id: 'services', label: 'Services' },
-    { id: 'portfolio', label: 'Portfolio' },
     { id: 'experience', label: 'Experience' },
     { id: 'reviews', label: 'Reviews' }
   ];
@@ -134,13 +131,6 @@ export default function ApplicationDetailPage() {
               deliveryTime: s.deliveryTime,
               category: s.category?.name,
               features: s.tags ? s.tags.split(',') : []
-            })) || [],
-
-            portfolio: profile.portfolios?.map((p: any) => ({
-              id: p.id,
-              title: p.title,
-              image: p.imageUrl || (p.images ? JSON.parse(p.images)[0] : '') || '/placeholder.jpg',
-              category: p.category
             })) || [],
 
             experienceDetails: profile.experiences?.map((e: any) => ({
@@ -429,7 +419,7 @@ export default function ApplicationDetailPage() {
                   alt="Profile Cover"
                   className="w-full h-full object-cover"
                   onError={(e) => {
-                    e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDEyMDAgMzAwIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjNkI0NkMxIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIzMiIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIj5Dcmlja2V0IENvdmVyPC90ZXh0Pjwvc3ZnPg=='
+                    e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDEyMDAgMzAwIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjNkI0NjMxIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIzMiIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIj5Dcmlja2V0IENvdmVyPC90ZXh0Pjwvc3ZnPg=='
                   }}
                 />
               </div>
@@ -762,48 +752,7 @@ export default function ApplicationDetailPage() {
                 </section>
               )}
 
-              {/* Portfolio Section */}
-              {freelancer.portfolio && freelancer.portfolio.length > 0 && (
-                <section id="portfolio" data-section="portfolio" className="pt-8 scroll-mt-20 relative">
-                  <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
-                  <div className="mb-4">
-                    <h2 className="text-xl font-semibold text-white mb-1">My Portfolio</h2>
-                    <p className="text-white/60 text-sm">Showcase of my best work and projects</p>
-                  </div>
 
-                  <div className="relative">
-                    <div className="flex -mx-2 overflow-x-auto scrollbar-hide pb-2">
-                      <div className="flex gap-4 px-2">
-                        {freelancer.portfolio.map((item: any) => (
-                          <div
-                            key={item.id}
-                            className="w-80 flex-shrink-0 group relative aspect-video rounded-xl overflow-hidden border border-white/10 hover:border-white/20 transition-all cursor-pointer"
-                            onClick={() => {
-                              setSelectedPortfolioItem(item);
-                              setIsPortfolioModalOpen(true);
-                            }}
-                          >
-                            <img
-                              src={item.image}
-                              alt={item.title}
-                              className="w-full h-full object-cover transition-all duration-300 group-hover:scale-105"
-                            />
-                            <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                            {item.category && (
-                              <div className="absolute top-3 left-3 z-10 bg-white/10 text-white/80 border-white/20 px-2 py-0.5 text-xs rounded-full border backdrop-blur-sm">
-                                {item.category}
-                              </div>
-                            )}
-                            <div className="absolute bottom-3 left-3 right-3">
-                              <h3 className="font-medium text-white line-clamp-1 text-sm">{item.title}</h3>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </section>
-              )}
 
               {/* Experience Section */}
               {freelancer.experienceDetails && freelancer.experienceDetails.length > 0 && (
@@ -915,16 +864,6 @@ export default function ApplicationDetailPage() {
         isOpen={isSkillDialogOpen}
         onClose={() => setIsSkillDialogOpen(false)}
         skillInfo={selectedSkillInfo}
-      />
-
-      {/* Portfolio Modal */}
-      <PortfolioItemModal
-        item={selectedPortfolioItem}
-        isOpen={isPortfolioModalOpen}
-        onClose={() => {
-          setIsPortfolioModalOpen(false);
-          setSelectedPortfolioItem(null);
-        }}
       />
 
       {/* Sticky Action Buttons */}

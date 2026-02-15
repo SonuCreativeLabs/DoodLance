@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, CreditCard, Tag, Shield, AlertCircle, ChevronDown, ChevronUp, Smartphone, Wallet, Truck, CheckCircle, Loader2, Copy } from 'lucide-react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { useHire } from '@/contexts/HireContext';
 import { useNavbar } from '@/contexts/NavbarContext';
@@ -33,6 +34,7 @@ export default function CheckoutPage() {
   const [generatedOtp, setGeneratedOtp] = useState('');
   const [showOrderDetails, setShowOrderDetails] = useState(false);
   const [showLoginDialog, setShowLoginDialog] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const generateOtp = () => {
     return Math.floor(1000 + Math.random() * 9000).toString();
@@ -387,7 +389,7 @@ export default function CheckoutPage() {
               <div className="space-y-2">
                 <label className="text-xs font-medium text-white/60">UPI ID</label>
                 <div className="flex items-center gap-2">
-                  <div className="flex-1 bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white font-mono text-sm">
+                  <div className="flex-1 bg-black/30 border border-white/10 rounded-lg px-4 py-3 text-white font-mono text-sm">
                     sathishsonu07@okaxis
                   </div>
 
@@ -397,10 +399,17 @@ export default function CheckoutPage() {
                     className="shrink-0 bg-white/5 border-white/10 hover:bg-white/10 text-white"
                     onClick={() => {
                       navigator.clipboard.writeText('sathishsonu07@okaxis');
+                      setCopied(true);
+                      toast.success("UPI ID copied to clipboard");
+                      setTimeout(() => setCopied(false), 2000);
                     }}
                   >
-                    <Copy className="w-4 h-4" />
-                    <span className="sr-only">Copy</span>
+                    {copied ? (
+                      <CheckCircle className="w-4 h-4 text-green-500" />
+                    ) : (
+                      <Copy className="w-4 h-4" />
+                    )}
+                    <span className="sr-only">{copied ? 'Copied' : 'Copy'}</span>
                   </Button>
                 </div>
               </div>
@@ -426,7 +435,7 @@ export default function CheckoutPage() {
             <button
               onClick={handleUPIBooking}
               disabled={isProcessing || !transactionId}
-              className="w-full py-4 px-6 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white font-bold text-lg shadow-lg shadow-purple-900/20 transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed mt-4"
+              className="w-full py-3 px-6 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white font-bold text-base shadow-lg shadow-purple-900/20 transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed mt-4"
             >
               {isProcessing ? (
                 <>

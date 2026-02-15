@@ -1,6 +1,7 @@
+
 "use client"
 
-import { MapPin, Star, Clock, Calendar, ChevronDown, ChevronRight, ArrowRight, Copy, Check, Zap, Shield, Users, Award, TrendingUp, Heart, MessageCircle, Filter, X, Wallet, Bell, Sparkles, Home, Compass } from 'lucide-react'
+import { MapPin, Search, Bell, Menu, X, Home, User, Calendar, Briefcase, Star, ChevronLeft, LogOut, ChevronRight, BookOpen, Copy, Check, Zap, Shield, Users, Award, TrendingUp, Heart, MessageCircle, Filter, Wallet, Sparkles, Compass, ChevronDown, Clock } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { Input } from '@/components/ui/input'
 import {
@@ -14,6 +15,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { categories } from './client/nearby/constants';
 import ClientLayout from '@/components/layouts/client-layout'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -25,8 +27,11 @@ import { usePopularServices } from '@/contexts/PopularServicesContext'
 import { useAuth } from '@/contexts/AuthContext';
 import { useRoleSwitch } from '@/contexts/RoleSwitchContext';
 import { TopRatedExpertSkeleton } from '@/components/skeletons/TopRatedExpertSkeleton'
-
-// Search functionality will be implemented with real data
+import { useTutorial, TutorialConfig } from '@/contexts/TutorialContext';
+import { useSearchParams } from 'next/navigation';
+import { AppGuideModal } from '@/components/common/tutorial/AppGuideModal';
+import { RequestServiceDialog } from '@/components/client/RequestServiceDialog';
+import LoginDialog from '@/components/auth/LoginDialog';
 
 export default function ClientHome() {
   const router = useRouter();
@@ -45,8 +50,185 @@ export default function ClientHome() {
   const [userAvatar, setUserAvatar] = useState("/images/default-avatar.svg"); // Fallback
   const [notificationCount, setNotificationCount] = useState(0);
   const [showLogoutAlert, setShowLogoutAlert] = useState(false);
+  const [showAppGuide, setShowAppGuide] = useState(false);
+  const [showRequestDialog, setShowRequestDialog] = useState(false);
+  const [showLoginDialog, setShowLoginDialog] = useState(false);
+  const searchParams = useSearchParams();
 
   const { user, refreshUser, signOut, isAuthenticated } = useAuth();
+  const { startTutorial, hasSeenTutorial, resetTutorials } = useTutorial();
+
+  // introduction tutorial configuration
+  // Handle window resize for mobile check
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.matchMedia('(max-width: 767px)').matches);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Helper to get correct ID based on screen size
+  const getNavId = (base: string) => {
+    if (base === 'nav-earn' && isMobile) return 'nav-earn-mobile-final';
+    return isMobile ? `${base}-mobile` : `${base}-desktop`;
+  };
+
+  // introduction tutorial configuration with dynamic IDs
+  const introTutorial: TutorialConfig = {
+    id: 'intro-tour',
+    steps: [
+      {
+        targetId: 'hero-search',
+        title: 'Find Your Expert',
+        description: 'Search for any sports service like cricket coaching, net bowlers, or physiotherapists.',
+        position: 'bottom'
+      },
+      {
+        targetId: 'experts-section',
+        title: 'Top Rated Experts',
+        description: 'Browse through our hand picked top rated professionals in your neighborhood.',
+        position: 'top'
+      },
+      {
+        targetId: 'sports-categories',
+        title: 'Explore Sports',
+        description: 'Discover experts across various sports including Football, Badminton, and more.',
+        position: 'top'
+      },
+      {
+        targetId: 'popular-services',
+        title: 'Popular Services',
+        description: 'Quickly find the most requested services like cricket coaching or net bowlers in your area.',
+        position: 'top'
+      },
+      {
+        targetId: getNavId('nav-hire'),
+        title: 'Hire Professionals',
+        description: 'Explore our interactive map to find and book sports experts in your neighborhood.',
+        position: isMobile ? 'top' : 'bottom'
+      },
+      {
+        targetId: getNavId('nav-bookings'),
+        title: 'Manage Bookings',
+        description: 'Keep track of all your active sessions and job applications here.',
+        position: isMobile ? 'top' : 'bottom'
+      },
+      {
+        targetId: getNavId('nav-earn'),
+        title: 'Start Earning',
+        description: 'Switch to freelancer mode to offer your sports services (e.g. netbowler, practice partner, 1 on 1 coach) and start earning.',
+        position: isMobile ? 'top' : 'bottom'
+      },
+      {
+        targetId: 'sidebar-container',
+        title: 'Your Account',
+        description: 'Access My Profile, My Bookings, My Referrals, Notifications, Support, and App Guide from here.',
+        position: 'bottom-center',
+        onStart: () => setShowSidebar(true)
+      }
+    ]
+  };
+
+  useEffect(() => {
+    const shouldStart = !hasSeenTutorial('intro-tour') || searchParams.get('tutorial') === 'intro-tour';
+    if (shouldStart) {
+      if (searchParams.get('tutorial') === 'intro-tour') {
+        // Clear param after starting? Or keep it?
+        // Let's keep it simple, just start.
+        // Wait, if we keep the param, a reload will restart it again. That's fine for "replay".
+      }
+
+      // Delay slightly for better entrance
+      const timer = setTimeout(() => {
+        startTutorial(introTutorial);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [searchParams, isMobile, hasSeenTutorial, startTutorial]);
+
+  // Configuration for Sport Card Styles
+  const sportStyles: Record<string, {
+    borderHover: string;
+    gradientTo: string;
+    iconShadow: string;
+    textHover: string;
+    icon: string;
+  }> = {
+    'Cricket': {
+      borderHover: 'group-hover:border-blue-500/50',
+      gradientTo: 'to-blue-900/20',
+      iconShadow: 'drop-shadow-[0_0_15px_rgba(59,130,246,0.3)]',
+      textHover: 'group-hover:text-blue-400',
+      icon: '🏏'
+    },
+    'Football': {
+      borderHover: 'group-hover:border-emerald-500/50',
+      gradientTo: 'to-emerald-900/20',
+      iconShadow: 'drop-shadow-[0_0_15px_rgba(16,185,129,0.3)]',
+      textHover: 'group-hover:text-emerald-400',
+      icon: '⚽️'
+    },
+    'Badminton': {
+      borderHover: 'group-hover:border-yellow-500/50',
+      gradientTo: 'to-yellow-900/20',
+      iconShadow: 'drop-shadow-[0_0_15px_rgba(234,179,8,0.3)]',
+      textHover: 'group-hover:text-yellow-400',
+      icon: '🏸'
+    },
+    'Tennis': {
+      borderHover: 'group-hover:border-lime-500/50',
+      gradientTo: 'to-lime-900/20',
+      iconShadow: 'drop-shadow-[0_0_15px_rgba(132,204,22,0.3)]',
+      textHover: 'group-hover:text-lime-400',
+      icon: '🎾'
+    },
+    'Basketball': {
+      borderHover: 'group-hover:border-orange-500/50',
+      gradientTo: 'to-orange-900/20',
+      iconShadow: 'drop-shadow-[0_0_15px_rgba(249,115,22,0.3)]',
+      textHover: 'group-hover:text-orange-400',
+      icon: '🏀'
+    },
+    'Padel': {
+      borderHover: 'group-hover:border-cyan-500/50',
+      gradientTo: 'to-cyan-900/20',
+      iconShadow: 'drop-shadow-[0_0_15px_rgba(6,182,212,0.3)]',
+      textHover: 'group-hover:text-cyan-400',
+      icon: '🎾'
+    },
+    'Pickleball': {
+      borderHover: 'group-hover:border-green-500/50',
+      gradientTo: 'to-green-900/20',
+      iconShadow: 'drop-shadow-[0_0_15px_rgba(34,197,94,0.3)]',
+      textHover: 'group-hover:text-green-400',
+      icon: '🏓'
+    },
+    'Table Tennis': {
+      borderHover: 'group-hover:border-teal-500/50',
+      gradientTo: 'to-teal-900/20',
+      iconShadow: 'drop-shadow-[0_0_15px_rgba(20,184,166,0.3)]',
+      textHover: 'group-hover:text-teal-400',
+      icon: '🏓'
+    },
+    'Combat Sports': {
+      borderHover: 'group-hover:border-rose-500/50',
+      gradientTo: 'to-rose-900/20',
+      iconShadow: 'drop-shadow-[0_0_15px_rgba(244,63,94,0.3)]',
+      textHover: 'group-hover:text-rose-400',
+      icon: '🥊'
+    },
+    'Others': {
+      borderHover: 'group-hover:border-purple-500/50',
+      gradientTo: 'to-purple-900/20',
+      iconShadow: 'drop-shadow-[0_0_15px_rgba(168,85,247,0.3)]',
+      textHover: 'group-hover:text-purple-400',
+      icon: '🏅'
+    }
+  };
 
   // Set local state when user from context changes
   useEffect(() => {
@@ -211,14 +393,26 @@ export default function ClientHome() {
 
   return (
     <ClientLayout>
+      <AppGuideModal isOpen={showAppGuide} onClose={() => setShowAppGuide(false)} />
+      <RequestServiceDialog
+        open={showRequestDialog}
+        onOpenChange={setShowRequestDialog}
+        userId={user?.id}
+      />
+      <LoginDialog
+        open={showLoginDialog}
+        onOpenChange={setShowLoginDialog}
+        onSuccess={() => setShowRequestDialog(true)}
+      />
       {/* Fixed Header */}
-      <div className="fixed top-0 left-0 w-full z-30 bg-gradient-to-br from-[#6B46C1] via-[#4C1D95] to-[#2D1B69]">
+      <div className="fixed top-0 left-0 w-full z-[110] bg-gradient-to-br from-[#6B46C1] via-[#4C1D95] to-[#2D1B69]">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between relative">
           {/* Left Section: Avatar and Welcome */}
           <div className="flex items-center gap-3 z-20">
             <div className="relative group">
               <div className="relative flex items-center justify-center">
                 <button
+                  id="sidebar-trigger"
                   className="flex items-center justify-center w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 transition-colors relative"
                   onClick={() => setShowSidebar(true)}
                   aria-label="Open profile menu"
@@ -235,6 +429,7 @@ export default function ClientHome() {
 
                 </button>
               </div>
+
               {/* Sidebar & Backdrop */}
               {/* Sidebar & Backdrop - always mounted for animation */}
               <div>
@@ -245,7 +440,7 @@ export default function ClientHome() {
                   aria-label="Close sidebar"
                 />
                 {/* Sidebar */}
-                <div className={`fixed top-0 left-0 z-50 h-full w-64 sm:w-72 bg-[#18181b] border-r border-white/10 shadow-2xl flex flex-col transition-transform duration-300 ${showSidebar ? 'translate-x-0' : '-translate-x-full'}`}>
+                <div id="sidebar-container" className={`fixed top-0 left-0 z-50 h-full w-64 sm:w-72 bg-[#18181b] border-r border-white/10 shadow-2xl flex flex-col transition-transform duration-300 ${showSidebar ? 'translate-x-0' : '-translate-x-full'}`}>
                   <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
                     <div className="flex items-center gap-3">
                       <img src={userAvatar} alt="Profile" className="w-10 h-10 rounded-full object-cover border-2 border-purple-400"
@@ -307,12 +502,39 @@ export default function ClientHome() {
                       <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><path d="M12 8v4l3 2" /></svg>
                       Support
                     </button>
+                    {/* Request a Feature */}
+                    <button
+                      className="flex items-center gap-3 px-6 py-3 text-left text-white/90 hover:bg-white/10 hover:text-white transition-colors group"
+                      onClick={() => {
+                        setShowSidebar(false);
+                        if (isAuthenticated) {
+                          setShowRequestDialog(true);
+                        } else {
+                          setShowLoginDialog(true);
+                        }
+                      }}
+                    >
+                      <Sparkles className="w-5 h-5 text-purple-400 transition-transform group-hover:scale-110" />
+                      Request a Feature
+                    </button>
+                    {/* App Guide Button */}
+                    <button
+                      className="flex items-center gap-3 px-6 py-3 text-left bg-purple-500/10 hover:bg-purple-500/20 text-purple-200 hover:text-white transition-all duration-300 mx-4 my-1 rounded-xl border border-purple-500/20"
+                      onClick={() => {
+                        setShowSidebar(false);
+                        setShowAppGuide(true);
+                      }}
+                    >
+                      <BookOpen className="w-5 h-5 text-purple-400" />
+                      App Guide
+                    </button>
 
                     <div className="border-t border-white/10 my-2" />
                     {/* Logout at the bottom */}
                     {isAuthenticated ? (
                       <button
                         onClick={() => setShowLogoutAlert(true)}
+                        id="sidebar-logout"
                         className="flex items-center gap-3 px-6 py-3 text-left text-red-400 hover:bg-white/10 hover:text-red-300 transition-colors w-full"
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7" /><path d="M3 21V3" /></svg>
@@ -366,28 +588,34 @@ export default function ClientHome() {
               <Home className="w-4 h-4 text-purple-400" />
               <span className="text-sm font-medium">Home</span>
             </Link>
-            <Link
-              href="/client/nearby/hirefeed"
-              className="px-4 py-2 rounded-xl flex items-center space-x-2 text-white/60 hover:text-white hover:bg-black/20 border border-transparent transition-all duration-300 group"
-            >
-              <Compass className="w-4 h-4 group-hover:text-purple-400 transition-colors duration-300" />
-              <span className="text-sm font-medium">Hire</span>
-            </Link>
-            <Link
-              href="/client/bookings"
-              className="px-4 py-2 rounded-xl flex items-center space-x-2 text-white/60 hover:text-white hover:bg-black/20 border border-transparent transition-all duration-300 group"
-            >
-              <Calendar className="w-4 h-4 group-hover:text-purple-400 transition-colors duration-300" />
-              <span className="text-sm font-medium">Bookings</span>
-            </Link>
+            <div id="nav-hire-desktop">
+              <Link
+                href="/client/nearby/hirefeed"
+                className="px-4 py-2 rounded-xl flex items-center space-x-2 text-white/60 hover:text-white hover:bg-black/20 border border-transparent transition-all duration-300 group"
+              >
+                <Compass className="w-4 h-4 group-hover:text-purple-400 transition-colors duration-300" />
+                <span className="text-sm font-medium">Hire</span>
+              </Link>
+            </div>
+            <div id="nav-bookings-desktop">
+              <Link
+                href="/client/bookings"
+                className="px-4 py-2 rounded-xl flex items-center space-x-2 text-white/60 hover:text-white hover:bg-black/20 border border-transparent transition-all duration-300 group"
+              >
+                <Calendar className="w-4 h-4 group-hover:text-purple-400 transition-colors duration-300" />
+                <span className="text-sm font-medium">Bookings</span>
+              </Link>
+            </div>
             {/* Earn Button */}
-            <button
-              onClick={handleSwitchToFreelancer}
-              className="px-4 py-2 rounded-xl flex items-center space-x-1.5 bg-gradient-to-r from-yellow-500 via-amber-400 to-yellow-300 text-black shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-300 border border-transparent"
-            >
-              <span className="text-sm font-bold whitespace-nowrap">Earn</span>
-              <span className="text-sm">💰</span>
-            </button>
+            <div id="nav-earn-desktop">
+              <button
+                onClick={handleSwitchToFreelancer}
+                className="px-4 py-2 rounded-xl flex items-center space-x-1.5 bg-gradient-to-r from-yellow-500 via-amber-400 to-yellow-300 text-black shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-300 border border-transparent"
+              >
+                <span className="text-sm font-bold whitespace-nowrap">Earn</span>
+                <span className="text-sm">💰</span>
+              </button>
+            </div>
           </div>
 
           <div className="flex items-center space-x-3 sm:space-x-4">
@@ -436,13 +664,13 @@ export default function ClientHome() {
                   Practice like a pro, with a pro
                 </h1>
                 <p className="text-sm sm:text-base md:text-lg text-white/90 mb-3 sm:mb-4 drop-shadow-[0_2px_4px_rgba(0,0,0,0.2)]">
-                  Your shortcut to better cricket starts here
+                  Your shortcut to better sports starts here
                 </p>
               </div>
 
               {/* Modern Search Bar */}
               <div className="max-w-3xl mx-auto mb-4 sm:mb-6 px-2 sm:px-0">
-                <div className="relative w-full">
+                <div id="hero-search" className="relative w-full">
                   <Input
                     type="text"
                     placeholder={searchQuery ? `Find services in Chennai...` : placeholder || `Find services in Chennai...`}
@@ -466,7 +694,7 @@ export default function ClientHome() {
 
         <div className="container max-w-5xl mx-auto px-4 py-4 bg-[#111111] mb-8 relative z-0">
           {/* Top Rated Experts Section */}
-          <section className="mb-4 relative z-0">
+          <section id="experts-section" className="mb-4 relative z-0">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-base font-semibold text-white tracking-wide text-left">
                 <span className="bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 text-transparent bg-clip-text">Top Rated</span>
@@ -608,8 +836,46 @@ export default function ClientHome() {
             }
           `}</style>
 
+          {/* Popular Sports Section */}
+          <section id="sports-categories" className="mb-4 relative z-0">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-base font-semibold text-white tracking-wide text-left">Popular Sports</h2>
+              <Link href="/client/services" className="text-white/80 hover:text-white text-xs font-medium flex items-center transition-colors">
+                View All
+                <ChevronRight className="w-3 h-3 ml-1" />
+              </Link>
+            </div>
+            <div className="relative -mx-4">
+              <div className="overflow-x-auto scrollbar-hide px-4 pr-8">
+                <div className="flex space-x-4 pb-4">
+                  {categories
+                    .filter(c => c.name !== 'All')
+                    .slice(0, 10)
+                    .map((category) => {
+                      const style = sportStyles[category.name] || sportStyles['Others'];
+                      return (
+                        <div
+                          key={category.id}
+                          onClick={() => router.push(`/client/nearby/hirefeed?category=${encodeURIComponent(category.name)}`)}
+                          className={`relative group w-[130px] h-[150px] sm:w-[140px] sm:h160px] rounded-2xl overflow-hidden cursor-pointer flex-shrink-0 bg-[#161616] border border-white/5 ${style.borderHover} transition-colors duration-300`}
+                        >
+                          <div className={`absolute inset-0 bg-gradient-to-b from-transparent via-transparent ${style.gradientTo} opacity-0 group-hover:opacity-100 transition-opacity duration-500`}></div>
+                          <div className="absolute inset-0 flex items-center justify-center pb-6">
+                            <span className={`text-5xl sm:text-6xl filter ${style.iconShadow} transform transition-transform duration-500 group-hover:scale-110 group-hover:-translate-y-2`}>{style.icon}</span>
+                          </div>
+                          <div className="absolute bottom-0 left-0 right-0 p-3 text-center bg-gradient-to-t from-black/90 to-transparent">
+                            <span className={`text-sm sm:text-base font-bold text-white tracking-wide ${style.textHover} transition-colors`}>{category.name}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
+              </div>
+            </div>
+          </section>
+
           {/* Service Categories */}
-          <section className="mb-4 relative z-0">
+          <section id="popular-services" className="mb-4 relative z-0">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-base font-semibold text-white tracking-wide text-left">Popular Services in your area</h2>
               <Link href="/client/services" className="text-white/80 hover:text-white text-xs font-medium flex items-center transition-colors">
@@ -617,10 +883,10 @@ export default function ClientHome() {
                 <ChevronRight className="w-3 h-3 ml-1" />
               </Link>
             </div>
-            <div className="relative -mx-4">
-              <div className="overflow-x-auto scrollbar-hide px-4 pr-8 md:overflow-visible">
-                <div className="flex space-x-4 pb-2 md:grid md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 md:space-x-0 md:gap-4">
-                  {popularServices.map((service) => (
+            <div className="relative -mx-4 text-left">
+              <div className="overflow-x-auto scrollbar-hide px-4 pr-8">
+                <div className="flex space-x-4 pb-2">
+                  {popularServices.slice(0, 10).map((service) => (
                     <ServiceCard
                       key={service.id}
                       id={service.id}
@@ -628,7 +894,7 @@ export default function ClientHome() {
                       image={service.image}
                       icon={service.icon}
                       providerCount={service.providerCount}
-                      className="w-[125px] flex-shrink-0 md:w-auto"
+                      className="w-[140px] flex-shrink-0"
                     />
                   ))}
                 </div>
@@ -642,7 +908,7 @@ export default function ClientHome() {
               <h2 className="text-base font-semibold text-white tracking-wide text-left">Why BAILS?</h2>
             </div>
             <div className="flex flex-row justify-center gap-2 md:gap-3 pb-4">
-              {/* Local Delivery */}
+              {/* Fast Service */}
               <div className="flex flex-col items-center w-24 md:w-28 py-2">
                 <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center mb-2">
                   <MapPin className="w-5 h-5 text-purple-500" />
@@ -655,7 +921,6 @@ export default function ClientHome() {
               {/* Smart Matching */}
               <div className="flex flex-col items-center w-24 md:w-28 py-2">
                 <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center mb-2">
-                  {/* AI-related icon - Sparkles */}
                   <Sparkles className="w-5 h-5 text-purple-500" />
                 </div>
                 <div className="text-center">
@@ -684,7 +949,7 @@ export default function ClientHome() {
             className="mb-4 relative z-0"
           >
             <div className="mb-4">
-              <h2 className="text-base font-semibold text-white tracking-wide text-left" data-component-name="ClientHome">Exclusive Offers</h2>
+              <h2 className="text-base font-semibold text-white tracking-wide text-left">Exclusive Offers</h2>
             </div>
             <div className="relative -mx-4">
               <div className="overflow-x-auto scrollbar-hide px-4 pr-8">
@@ -696,7 +961,6 @@ export default function ClientHome() {
                     ))
                   ) : promos.length > 0 ? (
                     promos.map((promo, index) => {
-                      // Determine accent color based on index or discount type
                       const colors = [
                         { gradient: 'from-purple-400/80 to-purple-600/80', text: 'text-purple-300', bg: 'bg-purple-500/20', border: 'border-purple-300/30', text2: 'text-purple-200' },
                         { gradient: 'from-blue-400/80 to-blue-600/80', text: 'text-blue-300', bg: 'bg-blue-500/20', border: 'border-blue-300/30', text2: 'text-blue-200' },
@@ -758,6 +1022,7 @@ export default function ClientHome() {
           </motion.section>
         </div>
       </div>
+
       <LocationPickerModal
         isOpen={showLocationPicker}
         onClose={() => setShowLocationPicker(false)}
@@ -765,8 +1030,9 @@ export default function ClientHome() {
         onUpdateLocation={handleLocationUpdate}
         onUseCurrentLocation={handleUseCurrentLocation}
       />
+
       <AlertDialog open={showLogoutAlert} onOpenChange={setShowLogoutAlert}>
-        <AlertDialogContent className="bg-[#18181b] border-white/10 text-white z-[100] w-[90%] max-w-sm rounded-lg">
+        <AlertDialogContent className="bg-[#18181b] border-white/10 text-white z-[999] w-[90%] max-w-sm rounded-lg">
           <AlertDialogHeader>
             <AlertDialogTitle>Sign out?</AlertDialogTitle>
             <AlertDialogDescription className="text-white/60">

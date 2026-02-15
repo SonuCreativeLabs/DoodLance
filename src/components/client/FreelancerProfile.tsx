@@ -8,6 +8,7 @@ import { useParams, useRouter, useSearchParams, usePathname } from 'next/navigat
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from "@/components/ui/badge";
+import { SPORTS_CONFIG } from '@/constants/sports';
 import {
     ArrowLeft,
     Star,
@@ -25,7 +26,9 @@ import {
     User,
     Play,
     CheckCircle2,
-    MessageSquare
+    MessageSquare,
+    Trophy,
+    Activity
 } from 'lucide-react';
 import { useNavbar } from '@/contexts/NavbarContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -40,7 +43,6 @@ import { formatTime } from '@/utils/profileUtils';
 import { calculateAge } from '@/utils/personalUtils';
 import Image from 'next/image';
 import { IconButton } from '@/components/ui/icon-button';
-import { PortfolioItemModal } from '@/components/common/PortfolioItemModal';
 import { HireBottomSheet } from '@/components/hire/HireBottomSheet';
 import { VideoEmbed } from '@/components/common/VideoEmbed';
 import { ServiceVideoCarousel } from '@/components/common/ServiceVideoCarousel';
@@ -80,6 +82,9 @@ interface FreelancerDetail {
     cricketRole?: string;
     battingStyle?: string;
     bowlingStyle?: string;
+    mainSport?: string;
+    otherSports?: string[];
+    sportsDetails?: any;
     languages?: string;
     completionRate?: number;
     skills?: string[];
@@ -96,14 +101,6 @@ interface FreelancerDetail {
         features?: string[];
         category?: string;
         videoUrls?: string[];
-    }[];
-
-    // Portfolio data
-    portfolio?: {
-        id: string;
-        title: string;
-        image: string;
-        category: string;
     }[];
 
     // Achievements data
@@ -155,8 +152,6 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
     const [isHoursDropdownOpen, setIsHoursDropdownOpen] = useState(false);
     const [isScrolledPastCover, setIsScrolledPastCover] = useState(false);
     const [activeTab, setActiveTab] = useState('top');
-    const [selectedPortfolioItem, setSelectedPortfolioItem] = useState<any>(null);
-    const [isPortfolioModalOpen, setIsPortfolioModalOpen] = useState(false);
     const [selectedService, setSelectedService] = useState<any>(null);
     const [isServiceDetailOpen, setIsServiceDetailOpen] = useState(false);
     const [isHireBottomSheetOpen, setIsHireBottomSheetOpen] = useState(false);
@@ -167,8 +162,8 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
     const tabsContainerRef = useRef<HTMLDivElement>(null);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-    // Prioritize propId, fallback to params.id
-    const freelancerId = propId || (params.id as string);
+    // Prioritize propId, fallback to params.id or params.username (for public profiles)
+    const freelancerId = propId || (params.id as string) || (params.username as string);
 
     // Auto-open hire sheet if returning from a completed auth/profile flow
     usePendingActionCheck(
@@ -221,7 +216,13 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
             try {
                 const res = await fetch(`/api/freelancers/${freelancerId}`);
                 if (!res.ok) {
-                    if (!cachedData) setFreelancer(null); // Only clear if no cache
+                    const errorData = await res.json().catch(() => ({}));
+                    console.error('[FreelancerProfile] API Error:', res.status, errorData);
+
+                    if (!cachedData) {
+                        setFreelancer(null);
+                        toast.error(errorData.error || 'Freelancer profile not found');
+                    }
                     setLoading(false);
                     return;
                 }
@@ -282,6 +283,10 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                     coverImage: String(profile.coverImage || ''),
                     dateOfBirth: profile.dateOfBirth,
 
+                    mainSport: profile.mainSport,
+                    otherSports: profile.otherSports,
+                    sportsDetails: profile.sportsDetails,
+
                     services: profile.services?.map((s: any) => {
                         // DEBUG LOG
                         console.log('FreelancerProfile Service Raw:', s.id, s.title, s.videoUrl, s.videoUrls);
@@ -303,12 +308,7 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                         company: String(exp.company)
                     })) || [],
 
-                    portfolio: profile.portfolios?.map((p: any) => ({
-                        id: String(p.id),
-                        title: String(p.title),
-                        image: p.images ? String(JSON.parse(p.images)[0] || '') : '',
-                        category: String(p.category)
-                    })) || [],
+
 
                     reviewsData: profile.reviews?.map((r: any) => ({
                         id: String(r.id),
@@ -365,24 +365,16 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
     useLayoutEffect(() => {
         if (typeof window !== 'undefined' && freelancer) {
             const hash = window.location.hash;
-            const shouldScrollToPortfolio = sessionStorage.getItem('scrollToPortfolio') === 'true' || hash === '#portfolio';
             const shouldScrollToServices = sessionStorage.getItem('scrollToServices') === 'true' || hash === '#services';
             const shouldScrollToReviews = sessionStorage.getItem('scrollToReviews') === 'true' || hash === '#reviews';
 
             // Clear the sessionStorage flags
-            sessionStorage.removeItem('scrollToPortfolio');
             sessionStorage.removeItem('scrollToServices');
             sessionStorage.removeItem('scrollToReviews');
 
             // Use requestAnimationFrame for better timing
             const handleScroll = () => {
-                if (shouldScrollToPortfolio) {
-                    const portfolioElement = document.getElementById('portfolio');
-                    if (portfolioElement) {
-                        portfolioElement.scrollIntoView({ behavior: 'instant', block: 'start' });
-                        setActiveTab('portfolio');
-                    }
-                } else if (shouldScrollToServices) {
+                if (shouldScrollToServices) {
                     const servicesElement = document.getElementById('services');
                     if (servicesElement) {
                         servicesElement.scrollIntoView({ behavior: 'instant', block: 'start' });
@@ -445,7 +437,6 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
 
     const handleViewAllServices = () => {
         if (typeof window !== 'undefined') {
-            sessionStorage.removeItem('fromPortfolio');
             sessionStorage.removeItem('fromReviews');
             sessionStorage.setItem('fromServices', 'true');
             sessionStorage.setItem('lastVisitedSection', 'services');
@@ -464,7 +455,6 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
     const handleViewAllReviews = () => {
         if (typeof window !== 'undefined') {
             sessionStorage.removeItem('fromServices');
-            sessionStorage.removeItem('fromPortfolio');
             sessionStorage.setItem('fromReviews', 'true');
 
             const url = new URL(window.location.href);
@@ -662,7 +652,7 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                             </div>
                             <div className="w-full max-w-4xl mx-auto bg-[#0f0f0f]">
                                 {/* Cover Photo */}
-                                <div className="relative h-48 md:h-80 w-full bg-gradient-to-r from-purple-900 to-purple-700">
+                                <div className="relative h-48 sm:h-64 md:h-72 w-full bg-gradient-to-r from-purple-900 to-purple-700">
 
                                     <div className="absolute inset-0 w-full h-full bg-[#111111] overflow-hidden">
                                         <div className="absolute inset-0 flex items-center justify-center">
@@ -709,11 +699,11 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                                                 </Avatar>
                                             </div>
                                             {/* ID Verified Badge - Left side of profile picture */}
-                                            <div className="absolute top-[calc(50%+32px)] -translate-y-1/2 -left-28 ml-0">
+                                            <div className="absolute top-[calc(50%+32px)] -translate-y-1/2 right-full mr-5">
                                                 <IdVerifiedBadge isVerified={!!freelancer.isVerified} />
                                             </div>
                                             {/* Online Badge - Right side of profile picture */}
-                                            <div className="absolute top-[calc(50%+32px)] -translate-y-1/2 left-full ml-10">
+                                            <div className="absolute top-[calc(50%+32px)] -translate-y-1/2 left-full ml-5">
                                                 <div className={`inline-flex items-center gap-1 px-2 py-1 text-[8px] font-bold border-2 shadow-lg whitespace-nowrap transform rotate-[-2deg] ${freelancer.online
                                                     ? 'bg-gradient-to-br from-green-400 to-green-600 border-green-300 text-white shadow-green-500/50 border-dashed'
                                                     : 'bg-gradient-to-br from-amber-400 to-orange-500 border-amber-300 text-white shadow-amber-500/50 border-dashed'
@@ -725,10 +715,10 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                                     </div>
 
                                     <div className="text-center mb-4">
-                                        <div className="flex items-center justify-center gap-2">
-                                            <h1 className="text-2xl font-bold text-white">{freelancer.name}</h1>
+                                        <div className="relative inline-block">
+                                            <h1 className="text-2xl font-bold text-white leading-tight">{freelancer.name}</h1>
                                             {freelancer.dateOfBirth && (
-                                                <span className="text-lg font-semibold text-white/70">
+                                                <span className="absolute left-full top-1/2 -translate-y-1/2 ml-3 text-lg font-semibold text-white/70 whitespace-nowrap">
                                                     {calculateAge(freelancer.dateOfBirth)}
                                                 </span>
                                             )}
@@ -736,7 +726,7 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                                         {freelancer.username && (
                                             <p className="text-white/40 text-sm font-medium">@{freelancer.username}</p>
                                         )}
-                                        <p className="text-purple-400 mt-1">{freelancer.cricketRole || 'Role not set'}</p>
+                                        <p className="text-purple-400 mt-1">{freelancer.mainSport === 'Cricket' ? (freelancer.cricketRole || 'Cricketer') : (freelancer.service || 'Freelancer')}</p>
 
                                         <div className="mt-2 flex flex-col items-center gap-0.5 text-sm text-white/70">
                                             <div className="flex items-center gap-2">
@@ -863,24 +853,91 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                                         {freelancer.bio || freelancer.about ? (
                                             <p className="text-white mb-3 whitespace-pre-line">{freelancer.bio || freelancer.about}</p>
                                         ) : (
-                                            <p className="text-white/40 text-sm italic mb-6">No bio available</p>
+                                            <div className="bg-white/[0.02] backdrop-blur-sm border border-white/5 rounded-2xl p-6 text-center mb-8">
+                                                <div className="text-white/40 text-sm italic">Biography not shared yet</div>
+                                            </div>
                                         )}
 
-                                        {/* Cricket Information */}
-                                        <div className="space-y-2 mb-6">
-                                            {freelancer.cricketRole && (
-                                                <div className="text-white/80">
-                                                    <span className="text-white/50">Role:</span> <span className="text-white">{freelancer.cricketRole}</span>
-                                                </div>
-                                            )}
-                                            {freelancer.battingStyle && (
-                                                <div className="text-white/80">
-                                                    <span className="text-white/50">Batting Style:</span> <span className="text-white">{freelancer.battingStyle}</span>
-                                                </div>
-                                            )}
-                                            {freelancer.bowlingStyle && (
-                                                <div className="text-white/80">
-                                                    <span className="text-white/50">Bowling Style:</span> <span className="text-white">{freelancer.bowlingStyle}</span>
+                                        {/* Sport-Specific Information */}
+                                        {/* Sport-Specific Information - Minimalist Stat Pills */}
+                                        <div className="space-y-6 mb-8">
+                                            {/* Main Sport Pills */}
+                                            {(() => {
+                                                const mainSport = freelancer.mainSport || 'Cricket';
+                                                const config = SPORTS_CONFIG[mainSport];
+                                                if (!config) return null;
+
+                                                const attributes = config.attributes.map(attr => {
+                                                    let value = freelancer.sportsDetails?.[attr.key];
+                                                    // Legacy fallback for Cricket
+                                                    if (!value && mainSport === 'Cricket') {
+                                                        if (attr.key === 'cricketRole') value = freelancer.cricketRole;
+                                                        if (attr.key === 'battingStyle') value = freelancer.battingStyle;
+                                                        if (attr.key === 'bowlingStyle') value = freelancer.bowlingStyle;
+                                                    }
+                                                    return { ...attr, value };
+                                                }).filter(attr => attr.value);
+
+                                                return (
+                                                    <div className="space-y-3">
+                                                        <div className="flex items-center gap-2 px-1">
+                                                            <Trophy className="h-4 w-4 text-white/40" />
+                                                            <h3 className="text-xs font-bold text-white/70 uppercase tracking-wider">{mainSport}</h3>
+                                                        </div>
+                                                        <div className="flex flex-wrap gap-2">
+                                                            {attributes.map((attr, idx) => (
+                                                                <div key={idx} className="bg-white/[0.02] backdrop-blur-sm border border-white/5 px-3 py-1.5 rounded-lg flex items-center gap-3 hover:bg-white/[0.04] transition-all duration-300">
+                                                                    <span className="text-[9px] uppercase tracking-wide text-white/40 font-medium">{attr.label}</span>
+                                                                    <span className="text-[11px] text-white font-medium">
+                                                                        {(() => {
+                                                                            const val = Array.isArray(attr.value) ? attr.value.join(', ') : attr.value;
+                                                                            return typeof val === 'string' ? val.replace(/-/g, ' ') : val;
+                                                                        })()}
+                                                                    </span>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })()}
+
+                                            {/* Secondary Sports Pills */}
+                                            {freelancer.otherSports && freelancer.otherSports.length > 0 && (
+                                                <div className="space-y-4 pt-2">
+                                                    {freelancer.otherSports.map((sport, i) => {
+                                                        const config = SPORTS_CONFIG[sport];
+                                                        const details = freelancer.sportsDetails?.[sport] || {};
+
+                                                        const attributes = config?.attributes.map(attr => ({
+                                                            ...attr,
+                                                            value: details[attr.key]
+                                                        })).filter(attr => attr.value) || [];
+
+                                                        return (
+                                                            <div key={i} className="space-y-3">
+                                                                <div className="flex items-center gap-2 px-1">
+                                                                    <Activity className="h-4 w-4 text-white/40" />
+                                                                    <h3 className="text-xs font-bold text-white/70 uppercase tracking-wider">{sport}</h3>
+                                                                </div>
+                                                                <div className="flex flex-wrap gap-2">
+                                                                    {attributes.map((attr, idx) => (
+                                                                        <div key={idx} className="bg-white/[0.02] backdrop-blur-sm border border-white/5 px-3 py-1.5 rounded-lg flex items-center gap-3 hover:bg-white/[0.04] transition-all duration-300">
+                                                                            <span className="text-[9px] uppercase tracking-wide text-white/40 font-medium">{attr.label}</span>
+                                                                            <span className="text-[11px] text-white font-medium">
+                                                                                {(() => {
+                                                                                    const val = Array.isArray(attr.value) ? attr.value.join(', ') : attr.value;
+                                                                                    return typeof val === 'string' ? val.replace(/-/g, ' ') : val;
+                                                                                })()}
+                                                                            </span>
+                                                                        </div>
+                                                                    ))}
+                                                                    {attributes.length === 0 && (
+                                                                        <span className="text-[10px] text-white/20 italic px-2">No additional details</span>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })}
                                                 </div>
                                             )}
                                         </div>
@@ -914,7 +971,9 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                                                     })}
                                                 </div>
                                             ) : (
-                                                <p className="text-white/40 text-sm italic">No skills listed</p>
+                                                <div className="bg-white/[0.02] backdrop-blur-sm border border-white/5 rounded-xl p-4 text-center">
+                                                    <p className="text-white/30 text-xs italic">Skills not listed yet</p>
+                                                </div>
                                             )}
                                         </div>
 
@@ -1067,96 +1126,13 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                                                 </button>
                                             </>
                                         ) : (
-                                            <div className="text-center py-12 rounded-3xl border border-white/10 bg-white/5">
-                                                <Briefcase className="h-12 w-12 mx-auto text-white/20 mb-4" />
-                                                <h3 className="text-lg font-medium text-white">No services listed yet</h3>
-                                                <p className="text-white/60 mt-1">This freelancer hasn&apos;t added any service packages yet.</p>
+                                            <div className="text-center py-12 rounded-2xl border border-white/5 bg-white/[0.02] backdrop-blur-sm">
+                                                <Briefcase className="h-10 w-10 mx-auto text-white/10 mb-3" />
+                                                <h3 className="text-lg font-medium text-white/90">No services listed yet</h3>
+                                                <p className="text-sm text-white/50 mt-1 max-w-xs mx-auto">This athlete hasn't added any professional services yet.</p>
                                             </div>
                                         )}
                                     </section>
-
-                                    {/* Portfolio Section */}
-                                    {freelancer.portfolio && freelancer.portfolio.length > 0 && (
-                                        <section id="portfolio" data-section="portfolio" className="pt-8 scroll-mt-20 relative group">
-                                            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
-                                            <div className="mb-4">
-                                                <h2 className="text-xl font-semibold text-white mb-1">My Portfolio</h2>
-                                                <p className="text-white/60 text-sm">Showcase of my best work and projects</p>
-                                            </div>
-
-                                            <div className="relative">
-                                                <div className="flex -mx-2 overflow-x-auto scrollbar-hide pb-2">
-                                                    <div className="flex gap-4 px-2">
-                                                        {freelancer.portfolio.map((item) => (
-                                                            <div
-                                                                key={item.id}
-                                                                className="w-80 flex-shrink-0 group relative aspect-video rounded-xl overflow-hidden border border-white/10 hover:border-white/20 transition-all duration-300 cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-500"
-                                                                role="button"
-                                                                tabIndex={0}
-                                                                aria-label={`Open portfolio item: ${item.title}`}
-                                                                onClick={() => {
-                                                                    setSelectedPortfolioItem(item);
-                                                                    setIsPortfolioModalOpen(true);
-                                                                }}
-                                                                onKeyDown={e => {
-                                                                    if (e.key === 'Enter' || e.key === ' ') {
-                                                                        setSelectedPortfolioItem(item);
-                                                                        setIsPortfolioModalOpen(true);
-                                                                    }
-                                                                }}
-                                                            >
-                                                                <div className="absolute inset-0 flex items-center justify-center bg-gray-800/50 rounded-xl">
-                                                                    <img
-                                                                        src={item.image}
-                                                                        alt={item.title}
-                                                                        className="w-full h-full object-cover transition-all duration-300 group-hover:scale-105 rounded-xl"
-                                                                        onError={(e) => {
-                                                                            e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjAwIiBoZWlnaHQ9IjgwMCIgdmlld0JveD0iMCAwIDYwMCA0MDAiPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiMxQTFBMUEiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE4IiBmb250LXdlaWdodD0iYm9sZCIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGRvbWluYW50LWJhc2VsaW5lPSJtaWRkbGUiPk5vIFRodW1ibmFpbCBBdmFpbGFibGU8L3RleHQ+PC9zdmc+'
-                                                                        }}
-                                                                    />
-                                                                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                                    </div>
-                                                                </div>
-                                                                <div className="absolute inset-0 p-4 flex flex-col justify-end bg-gradient-to-t from-black/70 via-black/40 to-transparent rounded-xl">
-                                                                    <div className="flex justify-between items-end mb-8">
-                                                                        <div className="pr-2 flex-1">
-                                                                            <h3 className="font-medium text-white line-clamp-1 text-sm">{item.title}</h3>
-                                                                        </div>
-                                                                    </div>
-                                                                    <div className="absolute bottom-3 left-3 bg-white/10 text-white/80 border-white/20 px-2 py-0.5 text-xs rounded-full border">
-                                                                        {item.category}
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <button
-                                                onClick={() => {
-                                                    if (typeof window !== 'undefined') {
-                                                        sessionStorage.removeItem('fromServices');
-                                                        sessionStorage.removeItem('fromReviews');
-                                                        sessionStorage.setItem('fromPortfolio', 'true');
-                                                        sessionStorage.setItem('lastVisitedSection', 'portfolio');
-
-                                                        const url = new URL(window.location.href);
-                                                        url.hash = '#portfolio';
-                                                        const currentUrl = url.toString();
-
-                                                        sessionStorage.setItem('returnToProfilePreview', currentUrl);
-
-                                                        // Use router.push instead of window.location.href for better navigation
-                                                        router.push(`/freelancer/profile/preview/portfolio?freelancerId=${freelancerId}${isViewOnly ? '&viewOnly=true' : ''}#fromPreview`);
-                                                    }
-                                                }}
-                                                className="w-full mt-2 py-2.5 px-4 border border-white/30 hover:bg-white/5 transition-colors text-sm font-medium flex items-center justify-center gap-2 text-white rounded-[6px]"
-                                            >
-                                                View All {freelancer.portfolio.length} Portfolio Items
-                                                <ArrowRight className="h-4 w-4" />
-                                            </button>
-                                        </section>
-                                    )}
 
                                     {/* Achievements Section */}
                                     <section id="achievements" data-section="achievements" className="pt-8 scroll-mt-20 relative group z-0">
@@ -1181,10 +1157,10 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                                                 ))}
                                             </div>
                                         ) : (
-                                            <div className="text-center py-8 rounded-2xl border border-white/10 bg-white/5">
-                                                <Award className="h-10 w-10 mx-auto text-white/20 mb-3" />
-                                                <h3 className="text-lg font-medium text-white">No achievements added yet</h3>
-                                                <p className="text-white/60 mt-1">This freelancer hasn&apos;t added any achievements yet.</p>
+                                            <div className="text-center py-12 rounded-2xl border border-white/5 bg-white/[0.02] backdrop-blur-sm">
+                                                <Award className="h-10 w-10 mx-auto text-white/10 mb-3" />
+                                                <h3 className="text-lg font-medium text-white/90">No achievements added yet</h3>
+                                                <p className="text-sm text-white/50 mt-1 max-w-xs mx-auto">Sports highlights and career milestones will appear here.</p>
                                             </div>
                                         )}
                                     </section>
@@ -1263,10 +1239,10 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                                                 </button>
                                             </>
                                         ) : (
-                                            <div className="text-center py-12 rounded-3xl border border-white/10 bg-white/5">
-                                                <MessageSquare className="h-12 w-12 mx-auto text-white/20 mb-4" />
-                                                <h3 className="text-lg font-medium text-white">No reviews yet</h3>
-                                                <p className="text-white/60 mt-1">Reviews from clients will appear here</p>
+                                            <div className="text-center py-12 rounded-2xl border border-white/5 bg-white/[0.02] backdrop-blur-sm">
+                                                <MessageSquare className="h-10 w-10 mx-auto text-white/10 mb-3" />
+                                                <h3 className="text-lg font-medium text-white/90">No reviews yet</h3>
+                                                <p className="text-sm text-white/50 mt-1 max-w-xs mx-auto">Client feedback and ratings will be showcased here.</p>
                                             </div>
                                         )}
                                     </section>
@@ -1280,16 +1256,6 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                         isOpen={isSkillDialogOpen}
                         onClose={() => setIsSkillDialogOpen(false)}
                         skillInfo={selectedSkillInfo}
-                    />
-
-                    {/* Portfolio Modal */}
-                    <PortfolioItemModal
-                        item={selectedPortfolioItem}
-                        isOpen={isPortfolioModalOpen}
-                        onClose={() => {
-                            setIsPortfolioModalOpen(false);
-                            setSelectedPortfolioItem(null);
-                        }}
                     />
 
                     {/* Service Detail Modal */}

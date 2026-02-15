@@ -3,11 +3,15 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { X, Clock, Calendar } from "lucide-react";
 import { useNavbar } from "@/contexts/NavbarContext";
-import { areas, serviceTypes, availabilityOptions, timeOptions } from '../constants';
+import { areas, serviceTypes, availabilityOptions, timeOptions, categories } from '../constants';
+import { useClientServices } from '@/contexts/ClientServicesContext';
+import * as Select from '@radix-ui/react-select';
 
 interface SearchFiltersProps {
   showFilterModal: boolean;
   setShowFilterModal: (show: boolean) => void;
+  selectedCategory: string;
+  setSelectedCategory: (category: string) => void;
   selectedArea: string;
   setSelectedArea: (area: string) => void;
   selectedService: string;
@@ -31,6 +35,8 @@ interface SearchFiltersProps {
 export default function SearchFilters({
   showFilterModal,
   setShowFilterModal,
+  selectedCategory,
+  setSelectedCategory,
   selectedArea,
   setSelectedArea,
   selectedService,
@@ -53,6 +59,8 @@ export default function SearchFilters({
   const dateInputRef = useRef<HTMLInputElement | null>(null);
   const { setNavbarVisibility } = useNavbar();
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const sports = categories.filter(c => c.name !== 'All');
+  const { services } = useClientServices(); // Using services from context for dynamic filtering
 
   useEffect(() => {
     if (showFilterModal) {
@@ -88,6 +96,7 @@ export default function SearchFilters({
 
       {/* Content */}
       <div className="flex-1 p-4 max-w-2xl w-full mx-auto">
+
         {/* Area Filter */}
         <div className="mb-6 relative">
           <label className="block mb-2 text-sm text-white/90 font-medium">Location</label>
@@ -126,19 +135,82 @@ export default function SearchFilters({
           */}
         </div>
 
+        {/* Sport Filter */}
+        <div className="mb-6">
+          <label className="block mb-2 text-sm text-white/90 font-medium">Sport</label>
+          <Select.Root value={selectedCategory} onValueChange={setSelectedCategory}>
+            <Select.Trigger className="w-full px-4 py-3 text-sm rounded-xl bg-[#111111] text-white border border-white/10 font-medium flex items-center justify-between focus:outline-none focus:border-purple-500 transition-colors data-[placeholder]:text-white/40">
+              <Select.Value placeholder="Select Sport" />
+              <Select.Icon className="text-white/40">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+              </Select.Icon>
+            </Select.Trigger>
+            <Select.Portal>
+              <Select.Content position="popper" side="bottom" sideOffset={5} className="overflow-hidden bg-[#18181b] rounded-xl border border-white/10 shadow-xl z-50 w-[var(--radix-select-trigger-width)] max-h-[240px] relative">
+                <Select.ScrollUpButton className="flex items-center justify-center h-6 bg-gradient-to-b from-[#18181b] to-transparent text-white/50 cursor-default pointer-events-none" />
+                <Select.Viewport className="p-1">
+                  <Select.Item value="All" className="relative flex items-center h-10 px-8 text-sm text-white rounded-lg select-none hover:bg-white hover:text-black data-[highlighted]:bg-white data-[highlighted]:text-black outline-none cursor-pointer mb-1 transition-colors">
+                    <Select.ItemText>All Sports</Select.ItemText>
+                    <Select.ItemIndicator className="absolute left-2 inline-flex items-center justify-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                    </Select.ItemIndicator>
+                  </Select.Item>
+                  {categories.filter(c => c.name !== 'All').map(category => (
+                    <Select.Item key={category.id} value={category.name} className="relative flex items-center h-10 px-8 text-sm text-white rounded-lg select-none hover:bg-white hover:text-black data-[highlighted]:bg-white data-[highlighted]:text-black outline-none cursor-pointer mb-1 transition-colors">
+                      <Select.ItemText>{category.name}</Select.ItemText>
+                      <Select.ItemIndicator className="absolute left-2 inline-flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                      </Select.ItemIndicator>
+                    </Select.Item>
+                  ))}
+                </Select.Viewport>
+                <Select.ScrollDownButton className="flex items-center justify-center h-8 bg-gradient-to-t from-[#18181b] to-transparent text-purple-400 cursor-default animate-pulse pointer-events-none" />
+              </Select.Content>
+            </Select.Portal>
+          </Select.Root>
+        </div>
+
         {/* Service Type Filter */}
         <div className="mb-6">
           <label className="block mb-2 text-sm text-white/90 font-medium">Service Type</label>
-          <select
-            value={selectedService}
-            onChange={e => setSelectedService(e.target.value)}
-            className="w-full px-4 py-3 text-sm rounded-xl bg-[#111111] text-white border border-white/10 font-medium"
-          >
-            <option value="All">All Services</option>
-            {serviceTypes.map(service => (
-              <option key={service} value={service}>{service}</option>
-            ))}
-          </select>
+          <Select.Root value={selectedService} onValueChange={setSelectedService}>
+            <Select.Trigger className="w-full px-4 py-3 text-sm rounded-xl bg-[#111111] text-white border border-white/10 font-medium flex items-center justify-between focus:outline-none focus:border-purple-500 transition-colors data-[placeholder]:text-white/40">
+              <Select.Value placeholder="Select Service" />
+              <Select.Icon className="text-white/40">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+              </Select.Icon>
+            </Select.Trigger>
+            <Select.Portal>
+              <Select.Content position="popper" side="bottom" sideOffset={5} className="overflow-hidden bg-[#18181b] rounded-xl border border-white/10 shadow-xl z-50 w-[var(--radix-select-trigger-width)] max-h-[240px] relative">
+                <Select.ScrollUpButton className="flex items-center justify-center h-6 bg-gradient-to-b from-[#18181b] to-transparent text-white/50 cursor-default pointer-events-none" />
+                <Select.Viewport className="p-1">
+                  <Select.Item value="All" className="relative flex items-center h-10 px-8 text-sm text-white rounded-lg select-none hover:bg-white hover:text-black data-[highlighted]:bg-white data-[highlighted]:text-black outline-none cursor-pointer mb-1 transition-colors">
+                    <Select.ItemText>All Services</Select.ItemText>
+                    <Select.ItemIndicator className="absolute left-2 inline-flex items-center justify-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                    </Select.ItemIndicator>
+                  </Select.Item>
+                  {services
+                    .filter(s => {
+                      if (selectedCategory === 'All') return true;
+                      return s.sport === selectedCategory;
+                    })
+                    .map(s => s.name)
+                    .filter((name, index, self) => name && self.indexOf(name) === index)
+                    .sort()
+                    .map(serviceName => (
+                      <Select.Item key={serviceName} value={serviceName} className="relative flex items-center h-10 px-8 text-sm text-white rounded-lg select-none hover:bg-white hover:text-black data-[highlighted]:bg-white data-[highlighted]:text-black outline-none cursor-pointer mb-1 transition-colors">
+                        <Select.ItemText>{serviceName}</Select.ItemText>
+                        <Select.ItemIndicator className="absolute left-2 inline-flex items-center justify-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                        </Select.ItemIndicator>
+                      </Select.Item>
+                    ))}
+                </Select.Viewport>
+                <Select.ScrollDownButton className="flex items-center justify-center h-8 bg-gradient-to-t from-[#18181b] to-transparent text-purple-400 cursor-default animate-pulse pointer-events-none" />
+              </Select.Content>
+            </Select.Portal>
+          </Select.Root>
         </div>
 
         {/* Distance Filter */}

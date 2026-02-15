@@ -1,5 +1,5 @@
 // Types for session storage keys
-type SessionStorageKey = 'scrollToPortfolio' | 'fromPortfolio' | 'lastVisitedSection' | 'returnToProfilePreview';
+type SessionStorageKey = 'lastVisitedSection' | 'returnToProfilePreview';
 
 /**
  * Safely gets an item from session storage

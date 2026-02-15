@@ -165,7 +165,17 @@ export async function GET(
           date: booking.scheduledAt ? booking.scheduledAt.toISOString() : null,
           time: booking.scheduledAt ? booking.scheduledAt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }) : null,
           scheduledAt: booking.scheduledAt,
-          duration: (booking.duration || 60) + " mins",
+          duration: (() => {
+            // Check for service delivery time first
+            if (booking.services && Array.isArray(booking.services as any)) {
+              const services = booking.services as any[];
+              const customTime = services.find(s => s.deliveryTime && typeof s.deliveryTime === 'string');
+              if (customTime) return customTime.deliveryTime;
+            }
+            // Fallback to duration
+            const durationVal = booking.duration || 60;
+            return typeof durationVal === 'number' ? `${durationVal} mins` : durationVal;
+          })(),
           client: {
             ...booking.client,
             memberSince: clientProfile?.createdAt,
@@ -187,7 +197,10 @@ export async function GET(
           services: booking.services,
           notes: booking.notes,
           createdAt: booking.createdAt,
-          completedAt: booking.deliveredAt,
+          startedAt: booking.startedAt, // Added startedAt
+          deliveredAt: booking.deliveredAt, // Added deliveredAt
+          clientConfirmedAt: booking.clientConfirmedAt, // Added clientConfirmedAt
+          completedAt: booking.completedAt, // Fixed: Use actual completedAt
           cancelledAt: booking.cancelledAt,
           clientRating: booking.clientRating,
           freelancerRating: booking.freelancerRating,
@@ -317,17 +330,10 @@ export async function PUT(
       }
 
       if (status === 'started') {
-        // Booking doesn't have startedAt field in schema I read?
-        // Let's check schema. Booking has 'scheduledAt', 'deliveredAt'.
-        // Job has 'startedAt' (Implied in code I read? NO. I did NOT see startedAt in Job schema).
-        // I read schema lines 176-209.
-        // Job: completedAt, updatedAt. NO startedAt.
-        // So updateData.startedAt will FAIL if column missing!
-        // The previous code (lines 89) had `updateData.startedAt = new Date()`.
-        // This suggests `startedAt` column EXISTS or previous code was broken/hallucinating.
-        // It's possible I missed it in schema view.
-        // Let's assume it exists or I should avoid setting it if not sure.
-        // I'll skip startedAt for now to be safe, or just check 'updatedAt'.
+        if (isBooking && !(isBooking as any).startedAt) {
+          updateData.startedAt = new Date();
+          console.log('[Jobs API] Setting startedAt for booking');
+        }
       }
 
       if (status === 'delivered') {
@@ -343,7 +349,11 @@ export async function PUT(
 
           // If both parties have completed, set deliveredAt
           if (updateData.status === 'COMPLETED') {
-            updateData.deliveredAt = new Date();
+            // If fully completed, ensure completedAt is set
+            updateData.completedAt = new Date();
+          } else if (updateData.completedAt) {
+            // Safety: If completedAt is somehow set but status isn't COMPLETED, force it
+            updateData.status = 'COMPLETED';
           }
         }
         if (isJob) updateData.completedAt = new Date();
@@ -356,12 +366,14 @@ export async function PUT(
             { status: 400 }
           )
         }
-        // Booking doesn't have cancelledAt?
-        // Just status update.
+        // Set cancelledAt
+        if (isBooking) updateData.cancelledAt = new Date();
       }
     }
 
     // 3. Perform Update
+    console.log('[Jobs API] Performing update on', isJob ? 'Job' : 'Booking', params.id, 'Data:', JSON.stringify(updateData, null, 2));
+
     let updatedRecord;
     if (isJob) {
       updatedRecord = await prisma.job.update({
@@ -372,7 +384,8 @@ export async function PUT(
         }
       });
     } else {
-      // Booking
+      // Booking to update
+      // Verify we aren't trying to set startedAt on booking if column missing (but we added it!)
       updatedRecord = await prisma.booking.update({
         where: { id: params.id },
         data: updateData,

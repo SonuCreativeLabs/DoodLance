@@ -296,7 +296,7 @@ export default function BookingHistoryDetailPage() {
                     </div>
                     <div>
                       <h4 className="text-xs text-white/40 uppercase mb-1">Venue</h4>
-                      <p className="text-sm text-white/80 truncate">
+                      <p className="text-sm text-white/80 break-words">
                         {historyItem.location || 'Remote'}
                       </p>
                     </div>
@@ -311,16 +311,21 @@ export default function BookingHistoryDetailPage() {
                   <Star className="w-4 h-4 text-purple-300" />
                   <span>Freelancer's Feedback</span>
                 </div>
-                <div className="flex items-center gap-1 mb-2">
-                  {Array.from({ length: 5 }, (_, i) => (
-                    <Star
-                      key={i}
-                      className={`w-5 h-5 ${i < (historyItem.clientRating?.stars || 0)
-                        ? 'text-yellow-400 fill-current'
-                        : 'text-gray-600'
-                        }`}
-                    />
-                  ))}
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: 5 }, (_, i) => (
+                      <Star
+                        key={i}
+                        className={`w-5 h-5 ${i < (historyItem.clientRating?.stars || 0)
+                          ? 'text-yellow-400 fill-current'
+                          : 'text-gray-600'
+                          }`}
+                      />
+                    ))}
+                  </div>
+                  <span className="text-sm font-medium text-white/60">
+                    Rated {historyItem.clientRating?.stars || 0}/5
+                  </span>
                 </div>
                 <p className="text-sm text-white/80 italic mb-3">
                   {historyItem.clientRating?.review ? `"${historyItem.clientRating.review}"` : "No written review provided."}
@@ -344,7 +349,10 @@ export default function BookingHistoryDetailPage() {
           {/* Your Rating of Provider - Now Full Width at Bottom */}
           {historyItem.status === 'completed' && (
             <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl">
-              <h3 className="text-lg font-semibold text-white mb-3">Your Rating of Provider</h3>
+              <div className="flex items-center gap-2 text-white/70 text-sm mb-3">
+                <Star className="w-4 h-4 text-purple-300" />
+                <span>Your Feedback to Freelancer</span>
+              </div>
 
               {historyItem.yourRating && (typeof historyItem.yourRating === 'object' || historyItem.yourRating > 0) ? (
                 <>

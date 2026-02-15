@@ -25,6 +25,8 @@ import { PostedJobsProvider } from '@/contexts/PostedJobsContext';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from '@/lib/query-client';
 import { Toaster } from 'sonner';
+import { TutorialProvider } from '@/contexts/TutorialContext';
+import { TutorialTour } from '@/components/common/tutorial/TutorialTour';
 
 interface ProvidersProps {
   children: ReactNode;
@@ -36,42 +38,45 @@ export function Providers({ children }: ProvidersProps) {
       <AuthProvider>
         <RoleProvider>
           <RealtimeProvider>
-            <NavbarProvider>
-              <LayoutProvider>
-                <ChatViewProvider>
-                  <DateRangeProvider>
-                    <ModalProvider>
-                      <AvailabilityProvider>
-                        <ListingsProvider>
-                          <CombinedProfileProvider>
-                            <NearbyProfessionalsProvider>
-                              <PopularServicesProvider>
-                                <ClientServicesProvider>
-                                  <BookingsProvider>
-                                    <ApplicationsProvider>
-                                      <HistoryJobsProvider>
-                                        <PostedJobsProvider>
-                                          <HireProvider>
-                                            <RoleSwitchProvider>
-                                              {children}
-                                              <Toaster theme="dark" richColors closeButton position="top-center" />
-                                            </RoleSwitchProvider>
-                                          </HireProvider>
-                                        </PostedJobsProvider>
-                                      </HistoryJobsProvider>
-                                    </ApplicationsProvider>
-                                  </BookingsProvider>
-                                </ClientServicesProvider>
-                              </PopularServicesProvider>
-                            </NearbyProfessionalsProvider>
-                          </CombinedProfileProvider>
-                        </ListingsProvider>
-                      </AvailabilityProvider>
-                    </ModalProvider>
-                  </DateRangeProvider>
-                </ChatViewProvider>
-              </LayoutProvider>
-            </NavbarProvider>
+            <TutorialProvider>
+              <NavbarProvider>
+                <LayoutProvider>
+                  <ChatViewProvider>
+                    <DateRangeProvider>
+                      <ModalProvider>
+                        <AvailabilityProvider>
+                          <ListingsProvider>
+                            <CombinedProfileProvider>
+                              <NearbyProfessionalsProvider>
+                                <PopularServicesProvider>
+                                  <ClientServicesProvider>
+                                    <BookingsProvider>
+                                      <ApplicationsProvider>
+                                        <HistoryJobsProvider>
+                                          <PostedJobsProvider>
+                                            <HireProvider>
+                                              <RoleSwitchProvider>
+                                                {children}
+                                                <Toaster theme="dark" richColors closeButton position="top-center" />
+                                              </RoleSwitchProvider>
+                                            </HireProvider>
+                                          </PostedJobsProvider>
+                                        </HistoryJobsProvider>
+                                      </ApplicationsProvider>
+                                    </BookingsProvider>
+                                  </ClientServicesProvider>
+                                </PopularServicesProvider>
+                              </NearbyProfessionalsProvider>
+                            </CombinedProfileProvider>
+                          </ListingsProvider>
+                        </AvailabilityProvider>
+                      </ModalProvider>
+                    </DateRangeProvider>
+                  </ChatViewProvider>
+                </LayoutProvider>
+              </NavbarProvider>
+              <TutorialTour />
+            </TutorialProvider>
           </RealtimeProvider>
         </RoleProvider>
       </AuthProvider>

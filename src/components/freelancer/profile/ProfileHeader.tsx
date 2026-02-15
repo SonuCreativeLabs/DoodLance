@@ -13,7 +13,6 @@ import { usePersonalDetails } from '@/contexts/PersonalDetailsContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSkills } from '@/contexts/SkillsContext';
 import { useReviews } from '@/contexts/ReviewsContext';
-import { usePortfolio } from '@/contexts/PortfolioContext';
 import { useAchievements } from '@/contexts/AchievementsContext';
 import { useServices } from '@/contexts/ServicesContext';
 import { useAvailability } from '@/contexts/AvailabilityContext';
@@ -71,7 +70,6 @@ export function ProfileHeader({
 
   const { skills } = useSkills();
   const { reviewsData } = useReviews();
-  const { portfolio } = usePortfolio();
   const { achievements } = useAchievements();
   const { services } = useServices();
   const { days: availabilityDays, getWorkingHoursText } = useAvailability();
@@ -143,11 +141,11 @@ export function ProfileHeader({
       missing.push("Location");
     }
 
-    // 4. Cricket Info Card (8%)
-    if (personalDetails?.cricketRole) {
+    // 4. Sport Info Card (8%)
+    if (personalDetails?.mainSport) {
       percentage += weights.cricketInfo;
     } else {
-      missing.push("Cricket Role");
+      missing.push("Primary Sport");
     }
 
     // 5. Public Profile Link (15% - CRITICAL)
@@ -234,9 +232,9 @@ export function ProfileHeader({
       const hash = window.location.hash;
 
       if (hash) {
-        // Check if it's a section hash (e.g., #services, #portfolio, #reviews)
+        // Check if it's a section hash (e.g., #services, #reviews)
         const section = hash.replace('#', '');
-        const validSections = ['services', 'portfolio', 'reviews'];
+        const validSections = ['services', 'reviews'];
 
         if (validSections.includes(section)) {
           // Open the preview modal
@@ -455,7 +453,7 @@ export function ProfileHeader({
         />
       </div>
       {/* Cover Photo */}
-      <div className={cn("group relative h-48 sm:h-64 w-full bg-gradient-to-r from-purple-900 to-purple-700", !compact && "md:h-80")}>
+      <div id="tour-profile-cover" className={cn("group relative h-48 sm:h-64 w-full bg-gradient-to-r from-purple-900 to-purple-700", !compact && "md:h-72")}>
         {/* Switch to Client Button - Top-right of cover */}
         {!isPreview && (
           <div className="absolute top-4 right-4 z-20">
@@ -474,21 +472,21 @@ export function ProfileHeader({
           <CoverImage src={coverImage || coverImageUrl || personalDetails.coverImageUrl} alt={`${personalDetails.name || 'User'}'s cover`} />
         </div>
 
-        {/* Edit Cover Button - Only show in edit mode */}
+        {/* Edit Cover Button - Always show if not preview */}
         {!isPreview && (
           <div className="absolute bottom-4 right-4 z-30">
-            <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+            <div>
               <Button
                 variant="secondary"
                 size="sm"
                 onClick={handleEditCoverClick}
                 disabled={isUploading}
-                className="h-10 w-10 rounded-full bg-white hover:bg-white/90 p-0 flex items-center justify-center shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer"
+                className="h-8 w-8 rounded-full bg-white hover:bg-gray-200 text-black shadow-lg border-none p-0 flex items-center justify-center transition-all duration-200 cursor-pointer"
               >
                 {isUploading ? (
-                  <Loader2 className="h-5 w-5 animate-spin text-[#1E1E1E]" />
+                  <Loader2 className="h-3.5 w-3.5 animate-spin text-black" />
                 ) : (
-                  <Camera className="h-5 w-5 text-[#1E1E1E]" />
+                  <Camera className="h-3.5 w-3.5 text-black" />
                 )}
               </Button>
               <input
@@ -510,44 +508,45 @@ export function ProfileHeader({
           {/* Profile Picture */}
           <div className="relative group">
             {/* Profile Picture */}
-            <div className="relative w-32 h-32 sm:w-40 sm:h-40 rounded-full border-4 border-[#1E1E1E] overflow-hidden bg-[#111111]">
+            <div id="tour-profile-avatar" className="relative w-32 h-32 sm:w-40 sm:h-40 rounded-full border-4 border-[#1E1E1E] overflow-hidden bg-[#111111]">
               <Avatar className="w-full h-full">
                 <AvatarImage src={profileImage || avatarUrl || personalDetails.avatarUrl} alt={personalDetails.name} />
                 <AvatarFallback className="bg-[#1a1a1a] flex items-center justify-center">
                   <User className="w-16 h-16 text-white/20" />
                 </AvatarFallback>
               </Avatar>
-              {!isPreview && (
-                <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <Button
-                    variant="default"
-                    size="icon"
-                    className="h-10 w-10 rounded-full bg-white hover:bg-white/90"
-                    onClick={handleEditProfileClick}
-                    disabled={isProfileUploading}
-                  >
-                    {isProfileUploading ? (
-                      <Loader2 className="h-5 w-5 animate-spin text-[#1E1E1E]" />
-                    ) : (
-                      <Camera className="h-5 w-5 text-[#1E1E1E]" />
-                    )}
-                  </Button>
-                  <input
-                    type="file"
-                    ref={profileInputRef}
-                    onChange={handleProfileImageChange}
-                    accept="image/*"
-                    className="hidden"
-                  />
-                </div>
-              )}
             </div>
+
+            {!isPreview && (
+              <div className="absolute bottom-2 right-2 z-50">
+                <Button
+                  variant="default"
+                  size="icon"
+                  className="h-8 w-8 rounded-full bg-white hover:bg-gray-200 text-black shadow-lg border-none flex items-center justify-center p-0 transition-transform hover:scale-105"
+                  onClick={handleEditProfileClick}
+                  disabled={isProfileUploading}
+                >
+                  {isProfileUploading ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin text-black" />
+                  ) : (
+                    <Camera className="h-3.5 w-3.5 text-black" />
+                  )}
+                </Button>
+                <input
+                  type="file"
+                  ref={profileInputRef}
+                  onChange={handleProfileImageChange}
+                  accept="image/*"
+                  className="hidden"
+                />
+              </div>
+            )}
             {/* ID Verified Badge - Left side of profile picture */}
-            <div className="absolute top-[calc(50%+32px)] -translate-y-1/2 -left-24 ml-0">
+            <div id="tour-profile-verification" className="absolute top-[calc(50%+32px)] -translate-y-1/2 right-full mr-5">
               <IdVerifiedBadge isVerified={personalDetails.isVerified ?? false} />
             </div>
             {/* Online/Offline Badge - Right side of profile picture */}
-            <div className="absolute top-[calc(50%+32px)] -translate-y-1/2 left-full ml-5">
+            <div id="tour-profile-status" className="absolute top-[calc(50%+32px)] -translate-y-1/2 left-full ml-5">
               <div className={`inline-flex items-center gap-1 px-2 py-1 text-[8px] font-bold border-2 shadow-lg whitespace-nowrap transform rotate-[-2deg] ${personalDetails.online
                 ? 'bg-gradient-to-br from-green-400 to-green-600 border-green-300 text-white shadow-green-500/50 border-dashed'
                 : 'bg-gradient-to-br from-amber-400 to-orange-500 border-amber-300 text-white shadow-amber-500/50 border-dashed'
@@ -559,10 +558,10 @@ export function ProfileHeader({
         </div>
 
         <div className="text-center mb-4">
-          <div className="flex items-center justify-center gap-2">
-            <h1 className="text-2xl font-bold text-white">{personalDetails.name?.split(' ')[0] || personalDetails.name}</h1>
+          <div className="relative inline-block">
+            <h1 className="text-2xl font-bold text-white leading-tight">{personalDetails.name?.split(' ')[0] || personalDetails.name}</h1>
             {age && (
-              <span className="text-lg font-semibold text-white/70">{age}</span>
+              <span className="absolute left-full top-1/2 -translate-y-1/2 ml-3 text-lg font-semibold text-white/70 whitespace-nowrap">{age}</span>
             )}
           </div>
           {personalDetails.username && (
@@ -573,7 +572,11 @@ export function ProfileHeader({
             <p className="text-xs text-gray-500 mt-1">ID: {personalDetails.displayId}</p>
           )} 
           */}
-          <p className="text-purple-400 font-medium mt-1">{personalDetails.cricketRole || 'Role not set'}</p>
+          <p className="text-purple-400 font-medium mt-1">
+            {personalDetails.mainSport === 'Cricket'
+              ? (personalDetails.cricketRole || 'Cricketer')
+              : (personalDetails.mainSport || 'Freelancer')}
+          </p>
 
           <div className="mt-2 flex flex-col items-center gap-0.5 text-sm text-white/70">
             <div className="flex items-center gap-2">
@@ -611,6 +614,7 @@ export function ProfileHeader({
         <div className="flex justify-center mt-3 mb-4">
           {!isPreview && (
             <Button
+              id="tour-profile-preview"
               variant="ghost"
               onClick={() => setIsPreviewOpen(true)}
               className="group relative overflow-hidden px-4 py-1.5 h-8 bg-gradient-to-r from-[#6B46C1] via-[#4C1D95] to-[#2D1B69] text-white text-xs font-normal rounded-full shadow hover:shadow-md hover:shadow-[#4C1D95]/40 transition-all duration-200 transform hover:-translate-y-0.5 focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-[#6B46C1]"
@@ -688,6 +692,9 @@ export function ProfileHeader({
           about: personalDetails.about,
           bio: personalDetails.bio,
           cricketRole: personalDetails.cricketRole,
+          mainSport: personalDetails.mainSport,
+          otherSports: personalDetails.otherSports,
+          sportsDetails: personalDetails.sportsDetails,
           battingStyle: personalDetails.battingStyle || '',
           bowlingStyle: personalDetails.bowlingStyle || '',
           responseTime: personalDetails.responseTime || 'Not set',
@@ -711,14 +718,6 @@ export function ProfileHeader({
             features: svc.features || [],
             videoUrls: svc.videoUrls || [],
             category: svc.category
-          })) : [],
-          portfolio: Array.isArray(portfolio) ? portfolio.map((item: any) => ({
-            id: item.id,
-            title: item.title,
-            category: item.category,
-            image: item.image,
-            description: item.description,
-            skills: item.skills
           })) : [],
           reviews: reviewsData?.reviews ? reviewsData.reviews.map((review: any) => ({
             id: review.id,

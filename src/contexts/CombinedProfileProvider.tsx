@@ -4,7 +4,6 @@ import React, { ReactNode } from 'react';
 import { PersonalDetailsProvider } from './PersonalDetailsContext';
 import { SkillsProvider } from './SkillsContext';
 import { ForYouJobsProvider } from './ForYouJobsContext';
-import { PortfolioProvider } from './PortfolioContext';
 import { AchievementsProvider } from './AchievementsContext';
 import { ServicesProvider } from './ServicesContext';
 import { ReviewsProvider } from './ReviewsContext';
@@ -26,20 +25,18 @@ export function CombinedProfileProvider({ children }: CombinedProfileProviderPro
     <PersonalDetailsProvider>
       <SkillsProvider skipInitialFetch={true}>
         <ForYouJobsProvider>
-          <PortfolioProvider skipInitialFetch={true}>
-            <AchievementsProvider skipInitialFetch={true}>
-              <ServicesProvider>
-                <ReviewsProvider skipInitialFetch={true}>
-                  <BankAccountProvider skipInitialFetch={true}>
-                    <SettingsProvider>
-                      <FreelancerDataLoader />
-                      {children}
-                    </SettingsProvider>
-                  </BankAccountProvider>
-                </ReviewsProvider>
-              </ServicesProvider>
-            </AchievementsProvider>
-          </PortfolioProvider>
+          <AchievementsProvider skipInitialFetch={true}>
+            <ServicesProvider>
+              <ReviewsProvider skipInitialFetch={true}>
+                <BankAccountProvider skipInitialFetch={true}>
+                  <SettingsProvider>
+                    <FreelancerDataLoader />
+                    {children}
+                  </SettingsProvider>
+                </BankAccountProvider>
+              </ReviewsProvider>
+            </ServicesProvider>
+          </AchievementsProvider>
         </ForYouJobsProvider>
       </SkillsProvider>
     </PersonalDetailsProvider>

@@ -118,12 +118,14 @@ export function CollapsibleTimeline({ items, title = "Timeline", defaultExpanded
                 </div>
                 {item.date ? (
                   <p className="text-xs text-white/60">
-                    {new Date(item.date).toLocaleDateString('en-US', {
-                      month: 'short',
+                    {new Date(item.date).toLocaleString('en-IN', {
+                      timeZone: 'Asia/Kolkata',
                       day: 'numeric',
+                      month: 'long',
                       year: 'numeric',
                       hour: '2-digit',
-                      minute: '2-digit'
+                      minute: '2-digit',
+                      hour12: true
                     })}
                   </p>
                 ) : (
@@ -318,56 +320,107 @@ export const createTimelineItems = (type: 'proposal' | 'job', item: any) => {
       // For jobs without proposal history (direct assignments)
       timelineItems.push({
         label: item.isDirectHire ? '📅 Booking Confirmed' : '🏏 Session Announced!',
-        date: item.createdAt || item.date && item.date !== 'TBD' ? item.date : (item.postedAt || new Date().toISOString()),
+        date: item.createdAt || new Date().toISOString(), // Strictly use booking creation time
         completed: true,
         icon: CheckCircle,
-        color: 'bg-purple-500'
+        color: 'bg-purple-500' // Changed to purple-500 for consistency
       });
     }
 
     // Add job-specific timeline items based on status
-    if (item.status === 'started' || item.status === 'ongoing' || item.status === 'completed') {
-      timelineItems.push({
-        label: '🏃 Game On - Work Started!',
-        date: item.startedAt || item.scheduledAt || getSafeIsoDate(item.date, 7200000),
-        completed: true,
-        icon: CheckCircle,
-        color: 'bg-blue-500'
-      });
+    if (item.status === 'started' || item.status === 'ongoing' || item.status === 'completed' || item.status === 'delivered' || item.status === 'completed_by_freelancer' || item.status === 'completed_by_client') {
+      // ONLY show if startedAt exists or status implies it has started
+      // User requested: "start job time will show the time when the freelancer start the job... not the scheduled time"
+      const startTime = item.startedAt;
+
+      if (startTime) {
+        timelineItems.push({
+          label: '🏃 Game On - Work Started!',
+          date: startTime,
+          completed: true,
+          icon: CheckCircle,
+          color: 'bg-blue-500'
+        });
+      } else if (item.status !== 'pending' && item.status !== 'confirmed') {
+        // Fallback only if status implies start but no timestamp (migration case)
+        // But user wants strictness. Let's keep it safe but prioritize startedAt.
+        // If no startedAt, we might default to scheduledAt? User said NO.
+        // "not the scheduled time, the time hwen they actually start the session."
+        // If data is missing (old jobs), maybe don't show or show "Started" without date?
+        // Let's show it if status is started/beyond, but date might be fallback if needed, or null.
+        // Re-reading: "start job time will show the time when the freelancer start the job... not the scheduled time"
+        // This implies if they haven't started (no OTP), don't show it?
+        // Or if they have, show the actual time.
+        // If we don't have stored time for old jobs, we might have to fallback or show "Time not recorded".
+        // Let's stick to item.startedAt if available.
+        // If status is 'started' but no date, it's an edge case.
+        timelineItems.push({
+          label: '🏃 Game On - Work Started!',
+          date: item.startedAt || null, // Don't fallback to scheduledAt
+          completed: true,
+          icon: CheckCircle,
+          color: 'bg-blue-500'
+        });
+      }
     }
 
-    if (item.status === 'delivered') {
-      // Freelancer marked as delivered
+    // Determine sequence of completion
+    // Case 1: Client marked complete (either partially or fully)
+    if (item.status === 'completed_by_client' || ((item as any).clientConfirmedAt && item.status === 'completed')) {
       timelineItems.push({
-        label: '📝 Work Delivered - Waiting for Confirmation',
-        date: item.deliveredAt || new Date().toISOString(),
+        label: '☝️ Umpire\'s Signal - Client Marked Complete',
+        date: (item as any).clientConfirmedAt || null, // Strict
         completed: true,
         icon: CheckCircle,
-        color: 'bg-indigo-500'
+        color: 'bg-amber-500'
       });
-      // Add waiting item
-      timelineItems.push({
-        label: '⏳ Waiting for Client Approval',
-        date: null,
-        completed: false,
-        icon: CheckCircle,
-        color: 'bg-white/10'
-      });
+
+      // If NOT fully completed yet, show waiting message
+      if (item.status !== 'completed') {
+        timelineItems.push({
+          label: '⏳ Waiting for You to Confirm',
+          date: null,
+          completed: false,
+          icon: CheckCircle,
+          color: 'bg-white/10'
+        });
+      }
+    }
+
+    // Case 2: Freelancer marked complete (either partially or fully)
+    if (item.status === 'delivered' || item.status === 'completed_by_freelancer' || (item.deliveredAt && item.status === 'completed')) {
+      // If client finished first, this label might change or we keep 'Work Delivered'
+      // But usually Freelancer delivers -> Client confirms.
+      // If Client confirms first -> Freelancer confirms (finishes).
+
+      // Use a flag to avoid duplication if logic overlaps
+      const isDuplicate = timelineItems.some(t => t.label === '📝 Work Delivered');
+      if (!isDuplicate) {
+        timelineItems.push({
+          label: '📝 Work Delivered',
+          date: item.deliveredAt || null, // Strict
+          completed: true,
+          icon: CheckCircle,
+          color: 'bg-indigo-500'
+        });
+      }
+
+      // If NOT fully completed AND client hasn't confirmed yet (this is the only action so far)
+      if (item.status !== 'completed' && !item.clientConfirmedAt) {
+        timelineItems.push({
+          label: '⏳ Waiting for Client Approval',
+          date: null,
+          completed: false,
+          icon: CheckCircle,
+          color: 'bg-white/10'
+        });
+      }
     }
 
     if (item.status === 'completed') {
-      // Add who marked job complete first (typically freelancer)
       timelineItems.push({
-        label: '📝 Work Delivered',
-        date: item.deliveredAt ? item.deliveredAt : (item.completedAt ? new Date(new Date(item.completedAt).getTime() - 900000).toISOString() : new Date(Date.now() - 3600000).toISOString()),
-        completed: true,
-        icon: CheckCircle,
-        color: 'bg-indigo-500'
-      });
-
-      timelineItems.push({
-        label: '🎯 Deal Secured - Client Confirmed!',
-        date: item.completedAt || new Date().toISOString(),
+        label: '🎯 Deal Secured - Job Fully Completed!',
+        date: item.completedAt || new Date().toISOString(), // Final completion time
         completed: true,
         icon: CheckCircle,
         color: 'bg-emerald-500'

@@ -12,6 +12,7 @@ export interface Review {
   date: string;
   role?: string;
   isVerified?: boolean;
+  avatar?: string;
 }
 
 export interface ReviewsData {
@@ -76,12 +77,13 @@ export function ReviewsProvider({ children, skipInitialFetch = false }: ReviewsP
         if (data) {
           const formattedReviews: Review[] = data.map((r: any) => ({
             id: r.id,
-            author: r.client?.name || 'Anonymous', // Use joined client data
+            author: r.client?.name || r.clientName || 'Anonymous', // Use joined client data or direct field
             rating: r.rating,
             comment: r.comment,
             date: new Date(r.createdAt).toISOString().split('T')[0],
             role: 'Client', // Default role since clientRole is not in schema often
-            isVerified: r.isVerified
+            isVerified: r.isVerified,
+            avatar: r.client?.avatar || r.clientAvatar
           }));
 
           const totalRating = formattedReviews.reduce((acc, curr) => acc + curr.rating, 0);

@@ -13,6 +13,7 @@ export interface ServicePackage {
   features?: string[];
   category?: string;
   skill?: string;
+  sport?: string;
 }
 
 interface ServicesContextType {

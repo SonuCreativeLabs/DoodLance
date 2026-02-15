@@ -19,8 +19,8 @@ export type JobCategory =
   | 'Physio'
   | 'Scorer'
   | 'Umpire'
-  | 'Cricket Photo / Videography'
-  | 'Cricket Content Creator'
+  | 'Sports Photo / Videography'
+  | 'Sports Content Creator'
   | 'Commentator'
   | 'OTHER';
 
@@ -36,8 +36,8 @@ export const JOB_CATEGORIES = [
   'Physio',
   'Scorer',
   'Umpire',
-  'Cricket Photo / Videography',
-  'Cricket Content Creator',
+  'Sports Photo / Videography',
+  'Sports Content Creator',
   'Commentator',
   'OTHER'
 ] as const;
@@ -87,6 +87,7 @@ export interface Job {
   jobDate?: string; // Scheduled date for the job
   jobTime?: string;  // Scheduled time for the job
   scheduledAt?: string;
+  createdAt?: string; // Added for correct booking time
   postedAt?: string;
   status: JobStatus | 'upcoming' | 'completed' | 'cancelled';
   displayStatus?: 'upcoming' | 'completed' | 'cancelled' | 'ongoing' | 'delivered' | 'marked'; // For UI display
@@ -131,9 +132,11 @@ export interface Job {
     price: number;
     description?: string;
   }[];
-  completedAt?: string;
   cancelledBy?: 'client' | 'freelancer';
   cancelledAt?: string;
+  deliveredAt?: string; // Timestamp when freelancer marks job as delivered
+  clientConfirmedAt?: string; // Timestamp when client marked as complete (even if before freelancer)
+  completedAt?: string; // Timestamp when job is fully completed
   notes?: string;
   // Proposal history for timeline continuity
   proposalHistory?: {

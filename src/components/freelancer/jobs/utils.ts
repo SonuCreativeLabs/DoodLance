@@ -15,8 +15,8 @@ export const getCategoryDisplayName = (category: string) => {
     'Physio': 'Physio',
     'Scorer': 'Scorer',
     'Umpire': 'Umpire',
-    'Cricket Photo / Videography': 'Cricket Photo / Videography',
-    'Cricket Content Creator': 'Cricket Content Creator',
+    'Sports Photo / Videography': 'Sports Photo / Videography',
+    'Sports Content Creator': 'Sports Content Creator',
     'Commentator': 'Commentator',
     'OTHER': 'Other Services'
   };

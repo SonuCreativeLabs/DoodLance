@@ -144,14 +144,14 @@ async function handleGetBookings(request: NextRequest, user: { id: string, role?
             category: b.service.category?.name || null, // Added category name
             clientId: b.clientId,
             otp: b.otp,
-            completedAt: b.deliveredAt ? b.deliveredAt.toISOString() : null,
+            deliveredAt: b.deliveredAt ? b.deliveredAt.toISOString() : null,
+            completedAt: b.completedAt ? b.completedAt.toISOString() : null,
+            clientConfirmedAt: b.clientConfirmedAt ? b.clientConfirmedAt.toISOString() : null,
+            cancelledAt: b.cancelledAt ? b.cancelledAt.toISOString() : null,
             location: b.location, // Added location
-            duration: b.duration, // Added duration
-            notes: b.notes, // Added notes
-            requirements: b.requirements, // Added requirements
-            skills: b.service.tags ? b.service.tags.split(',').map((s: string) => s.trim()) : [], // Added skills from service tags
-            scheduledAt: b.scheduledAt ? b.scheduledAt.toISOString() : null, // Added ISO string for client-side formatting
-            services: b.services || [], // Return services list
+            createdAt: b.createdAt ? b.createdAt.toISOString() : new Date().toISOString(), // Add createdAt
+            services: b.services, // Include services JSON for duration calc
+            duration: b.duration, // Include duration
         }));
 
         return NextResponse.json({ bookings: formattedBookings });

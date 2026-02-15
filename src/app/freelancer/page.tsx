@@ -4,9 +4,9 @@ import Image from "next/image"
 import { motion } from "framer-motion"
 import { Calendar, ChevronRight, Star, MapPin, TrendingUp, Award, Clock, Target, Trophy } from "lucide-react"
 import Link from "next/link"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { useLayout } from "@/contexts/LayoutContext"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useSkills } from "@/contexts/SkillsContext"
 import { usePersonalDetails } from "@/contexts/PersonalDetailsContext"
 import { useAvailability } from "@/contexts/AvailabilityContext"
@@ -17,23 +17,73 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { DashboardCardSkeleton } from "@/components/freelancer/skeletons/DashboardCardSkeleton"
 import { ProfileCardSkeleton } from "@/components/freelancer/skeletons/ProfileCardSkeleton"
 import { useAuth } from "@/contexts/AuthContext"
+import { useTutorial, TutorialConfig } from "@/contexts/TutorialContext"
 
 export const dynamic = 'force-dynamic'
 
 export default function FreelancerHome() {
   const { showHeader, showNavbar } = useLayout();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { skills } = useSkills();
   const { forYouJobs } = useForYouJobs();
   const { personalDetails, toggleReadyToWork } = usePersonalDetails();
-  const { getWorkingHoursText } = useAvailability();
-  const { user } = useAuth();
+  const { getWorkingHoursText, days } = useAvailability();
+  const { user, isLoading: isAuthLoading } = useAuth();
+  const { startTutorial, hasSeenTutorial, isOpen } = useTutorial();
+
+  const freelancerTutorial: TutorialConfig = useMemo(() => ({
+    id: 'freelancer-tour',
+    steps: [
+      {
+        targetId: 'freelancer-stats',
+        title: 'Track Your Performance',
+        description: 'Monitor your daily and total earnings, plus active hours worked this week.',
+        position: 'bottom'
+      },
+      {
+        targetId: 'freelancer-profile-card',
+        title: 'Your Professional Profile',
+        description: 'Manage your availability and "Ready to Work" status here. Use this for quick updates.',
+        position: 'bottom'
+      }
+    ]
+  }), []);
+
+  useEffect(() => {
+    const shouldStart = !hasSeenTutorial('freelancer-tour') || searchParams.get('tutorial') === 'freelancer-tour';
+    if (shouldStart && !isOpen) {
+      const timer = setTimeout(() => {
+        startTutorial(freelancerTutorial);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [searchParams, hasSeenTutorial, startTutorial, freelancerTutorial, isOpen]);
+
   const [jobCount, setJobCount] = useState(0);
   const [recommendedJobs, setRecommendedJobs] = useState<Job[]>([]);
   const [isLoadingStats, setIsLoadingStats] = useState(true);
   const [stats, setStats] = useState<any>(null);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+  const [serviceRadius, setServiceRadius] = useState(10);
   const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const response = await fetch('/api/freelancer/availability-settings');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.serviceRadius !== undefined) {
+            setServiceRadius(data.serviceRadius);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load availability settings:', error);
+      }
+    };
+    fetchSettings();
+  }, []);
 
   useEffect(() => {
     setIsMounted(true);
@@ -54,7 +104,15 @@ export default function FreelancerHome() {
   // Fetch dashboard stats
   useEffect(() => {
     const fetchStats = async () => {
-      if (!user?.id) return;
+      // Wait for auth to initialize
+      if (isAuthLoading) return;
+
+      if (!user?.id) {
+        setStats(null);
+        setIsLoadingStats(false);
+        return;
+      }
+
       try {
         setIsLoadingStats(true);
         const response = await fetch(`/api/freelancer/stats?userId=${user.id}`);
@@ -69,14 +127,21 @@ export default function FreelancerHome() {
       }
     };
     fetchStats();
-  }, [user?.id]);
+  }, [user?.id, isAuthLoading]);
 
   // Simulate profile loading (personalDetails loads via context)
   useEffect(() => {
+    if (isAuthLoading) return;
+
+    if (!user?.id) {
+      setIsLoadingProfile(false);
+      return;
+    }
+
     if (personalDetails.name) {
       setIsLoadingProfile(false);
     }
-  }, [personalDetails.name]);
+  }, [personalDetails.name, isAuthLoading, user?.id]);
 
   const handleJobClick = (job: Job) => {
     router.push(`/freelancer/feed?jobId=${job.id}`);
@@ -174,81 +239,83 @@ export default function FreelancerHome() {
         </motion.div>
 
         {/* Earnings Cards Section */}
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
-          {isLoadingStats ? (
-            <>
-              <div className="col-span-2 lg:col-span-1">
+        <div id="freelancer-stats">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
+            {isLoadingStats ? (
+              <>
+                <div className="col-span-2 lg:col-span-1">
+                  <DashboardCardSkeleton />
+                </div>
                 <DashboardCardSkeleton />
-              </div>
-              <DashboardCardSkeleton />
-              <DashboardCardSkeleton />
-            </>
-          ) : (
-            <>
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="bg-gradient-to-br from-[#1E1E1E] to-[#121212] rounded-2xl p-6 border border-white/10 transition-all duration-300 shadow-lg col-span-2 lg:col-span-1"
-              >
-                <div className="relative">
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-semibold text-white">Today&apos;s Earnings</h2>
+                <DashboardCardSkeleton />
+              </>
+            ) : (
+              <>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="bg-gradient-to-br from-[#1E1E1E] to-[#121212] rounded-2xl p-6 border border-white/10 transition-all duration-300 shadow-lg col-span-2 lg:col-span-1"
+                >
+                  <div className="relative">
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 className="text-lg font-semibold text-white">Today&apos;s Earnings</h2>
+                    </div>
+                    <p className="text-2xl sm:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#bf82fb] to-[#9537ea] mb-2 break-words truncate w-full">₹{stats?.todayEarnings?.toLocaleString() || 0}</p>
+                    <div className="flex items-center gap-2 flex-nowrap min-w-0 w-full overflow-hidden">
+                      <p className="text-sm text-white/60 truncate">
+                        {stats?.todayJobs || 0} job{stats?.todayJobs !== 1 ? 's' : ''} completed
+                      </p>
+                    </div>
                   </div>
-                  <p className="text-2xl sm:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#bf82fb] to-[#9537ea] mb-2 break-words truncate w-full">₹{stats?.todayEarnings?.toLocaleString() || 0}</p>
-                  <div className="flex items-center gap-2 flex-nowrap min-w-0 w-full overflow-hidden">
-                    <p className="text-sm text-white/60 truncate">
-                      {stats?.todayJobs || 0} job{stats?.todayJobs !== 1 ? 's' : ''} completed
-                    </p>
-                  </div>
-                </div>
-              </motion.div>
+                </motion.div>
 
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="bg-gradient-to-br from-[#1E1E1E] to-[#121212] rounded-2xl p-6 border border-white/10 transition-all duration-300 shadow-lg"
-              >
-                <div className="relative">
-                  <div className="flex flex-col h-full justify-between">
-                    <div>
-                      <div className="flex items-start justify-between mb-4">
-                        <h2 className="text-lg font-semibold text-white">Total Earnings</h2>
-                      </div>
-                      <p className="text-2xl sm:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#bf82fb] to-[#9537ea] mb-2 break-words truncate w-full">₹{stats?.totalEarnings?.toLocaleString() || 0}</p>
-                      <div className="flex items-center gap-2 flex-nowrap min-w-0 w-full overflow-hidden">
-                        <p className="text-sm text-white/60 truncate">
-                          {stats?.totalJobs || 0} total job{stats?.totalJobs !== 1 ? 's' : ''}
-                        </p>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="bg-gradient-to-br from-[#1E1E1E] to-[#121212] rounded-2xl p-6 border border-white/10 transition-all duration-300 shadow-lg"
+                >
+                  <div className="relative">
+                    <div className="flex flex-col h-full justify-between">
+                      <div>
+                        <div className="flex items-start justify-between mb-4">
+                          <h2 className="text-lg font-semibold text-white">Total Earnings</h2>
+                        </div>
+                        <p className="text-2xl sm:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#bf82fb] to-[#9537ea] mb-2 break-words truncate w-full">₹{stats?.totalEarnings?.toLocaleString() || 0}</p>
+                        <div className="flex items-center gap-2 flex-nowrap min-w-0 w-full overflow-hidden">
+                          <p className="text-sm text-white/60 truncate">
+                            {stats?.totalJobs || 0} total job{stats?.totalJobs !== 1 ? 's' : ''}
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              </motion.div>
+                </motion.div>
 
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-                className="bg-gradient-to-br from-[#1E1E1E] to-[#121212] rounded-2xl p-6 border border-white/10 transition-all duration-300 shadow-lg"
-              >
-                <div className="relative">
-                  <div className="flex flex-col h-full justify-between">
-                    <div>
-                      <div className="flex items-start justify-between mb-4">
-                        <h2 className="text-lg font-semibold text-white">Active Hours</h2>
-                      </div>
-                      <p className="text-2xl sm:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#bf82fb] to-[#9537ea] mb-2 break-words truncate w-full">{stats?.activeHours || 0}h</p>
-                      <div className="flex items-center gap-2 flex-nowrap min-w-0 w-full overflow-hidden">
-                        <p className="text-sm text-white/60 truncate">This week</p>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                  className="bg-gradient-to-br from-[#1E1E1E] to-[#121212] rounded-2xl p-6 border border-white/10 transition-all duration-300 shadow-lg"
+                >
+                  <div className="relative">
+                    <div className="flex flex-col h-full justify-between">
+                      <div>
+                        <div className="flex items-start justify-between mb-4">
+                          <h2 className="text-lg font-semibold text-white">Active Hours</h2>
+                        </div>
+                        <p className="text-2xl sm:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#bf82fb] to-[#9537ea] mb-2 break-words truncate w-full">{stats?.activeHours || 0}h</p>
+                        <div className="flex items-center gap-2 flex-nowrap min-w-0 w-full overflow-hidden">
+                          <p className="text-sm text-white/60 truncate">This week</p>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              </motion.div>
-            </>
-          )}
+                </motion.div>
+              </>
+            )}
+          </div>
         </div>
 
         {/* Your Profile Section */}
@@ -256,6 +323,7 @@ export default function FreelancerHome() {
           <ProfileCardSkeleton />
         ) : (
           <motion.div
+            id="freelancer-profile-card"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
@@ -323,6 +391,7 @@ export default function FreelancerHome() {
                     <p className="text-xs text-white/60">Toggle your availability</p>
                   </div>
                   <div
+                    id="ready-to-work-toggle"
                     className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer shadow-inner ${personalDetails.readyToWork ? 'bg-green-500 hover:bg-green-600' : 'bg-gray-600 hover:bg-gray-500'}`}
                     onClick={() => toggleReadyToWork()}
                   >
@@ -331,6 +400,7 @@ export default function FreelancerHome() {
                   </div>
                 </motion.div>
                 <motion.div
+                  id="freelancer-availability-card"
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.8 }}
@@ -341,11 +411,22 @@ export default function FreelancerHome() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-white group-hover:opacity-90 transition-colors whitespace-nowrap overflow-hidden text-ellipsis">Availability & Radius</p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1">
+                    <div className="grid grid-cols-1 gap-1 mt-1">
                       <div className="flex items-center gap-2">
                         <Clock className="w-3 h-3 text-white/40" />
-                        <span className="text-xs text-white/60 truncate" title={getWorkingHoursText()}>
-                          {getWorkingHoursText()}
+                        <span className="text-xs text-white/60 truncate">
+                          {(() => {
+                            const available = days.filter(d => d.available);
+                            if (available.length === 0) return 'Not available';
+                            if (available.length === 7) return 'Every day';
+                            return available.map(d => d.name.substring(0, 3)).join(', ');
+                          })()}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <MapPin className="w-3 h-3 text-white/40" />
+                        <span className="text-xs text-white/60 truncate">
+                          {serviceRadius} km radius
                         </span>
                       </div>
                     </div>

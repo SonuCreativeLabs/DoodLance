@@ -109,7 +109,17 @@ export async function GET(
         console.log('Debugging Category for Booking:', booking.id, 'Service:', booking.service?.title, 'CategoryObj:', booking.service?.category, 'Resolved:', cat);
         return cat || "Freelancer";
       })(),
-      duration: (booking.duration || 60) + " mins",
+      duration: (() => {
+        // Check for service delivery time first
+        if (booking.services && Array.isArray(booking.services as any)) {
+          const services = booking.services as any[];
+          const customTime = services.find(s => s.deliveryTime && typeof s.deliveryTime === 'string');
+          if (customTime) return customTime.deliveryTime;
+        }
+        // Fallback to duration
+        const durationVal = booking.duration || 60;
+        return durationVal + " mins";
+      })(),
       earnedMoney: `₹${booking.totalPrice}`,
       completedDate: (booking as any).deliveredAt
         ? new Date((booking as any).deliveredAt).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' })

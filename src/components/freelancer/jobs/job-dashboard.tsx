@@ -117,19 +117,24 @@ const convertBookingToJob = (booking: any): Job => {
     duration: (() => {
       // Calculate total duration from services if available
       if (booking.services && Array.isArray(booking.services) && booking.services.length > 0) {
-        // Assume default 60 mins per service quantity if not specified, 
-        // or rely on cart logic where 1 qty = 1 hour usually for hourly services.
-        // If booking.duration is available from API (which summons up service duration), use that.
-
-        let totalMins = 0;
-        if (booking.duration) {
-          totalMins = booking.duration;
-        } else {
-          // Fallback calculation
-          booking.services.forEach((s: any) => {
-            totalMins += (s.quantity || 1) * 60; // Assuming 60 mins per slot
-          });
+        // Priority 1: Check if any service has a custom delivery time string (e.g. "T20", "Match")
+        const customDuration = booking.services.find((s: any) => s.deliveryTime && typeof s.deliveryTime === 'string');
+        if (customDuration) {
+          return customDuration.deliveryTime;
         }
+
+        // Priority 2: Use booking duration if explicitly set (and not 0)
+        if (booking.duration) {
+          // If it's a number, append mins. If string (e.g. "T20" or "60 mins"), use as is.
+          if (typeof booking.duration === 'number') return `${booking.duration} mins`;
+          return booking.duration;
+        }
+
+        // Priority 3: Calculate based on quantity * 60 (fallback)
+        let totalMins = 0;
+        booking.services.forEach((s: any) => {
+          totalMins += (s.quantity || 1) * 60; // Assuming 60 mins per slot
+        });
 
         const hours = Math.floor(totalMins / 60);
         const mins = totalMins % 60;
@@ -137,12 +142,21 @@ const convertBookingToJob = (booking: any): Job => {
         if (hours > 0) return `${hours} hr`;
         return `${mins} mins`;
       }
-      return booking.duration ? `${booking.duration} mins` : 'As per booking';
+      return booking.duration
+        ? (typeof booking.duration === 'number' ? `${booking.duration} mins` : booking.duration)
+        : 'As per booking';
     })(),
     experienceLevel: undefined,
     otp: storedOtp,
     // Direct hire specific fields
     isDirectHire: true,
+    createdAt: booking.createdAt || new Date().toISOString(), // Use actual creation time or fallback
+    startedAt: booking.startedAt || (jobStatus === 'started' ? new Date().toISOString() : undefined),
+    deliveredAt: booking.deliveredAt,
+    clientConfirmedAt: booking.clientConfirmedAt,
+    completedAt: booking.completedAt,
+    cancelledAt: booking.cancelledAt,
+    scheduledAt: booking.scheduledAt || booking.date,
     notes: booking.notes || '',
     services: booking.services || [],
     paymentMethod: booking.paymentMethod || 'cod',
@@ -174,7 +188,7 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
   // State management
   const router = useRouter();
   const initialTab = searchParams?.tab === 'applications' ? 'applications' : 'upcoming';
-  const initialStatus = searchParams?.status || (initialTab === 'upcoming' ? 'upcoming' : 'pending');
+  const initialStatus = searchParams?.status || (initialTab === 'upcoming' ? 'all' : 'pending');
 
   const [activeTab, setActiveTab] = useState(initialTab);
   const [searchQuery, setSearchQuery] = useState('');
@@ -240,7 +254,13 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
       clientRating: dbJob.clientRating,
       earnings: dbJob.earnings,
       completedAt: dbJob.completedAt,
-      freelancerRating: dbJob.freelancerRating
+      deliveredAt: dbJob.deliveredAt,
+      clientConfirmedAt: dbJob.clientConfirmedAt,
+      cancelledAt: dbJob.cancelledAt,
+      freelancerRating: dbJob.freelancerRating,
+      createdAt: dbJob.createdAt,
+      isDirectHire: dbJob.isDirectHire,
+      proposalHistory: dbJob.proposalHistory
     };
   };
 
@@ -325,11 +345,11 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
     }
 
     // Extract status from URL parameters with defaults
-    let statusFromUrl = searchParams?.status || (tabFromUrl === 'upcoming' ? 'upcoming' : 'pending');
+    let statusFromUrl = searchParams?.status || (tabFromUrl === 'upcoming' ? 'all' : 'pending');
 
     // Validate status based on current tab
-    if (tabFromUrl === 'upcoming' && !['upcoming', 'ongoing', 'completed', 'cancelled'].includes(statusFromUrl)) {
-      statusFromUrl = 'ongoing';
+    if (tabFromUrl === 'upcoming' && !['all', 'upcoming', 'ongoing', 'completed', 'cancelled', 'marked'].includes(statusFromUrl)) {
+      statusFromUrl = 'all';
     } else if (tabFromUrl === 'applications' && !['pending', 'accepted', 'rejected', 'withdrawn'].includes(statusFromUrl)) {
       statusFromUrl = 'pending';
     }
@@ -382,7 +402,15 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
     const searchLower = searchQuery.trim().toLowerCase();
 
     if (!searchLower) {
-      if (statusFilter === 'completed') {
+      if (statusFilter === 'all') {
+        const regularJobs = jobs.filter(job => job.status !== 'cancelled').map(transformJobForCard);
+        // Should 'all' include cancelled? Usually yes, or maybe not.
+        // User asked for "all filter chip... to show all the job cards".
+        // Let's include everything from `jobs` array + applications?
+        // The `jobs` array contains confirmed, pending, started, completed, cancelled, marked.
+        // Let's include everything.
+        return jobs.map(transformJobForCard);
+      } else if (statusFilter === 'completed') {
         return jobs.filter(job => job.status === 'completed' || job.status === 'delivered').map(transformJobForCard);
       } else if (statusFilter === 'cancelled') {
         return jobs.filter(job => job.status === 'cancelled').map(transformJobForCard);
@@ -412,7 +440,8 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
       ].some(value => value && value.toString().toLowerCase().includes(searchLower));
 
       // Apply status filter if specified
-      const matchesStatus = statusFilter === 'upcoming' ||
+      const matchesStatus = statusFilter === 'all' ||
+        (statusFilter === 'upcoming' && (job.status === 'confirmed' || job.status === 'pending')) || // Explicit check for upcoming
         (statusFilter === 'completed' && (job.status === 'completed' || job.status === 'delivered')) ||
         (statusFilter === 'cancelled' && job.status === 'cancelled') ||
         (statusFilter === 'ongoing' && job.status === 'started') ||
@@ -474,7 +503,8 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
 
   // Calculate counts for each tab and status
   const tabCounts = useMemo(() => {
-    const upcomingJobs = jobs.filter(job => job.status === 'upcoming' || job.status === 'pending');
+    const allJobs = jobs; // All jobs
+    const upcomingJobs = jobs.filter(job => job.status === 'upcoming' || job.status === 'pending' || job.status === 'confirmed');
     const ongoingJobs = jobs.filter(job => job.status === 'started');
     const markedJobs = jobs.filter(job => {
       const statusLower = (job.status || '').toLowerCase();
@@ -489,6 +519,7 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
     const withdrawnApplications = applications.filter(app => app.status === 'withdrawn');
 
     return {
+      all: allJobs.length,
       upcoming: upcomingJobs.length,
       ongoing: ongoingJobs.length,
       marked: markedJobs.length,
@@ -506,6 +537,7 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
   const statusOptions = useMemo(() => {
     if (activeTab === 'upcoming') {
       return [
+        { value: 'all', label: 'All', count: tabCounts.all },
         { value: 'upcoming', label: 'Upcoming', count: tabCounts.upcoming },
         { value: 'ongoing', label: 'Ongoing', count: tabCounts.ongoing },
         { value: 'marked', label: 'Marked', count: tabCounts.marked },
@@ -525,7 +557,8 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
   // Event handlers
   const handleTabChange = (value: string) => {
     const newTab = value === 'applications' ? 'applications' : 'upcoming';
-    const defaultStatus = newTab === 'applications' ? 'pending' : 'upcoming';
+    // Fix: Default to 'all' when switching to My Jobs tab
+    const defaultStatus = newTab === 'applications' ? 'pending' : 'all';
 
     // Update URL with new tab and status using Next.js router
     const params = new URLSearchParams();
@@ -759,7 +792,7 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
             className="w-full pt-2 flex flex-col h-full"
           >
             <div className="flex flex-col md:flex-row justify-center items-center gap-4 py-2 flex-shrink-0">
-              <TabsList className="grid w-full sm:w-[400px] lg:w-auto grid-cols-2 h-12 bg-transparent p-1 gap-1">
+              <TabsList id="jobs-tabs" className="grid w-full sm:w-[400px] lg:w-auto grid-cols-2 h-12 bg-transparent p-1 gap-1">
                 <TabsTrigger
                   value="upcoming"
                   className="relative px-4 py-2 text-sm font-medium transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#8B66D1] data-[state=active]:to-[#9B76E1] data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-[#8B66D1]/25 data-[state=active]:rounded-lg data-[state=inactive]:text-gray-300 data-[state=inactive]:bg-transparent data-[state=inactive]:rounded-lg data-[state=inactive]:border data-[state=inactive]:border-gray-600/50"
@@ -800,6 +833,7 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
                     </div>
                   ) : (
                     <button
+                      id="jobs-search-button"
                       className={`h-10 w-10 p-0 text-gray-400 hover:text-white flex items-center justify-center transition-all duration-300 ease-in ${!showSearch ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}
                       onClick={() => setShowSearch(true)}
                     >
@@ -812,6 +846,7 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
                 {activeTab !== 'earnings' && statusOptions.length > 0 && !showSearch && (
                   <div className="flex-1 min-w-0 md:w-auto overflow-hidden">
                     <div
+                      id="jobs-status-filters"
                       ref={statusChipsRef}
                       className="flex items-center gap-2 overflow-x-auto scrollbar-hide allow-horizontal-scroll pr-4"
                     >
@@ -852,20 +887,23 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
                 >
                   <TabsContent value="upcoming" className="mt-0 w-full">
                     {loading ? (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+                      <div id="jobs-skeleton-container" className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
                         {[...Array(3)].map((_, i) => (
-                          <JobCardSkeleton key={i} />
+                          <div key={i} id={i === 0 ? 'first-skeleton-card' : undefined} className="w-full">
+                            <JobCardSkeleton />
+                          </div>
                         ))}
                       </div>
                     ) : filteredJobs.length > 0 ? (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
-                        {filteredJobs.map((job) => (
-                          <JobCard
-                            key={job.id}
-                            job={job}
-                            index={filteredJobs.indexOf(job)}
-                            onStatusChange={handleJobStatusChange}
-                          />
+                      <div id="jobs-grid-container" className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+                        {filteredJobs.map((job, index) => (
+                          <div key={job.id} id={index === 0 ? 'first-job-card' : undefined}>
+                            <JobCard
+                              job={job}
+                              index={index}
+                              onStatusChange={handleJobStatusChange}
+                            />
+                          </div>
                         ))}
                       </div>
                     ) : (
@@ -900,7 +938,7 @@ export function JobDashboard({ searchParams }: JobDashboardProps) {
                   </TabsContent>
 
                   <TabsContent value="applications" className="mt-0 w-full h-full">
-                    <div className="h-[60vh] flex flex-col items-center justify-center">
+                    <div id="applications-status-container" className="h-[60vh] flex flex-col items-center justify-center">
                       <CricketComingSoon
                         title="Pitch Inspection in Progress!"
                         description={

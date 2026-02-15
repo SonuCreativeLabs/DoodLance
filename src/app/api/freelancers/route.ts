@@ -217,6 +217,8 @@ export async function GET(request: Request) {
                 experience: experience,
                 description: p.user.bio || p.about || '',
                 cricketRole: p.cricketRole,
+                mainSport: p.mainSport,
+                otherSports: p.otherSports,
                 services: userServices.map((s: any) => ({
                     id: s.id,
                     title: s.title,
@@ -224,7 +226,8 @@ export async function GET(request: Request) {
                     category: s.categoryId
                 })),
                 isComplete,
-                completionPercentage
+                completionPercentage,
+                username: p.user.username // Now including username for better routing
             };
         });
 

@@ -121,7 +121,7 @@ export default function ProfessionalsFeed({ filteredProfessionals }: Professiona
                     </div>
                   </div>
                 </div>
-                <p className="text-[13px] text-white/80 line-clamp-2 leading-relaxed">{freelancer.description || `${freelancer.name} is available for ${freelancer.service || 'cricket services'}`}</p>
+                <p className="text-[13px] text-white/80 line-clamp-2 leading-relaxed">{freelancer.description || `${freelancer.name} is available for ${freelancer.service || 'sports services'}`}</p>
                 <div className="flex flex-col gap-1 text-[12px] text-white/60">
                   <div className="flex items-center gap-1.5">
                     <MapPin className="w-3.5 h-3.5 flex-shrink-0 text-white/60" />

@@ -315,7 +315,7 @@ const generateJobs = (): Job[] => {
     {
       title: 'Event Photographer',
       description: 'Need a professional photographer for a corporate event. Must have own equipment and portfolio.',
-      category: 'Cricket Photo / Videography',
+      category: 'Sports Photo / Videography',
       skills: ['Cricket Photography', 'Sports Photography', 'Action Shots', 'Photo Editing'],
       workMode: 'onsite',
       minRate: 2000,
@@ -324,7 +324,7 @@ const generateJobs = (): Job[] => {
     {
       title: 'Video Editor',
       description: 'Looking for a skilled video editor for YouTube content. Experience with Premiere Pro required.',
-      category: 'Cricket Content Creator',
+      category: 'Sports Content Creator',
       skills: ['Video Editing', 'Color Grading', 'Motion Graphics'],
       workMode: 'remote',
       minRate: 1500,

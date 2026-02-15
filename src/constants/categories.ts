@@ -11,25 +11,14 @@ export const SERVICE_CATEGORIES = [
   'Scorer',
   'Umpire',
   'Commentator',
-  'Cricket Content Creator',
-  'Cricket Photo / Videography',
+  'Sports Content Creator',
+  'Sports Photo / Videography',
   'Other'
 ] as const;
 
-export const PORTFOLIO_CATEGORIES = [
-  'Cricket Achievement',
-  'Academic Achievement',
-  'Cricket Analytics',
-  'Cricket Technology',
-  'Coaching Experience',
-  'Match Performance',
-  'Training Content',
-  'Other'
-] as const;
 
 // Combined categories for when both types are needed
-export const ALL_CATEGORIES = [...SERVICE_CATEGORIES, ...PORTFOLIO_CATEGORIES.filter(cat => !SERVICE_CATEGORIES.includes(cat as any))];
+export const ALL_CATEGORIES = [...SERVICE_CATEGORIES];
 
 export type ServiceCategory = typeof SERVICE_CATEGORIES[number];
-export type PortfolioCategory = typeof PORTFOLIO_CATEGORIES[number];
-export type AnyCategory = ServiceCategory | PortfolioCategory;
+export type AnyCategory = ServiceCategory;

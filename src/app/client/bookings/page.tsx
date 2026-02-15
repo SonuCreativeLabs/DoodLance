@@ -14,6 +14,7 @@ import { CricketLoader } from "@/components/ui/cricket-loader"
 import { useHistoryJobs, HistoryJob } from "@/contexts/HistoryJobsContext"
 import { usePostedJobs } from "@/contexts/PostedJobsContext"
 import { useBookAgain } from "@/hooks/useBookAgain"
+import { useTutorial, TutorialConfig } from "@/contexts/TutorialContext"
 // 🚀 React Query POC imports
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClient } from '@/lib/query-client'
@@ -334,7 +335,7 @@ const AcceptedProposalCard = ({ application }: { application: Application }) => 
 }
 
 // Card for history jobs
-const HistoryCard = ({ booking }: { booking: Booking }) => {
+const HistoryCard = ({ booking, id }: { booking: Booking; id?: string }) => {
   const router = useRouter()
   // Mocking history job for useBookAgain hook, or we need to update hook
   // Memoize to prevent re-creation loops in useBookAgain
@@ -374,6 +375,7 @@ const HistoryCard = ({ booking }: { booking: Booking }) => {
             handleOpenDetails()
           }
         }}
+        id={id}
         className="p-5 rounded-xl bg-[#1E1E1E] border border-white/5 w-full shadow-lg cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-500/40 focus:ring-offset-2 focus:ring-offset-[#111111]"
       >
         <div className="space-y-4">
@@ -646,6 +648,19 @@ function BookingsPageContent() {
   const [applicationFilter, setApplicationFilter] = useState('all')
   const [historyFilter, setHistoryFilter] = useState(initialHistoryFilter)
 
+  const { startTutorial, hasSeenTutorial } = useTutorial();
+
+
+  useEffect(() => {
+    const shouldStart = !hasSeenTutorial('bookings-tour') || searchParams.get('tutorial') === 'bookings-tour';
+    if (shouldStart) {
+      const timer = setTimeout(() => {
+        startTutorial(bookingsTutorial);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [searchParams]);
+
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [initialLoad, setInitialLoad] = useState(true)
 
@@ -763,7 +778,9 @@ function BookingsPageContent() {
 
     if (!isHistoryStatus) return false;
 
-    if (historyFilter === 'all') return matchesSearch
+    // Fix: Ensure 'all' shows both completed and cancelled
+    if (historyFilter === 'all') return matchesSearch;
+
     return matchesSearch && booking.status.toLowerCase() === historyFilter.toLowerCase()
   }).sort((a, b) => {
     const dateA = a.completedAt ? new Date(a.completedAt) : new Date(0)
@@ -831,6 +848,51 @@ function BookingsPageContent() {
     return counts;
   }, [bookings]);
 
+  // Tutorial configuration - defined after filteredBookings
+  const bookingsTutorial: TutorialConfig = useMemo(() => ({
+    id: 'bookings-tour',
+    steps: [
+      {
+        targetId: 'bookings-tabs',
+        title: 'Your Bookings Hub',
+        description: 'Navigate between Active sessions, Job Applications (where experts apply to your posts), and your complete Booking History.',
+        position: 'bottom',
+        onStart: () => setCurrentTab('active')
+      },
+      {
+        targetId: 'bookings-active-filters',
+        title: 'Filter Active Bookings',
+        description: 'Quickly filter by All, Ongoing (in-progress), Upcoming (scheduled), or Marked (sessions you\'ve marked as completed).',
+        position: 'bottom',
+        onStart: () => setCurrentTab('active')
+      },
+      {
+        targetId: 'bookings-applications-tab',
+        title: 'Job Applications',
+        description: 'View and manage applications from experts who want to work on your posted job requirements.',
+        position: 'bottom',
+        offsetY: -80, // Move up by 80px (~10% of typical mobile viewport)
+        onStart: () => setCurrentTab('applications')
+      },
+      // Only include history step if history exists, targeting the first card
+      ...(filteredHistory.length > 0 ? [{
+        targetId: 'first-history-card',
+        title: 'Booking History',
+        description: 'Browse all your completed sessions. You can easily re-book your favorite experts from here.',
+        position: 'bottom' as const,
+        offsetY: 20, // Position well below the card
+        onStart: () => setCurrentTab('history')
+      }] : [{
+        // Fallback to targeting tab if no history exists
+        targetId: 'bookings-history-tab',
+        title: 'Booking History',
+        description: 'Browse all your completed sessions. You can easily re-book your favorite experts from here.',
+        position: 'bottom' as const,
+        onStart: () => setCurrentTab('history')
+      }])
+    ]
+  }), [filteredBookings.length, filteredHistory.length]);
+
   const toggleSearch = () => {
     setIsSearchOpen(!isSearchOpen)
     if (!isSearchOpen) {
@@ -861,7 +923,7 @@ function BookingsPageContent() {
             {/* Fixed Tabs Header */}
             <div className="fixed top-[64px] md:top-32 left-0 right-0 z-40 bg-[#111111]">
               <div className="container max-w-4xl mx-auto px-4">
-                <TabsList className="flex w-full bg-transparent border-b border-white/10">
+                <TabsList id="bookings-tabs" className="flex w-full bg-transparent border-b border-white/10">
                   <TabsTrigger
                     value="active"
                     className={cn(
@@ -902,9 +964,9 @@ function BookingsPageContent() {
             {/* Scrollable Content */}
             <div className="flex-1 overflow-y-auto pt-[120px] md:pt-[70px] pb-6">
               <div className="container max-w-4xl mx-auto px-4">
-                <TabsContent value="active" className="mt-2 md:mt-0 focus-visible:outline-none focus-visible:ring-0">
+                <TabsContent id="bookings-list" value="active" className="mt-2 md:mt-0 focus-visible:outline-none focus-visible:ring-0">
                   {/* Active Tab Filters */}
-                  <div className="flex gap-2 mb-6 md:mb-4 overflow-x-auto pb-2 scroll-smooth items-center min-h-[44px]" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                  <div id="bookings-active-filters" className="flex gap-2 mb-6 md:mb-4 overflow-x-auto pb-2 scroll-smooth items-center min-h-[44px]" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                     {/* Inline Search */}
                     <div className={cn(
                       "flex items-center transition-all duration-300 overflow-hidden",
@@ -971,7 +1033,7 @@ function BookingsPageContent() {
                         </Button>
                       </div>
                     ) : filteredBookings.length === 0 ? (
-                      <div className="text-center py-12">
+                      <div className="text-center py-12 md:col-span-2">
                         <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-white/5 flex items-center justify-center">
                           <Calendar className="w-8 h-8 text-white/40" />
                         </div>
@@ -994,12 +1056,13 @@ function BookingsPageContent() {
                           ))
                         }
                         {/* Active Bookings */}
-                        {filteredBookings.map((booking) => (
-                          <BookingCard
-                            key={booking["#"]}
-                            booking={booking}
-                            showActions={true}
-                          />
+                        {filteredBookings.map((booking, index) => (
+                          <div key={booking["#"]} id={index === 0 ? "first-booking-card" : undefined}>
+                            <BookingCard
+                              booking={booking}
+                              showActions={true}
+                            />
+                          </div>
                         ))
                         }
                       </>
@@ -1009,7 +1072,7 @@ function BookingsPageContent() {
 
 
 
-                <TabsContent value="applications" className="mt-0 h-full">
+                <TabsContent id="bookings-applications-tab" value="applications" className="mt-0 h-full">
                   <div className="h-[60vh] flex flex-col items-center justify-center">
                     <CricketComingSoon
                       title="Field Setting Change!"
@@ -1023,9 +1086,9 @@ function BookingsPageContent() {
                   </div>
                 </TabsContent>
 
-                <TabsContent value="history" className="mt-2 focus-visible:outline-none focus-visible:ring-0">
+                <TabsContent id="bookings-history-tab" value="history" className="mt-2 focus-visible:outline-none focus-visible:ring-0">
                   {/* History Tab Filters */}
-                  <div className="flex gap-2 mb-6 overflow-x-auto pb-2 scroll-smooth items-center min-h-[44px]" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                  <div id="bookings-history-filters" className="flex gap-2 mb-6 overflow-x-auto pb-2 scroll-smooth items-center min-h-[44px]" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                     {/* Inline Search */}
                     <div className={cn(
                       "flex items-center transition-all duration-300 overflow-hidden",
@@ -1086,8 +1149,8 @@ function BookingsPageContent() {
                         </p>
                       </div>
                     ) : (
-                      filteredHistory.map((booking) => (
-                        <HistoryCard key={booking["#"]} booking={booking} />
+                      filteredHistory.map((booking, index) => (
+                        <HistoryCard key={booking["#"]} booking={booking} id={index === 0 ? "first-history-card" : undefined} />
                       ))
                     )}
                   </div>

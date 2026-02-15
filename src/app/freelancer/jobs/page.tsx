@@ -6,6 +6,8 @@ import { motion } from 'framer-motion';
 import { JobDashboard } from '@/components/freelancer/jobs/job-dashboard';
 import { Plus } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
+import { useTutorial, TutorialConfig } from '@/contexts/TutorialContext';
+import { useEffect, useMemo } from 'react';
 
 interface PageProps {
   searchParams: {
@@ -17,16 +19,53 @@ interface PageProps {
 export default function JobsPage({ searchParams: initialSearchParams }: PageProps) {
   // Use the useSearchParams hook to get the current URL search params
   const searchParamsObj = useSearchParams();
+  const { startTutorial, hasSeenTutorial, isOpen } = useTutorial();
 
   // Get the current tab and status from URL or use defaults
   const tab = searchParamsObj?.get('tab') || initialSearchParams?.tab || 'upcoming';
-  const status = searchParamsObj?.get('status') || initialSearchParams?.status || 'upcoming';
+  // Fix: Default to 'all' for jobs tab, 'pending' for applications tab
+  const defaultStatus = tab === 'applications' ? 'pending' : 'all';
+  const status = searchParamsObj?.get('status') || initialSearchParams?.status || defaultStatus;
 
   // Create a stable searchParams object to pass to JobDashboard
   const stableSearchParams = React.useMemo(() => ({
     tab,
     status
   }), [tab, status]);
+
+  const jobsTutorial: TutorialConfig = useMemo(() => ({
+    id: 'jobs-tour',
+    steps: [
+      {
+        targetId: 'jobs-tabs',
+        title: 'Your Jobs Dashboard',
+        description: 'Switch between "My Jobs" (confirmed bookings) and "My Proposals" (applications you\'ve submitted).',
+        position: 'bottom'
+      },
+      {
+        targetId: 'jobs-status-filters',
+        title: 'Filter by Status',
+        description: 'Quickly find jobs by status: Upcoming, Ongoing, Marked (completed by you), Completed, or Cancelled.',
+        position: 'bottom'
+      },
+      {
+        targetId: 'first-job-card,first-skeleton-card,jobs-empty-state,applications-status-container',
+        title: 'Job Cards',
+        description: 'Tap to view session details. Get the 4-digit OTP from the client to start the job.',
+        position: 'top'
+      }
+    ]
+  }), []);
+
+  useEffect(() => {
+    const shouldStart = !hasSeenTutorial('jobs-tour') || searchParamsObj?.get('tutorial') === 'jobs-tour';
+    if (shouldStart && !isOpen) {
+      const timer = setTimeout(() => {
+        startTutorial(jobsTutorial);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [searchParamsObj, hasSeenTutorial, startTutorial, jobsTutorial, isOpen]);
   return (
     <div className="min-h-screen bg-[#111111] pt-0">
       <motion.div

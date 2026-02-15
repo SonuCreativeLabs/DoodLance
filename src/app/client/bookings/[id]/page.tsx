@@ -12,7 +12,7 @@ import { useBookingsQuery } from "@/hooks/useBookingsQuery";
 import { useNavbar } from "@/contexts/NavbarContext";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { CricketWhiteBallSpinner } from '@/components/ui/CricketWhiteBallSpinner';
+import { SportsRandomSpinner } from '@/components/ui/SportsRandomSpinner';
 import { RescheduleModal } from "@/components/client/bookings/RescheduleModal";
 
 const statusCopy: Record<string, string> = {
@@ -56,6 +56,7 @@ export default function BookingDetailPage() {
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [rating, setRating] = useState(0);
   const [review, setReview] = useState('');
+  const [hoverRating, setHoverRating] = useState(0);
   const [selectedChips, setSelectedChips] = useState<string[]>([]);
 
   useEffect(() => {
@@ -142,6 +143,7 @@ export default function BookingDetailPage() {
       const res = await fetch(`/api/bookings/${params.id}/complete`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include", // Ensure cookies are sent
         body: JSON.stringify({
           rating,
           review,
@@ -149,7 +151,11 @@ export default function BookingDetailPage() {
         })
       });
 
-      if (!res.ok) throw new Error("Failed to mark booking as complete");
+      if (!res.ok) {
+        const errorData = await res.json();
+        console.error('Complete booking failed with status:', res.status, JSON.stringify(errorData, null, 2));
+        throw new Error(errorData.error || "Failed to mark booking as complete");
+      }
 
       const result = await res.json();
       console.log('Mark complete response:', result);
@@ -362,7 +368,7 @@ export default function BookingDetailPage() {
                 <span>Duration</span>
               </div>
               <p className="text-lg font-semibold text-white">
-                {booking.services?.reduce((acc, s) => acc + (s.duration || 0), 0) || 0} minutes
+                {booking.duration || `${booking.services?.reduce((acc, s) => acc + (s.duration || 0), 0) || 0} minutes`}
               </p>
               <p className="text-sm text-white/60">Arrive 10 minutes earlier</p>
             </div>
@@ -397,7 +403,7 @@ export default function BookingDetailPage() {
                     </div>
                     <span className="text-white font-medium">
                       {typeof service.price === 'number' ? `₹${service.price.toLocaleString()}` : service.price}
-                      {service.duration ? ` / ${service.duration} mins` : (service.deliveryTime ? ` / ${service.deliveryTime}` : '')}
+                      {service.deliveryTime ? ` / ${service.deliveryTime}` : (service.duration ? ` / ${service.duration} mins` : '')}
                     </span>
                   </div>
                 ))
@@ -823,12 +829,14 @@ export default function BookingDetailPage() {
                         {[1, 2, 3, 4, 5].map((star) => (
                           <button
                             key={star}
+                            onMouseEnter={() => setHoverRating(star)}
+                            onMouseLeave={() => setHoverRating(0)}
                             onClick={() => setRating(star)}
-                            className={`transition-all duration-200 ${star <= rating
+                            className={`transition-all duration-200 ${star <= (hoverRating || rating)
                               ? 'text-yellow-400 scale-110 drop-shadow-sm'
-                              : 'hover:text-yellow-400/50 hover:scale-105'
+                              : 'text-gray-600 hover:text-yellow-400/50 hover:scale-105'
                               }`}
-                            style={star <= rating ? {} : { color: '#404040' }}
+                            style={star <= (hoverRating || rating) ? {} : { color: '#404040' }}
                           >
                             <Star className="w-12 h-12 fill-current" />
                           </button>
@@ -867,12 +875,12 @@ export default function BookingDetailPage() {
                     </Label>
                     <div className="grid grid-cols-2 gap-2">
                       {[
-                        'Professional coaching',
+                        'Professional Player',
                         'Clear communication',
                         'Punctual sessions',
                         'Expert knowledge',
                         'Friendly approach',
-                        'Good facilities'
+                        'Game Changer'
                       ].map((chip) => (
                         <button
                           key={chip}
@@ -939,7 +947,7 @@ export default function BookingDetailPage() {
                 >
                   {isCompleting ? (
                     <>
-                      <CricketWhiteBallSpinner className="w-5 h-5 mr-2" />
+                      <SportsRandomSpinner className="w-5 h-5 mr-2" />
                       Processing...
                     </>
                   ) : (

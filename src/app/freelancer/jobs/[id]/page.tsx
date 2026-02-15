@@ -47,7 +47,7 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
         location: data.location || 'Remote',
         date: data.scheduledAt ? new Date(data.scheduledAt).toLocaleDateString() : (data.date || 'TBD'),
         time: data.scheduledAt ? new Date(data.scheduledAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' }) : (data.time || 'TBD'),
-        duration: data.duration ? `${data.duration} mins` : 'Flexible',
+        duration: data.duration || 'Flexible',
         workMode: data.workMode,
         experience: data.experience,
         skills: typeof data.skills === 'string' ? data.skills.split(',') : (data.skills || []),
@@ -66,6 +66,9 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
         otp: data.otp,
         startedAt: data.startedAt,
         completedAt: data.completedAt,
+        clientConfirmedAt: data.clientConfirmedAt, // Added mapping
+        deliveredAt: data.deliveredAt, // Added mapping
+        createdAt: data.createdAt,
         freelancerRating: data.freelancerRating, // Assuming API returns this object structure
         clientRating: data.clientRating,
         isDirectHire: !!data.otp || !!data.serviceId, // Identify as direct hire if OTP or ServiceID exists
