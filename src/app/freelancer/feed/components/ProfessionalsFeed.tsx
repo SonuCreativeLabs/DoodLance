@@ -324,7 +324,7 @@ export default function ProfessionalsFeed({
               </>
             ) : (
               <div className="flex items-center justify-between w-full">
-                <span className="text-xs text-white/40 italic">No services listed</span>
+                <span className="text-sm font-medium text-white/50 drop-shadow-sm">No services listed</span>
                 <button
                   disabled
                   className="bg-white/5 text-white/40 border border-white/5 py-1.5 px-3 rounded-lg text-sm font-medium cursor-not-allowed relative z-20"

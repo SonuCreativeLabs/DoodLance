@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import prisma from '@/lib/db';
+import { sendMetaEvent, hashData } from '@/lib/meta-capi';
 
 
 async function getDbUser(supabaseUserId: string, email?: string) {
@@ -150,18 +151,53 @@ export async function PATCH(request: NextRequest) {
                     addressUpdates.postalCode || currentUser?.postalCode
                 ].filter(Boolean).join(', ');
 
-                if (fullAddress) {
-                    const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
-                    if (mapboxToken) {
-                        const geocodeUrl = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(fullAddress)}.json?access_token=${mapboxToken}&limit=1`;
-                        const geocodeResponse = await fetch(geocodeUrl);
-                        const geocodeData = await geocodeResponse.json();
+                const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
 
-                        if (geocodeData.features && geocodeData.features.length > 0) {
-                            const [lng, lat] = geocodeData.features[0].center;
-                            coords = JSON.stringify([lng, lat]);
-                            console.log(`✅ Geocoded address "${fullAddress}" to coordinates:`, coords);
+                const getGeocode = async (query: string) => {
+                    if (!mapboxToken || !query) return null;
+                    const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${mapboxToken}&limit=1&country=in&proximity=80.2707,13.0827`;
+                    try {
+                        const res = await fetch(url);
+                        const data = await res.json();
+                        if (data.features && data.features.length > 0) {
+                            return data.features[0].center; // [lng, lat]
                         }
+                    } catch (err) {
+                        console.error('Geocoding fetch error:', err);
+                    }
+                    return null;
+                };
+
+                if (fullAddress) {
+                    let center = await getGeocode(fullAddress);
+
+                    // Fallback 1: Area + City + State
+                    if (!center) {
+                        const simpleAddress = [
+                            addressUpdates.area || currentUser?.area,
+                            addressUpdates.city || currentUser?.city,
+                            addressUpdates.state || currentUser?.state
+                        ].filter(Boolean).join(', ');
+                        if (simpleAddress !== fullAddress) {
+                            center = await getGeocode(simpleAddress);
+                        }
+                    }
+
+                    // Fallback 2: City + State
+                    if (!center) {
+                        const cityAddress = [
+                            addressUpdates.city || currentUser?.city,
+                            addressUpdates.state || currentUser?.state
+                        ].filter(Boolean).join(', ');
+                        if (cityAddress && cityAddress !== fullAddress) {
+                            center = await getGeocode(cityAddress);
+                        }
+                    }
+
+                    if (center) {
+                        const [lng, lat] = center;
+                        coords = JSON.stringify([lng, lat]);
+                        console.log(`✅ Geocoded address "${fullAddress}" to coordinates:`, coords);
                     }
                 }
             } catch (geocodeError) {
@@ -227,7 +263,7 @@ export async function PATCH(request: NextRequest) {
                     battingStyle: battingStyle || '',
                     bowlingStyle: bowlingStyle || '',
                     hourlyRate: hourlyRate || 30, // Default
-                    isOnline: online ?? true,
+                    isOnline: online ?? false, // Default to false so they don't show "Available / GAME ON" until they explicitly turn it on.
                     skills: Array.isArray(skills) ? JSON.stringify(skills) : (skills || "[]"),
                     specializations: Array.isArray(specializations) ? JSON.stringify(specializations) : (specializations || "[]"),
                     availability: "[]", // Default empty JSON string, NOT array
@@ -244,7 +280,7 @@ export async function PATCH(request: NextRequest) {
                     avgProjectValue: 0,
                     dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
                     coverImage: coverImageUrl || null,
-                    coords: JSON.stringify([0, 0]), // Required by schema
+                    coords: JSON.stringify([80.2707, 13.0827]), // Default to Chennai
 
                     // Multi-Sport fields for creation
                     mainSport: mainSport || 'Cricket',
@@ -253,18 +289,40 @@ export async function PATCH(request: NextRequest) {
                 }
             });
 
-            // PERMANENT ROLE UPGRADE:
-            // If the user's main role is 'client', upgrade it to 'freelancer' permanently.
-            // This grants them dual capabilities.
-            if (dbUser.role === 'client') {
-                await prisma.user.update({
-                    where: { id: dbUser.id },
-                    data: {
-                        role: 'freelancer',
-                        currentRole: 'freelancer' // Switch them to freelancer view immediately
+            // Track Freelancer Profile Creation (CAPI)
+            try {
+                sendMetaEvent({
+                    event_name: 'FreelancerProfileCreated',
+                    event_id: `freelancer_profile_${dbUser.id}`,
+                    event_source_url: request.url,
+                    user_data: {
+                        em: [hashData(dbUser.email)],
+                        ph: dbUser.phone ? [hashData(dbUser.phone)] : undefined,
+                        client_ip_address: request.headers.get('x-forwarded-for') || undefined,
+                        client_user_agent: request.headers.get('user-agent') || undefined,
+                    },
+                    custom_data: {
+                        content_name: 'Freelancer Onboarding',
+                        status: 'success',
+                        main_sport: mainSport || 'Cricket'
                     }
                 });
+            } catch (capiError) {
+                console.error('Failed to track FreelancerProfileCreated:', capiError);
             }
+        }
+
+        // PERMANENT ROLE UPGRADE:
+        // If the user's main role is 'client', upgrade it to 'freelancer' permanently.
+        // This grants them dual capabilities.
+        if (dbUser.role === 'client') {
+            await prisma.user.update({
+                where: { id: dbUser.id },
+                data: {
+                    role: 'freelancer',
+                    currentRole: 'freelancer' // Switch them to freelancer view immediately
+                }
+            });
         }
 
         // Fetch the latest user data to return

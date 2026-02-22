@@ -185,7 +185,9 @@ export default function IntegratedExplorePage() {
       name: freelancer.name,
       title: freelancer.name,
       service: freelancer.service,
-      availability: ['Available now'],
+      availability: Array.isArray(freelancer.availability)
+        ? freelancer.availability.filter((a: any) => a.available).map((a: any) => a.day)
+        : [],
       avatar: freelancer.image,
       image: freelancer.image,
       skills: freelancer.expertise || [],
@@ -522,9 +524,9 @@ export default function IntegratedExplorePage() {
           const dragDistance = info.offset.y;
           const dragVelocity = info.velocity.y;
 
-          if (dragDistance > 50 || dragVelocity > 300) {
+          if (dragDistance > 120 || dragVelocity > 600) {
             setIsSheetCollapsed(true);
-          } else if (dragDistance < -50 || dragVelocity < -300) {
+          } else if (dragDistance < -120 || dragVelocity < -600) {
             setIsSheetCollapsed(false);
           } else {
             setIsSheetCollapsed(dragDistance > 0);

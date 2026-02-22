@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { verifyAccessToken } from '@/lib/auth/jwt';
+import { sendMetaEvent, hashData } from '@/lib/meta-capi';
 
 export const dynamic = 'force-dynamic';
 
@@ -75,6 +76,43 @@ export async function POST(request: Request) {
             } catch (dbError) {
                 console.error('Failed to save referredBy:', dbError);
             }
+        }
+
+        // Check if this is a new signup for Meta Tracking
+        try {
+            const prisma = (await import('@/lib/db')).default;
+            const dbUser = await prisma.user.findUnique({
+                where: { id: user.id },
+                select: { createdAt: true, email: true, phone: true }
+            });
+
+            if (dbUser) {
+                const now = new Date();
+                const createdAt = new Date(dbUser.createdAt);
+                const diffMinutes = (now.getTime() - createdAt.getTime()) / (1000 * 60);
+
+                // If created in the last 2 minutes, consider it a new registration
+                if (diffMinutes < 2) {
+                    console.log('🚀 New User Detected! Triggering Meta CompleteRegistration');
+                    sendMetaEvent({
+                        event_name: 'CompleteRegistration',
+                        event_id: `signup_${user.id}`,
+                        event_source_url: request.url,
+                        user_data: {
+                            em: [hashData(dbUser.email)],
+                            ph: dbUser.phone ? [hashData(dbUser.phone)] : undefined,
+                            client_ip_address: request.headers.get('x-forwarded-for') || undefined,
+                            client_user_agent: request.headers.get('user-agent') || undefined,
+                        },
+                        custom_data: {
+                            content_name: 'Signup',
+                            status: 'success'
+                        }
+                    });
+                }
+            }
+        } catch (capiError) {
+            console.error('Failed to track CompleteRegistration:', capiError);
         }
 
         return NextResponse.json({ success: true, user: { ...user, role: user.role || 'client' } });
