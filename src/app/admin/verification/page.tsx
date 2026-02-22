@@ -552,14 +552,16 @@ export default function KYCVerificationPage() {
                         >
                           {doc.status}
                         </Badge>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="text-purple-400 hover:text-purple-300"
-                          onClick={() => window.open(doc.file, '_blank')}
-                        >
-                          <Eye className="w-4 h-4" />
-                        </Button>
+                        {(!doc.isText && doc.file && typeof doc.file === 'string' && (doc.file.startsWith('http') || doc.file.startsWith('/') || doc.file.startsWith('blob:'))) && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="text-purple-400 hover:text-purple-300"
+                            onClick={() => window.open(doc.file, '_blank')}
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                        )}
                       </div>
                     </div>
                   ))}
