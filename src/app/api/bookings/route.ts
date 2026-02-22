@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import prisma from '@/lib/db';
 import { createClient } from '@/lib/supabase/server';
+import { sendMetaEvent, hashData } from '@/lib/meta-capi';
 
 export const dynamic = 'force-dynamic';
 
@@ -634,6 +635,31 @@ export async function POST(request: NextRequest) {
             }
 
             console.log('Booking created successfully:', result.id);
+
+            // Track Purchase (CAPI)
+            try {
+                sendMetaEvent({
+                    event_name: 'Purchase',
+                    event_id: `booking_${result.id}`,
+                    event_source_url: request.url,
+                    user_data: {
+                        em: [hashData(dbUser.email)],
+                        ph: dbUser.phone ? [hashData(dbUser.phone)] : undefined,
+                        client_ip_address: request.headers.get('x-forwarded-for') || undefined,
+                        client_user_agent: request.headers.get('user-agent') || undefined,
+                    },
+                    custom_data: {
+                        value: finalPrice,
+                        currency: 'INR',
+                        content_ids: [service.id],
+                        content_type: 'product',
+                        num_items: 1,
+                    }
+                });
+            } catch (capiError) {
+                console.error('Failed to send Meta CAPI Purchase event:', capiError);
+            }
+
             return NextResponse.json({ success: true, booking: result });
         } catch (dbError: any) {
             console.error('Prisma Create Error:', dbError);

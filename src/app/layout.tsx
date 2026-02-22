@@ -7,17 +7,18 @@ import ErrorBoundary from '@/components/ErrorBoundary';
 
 import { ReferralTracker } from '@/components/ReferralTracker';
 import { MicrosoftClarity } from "@/components/MicrosoftClarity";
+import FacebookPixel from "@/components/FacebookPixel";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
   metadataBase: new URL('https://bails.in'),
   title: {
-    default: 'BAILS - Sports Freelance Marketplace',
+    default: 'Sports Talent Marketplace',
     template: '%s | BAILS',
   },
   description: 'Find and hire the best sports freelancers. Connect with coaches, players, and specialized sport professionals.',
-  keywords: ['sports freelance', 'coaching', 'athletes', 'hire sports talent', 'sports marketplace', 'cricket', 'football', 'badminton'],
+  keywords: ['sports freelance', 'coaching', 'athletes', 'hire sports talent', 'sports marketplace', 'cricket', 'football', 'badminton', 'net bowlers', 'sidearmers', 'mystry spinners', 'fast bowler', 'pickleball coach', 'padelball', 'basketball', 'one on one coach', 'analyst', 'physio', 'practice partner', 'cricket coaching', 'sports recruitment', 'athlete portfolio', 'local coaches', 'sports gigs', 'monetize sports skills', 'sports community', 'scouting', 'performance analyst', 'sports tech'],
 
   authors: [{ name: 'BAILS Team' }],
   creator: 'BAILS',
@@ -28,16 +29,16 @@ export const metadata = {
     telephone: false,
   },
   openGraph: {
-    title: 'BAILS - Sports Freelance Marketplace',
-    description: 'Connect with local sports freelancers and monetize your skills',
+    title: 'Sports Talent Marketplace',
+    description: 'Hire sports experts or monetize your sports skills',
     url: 'https://bails.in',
     siteName: 'BAILS',
     images: [
       {
-        url: '/images/LOGOS/BAILS TG.png',
+        url: '/images/LOGOS/BAILS%20Logo%20+%20Tag.png',
         width: 1200,
         height: 630,
-        alt: 'BAILS - Sports Freelance Marketplace',
+        alt: 'BAILS - Sports Talent Marketplace',
       },
     ],
     locale: 'en_US',
@@ -45,10 +46,10 @@ export const metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'BAILS - Sports Freelance Marketplace',
-    description: 'Connect with local sports freelancers and monetize your skills',
+    title: 'Sports Talent Marketplace',
+    description: 'Hire sports experts or monetize your sports skills',
     creator: '@bails_in', // Assuming handle, can be generic if unknown
-    images: ['/images/LOGOS/BAILS TG.png'],
+    images: ['/images/LOGOS/BAILS%20Logo%20+%20Tag.png'],
   },
   robots: {
     index: true,
@@ -74,7 +75,7 @@ const jsonLd = {
   '@type': 'Organization',
   name: 'BAILS',
   url: 'https://bails.in',
-  logo: 'https://bails.in/images/LOGOS/BAILS%20TG.png',
+  logo: 'https://bails.in/images/LOGOS/BAILS%20Logo%20+%20Tag.png',
   sameAs: [
     'https://twitter.com/bails_official',
     'https://instagram.com/bails_official',
@@ -109,6 +110,24 @@ export default function RootLayout({
           />
           <ReferralTracker />
           <MicrosoftClarity projectId="v28pmfyxle" />
+          <FacebookPixel />
+          <Script
+            id="fb-pixel"
+            strategy="afterInteractive"
+            dangerouslySetInnerHTML={{
+              __html: `
+                !function(f,b,e,v,n,t,s)
+                {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+                n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+                if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+                n.queue=[];t=b.createElement(e);t.async=!0;
+                t.src=v;s=b.getElementsByTagName(e)[0];
+                s.parentNode.insertBefore(t,s)}(window, document,'script',
+                'https://connect.facebook.net/en_US/fbevents.js');
+                fbq('init', '${process.env.NEXT_PUBLIC_META_PIXEL_ID}');
+              `,
+            }}
+          />
           <ErrorBoundary>
             {children}
           </ErrorBoundary>

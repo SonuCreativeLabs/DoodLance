@@ -9,8 +9,14 @@ interface SendEmailParams {
 
 export async function sendEmail({ to, subject, text, html }: SendEmailParams) {
   // Check if SMTP configuration is present
-  if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
-    console.warn('⚠️ SMTP configuration missing. Email will NOT be sent.');
+  const missingVars = [];
+  if (!process.env.SMTP_HOST) missingVars.push('SMTP_HOST');
+  if (!process.env.SMTP_USER) missingVars.push('SMTP_USER');
+  if (!process.env.SMTP_PASS) missingVars.push('SMTP_PASS');
+  if (!process.env.SMTP_FROM) missingVars.push('SMTP_FROM');
+
+  if (missingVars.length > 0) {
+    console.warn(`⚠️ SMTP configuration missing [${missingVars.join(', ')}]. Email will NOT be sent.`);
     console.log('📨 [MOCK EMAIL] To:', to);
     console.log('📝 [MOCK EMAIL] Subject:', subject);
     console.log('📄 [MOCK EMAIL] Content:', text);
@@ -28,7 +34,8 @@ export async function sendEmail({ to, subject, text, html }: SendEmailParams) {
       },
     });
 
-    console.log('📧 Attempting to send email to:', to);
+    const from = process.env.SMTP_FROM;
+    console.log(`📧 Attempting to send email from [${from}] to [${to}]`);
     await transporter.sendMail({
       from: process.env.SMTP_FROM,
       to,

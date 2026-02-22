@@ -8,10 +8,11 @@ import { useHire } from '@/contexts/HireContext';
 import { useNavbar } from '@/contexts/NavbarContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { SportsRandomSpinner } from '@/components/ui/SportsRandomSpinner';
+import * as fbq from '@/lib/fpixel';
 
 export default function BookingDatePage() {
   const router = useRouter();
-  const { state: hireState, setBookingDetails, setBookingNotes, addToCart, clearCart, isLoaded, increaseSelectedServiceQuantity, decreaseSelectedServiceQuantity } = useHire();
+  const { state: hireState, setBookingDetails, setBookingNotes, addToCart, clearCart, isLoaded, increaseSelectedServiceQuantity, decreaseSelectedServiceQuantity, getTotalPrice } = useHire();
   const { setNavbarVisibility } = useNavbar();
   const { user } = useAuth();
 
@@ -276,6 +277,14 @@ export default function BookingDatePage() {
   const handleContinue = () => {
     if (selectedDate && selectedTimeSlot && location.trim()) {
       setIsNavigating(true);
+
+      // Track InitiateCheckout
+      fbq.event('InitiateCheckout', {
+        content_name: 'Booking',
+        content_category: 'Service',
+        value: getTotalPrice() || 0,
+        currency: 'INR'
+      });
 
       // Try to parse duration from service deliveryTime (e.g. "60 mins", "1 hour") or default to 60 mins
       const duration = 60; // Default to 60 if parsing fails

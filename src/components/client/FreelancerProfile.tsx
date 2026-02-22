@@ -704,11 +704,11 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                                             </div>
                                             {/* Online Badge - Right side of profile picture */}
                                             <div className="absolute top-[calc(50%+32px)] -translate-y-1/2 left-full ml-5">
-                                                <div className={`inline-flex items-center gap-1 px-2 py-1 text-[8px] font-bold border-2 shadow-lg whitespace-nowrap transform rotate-[-2deg] ${freelancer.online
+                                                <div className={`inline-flex items-center gap-1 px-2 py-1 text-[8px] font-bold border-2 shadow-lg whitespace-nowrap transform rotate-[-2deg] ${freelancer.online && freelancer.availability && freelancer.availability.length > 0 && freelancer.availability.some(d => d.available)
                                                     ? 'bg-gradient-to-br from-green-400 to-green-600 border-green-300 text-white shadow-green-500/50 border-dashed'
                                                     : 'bg-gradient-to-br from-amber-400 to-orange-500 border-amber-300 text-white shadow-amber-500/50 border-dashed'
                                                     }`}>
-                                                    <span className="tracking-widest font-black">{freelancer.online ? 'GAME ON' : 'OFFLINE'}</span>
+                                                    <span className="tracking-widest font-black">{freelancer.online && freelancer.availability && freelancer.availability.length > 0 && freelancer.availability.some(d => d.available) ? 'GAME ON' : 'OFFLINE'}</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -999,60 +999,71 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                                             <div className="bg-white/5 p-4 rounded-xl border border-white/10">
                                                 <div className="flex items-center justify-between mb-3">
                                                     <h3 className="font-medium text-white">Availability</h3>
-                                                    <div className="flex items-center gap-1.5 text-xs text-white/60">
-                                                        <div className={`w-2 h-2 rounded-full ${freelancer.online ? 'bg-green-400/80 shadow-[0_0_8px_rgba(74,222,128,0.5)]' : 'bg-yellow-500/80 shadow-[0_0_8px_rgba(234,179,8,0.5)]'}`}></div>
-                                                        <span className={freelancer.online ? 'text-green-400' : 'text-yellow-500'}>
-                                                            {freelancer.online ? 'Available' : 'Not Available'}
-                                                        </span>
-                                                    </div>
-                                                </div>
-
-                                                <div className="grid grid-cols-7 gap-2">
-                                                    {freelancer.availability.map((day, i) => (
-                                                        <div key={i} className="flex flex-col items-center">
-                                                            <div
-                                                                className={`w-8 h-8 flex items-center justify-center rounded-full text-sm font-medium ${day.available
-                                                                    ? (freelancer.online ? 'bg-green-500/10 text-green-400' : 'bg-yellow-500/10 text-yellow-500')
-                                                                    : 'bg-white/5 text-white/40'
-                                                                    }`}
-                                                            >
-                                                                {day.day?.substring(0, 1) || '?'}
-                                                            </div>
-                                                        </div>
-                                                    ))}
-                                                </div>
-
-                                                {/* Working Hours Dropdown */}
-                                                <div className="mt-4">
-                                                    <button
-                                                        onClick={() => setIsHoursDropdownOpen(!isHoursDropdownOpen)}
-                                                        className="w-full flex items-center justify-between p-3 bg-[#1E1E1E] border border-white/10 rounded-lg hover:border-white/20 transition-colors"
-                                                    >
-                                                        <div className="flex items-center gap-2">
-                                                            <Clock className="h-4 w-4 text-purple-400" />
-                                                            <span className="text-sm text-white font-medium">Working Hours</span>
-                                                        </div>
-                                                        <ChevronDown className={`h-4 w-4 text-white/60 transition-transform ${isHoursDropdownOpen ? 'rotate-180' : ''}`} />
-                                                    </button>
-
-                                                    {isHoursDropdownOpen && (
-                                                        <div className="mt-2 p-3 bg-[#1E1E1E] border border-white/10 rounded-lg">
-                                                            {/* Detailed hours by day */}
-                                                            <div className="space-y-1">
-                                                                {freelancer.availability.filter(day => day.available).map((day, index) => (
-                                                                    <div key={index} className="flex justify-between items-center text-sm">
-                                                                        <span className="text-white/60">{day.day}:</span>
-                                                                        <span className="text-white/80">
-                                                                            {day.timeSlots && day.timeSlots.length > 0
-                                                                                ? day.timeSlots.map(slot => `${formatTime(slot.start)} - ${formatTime(slot.end)}`).join(', ')
-                                                                                : '9 AM - 6 PM'}
-                                                                        </span>
-                                                                    </div>
-                                                                ))}
-                                                            </div>
+                                                    {freelancer.availability.length > 0 && freelancer.availability.some(d => d.available) && (
+                                                        <div className="flex items-center gap-1.5 text-xs text-white/60">
+                                                            <div className={`w-2 h-2 rounded-full ${freelancer.online ? 'bg-green-400/80 shadow-[0_0_8px_rgba(74,222,128,0.5)]' : 'bg-yellow-500/80 shadow-[0_0_8px_rgba(234,179,8,0.5)]'}`}></div>
+                                                            <span className={freelancer.online ? 'text-green-400' : 'text-yellow-500'}>
+                                                                {freelancer.online ? 'Available' : 'Not Available'}
+                                                            </span>
                                                         </div>
                                                     )}
                                                 </div>
+
+                                                <div className="grid grid-cols-7 gap-2">
+                                                    {freelancer.availability.length > 0 ? (
+                                                        freelancer.availability.map((day, i) => (
+                                                            <div key={i} className="flex flex-col items-center">
+                                                                <div
+                                                                    className={`w-8 h-8 flex items-center justify-center rounded-full text-sm font-medium ${day.available
+                                                                        ? (freelancer.online ? 'bg-green-500/10 text-green-400' : 'bg-yellow-500/10 text-yellow-500')
+                                                                        : 'bg-white/5 text-white/40'
+                                                                        }`}
+                                                                >
+                                                                    {day.day?.substring(0, 1) || '?'}
+                                                                </div>
+                                                            </div>
+                                                        ))
+                                                    ) : (
+                                                        <div className="col-span-7 flex flex-col items-center justify-center py-4 bg-white/5 rounded-lg border border-white/5 border-dashed">
+                                                            <Clock className="w-5 h-5 text-white/30 mb-2" />
+                                                            <span className="text-white/50 text-sm">Availability not set</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                {/* Working Hours Dropdown */}
+                                                {freelancer.availability.length > 0 && freelancer.availability.some(d => d.available) && (
+                                                    <div className="mt-4">
+                                                        <button
+                                                            onClick={() => setIsHoursDropdownOpen(!isHoursDropdownOpen)}
+                                                            className="w-full flex items-center justify-between p-3 bg-[#1E1E1E] border border-white/10 rounded-lg hover:border-white/20 transition-colors"
+                                                        >
+                                                            <div className="flex items-center gap-2">
+                                                                <Clock className="h-4 w-4 text-purple-400" />
+                                                                <span className="text-sm text-white font-medium">Working Hours</span>
+                                                            </div>
+                                                            <ChevronDown className={`h-4 w-4 text-white/60 transition-transform ${isHoursDropdownOpen ? 'rotate-180' : ''}`} />
+                                                        </button>
+
+                                                        {isHoursDropdownOpen && (
+                                                            <div className="mt-2 p-3 bg-[#1E1E1E] border border-white/10 rounded-lg">
+                                                                {/* Detailed hours by day */}
+                                                                <div className="space-y-1">
+                                                                    {freelancer.availability.filter(day => day.available).map((day, index) => (
+                                                                        <div key={index} className="flex justify-between items-center text-sm">
+                                                                            <span className="text-white/60">{day.day}:</span>
+                                                                            <span className="text-white/80">
+                                                                                {day.timeSlots && day.timeSlots.length > 0
+                                                                                    ? day.timeSlots.map(slot => `${formatTime(slot.start)} - ${formatTime(slot.end)}`).join(', ')
+                                                                                    : '9 AM - 6 PM'}
+                                                                            </span>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
                                             </div>
 
                                         </div>
@@ -1290,9 +1301,9 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                             <div className="fixed bottom-0 left-0 right-0 p-4 bg-[#0F0F0F]/95 backdrop-blur-sm border-t border-white/10 z-[50]">
                                 <div className="max-w-4xl mx-auto">
                                     <button
-                                        disabled={!freelancer?.online || isViewingOwnProfile}
+                                        disabled={!freelancer?.online || isViewingOwnProfile || !freelancer?.services || freelancer.services.length === 0 || !freelancer?.availability || freelancer.availability.length === 0}
                                         onClick={() => {
-                                            if (!freelancer?.online || isViewingOwnProfile) return;
+                                            if (!freelancer?.online || isViewingOwnProfile || !freelancer?.services || freelancer.services.length === 0 || !freelancer?.availability || freelancer.availability.length === 0) return;
                                             if (isAuthenticated && isProfileComplete) {
                                                 setIsHireBottomSheetOpen(true);
                                             } else {
@@ -1301,7 +1312,7 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                                                 });
                                             }
                                         }}
-                                        className={`w-full py-2.5 font-medium rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg ${isViewingOwnProfile
+                                        className={`w-full py-2.5 font-medium rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg ${isViewingOwnProfile || !freelancer?.services || freelancer.services.length === 0 || !freelancer?.availability || freelancer.availability.length === 0
                                             ? 'bg-white/10 text-white/40 cursor-not-allowed border border-white/5'
                                             : freelancer?.online
                                                 ? 'bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-700 hover:to-purple-600'
@@ -1312,6 +1323,16 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                                             <>
                                                 <div className="w-4 h-4" />
                                                 This is your profile
+                                            </>
+                                        ) : (!freelancer?.services || freelancer.services.length === 0) ? (
+                                            <>
+                                                <div className="w-4 h-4" />
+                                                No services available
+                                            </>
+                                        ) : (!freelancer?.availability || freelancer.availability.length === 0) ? (
+                                            <>
+                                                <div className="w-4 h-4" />
+                                                Availability not set
                                             </>
                                         ) : freelancer?.online ? (
                                             <>

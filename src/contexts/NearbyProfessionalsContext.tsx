@@ -170,8 +170,15 @@ export function NearbyProfessionalsProvider({ children }: { children: ReactNode 
         },
         (error) => {
           console.warn('⚠️ Geolocation error:', error.message);
-          // Still try to fetch - API will use coordinates from request or default
-          refreshProfessionals();
+
+          // Default to Chennai, India if location access is denied or fails
+          const fallbackLat = 13.0827;
+          const fallbackLng = 80.2707;
+          console.log('Using default location (Chennai, India):', { lat: fallbackLat, lng: fallbackLng });
+
+          setCurrentCoordinates({ lat: fallbackLat, lng: fallbackLng });
+          setCurrentLocation({ city: "Chennai", state: "Tamil Nadu" });
+          refreshProfessionals(fallbackLat, fallbackLng);
         },
         {
           enableHighAccuracy: true,
@@ -180,8 +187,12 @@ export function NearbyProfessionalsProvider({ children }: { children: ReactNode 
         }
       );
     } else if (!currentCoordinates) {
-      console.warn('⚠️ Geolocation not available');
-      refreshProfessionals();
+      console.warn('⚠️ Geolocation not available on device');
+      const fallbackLat = 13.0827;
+      const fallbackLng = 80.2707;
+      setCurrentCoordinates({ lat: fallbackLat, lng: fallbackLng });
+      setCurrentLocation({ city: "Chennai", state: "Tamil Nadu" });
+      refreshProfessionals(fallbackLat, fallbackLng);
     }
     // If coordinates exist, we do nothing - preserving state
   }, []);

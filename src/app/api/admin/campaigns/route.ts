@@ -2,6 +2,8 @@ import { jwtVerify } from 'jose';
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 // Helper to verify admin session
 async function verifyAdminSession(request: NextRequest) {
     const authToken = request.cookies.get('auth-token')?.value;

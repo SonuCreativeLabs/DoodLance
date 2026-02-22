@@ -192,6 +192,16 @@ export async function GET(request: Request) {
 
             const isComplete = completionPercentage === 100;
 
+            // Parse availability
+            let parsedAvailability = [];
+            try {
+                if (p.availability) {
+                    parsedAvailability = typeof p.availability === 'string' ? JSON.parse(p.availability) : p.availability;
+                }
+            } catch (e) {
+                // Keep empty array
+            }
+
             return {
                 id: p.id,
                 userId: p.userId,
@@ -219,6 +229,7 @@ export async function GET(request: Request) {
                 cricketRole: p.cricketRole,
                 mainSport: p.mainSport,
                 otherSports: p.otherSports,
+                availability: parsedAvailability,
                 services: userServices.map((s: any) => ({
                     id: s.id,
                     title: s.title,

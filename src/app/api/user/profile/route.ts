@@ -93,7 +93,7 @@ export async function GET(request: NextRequest) {
                         email: user.email!,
                         name: user.user_metadata?.name || user.user_metadata?.full_name || user.email!.split('@')[0],
                         role: 'client', // Default role
-                        coords: '[0,0]',
+                        coords: '[80.2707, 13.0827]', // Default to Chennai
                         isVerified: false,
                         referralCode: referralCode, // Add generated code
                         referredBy: referredBy,
