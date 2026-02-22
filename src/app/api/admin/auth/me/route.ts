@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { jwtVerify } from 'jose';
 
+export const dynamic = 'force-dynamic';
+
 // Helper: Ensure we have a valid admin token
 export async function GET(req: NextRequest) {
     try {

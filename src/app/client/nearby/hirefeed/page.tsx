@@ -24,6 +24,10 @@ export default function IntegratedExplorePage() {
   const { professionals, loading, currentCoordinates } = useNearbyProfessionals();
   const { startTutorial, hasSeenTutorial } = useTutorial();
 
+  const mapCenter = React.useMemo<[number, number] | null>(() =>
+    currentCoordinates ? [currentCoordinates.lng, currentCoordinates.lat] : null
+    , [currentCoordinates?.lat, currentCoordinates?.lng]);
+
   const hireTutorial: TutorialConfig = {
     id: 'hire-tour',
     steps: [
@@ -406,7 +410,7 @@ export default function IntegratedExplorePage() {
         <MapView
           ref={mapViewRef}
           professionals={filteredProfessionals}
-          customCenter={currentCoordinates ? [currentCoordinates.lng, currentCoordinates.lat] : null}
+          customCenter={mapCenter}
         />
       </div>
 

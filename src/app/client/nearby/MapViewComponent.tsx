@@ -18,7 +18,6 @@ interface MapViewRef {
 const MapView = forwardRef<MapViewRef, MapViewProps>(({ professionals: propProfessionals, customCenter }, ref) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
-  const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const userMarkerRef = useRef<mapboxgl.Marker | null>(null);
   const markersRef = useRef<Map<string, { marker: mapboxgl.Marker; popup: mapboxgl.Popup }>>(new Map());
 
@@ -46,15 +45,6 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({ professionals: propProfe
       }
     }
   }));
-
-  // Sync local userLocation with customCenter prop (from context)
-  useEffect(() => {
-    if (customCenter) {
-      setUserLocation(customCenter);
-    }
-  }, [customCenter]);
-
-
 
   const [mapLoaded, setMapLoaded] = useState(false);
   const professionalsRef = useRef(propProfessionals);
@@ -203,11 +193,10 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({ professionals: propProfe
     document.head.appendChild(popupStyle);
 
     return () => {
-      setMapLoaded(false);
-      map.remove();
-      mapRef.current = null;
-      document.head.removeChild(mapStyle);
-      document.head.removeChild(popupStyle);
+      if (userMarkerRef.current) {
+        userMarkerRef.current.remove();
+        userMarkerRef.current = null;
+      }
     };
   }, []);
 
@@ -324,11 +313,11 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({ professionals: propProfe
                 </div>
               </div>
               <div class="flex items-center justify-between pt-2 border-t border-white/5">
-                ${pro.services && pro.services.length > 0 && pro.price > 0 ? `
+                ${pro.services && pro.services.length > 0 && pro.price > 0 && pro.availability && pro.availability.length > 0 ? `
                   <div class="flex items-baseline gap-1"><span class="text-sm text-white/70">From</span><span class="text-xl font-bold text-white">₹${pro.price}</span></div>
                   <button class="px-4 py-1.5 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white rounded-lg text-xs font-medium transition-all duration-200 shadow-lg" onclick="event.stopPropagation(); window.location.href='/client/freelancer/${pro.id}?source=map&pinId=${pro.id}'">Hire Now</button>
                 ` : `
-                  <div class="flex items-center gap-2 text-sm font-medium text-white/50 drop-shadow-sm"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span>No services listed</span></div>
+                  <div class="flex items-center gap-2 text-sm font-medium text-white/50 drop-shadow-sm"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span>${(!pro.availability || pro.availability.length === 0) ? 'Availability not set' : 'No services listed'}</span></div>
                   <button class="px-4 py-1.5 bg-white/10 text-white/40 rounded-lg text-xs font-medium cursor-not-allowed" disabled>Unavailable</button>
                 `}
               </div>
@@ -393,9 +382,9 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({ professionals: propProfe
     });
 
     // Handle view adjustment logic (User Location vs Professionals Center)
-    if (userLocation) {
+    if (customCenter) {
       // If user location is available, we prioritize it (per user request)
-      // The userLocation effect handles flying to user.
+      // The customCenter effect handles flying to user.
     } else {
       // Fallback logic if no user location yet
       if (professionals.length > 0) {
@@ -409,16 +398,16 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({ professionals: propProfe
 
   }, [propProfessionals, mapLoaded]); // Re-run when professionals change or map loads
 
-  // Handle Location Updates (User Location or Custom Center)
+  // Handle User Location Marker & View Updates
   useEffect(() => {
-    if (!mapRef.current) return;
+    if (!mapLoaded || !mapRef.current) return;
     const map = mapRef.current;
 
-    // Move map to user location or custom center
     if (customCenter) {
+      // Re-center if this is the first time we have center or if it actually moved significantly
       map.flyTo({
         center: customCenter,
-        zoom: 8
+        zoom: map.getZoom() < 5 ? 8 : map.getZoom() // Maintain zoom if already zoomed in, otherwise default to 8
       });
 
       // Update/Create persistent user location marker
@@ -432,14 +421,8 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({ professionals: propProfe
       } else {
         userMarkerRef.current.setLngLat(customCenter);
       }
-    } else if (userLocation) {
-      map.flyTo({
-        center: userLocation,
-        zoom: 8
-      });
     }
-
-  }, [userLocation, customCenter]);
+  }, [customCenter, mapLoaded]);
 
   return (
     <div

@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import * as fbq from '@/lib/fpixel';
 
-const FacebookPixel = () => {
+const FacebookPixelContent = () => {
     const pathname = usePathname();
     const searchParams = useSearchParams();
 
@@ -14,6 +14,14 @@ const FacebookPixel = () => {
     }, [pathname, searchParams]);
 
     return null;
+};
+
+const FacebookPixel = () => {
+    return (
+        <Suspense fallback={null}>
+            <FacebookPixelContent />
+        </Suspense>
+    );
 };
 
 export default FacebookPixel;

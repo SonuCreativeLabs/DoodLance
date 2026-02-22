@@ -1301,9 +1301,9 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                             <div className="fixed bottom-0 left-0 right-0 p-4 bg-[#0F0F0F]/95 backdrop-blur-sm border-t border-white/10 z-[50]">
                                 <div className="max-w-4xl mx-auto">
                                     <button
-                                        disabled={!freelancer?.online || isViewingOwnProfile || !freelancer?.services || freelancer.services.length === 0}
+                                        disabled={!freelancer?.online || isViewingOwnProfile || !freelancer?.services || freelancer.services.length === 0 || !freelancer?.availability || freelancer.availability.length === 0}
                                         onClick={() => {
-                                            if (!freelancer?.online || isViewingOwnProfile || !freelancer?.services || freelancer.services.length === 0) return;
+                                            if (!freelancer?.online || isViewingOwnProfile || !freelancer?.services || freelancer.services.length === 0 || !freelancer?.availability || freelancer.availability.length === 0) return;
                                             if (isAuthenticated && isProfileComplete) {
                                                 setIsHireBottomSheetOpen(true);
                                             } else {
@@ -1312,7 +1312,7 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                                                 });
                                             }
                                         }}
-                                        className={`w-full py-2.5 font-medium rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg ${isViewingOwnProfile || !freelancer?.services || freelancer.services.length === 0
+                                        className={`w-full py-2.5 font-medium rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg ${isViewingOwnProfile || !freelancer?.services || freelancer.services.length === 0 || !freelancer?.availability || freelancer.availability.length === 0
                                             ? 'bg-white/10 text-white/40 cursor-not-allowed border border-white/5'
                                             : freelancer?.online
                                                 ? 'bg-gradient-to-r from-purple-600 to-purple-500 text-white hover:from-purple-700 hover:to-purple-600'
@@ -1328,6 +1328,11 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                                             <>
                                                 <div className="w-4 h-4" />
                                                 No services available
+                                            </>
+                                        ) : (!freelancer?.availability || freelancer.availability.length === 0) ? (
+                                            <>
+                                                <div className="w-4 h-4" />
+                                                Availability not set
                                             </>
                                         ) : freelancer?.online ? (
                                             <>

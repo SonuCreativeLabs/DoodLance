@@ -30,7 +30,7 @@ export const metadata = {
   },
   openGraph: {
     title: 'Sports Talent Marketplace',
-    description: 'Connect with local sports freelancers and monetize your skills',
+    description: 'Hire sports experts or monetize your sports skills',
     url: 'https://bails.in',
     siteName: 'BAILS',
     images: [
@@ -47,7 +47,7 @@ export const metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Sports Talent Marketplace',
-    description: 'Connect with local sports freelancers and monetize your skills',
+    description: 'Hire sports experts or monetize your sports skills',
     creator: '@bails_in', // Assuming handle, can be generic if unknown
     images: ['/images/LOGOS/BAILS%20Logo%20+%20Tag.png'],
   },

@@ -302,7 +302,7 @@ export default function ProfessionalsFeed({
           </div>
           {/* Footer - Price and Hire Button */}
           <div className="flex items-center justify-between pt-2 border-t border-white/5 mt-3 mb-2 min-h-[40px]">
-            {item.services && item.services.length > 0 ? (
+            {item.services && item.services.length > 0 && item.availability && item.availability.length > 0 ? (
               <>
                 <div className="flex items-center gap-1">
                   <span className="text-sm font-medium text-white/70 drop-shadow-sm">From</span>
@@ -324,13 +324,15 @@ export default function ProfessionalsFeed({
               </>
             ) : (
               <div className="flex items-center justify-between w-full">
-                <span className="text-sm font-medium text-white/50 drop-shadow-sm">No services listed</span>
+                <span className="text-sm font-medium text-white/50 drop-shadow-sm">
+                  {(!item.availability || item.availability.length === 0) ? 'Availability not set' : 'No services listed'}
+                </span>
                 <button
                   disabled
                   className="bg-white/5 text-white/40 border border-white/5 py-1.5 px-3 rounded-lg text-sm font-medium cursor-not-allowed relative z-20"
                   onClick={(e) => { e.stopPropagation(); }}
                 >
-                  Hire Now
+                  Unavailable
                 </button>
               </div>
             )}
