@@ -129,12 +129,9 @@ export default function ProfessionalsFeed({
       // Default behavior if no onProfessionalSelect handler is provided
       const categoryParam = selectedCategory && selectedCategory !== 'All' ? `&category=${encodeURIComponent(selectedCategory)}` : '';
 
-      // Prefer username-based routing if available
-      if (professional.username) {
-        router.push(`/${professional.username}?source=list${categoryParam}`);
-      } else {
-        router.push(`/client/freelancer/${professional.id}?source=list${categoryParam}`);
-      }
+      // Always use ID-based routing for in-app hire navigation
+      // Username-based routes (/${username}) are for public/SEO profile links only
+      router.push(`/client/freelancer/${professional.id}?source=list${categoryParam}`);
     }
   };
 
