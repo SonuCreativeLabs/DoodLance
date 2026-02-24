@@ -113,7 +113,7 @@ export async function PATCH(request: NextRequest) {
         if (bio !== undefined) userUpdates.bio = bio;
         if (email !== undefined) userUpdates.email = email;
         if (phone !== undefined) userUpdates.phone = phone;
-        if (username !== undefined) userUpdates.username = username;
+        if (username !== undefined) userUpdates.username = username.trim();
         if (area !== undefined) userUpdates.area = area;
 
         if (Object.keys(userUpdates).length > 0) {

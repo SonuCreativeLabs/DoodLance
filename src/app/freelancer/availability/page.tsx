@@ -36,10 +36,10 @@ export default function AvailabilityPage() {
     endDate: addDays(new Date(), 6),
     key: 'selection',
   });
-  const [fromTimeWeekday, setFromTimeWeekday] = useState<string | null>("09:00");
-  const [toTimeWeekday, setToTimeWeekday] = useState<string | null>("18:00");
-  const [fromTimeWeekend, setFromTimeWeekend] = useState<string | null>("10:00");
-  const [toTimeWeekend, setToTimeWeekend] = useState<string | null>("16:00");
+  const [fromTimeWeekday, setFromTimeWeekday] = useState<string | null>("06:00");
+  const [toTimeWeekday, setToTimeWeekday] = useState<string | null>("23:00");
+  const [fromTimeWeekend, setFromTimeWeekend] = useState<string | null>("06:00");
+  const [toTimeWeekend, setToTimeWeekend] = useState<string | null>("23:00");
   const [area, setArea] = useState<number>(10);
   const [saving, setSaving] = useState(false);
 
@@ -59,7 +59,7 @@ export default function AvailabilityPage() {
         description="Set your working hours and timezone"
         backLink="/freelancer/profile"
       />
-      
+
       <div className="mb-6">
         <Button
           onClick={handleCreateNew}
@@ -103,14 +103,14 @@ export default function AvailabilityPage() {
           <label className="block mb-4 text-neutral-800 text-base font-semibold">Available Time</label>
           <Tabs defaultValue="weekday" className="w-full">
             <TabsList className="w-full flex mb-4 gap-0 bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
-              <TabsTrigger 
-                value="weekday" 
+              <TabsTrigger
+                value="weekday"
                 className="flex-1 flex items-center justify-center border-none bg-transparent text-gray-700 font-semibold py-2 px-0 shadow-none rounded-none data-[state=active]:bg-white data-[state=active]:text-purple-600 data-[state=active]:shadow-sm data-[state=active]:border-b-2 data-[state=active]:border-purple-500 transition-colors duration-200"
               >
                 Weekday <span className="ml-2 px-2 py-0.5 rounded bg-purple-100 text-xs text-purple-700">Mon-Fri</span>
               </TabsTrigger>
-              <TabsTrigger 
-                value="weekend" 
+              <TabsTrigger
+                value="weekend"
                 className="flex-1 flex items-center justify-center border-none bg-transparent text-gray-700 font-semibold py-2 px-0 shadow-none rounded-none data-[state=active]:bg-white data-[state=active]:text-yellow-600 data-[state=active]:shadow-sm data-[state=active]:border-b-2 data-[state=active]:border-yellow-400 transition-colors duration-200"
               >
                 Weekend <span className="ml-2 px-2 py-0.5 rounded bg-yellow-100 text-xs text-yellow-700">Sat-Sun</span>
