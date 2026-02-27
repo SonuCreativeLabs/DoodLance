@@ -128,7 +128,7 @@ export default function AvailabilityPage() {
           ...day,
           available: !day.available,
           timeSlots: !day.available
-            ? [{ id: Date.now().toString(), start: '09:00', end: '18:00', isEditing: false }]
+            ? [{ id: Date.now().toString(), start: '06:00', end: '23:00', isEditing: false }]
             : []
         }
         : day
@@ -142,7 +142,7 @@ export default function AvailabilityPage() {
           ...day,
           timeSlots: [
             ...day.timeSlots,
-            { id: Date.now().toString(), start: '09:00', end: '18:00', isEditing: true }
+            { id: Date.now().toString(), start: '06:00', end: '23:00', isEditing: true }
           ]
         }
         : day

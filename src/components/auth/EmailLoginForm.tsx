@@ -20,7 +20,9 @@ export function EmailLoginForm({ onSuccess }: EmailLoginFormProps) {
         e.preventDefault()
         setError(null)
 
-        if (!isValidEmail(email)) {
+        const cleanEmail = email.trim().toLowerCase()
+
+        if (!isValidEmail(cleanEmail)) {
             setError('Please enter a valid email address')
             return
         }
@@ -34,8 +36,8 @@ export function EmailLoginForm({ onSuccess }: EmailLoginFormProps) {
 
         setIsLoading(true)
         try {
-            await sendOTP(email, 'email', referralCode ? { referredBy: referralCode } : undefined)
-            onSuccess(email)
+            await sendOTP(cleanEmail, 'email', referralCode ? { referredBy: referralCode } : undefined)
+            onSuccess(cleanEmail)
 
             // Start 60-second countdown
             setCountdown(60)
@@ -48,8 +50,9 @@ export function EmailLoginForm({ onSuccess }: EmailLoginFormProps) {
                     return prev - 1
                 })
             }, 1000)
-        } catch (err) {
-            setError('Failed to send verification code. Please try again.')
+        } catch (err: any) {
+            console.error('OTP Send Error:', err)
+            setError(err?.message || 'Failed to send verification code. Please try again.')
         } finally {
             setIsLoading(false)
         }

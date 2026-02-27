@@ -117,7 +117,7 @@ export function AvailabilityProvider({ children }: { children: ReactNode }) {
       return `${dayNames} • ${startTime} - ${endTime}`;
     }
 
-    return `${dayNames} • 9 AM - 6 PM`; // Fallback
+    return `${dayNames} • 6 AM - 11 PM`; // Fallback
   }, [days]);
 
   const formatTime = (timeString: string) => {
