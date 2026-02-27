@@ -59,7 +59,9 @@ export default function Login() {
     e.preventDefault()
     setError(null)
 
-    if (!isValidEmail(email)) {
+    const cleanEmail = email.trim().toLowerCase()
+
+    if (!isValidEmail(cleanEmail)) {
       setError('Please enter a valid email address')
       return
     }
@@ -67,11 +69,13 @@ export default function Login() {
     setIsLoading(true)
     try {
       // Send OTP (no need to pass metadata, we use localStorage)
-      await sendOTP(email, 'email')
+      await sendOTP(cleanEmail, 'email')
 
-      router.push(`/auth/otp?email=${encodeURIComponent(email)}`)
-    } catch (err) {
-      setError('Failed to send verification code. Please try again.')
+      router.push(`/auth/otp?email=${encodeURIComponent(cleanEmail)}`)
+    } catch (err: any) {
+      console.error('OTP Send Error:', err)
+      // Display actual error (e.g., rate limit) or fallback message
+      setError(err?.message || 'Failed to send verification code. Please try again.')
       setIsLoading(false)
     }
   }

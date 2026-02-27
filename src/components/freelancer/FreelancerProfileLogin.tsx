@@ -25,17 +25,20 @@ export default function FreelancerProfileLogin() {
         e.preventDefault()
         setError(null)
 
-        if (!isValidEmail(email)) {
+        const cleanEmail = email.trim().toLowerCase()
+
+        if (!isValidEmail(cleanEmail)) {
             setError('Please enter a valid email address')
             return
         }
 
         setIsLoading(true)
         try {
-            await sendOTP(email, 'email')
+            await sendOTP(cleanEmail, 'email')
             setStep('otp')
-        } catch (err) {
-            setError('Failed to send verification code. Please try again.')
+        } catch (err: any) {
+            console.error('OTP Send Error:', err)
+            setError(err?.message || 'Failed to send verification code. Please try again.')
         } finally {
             setIsLoading(false)
         }
