@@ -526,7 +526,11 @@ export default function ClientHome() {
                           // @ts-ignore
                           if (window && window.Pushwoosh) {
                             // @ts-ignore
-                            window.Pushwoosh.push(['registerDevice']);
+                            if (typeof window.Pushwoosh.subscribe === 'function') {
+                              window.Pushwoosh.subscribe();
+                            } else {
+                              console.error("Pushwoosh SDK not fully loaded. subscribe is not a function:", window.Pushwoosh);
+                            }
                           } else {
                             console.error("Pushwoosh SDK is not ready yet.");
                           }
