@@ -274,7 +274,7 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({ professionals: propProfe
         className: 'custom-popup animate-popup',
         anchor: 'bottom'
       }).setHTML(`
-            <div id="map-pin-popup" class="bg-gradient-to-br from-[#111111]/95 to-[#000000]/95 backdrop-blur-sm shadow-lg rounded-2xl p-4 border border-white/10 hover:border-white/20 relative cursor-pointer" style="width: 340px;" onclick="window.location.href='/client/freelancer/${pro.id}?source=map&pinId=${pro.id}'">
+            <div id="map-pin-popup" class="bg-gradient-to-br from-[#111111]/95 to-[#000000]/95 backdrop-blur-sm shadow-lg rounded-2xl p-4 border border-white/10 hover:border-white/20 relative cursor-pointer" style="width: 340px;" onclick="window.location.href='/client/freelancer/${pro.username || pro.id}?source=map&pinId=${pro.id}'">
               <div class="flex justify-between items-center mb-2">
                 <button class="nav-btn prev-btn flex items-center justify-center w-6 h-6 rounded-full bg-black/20 hover:bg-black/30 transition-colors text-white/60 hover:text-white ${!hasPrev ? 'opacity-50 cursor-not-allowed' : ''}" ${!hasPrev ? 'disabled' : ''} data-index="${currentIndex - 1}">
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
@@ -315,7 +315,7 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({ professionals: propProfe
               <div class="flex items-center justify-between pt-2 border-t border-white/5">
                 ${pro.services && pro.services.length > 0 && pro.price > 0 && pro.availability && pro.availability.length > 0 ? `
                   <div class="flex items-baseline gap-1"><span class="text-sm text-white/70">From</span><span class="text-xl font-bold text-white">₹${pro.price}</span></div>
-                  <button class="px-4 py-1.5 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white rounded-lg text-xs font-medium transition-all duration-200 shadow-lg" onclick="event.stopPropagation(); window.location.href='/client/freelancer/${pro.id}?source=map&pinId=${pro.id}'">Hire Now</button>
+                  <button class="px-4 py-1.5 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white rounded-lg text-xs font-medium transition-all duration-200 shadow-lg" onclick="event.stopPropagation(); window.location.href='/client/freelancer/${pro.username || pro.id}?source=map&pinId=${pro.id}'">Hire Now</button>
                 ` : `
                   <div class="flex items-center gap-2 text-sm font-medium text-white/50 drop-shadow-sm"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span>${(!pro.availability || pro.availability.length === 0) ? 'Availability not set' : 'No services listed'}</span></div>
                   <button class="px-4 py-1.5 bg-white/10 text-white/40 rounded-lg text-xs font-medium cursor-not-allowed" disabled>Unavailable</button>

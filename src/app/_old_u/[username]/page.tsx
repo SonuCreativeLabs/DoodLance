@@ -40,13 +40,13 @@ export async function generateMetadata({ params }: PageProps) {
 
     if (!user || !user.freelancerProfile) {
         return {
-            title: 'User Not Found | DoodLance',
+            title: 'User Not Found | BAILS',
         };
     }
 
     return {
-        title: `${user.name || user.username} - ${user.freelancerProfile.title || 'Freelancer'} | DoodLance`,
-        description: user.freelancerProfile.about || `Hire ${user.name} on DoodLance`,
+        title: `${user.name || user.username} - ${user.freelancerProfile.title || 'Freelancer'} | BAILS`,
+        description: user.freelancerProfile.about || `Hire ${user.name} on BAILS`,
         openGraph: {
             title: user.name || user.username,
             description: user.freelancerProfile.about,
@@ -73,7 +73,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
                 <div className="container mx-auto px-4 py-6">
                     <div className="flex items-center justify-between">
                         <Link href="/" className="text-xl font-bold text-purple-400">
-                            DoodLance
+                            BAILS
                         </Link>
                         <Link href="/login">
                             <Button variant="outline" className="border-white/20">
@@ -278,7 +278,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
                                     <h3 className="font-bold">Verified Freelancer</h3>
                                 </div>
                                 <p className="text-sm text-gray-300">
-                                    This freelancer has been verified by DoodLance
+                                    This freelancer has been verified by BAILS
                                 </p>
                             </div>
                         )}
@@ -302,7 +302,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
             {/* Footer */}
             <div className="border-t border-white/10 mt-12">
                 <div className="container mx-auto px-4 py-6 text-center text-gray-400">
-                    <p>© 2024 DoodLance. All rights reserved.</p>
+                    <p>© 2024 BAILS. All rights reserved.</p>
                 </div>
             </div>
         </div>

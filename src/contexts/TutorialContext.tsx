@@ -40,7 +40,7 @@ export const TutorialProvider = ({ children }: { children: ReactNode }) => {
     const [seenTours, setSeenTours] = useState<string[]>([]);
 
     useEffect(() => {
-        const saved = localStorage.getItem('doodlance_seen_tutorials');
+        const saved = localStorage.getItem('bails_seen_tutorials');
         if (saved) {
             try {
                 setSeenTours(JSON.parse(saved));
@@ -56,7 +56,7 @@ export const TutorialProvider = ({ children }: { children: ReactNode }) => {
         if (!seenTours.includes(id)) {
             const updated = [...seenTours, id];
             setSeenTours(updated);
-            localStorage.setItem('doodlance_seen_tutorials', JSON.stringify(updated));
+            localStorage.setItem('bails_seen_tutorials', JSON.stringify(updated));
         }
     }, [seenTours]);
 
@@ -100,14 +100,14 @@ export const TutorialProvider = ({ children }: { children: ReactNode }) => {
 
     const resetTutorials = useCallback(() => {
         setSeenTours([]);
-        localStorage.removeItem('doodlance_seen_tutorials');
+        localStorage.removeItem('bails_seen_tutorials');
         window.location.reload(); // Reload to trigger the auto-tours
     }, []);
 
     const clearTutorialHistory = useCallback((id: string) => {
         const updated = seenTours.filter(tourId => tourId !== id);
         setSeenTours(updated);
-        localStorage.setItem('doodlance_seen_tutorials', JSON.stringify(updated));
+        localStorage.setItem('bails_seen_tutorials', JSON.stringify(updated));
     }, [seenTours]);
 
     const value = useMemo(() => ({

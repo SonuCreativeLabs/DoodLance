@@ -131,7 +131,7 @@ export default function ProfessionalsFeed({
 
       // Always use ID-based routing for in-app hire navigation
       // Username-based routes (/${username}) are for public/SEO profile links only
-      router.push(`/client/freelancer/${professional.id}?source=list${categoryParam}`);
+      router.push(`/client/freelancer/${professional.username || professional.id}?source=list${categoryParam}`);
     }
   };
 
@@ -312,7 +312,7 @@ export default function ProfessionalsFeed({
                     if (handleProfessionalClick) {
                       handleProfessionalClick(item);
                     } else {
-                      router.push(`/client/freelancer/${item.id}`);
+                      router.push(`/client/freelancer/${item.username || item.id}`);
                     }
                   }}
                 >

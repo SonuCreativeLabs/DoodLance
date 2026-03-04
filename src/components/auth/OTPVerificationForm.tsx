@@ -24,12 +24,38 @@ export function OTPVerificationForm({
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
     const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
-    const { verifyOTP } = useAuth();
+    const { verifyOTP, isAuthenticated } = useAuth();
+    const [isVerifyingSession, setIsVerifyingSession] = useState(false);
 
     useEffect(() => {
         // Focus first input on mount
         inputRefs.current[0]?.focus();
     }, []);
+
+    // Effect to wait for AuthContext to sync before redirecting
+    useEffect(() => {
+        if (success && isAuthenticated && isVerifyingSession) {
+            // Give it a tiny buffer to avoid sudden flash
+            const timer = setTimeout(() => {
+                setIsVerifyingSession(false);
+                onVerified();
+            }, 500);
+            return () => clearTimeout(timer);
+        }
+    }, [success, isAuthenticated, isVerifyingSession, onVerified]);
+
+    // Safety timeout in case session sync fails/delays too long
+    useEffect(() => {
+        if (success && !isAuthenticated && isVerifyingSession) {
+            const safetyTimer = setTimeout(() => {
+                console.warn('[OTP Auth] Safety timeout triggered: AuthContext session did not sync in time. Forcing redirect.');
+                setIsVerifyingSession(false);
+                onVerified();
+            }, 4000); // Wait 4 seconds maximum
+            return () => clearTimeout(safetyTimer);
+        }
+    }, [success, isAuthenticated, isVerifyingSession, onVerified]);
+
 
     const handleChange = (index: number, value: string) => {
         // Only allow numbers
@@ -95,9 +121,7 @@ export function OTPVerificationForm({
         try {
             await verifyOTP(email, code, 'email');
             setSuccess(true);
-            setTimeout(() => {
-                onVerified();
-            }, 500);
+            setIsVerifyingSession(true); // Start waiting for session sync
         } catch (err: any) {
             setError(err?.message || 'Verification failed. Please try again.');
             setOtp(['', '', '', '', '', '']);

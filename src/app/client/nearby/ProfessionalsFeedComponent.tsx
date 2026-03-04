@@ -26,6 +26,7 @@ interface BaseProfessional {
   experience?: string;
   description?: string;
   cricketRole?: string;
+  username?: string;
 }
 
 interface ProfessionalsFeedProps {
@@ -50,8 +51,8 @@ export default function ProfessionalsFeed({ filteredProfessionals }: Professiona
   };
 
   const handleProfessionalClick = (freelancer: BaseProfessional) => {
-    if (freelancer && freelancer.id) {
-      router.push(`/client/freelancer/${freelancer.id}?source=list`);
+    if (freelancer && (freelancer.username || freelancer.id)) {
+      router.push(`/client/freelancer/${freelancer.username || freelancer.id}?source=list`);
     }
   };
 
