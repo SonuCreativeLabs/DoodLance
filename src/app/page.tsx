@@ -523,13 +523,12 @@ export default function ClientHome() {
                       onClick={() => {
                         setShowSidebar(false);
                         try {
-                          // @ts-ignore
-                          if (window && window.Pushwoosh) {
-                            // @ts-ignore
-                            if (typeof window.Pushwoosh.subscribe === 'function') {
-                              window.Pushwoosh.subscribe();
+                          const pw = typeof window !== 'undefined' ? (window as any).Pushwoosh : null;
+                          if (pw) {
+                            if (typeof pw.subscribe === 'function') {
+                              pw.subscribe();
                             } else {
-                              console.error("Pushwoosh SDK not fully loaded. subscribe is not a function:", window.Pushwoosh);
+                              console.error("Pushwoosh SDK not fully loaded. subscribe is not a function:", pw);
                             }
                           } else {
                             console.error("Pushwoosh SDK is not ready yet.");
