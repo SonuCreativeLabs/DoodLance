@@ -159,7 +159,7 @@ export default function RootLayout({
                      safariWebsitePushID: '',
                      defaultNotificationTitle: 'BAILS',
                      defaultNotificationImage: 'https://bails.in/images/LOGOS/BAILS%20Logo%20+%20Tag.png',
-                     autoSubscribe: false,
+                     autoSubscribe: true,
                      serviceWorkerUrl: '/pushwoosh-service-worker.js'
                  }]);
                `,

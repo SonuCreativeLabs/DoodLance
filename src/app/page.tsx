@@ -523,15 +523,13 @@ export default function ClientHome() {
                       onClick={() => {
                         setShowSidebar(false);
                         try {
+                          // In Pushwoosh v3 web SDK, the command array push only supports ['init', ...] commands.
+                          // To trigger a subscription manually, we must call the .subscribe() method on the loaded Pushwoosh instance.
                           const pw = typeof window !== 'undefined' ? (window as any).Pushwoosh : null;
-                          if (pw) {
-                            if (typeof pw.subscribe === 'function') {
-                              pw.subscribe();
-                            } else {
-                              console.error("Pushwoosh SDK not fully loaded. subscribe is not a function:", pw);
-                            }
+                          if (pw && typeof pw.subscribe === 'function') {
+                            pw.subscribe().catch((err: any) => console.error("Pushwoosh subscribe error:", err));
                           } else {
-                            console.error("Pushwoosh SDK is not ready yet.");
+                            console.warn("Pushwoosh SDK is not fully loaded yet. Auto-prompt will handle subscription if enabled.");
                           }
                         } catch (e) {
                           console.error("Pushwoosh error:", e);
