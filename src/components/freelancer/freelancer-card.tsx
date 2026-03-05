@@ -21,6 +21,7 @@ interface FreelancerCardProps {
   availability: string
   description: string
   isVerified: boolean
+  username?: string
 }
 
 export default function FreelancerCard({
@@ -35,12 +36,13 @@ export default function FreelancerCard({
   availability,
   description,
   isVerified,
+  username,
 }: FreelancerCardProps) {
   const router = useRouter()
 
   const handleHireClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    router.push(`/client/freelancer/${id}`);
+    router.push(`/client/freelancer/${username || id}`);
   };
   return (
     <Card className="overflow-hidden bg-white shadow-lg hover:shadow-xl transition-all duration-200 border border-purple-100/50 hover:border-purple-300 relative group">

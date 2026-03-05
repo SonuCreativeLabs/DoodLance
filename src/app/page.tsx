@@ -517,6 +517,28 @@ export default function ClientHome() {
                       <Sparkles className="w-5 h-5 text-purple-400 transition-transform group-hover:scale-110" />
                       Request a Feature
                     </button>
+                    {/* Pushwoosh Subscribe Button */}
+                    <button
+                      className="flex items-center gap-3 px-6 py-3 text-left text-white/90 hover:bg-white/10 hover:text-white transition-colors group"
+                      onClick={() => {
+                        setShowSidebar(false);
+                        try {
+                          // In Pushwoosh v3 web SDK, the command array push only supports ['init', ...] commands.
+                          // To trigger a subscription manually, we must call the .subscribe() method on the loaded Pushwoosh instance.
+                          const pw = typeof window !== 'undefined' ? (window as any).Pushwoosh : null;
+                          if (pw && typeof pw.subscribe === 'function') {
+                            pw.subscribe().catch((err: any) => console.error("Pushwoosh subscribe error:", err));
+                          } else {
+                            console.warn("Pushwoosh SDK is not fully loaded yet. Auto-prompt will handle subscription if enabled.");
+                          }
+                        } catch (e) {
+                          console.error("Pushwoosh error:", e);
+                        }
+                      }}
+                    >
+                      <Bell className="w-5 h-5 text-purple-400 transition-transform group-hover:scale-110" />
+                      Enable Notifications
+                    </button>
                     {/* App Guide Button */}
                     <button
                       className="flex items-center gap-3 px-6 py-3 text-left bg-purple-500/10 hover:bg-purple-500/20 text-purple-200 hover:text-white transition-all duration-300 mx-4 my-1 rounded-xl border border-purple-500/20"
@@ -742,7 +764,7 @@ export default function ClientHome() {
                       .map((expert) => (
                         <button
                           key={expert.id}
-                          onClick={() => router.push(`/client/freelancer/${expert.id}`)}
+                          onClick={() => router.push(`/client/freelancer/${expert.username || expert.id}`)}
                           className="flex-shrink-0 w-[140px] cursor-pointer"
                         >
                           {/* Outer Layer Card */}

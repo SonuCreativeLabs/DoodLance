@@ -145,6 +145,26 @@ export default function RootLayout({
               gtag('config', 'G-0N2KWPE6D5');
             `}
           </Script>
+          <Script src="https://cdn.pushwoosh.com/webpush/v3/pushwoosh-web-notifications.js" strategy="afterInteractive" />
+          <Script
+            id="pushwoosh-init"
+            strategy="lazyOnload"
+            dangerouslySetInnerHTML={{
+              __html: `
+                 window.Pushwoosh = window.Pushwoosh || [];
+                 window.Pushwoosh.push(['init', {
+                     logLevel: 'info',
+                     applicationCode: '39A99-0D413',
+                     apiToken: '${process.env.NEXT_PUBLIC_PUSHWOOSH_API_TOKEN || ""}',
+                     safariWebsitePushID: '',
+                     defaultNotificationTitle: 'BAILS',
+                     defaultNotificationImage: 'https://bails.in/images/LOGOS/BAILS%20Logo%20+%20Tag.png',
+                     autoSubscribe: true,
+                     serviceWorkerUrl: '/pushwoosh-service-worker.js'
+                 }]);
+               `,
+            }}
+          />
         </Providers>
       </body>
     </html>

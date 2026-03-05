@@ -66,8 +66,10 @@ export async function GET(request: Request) {
             return R * c; // Distance in km
         };
 
+        const validProfiles = profiles.filter((p: any) => p.user);
+
         // Transform to match Professional interface
-        const formattedProfiles = profiles.map((p: any) => {
+        const formattedProfiles = validProfiles.map((p: any) => {
             const rating = p.reviews.reduce((acc: number, r: any) => acc + r.rating, 0) / (p.reviews.length || 1);
 
             // Services come from the User relation now
@@ -243,9 +245,9 @@ export async function GET(request: Request) {
         });
 
 
-        // Filter to show profiles with at least 30% completion
-        // Lowered from 50% to 30% to show more freelancers
-        const qualityProfiles = formattedProfiles.filter((p: any) => p.completionPercentage >= 30);
+        // Filter to show profiles with at least 0% completion to show ALL valid freelancers
+        // Lowered from 30% to 0% as per user request to explicitly see all freelancers
+        const qualityProfiles = formattedProfiles.filter((p: any) => p.completionPercentage >= 0);
 
         // Client-side filtering for category if strict filtering needed
         let filtered = qualityProfiles;

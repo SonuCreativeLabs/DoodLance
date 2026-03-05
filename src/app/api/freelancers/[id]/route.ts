@@ -109,8 +109,8 @@ export async function GET(
       });
     }
 
-    if (!profile) {
-      console.log('[API] Profile not found for ID:', id);
+    if (!profile || !profile.user) {
+      console.log('[API] Profile or User not found for ID:', id);
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
     }
 
