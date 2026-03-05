@@ -11,6 +11,7 @@ const pwaConfig = withPWA({
   dest: 'public',
   register: true,
   skipWaiting: true,
+  clientsClaim: true, // Take control of un-controlled clients immediately
   disable: process.env.NODE_ENV === 'development',
   runtimeCaching: [
     {
@@ -59,13 +60,14 @@ const pwaConfig = withPWA({
     },
     {
       urlPattern: /\/_next\/static.+\.js$/i,
-      handler: 'CacheFirst',
+      handler: 'NetworkFirst', // Changed from CacheFirst to prevent ChunkLoadErrors on Vercel redeploys
       options: {
         cacheName: 'next-static-js-assets',
         expiration: {
-          maxEntries: 32,
-          maxAgeSeconds: 24 * 60 * 60, // 24 hours
+          maxEntries: 16,
+          maxAgeSeconds: 12 * 60 * 60, // Reduced to 12 hours
         },
+        networkTimeoutSeconds: 5,
       },
     },
     {
