@@ -502,6 +502,17 @@ export default function ClientHome() {
                       <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><path d="M12 8v4l3 2" /></svg>
                       Support
                     </button>
+                    {/* WhatsApp Support */}
+                    <button
+                      className="flex items-center gap-3 px-6 py-3 text-left text-white/90 hover:bg-white/10 hover:text-white transition-colors group"
+                      onClick={() => {
+                        setShowSidebar(false);
+                        window.open('https://wa.me/916379496755?text=Hi%20BAILS%20Support!%20I%20have%20a%20question.', '_blank', 'noopener,noreferrer');
+                      }}
+                    >
+                      <MessageCircle className="w-5 h-5 text-green-400 transition-transform group-hover:scale-110" />
+                      WhatsApp Support
+                    </button>
                     {/* Request a Feature */}
                     <button
                       className="flex items-center gap-3 px-6 py-3 text-left text-white/90 hover:bg-white/10 hover:text-white transition-colors group"
