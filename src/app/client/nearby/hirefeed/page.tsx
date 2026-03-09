@@ -11,6 +11,7 @@ import { useNearbyProfessionals, Professional } from '@/contexts/NearbyProfessio
 import SearchFilters from '../components/SearchFilters';
 import { SportsRandomSpinner } from '@/components/ui/SportsRandomSpinner';
 import { useTutorial, TutorialConfig } from '@/contexts/TutorialContext';
+import { pwPostEvent } from '@/lib/pushwoosh';
 
 export default function IntegratedExplorePage() {
   const searchParams = useSearchParams();
@@ -449,6 +450,11 @@ export default function IntegratedExplorePage() {
                 placeholder="Search services, professionals, or areas..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && searchQuery.trim()) {
+                    pwPostEvent('Discovery_Query_Entered', { query: searchQuery.trim() });
+                  }
+                }}
                 className="flex-1 bg-transparent outline-none text-sm text-white font-medium placeholder:text-white/60"
               />
             </div>
@@ -483,6 +489,7 @@ export default function IntegratedExplorePage() {
                       : 'bg-[#111111] text-white border-white/30 hover:bg-[#111111]/80'
                     }`}
                   onClick={() => {
+                    pwPostEvent('Discovery_Category_Selected', { category: cat.name });
                     setSelectedCategory(cat.name);
                     setSelectedService("All");
                   }}

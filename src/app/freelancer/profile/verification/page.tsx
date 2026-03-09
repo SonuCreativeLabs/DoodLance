@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { SelfieCapture } from '@/components/verification/SelfieCapture';
 import { Skeleton } from "@/components/ui/skeleton";
 import imageCompression from 'browser-image-compression';
+import { pwPostEvent } from '@/lib/pushwoosh';
 
 interface IdType {
   value: string;
@@ -539,6 +540,7 @@ export default function IdUploadPage() {
       }
 
       // On success
+      pwPostEvent('KYC_Submitted');
       toast.success('Verification submitted successfully! Your documents are under review.');
       router.push('/freelancer/profile/verification/status?status=in_review');
     } catch (error) {

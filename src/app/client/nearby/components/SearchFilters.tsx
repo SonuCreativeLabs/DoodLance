@@ -6,6 +6,7 @@ import { useNavbar } from "@/contexts/NavbarContext";
 import { areas, serviceTypes, availabilityOptions, timeOptions, categories } from '../constants';
 import { useClientServices } from '@/contexts/ClientServicesContext';
 import * as Select from '@radix-ui/react-select';
+import { pwPostEvent } from '@/lib/pushwoosh';
 
 interface SearchFiltersProps {
   showFilterModal: boolean;

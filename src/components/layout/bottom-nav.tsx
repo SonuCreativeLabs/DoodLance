@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { Home, Briefcase, PlusCircle, MessageSquare, ArrowUpRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useRole } from '@/contexts/role-context'
+import { pwPostEvent } from '@/lib/pushwoosh'
 
 const navigation = [
   { name: 'HOME', href: '/client', icon: Home },
@@ -18,6 +19,7 @@ export function BottomNav() {
   const { role, switchRole } = useRole()
 
   const handleWorkAndEarn = () => {
+    pwPostEvent('Clicked_Earn_Button');
     if (role === "client") {
       switchRole()
     }

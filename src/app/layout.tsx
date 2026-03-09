@@ -8,6 +8,7 @@ import ErrorBoundary from '@/components/ErrorBoundary';
 import { ReferralTracker } from '@/components/ReferralTracker';
 import { MicrosoftClarity } from "@/components/MicrosoftClarity";
 import FacebookPixel from "@/components/FacebookPixel";
+import { PageTracker } from "@/components/common/PageTracker";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -109,6 +110,7 @@ export default function RootLayout({
             dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
           />
           <ReferralTracker />
+          <PageTracker />
           <MicrosoftClarity projectId="v28pmfyxle" />
           <FacebookPixel />
           <Script
