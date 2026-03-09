@@ -160,11 +160,11 @@ export default function RootLayout({
           <Script src="https://cdn.pushwoosh.com/webpush/v3/pushwoosh-web-notifications.js" strategy="afterInteractive" />
           <Script
             id="pushwoosh-init"
-            strategy="lazyOnload"
+            strategy="afterInteractive"
             dangerouslySetInnerHTML={{
               __html: `
-                 window.Pushwoosh = window.Pushwoosh || [];
-                 window.Pushwoosh.push(['init', {
+                 var Pushwoosh = window.Pushwoosh || [];
+                 Pushwoosh.push(['init', {
                      logLevel: 'info',
                      applicationCode: '39A99-0D413',
                      apiToken: '${process.env.NEXT_PUBLIC_PUSHWOOSH_API_TOKEN || ""}',
