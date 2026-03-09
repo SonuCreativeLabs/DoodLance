@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useMemo, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import { pwSetUserId, pwSetTags, pwPostEvent } from '@/lib/pushwoosh'
 
 interface User {
   id: string
@@ -40,19 +41,29 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
-
-  useEffect(() => {
-    if (user) console.log('👤 AuthContext User Updated:', user.id, user.name);
-  }, [user]);
-
   const [isLoading, setIsLoading] = useState(true)
   const [supabase] = useState(() => createClient())
   const router = useRouter()
 
   useEffect(() => {
+    if (user) {
+      console.log('👤 AuthContext User Updated:', user.id, user.name);
+      pwSetUserId(user.id);
+      pwSetTags({
+        name: user.name || '',
+        role: user.role || 'client',
+        phone_verified: user.phone ? 1 : 0,
+        location: user.location || '',
+        email_verified: user.isVerified ? 1 : 0
+      });
+    } else if (!isLoading) {
+      pwSetUserId('');
+    }
+  }, [user, isLoading]);
+
+  useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
-        // Set user immediately to unblock login
         setUser({
           id: session.user.id,
           email: session.user.email,
@@ -65,6 +76,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           createdAt: session.user.created_at,
         })
         setIsLoading(false)
+
+        // Track Signup / Initial Login event exactly once per session
+        if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
+          const hasTrackedSignup = sessionStorage.getItem(`tracked_signup_${session.user.id}`);
+          if (!hasTrackedSignup) {
+            // If the user's created_at is very recent (e.g. within last 5 minutes), it's a true signup
+            const isNewUser = new Date(session.user.created_at).getTime() > Date.now() - 5 * 60 * 1000;
+            if (isNewUser) {
+              pwPostEvent('Signup_Completed', { role: session.user.user_metadata?.role || 'client' });
+            }
+            sessionStorage.setItem(`tracked_signup_${session.user.id}`, 'true');
+          }
+        }
 
         //Fetch DB data in background via API
         // Fetch DB data in background via API - only if needed or after 5 minutes

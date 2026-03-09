@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { MapPin, DollarSign, Calendar, Clock, Tag, Sparkles, User, X, Plus, Minus, Users, CheckCircle2 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRequireAuth } from '@/hooks/useRequireAuth'
+import { pwPostEvent } from '@/lib/pushwoosh'
 import LoginDialog from '@/components/auth/LoginDialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -190,6 +191,14 @@ export default function PostJobForm() {
 
       // Dispatch event to refresh ForYouJobs context
       window.dispatchEvent(new CustomEvent('jobPosted', { detail: { jobId: job.id } }));
+
+      // Track marketing event
+      pwPostEvent('Job_Posted', {
+        category: selectedCategory,
+        budget: parseFloat(budget),
+        location: location.trim(),
+        workMode: workMode
+      });
 
       // Show success modal
       setShowSuccessModal(true);

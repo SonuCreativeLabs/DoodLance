@@ -8,6 +8,7 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog"
 import { UserCircle } from "lucide-react"
+import { pwPostEvent } from "@/lib/pushwoosh"
 
 interface ProfileCompletionDialogProps {
     open: boolean
@@ -61,7 +62,10 @@ export default function ProfileCompletionDialog({
                         Cancel
                     </Button>
                     <Button
-                        onClick={onCompleteProfile}
+                        onClick={() => {
+                            pwPostEvent('Profile_Update_Initiated');
+                            onCompleteProfile();
+                        }}
                         disabled={actionLoading}
                         className="w-full bg-purple-600 hover:bg-purple-700 text-white"
                     >

@@ -35,6 +35,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import LoginDialog from '@/components/auth/LoginDialog';
 import ProfileCompletionDialog from '@/components/auth/ProfileCompletionDialog';
 import { useRequireAuth, usePendingActionCheck } from '@/hooks/useRequireAuth';
+import { pwPostEvent } from '@/lib/pushwoosh';
 
 import { IdVerifiedBadge } from '@/components/freelancer/profile/IdVerifiedBadge';
 import { SkillInfoDialog } from '@/components/common/SkillInfoDialog';
@@ -1304,6 +1305,13 @@ export function FreelancerProfile({ freelancerId: propId, isPublicView = false }
                                         disabled={!freelancer?.online || isViewingOwnProfile || !freelancer?.services || freelancer.services.length === 0 || !freelancer?.availability || freelancer.availability.length === 0}
                                         onClick={() => {
                                             if (!freelancer?.online || isViewingOwnProfile || !freelancer?.services || freelancer.services.length === 0 || !freelancer?.availability || freelancer.availability.length === 0) return;
+
+                                            // Track marketing event
+                                            pwPostEvent('Hire_Initiated', {
+                                                freelancerId: freelancer?.id,
+                                                freelancerName: freelancer?.name
+                                            });
+
                                             if (isAuthenticated && isProfileComplete) {
                                                 setIsHireBottomSheetOpen(true);
                                             } else {
