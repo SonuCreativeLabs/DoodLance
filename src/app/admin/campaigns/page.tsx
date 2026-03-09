@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Download, Edit2, Save, X } from 'lucide-react';
+import { Download, Edit2, Save, X, Trash2 } from 'lucide-react';
 
 interface Campaign {
     id: string;
@@ -115,6 +115,28 @@ export default function CampaignsPage() {
             }
         } catch (error) {
             alert('Failed to update campaign');
+        }
+    };
+
+    const handleDelete = async (campaignId: string) => {
+        if (!confirm('Are you sure you want to delete this campaign? This will permanently remove its tracking code.')) {
+            return;
+        }
+
+        try {
+            const res = await fetch(`/api/admin/campaigns/${campaignId}`, {
+                method: 'DELETE'
+            });
+
+            if (res.ok) {
+                alert('✅ Campaign deleted successfully');
+                fetchCampaigns();
+            } else {
+                const error = await res.json();
+                alert(`Failed to delete: ${error.error}`);
+            }
+        } catch (error) {
+            alert('Failed to delete campaign');
         }
     };
 
@@ -300,12 +322,21 @@ export default function CampaignsPage() {
                                                     </button>
                                                 </div>
                                             ) : (
-                                                <button
-                                                    onClick={() => startEdit(campaign)}
-                                                    className="text-blue-400 hover:text-blue-300"
-                                                >
-                                                    <Edit2 className="w-4 h-4" />
-                                                </button>
+                                                <div className="flex gap-3">
+                                                    <button
+                                                        onClick={() => startEdit(campaign)}
+                                                        className="text-blue-400 hover:text-blue-300"
+                                                    >
+                                                        <Edit2 className="w-4 h-4" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDelete(campaign.id)}
+                                                        className="text-red-400 hover:text-red-300 transition-colors"
+                                                        title="Delete Campaign"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                </div>
                                             )}
                                         </td>
                                     </tr>

@@ -1,6 +1,5 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "../node_modules/.prisma/client"
 }
 
 datasource db {
@@ -623,4 +622,15 @@ model ServiceRequest {
   user        User?    @relation(fields: [userId], references: [id])
   
   @@map("service_requests")
+}
+
+model ArchivedItem {
+  id           String   @id @default(cuid())
+  resourceType String   // e.g., "BOOKING", "USER"
+  resourceId   String
+  data         Json     // The complete record before deletion
+  deletedBy    String?  // Admin ID or Email
+  deletedAt    DateTime @default(now())
+
+  @@map("archived_items")
 }

@@ -8,7 +8,7 @@ import {
     LayoutDashboard, Users, Calendar, CreditCard,
     Briefcase, HeadphonesIcon, FileText, TrendingUp,
     Settings, Shield, LogOut, ChevronRight, Bell,
-    Search, Menu, X, Package, Tag, QrCode, User
+    Search, Menu, X, Package, Tag, QrCode, User, Archive
 } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -53,6 +53,7 @@ const sidebarItems = [
     {
         category: 'System',
         items: [
+            { icon: Archive, label: 'Archive', href: '/admin/archive', permission: 'settings.view' },
             { icon: Settings, label: 'Settings', href: '/admin/settings', permission: 'settings.view' },
         ]
     }
@@ -315,7 +316,7 @@ function AdminLayoutContent({ children }: { children: ReactNode }) {
                                 size="icon"
                                 className="lg:hidden text-gray-400 hover:text-white"
                             >
-                                {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+                                {mobileMenuOpen ? <Menu className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
                             </Button>
 
                             {/* Tablet Hamburger */}
@@ -325,7 +326,7 @@ function AdminLayoutContent({ children }: { children: ReactNode }) {
                                 size="icon"
                                 className="hidden md:flex lg:hidden text-gray-400 hover:text-white"
                             >
-                                {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+                                {sidebarOpen ? <Menu className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
                             </Button>
 
                             {/* Desktop Hamburger */}
@@ -335,7 +336,7 @@ function AdminLayoutContent({ children }: { children: ReactNode }) {
                                 size="icon"
                                 className="hidden lg:flex text-gray-400 hover:text-white"
                             >
-                                {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+                                {sidebarOpen ? <Menu className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
                             </Button>
 
                             <h1 className="text-lg sm:text-xl font-semibold text-white capitalize truncate">

@@ -46,3 +46,25 @@ export async function PATCH(
         return NextResponse.json({ error: 'Failed to update campaign' }, { status: 500 });
     }
 }
+
+// DELETE /api/admin/campaigns/[id] - Delete a campaign
+export async function DELETE(
+    request: NextRequest,
+    { params }: { params: { id: string } }
+) {
+    try {
+        const admin = await verifyAdminSession(request);
+        if (!admin) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        await prisma.campaign.delete({
+            where: { id: params.id }
+        });
+
+        return NextResponse.json({ success: true, message: 'Campaign deleted' });
+    } catch (error) {
+        console.error('Campaign delete error:', error);
+        return NextResponse.json({ error: 'Failed to delete campaign' }, { status: 500 });
+    }
+}

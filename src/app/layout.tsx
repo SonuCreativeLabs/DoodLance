@@ -16,10 +16,10 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata = {
   metadataBase: new URL('https://bails.in'),
   title: {
-    default: 'Sports Talent Marketplace',
+    default: 'BAILS - Sports Freelance Marketplace',
     template: '%s | BAILS',
   },
-  description: 'Find and hire the best sports freelancers. Connect with coaches, players, and specialized sport professionals.',
+  description: 'Connect with professional sports freelancers, coaches, and support staff. BAILS is the premier freelance marketplace for sports.',
   keywords: ['sports freelance', 'coaching', 'athletes', 'hire sports talent', 'sports marketplace', 'cricket', 'football', 'badminton', 'net bowlers', 'sidearmers', 'mystry spinners', 'fast bowler', 'pickleball coach', 'padelball', 'basketball', 'one on one coach', 'analyst', 'physio', 'practice partner', 'cricket coaching', 'sports recruitment', 'athlete portfolio', 'local coaches', 'sports gigs', 'monetize sports skills', 'sports community', 'scouting', 'performance analyst', 'sports tech'],
 
   authors: [{ name: 'BAILS Team' }],
@@ -37,10 +37,10 @@ export const metadata = {
     siteName: 'BAILS',
     images: [
       {
-        url: '/images/LOGOS/BAILS%20Logo%20+%20Tag.png',
+        url: '/images/LOGOS/bails-og-logo.png',
         width: 1200,
         height: 630,
-        alt: 'BAILS - Sports Talent Marketplace',
+        alt: 'BAILS - Sports Freelance Marketplace',
       },
     ],
     locale: 'en_US',
@@ -48,10 +48,10 @@ export const metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Sports Talent Marketplace',
-    description: 'Hire sports experts or monetize your sports skills',
-    creator: '@bails_in', // Assuming handle, can be generic if unknown
-    images: ['/images/LOGOS/BAILS%20Logo%20+%20Tag.png'],
+    title: 'BAILS - Sports Freelance Marketplace',
+    description: 'Connect with professional sports freelancers, coaches, and support staff.',
+    creator: '@bails_in',
+    images: ['/images/LOGOS/bails-og-logo.png'],
   },
   robots: {
     index: true,
@@ -65,8 +65,11 @@ export const metadata = {
     },
   },
   icons: {
-    icon: '/images/LOGOS/TS favicon.svg',
-    shortcut: '/images/LOGOS/TS favicon.svg',
+    icon: [
+      { url: '/favicon.ico' },
+      { url: '/images/LOGOS/TS favicon.svg', type: 'image/svg+xml' },
+    ],
+    shortcut: '/favicon.ico',
     apple: '/images/LOGOS/TS favicon.svg',
   },
   manifest: '/manifest.json',
@@ -77,7 +80,7 @@ const jsonLd = {
   '@type': 'Organization',
   name: 'BAILS',
   url: 'https://bails.in',
-  logo: 'https://bails.in/images/LOGOS/BAILS%20Logo%20+%20Tag.png',
+  logo: 'https://bails.in/images/LOGOS/bails-og-logo.png',
   sameAs: [
     'https://twitter.com/bails_official',
     'https://instagram.com/bails_official',
@@ -167,7 +170,7 @@ export default function RootLayout({
                      apiToken: '${process.env.NEXT_PUBLIC_PUSHWOOSH_API_TOKEN || ""}',
                      safariWebsitePushID: '',
                      defaultNotificationTitle: 'BAILS',
-                     defaultNotificationImage: 'https://bails.in/images/LOGOS/BAILS%20Logo%20+%20Tag.png',
+                     defaultNotificationImage: 'https://bails.in/images/LOGOS/bails-og-logo.png',
                      autoSubscribe: true,
                      serviceWorkerUrl: '/pushwoosh-service-worker.js'
                  }]);

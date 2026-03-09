@@ -749,7 +749,7 @@ export default function ClientHome() {
                 <div className="flex gap-3 pb-2">
                   {loading ? (
                     // Show skeleton cards while loading
-                    [...Array(5)].map((_, i) => (
+                    [...Array(7)].map((_, i) => (
                       <TopRatedExpertSkeleton key={i} />
                     ))
                   ) : professionals.length > 0 ? (
