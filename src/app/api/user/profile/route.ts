@@ -25,6 +25,17 @@ export async function GET(request: NextRequest) {
                         cricketRole: true,
                         title: true,
                         coverImage: true,
+                        skills: true,
+                        specializations: true,
+                        mainSport: true,
+                        otherSports: true,
+                        isVerified: true
+                    }
+                },
+                clientProfile: {
+                    select: {
+                        isVerified: true,
+                        preferredSkills: true
                     }
                 }
             }
