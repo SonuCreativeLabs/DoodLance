@@ -4,6 +4,7 @@ import { Inter } from "next/font/google";
 import { Analytics } from '@vercel/analytics/react'
 import { Providers } from "@/components/Providers";
 import ErrorBoundary from '@/components/ErrorBoundary';
+import { Suspense } from 'react';
 
 import { ReferralTracker } from '@/components/ReferralTracker';
 import { MicrosoftClarity } from "@/components/MicrosoftClarity";
@@ -109,10 +110,16 @@ export default function RootLayout({
             type="application/ld+json"
             dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
           />
-          <ReferralTracker />
-          <PageTracker />
+          <Suspense fallback={null}>
+            <ReferralTracker />
+          </Suspense>
+          <Suspense fallback={null}>
+            <PageTracker />
+          </Suspense>
           <MicrosoftClarity projectId="v28pmfyxle" />
-          <FacebookPixel />
+          <Suspense fallback={null}>
+            <FacebookPixel />
+          </Suspense>
           <Script
             id="fb-pixel"
             strategy="afterInteractive"
