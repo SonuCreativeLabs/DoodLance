@@ -8,7 +8,7 @@ import {
     LayoutDashboard, Users, Calendar, CreditCard,
     Briefcase, HeadphonesIcon, FileText, TrendingUp,
     Settings, Shield, LogOut, ChevronRight, Bell,
-    Search, Menu, X, Package, Tag, QrCode, User, Archive
+    Search, Menu, X, Package, Tag, QrCode, User, Archive, Link as LinkIcon
 } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -30,6 +30,7 @@ const sidebarItems = [
             { icon: Briefcase, label: 'Jobs', href: '/admin/jobs', permission: 'jobs.view' },
             { icon: Package, label: 'Services', href: '/admin/services', permission: 'services.view' },
             { icon: CreditCard, label: 'Transactions', href: '/admin/transactions', permission: 'transactions.view' },
+            { icon: LinkIcon, label: 'Connect Users', href: '/admin/connect', permission: 'bookings.view' },
         ]
     },
     {
