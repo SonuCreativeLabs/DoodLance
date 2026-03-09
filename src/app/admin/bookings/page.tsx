@@ -26,7 +26,7 @@ import {
   Calendar, Clock, MapPin, DollarSign, User, Shield,
   MoreVertical, Eye, Edit, XCircle, CheckCircle, AlertTriangle,
   MessageSquare, FileText, TrendingUp, Filter, Download,
-  ChevronLeft, ChevronRight, RefreshCw, Phone, Mail, Search, HelpCircle
+  ChevronLeft, ChevronRight, RefreshCw, Phone, Mail, Search, HelpCircle, Trash2
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { BookingDetailsModal } from '@/components/admin/BookingDetailsModal';
@@ -128,6 +128,22 @@ export default function BookingManagementPage() {
         if (selectedBooking && selectedBooking.id === bookingId) {
           setSelectedBooking((prev: any) => ({ ...prev, status: newStatus }));
         }
+      }
+    } catch (e) { console.error(e); }
+  };
+
+  const handleDeleteBooking = async (bookingId: string) => {
+    if (!confirm('Are you sure you want to delete and archive this booking? This action cannot be undone.')) return;
+
+    try {
+      const res = await fetch(`/api/admin/bookings/${bookingId}`, {
+        method: 'DELETE'
+      });
+      if (res.ok) {
+        await fetchBookings();
+      } else {
+        const data = await res.json();
+        alert(data.error || 'Failed to delete booking');
       }
     } catch (e) { console.error(e); }
   };
@@ -427,18 +443,26 @@ export default function BookingManagementPage() {
                             <MoreVertical className="w-4 h-4" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="bg-[#1a1a1a] border-gray-800">
+                        <DropdownMenuContent align="end" className="bg-[#1a1a1a] border-gray-800 text-white">
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
+                          <DropdownMenuSeparator className="bg-gray-800" />
                           <DropdownMenuItem
                             onClick={() => {
                               setSelectedBooking(booking);
                               setDetailsModalOpen(true);
                             }}
-                            className="cursor-pointer"
+                            className="cursor-pointer hover:bg-gray-800"
                           >
                             <Eye className="w-4 h-4 mr-2" />
                             View Details
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator className="bg-gray-800" />
+                          <DropdownMenuItem
+                            onClick={() => handleDeleteBooking(booking.id)}
+                            className="cursor-pointer text-red-500 hover:text-red-400 focus:text-red-400 hover:bg-red-500/10"
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Delete & Archive
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -447,7 +471,7 @@ export default function BookingManagementPage() {
                 );
               })}
               {!loading && bookings.length === 0 && (
-                <tr><td colSpan={9} className="p-4 text-center text-gray-400">No bookings found.</td></tr>
+                <tr><td colSpan={10} className="p-4 text-center text-gray-400">No bookings found.</td></tr>
               )}
             </tbody>
           </table>

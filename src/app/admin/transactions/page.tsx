@@ -33,7 +33,7 @@ import {
   CreditCard, DollarSign, TrendingUp, TrendingDown,
   ArrowUpRight, ArrowDownLeft, Search, Download,
   MoreVertical, Eye, RefreshCw, ChevronLeft, ChevronRight,
-  CheckCircle, Clock, XCircle
+  CheckCircle, Clock, XCircle, Trash2, Archive
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -239,6 +239,21 @@ export default function TransactionManagementPage() {
       if (res.ok) {
         setDetailsModalOpen(false);
         fetchTransactions();
+      }
+    } catch (e) { console.error(e); }
+  };
+
+  const handleDeleteTransaction = async (id: string) => {
+    if (!confirm('Are you sure you want to delete and archive this transaction?')) return;
+    try {
+      const res = await fetch(`/api/admin/transactions/${id}`, {
+        method: 'DELETE'
+      });
+      if (res.ok) {
+        fetchTransactions();
+      } else {
+        const err = await res.json();
+        alert('Error: ' + err.error);
       }
     } catch (e) { console.error(e); }
   };
@@ -547,6 +562,13 @@ export default function TransactionManagementPage() {
                           >
                             <Eye className="w-4 h-4 mr-2" />
                             View Details
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="cursor-pointer text-red-500 hover:text-red-400"
+                            onClick={() => handleDeleteTransaction(transaction.id)}
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Delete & Archive
                           </DropdownMenuItem>
                           {transaction.status === 'PENDING' && (
                             <>

@@ -133,13 +133,14 @@ export async function POST(request: Request) {
 
         // Clean price string to float
         const numericPrice = parseFloat(String(price).replace(/[^0-9.]/g, ''));
+        const numericDuration = parseInt(String(deliveryTime).replace(/[^0-9]/g, ''), 10);
 
         const service = await prisma.service.create({
             data: {
                 title,
                 description,
                 price: numericPrice,
-                duration: 0, // Default duration if not provided
+                duration: isNaN(numericDuration) ? 60 : numericDuration, // Parse from string if possible
                 coords: '', // Required field
                 images: '[]', // Required field
                 tags: skill || '', // Store skill in tags if present

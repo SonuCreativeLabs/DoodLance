@@ -7,6 +7,9 @@ export const metadata: Metadata = {
   },
   description: 'Connect with professional sports freelancers, coaches, and support staff. BAILS is the premier freelance marketplace for sports.',
   icons: {
-    icon: "/favicon.ico",
+    icon: [
+      { url: '/favicon.ico' },
+      { url: '/images/LOGOS/TS favicon.svg', type: 'image/svg+xml' },
+    ],
   },
 };
