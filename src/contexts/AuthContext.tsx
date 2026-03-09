@@ -17,6 +17,12 @@ interface User {
   role?: string
   createdAt?: string
   isVerified?: boolean
+  // Marketing Tags
+  city?: string
+  state?: string
+  postalCode?: string // Used to derive country for now if no dedicated field is present
+  profileCompleted?: boolean
+  expertise?: string
 }
 
 // 🎯 Stable auth identity (never changes except on login/logout)
@@ -49,12 +55,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (user) {
       console.log('👤 AuthContext User Updated:', user.id, user.name);
       pwSetUserId(user.id);
+
+      // Determine Country fallback (if we only have city/state, assume India for now per project scope)
+      const country = user.location || user.city || user.state ? 'India' : '';
+
       pwSetTags({
         name: user.name || '',
         role: user.role || 'client',
-        phone_verified: user.phone ? 1 : 0,
+        email: user.email || '',
+        phone_verified: user.phone ? true : false,
         location: user.location || '',
-        email_verified: user.isVerified ? 1 : 0
+        location_city: user.city || '',
+        location_state: user.state || '',
+        location_country: country,
+        profile_completed: user.profileCompleted || false,
+        expertise: user.expertise || '',
+        email_verified: user.isVerified ? true : false
       });
     } else if (!isLoading) {
       pwSetUserId('');
@@ -202,6 +218,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                   return prev;
                 }
 
+                // Calculate profile completion and expertise
+                let isComplete = false;
+                let expertiseString = '';
+
+                if (data.role === 'freelancer' && data.freelancerProfile) {
+                  const fp = data.freelancerProfile;
+                  isComplete = !!(data.name && data.phone && fp.title && fp.mainSport);
+
+                  const specializations = fp.specializations ? JSON.parse(fp.specializations || '[]') : [];
+                  const skills = fp.skills ? JSON.parse(fp.skills || '[]') : [];
+                  const allSkills = [...new Set([fp.mainSport, ...(fp.otherSports || []), ...specializations, ...skills].filter(Boolean))];
+                  expertiseString = allSkills.join(', ');
+                } else if (data.role === 'client') {
+                  // Basic client profile completion
+                  isComplete = !!(data.name && data.phone && data.location);
+                }
+
                 if (!prev) return prev; // Should not happen if we are logged in, but safety first
                 return {
                   ...prev,
@@ -210,8 +243,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                   avatar: data.avatar || prev.avatar,
                   profileImage: data.avatar || prev.profileImage, // Sync profile image with avatar
                   location: data.location || prev.location,
+                  city: data.city || prev.city,
+                  state: data.state || prev.state,
+                  postalCode: data.postalCode || prev.postalCode,
                   email: data.email || prev.email || '',
                   createdAt: data.createdAt || prev.createdAt,
+                  profileCompleted: isComplete,
+                  expertise: expertiseString
                 };
               });
 
