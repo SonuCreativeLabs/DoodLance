@@ -1,7 +1,7 @@
 
 "use client"
 
-import { MapPin, Search, Bell, Menu, X, Home, User, Calendar, Briefcase, Star, ChevronLeft, LogOut, ChevronRight, BookOpen, Copy, Check, Zap, Shield, Users, Award, TrendingUp, Heart, MessageCircle, Filter, Wallet, Sparkles, Compass, ChevronDown, Clock } from 'lucide-react'
+import { MapPin, Search, Bell, Menu, X, Home, User, Calendar, Briefcase, Star, ChevronLeft, LogOut, ChevronRight, BookOpen, Copy, Check, Zap, Shield, Users, Award, TrendingUp, Heart, MessageCircle, Filter, Wallet, Sparkles, Compass, ChevronDown, Clock, Globe } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { Input } from '@/components/ui/input'
 import {
@@ -486,6 +486,17 @@ export default function ClientHome() {
                       <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
                       My Referrals
                     </button>
+                    {/* About BAILS Button */}
+                    <button
+                      className="flex items-center gap-3 px-6 py-3 text-left text-white/90 hover:bg-white/10 hover:text-white transition-colors group"
+                      onClick={() => {
+                        setShowSidebar(false);
+                        window.open('https://playpal.pro', '_blank', 'noopener,noreferrer');
+                      }}
+                    >
+                      <Globe className="w-5 h-5 text-purple-400 transition-transform group-hover:scale-110" />
+                      About BAILS
+                    </button>
                     {/* Notifications */}
                     <button
                       className="flex items-center gap-3 px-6 py-3 text-left text-white/90 hover:bg-white/10 hover:text-white transition-colors"
@@ -703,7 +714,7 @@ export default function ClientHome() {
                   Practice like a pro, with a pro
                 </h1>
                 <p className="text-sm sm:text-base md:text-lg text-white/90 mb-3 sm:mb-4 drop-shadow-[0_2px_4px_rgba(0,0,0,0.2)]">
-                  Your shortcut to better sports starts here
+                  Your shortcut to better training starts here
                 </p>
               </div>
 

@@ -29,7 +29,7 @@ const initialPopularServices: PopularService[] = [
     title: 'Net Bowler',
     icon: '🎯',
     providerCount: 156,
-    image: '/images/Service Catagories/cricket net bowler.jpeg',
+    image: '/images/Service Catagories/cricket net bowler.webp',
     mostBooked: true,
     sport: 'Cricket'
   },
@@ -38,7 +38,7 @@ const initialPopularServices: PopularService[] = [
     title: 'Sidearm Thrower',
     icon: '💪',
     providerCount: 34,
-    image: '/images/Service Catagories/cricket sidearm.png',
+    image: '/images/Service Catagories/cricket sidearm.webp',
     mostBooked: true,
     sport: 'Cricket'
   },
@@ -47,7 +47,7 @@ const initialPopularServices: PopularService[] = [
     title: 'Cricket Coach',
     icon: '🏏',
     providerCount: 120,
-    image: '/images/Service Catagories/Cricket coach.png',
+    image: '/images/Service Catagories/Cricket coach.webp',
     mostBooked: true,
     sport: 'Cricket'
   },
@@ -56,7 +56,7 @@ const initialPopularServices: PopularService[] = [
     title: 'Sports Physio',
     icon: '👨‍⚕️',
     providerCount: 28,
-    image: '/images/Service Catagories/cricket physio.png',
+    image: '/images/Service Catagories/cricket physio.webp',
     mostBooked: false,
     sport: 'Cricket'
   },
@@ -65,7 +65,7 @@ const initialPopularServices: PopularService[] = [
     title: 'Umpire',
     icon: '☝️',
     providerCount: 45,
-    image: '/images/Service Catagories/cricket umpire.png',
+    image: '/images/Service Catagories/cricket umpire.webp',
     mostBooked: true,
     sport: 'Cricket'
   },
@@ -74,7 +74,7 @@ const initialPopularServices: PopularService[] = [
     title: 'Scorer',
     icon: '📝',
     providerCount: 89,
-    image: '/images/Service Catagories/cricket scorer.png',
+    image: '/images/Service Catagories/cricket scorer.webp',
     mostBooked: false,
     sport: 'Cricket'
   },
@@ -83,7 +83,7 @@ const initialPopularServices: PopularService[] = [
     title: 'Commentator',
     icon: '🎙️',
     providerCount: 12,
-    image: '/images/Service Catagories/cricket commentator.png',
+    image: '/images/Service Catagories/cricket commentator.webp',
     mostBooked: false,
     sport: 'Cricket'
   },
@@ -94,7 +94,7 @@ const initialPopularServices: PopularService[] = [
     title: 'Match Player',
     icon: '⚽',
     providerCount: 45,
-    image: '/images/Service Catagories/football match player.png',
+    image: '/images/Service Catagories/football match player.webp',
     mostBooked: true,
     sport: 'Football'
   },
@@ -103,7 +103,7 @@ const initialPopularServices: PopularService[] = [
     title: 'Training Partner',
     icon: '⚽',
     providerCount: 22,
-    image: '/images/Service Catagories/football training partner.png',
+    image: '/images/Service Catagories/football training partner.webp',
     mostBooked: true,
     sport: 'Football'
   },
@@ -112,7 +112,7 @@ const initialPopularServices: PopularService[] = [
     title: 'Football Coach',
     icon: '📋',
     providerCount: 32,
-    image: '/images/Service Catagories/football coach.png',
+    image: '/images/Service Catagories/football coach.webp',
     mostBooked: true,
     sport: 'Football'
   },
@@ -121,7 +121,7 @@ const initialPopularServices: PopularService[] = [
     title: 'Referee',
     icon: '🟨',
     providerCount: 15,
-    image: '/images/Service Catagories/football referee.png',
+    image: '/images/Service Catagories/football referee.webp',
     mostBooked: false,
     sport: 'Football'
   },
@@ -130,7 +130,7 @@ const initialPopularServices: PopularService[] = [
     title: 'Analyst',
     icon: '📊',
     providerCount: 8,
-    image: '/images/Service Catagories/football analyst.png',
+    image: '/images/Service Catagories/football analyst.webp',
     mostBooked: false,
     sport: 'Football'
   },
@@ -139,7 +139,7 @@ const initialPopularServices: PopularService[] = [
     title: 'Commentator',
     icon: '🎙️',
     providerCount: 5,
-    image: '/images/Service Catagories/football commentator.png',
+    image: '/images/Service Catagories/football commentator.webp',
     mostBooked: false,
     sport: 'Football'
   },
@@ -148,7 +148,7 @@ const initialPopularServices: PopularService[] = [
     title: 'Influencer',
     icon: '📱',
     providerCount: 12,
-    image: '/images/Service Catagories/football influencer.png',
+    image: '/images/Service Catagories/football influencer.webp',
     mostBooked: false,
     sport: 'Football'
   },
@@ -159,7 +159,7 @@ const initialPopularServices: PopularService[] = [
     title: 'Match Player',
     icon: '🏸',
     providerCount: 34,
-    image: '/images/Service Catagories/badminton match player.png',
+    image: '/images/Service Catagories/badminton match player.webp',
     mostBooked: true,
     sport: 'Badminton'
   },
@@ -168,7 +168,7 @@ const initialPopularServices: PopularService[] = [
     title: 'Practice Partner',
     icon: '🏸',
     providerCount: 28,
-    image: '/images/Service Catagories/badminton practice partner.png',
+    image: '/images/Service Catagories/badminton practice partner.webp',
     mostBooked: false,
     sport: 'Badminton'
   },
@@ -177,7 +177,7 @@ const initialPopularServices: PopularService[] = [
     title: 'Badminton Coach',
     icon: '📋',
     providerCount: 45,
-    image: '/images/Service Catagories/badminton coach.png',
+    image: '/images/Service Catagories/badminton coach.webp',
     mostBooked: true,
     sport: 'Badminton'
   },
@@ -186,7 +186,7 @@ const initialPopularServices: PopularService[] = [
     title: 'Umpire',
     icon: '☝️',
     providerCount: 12,
-    image: '/images/Service Catagories/badminton umpire.png',
+    image: '/images/Service Catagories/badminton umpire.webp',
     mostBooked: false,
     sport: 'Badminton'
   },
@@ -224,7 +224,7 @@ const initialPopularServices: PopularService[] = [
     title: 'Match Player',
     icon: '🎾',
     providerCount: 30,
-    image: '/images/Service Catagories/tennis match player.png',
+    image: '/images/Service Catagories/tennis match player.webp',
     mostBooked: true,
     sport: 'Tennis'
   },
@@ -233,7 +233,7 @@ const initialPopularServices: PopularService[] = [
     title: 'Practice Partner',
     icon: '🎾',
     providerCount: 25,
-    image: '/images/Service Catagories/tennis practice partner.png',
+    image: '/images/Service Catagories/tennis practice partner.webp',
     mostBooked: false,
     sport: 'Tennis'
   },

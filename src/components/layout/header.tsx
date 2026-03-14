@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useEffect } from 'react'
-import { Menu, Bell, X, Wallet, LogOut, LogIn, User, Sparkles } from 'lucide-react'
+import { Menu, Bell, X, Wallet, LogOut, LogIn, User, Sparkles, Globe } from 'lucide-react'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter, usePathname } from 'next/navigation'
@@ -226,6 +226,18 @@ export default function Header() {
                     >
                       <span>{item.name}</span>
                     </Link>
+                    {item.name === 'Help & Support' && (
+                      <button
+                        className="w-full flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors text-left group"
+                        onClick={() => {
+                          setIsMenuOpen(false);
+                          window.open('https://playpal.pro', '_blank', 'noopener,noreferrer');
+                        }}
+                      >
+                        <Globe className="w-4 h-4 text-purple-600 transition-transform group-hover:scale-110" />
+                        <span className="font-medium">About BAILS</span>
+                      </button>
+                    )}
                     {item.name === 'Help & Support' && (
                       <button
                         className="w-full flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors text-left group"
