@@ -3,10 +3,10 @@ import { Category } from '../types';
 export const categories: Category[] = [
   { id: 1, name: 'All', icon: '' },
   { id: 10, name: 'Cricket', icon: '' },
-  { id: 11, name: 'Football', icon: '' },
   { id: 12, name: 'Badminton', icon: '' },
-  { id: 13, name: 'Tennis', icon: '' },
   { id: 16, name: 'Pickleball', icon: '' },
+  { id: 11, name: 'Football', icon: '' },
+  { id: 13, name: 'Tennis', icon: '' },
   { id: 14, name: 'Basketball', icon: '' },
   { id: 15, name: 'Padel', icon: '' },
   { id: 17, name: 'Table Tennis', icon: '' },

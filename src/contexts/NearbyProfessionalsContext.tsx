@@ -1,6 +1,8 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
+
+const SESSION_KEY = 'bails_user_location';
 
 
 export interface Professional {
@@ -76,6 +78,8 @@ export function NearbyProfessionalsProvider({ children }: { children: ReactNode 
   const [error, setError] = useState<string | null>(null);
   const [currentCoordinates, setCurrentCoordinates] = useState<{ lat: number; lng: number } | null>(null);
   const [currentLocation, setCurrentLocation] = useState<{ city: string; state: string } | null>(null);
+  // Tracks whether the user explicitly set a location (prevents geolocation from overriding it)
+  const userSetLocationRef = useRef(false);
 
   const refreshProfessionals = async (lat?: number, lng?: number) => {
     setLoading(true);
@@ -120,6 +124,12 @@ export function NearbyProfessionalsProvider({ children }: { children: ReactNode 
 
   const updateLocation = (lat: number, lng: number, city: string, state: string) => {
     console.log('📍 updateLocation called:', { lat, lng, city, state });
+    // Mark that user explicitly set a location — prevent geolocation from overriding
+    userSetLocationRef.current = true;
+    // Persist to sessionStorage so it survives navigation within the same session
+    try {
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify({ lat, lng, city, state }));
+    } catch (e) { /* ignore */ }
     setCurrentCoordinates({ lat, lng });
     setCurrentLocation({ city, state });
     refreshProfessionals(lat, lng);
@@ -152,23 +162,36 @@ export function NearbyProfessionalsProvider({ children }: { children: ReactNode 
   };
 
   useEffect(() => {
-    // Get location first, then fetch
-    // Get location first, then fetch
-    // Only fetch if we don't have coordinates yet (prevents reset on navigation)
+    // Step 1: If user previously set a location manually in this session, restore it and skip geolocation
+    try {
+      const saved = sessionStorage.getItem(SESSION_KEY);
+      if (saved) {
+        const { lat, lng, city, state } = JSON.parse(saved);
+        console.log('📍 Restoring user-set location from session:', { lat, lng, city, state });
+        userSetLocationRef.current = true;
+        setCurrentCoordinates({ lat, lng });
+        setCurrentLocation({ city, state });
+        refreshProfessionals(lat, lng);
+        return; // Don't auto-geolocate — honour the user's manual choice
+      }
+    } catch (e) { /* ignore */ }
+
+    // Step 2: Auto-geolocate only if user hasn't manually picked a location
     if (!currentCoordinates && typeof window !== 'undefined' && navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         async (position) => {
+          // Don't override if user set location between the time we called getCurrentPosition and it resolved
+          if (userSetLocationRef.current) return;
           const { latitude, longitude } = position.coords;
           console.log('✅ Geolocation success:', { latitude, longitude });
 
-          // Reverse geocode to get city/state
           const locationData = await reverseGeocode(latitude, longitude);
-
           setCurrentCoordinates({ lat: latitude, lng: longitude });
           setCurrentLocation(locationData);
           refreshProfessionals(latitude, longitude);
         },
         (error) => {
+          if (userSetLocationRef.current) return;
           console.warn('⚠️ Geolocation error:', error.message);
 
           // Default to Chennai, India if location access is denied or fails
@@ -177,7 +200,7 @@ export function NearbyProfessionalsProvider({ children }: { children: ReactNode 
           console.log('Using default location (Chennai, India):', { lat: fallbackLat, lng: fallbackLng });
 
           setCurrentCoordinates({ lat: fallbackLat, lng: fallbackLng });
-          setCurrentLocation({ city: "Chennai", state: "Tamil Nadu" });
+          setCurrentLocation({ city: 'Chennai', state: 'Tamil Nadu' });
           refreshProfessionals(fallbackLat, fallbackLng);
         },
         {
@@ -187,14 +210,15 @@ export function NearbyProfessionalsProvider({ children }: { children: ReactNode 
         }
       );
     } else if (!currentCoordinates) {
+      if (userSetLocationRef.current) return;
       console.warn('⚠️ Geolocation not available on device');
       const fallbackLat = 13.0827;
       const fallbackLng = 80.2707;
       setCurrentCoordinates({ lat: fallbackLat, lng: fallbackLng });
-      setCurrentLocation({ city: "Chennai", state: "Tamil Nadu" });
+      setCurrentLocation({ city: 'Chennai', state: 'Tamil Nadu' });
       refreshProfessionals(fallbackLat, fallbackLng);
     }
-    // If coordinates exist, we do nothing - preserving state
+    // If coordinates already exist, do nothing — preserving state
   }, []);
 
   const value = {

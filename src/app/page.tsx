@@ -157,6 +157,7 @@ export default function ClientHome() {
     iconShadow: string;
     textHover: string;
     icon: string;
+    svgIcon?: React.ReactNode;
   }> = {
     'Cricket': {
       borderHover: 'group-hover:border-blue-500/50',
@@ -911,7 +912,13 @@ export default function ClientHome() {
                         >
                           <div className={`absolute inset-0 bg-gradient-to-b from-transparent via-transparent ${style.gradientTo} opacity-0 group-hover:opacity-100 transition-opacity duration-500`}></div>
                           <div className="absolute inset-0 flex items-center justify-center pb-6">
-                            <span className={`text-5xl sm:text-6xl filter ${style.iconShadow} transform transition-transform duration-500 group-hover:scale-110 group-hover:-translate-y-2`}>{style.icon}</span>
+                            {style.svgIcon ? (
+                              <span className={`filter ${style.iconShadow} transform transition-transform duration-500 group-hover:scale-110 group-hover:-translate-y-2`}>
+                                {style.svgIcon}
+                              </span>
+                            ) : (
+                              <span className={`text-5xl sm:text-6xl filter ${style.iconShadow} transform transition-transform duration-500 group-hover:scale-110 group-hover:-translate-y-2`}>{style.icon}</span>
+                            )}
                           </div>
                           <div className="absolute bottom-0 left-0 right-0 p-3 text-center bg-gradient-to-t from-black/90 to-transparent">
                             <span className={`text-sm sm:text-base font-bold text-white tracking-wide ${style.textHover} transition-colors`}>{category.name}</span>

@@ -208,22 +208,28 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({ professionals: propProfe
 
     const professionals = propProfessionals || [];
 
-    // Update GeoJSON Source
+    // Update GeoJSON Source - filter out null/invalid coords to avoid rendering Null Island [0,0]
     const source = map.getSource('places') as mapboxgl.GeoJSONSource;
     if (source) {
       source.setData({
         type: 'FeatureCollection',
-        features: professionals.map((pro: any) => ({
-          type: 'Feature',
-          geometry: {
-            type: 'Point',
-            coordinates: pro.coords
-          },
-          properties: {
-            id: pro.id,
-            name: pro.name
-          }
-        }))
+        features: professionals
+          .filter((pro: any) =>
+            pro.coords && Array.isArray(pro.coords) &&
+            typeof pro.coords[0] === 'number' && typeof pro.coords[1] === 'number' &&
+            pro.coords[0] !== 0 && pro.coords[1] !== 0
+          )
+          .map((pro: any) => ({
+            type: 'Feature',
+            geometry: {
+              type: 'Point',
+              coordinates: pro.coords
+            },
+            properties: {
+              id: pro.id,
+              name: pro.name
+            }
+          }))
       });
     }
 
@@ -261,9 +267,14 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({ professionals: propProfe
       ];
     };
 
-    professionals.forEach((pro: any, index: number) => {
+    // Filter out professionals with null/invalid coordinates before rendering markers
+    const professionalsWithCoords = professionals.filter((pro: any) =>
+      pro.coords && Array.isArray(pro.coords) && typeof pro.coords[0] === 'number' && typeof pro.coords[1] === 'number'
+    );
+
+    professionalsWithCoords.forEach((pro: any, index: number) => {
       const currentIndex = index;
-      const hasNext = currentIndex < professionals.length - 1;
+      const hasNext = currentIndex < professionalsWithCoords.length - 1;
       const hasPrev = currentIndex > 0;
 
       const popup = new mapboxgl.Popup({
@@ -387,9 +398,16 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({ professionals: propProfe
       // The customCenter effect handles flying to user.
     } else {
       // Fallback logic if no user location yet
-      if (professionals.length > 0) {
+      // IMPORTANT: Only extend bounds with professionals that have valid coordinates
+      // to prevent the map from jumping to Null Island [0,0]
+      const validProfessionals = professionals.filter((p: any) =>
+        p.coords && Array.isArray(p.coords) &&
+        typeof p.coords[0] === 'number' && typeof p.coords[1] === 'number' &&
+        p.coords[0] !== 0 && p.coords[1] !== 0
+      );
+      if (validProfessionals.length > 0) {
         const bounds = new mapboxgl.LngLatBounds();
-        professionals.forEach((p: any) => bounds.extend(p.coords));
+        validProfessionals.forEach((p: any) => bounds.extend(p.coords));
         if (!bounds.isEmpty()) {
           map.fitBounds(bounds, { padding: 50, maxZoom: 14 });
         }
